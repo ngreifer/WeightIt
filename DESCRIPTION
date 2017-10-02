@@ -1,0 +1,20 @@
+Package: WeightIt
+Type: Package
+Title: Weighting for Covariate Balance in Observational Studies
+Version: 0.1.0
+Author: Noah Greifer [aut, cre]
+Maintainer: Noah Greifer <noah@unc.edu>
+Description: Generates weights to form equivalent groups in observational studies.
+Depends:
+    R (>= 3.1)
+Suggests:
+    cobalt,
+    twang,
+    CBPS,
+    ebal,
+    ATE
+License: GPL (>=2)
+Encoding: UTF-8
+LazyData: true
+Date: xxxx-xx-xx
+VignetteBuilder: knitr

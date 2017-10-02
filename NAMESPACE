@@ -1,0 +1,6 @@
+importFrom("stats", "terms", "glm", "setNames")
+importFrom("utils", "data")
+
+export(weightit)
+#S3method(print, weightit)
+#S3method(summary, weightit)
