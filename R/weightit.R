@@ -32,8 +32,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                           "cbps",
                           "ebal", "entropy", "ebalance",
                           "sbw",
-                          "ebcw", "ate",
-                          "ipw")
+                          "ebcw", "ate")
   if (missing(method) || length(ps) > 0) method <- "ps"
   else if (!is.character(method)) bad.method <- TRUE
   else if (length(method) != 1) bad.method <- TRUE
@@ -69,7 +68,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
     treat.type = "continuous"
   }
 
-
+#kgkg
   if (length(s.weights) > 0) {
     if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
       stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights.", call. = FALSE)
@@ -105,7 +104,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
   ##Process s.weights
   if (length(s.weights) == 0) s.weights <- rep(1, nrow(data))
 
-  w <- ps <- rep(NA_real_, n)
+  w <- p.score <- rep(NA_real_, n)
 
   for (i in levels(exact.factor)) {
     #Run method
@@ -143,7 +142,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                                  ...)
       }
 
-      ps[exact.factor == i] <- obj$ps
+      p.score[exact.factor == i] <- obj$ps
     }
     else if (method == "gbm") {
       if (treat.type == "binary") {
@@ -167,7 +166,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
       }
       else stop("Generalized boosted modeling is not compatible with continuous treatments.", call. = FALSE)
 
-      ps[exact.factor == i] <- obj$ps
+      p.score[exact.factor == i] <- obj$ps
     }
     else if (method == "cbps") {
       if (treat.type == "binary") {
@@ -195,7 +194,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                                    ...)
       }
 
-      ps[exact.factor == i] <- obj$ps
+      p.score[exact.factor == i] <- obj$ps
     }
     else if (method == "nbcbps") {
       if (treat.type == "binary") {
@@ -223,7 +222,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                                   ...)
       }
 
-      ps[exact.factor == i] <- obj$ps
+      p.score[exact.factor == i] <- obj$ps
     }
     else if (method == "ebal") {
       if (treat.type == "binary") {
@@ -234,6 +233,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                              subset = exact.factor == i,
                              estimand = estimand,
                              stabilize = stabilize,
+                             verbose = verbose,
                              ...)
       }
       else if (treat.type == "multi") {
@@ -245,6 +245,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                              estimand = estimand,
                              focal = focal,
                              stabilize = stabilize,
+                             verbose = verbose,
                              ...)
       }
       else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
@@ -279,53 +280,33 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
       }
 
     }
-    else if (method == "ipw") {
-      if (treat.type == "binary") {
-        estimand <- process.estimand(estimand, c("ATE"), method)
-        obj <- weightit2ipw(formula = formula,
-                            data = data,
-                            truncate.q = truncate.q,
-                            ...)
-      }
-      else if (treat.type == "multi") {
-        estimand <- process.estimand(estimand, c("ATE"), method)
-        obj <- weightit2ipw.multi(formula = formula,
-                            data = data,
-                            truncate.q = truncate.q,
-                            ...)
-      }
-      else if (treat.type == "continuous") {
-        estimand <- process.estimand(estimand, c("ATE"), method)
-        obj <- weightit2ipw.cont(formula = formula,
-                                  data = data,
-                                  truncate.q = truncate.q,
-                                  ...)
-      }
-
-    }
 
     #Extract weights
     w[exact.factor == i] <- obj$w
   }
 
   #Trim/Truncate
+
   if (length(trim.q) == 2) trim <- quantile(w, trim.q)
+
   if (length(trim) == 2) {
-    if (all(is.na(ps))) {
+    if (length(ps) == 0 || all(is.na(ps))) {
       to.trim <- !between(w, trim, inclusive = TRUE)
     }
     else {
       to.trim <- !between(ps, trim, inclusive = TRUE)
     }
+
     w[to.trim] <- 0
-    if (nunique(treat[to.trim]) != nunique(treat)) {
+
+    if (nunique(treat[!to.trim]) != nunique(treat)) {
       warning("Trimming will remove an entire treatment group.", call. = FALSE)
     }
   }
 
   if (length(truncate.q) == 2) truncate <- quantile(w, truncate.q)
   if (length(truncate) == 2) {
-    if (all(is.na(ps))) {
+    if (length(ps) == 0 || all(is.na(ps))) {
       w[w < min(truncate)] <- min(truncate)
       w[w > max(truncate)] <- max(truncate)
     }
@@ -342,7 +323,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
              data = data,
              estimand = estimand,
              method = method,
-             ps = ps,
+             ps = p.score,
              s.weights = s.weights,
              discarded = NULL,
              treat.type = treat.type)

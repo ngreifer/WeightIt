@@ -50,7 +50,7 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
   else if (method %in% c("sbw")) return("sbw")
   else if (method %in% c("ebcw", "ate")) return("ebcw")
-  else return(NA_character_)
+  else return(method)
 }
 method.to.phrase <- function(method) {
   if (method %in% c("ps")) return("propensity score weighting")

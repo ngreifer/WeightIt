@@ -31,7 +31,12 @@ weightit2ps <- function(formula, data, s.weights, estimand, subset, stabilize, p
   else if (toupper(estimand) == "ATO") {
     w <- t*(1-ps) + (1-t)*ps
   }
-  if (stabilize) w <- w*(t*mean(t) + (1-t)*(1-mean(t)))
+  else w <- NULL
+  if (stabilize) {
+    num.fit <- glm(t ~ 1, family = A$family)
+    num.ps <- num.fit$fitted.values
+    w <- w*num.ps
+  }
 
   obj <- list(ps = ps,
               t = t,
@@ -43,7 +48,41 @@ weightit2ps.multi <- function(formula, data, s.weights, subset, estimand, focal,
 
 }
 weightit2ps.cont <- function(formula, data, s.weights, subset, stabilize, ps, ...) {
+  A <- list(...)
+  if (length(A$link) == 0) A$link <- "identity"
+  if (length(A$family) == 0) A$family <- gaussian(link = A$link)
 
+  stabilize <- TRUE
+
+  if (length(ps) > 0) {
+    mf <- model.frame(formula, data[subset,])
+    t <- model.response(mf)
+  }
+  else {
+    fit <- glm(formula, data = data[subset,],
+               weights = s.weights[subset],
+               family = A$family,
+               ...)
+    p.denom <- fit$fitted.values
+    den.denom <- dnorm(t, ps, sqrt(summary(fit)$dispersion))
+
+    if (stabilize) {
+      num.fit <- glm(t ~ 1,
+                     weights = s.weights[subset],
+                     family = A$family)
+      p.num <- num.fit$fitted.values
+      den.num <- dnorm(t, p.num, sqrt(summary(num.fit)$dispersion))
+      w <- den.num/den.denom
+    }
+    else {
+      w <- 1/den.denom
+    }
+  }
+
+  obj <- list(ps = p.denom,
+              t = t,
+              w = w)
+  return(obj)
 }
 
 #Generalized boosted modeling with twang
@@ -99,11 +138,11 @@ weightit2cbps <- function(formula, data, subset, estimand, verbose, ...) {
 
   if (verbose) {
     fit <- CBPS::CBPS(formula, data = data[subset, ], ATT = switch(estimand, ATT = 1, ATC = 2, ATE = 0),
-                                                method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...)
+                      method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...)
   }
   else {
     capture.output(fit <- CBPS::CBPS(formula, data = data[subset, ], ATT = switch(estimand, ATT = 1, ATC = 2, ATE = 0),
-                                                method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...))
+                                     method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...))
   }
 
   w <- cobalt::get.w(fit, estimand = estimand)
@@ -166,7 +205,7 @@ weightit2nbcbps.multi <- function(formula, data, subset, estimand, verbose, ...)
 weightit2nbcbps.cont <- weightit2nbcbps.multi
 
 #Entropy balancing with ebal
-weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize, ...) {
+weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize, verbose,...) {
   A <- list(...)
 
   tt <- terms(formula)
@@ -180,39 +219,41 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
     if (estimand == "ATC" ) treat_ <- 1 - treat
     else treat_ <- treat
 
-    ebal.out <- ebalance(Treatment = treat_, X = covs, ...)
-    if (stabilize) ebal.out <- ebalance.trim(ebal.out, ...)
+    ebal.out <- ebal::ebalance(Treatment = treat_, X = covs,
+                               print.level = ifelse(verbose, 3, -1), ...)
+    if (stabilize) ebal.out <- ebal::ebalance.trim(ebal.out,
+                                                   print.level = ifelse(verbose, 3, -1),
+                                                   ...)
 
     w <- cobalt::get.w(ebal.out, treat = treat_)
   }
   else if (estimand == "ATE") {
     w <- rep(1, length(treat))
 
-    #Reweight controls to be like total (need treated to look like total)
-    covs1 <- rbind(covs, covs[treat==0,])
-    treat1 <- c(rep(1, nrow(covs)), treat[treat==0])
+    for (i in unique(treat)) {
+      #Reweight controls to be like total (need treated to look like total)
+      covs_i <- rbind(covs, covs[treat==i,])
+      treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
-    ebal.out1 <- ebalance(Treatment = treat1, X = covs1, ...)
-    if (stabilize) ebal.out1 <- ebalance.trim(ebal.out1, ...)
+      if (verbose) {
+        ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i, ...)
+        if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebal.out_i, ...)
+      }
+      else {
+        capture.output({ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i, ...)
+        if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebal.out_i, ...)})
+      }
 
-    w[treat == 0] <- ebal.out1$w
 
-    #Reweight treated to be like total
-
-    covs0 <- rbind(covs, covs[treat==1,])
-    treat0 <- c(rep(1, nrow(covs)), 1 - treat[treat==1])
-
-    ebal.out0 <- ebalance(Treatment = treat0, X = covs0, ...)
-    if (stabilize) ebal.out0 <- ebalance.trim(ebal.out0, ...)
-
-    w[treat == 1] <- ebal.out0$w
+      w[treat == i] <- ebal.out_i$w
+    }
   }
 
   obj <- list(w = w)
   return(obj)
 
 }
-weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, stabilize, ...) {
+weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, stabilize, verbose, ...) {
   A <- list(...)
 
   tt <- terms(formula)
@@ -229,8 +270,10 @@ weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, stab
     for (i in control.levels) {
       treat_ <- ifelse(treat[treat %in% c(focal, i)] == i, 0, 1)
       covs_ <- covs[treat %in% c(focal, i),]
-      ebal.out <- ebalance(Treatment = treat_, X = covs_, ...)
-      if (stabilize) ebal.out <- ebalance.trim(ebal.out, ...)
+      ebal.out <- ebal::ebalance(Treatment = treat_, X = covs_,
+                                 print.level = ifelse(verbose, 3, -1), ...)
+      if (stabilize) ebal.out <- ebal::ebalance.trim(ebal.out,
+                                                     print.level = ifelse(verbose, 3, -1), ...)
       w[treat == i] <- e$w
     }
   }
@@ -241,8 +284,11 @@ weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, stab
       covs_i <- rbind(covs, covs[treat==i,])
       treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
-      ebal.out_i <- ebalance(Treatment = treat_i, X = covs_i, ...)
-      if (stabilize) ebal.out_i <- ebalance.trim(ebal.out_i, ...)
+      ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i,
+                                   print.level = ifelse(verbose, 3, -1), ...)
+      if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebal.out_i,
+                                                       print.level = ifelse(verbose, 3, -1),
+                                                       ...)
 
       w[treat == i] <- ebal.out_i$w
     }
@@ -303,28 +349,4 @@ weightit2ebcw.multi <- function(formula, data, subset, estimand, ...) {
 
   obj <- list(w = w)
   return(obj)
-}
-
-#Propensity score estimation with ipw (probably won't use)
-weightit2ipw <- function(formula, data, truncate.q, ...) {
-  A <- list(...)
-
-  tt <- terms(formula)
-  #attr(tt, "intercept") <- 0
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
-  treat <- model.response(mf)
-  covs <- model.matrix(tt, data=mf)[,-1]
-
-  out <- ipwpoint(exposure = treat, family = A$family, link = A$link, numerator = A$numerator,
-                  denominator = f.build("", covs), data = data,
-                  trunc = truncate.q, ...)
-  if (length(out$weights.trunc) == 0) w <- obj$ipw.weights
-  else w <- obj$weights.trunc
-  obj <- list(w = w)
-}
-weightit2ipw.multi <- function(formula, data, truncate.q, ...) {
-
-}
-weightit2ipw.cont <- function(formula, data, truncate.q, ...) {
-
 }
