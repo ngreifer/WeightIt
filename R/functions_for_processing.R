@@ -89,3 +89,35 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
 
   return(out)
 }
+
+equivalent.factors <- function(f1, f2) {
+  return(nunique(f1) == nunique(paste(f1, f2)))
+}
+
+text.box.plot <- function(range.list, width = 12) {
+  full.range <- range(unlist(range.list))
+  ratio = diff(full.range)/(width+1)
+  rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
+  rescaled.full.range <- round(full.range/ratio)
+  d <- as.data.frame(matrix(NA_character_, ncol = 3, nrow = length(range.list),
+                         dimnames = list(names(range.list), c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"))),
+                     stringsAsFactors = FALSE)
+  d[,"Min"] <- sapply(range.list, function(x) x[1])
+  d[,"Max"] <- sapply(range.list, function(x) x[2])
+  for (i in seq_len(nrow(d))) {
+    spaces1 <- rescaled.range.list[[i]][1] - rescaled.full.range[1]
+    #|
+    dashes <- max(0, diff(rescaled.range.list[[i]]) - 2)
+    #|
+    spaces2 <- max(0, diff(rescaled.full.range) - (spaces1 + 1 + dashes + 1))
+
+    d[i, 2] <- paste0(paste(rep(" ", spaces1), collapse = ""), "|", paste(rep("-", dashes), collapse = ""), "|", paste(rep(" ", spaces2), collapse = ""))
+  }
+  return(d)
+}
+
+round_df <- function(df, digits) {
+  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+  df[, nums] <- round(df[, nums], digits = digits)
+  return(df)
+}

@@ -35,7 +35,7 @@ weightit2ps <- function(formula, data, s.weights, estimand, subset, stabilize, p
   if (stabilize) {
     num.fit <- glm(t ~ 1, family = A$family)
     num.ps <- num.fit$fitted.values
-    w <- w*num.ps
+    w <- w*ifelse(t == 1, 1/sum(1/ps[t==1]), 1/sum(1/(1-ps[t==0])))
   }
 
   obj <- list(ps = ps,
@@ -136,14 +136,11 @@ weightit2gbm.multi <- function(formula, data, s.weights, estimand, focal, subset
 weightit2cbps <- function(formula, data, subset, estimand, verbose, ...) {
   A <- list(...)
 
-  if (verbose) {
-    fit <- CBPS::CBPS(formula, data = data[subset, ], ATT = switch(estimand, ATT = 1, ATC = 2, ATE = 0),
-                      method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...)
-  }
-  else {
-    capture.output(fit <- CBPS::CBPS(formula, data = data[subset, ], ATT = switch(estimand, ATT = 1, ATC = 2, ATE = 0),
-                                     method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...))
-  }
+
+  fit <- CBPS::CBPS(formula, data = data[subset, ], ATT = switch(estimand, ATT = 1, ATC = 2, ATE = 0),
+                    method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"),
+                    standardize = FALSE, ...)
+
 
   w <- cobalt::get.w(fit, estimand = estimand)
 
@@ -154,14 +151,11 @@ weightit2cbps <- function(formula, data, subset, estimand, verbose, ...) {
 }
 weightit2cbps.multi <- function(formula, data, subset, verbose, ...) {
   A <- list(...)
-  if (verbose) {
-    fit <- CBPS::CBPS(formula, data = data[subset, ],
-                      method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...)
-  }
-  else {
-    capture.output(fit <- CBPS::CBPS(formula, data = data[subset, ],
-                                     method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"), ...))
-  }
+
+  fit <- CBPS::CBPS(formula, data = data[subset, ],
+                    method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"),
+                    standardize = FALSE, ...)
+
 
   w <- cobalt::get.w(fit)
 
@@ -235,14 +229,9 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
       covs_i <- rbind(covs, covs[treat==i,])
       treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
-      if (verbose) {
-        ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i, ...)
-        if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebal.out_i, ...)
-      }
-      else {
-        capture.output({ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i, ...)
-        if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebal.out_i, ...)})
-      }
+      ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i, ...)
+      if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebal.out_i, ...)
+
 
 
       w[treat == i] <- ebal.out_i$w
