@@ -4,17 +4,19 @@ Title: Weighting for Covariate Balance in Observational Studies
 Version: 0.1.0
 Author: Noah Greifer [aut, cre]
 Maintainer: Noah Greifer <noah@unc.edu>
-Description: Generates weights to form equivalent groups in observational studies.
+Description: Generates weights to form equivalent groups in observational studies by easing and extending the functionality of the R packages 'twang' (Ridgeway et al., 2017) <https://CRAN.R-project.org/package=twang> for generalized boosted modeling, 'CBPS' (Fong, Ratkovic, & Imai, 2017) <https://CRAN.R-project.org/package=CBPS> for covariate balancing propensity score weighting, 'ebal' (Hainbueller, 2014) <https://CRAN.R-project.org/package=ebal> for entropy balancing, and 'ATE' (Haris & Chan, 2015) <https://CRAN.R-project.org/package=ATE> for empirical balancing calibration weighting. Also allows for assessment of weights and checking of covariate balance by interfacing directly with 'cobalt' (Greifer, 2017) <https://CRAN.R-project.org/package=cobalt>.
 Depends:
-    R (>= 3.1)
+    R (>= 3.4.0)
+Imports:
+    cobalt (>= 3.0.0)
 Suggests:
-    cobalt,
-    twang,
-    CBPS,
-    ebal,
-    ATE
+    twang (>= 1.5),
+    CBPS (>= 0.14),
+    ebal (>= 0.1-6),
+    ATE (>= 0.2.0),
+    mlogit (>= 0.2-4),
+    MNP (>= 3.1-0)
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
-Date: xxxx-xx-xx
-VignetteBuilder: knitr
+Date: 2017-10-16

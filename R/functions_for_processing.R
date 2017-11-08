@@ -63,11 +63,11 @@ method.to.phrase <- function(method) {
   else return("the chosen method of weighting")
 }
 
-process.estimand <- function(estimand, allowable.estimands, method) {
+process.estimand <- function(estimand, allowable.estimands, method, treat.type) {
   if (!toupper(estimand) %in% toupper(allowable.estimands)) {
-    stop(paste0(estimand, " is not an allowable estimand for ", method.to.phrase(method),
-                ". Please select one of ", word.list(allowable.estimands, quotes = TRUE, and.or = "or"),
-                "."), call. = FALSE)
+    stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
+                " with ", treat.type, " treatments. Only ", word.list(allowable.estimands, quotes = TRUE, and.or = "and", is.are = TRUE),
+                " allowed."), call. = FALSE)
   }
   else {
     return(toupper(estimand))
@@ -121,3 +121,26 @@ round_df <- function(df, digits) {
   df[, nums] <- round(df[, nums], digits = digits)
   return(df)
 }
+
+check.package <- function(package.name, alternative = FALSE) {
+  package.is.intalled <- any(.packages(all = TRUE) == package.name)
+  if (!package.is.intalled && !alternative) {
+    stop(paste0("Package \"", package.name, "\" needed for this function to work. Please install it."),
+         call. = FALSE)
+  }
+  return(invisible(package.is.intalled))
+}
+
+make.smaller <- function(x) {
+  m <- max(x)
+  ndigits <- floor(log10(m))
+  return(x/(10^ndigits))
+}
+
+make.closer.to.1 <- function(x) {
+  ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)])))))
+  return(x/(10^ndigits))
+}
+
+#To pass CRAN checks:
+utils::globalVariables(c(".s.weights"))
