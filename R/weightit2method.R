@@ -193,12 +193,13 @@ weightit2gbm <- function(formula, data, s.weights, estimand, subset, stabilize, 
   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
   treat <- model.response(mf)
   covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
-  new.data <- data.frame(treat = treat, covs)
 
   if (estimand == "ATC") {
     treat <- 1 - treat
     estimand <- "ATT"
   }
+
+  new.data <- data.frame(treat = treat, covs)
 
   check.package("twang")
   fit <- do.call(twang::ps, c(list(formula = formula(new.data),
@@ -208,14 +209,12 @@ weightit2gbm <- function(formula, data, s.weights, estimand, subset, stabilize, 
 
   s <- names(fit$ps)[1]
 
-  w <- cobalt::get.w(fit, stop.method = s)[[1]]
-
   if (stabilize) {
     w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
   }
 
   obj <- list(w = w,
-              ps = fit$ps[,s])
+              ps = fit$ps[[s]])
 
   return(obj)
 }

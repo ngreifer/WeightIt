@@ -99,7 +99,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
   acceptable.exacts <- names(data)
   exact.vars <- character(0)
 
-  if (missing(exact)) exact.factor <- factor(rep(1, n))
+  if (missing(exact) || length(exact) == 0) exact.factor <- factor(rep(1, n))
   else if (!is.atomic(exact)) bad.exact <- TRUE
   else if (is.character(exact) && all(exact %in% acceptable.exacts)) {
     exact.factor <- factor(apply(data[exact], 1, paste, collapse = "|"))
