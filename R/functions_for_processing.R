@@ -156,5 +156,16 @@ make.closer.to.1 <- function(x) {
   return(x/(10^ndigits))
 }
 
+remove.collinearity <- function(mat) {
+  keep <- rep(TRUE, ncol(mat))
+  for (i in seq_along(keep)) {
+    keep. <- keep; keep.[i] <- FALSE
+    if (qr(mat[, keep., drop = FALSE])$rank == qr(mat[, keep, drop = FALSE])$rank) {
+      keep[i] <- FALSE
+    }
+  }
+  return(mat[,keep, drop = FALSE])
+}
+
 #To pass CRAN checks:
 utils::globalVariables(c(".s.weights"))
