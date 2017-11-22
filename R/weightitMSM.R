@@ -26,7 +26,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                              exact = exact, s.weights = s.weights,
                              verbose = verbose, ...)
     w.list[[i]] <- cobalt::get.w(weightit_obj)
-    ps.list[[i]] <- weightit_obj$ps
+    if (length(weightit_obj$ps) > 0) ps.list[[i]] <- weightit_obj$ps
   }
 
   w <- Reduce("*", w.list)
