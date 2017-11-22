@@ -156,5 +156,22 @@ make.closer.to.1 <- function(x) {
   return(x/(10^ndigits))
 }
 
+remove.collinearity <- function(mat) {
+
+  if (nrow(mat) > 1500) {
+    repeat {
+      mini.mat <- mat[sample(seq_len(nrow(mat)), 1000),]
+      single.value <- apply(mini.mat, 2, function(x) abs(max(x) - min(x)) < sqrt(.Machine$double.eps))
+      if (all(!single.value)) break
+    }
+    suppressWarnings(mat.cor <- cor(mini.mat))
+  }
+  else suppressWarnings(mat.cor <- cor(mat))
+  s <- !lower.tri(mat.cor, diag=TRUE) & (1 - abs(mat.cor) < sqrt(.Machine$double.eps))
+  redundant.vars <- apply(s, 2, function(x) any(x))
+  mat <- mat[, !redundant.vars, drop = FALSE]
+  return(mat)
+}
+
 #To pass CRAN checks:
 utils::globalVariables(c(".s.weights"))

@@ -410,7 +410,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
   tt <- terms(formula)
   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
   treat <- model.response(mf)
-  covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+  covs <- apply(model.matrix(tt, data=mf)[, -1, drop = FALSE], 2, make.closer.to.1)
 
   #covs <- covs * replicate(ncol(covs), s.weights)
 
@@ -418,6 +418,8 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
   if (estimand %in% c("ATT", "ATC")) {
     if (estimand == "ATC" ) treat_ <- 1 - treat
     else treat_ <- treat
+
+    covs <- covs[, Reduce("intersect", lapply(unique(treat_, nmax = 2), function(j) colnames(remove.collinearity(covs[treat_ == j, , drop = FALSE]))))]
 
     ebal.out <- ebal::ebalance(Treatment = treat_, X = covs,
                                print.level = 3,
@@ -433,15 +435,17 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
 
     for (i in unique(treat)) {
       #Reweight controls to be like total (need treated to look like total)
+
       covs_i <- rbind(covs, covs[treat==i,])
       treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
+
+      covs_i <- covs_i[, Reduce("intersect", lapply(unique(treat_i, nmax = 2), function(j) colnames(remove.collinearity(covs_i[treat_i == j, , drop = FALSE]))))]
+
 
       ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i,
                                    base.weight = s.weights[subset][treat==i],
                                    print.level = 3, ...)
       if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebal.out_i, ...)
-
-
 
       w[treat == i] <- ebal.out_i$w
     }
@@ -468,6 +472,9 @@ weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, foca
     for (i in control.levels) {
       treat_ <- ifelse(treat[treat %in% c(focal, i)] == i, 0, 1)
       covs_ <- covs[treat %in% c(focal, i),]
+
+      covs_ <- covs_[, Reduce("intersect", lapply(unique(treat_, nmax = 2), function(j) colnames(remove.collinearity(covs_[treat_ == j, , drop = FALSE]))))]
+
       ebal.out <- ebal::ebalance(Treatment = treat_, X = covs_,
                                  base.weight = s.weights[subset][treat == i],
                                  print.level = 3, ...)
@@ -482,6 +489,8 @@ weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, foca
     for (i in levels(treat)) {
       covs_i <- rbind(covs, covs[treat==i,])
       treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
+
+      covs_i <- covs_i[, Reduce("intersect", lapply(unique(treat_i, nmax = 2), function(j) colnames(remove.collinearity(covs_i[treat_i == j, , drop = FALSE]))))]
 
       ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i,
                                    base.weight = s.weights[subset][treat == i],
