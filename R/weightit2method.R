@@ -208,6 +208,7 @@ weightit2gbm <- function(formula, data, s.weights, estimand, subset, stabilize, 
                                    verbose = TRUE, print.level = 2), A))
 
   s <- names(fit$ps)[1]
+  w <- cobalt::get.w(fit, stop.method = s)
 
   if (stabilize) {
     w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))

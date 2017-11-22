@@ -36,12 +36,12 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
               treat.list = treat.list,
               covs.list = covs.list,
               data = data,
-              estimand = NULL,
+              estimand = estimand,
               method = method,
               ps.list = ps.list,
               s.weights = s.weights,
               #discarded = NULL,
-              treat.type = NULL
+              treat.type = "binary"
               )
   class(out) <- c("weightitMSM", "weightit")
 
