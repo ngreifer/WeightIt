@@ -75,6 +75,20 @@ process.estimand <- function(estimand, allowable.estimands, method, treat.type) 
 
 }
 
+process.focal <- function(focal, estimand, treat) {
+  if (estimand == "ATT") {
+    if (length(focal) == 0) {
+      stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
+    }
+    if (length(focal) > 1 || !any(unique(treat) == focal)) {
+      stop("The argument supplied to focal must be the name of a level of treat.", call. = FALSE)
+    }
+  }
+  else {
+    warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
+  }
+}
+
 between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
   if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
   if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
@@ -91,7 +105,7 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
 }
 
 equivalent.factors <- function(f1, f2) {
-  return(nunique(f1) == nunique(paste(f1, f2)))
+  return(nunique(f1) == nunique(interaction(f1, f2)))
 }
 
 text.box.plot <- function(range.list, width = 12) {
@@ -123,7 +137,7 @@ round_df <- function(df, digits) {
 }
 
 check.package <- function(package.name, alternative = FALSE) {
-  package.is.intalled <- any(.packages(all = TRUE) == package.name)
+  package.is.intalled <- any(.packages(all.available = TRUE) == package.name)
   if (!package.is.intalled && !alternative) {
     stop(paste0("Package \"", package.name, "\" needed for this function to work. Please install it."),
          call. = FALSE)

@@ -1,0 +1,81 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, echo = FALSE}
+knitr::opts_chunk$set(
+  collapse = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  tidy = TRUE,
+  fig.align='center',
+  comment = "",
+  fig.path = "inst/figures/README-"
+)
+```
+#WeightIt
+
+`WeightIt` is a one-stop package to generate balancing weights for point treatments in observational studies. Contained within `WeightIt` are methods that call on other R packages to estimate weights. The value of `WeightIt` is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. `WeightIt` extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, and ATC for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, `WeightIt` does for weighting what `MatchIt` has done for matching, and `MatchIt` users will find the syntax familiar.
+
+To install and load `WeightIt`, use the code below:
+
+```{r, eval = FALSE}
+install.packages("WeightIt")
+library("WeightIt")
+```
+```{r, include = FALSE}
+library("WeightIt")
+```
+
+The workhorse function of `WeightIt` is `weightit()`, which generates weights from a given formula and data input according to methods and other parameters sepcified by the user. Below is an example of the use of `weightit()` to generate weights for estimating the ATE:
+
+```{r}
+data("lalonde", package = "cobalt")
+W <- weightit(treat ~ age + educ + nodegree + married + race +
+                re74 + re75, data = lalonde, method = "ps",
+              estimand = "ATE")
+print(W)
+```
+
+Evaluating weights has two components: evaluating the covariate balance produces by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the `cobalt` package, which are fully compatible with `WeightIt`, can be used, as demonstrated below:
+
+```{r}
+library("cobalt")
+bal.tab(W, un = TRUE)
+```
+
+For the second goal, qualities of the distributions of weights can be assessed using `summary()`, as demonstrated below.
+
+```{r}
+summary(W)
+```
+
+Desirable qualities include ratios close to 1, coefficients of variation close to 0, and large effective sample sizes.
+
+The table below contains the available methods in `WeightIt` for estimating weights for binary, multinomial, and continuous treatments using various methods and functions from various packages.
+ 
+ Treatment type | Method (`method = `) | Function | Package
+ -------------- | -------------------- | -------- | -------
+ **Binary** | Binary regression PS (`"ps"`) | `glm()` | `base`
+ - | Generalized boosted modeling PS (`"pgbm"`) | `ps()` | `twang`
+ - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
+ - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
+ - | Entropy Balancing (`"ebal"`) | `ebalance()` | `ebal`
+ - | Stabilized Balancing Weights (`"sbw"`) | `sbw()` | `sbw`
+ - | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE()` | `ATE`
+ **Multinomial** | Multiple binary regression PS (`"ps"`) | `glm()` | `base`
+ - | Multinomial regression PS (`"ps"`) | `mlogit()` | `mlogit`
+ - | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()` | `MNP`
+ - | Generalized boosted modeling PS (`"gbm"`) | `ps()` | `twang`
+ - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
+ - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
+ - | Entropy Balancing (`"ebal"`) | `ebalance()` | `ebal`
+ - | Stabilized Balancing Weights (`"sbw"`) | `sbw()` | `sbw`
+ - | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE()` | `ATE`
+ **Continuous** | Generalized linear model PS (`"ps"`) | `glm()` | `base`
+ - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
+ - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
+
+If you would like to see your package integrated into `WeightIt`, or for any other questions or comments about `WeightIt`, please contact Noah Greifer at noah@unc.edu.

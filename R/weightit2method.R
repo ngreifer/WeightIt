@@ -33,10 +33,9 @@ weightit2ps <- function(formula, data, s.weights, estimand, subset, stabilize, p
     w <- t*(1-ps) + (1-t)*ps
   }
   else w <- NULL
+
   if (stabilize) {
-    num.fit <- glm(t ~ 1, family = A$family)
-    num.ps <- num.fit$fitted.values
-    w <- w*ifelse(t == 1, mean(t), 1-mean(t))
+    w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
   }
 
   obj <- list(ps = ps,
@@ -66,9 +65,9 @@ weightit2ps.multi <- function(formula, data, s.weights, subset, estimand, focal,
   }
   else {
     if (A$link %in% c("logit", "probit")) {
-      if ((check.package("mlogit", alternative = TRUE) && length(A$use.mlogit) == 0) ||
-          (length(A$use.mlogit) > 0 && A$use.mlogit != FALSE)) {
-        print("m")
+      if (check.package("mlogit", alternative = TRUE) && (length(A$use.mlogit) == 0 ||
+                                                          (length(A$use.mlogit) > 0 && A$use.mlogit != FALSE))) {
+        message(paste0("Using multinomial ", A$link, " regression."))
         covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
         mult <- mlogit::mlogit.data(data.frame(.t = t, covs, .s.weights = s.weights[subset]), varying = NULL, shape = "wide", sep = "", choice = ".t")
         fit <- mlogit::mlogit(as.formula(paste0(".t ~ 1 | ", paste(colnames(covs), collapse = " + "),
@@ -78,22 +77,20 @@ weightit2ps.multi <- function(formula, data, s.weights, subset, estimand, focal,
         ps <- fitted(fit, outcome = FALSE)
       }
       else {
-        print("b")
+        message(paste0("Using a series of ", nunique(t), " binomial ", A$link, " regressions."))
         covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
         ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
                        levels(t))
-        left.out <- 1
-        for (i in levels(t)[-left.out]) {
+
+        for (i in levels(t)) {
           t_i <- rep(0, length(t)); t_i[t == i] <- 1
           data_i <- data.frame(t_i, covs)
           fit_i <- glm(formula(data_i), data = data_i,
-                       family = binomial(link = A$link))
+                       family = binomial(link = A$link),
+                       weights = s.weights[subset])
           ps[[i]] <- fit_i$fitted.values
         }
-        ps[[left.out]] <- 1 - rowSums(ps[-left.out])
-        if (any(ps[[left.out]] <= 0)) {
-          stop("Using multiple binary regressions resulted in improper propensity scores. To try again with multinomial regression, please rerun with the mlogit package installed.", call. = FALSE)
-        }
+
       }
 
     }
@@ -128,6 +125,10 @@ weightit2ps.multi <- function(formula, data, s.weights, subset, estimand, focal,
   else w <- NULL
 
   #ps <- sapply(seq_along(t), function(i) ps[i, which(levels(t) == t[i])])
+
+  if (stabilize) {
+    w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
+  }
 
   obj <- list(w = w)
   return(obj)
@@ -209,6 +210,10 @@ weightit2gbm <- function(formula, data, s.weights, estimand, subset, stabilize, 
 
   w <- cobalt::get.w(fit, stop.method = s)[[1]]
 
+  if (stabilize) {
+    w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
+  }
+
   obj <- list(w = w,
               ps = fit$ps[,s])
 
@@ -244,11 +249,15 @@ weightit2gbm.multi <- function(formula, data, s.weights, estimand, focal, subset
 
   w <- cobalt::get.w(fit, stop.method = s)[[1]]
 
+  if (stabilize) {
+    w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
+  }
+
   out <- list(w = w)
 }
 
 #CBPS
-weightit2cbps <- function(formula, data, subset, estimand, s.weights, ...) {
+weightit2cbps <- function(formula, data, subset, estimand, s.weights, stabilize, ...) {
   A <- list(...)
 
   tt <- terms(formula)
@@ -260,17 +269,24 @@ weightit2cbps <- function(formula, data, subset, estimand, s.weights, ...) {
   check.package("CBPS")
   fit <- CBPS::CBPS(formula(new.data), data = new.data, ATT = switch(estimand, ATT = 1, ATC = 2, ATE = 0),
                     method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"),
-                    standardize = FALSE, sample.weights = s.weights[subset], ...)
+                    standardize = FALSE,
+                    sample.weights = s.weights[subset],
+                    ...)
+
 
 
   w <- cobalt::get.w(fit, estimand = switch(estimand, ATE = "ate", "att"))
+
+  if (stabilize) {
+    w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
+  }
 
   obj <- list(w = w,
               ps = fit$fitted.values)
 
   return(obj)
 }
-weightit2cbps.multi <- function(formula, data, subset, s.weights, ...) {
+weightit2cbps.multi <- function(formula, data, subset, s.weights, stabilize, ...) {
   A <- list(...)
 
   tt <- terms(formula)
@@ -280,16 +296,58 @@ weightit2cbps.multi <- function(formula, data, subset, s.weights, ...) {
   new.data <- data.frame(treat = treat, covs)
 
   check.package("CBPS")
-  fit <- CBPS::CBPS(formula(new.data), data = new.data,
-                    method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"),
-                    standardize = FALSE, sample.weights = s.weights[subset], ...)
+  if (nunique(treat) <= 4) {
+    fit <- CBPS::CBPS(formula(new.data),
+                      data = new.data,
+                      method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"),
+                      standardize = FALSE,
+                      sample.weights = s.weights[subset],
+                      ...)
 
+
+    w <- cobalt::get.w(fit)
+  }
+  else {
+    w <- rep(1, length(treat))
+    for (i in levels(treat)) {
+      new.data[[1]] <- ifelse(treat == i, 1, 0)
+      fit <- CBPS::CBPS(formula(new.data), data = new.data,
+                        method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"),
+                        standardize = FALSE,
+                        sample.weights = s.weights[subset],
+                        ATT = 0, ...)
+
+      w[treat==i] <- cobalt::get.w(fit)[treat==i]
+    }
+  }
+
+  if (stabilize) {
+    w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
+  }
+
+  obj <- list(w = w)
+}
+weightit2cbps.cont <- function(formula, data, subset, s.weights, ...) {
+  A <- list(...)
+
+  tt <- terms(formula)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  treat <- model.response(mf)
+  covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+  new.data <- data.frame(treat = treat, covs)
+
+  check.package("CBPS")
+  fit <- CBPS::CBPS(formula(new.data),
+                    data = new.data,
+                    method = ifelse(length(A$over) == 0 || isTRUE(A$over), "over", "exact"),
+                    standardize = FALSE,
+                    sample.weights = s.weights[subset],
+                    ...)
 
   w <- cobalt::get.w(fit)
 
   obj <- list(w = w)
 }
-weightit2cbps.cont <- weightit2cbps.multi
 weightit2npcbps <- function(formula, data, subset, ...) {
   A <- list(...)
 
@@ -444,6 +502,8 @@ weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, foca
 weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
   A <- list(...)
 
+  check.package("sbw")
+
   if (length(A$l_norm) == 0) A$l_norm <- "l_2"
   if (length(A$solver) == 0) A$solver <- "quadprog"
   if (length(A$max_iter) == 0) A$max_iter <- 100000
@@ -457,7 +517,7 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
   treat <- model.response(mf)
   covs0 <- model.matrix(tt, data=mf,
                         contrasts.arg = lapply(mf[sapply(mf, is.factor)],
-                                             contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+                                               contrasts, contrasts=FALSE))[,-1, drop = FALSE]
   covs <- apply(covs0, 2, make.closer.to.1)
   new.data <- setNames(data.frame(treat, covs), as.character(seq_len(1+ncol(covs))))
 
@@ -482,7 +542,6 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
     message("Using bal_tols_sd = TRUE.")
   }
 
-  check.package("sbw")
   if (estimand %in% c("ATT", "ATC")) {
     new.data_ <- new.data
     if (estimand == "ATC") {
@@ -499,7 +558,8 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
                         l_norm = A$l_norm,
                         w_min = 0,
                         normalize = TRUE,
-                        solver = A$solver, display = 1,
+                        solver = A$solver,
+                        display = 1,
                         max_iter = A$max_iter,
                         rel_tol = A$rel_tol,
                         abs_tol = A$abs_tol,
@@ -507,7 +567,8 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
                         adaptive_rho = A$adaptive_rho)
     w <- rep(0, length(treat))
     w[new.data_[["1"]]==0] <- sbw.fit$data_frame_weights$weights[sbw.fit$data_frame_weights[["1"]] == 0]*sum(new.data_[["1"]] == 0)
-    w[new.data_[["1"]]==1] <- 1; w[w < 0] <- 0
+    w[new.data_[["1"]]==1] <- 1
+    w[w < 0] <- 0
   }
   else {
     if (bal_tols_sd) {
@@ -573,7 +634,7 @@ weightit2sbw.multi <- function(formula, data, s.weights, subset, estimand, focal
 
   if (length(A$bal_tols) == 0) bal_tols <- .0001
   else {
-    bal_tols <- A$bal-tols
+    bal_tols <- A$bal_tols
     if (length(bal_tols) != 1 && length(bal_tols) != ncol(covs)) {
       stop(paste0("bal_tols needs to be of length 1 or equal to the number of covariates (", ncol(covs),
                   ").\nThe covariates (in order) are:\n   ", paste0(colnames(covs), collapse = " ")), call.= FALSE)

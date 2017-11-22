@@ -1,6 +1,6 @@
 importFrom("stats", "terms", "glm", "setNames", "sd", "model.frame", "model.response",
            "update.formula", "as.formula", "quantile", "model.matrix", "binomial",
-           "gaussian", "dnorm", "fitted")
+           "gaussian", "dnorm", "fitted", "contrasts")
 importFrom("utils", "data")
 
 export(weightit)
