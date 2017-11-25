@@ -49,16 +49,16 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
   #Process treat and covs from formula and data
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
-  if (is.na(match(rownames(attr(tt, "factors"))[1], names(data)))) {
-    stop(paste0("The given response variable, \"", rownames(attr(tt, "factors"))[1], "\", is not a variable in data."))
+  if (is.na(match(all.vars(tt[[2]]), names(data)))) {
+    stop(paste0("The given response variable, \"", all.vars(tt[[2]]), "\", is not a variable in data."))
   }
-  vars.mentioned <- unlist(lapply(attr(tt, "variables")[-1], function(x) if (length(x) > 1) paste(x[-1]) else paste(x)))
-  m.try <- try({mf <- model.frame(tt, data)}, TRUE)
-  if (class(m.try) == "try-error") {
-    stop(paste0(c("All variables of formula must be variables in data.\nVariables not in data: ",
-                  paste(attr(tt, "term.labels")[is.na(match(attr(tt, "term.labels"), names(data)))], collapse=", "))), call. = FALSE)}
+  vars.mentioned <- all.vars(tt)
+  tryCatch({mf <- model.frame(tt, data)}, error = function(e) {
+    stop(paste0(c("All variables in formula must be variables in data.\nVariables not in data: ",
+                  paste(vars.mentioned[is.na(match(vars.mentioned, names(data)))], collapse=", "))), call. = FALSE)})
+
   treat <- model.response(mf)
-  covs <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != rownames(attr(tt, "factors"))[1]]))]
+  covs <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != as.character(tt[[2]])]))]
 
   n <- nrow(data)
 
@@ -492,7 +492,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 print.summary.weightit <- function(x, ...) {
   cat("Summary of weights:\n\n")
   cat("- Weight ranges:\n")
-  print.data.frame(round_df(text.box.plot(x$weight.range, 28), 4))
+  print.data.frame(round_df_char(text.box.plot(x$weight.range, 28), 4))
 
   df <- setNames(data.frame(do.call("c", lapply(names(x$weight.top), function(x) c(" ", x))),
                    matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), round(x, 4)))),
@@ -501,10 +501,10 @@ print.summary.weightit <- function(x, ...) {
   cat(paste("\n- Units with", length(x$weight.top[[1]]), "greatest weights by group:\n"))
   print.data.frame(df, row.names = FALSE)
   cat("\n")
-  print.data.frame(as.data.frame(round(matrix(c(x$weight.ratio, x$coef.of.var), ncol = 2,
+  print.data.frame(round_df_char(as.data.frame(matrix(c(x$weight.ratio, x$coef.of.var), ncol = 2,
                                         dimnames = list(names(x$weight.ratio),
-                                                        c("Ratio", "Coef of Var"))), 4)))
+                                                        c("Ratio", "Coef of Var")))), 4))
   cat("\n- Effective Sample Sizes:\n")
-  print.data.frame(round(x$effective.sample.size, 3))
+  print.data.frame(round_df_char(x$effective.sample.size, 3))
   invisible(x)
 }

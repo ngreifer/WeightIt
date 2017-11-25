@@ -136,6 +136,36 @@ round_df <- function(df, digits) {
   return(df)
 }
 
+round_df_char <- function(df, digits) {
+  rn <- rownames(df)
+  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+  df[nums] <- round(df[nums], digits = digits)
+  nas <- is.na(df)
+  df[nas] <- ""
+  #check.rounding <- apply(nas, 2, any)
+  df <- as.data.frame(sapply(df, as.character), stringsAsFactors = FALSE)
+
+  for (i in which(nums)) {
+    if (any(grepl(".", df[[i]], fixed = TRUE))) {
+      s <- strsplit(df[[i]], ".", fixed = TRUE)
+      lengths <- sapply(s, length)
+      digits.r.of.. <- sapply(seq_along(s), function(x) {
+        if (lengths[x] > 1) nchar(s[[x]][lengths[x]])
+        else 0 })
+      df[[i]] <- sapply(seq_along(df[[i]]), function(x) {
+        if (nas[x, i]) ""
+        else if (lengths[x] <= 1) paste0(c(df[[i]][x], ".", rep("0", max(digits.r.of..) - digits.r.of..[x])),
+                                         collapse = "")
+        else paste0(c(df[[i]][x], rep("0", max(digits.r.of..) - digits.r.of..[x])),
+                    collapse = "")
+      })
+    }
+  }
+
+  rownames(df) <- rn
+  return(df)
+}
+
 check.package <- function(package.name, alternative = FALSE) {
   package.is.intalled <- any(.packages(all.available = TRUE) == package.name)
   if (!package.is.intalled && !alternative) {
@@ -143,12 +173,6 @@ check.package <- function(package.name, alternative = FALSE) {
          call. = FALSE)
   }
   return(invisible(package.is.intalled))
-}
-
-make.smaller <- function(x) {
-  m <- max(x)
-  ndigits <- floor(log10(m))
-  return(x/(10^ndigits))
 }
 
 make.closer.to.1 <- function(x) {
@@ -165,6 +189,15 @@ remove.collinearity <- function(mat) {
     }
   }
   return(mat[,keep, drop = FALSE])
+}
+
+is.formula <- function(f, sides = NULL) {
+    res <- is.name(f[[1]])  && deparse(f[[1]]) %in% c( '~', '!') &&
+    length(f) >= 2
+    if (length(sides) > 0 && is.numeric(sides) && sides %in% c(1,2)) {
+      res <- res && length(f) == sides + 1
+    }
+    return(res)
 }
 
 #To pass CRAN checks:

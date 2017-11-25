@@ -143,9 +143,7 @@ weightit2ps.cont <- function(formula, data, s.weights, subset, stabilize, ps, ..
 
   stabilize <- TRUE
 
-  if (length(ps) > 0) {
-  }
-  else {
+  if (length(ps) == 0) {
     fit <- glm(formula, data = data.frame(data, .s.weights = s.weights)[subset,],
                weights = .s.weights,
                family = A$family,
@@ -157,7 +155,7 @@ weightit2ps.cont <- function(formula, data, s.weights, subset, stabilize, ps, ..
     if (stabilize) {
       if (length(A$num.formula) == 0) A$num.formula <- ~ 1
       num.fit <- glm(update.formula(A$num.formula, .t ~ .),
-                     data = data.frame(.t =t, data, .s.weights = s.weights)[subset,],
+                     data = data.frame(.t = t, data, .s.weights = s.weights)[subset,],
                      weights = .s.weights,
                      family = A$family,
                      control = list(), ...)
@@ -440,7 +438,6 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
       treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
       covs_i <- covs_i[, Reduce("intersect", lapply(unique(treat_i, nmax = 2), function(j) colnames(remove.collinearity(covs_i[treat_i == j, , drop = FALSE]))))]
-
 
       ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i,
                                    base.weight = s.weights[subset][treat==i],
