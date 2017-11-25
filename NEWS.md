@@ -1,5 +1,9 @@
 WeightIt News and Updates
 ======
+Version 0.3.0
+
+* Added `weightitMSM()` function (and supporting `print()` and `summary()` functions) to estimate weights for marginal structural models with time-varying treatments and covariates.
+
 Version 0.2.1
 
 * Fixed some bugs, including when using CBPS with continuous treatments, and when using focal incorrectly.
