@@ -29,7 +29,7 @@ a string of length 1 containing the name of the method that will be used to esti
 the desired estimand. For binary treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO". For multinomial treatments, can be "ATE" or "ATT". The default for both is "ATE". This argument is ignored for continuous treatments.
 }
   \item{stabilize}{
-\code{logical}; whether or not to stabilize the weights. For the methods that involve estimatign propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim()} to reduce the variance of the weights. Default is \code{FALSE}.
+\code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim()} to reduce the variance of the weights. Default is \code{FALSE}.
 }
   \item{focal}{
 when multinomial treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group.
