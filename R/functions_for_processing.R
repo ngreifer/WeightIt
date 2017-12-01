@@ -143,7 +143,7 @@ round_df_char <- function(df, digits) {
   nas <- is.na(df)
   df[nas] <- ""
   #check.rounding <- apply(nas, 2, any)
-  df <- as.data.frame(sapply(df, as.character), stringsAsFactors = FALSE)
+  df <- as.data.frame(lapply(df, as.character), stringsAsFactors = FALSE)
 
   for (i in which(nums)) {
     if (any(grepl(".", df[[i]], fixed = TRUE))) {
@@ -193,7 +193,7 @@ remove.collinearity <- function(mat) {
 
 is.formula <- function(f, sides = NULL) {
     res <- is.name(f[[1]])  && deparse(f[[1]]) %in% c( '~', '!') &&
-    length(f) >= 2
+      length(f) >= 2
     if (length(sides) > 0 && is.numeric(sides) && sides %in% c(1,2)) {
       res <- res && length(f) == sides + 1
     }
