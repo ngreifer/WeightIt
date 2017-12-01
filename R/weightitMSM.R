@@ -1,6 +1,7 @@
 weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, exact = NULL, s.weights = NULL,
                         num.formula = NULL, verbose = FALSE, ...) {
 
+  A <- list(...)
   estimand <- "ATE"
 
   n <- nrow(data)
@@ -41,6 +42,13 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
     names(treat.list)[i] <- all.vars(tt[[2]])
     covs.list[[i]] <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != all.vars(tt[[2]])]))]
 
+    if (any(is.na(covs.list[[i]]))) {
+      stop("No missing values are allowed in the covariates.", call. = FALSE)
+    }
+    if (any(is.na(treat.list[[i]]))) {
+      stop(paste0("No missing values are allowed in the treatment variable. Missing values found in ", names(treat.list[i])), call. = FALSE)
+    }
+
     #Get weights into a list
     weightit_obj <- weightit(formula.list[[i]],
                              data = data,
@@ -59,7 +67,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
 
   if (length(num.formula) > 0) {
     if (!stabilize) {
-      warning("Setting stabilize to TRUE based on num.formula input.", call. = FALSE)
+      message("Setting stabilize to TRUE based on num.formula input.")
     }
     stabilize <- TRUE
   }
@@ -98,7 +106,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
           else {
             for (i in seq_along(formula.list)) {
               if (i == 1) {
-                stabilization.formula.list[[i]] <- update(as.formula(paste(names(treat.list)[i], "~ 1")), as.formula(paste(num.formula, "+ .")))
+                stabilization.formula.list[[i]] <- update(as.formula(paste(names(treat.list)[i], "~ 1")), as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
               }
               else {
                 stabilization.formula.list[[i]] <- update(as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * "))), as.formula(paste(num.formula, "+ .")))
@@ -143,6 +151,10 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
     }
     sw <- Reduce("*", sw.list)
     w <- w*sw
+
+    stabout <- lapply(stabilization.formula.list, function(x) x[-2])
+    unique.stabout <- unique(stabout)
+    if (length(unique.stabout) <= 1) stabout <- unique.stabout
   }
 
   if (nunique(treat.type.vec) == 1) treat.type.vec <- unique(treat.type.vec)
@@ -157,7 +169,9 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
               ps.list = ps.list,
               s.weights = s.weights,
               #discarded = NULL,
-              treat.type = treat.type.vec
+              treat.type = treat.type.vec,
+              call = NULL,
+              stabilization = stabout
   )
   class(out) <- c("weightitMSM", "weightit")
 
@@ -181,12 +195,24 @@ print.weightitMSM <- function(x, ...) {
                  paste0("    + after time ", i-1, ": ", paste(names(x$covs.list[[i]])[!names(x$covs.list[[i]]) %in% c(names(x$treat.list)[i-1], names(x$covs.list[[i-1]]))], collapse = ", "), "\n")
                }
              }), collapse = ""), collapse = "\n"))
+  cat(paste0(" - stabilization factors: ", if (length(x$stabilization) == 1) paste0(all.vars(x$stabilization[[1]]), collapse = ", ")
+             else {
+               paste0("\n", sapply(1:length(x$stabilization), function(i) {
+                 if (i == 1) {
+                   paste0("    + baseline: ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
+                 }
+                 else {
+                   paste0("    + after time ", i-1, ": ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
+                 }
+               }), collapse = "")
+             }))
   invisible(x)
 }
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   outnames <- c("weight.range", "weight.top","weight.ratio",
                 "coef.of.var",
                 "effective.sample.size")
+  out <- setNames(vector("list", length(outnames)), outnames)
 
   if (ignore.s.weights) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
