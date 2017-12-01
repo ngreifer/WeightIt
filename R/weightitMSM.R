@@ -34,7 +34,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
       stop(paste0("The given response variable, \"", all.vars(tt[[2]]), "\", is not a variable in data."))
     }
     vars.mentioned <- all.vars(tt)
-    tryCatch({mf <- model.frame(tt, data)}, error = function(e) {
+    tryCatch({mf <- model.frame(tt, data, na.action = na.pass)}, error = function(e) {
       stop(paste0(c("All variables of formula ", i, " in formula.list must be variables in data.\nVariables not in data: ",
                     paste(vars.mentioned[is.na(match(vars.mentioned, names(data)))], collapse=", "))), call. = FALSE)})
 

@@ -53,7 +53,7 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
     stop(paste0("The given response variable, \"", all.vars(tt[[2]]), "\", is not a variable in data."))
   }
   vars.mentioned <- all.vars(tt)
-  tryCatch({mf <- model.frame(tt, data)}, error = function(e) {
+  tryCatch({mf <- model.frame(tt, data, na.action = na.pass)}, error = function(e) {
     stop(paste0(c("All variables in formula must be variables in data.\nVariables not in data: ",
                   paste(vars.mentioned[is.na(match(vars.mentioned, names(data)))], collapse=", "))), call. = FALSE)})
 
@@ -62,10 +62,10 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
 
   n <- nrow(data)
 
-  if (any(is.na(covs))) {
+  if (any(is.na(covs)) || nrow(covs) != n) {
     stop("No missing values are allowed in the covariates.", call. = FALSE)
   }
-  if (any(is.na(treat))) {
+  if (any(is.na(treat)) || length(treat) != n) {
     stop("No missing values are allowed in the treatment variable.", call. = FALSE)
   }
   nunique.treat <- nunique(treat)
