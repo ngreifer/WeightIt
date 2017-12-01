@@ -4,10 +4,12 @@
 \title{Generate Balancing Weights}
 \usage{
 weightitMSM(formula.list,
-            data, method,
+            data,
+            method = "ps",
             stabilize = FALSE,
             exact = NULL,
             s.weights = NULL,
+            num.formula = NULL,
             verbose = FALSE,
             ...)
 
@@ -27,12 +29,12 @@ a list of formulas corresponding to each time point with the time-specific treat
 a data set in the form of a data frame that contains the variables in the formulas in \code{formula.list}. This must be a wide data set with exactly one row per unit.
 }
   \item{method}{
-a string of length 1 containing the name of the method that will be used to estimate weights. See \code{\link{weightit}} for allowable options. The default is \code{"ps"}, which estimates the weights using binary (e.g., logistic) regression.
+a string of length 1 containing the name of the method that will be used to estimate weights. See \code{\link{weightit}} for allowable options. The default is \code{"ps"}, which estimates the weights using generalized linear models. See Details below.
 }
   \item{stabilize}{
 \code{logical}; whether or not to stabilize the weights. Stabilizing the weights involves fitting a model predicting treatment at each time point from treatment status at prior time points. If \code{TRUE}, a saturated model will be fit, essentially using the observed treatment probabilities in the numerator (for binary and multinomial treatments). This may yield an error if some combinations are not observed. Default is \code{FALSE}. To manually specify stabilization model formulas, use \code{num.formula}.
 }
-\item{num.formula} {
+\item{num.formula}{
 optional; a list of formulas used in the numerator of the weights if stabilization is to occur. These formulas should specify the relationship between the treatment and the stabilization factors (including previous treatments) at each time point. They should not contain time-varying covariates except those measured prior to the first treatment. Can also be specified as a single one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernan (2008) for a discussion of how to specifiy this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
 }
   \item{exact}{
@@ -65,7 +67,7 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM()}.
   \item{treat.type}{The type of treatment: binary, continuous, or multinomial (\code{"multi"}).}
 }
 \details{
-\code{weightitMSM()} works by seperating the estimation of weights into seperate procedures for each time period based on the formulas provided. For each formula, \code{weightitMSM()} simple calls \code{weightit()} to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing  weights.
+\code{weightitMSM()} works by seperating the estimation of weights into seperate procedures for each time period based on the formulas provided. For each formula, \code{weightitMSM()} simply calls \code{weightit()} to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing weights.
 
 Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in seperate variables.
 
@@ -90,30 +92,12 @@ Cole, S. R., & Hernan, M. A. (2008). Constructing Inverse Probability Weights fo
 
 }
 \examples{
-library("cobalt")
-data("lalonde", package = "cobalt")
-
-#Balancing covariates between treatment groups
-(W1 <- weightit(treat ~ age + educ + married +
-                nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATT"))
-summary(W1)
-bal.tab(W1)
-
-#Balancing covariates among races (3-level)
-(W2 <- weightit(race ~ age + educ + married +
-                nodegree + re74, data = lalonde,
-                method = "cbps", estimand = "ATE",
-                over = FALSE))
-summary(W2)
-bal.tab(W2)
-
-#Balancing covariates with respect to re78 (continuous)
-(W3 <- weightit(re78 ~ age + educ + married +
-                nodegree + re74, data = lalonde,
-                method = "ps", num.formula = ~ age +
-                educ + married))
-summary(W3)
-bal.tab(W3)
+\dontrun{
+W <- weightitMSM(list(t1 ~ X0,
+                      t2 ~ t1 + X1 + X0,
+                      t3 ~ t2 + t1 + X2 + X1 + X0),
+                 data = data,
+                 stabilize = TRUE)
+}
 
 }
