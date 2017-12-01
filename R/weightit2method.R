@@ -406,7 +406,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
   A <- list(...)
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE)
   treat <- model.response(mf)
   covs <- apply(model.matrix(tt, data=mf)[, -1, drop = FALSE], 2, make.closer.to.1)
 
@@ -417,7 +417,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
     if (estimand == "ATC" ) treat_ <- 1 - treat
     else treat_ <- treat
 
-    covs <- covs[, Reduce("intersect", lapply(unique(treat_, nmax = 2), function(j) colnames(remove.collinearity(covs[treat_ == j, , drop = FALSE]))))]
+    covs <- covs[, Reduce("intersect", lapply(unique(treat_, nmax = 2), function(j) colnames(remove.collinearity(covs[treat_ == j, , drop = FALSE])))), drop = FALSE]
 
     ebal.out <- ebal::ebalance(Treatment = treat_, X = covs,
                                print.level = 3,
