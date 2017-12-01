@@ -58,16 +58,22 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                   paste(vars.mentioned[is.na(match(vars.mentioned, names(data)))], collapse=", "))), call. = FALSE)})
 
   treat <- model.response(mf)
-  covs <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != as.character(tt[[2]])]))]
+  covs <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != all.vars(tt[[2]])]))]
 
   n <- nrow(data)
 
+  if (any(is.na(covs))) {
+    stop("No missing values are allowed in the covariates.", call. = FALSE)
+  }
+  if (any(is.na(treat))) {
+    stop("No missing values are allowed in the treatment variable.", call. = FALSE)
+  }
   nunique.treat <- nunique(treat)
   if (nunique.treat == 2) {
     treat.type = "binary"
   }
   else if (nunique.treat < 2) {
-    stop("treatment must have at least two unique values.", call. = FALSE)
+    stop("The treatment must have at least two unique values.", call. = FALSE)
   }
   else if (is.factor(treat) || is.character(treat)) {
     treat.type = "multinomial"
