@@ -17,6 +17,8 @@ knitr::opts_chunk$set(
 ```
 #WeightIt
 
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/WeightIt)](https://cran.r-project.org/package=WeightIt)
+
 `WeightIt` is a one-stop package to generate balancing weights for point treatments in observational studies. Contained within `WeightIt` are methods that call on other R packages to estimate weights. The value of `WeightIt` is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. `WeightIt` extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, and ATC for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, `WeightIt` does for weighting what `MatchIt` has done for matching, and `MatchIt` users will find the syntax familiar.
 
 To install and load `WeightIt`, use the code below:

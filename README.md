@@ -3,6 +3,8 @@
 WeightIt
 ========
 
+[![CRAN\_Status\_Badge](http://www.r-pkg.org/badges/version/WeightIt)](https://cran.r-project.org/package=WeightIt)
+
 `WeightIt` is a one-stop package to generate balancing weights for point treatments in observational studies. Contained within `WeightIt` are methods that call on other R packages to estimate weights. The value of `WeightIt` is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. `WeightIt` extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, and ATC for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, `WeightIt` does for weighting what `MatchIt` has done for matching, and `MatchIt` users will find the syntax familiar.
 
 To install and load `WeightIt`, use the code below:
@@ -25,8 +27,8 @@ print(W)
      - method: "ps" (propensity score weighting)
      - number of obs.: 614
      - sampling weights: none
-     - estimand: ATE
      - treatment: 2-category
+     - estimand: ATE
      - covariates: age, educ, race, married, nodegree, re74, re75
 
 Evaluating weights has two components: evaluating the covariate balance produces by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the `cobalt` package, which are fully compatible with `WeightIt`, can be used, as demonstrated below:
@@ -63,9 +65,9 @@ summary(W)
     Summary of weights:
 
     - Weight ranges:
-               Min                                   Max
-    treated 1.1721 |---------------------------| 40.0773
-    control 1.0092 |-|                            4.7432
+               Min X.............................     Max
+    treated 1.1721  |---------------------------| 40.0773
+    control 1.0092  |-|                            4.7432
 
     - Units with 5 greatest weights by group:
                                                     
@@ -74,7 +76,7 @@ summary(W)
                  412     388     226     196     118
      control  4.0301  4.0592  4.2397  4.5231  4.7432
 
-              Ratio Coef of Var
+              Ratio Coef.of.Var
     treated 34.1921      1.4777
     control  4.7002      0.5519
     overall 39.7134      1.3709
