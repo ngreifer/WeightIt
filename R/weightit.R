@@ -128,6 +128,8 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
     formula <- update.formula(formula, as.formula(paste("~ . -", paste(exact.vars, collapse = " - "))))
   }
 
+  call <- match.call()
+
   ## Running models ----
   w <- p.score <- rep(NA_real_, n)
 
@@ -392,7 +394,8 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
               s.weights = s.weights,
               #discarded = NULL,
               treat.type = treat.type,
-              focal = focal)
+              focal = focal,
+              call = call)
   class(out) <- "weightit"
 
   return(out)
