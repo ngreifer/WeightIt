@@ -271,8 +271,6 @@ weightit2cbps <- function(formula, data, subset, estimand, s.weights, stabilize,
                     sample.weights = s.weights[subset],
                     ...)
 
-
-
   w <- cobalt::get.w(fit, estimand = switch(estimand, ATE = "ate", "att"))
 
   if (stabilize) {
@@ -409,6 +407,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
   mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE)
   treat <- model.response(mf)
   covs <- apply(model.matrix(tt, data=mf)[, -1, drop = FALSE], 2, make.closer.to.1)
+  #covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
 
   #covs <- covs * replicate(ncol(covs), s.weights)
 
@@ -434,7 +433,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, stabilize,
     for (i in unique(treat)) {
       #Reweight controls to be like total (need treated to look like total)
 
-      covs_i <- rbind(covs, covs[treat==i,])
+      covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
       treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
       covs_i <- covs_i[, Reduce("intersect", lapply(unique(treat_i, nmax = 2), function(j) colnames(remove.collinearity(covs_i[treat_i == j, , drop = FALSE]))))]
@@ -468,7 +467,7 @@ weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, foca
 
     for (i in control.levels) {
       treat_ <- ifelse(treat[treat %in% c(focal, i)] == i, 0, 1)
-      covs_ <- covs[treat %in% c(focal, i),]
+      covs_ <- covs[treat %in% c(focal, i), , drop = FALSE]
 
       covs_ <- covs_[, Reduce("intersect", lapply(unique(treat_, nmax = 2), function(j) colnames(remove.collinearity(covs_[treat_ == j, , drop = FALSE]))))]
 
@@ -484,7 +483,7 @@ weightit2ebal.multi <- function(formula, data, s.weights, subset, estimand, foca
     w <- rep(1, length(treat))
 
     for (i in levels(treat)) {
-      covs_i <- rbind(covs, covs[treat==i,])
+      covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
       treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
       covs_i <- covs_i[, Reduce("intersect", lapply(unique(treat_i, nmax = 2), function(j) colnames(remove.collinearity(covs_i[treat_i == j, , drop = FALSE]))))]
@@ -509,6 +508,7 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
   A <- list(...)
 
   check.package("sbw")
+  check.package("slam"); require("slam")
 
   if (length(A$l_norm) == 0) A$l_norm <- "l_2"
   if (length(A$solver) == 0) A$solver <- "quadprog"
@@ -517,6 +517,8 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
   if (length(A$abs_tol) == 0) A$abs_tol <- 1e-4
   if (length(A$gap_stop) == 0) A$gap_stop <- TRUE
   if (length(A$adaptive_rho) == 0) A$adaptive_rho <- TRUE
+
+  check.package(A$solver); require(A$solver, character.only = TRUE)
 
   tt <- terms(formula)
   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
