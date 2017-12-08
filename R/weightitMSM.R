@@ -24,6 +24,8 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
     s.weights <- rep(1, n)
   }
 
+  call <- match.call()
+
   treat.type.vec <- character(length(formula.list))
   covs.list <- treat.list <- w.list <- ps.list <- vector("list", length(formula.list))
   for (i in seq_along(formula.list)) {
@@ -54,7 +56,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                              data = data,
                              method = method,
                              estimand = estimand,
-                             stabilize = stabilize,
+                             stabilize = FALSE,
                              exact = exact,
                              s.weights = s.weights,
                              verbose = verbose, ...)
@@ -156,6 +158,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
     unique.stabout <- unique(stabout)
     if (length(unique.stabout) <= 1) stabout <- unique.stabout
   }
+  else stabout <- NULL
 
   if (nunique(treat.type.vec) == 1) treat.type.vec <- unique(treat.type.vec)
 
@@ -170,7 +173,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
               s.weights = s.weights,
               #discarded = NULL,
               treat.type = treat.type.vec,
-              call = NULL,
+              call = call,
               stabilization = stabout
   )
   class(out) <- c("weightitMSM", "weightit")
@@ -195,7 +198,7 @@ print.weightitMSM <- function(x, ...) {
                  paste0("    + after time ", i-1, ": ", paste(names(x$covs.list[[i]])[!names(x$covs.list[[i]]) %in% c(names(x$treat.list)[i-1], names(x$covs.list[[i-1]]))], collapse = ", "), "\n")
                }
              }), collapse = ""), collapse = "\n"))
-  cat(paste0(" - stabilization factors: ", if (length(x$stabilization) == 1) paste0(all.vars(x$stabilization[[1]]), collapse = ", ")
+  if (length(x$stabilization) > 0) cat(paste0(" - stabilization factors: ", if (length(x$stabilization) == 1) paste0(all.vars(x$stabilization[[1]]), collapse = ", ")
              else {
                paste0("\n", sapply(1:length(x$stabilization), function(i) {
                  if (i == 1) {
