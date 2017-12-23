@@ -87,7 +87,7 @@ The primary purpose of \code{weightit()} is as a dispatcher to other functions i
 }
 
 \author{
-Noah Greifer \email{noah@unc.edu}
+Noah Greifer
 }
 
 \references{

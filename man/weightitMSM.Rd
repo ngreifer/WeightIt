@@ -19,7 +19,7 @@ weightitMSM(formula.list,
 \description{
 \code{weightitMSM()} allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which \code{weightit()} calls; these packages must be installed to use the desired method. Also included are \code{print} and \code{summary} methods for examining the output.
 
-Currently only "wide" data sets, where each row corresponds to a unit's entire variable history, are supported. You can use \code{\link{reshape}} or other functions to transform your data into this format.
+Currently only "wide" data sets, where each row corresponds to a unit's entire variable history, are supported. You can use \code{\link{reshape}} or other functions to transform your data into this format; see example below.
 }
 \arguments{
   \item{formula.list}{
@@ -76,28 +76,44 @@ The \code{"gbm"} method, which calls \code{ps()} in \pkg{twang}, yields the same
 }
 
 \author{
-Noah Greifer \email{noah@unc.edu}
+Noah Greifer
 }
 
 \references{
-
 Cole, S. R., & Hernan, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. <doi:10.1093/aje/kwn164>
-
-
-
-
 }
 
 \note{
 
 }
 \examples{
-\dontrun{
-W <- weightitMSM(list(t1 ~ X0,
-                      t2 ~ t1 + X1 + X0,
-                      t3 ~ t2 + t1 + X2 + X1 + X0),
-                 data = data,
-                 stabilize = TRUE)
-}
+library("twang")
+data("iptwExWide")
+W <- weightitMSM(list(tx1 ~ age + gender + use0,
+                      tx2 ~ tx1 + use1 + age + gender + use0,
+                      tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
+                 data = iptwExWide,
+                 method = "ps")
+W
+summary(W)
 
+##Going from long to wide data
+data("iptwExLong")
+wide_data <- reshape(iptwExLong$covariates,    #long data
+                     timevar = "time",         #time variable
+                     v.names = c("use", "tx"), #time-varying
+                     idvar = "ID",             #time-stable
+                     direction = "wide",
+                     sep = "")
+
+W2 <- weightitMSM(list(tx1 ~ age + gender + use1,
+                      tx2 ~ tx1 + use2 + age + gender + use1,
+                      tx3 ~ tx2 + use3 + tx1 + use2 + age +
+                          gender + use1),
+                 data = wide_data,
+                 method = "ps")
+W2
+summary(W2)
+
+all.equal(get.w(W), get.w(W2))
 }
