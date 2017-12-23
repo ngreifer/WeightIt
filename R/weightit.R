@@ -501,7 +501,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 print.summary.weightit <- function(x, ...) {
   cat("Summary of weights:\n\n")
   cat("- Weight ranges:\n")
-  print.data.frame(round_df_char(text.box.plot(x$weight.range, 28), 4))
+  print.data.frame(round_df_char(text.box.plot(x$weight.range, 28), 4), ...)
 
   df <- setNames(data.frame(do.call("c", lapply(names(x$weight.top), function(x) c(" ", x))),
                    matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), round(x, 4)))),

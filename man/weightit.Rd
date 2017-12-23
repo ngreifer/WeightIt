@@ -171,16 +171,14 @@ bal.tab(W1)
 #Balancing covariates among races (3-level)
 (W2 <- weightit(race ~ age + educ + married +
                 nodegree + re74, data = lalonde,
-                method = "cbps", estimand = "ATE",
-                over = FALSE))
+                method = "ebal", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
 
 #Balancing covariates with respect to re78 (continuous)
-(W3 <- weightit(re78 ~ age + educ + married +
+(W3 <- weightit(re75 ~ age + educ + married +
                 nodegree + re74, data = lalonde,
-                method = "ps", num.formula = ~ age +
-                educ + married))
+                method = "cbps", over = FALSE))
 summary(W3)
 bal.tab(W3)
 

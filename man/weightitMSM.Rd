@@ -83,11 +83,8 @@ Noah Greifer
 Cole, S. R., & Hernan, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. <doi:10.1093/aje/kwn164>
 }
 
-\note{
-
-}
 \examples{
-library("twang")
+library("twang"); library("cobalt")
 data("iptwExWide")
 W <- weightitMSM(list(tx1 ~ age + gender + use0,
                       tx2 ~ tx1 + use1 + age + gender + use0,

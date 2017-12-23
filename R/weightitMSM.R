@@ -108,10 +108,10 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
           else {
             for (i in seq_along(formula.list)) {
               if (i == 1) {
-                stabilization.formula.list[[i]] <- update(as.formula(paste(names(treat.list)[i], "~ 1")), as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
+                stabilization.formula.list[[i]] <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")), as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
               }
               else {
-                stabilization.formula.list[[i]] <- update(as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * "))), as.formula(paste(num.formula, "+ .")))
+                stabilization.formula.list[[i]] <- update.formula(as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * "))), as.formula(paste(num.formula, "+ .")))
               }
             }
           }

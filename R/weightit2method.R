@@ -513,7 +513,7 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
   A <- list(...)
 
   check.package("sbw")
-  check.package("slam"); require("slam")
+  check.package("slam"); requireNamespace("slam")
 
   if (length(A$l_norm) == 0) A$l_norm <- "l_2"
   if (length(A$solver) == 0) A$solver <- "quadprog"
@@ -628,6 +628,9 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, ...) {
 weightit2sbw.multi <- function(formula, data, s.weights, subset, estimand, focal, ...) {
   A <- list(...)
 
+  check.package("sbw")
+  check.package("slam"); requireNamespace("slam")
+
   if (length(A$l_norm) == 0) A$l_norm <- "l_2"
   if (length(A$solver) == 0) A$solver <- "quadprog"
   if (length(A$max_iter) == 0) A$max_iter <- 100000
@@ -666,7 +669,6 @@ weightit2sbw.multi <- function(formula, data, s.weights, subset, estimand, focal
     message("Using bal_tols_sd = TRUE.")
   }
 
-  check.package("sbw")
   if (estimand == "ATT") {
     control.levels <- levels(treat)[levels(treat) != focal]
     w <- rep(1, length(treat))
