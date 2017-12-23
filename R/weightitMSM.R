@@ -160,7 +160,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
   }
   else stabout <- NULL
 
-  if (nunique(treat.type.vec) == 1) treat.type.vec <- unique(treat.type.vec)
+  #if (nunique(treat.type.vec) == 1) treat.type.vec <- unique(treat.type.vec)
 
   ## Assemble output object----
   out <- list(weights = w,
@@ -187,8 +187,13 @@ print.weightitMSM <- function(x, ...) {
   cat(paste0(" - number of obs.: ", length(x$weights), "\n"))
   cat(paste0(" - sampling weights: ", ifelse(max(x$s.weights) - min(x$s.weights) < sqrt(.Machine$double.eps),
                                              "none", "present"), "\n"))
-  cat(paste0(" - treatment: ", ifelse(x$treat.type == "continuous", "continuous", paste0(nunique(x$treat.list[[1]]), "-category", ifelse(x$treat.type == "multinomial", paste0(" (", paste(levels(x$treat.list[[1]]), collapse = ", "), ")"), ""))), "\n"))
   cat(paste0(" - number of time points: ", length(x$treat.list), " (", paste(names(x$treat.list), collapse = ", "), ")\n"))
+  cat(paste0(" - treatment: \n",
+             paste0(sapply(1:length(x$covs.list), function(i) {
+
+               paste0("    + time ", i, ": ", ifelse(x$treat.type[i] == "continuous", "continuous", paste0(nunique(x$treat.list[[i]]), "-category", ifelse(x$treat.type[i] == "multinomial", paste0(" (", paste(levels(x$treat.list[[i]]), collapse = ", "), ")"), ""))), "\n")
+
+             }), collapse = ""), collapse = "\n"))
   cat(paste0(" - covariates: \n",
              paste0(sapply(1:length(x$covs.list), function(i) {
                if (i == 1) {
@@ -199,50 +204,50 @@ print.weightitMSM <- function(x, ...) {
                }
              }), collapse = ""), collapse = "\n"))
   if (length(x$stabilization) > 0) cat(paste0(" - stabilization factors: ", if (length(x$stabilization) == 1) paste0(all.vars(x$stabilization[[1]]), collapse = ", ")
-             else {
-               paste0("\n", sapply(1:length(x$stabilization), function(i) {
-                 if (i == 1) {
-                   paste0("    + baseline: ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
-                 }
-                 else {
-                   paste0("    + after time ", i-1, ": ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
-                 }
-               }), collapse = "")
-             }))
+                                              else {
+                                                paste0("\n", sapply(1:length(x$stabilization), function(i) {
+                                                  if (i == 1) {
+                                                    paste0("    + baseline: ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
+                                                  }
+                                                  else {
+                                                    paste0("    + after time ", i-1, ": ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
+                                                  }
+                                                }), collapse = "")
+                                              }))
   invisible(x)
 }
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   outnames <- c("weight.range", "weight.top","weight.ratio",
                 "coef.of.var",
                 "effective.sample.size")
-  out <- setNames(vector("list", length(outnames)), outnames)
+  out.list <- setNames(vector("list", length(object$treat.list)),
+                       names(object$treat.list))
 
   if (ignore.s.weights) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
   w <- object$weights*sw
 
-  if (object$treat.type == "continuous") {
-    out$weight.range <- list(all = c(min(w[w > 0]),
-                                     max(w[w > 0])))
-    out$weight.ratio <- c(all = out$weight.range[["all"]][2]/out$weight.range[["all"]][1])
-    top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
-    out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
-    out$coef.of.var <- c(all = sd(w)/mean(w))
+  for (ti in seq_along(object$treat.list)) {
+    if (object$treat.type[ti] == "continuous") {
+      out <- setNames(vector("list", length(outnames)), outnames)
+      out$weight.range <- list(all = c(min(w[w > 0]),
+                                       max(w[w > 0])))
+      out$weight.ratio <- c(all = out$weight.range[["all"]][2]/out$weight.range[["all"]][1])
+      top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
+      out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
+      out$coef.of.var <- c(all = sd(w)/mean(w))
 
-    nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
-    nn[1, ] <- (sum(sw)^2)/sum(sw^2)
-    nn[2, ] <- (sum(w)^2)/sum((w)^2)
-    dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                         c("Total"))
-    out$effective.sample.size <- nn
+      nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
+      nn[1, ] <- (sum(sw)^2)/sum(sw^2)
+      nn[2, ] <- (sum(w)^2)/sum((w)^2)
+      dimnames(nn) <- list(c("Unweighted", "Weighted"),
+                           c("Total"))
+      out$effective.sample.size <- nn
 
-    out.list <- list(out)
+      out.list[[ti]] <- out
 
-  }
-  else if (object$treat.type == "binary") {
-    out.list <- setNames(vector("list", length(object$treat.list)),
-                         names(object$treat.list))
-    for (ti in names(object$treat.list)) {
+    }
+    else if (object$treat.type[ti] == "binary") {
       out <- setNames(vector("list", length(outnames)), outnames)
       t <- object$treat.list[[ti]]
       out$weight.range <- list(treated = c(min(w[w > 0 & t == 1]),
@@ -273,13 +278,10 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                            c("Control", "Treated"))
       out$effective.sample.size <- nn
       out.list[[ti]] <- out
-    }
 
-  }
-  else if (object$treat.type == "multinomial") {
-    out.list <- setNames(vector("list", length(object$treat.list)),
-                         names(object$treat.list))
-    for (ti in names(object$treat.list)) {
+    }
+    else if (object$treat.type[ti] == "multinomial") {
+
       out <- setNames(vector("list", length(outnames)), outnames)
       t <- object$treat.list[[ti]]
       out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
@@ -306,16 +308,23 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       out$effective.sample.size <- nn
       out.list[[ti]] <- out
     }
+    else if (object$treat.type[ti] == "ordinal") {
+      warning("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)
+    }
   }
-
 
   class(out.list) <- "summary.weightitMSM"
   return(out.list)
 }
 print.summary.weightitMSM <- function(x, ...) {
+  if (all(sapply(x, function(y) isTRUE(all.equal(x[[1]], y))))) {
+    only.one <- TRUE
+  }
+  else only.one <- FALSE
+
   cat("Summary of weights:\n\n")
   for (ti in seq_along(x)) {
-    cat(paste0(" - - - - - - - - - - Time ", ti, " - - - - - - - - - -\n"))
+    if (!only.one) cat(paste0(" - - - - - - - - - - Time ", ti, " - - - - - - - - - -\n"))
     cat("- Weight ranges:\n")
     print.data.frame(round_df(text.box.plot(x[[ti]]$weight.range, 28), 4))
 
@@ -332,6 +341,7 @@ print.summary.weightitMSM <- function(x, ...) {
     cat("\n- Effective Sample Sizes:\n")
     print.data.frame(round(x[[ti]]$effective.sample.size, 3))
     cat("\n")
+    if (only.one) break
   }
 
   invisible(x)
