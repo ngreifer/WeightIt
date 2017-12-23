@@ -85,7 +85,9 @@ process.focal <- function(focal, estimand, treat) {
     }
   }
   else {
-    warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
+    if (length(focal) > 0) {
+      warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
+    }
   }
 }
 

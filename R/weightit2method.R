@@ -70,10 +70,12 @@ weightit2ps.multi <- function(formula, data, s.weights, subset, estimand, focal,
         message(paste0("Using multinomial ", A$link, " regression."))
         covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
         mult <- mlogit::mlogit.data(data.frame(.t = t, covs, .s.weights = s.weights[subset]), varying = NULL, shape = "wide", sep = "", choice = ".t")
-        fit <- mlogit::mlogit(as.formula(paste0(".t ~ 1 | ", paste(colnames(covs), collapse = " + "),
+        tryCatch({fit <- mlogit::mlogit(as.formula(paste0(".t ~ 1 | ", paste(colnames(covs), collapse = " + "),
                                                 " | 1")), data = mult, estimate = TRUE,
-                              probit = ifelse(A$link == "probit", TRUE, FALSE),
-                              weights = .s.weights, ...)
+                              probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
+                              weights = .s.weights, ...)},
+                 error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
+        )
         ps <- fitted(fit, outcome = FALSE)
       }
       else {
@@ -98,6 +100,9 @@ weightit2ps.multi <- function(formula, data, s.weights, subset, estimand, focal,
       check.package("MNP")
       fit <- MNP::mnp(formula, data[subset,], verbose = TRUE)
       ps <- MNP::predict.mnp(fit, type = "prob")$p
+    }
+    else {
+      stop('link must be "logit", "probit", or "bayes.probit".', call. = FALSE)
     }
   }
   #ps should be matrix of probs for each treat
