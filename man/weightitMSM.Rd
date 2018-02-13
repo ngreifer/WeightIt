@@ -86,12 +86,11 @@ Cole, S. R., & Hernan, M. A. (2008). Constructing Inverse Probability Weights fo
 \examples{
 library("twang"); library("cobalt")
 data("iptwExWide")
-W <- weightitMSM(list(tx1 ~ age + gender + use0,
+(W <- weightitMSM(list(tx1 ~ age + gender + use0,
                       tx2 ~ tx1 + use1 + age + gender + use0,
                       tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
                  data = iptwExWide,
-                 method = "ps")
-W
+                 method = "ps"))
 summary(W)
 
 ##Going from long to wide data
@@ -103,13 +102,12 @@ wide_data <- reshape(iptwExLong$covariates,    #long data
                      direction = "wide",
                      sep = "")
 
-W2 <- weightitMSM(list(tx1 ~ age + gender + use1,
+(W2 <- weightitMSM(list(tx1 ~ age + gender + use1,
                       tx2 ~ tx1 + use2 + age + gender + use1,
                       tx3 ~ tx2 + use3 + tx1 + use2 + age +
                           gender + use1),
                  data = wide_data,
-                 method = "ps")
-W2
+                 method = "ps"))
 summary(W2)
 
 all.equal(get.w(W), get.w(W2))
