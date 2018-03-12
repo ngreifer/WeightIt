@@ -1,5 +1,5 @@
-weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE, focal = NULL,
-                     exact = NULL, s.weights = NULL, ps = NULL,
+weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
+                     exact = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE,
                      #trim = c(0, Inf), trim.q = c(0, 1), truncate = c(0, Inf), truncate.q = c(0, 1),
                      verbose = FALSE, ...) {
 
@@ -44,21 +44,36 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
   else if (!tolower(method) %in% acceptable.methods) bad.method <- TRUE
 
   if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method.", call. = FALSE)
-  else method <- method.to.proper.method(tolower(method))
+  method <- method.to.proper.method(tolower(method))
 
   #Process treat and covs from formula and data
+  mf <- match.call(expand.dots = FALSE)
+  m <- match(c("formula", "data"), names(mf), 0L)
+  mf <- mf[c(1L, m)]
+  mf$drop.unused.levels <- TRUE
+  mf[[1L]] <- quote(stats::model.frame)
   tt <- terms(formula)
+
+#mf0 <<- mf
+
+#covs <- mf[,-1, drop = FALSE]
+
+
+  #tt <- terms(formula)
   attr(tt, "intercept") <- 0
   if (is.na(match(all.vars(tt[[2]]), names(data)))) {
-    stop(paste0("The given response variable, \"", all.vars(tt[[2]]), "\", is not a variable in data."))
+    stop(paste0("The given response variable, \"", all.vars(tt[[2]]), "\", is not a variable in data."), call. = FALSE)
   }
-  vars.mentioned <- all.vars(tt)
-  tryCatch({mf <- model.frame(tt, data, na.action = na.pass)}, error = function(e) {
-    stop(paste0(c("All variables in formula must be variables in data.\nVariables not in data: ",
-                  paste(vars.mentioned[is.na(match(vars.mentioned, names(data)))], collapse=", "))), call. = FALSE)})
+  vars.mentioned <- all.vars(tt[[3]])
 
+  tryCatch({mf <- eval(mf, parent.frame())}, error = function(e) {
+    stop(paste0(c("All variables in formula must be variables in data or objects in the global environment.\nMissing variables: ",
+                  paste(vars.mentioned[is.na(match(vars.mentioned, c(names(data), names(.GlobalEnv))))], collapse=", "))), call. = FALSE)})
+
+  covs <- mf[,-1, drop = FALSE]
+  #colnames(covs) <- paste0("`", colnames(covs), "`")
   treat <- model.response(mf)
-  covs <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != all.vars(tt[[2]])]))]
+  #covs <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != all.vars(tt[[2]])]))]
 
   n <- nrow(data)
 
@@ -128,7 +143,12 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
     formula <- update.formula(formula, as.formula(paste("~ . -", paste(exact.vars, collapse = " - "))))
   }
 
+  #Process moments and int
+  moments.int <- check.moments.int(method, moments, int)
+  moments <- moments.int["moments"]; int <- moments.int["int"]
+
   call <- match.call()
+  args <- list(...)
 
   ## Running models ----
   w <- p.score <- rep(NA_real_, n)
@@ -274,6 +294,8 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                                subset = exact.factor == i,
                                estimand = estimand,
                                stabilize = stabilize,
+                               moments = moments,
+                               int = int,
                                ...)
         }
         else if (treat.type == "multinomial") {
@@ -286,6 +308,8 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                                      estimand = estimand,
                                      focal = focal,
                                      stabilize = stabilize,
+                                     moments = moments,
+                                     int = int,
                                      ...)
         }
         else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
@@ -299,7 +323,9 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                                s.weights = s.weights,
                                subset = exact.factor == i,
                                estimand = estimand,
-                               ...)
+                              moments = moments,
+                              int = int,
+                              ...)
         }
         else if (treat.type == "multinomial") {
           estimand <- process.estimand(estimand, c("ATT", "ATE"), method, treat.type)
@@ -310,34 +336,42 @@ weightit <- function(formula, data, method, estimand = "ATE", stabilize = FALSE,
                               subset = exact.factor == i,
                               estimand = estimand,
                               focal = focal,
+                              moments = moments,
+                              int = int,
                               ...)
+        }
+        else {
+          stop("Stable balancing weights are not compatible with continuous treatments.", call. = FALSE)
         }
       }
       else if (method == "ebcw") {
-        if (s.weights.specified) stop(paste0("Sampling weights cannot be used with ", method.to.phrase(method), "."),
-                                      call. = FALSE)
         if (treat.type == "binary") {
           estimand <- process.estimand(estimand, c("ATT", "ATC", "ATE"), method, treat.type)
           obj <- weightit2ebcw(formula = formula,
                                data = data,
-                               #s.weights = s.weights,
+                               s.weights = s.weights,
                                subset = exact.factor == i,
                                estimand = estimand,
                                #stabilize = stabilize,
+                               moments = moments,
+                               int = int,
                                ...)
         }
         else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATE"), method, treat.type)
+          estimand <- process.estimand(estimand, c("ATE", "ATT"), method, treat.type)
           process.focal(focal, estimand, treat)
           obj <- weightit2ebcw.multi(formula = formula,
                                data = data,
-                               #s.weights = s.weights,
+                               s.weights = s.weights,
                                subset = exact.factor == i,
                                estimand = estimand,
+                               focal = focal,
                                #stabilize = stabilize,
+                               moments = moments,
+                               int = int,
                                ...)
         }
-        else if (treat.type == "continuous") {
+        else {
           stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
         }
 
