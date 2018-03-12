@@ -38,10 +38,6 @@ word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
   }
   return(out)
 }
-nunique <- function(x) {
-  if (is.factor(x)) return(nlevels(x))
-  else return(length(unique(x)))
-}
 method.to.proper.method <- function(method) {
   if (method %in% c("ps")) return("ps")
   else if (method %in% c("gbm", "gbr", "twang")) return("gbm")
@@ -62,7 +58,6 @@ method.to.phrase <- function(method) {
   else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
   else return("the chosen method of weighting")
 }
-
 process.estimand <- function(estimand, allowable.estimands, method, treat.type) {
   if (!toupper(estimand) %in% toupper(allowable.estimands)) {
     stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
@@ -74,7 +69,6 @@ process.estimand <- function(estimand, allowable.estimands, method, treat.type) 
   }
 
 }
-
 process.focal <- function(focal, estimand, treat) {
   if (estimand == "ATT") {
     if (length(focal) == 0) {
@@ -90,7 +84,59 @@ process.focal <- function(focal, estimand, treat) {
     }
   }
 }
+check.moments.int <- function(method, moments, int) {
+  if (method %in% c("ebal", "ebcw", "sbw")) {
+    if (length(int) != 1 || !is.logical(int)) {
+      stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
+    }
+    if (length(moments) != 1 || !is.numeric(moments) ||
+        abs(moments - round(moments)) > sqrt(.Machine$double.eps) ||
+        moments < 1) {
+      stop("moments must be a positive integer of length 1.", call. = FALSE)
+    }
+  }
+  else if (any(mi0 <- c(as.integer(moments) != 1L, int == TRUE))) {
+    warning(paste0(word.list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
+                   " not compatible with ", method.to.phrase(method), ". Ignoring ", word.list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
+    moments <- 1
+    int <- FALSE
+  }
+  return(c(moments = as.integer(moments), int = int))
+}
+int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
+  #Adds to data frame interactions and polynomial terms; interaction terms will be named "v1_v2" and polynomials will be named "v1_2"
+  #Only to be used in base.bal.tab; for general use see int.poly()
+  #mat=matrix input
+  #ex=matrix of variables to exclude in interactions and polynomials; a subset of df
+  #int=whether to include interactions or not; currently only 2-way are supported
+  #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
+  #nunder=number of underscores between variables
 
+  if (length(ex) > 0) d <- mat[, !colnames(mat) %in% colnames(ex), drop = FALSE]
+  else d <- mat
+  nd <- ncol(d)
+  nrd <- nrow(d)
+  no.poly <- apply(d, 2, function(x) !nunique.gt(x, 2))
+  npol <- nd - sum(no.poly)
+  new <- matrix(ncol = (poly-1)*npol + int*(.5*(nd)*(nd-1)), nrow = nrd)
+  nc <- ncol(new)
+  new.names <- character(nc)
+  if (poly > 1 && npol != 0) {
+    for (i in 2:poly) {
+      new[, (1 + npol*(i - 2)):(npol*(i - 1))] <- apply(d[, !no.poly, drop = FALSE], 2, function(x) x^i)
+      new.names[(1 + npol*(i - 2)):(npol*(i - 1))] <- paste0(colnames(d)[!no.poly], paste0(replicate(ncarrot, "_"), collapse = ""), i)
+    }
+  }
+  if (int && nd > 1) {
+    new[,(nc - .5*nd*(nd-1) + 1):nc] <- matrix(t(apply(d, 1, combn, 2, prod)), nrow = nrd)
+    new.names[(nc - .5*nd*(nd-1) + 1):nc] <- combn(colnames(d), 2, paste, collapse=paste0(replicate(nunder, "_"), collapse = ""))
+  }
+
+  single.value <- apply(new, 2, function(x) abs(max(x) - min(x)) < sqrt(.Machine$double.eps))
+  colnames(new) <- new.names
+  #new <- setNames(data.frame(new), new.names)[!single.value]
+  return(new[, !single.value, drop = FALSE])
+}
 between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
   if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
   if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
@@ -105,18 +151,16 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
 
   return(out)
 }
-
 equivalent.factors <- function(f1, f2) {
   return(nunique(f1) == nunique(interaction(f1, f2)))
 }
-
 text.box.plot <- function(range.list, width = 12) {
   full.range <- range(unlist(range.list))
   ratio = diff(full.range)/(width+1)
   rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
   rescaled.full.range <- round(full.range/ratio)
   d <- as.data.frame(matrix(NA_character_, ncol = 3, nrow = length(range.list),
-                         dimnames = list(names(range.list), c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"))),
+                            dimnames = list(names(range.list), c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"))),
                      stringsAsFactors = FALSE)
   d[,"Min"] <- sapply(range.list, function(x) x[1])
   d[,"Max"] <- sapply(range.list, function(x) x[2])
@@ -131,13 +175,11 @@ text.box.plot <- function(range.list, width = 12) {
   }
   return(d)
 }
-
 round_df <- function(df, digits) {
   nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
   df[, nums] <- round(df[, nums], digits = digits)
   return(df)
 }
-
 round_df_char <- function(df, digits, pad = "0") {
   nas <- is.na(df)
   if (!is.data.frame(df)) df <- as.data.frame(df, stringsAsFactors = FALSE)
@@ -180,7 +222,6 @@ round_df_char <- function(df, digits, pad = "0") {
 
   return(df)
 }
-
 check.package <- function(package.name, alternative = FALSE) {
   package.is.intalled <- any(.packages(all.available = TRUE) == package.name)
   if (!package.is.intalled && !alternative) {
@@ -189,12 +230,16 @@ check.package <- function(package.name, alternative = FALSE) {
   }
   return(invisible(package.is.intalled))
 }
-
 make.closer.to.1 <- function(x) {
-  ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)])))))
-  return(x/(10^ndigits))
+  if (nunique.gt(x, 2)) {
+    ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)])))))
+    if (abs(ndigits) > 2) return(x/(10^ndigits))
+    else return(x)
+  }
+  else {
+    return(as.numeric(x == x[1]))
+  }
 }
-
 remove.collinearity <- function(mat) {
   keep <- rep(TRUE, ncol(mat))
   for (i in seq_along(keep)) {
@@ -205,14 +250,21 @@ remove.collinearity <- function(mat) {
   }
   return(mat[,keep, drop = FALSE])
 }
-
 is.formula <- function(f, sides = NULL) {
-    res <- is.name(f[[1]])  && deparse(f[[1]]) %in% c( '~', '!') &&
-      length(f) >= 2
-    if (length(sides) > 0 && is.numeric(sides) && sides %in% c(1,2)) {
-      res <- res && length(f) == sides + 1
-    }
-    return(res)
+  res <- is.name(f[[1]])  && deparse(f[[1]]) %in% c( '~', '!') &&
+    length(f) >= 2
+  if (length(sides) > 0 && is.numeric(sides) && sides %in% c(1,2)) {
+    res <- res && length(f) == sides + 1
+  }
+  return(res)
+}
+nunique <- function(x, nmax = NA) {
+  if (is.factor(x)) return(nlevels(x))
+  else return(length(unique(x, nmax = nmax)))
+}
+nunique.gt <- function(x, n) {
+  if (length(x) < 2000) nunique(x) > n
+  else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
 }
 
 #To pass CRAN checks:
