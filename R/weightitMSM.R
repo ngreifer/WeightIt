@@ -1,5 +1,5 @@
 weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, exact = NULL, s.weights = NULL,
-                        num.formula = NULL, verbose = FALSE, ...) {
+                        num.formula = NULL, moments = 1L, int = FALSE, verbose = FALSE, ...) {
 
   A <- list(...)
   estimand <- "ATE"
@@ -59,7 +59,9 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                              stabilize = FALSE,
                              exact = exact,
                              s.weights = s.weights,
-                             verbose = verbose, ...)
+                             verbose = verbose,
+                             moments = moments,
+                             int = int, ...)
     w.list[[i]] <- cobalt::get.w(weightit_obj)
     if (length(weightit_obj$ps) > 0) ps.list[[i]] <- weightit_obj$ps
     treat.type.vec[i] <- weightit_obj$treat.type
@@ -147,7 +149,8 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                          stabilize = FALSE,
                          exact = exact,
                          s.weights = s.weights,
-                         verbose = verbose, ...)
+                         verbose = verbose,
+                         ...)
       sw.list[[i]] <- 1/cobalt::get.w(sw_obj)
 
     }
