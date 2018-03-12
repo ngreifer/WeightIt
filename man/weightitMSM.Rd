@@ -10,6 +10,8 @@ weightitMSM(formula.list,
             exact = NULL,
             s.weights = NULL,
             num.formula = NULL,
+            moments = 1,
+            int = FALSE,
             verbose = FALSE,
             ...)
 
@@ -17,7 +19,7 @@ weightitMSM(formula.list,
 
 }
 \description{
-\code{weightitMSM()} allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which \code{weightit()} calls; these packages must be installed to use the desired method. Also included are \code{print} and \code{summary} methods for examining the output.
+\code{weightitMSM()} allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which \code{\link[=weightit]{weightit()}} calls; these packages must be installed to use the desired method. Also included are \code{print} and \code{summary} methods for examining the output.
 
 Currently only "wide" data sets, where each row corresponds to a unit's entire variable history, are supported. You can use \code{\link{reshape}} or other functions to transform your data into this format; see example below.
 }
@@ -43,6 +45,12 @@ a vector or the names of variables in data for which weighting is to be done wit
   \item{s.weights}{
 a vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These are ignored for some methods.
 }
+  \item{moments}{
+\code{numeric}; for entropy balancing, empirical balancing callibration weights, and stable balancing weights, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}.
+}
+  \item{int}{
+\code{logical}; for entropy balancing, empirical balancing callibration weights, and stable balancing weights, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
+}
   \item{verbose}{
 whether to print additional information output by the fitting function.
 }
@@ -60,7 +68,7 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM()}.
   \item{treat.list}{A list of the values of the time-varying treatment variables.}
   \item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
   \item{data}{The data.frame originally entered to \code{weightitMSM()}.}
-  \item{estimand}{"ATE", currently the only estimand for MSMs.}
+  \item{estimand}{"ATE", currently the only estimand for MSMs with binary or multinomial treatments.}
   \item{method}{The weight estimation method specified.}
   \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
   \item{s.weights}{The provided sampling weights.}
@@ -71,7 +79,7 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM()}.
 
 Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in seperate variables.
 
-The \code{"gbm"} method, which calls \code{ps()} in \pkg{twang}, yields the same results to a call to \code{iptw()} in \pkg{twang}. However, the \code{cbps} method, which calls \code{CBPS()} in \pkg{CBPS}, will yield different results from \code{CPMSM()} in \pkg{CBPS} because \code{CPMSM()} takes a different approach to generating weights than simply estimating several time-specific models.
+The \code{"gbm"} method, which calls \code{ps()} in \pkg{twang}, yields the same results to a call to \code{iptw()} in \pkg{twang}. However, the \code{cbps} method, which calls \code{CBPS()} in \pkg{CBPS}, will yield different results from \code{CBMSM()} in \pkg{CBPS} because \code{CBMSM()} takes a different approach to generating weights than simply estimating several time-specific models.
 
 }
 
@@ -92,6 +100,7 @@ data("iptwExWide")
                  data = iptwExWide,
                  method = "ps"))
 summary(W)
+bal.tab(W)
 
 ##Going from long to wide data
 data("iptwExLong")

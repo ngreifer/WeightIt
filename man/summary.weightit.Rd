@@ -33,7 +33,7 @@ whether or not to ignore sampling weights when computing the weight summary. If 
 a \code{summary.weightit} or \code{summary.weightitMSM} object; the output of a call to \code{summary.weightit()} or \code{summary.weightitMSM()}.
 }
   \item{...}{
-  arguments passed to \code{\link{print}}.
+arguments passed to \code{\link{print}}.
   }
 }
 
