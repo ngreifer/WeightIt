@@ -1,26 +1,25 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.3.1
+Version: 0.3.1.9000
 Author: Noah Greifer [aut, cre]
 Maintainer: Noah Greifer <noah.greifer@gmail.com>
-Description: Generates weights to form equivalent groups in observational studies by easing and extending the functionality of the R packages 'twang' (Ridgeway et al., 2017) <https://CRAN.R-project.org/package=twang> for generalized boosted modeling, 'CBPS' (Fong, Ratkovic, & Imai, 2017) <https://CRAN.R-project.org/package=CBPS> for covariate balancing propensity score weighting, 'ebal' (Hainmueller, 2014) <https://CRAN.R-project.org/package=ebal> for entropy balancing, 'sbw' (Zubizarreta, 2015) <doi:10.1080/01621459.2015.1023805>, and 'ATE' (Haris & Chan, 2015) <https://CRAN.R-project.org/package=ATE> for empirical balancing calibration weighting. Also allows for assessment of weights and checking of covariate balance by interfacing directly with 'cobalt' (Greifer, 2017) <https://CRAN.R-project.org/package=cobalt>. (The suggested 'sbw' package is available at <http://www.jrzubizarreta.com/sbw_0.0.2.tar.gz>.)
+Description: Generates weights to form equivalent groups in observational studies by easing and extending the functionality of the R packages 'twang' (Ridgeway et al., 2017) <https://CRAN.R-project.org/package=twang> for generalized boosted modeling, 'CBPS' (Fong, Ratkovic, & Imai, 2017) for covariate balancing propensity score weighting, 'ebal' (Hainmueller, 2014) <https://CRAN.R-project.org/package=ebal> for entropy balancing, 'sbw' (Zubizarreta, 2015) <doi:10.1080/01621459.2015.1023805>, and 'ATE' (Haris & Chan, 2015) <https://CRAN.R-project.org/package=ATE> for empirical balancing calibration weighting. Also allows for assessment of weights and checking of covariate balance by interfacing directly with 'cobalt' (Greifer, 2018) <https://CRAN.R-project.org/package=cobalt>. (The Suggested 'CBPS' package can be installed with devtools::install_github("https://github.com/kosukeimai/CBPS").)
 Depends:
     R (>= 3.3.0)
 Imports:
-    cobalt (>= 3.0.0)
+    cobalt (>= 3.2.1)
 Suggests:
     twang (>= 1.5),
-    CBPS (>= 0.15),
+    CBPS,
     ebal (>= 0.1-6),
-    sbw,
     ATE (>= 0.2.0),
     mlogit (>= 0.2-4),
     MNP (>= 3.1-0),
-    slam
+    devtools
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
-Date: 2018-02-13
+Date: 2018-03-03
 URL: https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
