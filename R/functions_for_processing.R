@@ -58,28 +58,45 @@ method.to.phrase <- function(method) {
   else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
   else return("the chosen method of weighting")
 }
-process.estimand <- function(estimand, allowable.estimands, method, treat.type) {
-  if (!toupper(estimand) %in% toupper(allowable.estimands)) {
+process.estimand <- function(estimand, method, treat.type) {
+  #Allowable estimands
+  AE <- list(binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM"),
+                           gbm = c("ATT", "ATC", "ATE"),
+                           cbps = c("ATT", "ATC", "ATE"),
+                           npcbps = c("ATE"),
+                           ebal = c("ATT", "ATC", "ATE"),
+                           sbw = c("ATT", "ATC", "ATE"),
+                           ebcw = c("ATT", "ATC", "ATE")),
+             multinomial = list(ps = c("ATT", "ATE", "ATO"),
+                                gbm = c("ATT", "ATE"),
+                                cbps = c("ATT", "ATE"),
+                                npcbps = c("ATE"),
+                                ebal = c("ATT", "ATE"),
+                                sbw = c("ATT", "ATE"),
+                                ebcw = c("ATT", "ATE")))
+
+  if (!toupper(estimand) %in% AE[[treat.type]][[method]]) {
     stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
-                " with ", treat.type, " treatments. Only ", word.list(allowable.estimands, quotes = TRUE, and.or = "and", is.are = TRUE),
+                " with ", treat.type, " treatments. Only ", word.list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
                 " allowed."), call. = FALSE)
   }
   else {
     return(toupper(estimand))
   }
-
 }
-process.focal <- function(focal, estimand, treat) {
+process.focal <- function(focal, estimand, treat, treat.type) {
   if (estimand == "ATT") {
-    if (length(focal) == 0) {
-      stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
+    if (length(focal) == 0L) {
+      if (treat.type == "multinomial") {
+        stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
+      }
     }
-    if (length(focal) > 1 || !any(unique(treat) == focal)) {
+    else if (length(focal) > 1L || !any(unique(treat) == focal)) {
       stop("The argument supplied to focal must be the name of a level of treat.", call. = FALSE)
     }
   }
   else {
-    if (length(focal) > 0) {
+    if (length(focal) > 0L) {
       warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
     }
   }
@@ -223,12 +240,12 @@ round_df_char <- function(df, digits, pad = "0") {
   return(df)
 }
 check.package <- function(package.name, alternative = FALSE) {
-  package.is.intalled <- any(.packages(all.available = TRUE) == package.name)
-  if (!package.is.intalled && !alternative) {
+  package.is.installed <- any(.packages(all.available = TRUE) == package.name)
+  if (!package.is.installed && !alternative) {
     stop(paste0("Package \"", package.name, "\" needed for this function to work. Please install it."),
          call. = FALSE)
   }
-  return(invisible(package.is.intalled))
+  return(invisible(package.is.installed))
 }
 make.closer.to.1 <- function(x) {
   if (nunique.gt(x, 2)) {
@@ -265,6 +282,14 @@ nunique <- function(x, nmax = NA) {
 nunique.gt <- function(x, n) {
   if (length(x) < 2000) nunique(x) > n
   else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
+}
+binarize <- function(variable) {
+  if (nunique.gt(variable, 2)) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
+  variable.numeric <- as.numeric(variable)
+  if (!is.na(match(0, unique(variable.numeric)))) zero <- 0
+  else zero <- min(unique(variable.numeric))
+  newvar <- setNames(ifelse(variable.numeric==zero, 0, 1), names(variable))
+  return(newvar)
 }
 
 #To pass CRAN checks:

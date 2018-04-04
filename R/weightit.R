@@ -53,13 +53,6 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   mf$drop.unused.levels <- TRUE
   mf[[1L]] <- quote(stats::model.frame)
   tt <- terms(formula)
-
-#mf0 <<- mf
-
-#covs <- mf[,-1, drop = FALSE]
-
-
-  #tt <- terms(formula)
   attr(tt, "intercept") <- 0
   if (is.na(match(all.vars(tt[[2]]), names(data)))) {
     stop(paste0("The given response variable, \"", all.vars(tt[[2]]), "\", is not a variable in data."), call. = FALSE)
@@ -85,16 +78,38 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   }
   nunique.treat <- nunique(treat)
   if (nunique.treat == 2) {
-    treat.type = "binary"
+    treat.type <- "binary"
   }
   else if (nunique.treat < 2) {
     stop("The treatment must have at least two unique values.", call. = FALSE)
   }
   else if (is.factor(treat) || is.character(treat)) {
-    treat.type = "multinomial"
+    treat.type <- "multinomial"
+    treat <- factor(treat)
   }
   else {
-    treat.type = "continuous"
+    treat.type <- "continuous"
+  }
+
+  #Process estimand and focal
+  reported.estimand <- estimand
+  estimand <- process.estimand(estimand, method, treat.type)
+  process.focal(focal, estimand, treat, treat.type)
+  if (treat.type == "binary") {
+    unique.treat <- unique(treat, nmax = 2)
+    unique.treat.bin <- unique(binarize(treat), nmax = 2)
+    if (estimand == "ATT") {
+      if (length(focal) == 0) {
+        focal <- unique.treat[unique.treat.bin == 1]
+      }
+      else if (focal == unique.treat[unique.treat.bin == 0]){
+        reported.estimand <- "ATC"
+      }
+    }
+    else if (estimand == "ATC") {
+      focal <- unique.treat[unique.treat.bin == 0]
+      estimand <- "ATT"
+    }
   }
 
   #Process s.weights
@@ -163,22 +178,8 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
 
       #Run method
       if (method == "ps") {
-        if (treat.type == "binary") {
-          estimand <- process.estimand(estimand, c("ATT", "ATC", "ATE", "ATO"), method, treat.type)
+        if (treat.type %in% c("binary", "multinomial")) {
           obj <- weightit2ps(formula = formula,
-                             data = data,
-                             s.weights = s.weights,
-                             subset = exact.factor == i,
-                             estimand = estimand,
-                             stabilize = stabilize,
-                             ps = ps,
-                             ...)
-
-        }
-        else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATT", "ATE", "ATO"), method, treat.type)
-          process.focal(focal, estimand, treat)
-          obj <- weightit2ps.multi(formula = formula,
                                    data = data,
                                    s.weights = s.weights,
                                    subset = exact.factor == i,
@@ -201,20 +202,8 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
 
       }
       else if (method == "gbm") {
-        if (treat.type == "binary") {
-          estimand <- process.estimand(estimand, c("ATT", "ATC", "ATE"), method, treat.type)
+        if (treat.type %in% c("binary", "multinomial")) {
           obj <- weightit2gbm(formula = formula,
-                              data = data,
-                              s.weights = s.weights,
-                              estimand = estimand,
-                              subset = exact.factor == i,
-                              stabilize = stabilize,
-                              ...)
-        }
-        else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATT", "ATE"), method, treat.type)
-          process.focal(focal, estimand, treat)
-          obj <- weightit2gbm.multi(formula = formula,
                                     data = data,
                                     s.weights = s.weights,
                                     estimand = estimand,
@@ -227,25 +216,14 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
 
       }
       else if (method == "cbps") {
-        if (treat.type == "binary") {
-          estimand <- process.estimand(estimand, c("ATT", "ATC", "ATE"), method, treat.type)
+        if (treat.type %in% c("binary", "multinomial")) {
           obj <- weightit2cbps(formula = formula,
-                               data = data,
-                               subset = exact.factor == i,
-                               estimand = estimand,
-                               s.weights = s.weights,
-                               stabilize = stabilize,
-                               ...)
-
-        }
-        else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATE"), method, treat.type)
-          process.focal(focal, estimand, treat)
-          obj <- weightit2cbps.multi(formula = formula,
                                      data = data,
                                      subset = exact.factor == i,
                                      s.weights = s.weights,
                                      stabilize = stabilize,
+                                     estimand = estimand,
+                                     focal = focal,
                                      ...)
         }
         else if (treat.type == "continuous") {
@@ -262,20 +240,11 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
       else if (method == "npcbps") {
         if (s.weights.specified) stop(paste0("Sampling weights cannot be used with ", method.to.phrase(method), "."),
                                       call. = FALSE)
-        if (treat.type == "binary") {
-          estimand <- process.estimand(estimand, c("ATE"), method, treat.type)
+        if (treat.type %in% c("binary", "multinomial")) {
           obj <- weightit2npcbps(formula = formula,
                                  data = data,
                                  subset = exact.factor == i,
                                  ...)
-        }
-        else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATE"), method, treat.type)
-          process.focal(focal, estimand, treat)
-          obj <- weightit2npcbps.multi(formula = formula,
-                                       data = data,
-                                       subset = exact.factor == i,
-                                       ...)
         }
         else if (treat.type == "continuous") {
           obj <- weightit2npcbps.cont(formula = formula,
@@ -286,90 +255,49 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
 
       }
       else if (method == "ebal") {
-        if (treat.type == "binary") {
-          estimand <- process.estimand(estimand, c("ATT", "ATC", "ATE"), method, treat.type)
-          obj <- weightit2ebal(formula = formula,
-                               data = data,
-                               s.weights = s.weights,
-                               subset = exact.factor == i,
-                               estimand = estimand,
-                               stabilize = stabilize,
-                               moments = moments,
-                               int = int,
-                               ...)
-        }
-        else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATT", "ATE"), method, treat.type)
-          process.focal(focal, estimand, treat)
-          obj <- weightit2ebal.multi(formula = formula,
-                                     data = data,
-                                     s.weights = s.weights,
-                                     subset = exact.factor == i,
-                                     estimand = estimand,
-                                     focal = focal,
-                                     stabilize = stabilize,
-                                     moments = moments,
-                                     int = int,
-                                     ...)
+        if (treat.type %in% c("binary", "multinomial")) {
+            obj <- weightit2ebal(formula = formula,
+                                       data = data,
+                                       s.weights = s.weights,
+                                       subset = exact.factor == i,
+                                       estimand = estimand,
+                                       focal = focal,
+                                       stabilize = stabilize,
+                                       moments = moments,
+                                       int = int,
+                                       ...)
         }
         else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
 
       }
       else if (method == "sbw") {
-        if (treat.type == "binary") {
-          estimand <- process.estimand(estimand, c("ATT", "ATC", "ATE"), method, treat.type)
+        if (treat.type %in% c("binary", "multinomial")) {
           obj <- weightit2sbw(formula = formula,
-                               data = data,
-                               s.weights = s.weights,
-                               subset = exact.factor == i,
-                               estimand = estimand,
-                              moments = moments,
-                              int = int,
-                              ...)
-        }
-        else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATT", "ATE"), method, treat.type)
-          process.focal(focal, estimand, treat)
-          obj <- weightit2sbw.multi(formula = formula,
-                              data = data,
-                              s.weights = s.weights,
-                              subset = exact.factor == i,
-                              estimand = estimand,
-                              focal = focal,
-                              moments = moments,
-                              int = int,
-                              ...)
+                                    data = data,
+                                    s.weights = s.weights,
+                                    subset = exact.factor == i,
+                                    estimand = estimand,
+                                    focal = focal,
+                                    moments = moments,
+                                    int = int,
+                                    ...)
         }
         else {
           stop("Stable balancing weights are not compatible with continuous treatments.", call. = FALSE)
         }
       }
       else if (method == "ebcw") {
-        if (treat.type == "binary") {
-          estimand <- process.estimand(estimand, c("ATT", "ATC", "ATE"), method, treat.type)
+        if (treat.type %in% c("binary", "multinomial")) {
           obj <- weightit2ebcw(formula = formula,
-                               data = data,
-                               s.weights = s.weights,
-                               subset = exact.factor == i,
-                               estimand = estimand,
-                               #stabilize = stabilize,
-                               moments = moments,
-                               int = int,
-                               ...)
-        }
-        else if (treat.type == "multinomial") {
-          estimand <- process.estimand(estimand, c("ATE", "ATT"), method, treat.type)
-          process.focal(focal, estimand, treat)
-          obj <- weightit2ebcw.multi(formula = formula,
-                               data = data,
-                               s.weights = s.weights,
-                               subset = exact.factor == i,
-                               estimand = estimand,
-                               focal = focal,
-                               #stabilize = stabilize,
-                               moments = moments,
-                               int = int,
-                               ...)
+                                     data = data,
+                                     s.weights = s.weights,
+                                     subset = exact.factor == i,
+                                     estimand = estimand,
+                                     focal = focal,
+                                     #stabilize = stabilize,
+                                     moments = moments,
+                                     int = int,
+                                     ...)
         }
         else {
           stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
@@ -422,13 +350,13 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
               treat = treat,
               covs = covs,
               data = data,
-              estimand = if (treat.type == "continuous") NULL else estimand,
+              estimand = if (treat.type == "continuous") NULL else reported.estimand,
               method = method,
               ps = if (all(is.na(p.score))) NULL else p.score,
               s.weights = s.weights,
               #discarded = NULL,
               treat.type = treat.type,
-              focal = focal,
+              focal = if (reported.estimand == "ATT") focal else NULL,
               call = call)
   class(out) <- "weightit"
 
