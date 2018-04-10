@@ -12,6 +12,7 @@ weightitMSM(formula.list,
             num.formula = NULL,
             moments = 1,
             int = FALSE,
+            truncate = 1,
             verbose = FALSE,
             ...)
 
@@ -51,6 +52,9 @@ a vector of sampling weights or the name of a variable in \code{data} that conta
   \item{int}{
 \code{logical}; for entropy balancing, empirical balancing callibration weights, and stable balancing weights, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
 }
+  \item{truncate}{
+\code{numeric}; the quantile at which the weights will be truncated. All weights greater than the weight at the specified quantile will be sent to the weight at the quantile. If the estimand is the ATT or ATC, only the control or treated units, respectively, will have their weights truncated. Default is 1, or no truncation.
+}
   \item{verbose}{
 whether to print additional information output by the fitting function.
 }
@@ -63,7 +67,7 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM()}.
 
 }
 \value{
-  A \code{weightit} object with the following elements:
+  A \code{weightitMSM} object with the following elements:
   \item{weights}{The estimated weights, one for each unit.}
   \item{treat.list}{A list of the values of the time-varying treatment variables.}
   \item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
@@ -73,6 +77,7 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM()}.
   \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
   \item{s.weights}{The provided sampling weights.}
   \item{treat.type}{The type of treatment: binary, continuous, or multinomial (\code{"multi"}).}
+  \item{stabilization}{The stabilization factors, if any.}
 }
 \details{
 \code{weightitMSM()} works by seperating the estimation of weights into seperate procedures for each time period based on the formulas provided. For each formula, \code{weightitMSM()} simply calls \code{weightit()} to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing weights.

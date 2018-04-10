@@ -1,5 +1,6 @@
 weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, exact = NULL, s.weights = NULL,
-                        num.formula = NULL, moments = 1L, int = FALSE, verbose = FALSE, ...) {
+                        num.formula = NULL, moments = 1L, int = FALSE,
+                        truncate = 1, verbose = FALSE, ...) {
 
   A <- list(...)
   estimand <- "ATE"
@@ -61,7 +62,9 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                              s.weights = s.weights,
                              verbose = verbose,
                              moments = moments,
-                             int = int, ...)
+                             int = int,
+                             truncate = 1, #Save truncation till end
+                             ...)
     w.list[[i]] <- cobalt::get.w(weightit_obj)
     if (length(weightit_obj$ps) > 0) ps.list[[i]] <- weightit_obj$ps
     treat.type.vec[i] <- weightit_obj$treat.type
@@ -150,6 +153,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                          exact = exact,
                          s.weights = s.weights,
                          verbose = verbose,
+                         truncate = 1, #Save truncation till end
                          ...)
       sw.list[[i]] <- 1/cobalt::get.w(sw_obj)
 
@@ -162,6 +166,25 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
     if (length(unique.stabout) <= 1) stabout <- unique.stabout
   }
   else stabout <- NULL
+
+  if (length(truncate) == 1 && is.numeric(truncate)) {
+    if (truncate < 0 | truncate > 1) {
+      warning("truncate must be between 0 and 1. Ignoring truncate.", call. = FALSE)
+      truncate <- 1
+    }
+    else {
+      truncate <- max(truncate, 1 - truncate)
+    }
+      trunc.w <- quantile(w, probs = truncate)
+      w[w > trunc.w] <- trunc.w
+  }
+  else if (length(truncate) == 0) {
+    truncate <- 1
+  }
+  else {
+    warning("truncate must be a single number between 0 and 1. Ignoring truncate.", call. = FALSE)
+    truncate <- 1
+  }
 
   #if (nunique(treat.type.vec) == 1) treat.type.vec <- unique(treat.type.vec)
 
@@ -179,6 +202,7 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
               call = call,
               stabilization = stabout
   )
+  attr(out, "truncate") <- truncate
   class(out) <- c("weightitMSM", "weightit")
 
   return(out)
@@ -217,6 +241,7 @@ print.weightitMSM <- function(x, ...) {
                                                   }
                                                 }), collapse = "")
                                               }))
+  if (length(attr(x, "truncate")) > 0 && attr(x, "truncate") != 1) cat(paste0(" - weights truncated at ", round(100*attr(x, "truncate"), 2), "%\n"))
   invisible(x)
 }
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {

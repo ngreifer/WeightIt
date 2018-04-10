@@ -1,7 +1,6 @@
 weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
                      exact = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE,
-                     #trim = c(0, Inf), trim.q = c(0, 1), truncate = c(0, Inf), truncate.q = c(0, 1),
-                     verbose = FALSE, ...) {
+                     truncate = 1, verbose = FALSE, ...) {
 
   ## Checks and processing ----
 
@@ -197,9 +196,7 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
                                   stabilize = stabilize,
                                   ps = ps,
                                   ...)
-
         }
-
       }
       else if (method == "gbm") {
         if (treat.type %in% c("binary", "multinomial")) {
@@ -268,7 +265,6 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
                                        ...)
         }
         else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
-
       }
       else if (method == "sbw") {
         if (treat.type %in% c("binary", "multinomial")) {
@@ -302,10 +298,10 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
         else {
           stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
         }
-
       }
 
       #Extract weights
+      if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
       w[exact.factor == i] <- obj$w
       if (length(obj$ps) > 0) p.score[exact.factor == i] <- obj$ps
     }
@@ -331,19 +327,34 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   #   }
   # }
   #
-  # if (length(truncate.q) == 2 && all(truncate == c(0, Inf))) truncate <- quantile(w, truncate.q)
-  # if (length(truncate) == 2) {
-  #   # if (length(ps) == 0 || all(is.na(ps))) {
-  #     w[w < min(truncate)] <- min(truncate)
-  #     w[w > max(truncate)] <- max(truncate)
-  #   # }
-  #   # else {
-  #   #   w[ps < min(truncate)] <- w[ps == min(truncate)][1]
-  #   #   w[ps > max(truncate)] <- w[ps == max(truncate)][1]
-  #   # }
-  # }
 
-  if (sum(w) == 0) stop("All weights are 0.", call. = FALSE)
+  if (length(truncate) == 1 && is.numeric(truncate)) {
+    if (truncate < 0 | truncate > 1) {
+      warning("truncate must be between 0 and 1. Ignoring truncate.", call. = FALSE)
+      truncate <- 1
+    }
+    else {
+      truncate <- max(truncate, 1 - truncate)
+    }
+
+    if (estimand == "ATT") {
+      trunc.w <- quantile(w[treat != focal], probs = truncate)
+      w[treat != focal & w > trunc.w] <- trunc.w
+    }
+    else {
+      trunc.w <- quantile(w, probs = truncate)
+      w[w > trunc.w] <- trunc.w
+    }
+  }
+  else if (length(truncate) == 0) {
+    truncate <- 1
+  }
+  else {
+    warning("truncate must be a single number between 0 and 1. Ignoring truncate.", call. = FALSE)
+    truncate <- 1
+  }
+
+  if (!nunique.gt(w, 1)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
 
   ## Assemble output object----
   out <- list(weights = w,
@@ -358,6 +369,7 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
               treat.type = treat.type,
               focal = if (reported.estimand == "ATT") focal else NULL,
               call = call)
+  attr(out, "truncate") <- truncate
   class(out) <- "weightit"
 
   return(out)
@@ -373,6 +385,7 @@ print.weightit <- function(x, ...) {
   cat(paste0(" - treatment: ", ifelse(x$treat.type == "continuous", "continuous", paste0(nunique(x$treat), "-category", ifelse(x$treat.type == "multinomial", paste0(" (", paste(levels(x$treat), collapse = ", "), ")"), ""))), "\n"))
   if (length(x$estimand) > 0) cat(paste0(" - estimand: ", x$estimand, ifelse(length(x$focal)>0, paste0(" (focal: ", x$focal, ")"), ""), "\n"))
   cat(paste0(" - covariates: ", ifelse(length(names(x$covs)) > 60, "too many to name", paste(names(x$covs), collapse = ", ")), "\n"))
+  if (length(attr(x, "truncate")) > 0 && attr(x, "truncate") != 1) cat(paste0(" - weights truncated at ", round(100*attr(x, "truncate"), 2), "%\n"))
   invisible(x)
 }
 summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
