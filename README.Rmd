@@ -15,16 +15,20 @@ knitr::opts_chunk$set(
   fig.path = "inst/figures/README-"
 )
 ```
-#WeightIt
+# WeightIt
 
-[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/WeightIt)](https://cran.r-project.org/package=WeightIt)
+[![CRAN_Status_Badge](http://r-pkg.org/badges/version-last-release/WeightIt?color=0047ab
+)](https://cran.r-project.org/package=WeightIt)
+[![CRAN_Downloads_Badge](http://cranlogs.r-pkg.org/badges/WeightIt?color=0047ab
+)](https://cran.r-project.org/package=WeightIt)
 
-`WeightIt` is a one-stop package to generate balancing weights for point treatments in observational studies. Contained within `WeightIt` are methods that call on other R packages to estimate weights. The value of `WeightIt` is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. `WeightIt` extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, and ATC for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, `WeightIt` does for weighting what `MatchIt` has done for matching, and `MatchIt` users will find the syntax familiar.
+`WeightIt` is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Contained within `WeightIt` are methods that call on other R packages to estimate weights. The value of `WeightIt` is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. `WeightIt` extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, and ATC for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, `WeightIt` does for weighting what `MatchIt` has done for matching, and `MatchIt` users will find the syntax familiar.
 
 To install and load `WeightIt`, use the code below:
 
 ```{r, eval = FALSE}
-install.packages("WeightIt")
+install.packages("WeightIt") #CRAN version
+devtools::install_github("ngrefer/WeightIt") #Development version
 library("WeightIt")
 ```
 ```{r, include = FALSE}
@@ -61,7 +65,7 @@ The table below contains the available methods in `WeightIt` for estimating weig
  Treatment type | Method (`method = `) | Function | Package
  -------------- | -------------------- | -------- | -------
  **Binary** | Binary regression PS (`"ps"`) | `glm()` | `base`
- - | Generalized boosted modeling PS (`"pgbm"`) | `ps()` | `twang`
+ - | Generalized boosted modeling PS (`"gbm"`) | `ps()` | `twang`
  - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
  - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
  - | Entropy Balancing (`"ebal"`) | `ebalance()` | `ebal`
@@ -80,4 +84,4 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
  - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
 
-If you would like to see your package integrated into `WeightIt`, or for any other questions or comments about `WeightIt`, please contact Noah Greifer at noah@unc.edu.
+If you would like to see your package or method integrated into `WeightIt`, or for any other questions or comments about `WeightIt`, please contact Noah Greifer at noah.greifer@gmail.com.

@@ -1,6 +1,12 @@
 WeightIt News and Updates
 ======
 
+Version 0.3.3
+
+* Added `truncate` option to allow truncation of weights.
+
+* Under-the-hood changes to facilitate adding new features and debugging.
+
 Version 0.3.2
 
 * Added new `moments` and `int` options for some `weightit()` methods to easily specify moments and interactions of covariates.
@@ -8,6 +14,8 @@ Version 0.3.2
 * Fixed bug when using objects not in the data set in `weightit()`. Behavior has changed to include transformed covariates entered in formula in `weightit()` output.
 
 * Fixed bug resulting from potentially colinearity when using `ebal` or `ebcw`.
+
+* Added a vignette.
 
 Version 0.3.1
 
