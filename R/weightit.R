@@ -50,6 +50,7 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   m <- match(c("formula", "data"), names(mf), 0L)
   mf <- mf[c(1L, m)]
   mf$drop.unused.levels <- TRUE
+  mf$na.action <- "na.pass"
   mf[[1L]] <- quote(stats::model.frame)
   tt <- terms(formula)
   attr(tt, "intercept") <- 0
@@ -70,7 +71,8 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   n <- nrow(data)
 
   if (any(is.na(covs)) || nrow(covs) != n) {
-    stop("No missing values are allowed in the covariates.", call. = FALSE)
+    warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
+    #stop("No missing values are allowed in the covariates.", call. = FALSE)
   }
   if (any(is.na(treat)) || length(treat) != n) {
     stop("No missing values are allowed in the treatment variable.", call. = FALSE)

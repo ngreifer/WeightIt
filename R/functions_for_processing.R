@@ -249,7 +249,7 @@ check.package <- function(package.name, alternative = FALSE) {
 }
 make.closer.to.1 <- function(x) {
   if (nunique.gt(x, 2)) {
-    ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)])))))
+    ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)]))), na.rm = TRUE))
     if (abs(ndigits) > 2) return(x/(10^ndigits))
     else return(x)
   }
@@ -275,11 +275,13 @@ is.formula <- function(f, sides = NULL) {
   }
   return(res)
 }
-nunique <- function(x, nmax = NA) {
+nunique <- function(x, nmax = NA, na.rm = TRUE) {
+  if (na.rm) x <- x[!is.na(x)]
   if (is.factor(x)) return(nlevels(x))
   else return(length(unique(x, nmax = nmax)))
 }
-nunique.gt <- function(x, n) {
+nunique.gt <- function(x, n, na.rm = TRUE) {
+  if (na.rm) x <- x[!is.na(x)]
   if (length(x) < 2000) nunique(x) > n
   else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
 }
