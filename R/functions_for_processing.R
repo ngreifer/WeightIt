@@ -75,7 +75,7 @@ process.estimand <- function(estimand, method, treat.type) {
                                 sbw = c("ATT", "ATE"),
                                 ebcw = c("ATT", "ATE")))
 
-  if (!toupper(estimand) %in% AE[[treat.type]][[method]]) {
+  if (treat.type != "continuous" && !toupper(estimand) %in% AE[[treat.type]][[method]]) {
     stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
                 " with ", treat.type, " treatments. Only ", word.list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
                 " allowed."), call. = FALSE)
@@ -84,7 +84,10 @@ process.estimand <- function(estimand, method, treat.type) {
     return(toupper(estimand))
   }
 }
-process.focal <- function(focal, estimand, treat, treat.type) {
+process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
+  reported.estimand <- estimand
+
+  #Check focal
   if (estimand == "ATT") {
     if (length(focal) == 0L) {
       if (treat.type == "multinomial") {
@@ -98,8 +101,30 @@ process.focal <- function(focal, estimand, treat, treat.type) {
   else {
     if (length(focal) > 0L) {
       warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
+      focal <- NULL
     }
   }
+
+  #Get focal, estimand, and reported estimand
+  if (isTRUE(treat.type == "binary")) {
+    unique.treat <- unique(treat, nmax = 2)
+    unique.treat.bin <- unique(binarize(treat), nmax = 2)
+    if (estimand == "ATT") {
+      if (length(focal) == 0) {
+        focal <- unique.treat[unique.treat.bin == 1]
+      }
+      else if (focal == unique.treat[unique.treat.bin == 0]){
+        reported.estimand <- "ATC"
+      }
+    }
+    else if (estimand == "ATC") {
+      focal <- unique.treat[unique.treat.bin == 0]
+      estimand <- "ATT"
+    }
+  }
+  return(list(focal = focal,
+              estimand = estimand,
+              reported.estimand = reported.estimand))
 }
 check.moments.int <- function(method, moments, int) {
   if (method %in% c("ebal", "ebcw", "sbw")) {
@@ -282,8 +307,8 @@ nunique <- function(x, nmax = NA, na.rm = TRUE) {
 }
 nunique.gt <- function(x, n, na.rm = TRUE) {
   if (na.rm) x <- x[!is.na(x)]
-  if (length(x) < 2000) nunique(x) > n
-  else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
+  if (length(x) < 2000) nunique(x, na.rm = na.rm) > n
+  else tryCatch(nunique(x, nmax = n, na.rm = na.rm) > n, error = function(e) TRUE)
 }
 binarize <- function(variable) {
   if (nunique.gt(variable, 2)) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
