@@ -1,6 +1,6 @@
 weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
                      exact = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE,
-                     truncate = 1, verbose = FALSE, ...) {
+                     verbose = FALSE, ...) {
 
   ## Checks and processing ----
 
@@ -91,27 +91,14 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   else {
     treat.type <- "continuous"
   }
+  attr(treat, "treat.type") <- treat.type
 
   #Process estimand and focal
-  reported.estimand <- estimand
   estimand <- process.estimand(estimand, method, treat.type)
-  process.focal(focal, estimand, treat, treat.type)
-  if (treat.type == "binary") {
-    unique.treat <- unique(treat, nmax = 2)
-    unique.treat.bin <- unique(binarize(treat), nmax = 2)
-    if (estimand == "ATT") {
-      if (length(focal) == 0) {
-        focal <- unique.treat[unique.treat.bin == 1]
-      }
-      else if (focal == unique.treat[unique.treat.bin == 0]){
-        reported.estimand <- "ATC"
-      }
-    }
-    else if (estimand == "ATC") {
-      focal <- unique.treat[unique.treat.bin == 0]
-      estimand <- "ATT"
-    }
-  }
+  f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+  focal <- f.e.r[["focal"]]
+  estimand <- f.e.r[["estimand"]]
+  reported.estimand <- f.e.r[["reported.estimand"]]
 
   #Process s.weights
   if (length(s.weights) > 0) {
@@ -310,52 +297,6 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
 
   })
 
-  ## Trim/Truncate ----
-
-  # if (length(trim.q) == 2 && all(trim == c(0, Inf))) trim <- quantile(w, trim.q)
-  #
-  # if (length(trim) == 2) {
-  #   # if (length(ps) == 0 || all(is.na(ps))) {
-  #     to.trim <- !between(w, trim, inclusive = TRUE)
-  #   # }
-  #   # else {
-  #   #   to.trim <- !between(ps, trim, inclusive = TRUE)
-  #   # }
-  #
-  #   w[to.trim] <- 0
-  #
-  #   if (treat.type %in% c("binary", "multinomial") && nunique(treat[!to.trim]) != nunique(treat)) {
-  #     warning("Trimming will remove an entire treatment group.", call. = FALSE)
-  #   }
-  # }
-  #
-
-  if (length(truncate) == 1 && is.numeric(truncate)) {
-    if (truncate < 0 | truncate > 1) {
-      warning("truncate must be between 0 and 1. Ignoring truncate.", call. = FALSE)
-      truncate <- 1
-    }
-    else {
-      truncate <- max(truncate, 1 - truncate)
-    }
-
-    if (estimand == "ATT") {
-      trunc.w <- quantile(w[treat != focal], probs = truncate)
-      w[treat != focal & w > trunc.w] <- trunc.w
-    }
-    else {
-      trunc.w <- quantile(w, probs = truncate)
-      w[w > trunc.w] <- trunc.w
-    }
-  }
-  else if (length(truncate) == 0) {
-    truncate <- 1
-  }
-  else {
-    warning("truncate must be a single number between 0 and 1. Ignoring truncate.", call. = FALSE)
-    truncate <- 1
-  }
-
   if (!nunique.gt(w, 1)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
 
   ## Assemble output object----
@@ -368,10 +309,8 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
               ps = if (all(is.na(p.score))) NULL else p.score,
               s.weights = s.weights,
               #discarded = NULL,
-              treat.type = treat.type,
               focal = if (reported.estimand == "ATT") focal else NULL,
               call = call)
-  attr(out, "truncate") <- truncate
   class(out) <- "weightit"
 
   return(out)
@@ -379,15 +318,17 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
 }
 
 print.weightit <- function(x, ...) {
+  treat.type <- attr(x[["treat"]], "treat.type")
+  trim <- attr(x[["weights"]], "trim")
   cat("A weightit object\n")
   cat(paste0(" - method: \"", x$method, "\" (", method.to.phrase(x$method), ")\n"))
   cat(paste0(" - number of obs.: ", length(x$weights), "\n"))
   cat(paste0(" - sampling weights: ", ifelse(max(x$s.weights) - min(x$s.weights) < sqrt(.Machine$double.eps),
                                              "none", "present"), "\n"))
-  cat(paste0(" - treatment: ", ifelse(x$treat.type == "continuous", "continuous", paste0(nunique(x$treat), "-category", ifelse(x$treat.type == "multinomial", paste0(" (", paste(levels(x$treat), collapse = ", "), ")"), ""))), "\n"))
+  cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x$treat), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x$treat), collapse = ", "), ")"), ""))), "\n"))
   if (length(x$estimand) > 0) cat(paste0(" - estimand: ", x$estimand, ifelse(length(x$focal)>0, paste0(" (focal: ", x$focal, ")"), ""), "\n"))
   cat(paste0(" - covariates: ", ifelse(length(names(x$covs)) > 60, "too many to name", paste(names(x$covs), collapse = ", ")), "\n"))
-  if (length(attr(x, "truncate")) > 0 && attr(x, "truncate") != 1) cat(paste0(" - weights truncated at ", round(100*attr(x, "truncate"), 2), "%\n"))
+  if (length(trim) > 0 && trim != 1) cat(paste0(" - weights trimmed at ", round(100*trim, 2), "%\n"))
   invisible(x)
 }
 summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
@@ -400,8 +341,9 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   else sw <- object$s.weights
   w <- object$weights*sw
   t <- object$treat
+  treat.type <- attr(object[["treat"]], "treat.type")
 
-  if (object$treat.type == "continuous") {
+  if (treat.type == "continuous") {
     out$weight.range <- list(all = c(min(w[w > 0]),
                           max(w[w > 0])))
     out$weight.ratio <- c(all = out$weight.range[["all"]][2]/out$weight.range[["all"]][1])
@@ -416,7 +358,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                          c("Total"))
 
   }
-  else if (object$treat.type == "binary") {
+  else if (treat.type == "binary") {
     top0 <- c(treated = min(top, sum(t == 1)),
               control = min(top, sum(t == 0)))
     out$weight.range <- list(treated = c(min(w[w > 0 & t == 1]),
@@ -449,7 +391,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     dimnames(nn) <- list(c("Unweighted", "Weighted"),
                          c("Control", "Treated"))
   }
-  else if (object$treat.type == "multinomial") {
+  else if (treat.type == "multinomial") {
     out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
                                                         max(w[w > 0 & t == x]))),
                                  levels(t))
@@ -471,11 +413,12 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     }
     dimnames(nn) <- list(c("Unweighted", "Weighted"),
                          levels(t))
-
+  }
+  else if (treat.type == "ordinal") {
+    stop("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)
   }
 
   out$effective.sample.size <- nn
-
 
   class(out) <- "summary.weightit"
   return(out)

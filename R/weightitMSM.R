@@ -1,6 +1,6 @@
 weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, exact = NULL, s.weights = NULL,
                         num.formula = NULL, moments = 1L, int = FALSE,
-                        truncate = 1, verbose = FALSE, ...) {
+                        verbose = FALSE, ...) {
 
   A <- list(...)
   estimand <- "ATE"
@@ -27,7 +27,6 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
 
   call <- match.call()
 
-  treat.type.vec <- character(length(formula.list))
   covs.list <- treat.list <- w.list <- ps.list <- vector("list", length(formula.list))
   for (i in seq_along(formula.list)) {
     #Process treat and covs from formula and data
@@ -63,11 +62,10 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                              verbose = verbose,
                              moments = moments,
                              int = int,
-                             truncate = 1, #Save truncation till end
                              ...)
     w.list[[i]] <- cobalt::get.w(weightit_obj)
     if (length(weightit_obj$ps) > 0) ps.list[[i]] <- weightit_obj$ps
-    treat.type.vec[i] <- weightit_obj$treat.type
+    attr(treat.list[[i]], "treat.type") <- attr(weightit_obj$treat, "treat.type")
   }
 
   w <- Reduce("*", w.list)
@@ -153,7 +151,6 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
                          exact = exact,
                          s.weights = s.weights,
                          verbose = verbose,
-                         truncate = 1, #Save truncation till end
                          ...)
       sw.list[[i]] <- 1/cobalt::get.w(sw_obj)
 
@@ -167,25 +164,6 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
   }
   else stabout <- NULL
 
-  if (length(truncate) == 1 && is.numeric(truncate)) {
-    if (truncate < 0 | truncate > 1) {
-      warning("truncate must be between 0 and 1. Ignoring truncate.", call. = FALSE)
-      truncate <- 1
-    }
-    else {
-      truncate <- max(truncate, 1 - truncate)
-    }
-      trunc.w <- quantile(w, probs = truncate)
-      w[w > trunc.w] <- trunc.w
-  }
-  else if (length(truncate) == 0) {
-    truncate <- 1
-  }
-  else {
-    warning("truncate must be a single number between 0 and 1. Ignoring truncate.", call. = FALSE)
-    truncate <- 1
-  }
-
   #if (nunique(treat.type.vec) == 1) treat.type.vec <- unique(treat.type.vec)
 
   ## Assemble output object----
@@ -198,17 +176,18 @@ weightitMSM <- function(formula.list, data, method = "ps", stabilize = FALSE, ex
               ps.list = ps.list,
               s.weights = s.weights,
               #discarded = NULL,
-              treat.type = treat.type.vec,
               call = call,
               stabilization = stabout
   )
-  attr(out, "truncate") <- truncate
+
   class(out) <- c("weightitMSM", "weightit")
 
   return(out)
 }
 
 print.weightitMSM <- function(x, ...) {
+  treat.types <- sapply(x[["treat.list"]], function(y) attr(y, "treat.type"))
+  trim <- attr(x, "trim")
   cat("A weightitMSM object\n")
   cat(paste0(" - method: \"", x$method, "\" (", method.to.phrase(x$method), ")\n"))
   cat(paste0(" - number of obs.: ", length(x$weights), "\n"))
@@ -218,7 +197,7 @@ print.weightitMSM <- function(x, ...) {
   cat(paste0(" - treatment: \n",
              paste0(sapply(1:length(x$covs.list), function(i) {
 
-               paste0("    + time ", i, ": ", ifelse(x$treat.type[i] == "continuous", "continuous", paste0(nunique(x$treat.list[[i]]), "-category", ifelse(x$treat.type[i] == "multinomial", paste0(" (", paste(levels(x$treat.list[[i]]), collapse = ", "), ")"), ""))), "\n")
+               paste0("    + time ", i, ": ", ifelse(treat.types[i] == "continuous", "continuous", paste0(nunique(x$treat.list[[i]]), "-category", ifelse(treat.types[i] == "multinomial", paste0(" (", paste(levels(x$treat.list[[i]]), collapse = ", "), ")"), ""))), "\n")
 
              }), collapse = ""), collapse = "\n"))
   cat(paste0(" - covariates: \n",
@@ -241,7 +220,7 @@ print.weightitMSM <- function(x, ...) {
                                                   }
                                                 }), collapse = "")
                                               }))
-  if (length(attr(x, "truncate")) > 0 && attr(x, "truncate") != 1) cat(paste0(" - weights truncated at ", round(100*attr(x, "truncate"), 2), "%\n"))
+  if (length(trim) > 0 && trim != 1) cat(paste0(" - weights trimmed at ", round(100*trim, 2), "%\n"))
   invisible(x)
 }
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
@@ -254,9 +233,10 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   if (ignore.s.weights) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
   w <- object$weights*sw
+  treat.types <- sapply(x[["treat.list"]], function(y) attr(y, "treat.type"))
 
   for (ti in seq_along(object$treat.list)) {
-    if (object$treat.type[ti] == "continuous") {
+    if (treat.types[ti] == "continuous") {
       out <- setNames(vector("list", length(outnames)), outnames)
       out$weight.range <- list(all = c(min(w[w > 0]),
                                        max(w[w > 0])))
@@ -275,7 +255,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       out.list[[ti]] <- out
 
     }
-    else if (object$treat.type[ti] == "binary") {
+    else if (treat.types[ti] == "binary") {
       out <- setNames(vector("list", length(outnames)), outnames)
       t <- object$treat.list[[ti]]
       out$weight.range <- list(treated = c(min(w[w > 0 & t == 1]),
@@ -308,7 +288,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       out.list[[ti]] <- out
 
     }
-    else if (object$treat.type[ti] == "multinomial") {
+    else if (treat.types[ti] == "multinomial") {
 
       out <- setNames(vector("list", length(outnames)), outnames)
       t <- object$treat.list[[ti]]
@@ -336,7 +316,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       out$effective.sample.size <- nn
       out.list[[ti]] <- out
     }
-    else if (object$treat.type[ti] == "ordinal") {
+    else if (treat.types[ti] == "ordinal") {
       warning("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)
     }
   }
