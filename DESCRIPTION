@@ -8,7 +8,7 @@ Description: Generates weights to form equivalent groups in observational studie
 Depends:
     R (>= 3.3.0)
 Imports:
-    cobalt (>= 3.2.2)
+    cobalt (>= 3.2.3)
 Suggests:
     twang (>= 1.5),
     CBPS (>= 0.17),
