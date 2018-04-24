@@ -3,10 +3,12 @@ importFrom("stats", "terms", "glm", "setNames", "sd", "model.frame", "model.resp
            "gaussian", "dnorm", "fitted", "contrasts", "na.pass")
 importFrom("utils", "data", "combn")
 
-export(weightit, weightitMSM)
+export(weightit, weightitMSM, trim)
 S3method(print, weightit)
 S3method(summary, weightit)
 S3method(print, summary.weightit)
 S3method(print, weightitMSM)
 S3method(summary, weightitMSM)
 S3method(print, summary.weightitMSM)
+S3method(trim, weightit)
+S3method(trim, numeric)
