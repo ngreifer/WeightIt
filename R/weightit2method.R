@@ -194,7 +194,7 @@ weightit2gbm <- function(formula, data, s.weights, estimand, focal, subset, stab
   }
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
   covs <- model.matrix(tt, data=mf,
                        contrasts.arg = lapply(mf[sapply(mf, is.factor)],
@@ -262,9 +262,14 @@ weightit2cbps <- function(formula, data, s.weights, estimand, focal, subset, sta
   A <- list(...)
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
   covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+
+  vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
+  missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  covs[is.na(covs)] <- 0
+  covs <- cbind(covs, missing.ind)
 
   if (check.package("CBPS")) {
     if (estimand == "ATT") {
@@ -297,6 +302,7 @@ weightit2cbps <- function(formula, data, s.weights, estimand, focal, subset, sta
                           method = if (length(A$over) == 0 || A$over) "over" else "exact",
                           standardize = FALSE,
                           sample.weights = s.weights[subset],
+                          ATT = 0,
                           ...)
 
 
@@ -328,7 +334,7 @@ weightit2cbps.cont <- function(formula, data, s.weights, subset, ...) {
   A <- list(...)
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- model.response(mf)
   covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
   new.data <- data.frame(treat = treat, covs)
@@ -349,9 +355,14 @@ weightit2npcbps <- function(formula, data, subset, ...) {
   A <- list(...)
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
   covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+
+  vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
+  missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  covs[is.na(covs)] <- 0
+  covs <- cbind(covs, missing.ind)
   new.data <- data.frame(treat = treat, covs)
 
   if (check.package("CBPS")) {
@@ -367,7 +378,7 @@ weightit2npcbps.cont <- function(formula, data, subset, estimand, ...) {
   A <- list(...)
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- model.response(mf)
   covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
   new.data <- data.frame(treat = treat, covs)
@@ -387,11 +398,16 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
   A <- list(...)
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
   covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
+
+  vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
+  missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  covs[is.na(covs)] <- 0
+  covs <- cbind(covs, missing.ind)
 
   for (f in names(formals(ebal::ebalance))) {
     if (length(A[[f]]) == 0) A[[f]] <- formals(ebal::ebalance)[[f]]
@@ -475,11 +491,20 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
   A <- list(...)
 
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
   covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
+
+  vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
+  missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  covs[is.na(covs)] <- 0
+  covs <- cbind(covs, missing.ind)
+
+  for (f in names(formals(ATE::ATE))) {
+    if (length(A[[f]]) == 0) A[[f]] <- formals(ATE::ATE)[[f]]
+  }
 
   if (check.package("ATE")) {
     if (estimand == "ATT") {
@@ -498,7 +523,15 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
         Y <- rep(0, length(treat_))
 
         ate.out <- ATE::ATE(Y = Y, Ti = treat_, X = covs_,
-                            ATT = TRUE, ...)
+                            ATT = TRUE,
+                            theta = A[["theta"]],
+                            verbose = TRUE,
+                            max.iter = A[["max.iter"]],
+                            tol = A[["tol"]],
+                            initial.values = A[["initial.values"]],
+                            backtrack = A[["backtrack"]],
+                            backtrack.alpha = A[["backtrack.alpha"]],
+                            backtrack.beta = A[["backtrack.beta"]])
         w[treat == i] <- ate.out$weights.q[treat_ == 0] / s.weights[subset][treat == i]
 
       }
@@ -517,7 +550,15 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
         Y <- rep(0, length(treat_i))
 
         ate.out <- ATE::ATE(Y = Y, Ti = treat_i, X = covs_i,
-                            ATT = TRUE, ...)
+                            ATT = TRUE,
+                            theta = A[["theta"]],
+                            verbose = TRUE,
+                            max.iter = A[["max.iter"]],
+                            tol = A[["tol"]],
+                            initial.values = A[["initial.values"]],
+                            backtrack = A[["backtrack"]],
+                            backtrack.alpha = A[["backtrack.alpha"]],
+                            backtrack.beta = A[["backtrack.beta"]])
         w[treat == i] <- ate.out$weights.q[treat_i == 0] / s.weights[subset][treat == i]
       }
     }
@@ -528,7 +569,7 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
 
 #Stable balancing weights with sbw
 # weightit2sbw <- function(...) {
-#   stop("Stable balancing weights are not currently supported. Please choose another method.", call. = FALSE)
+#   stop("Stable balancing weights are not currently supported. Please choose another method.\n        The github version of WeightIt may allow stable balancing weights.\n        Install it with devtools::install_github(\"ngreifer/WeightIt\").", call. = FALSE)
 # }
 
 #SBW--------
@@ -561,11 +602,14 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, focal, mome
     }
 
     tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE)
+    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
     treat <- factor(model.response(mf))
     covs <- model.matrix(tt, data=mf,
                          contrasts.arg = lapply(mf[sapply(mf, is.factor)],
                                                 contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+    if (any(is.na(covs))) {
+      stop("Stable balancing weights are not compatible with missing values.", call. = FALSE)
+    }
     covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
     covs <- apply(covs, 2, make.closer.to.1) * s.weights[subset]
 
@@ -596,7 +640,7 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, focal, mome
       control.levels <- levels(treat)[levels(treat) != focal]
       w <- rep(1, length(treat))
       if (bal_tols_sd) {
-        binary.vars <- apply(covs, 2, function(x) nunique(x) <= 2)
+        binary.vars <- apply(covs, 2, function(x) !nunique.gt(x, 2))
         bal_tols <- bal_tols * sapply(1:ncol(covs), function(x) {if (binary.vars[x]) 1 else sd(covs[treat == focal, x])})
       }
       for (i in control.levels) {
@@ -625,7 +669,7 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, focal, mome
     }
     else if (estimand == "ATE") {
       if (bal_tols_sd) {
-        binary.vars <- apply(covs, 2, function(x) nunique(x) <= 2)
+        binary.vars <- apply(covs, 2, function(x) !nunique.gt(x, 2))
         bal_tols <- bal_tols * sapply(1:ncol(covs), function(x) {if (binary.vars[x]) 1 else sqrt(mean(sapply(unique(treat), function(t) var(covs[new.data[["1"]] == t,x]))))})
       }
       bal_tols <- bal_tols/nunique(treat)
