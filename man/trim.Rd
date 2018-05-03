@@ -19,13 +19,13 @@ Trims (i.e., truncates) large weights by setting all weights higher than that at
 A \code{weightit} object or a vector of weights.
 }
   \item{at}{
-\code{numeric}; the quantile of the weights above which weights are to be trimmed. A single number between .5 and 1.
+\code{numeric}; either the quantile of the weights above which weights are to be trimmed. A single number between .5 and 1, or the number weights to be trimmed (e.g., \code{at = 3} for the top 3 weights to be set to the top 4th weight)
 }
   \item{lower}{
-\code{logical}; whether also to trim at the lower quantile (e.g., for \code{at = .9}, trimming at both .1 and .9).
+\code{logical}; whether also to trim at the lower quantile (e.g., for \code{at = .9}, trimming at both .1 and .9, or for \code{at = 3}, trimming the top and bottom 3 weights).
 }
   \item{treat}{
-A vector of treatment status for each unit. This should always be included, but you can get away with leaving it out if the treatment is continuous or the estimand is the ATE for binary or multinomial treatments.
+A vector of treatment status for each unit. This should always be included when \code{x} is numeric, but you can get away with leaving it out if the treatment is continuous or the estimand is the ATE for binary or multinomial treatments.
 }
   \item{\dots}{
 Not used.
@@ -64,6 +64,9 @@ data("lalonde", package = "cobalt")
                 nodegree + re74, data = lalonde,
                 method = "ps", estimand = "ATT"))
 summary(W)
+
+#Trimming the top and bottom 5 weights
+trim(W, at = 5, lower = TRUE)
 
 #Trimming at 90th percentile
 (W.trim <- trim(W, at = .9))

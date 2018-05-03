@@ -72,40 +72,85 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
   estimand <- f.e.r[["estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
 
-  if (length(at) == 0) {
-    at <- 1
+  if (length(at) == 0 || isTRUE(at == 0)) {
+    at <- NULL
   }
-  else if (length(at) > 1 || !is.numeric(at)) {
-    warning("\"at\" must be a single number between 0 and 1. Weights will not be trimmed.", call. = FALSE)
-    at <- 1
-  }
-  else  if (at <= 0 || at >= 1) {
-    warning("\"at\" must be between 0 and 1. Weights will not be trimmed.", call. = FALSE)
-    at <- 1
+  else if (length(at) > 1 || !is.numeric(at) || at < 0) {
+    warning("\"at\" must be a single positive number. Weights will not be trimmed.", call. = FALSE)
+    at <- NULL
   }
   else {
-    if (lower) at <- sort(c(at, 1 - at))
-    else at <- c(0, max(at, 1 - at))
-  }
+    if (at < 1) {
+      at <- max(at, 1 - at)
 
-  if (all(at != 1)) {
-    if (toupper(estimand) == "ATT") {
-      trim.w <- quantile(weights[treat != focal], probs = at)
-      weights[treat != focal & weights < trim.w] <- trim.w[1]
-      weights[treat != focal & weights > trim.w] <- trim.w[2]
-      message(paste0("Trimming weights where treat ≠ ", focal, " to ", round(100*at, 2), "%."))
+      if (lower) trim.q <- c(1 - at, at)
+      else trim.q <- c(0, at)
+
+      if (toupper(estimand) == "ATT") {
+        trim.w <- quantile(weights[treat != focal], probs = trim.q, type = 3)
+        weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
+        weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
+        message(paste0("Trimming weights where treat ≠ ", focal, " to ", word.list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
+      }
+      else {
+        trim.w <- quantile(weights, probs = trim.q, type = 3)
+        weights[weights < trim.w[1]] <- trim.w[1]
+        weights[weights > trim.w[2]] <- trim.w[2]
+        if (sum(abs(weights - 1) < sqrt(.Machine$double.eps)) > 10) {
+          warning("Several weights are equal to 1. You should enter the treatment variable as an argument to treat in trim().", call. = FALSE)
+        }
+        message(paste0("Trimming weights to ", word.list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
+      }
     }
     else {
-      trim.w <- quantile(weights, probs = at)
-      weights[weights < trim.w] <- trim.w[1]
-      weights[weights > trim.w] <- trim.w[2]
-      if (sum(abs(weights - 1) < sqrt(.Machine$double.eps)) > 10) {
-        warning("Several weights are equal to 1. You should enter the treatment variable as an argument to treat in trim().", call. = FALSE)
+      if (toupper(estimand) == "ATT") {
+        if (at >= sum(treat != focal)) {
+          warning(paste0("'at' must be less than ", sum(treat != focal), ", the number of units not in the focal treatment. Weights will not be trimmed."), call. = FALSE)
+          at <- NULL
+        }
+        else {
+          at <- as.integer(min(at, sum(treat != focal) - at))
+
+          if (lower) trim.top <- c(at + 1, sum(treat != focal) - at)
+          else trim.top <- c(1, sum(treat != focal) - at)
+
+          trim.w <- sort(weights[treat != focal])[trim.top]
+          weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
+          weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
+          if (at == 1) {
+            if (lower) weights.text <- "weights"
+            else weights.text <- "weight"
+          }
+          else weights.text <- paste(at, "weights")
+          message(paste0("Trimming the ", word.list(c("top", "bottom")[c(TRUE, lower)]), " ", weights.text, " where treat ≠ ", focal, "."))
+        }
       }
-      message(paste0("Trimming weights to ", word.list(paste0(round(100*at[c(lower, TRUE)], 2), "%")), "."))
+      else {
+        if (at >= length(treat)) {
+          warning(paste0("'at' must be less than ", length(treat), ", the number of units. Weights will not be trimmed."), call. = FALSE)
+          at <- NULL
+        }
+        else {
+          at <- as.integer(min(at, length(treat) - at))
+
+          if (lower) trim.top <- c(at + 1, length(treat) - at)
+          else trim.top <- c(1, length(treat) - at)
+
+          trim.w <- sort(weights)[trim.top]
+          weights[weights < trim.w[1]] <- trim.w[1]
+          weights[weights > trim.w[2]] <- trim.w[2]
+          if (at == 1) {
+            if (lower) weights.text <- "weights"
+            else weights.text <- "weight"
+          }
+          else weights.text <- paste(at, "weights")
+          message(paste0("Trimming the ", word.list(c("top", "bottom")[c(TRUE, lower)]), " ", weights.text, "."))
+        }
+      }
     }
   }
 
   attr(weights, "trim") <- at
+  if (length(at) > 0) attr(weights, "trim.lower") <- lower
   return(weights)
 }

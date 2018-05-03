@@ -286,7 +286,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   out <- list(weights = w,
               treat = treat,
               covs = covs,
-              data = data,
+              #data = data,
               estimand = if (treat.type == "continuous") NULL else reported.estimand,
               method = method,
               ps = if (all(is.na(p.score))) NULL else p.score,
@@ -303,6 +303,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 print.weightit <- function(x, ...) {
   treat.type <- attr(x[["treat"]], "treat.type")
   trim <- attr(x[["weights"]], "trim")
+
   cat("A weightit object\n")
   cat(paste0(" - method: \"", x$method, "\" (", method.to.phrase(x$method), ")\n"))
   cat(paste0(" - number of obs.: ", length(x$weights), "\n"))
@@ -311,7 +312,16 @@ print.weightit <- function(x, ...) {
   cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x$treat), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x$treat), collapse = ", "), ")"), ""))), "\n"))
   if (length(x$estimand) > 0) cat(paste0(" - estimand: ", x$estimand, ifelse(length(x$focal)>0, paste0(" (focal: ", x$focal, ")"), ""), "\n"))
   cat(paste0(" - covariates: ", ifelse(length(names(x$covs)) > 60, "too many to name", paste(names(x$covs), collapse = ", ")), "\n"))
-  if (length(trim) > 0 && trim != 1) cat(paste0(" - weights trimmed at ", round(100*trim, 2), "%\n"))
+  if (length(trim) > 0) {
+    if (trim < 1) {
+      if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
+      cat(paste(" - weights trimmed at", word.list(paste0(round(100*trim, 2), "%")), "\n"))
+    }
+    else {
+      if (attr(x[["weights"]], "trim.lower")) t.b <- "top and bottom" else t.b <- "top"
+      cat(paste(" - weights trimmed at the", t.b, trim, "\n"))
+    }
+  }
   invisible(x)
 }
 summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {

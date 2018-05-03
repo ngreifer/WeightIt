@@ -3,6 +3,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                         verbose = FALSE, ...) {
 
   A <- list(...)
+  A[["estimand"]] <- NULL
   estimand <- "ATE"
 
   #Process s.weights
@@ -49,7 +50,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     if (!s.weights.specified) s.weights <- rep(1, length(treat.list[[i]]))
 
     #Get weights into a list
-    weightit_obj <- weightit(formula.list[[i]],
+    weightit_obj <- do.call("weightit", list(formula.list[[i]],
                              data = data.list[[i]],
                              method = method,
                              estimand = estimand,
@@ -59,18 +60,13 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                              verbose = verbose,
                              moments = moments,
                              int = int,
-                             ...)
+                             A))
     w.list[[i]] <- weightit_obj[["weights"]]
     if (length(weightit_obj[["ps"]]) > 0) ps.list[[i]] <- weightit_obj[["ps"]]
-    attr(treat.list[[i]], "treat.type") <- attr(weightit_obj$treat, "treat.type")
+    attr(treat.list[[i]], "treat.type") <- attr(weightit_obj[["treat"]], "treat.type")
   }
 
   w <- Reduce("*", w.list)
-
-  if (length(data) == 0) {
-    data.names <- unique(unlist(sapply(data.list, names)))
-    data <- do.call("cbind", data.list)[data.names]
-  }
 
   if (length(num.formula) > 0) {
     if (!stabilize) {
@@ -89,7 +85,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
             null.or.error(try(eval(parse(text = v), c(data, .GlobalEnv)), silent = TRUE))
           })
           if (any(rhs.vars.failed)) {
-            stop(paste0(c("All variables in num.formula must be variables in data.\nVariables not in data: ",
+            stop(paste0(c("All variables in num.formula must be variables in data or objects in the global environment.\nMissing variables: ",
                           paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), call. = FALSE)
           }
           else {
@@ -150,8 +146,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
       }
     }
     for (i in seq_along(formula.list)) {
-
-      sw_obj <- weightit(stabilization.formula.list[[i]],
+      sw_obj <- do.call("weightit", list(stabilization.formula.list[[i]],
                          data = data,
                          method = "ps",
                          estimand = estimand,
@@ -159,7 +154,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                          exact = exact,
                          s.weights = s.weights,
                          verbose = verbose,
-                         ...)
+                         A))
       sw.list[[i]] <- 1/cobalt::get.w(sw_obj)
 
     }
@@ -195,17 +190,18 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
 print.weightitMSM <- function(x, ...) {
   treat.types <- sapply(x[["treat.list"]], function(y) attr(y, "treat.type"))
-  trim <- attr(x, "trim")
+  trim <- attr(x[["weights"]], "trim")
+
   cat("A weightitMSM object\n")
-  cat(paste0(" - method: \"", x$method, "\" (", method.to.phrase(x$method), ")\n"))
-  cat(paste0(" - number of obs.: ", length(x$weights), "\n"))
-  cat(paste0(" - sampling weights: ", ifelse(max(x$s.weights) - min(x$s.weights) < sqrt(.Machine$double.eps),
+  cat(paste0(" - method: \"", x[["method"]], "\" (", method.to.phrase(x[["method"]]), ")\n"))
+  cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
+  cat(paste0(" - sampling weights: ", ifelse(max(x[["s.weights"]]) - min(x[["s.weights"]]) < sqrt(.Machine$double.eps),
                                              "none", "present"), "\n"))
-  cat(paste0(" - number of time points: ", length(x$treat.list), " (", paste(names(x$treat.list), collapse = ", "), ")\n"))
+  cat(paste0(" - number of time points: ", length(x[["treat.list"]]), " (", paste(names(x[["treat.list"]]), collapse = ", "), ")\n"))
   cat(paste0(" - treatment: \n",
              paste0(sapply(1:length(x$covs.list), function(i) {
 
-               paste0("    + time ", i, ": ", ifelse(treat.types[i] == "continuous", "continuous", paste0(nunique(x$treat.list[[i]]), "-category", ifelse(treat.types[i] == "multinomial", paste0(" (", paste(levels(x$treat.list[[i]]), collapse = ", "), ")"), ""))), "\n")
+               paste0("    + time ", i, ": ", ifelse(treat.types[i] == "continuous", "continuous", paste0(nunique(x[["treat.list"]][[i]]), "-category", ifelse(treat.types[i] == "multinomial", paste0(" (", paste(levels(x[["treat.list"]][[i]]), collapse = ", "), ")"), ""))), "\n")
 
              }), collapse = ""), collapse = "\n"))
   cat(paste0(" - covariates: \n",
@@ -220,21 +216,30 @@ print.weightitMSM <- function(x, ...) {
   if (length(x$stabilization) > 0) {
     cat(" - stabilized")
     if (any(sapply(x$stabilization, function(s) length(all.vars(s)) > 0))) {
-      cat(paste0("; stabilization factors:\n", if (length(x$stabilization) == 1) paste0("      ", all.vars(x$stabilization[[1]]), collapse = ", ")
+      cat(paste0("; stabilization factors:\n", if (length(x$stabilization) == 1) paste0("      ", paste0(attr(terms(x[["stabilization"]][[1]]), "term.labels"), collapse = ", "))
                  else {
                    paste0("\n", sapply(1:length(x$stabilization), function(i) {
                      if (i == 1) {
-                       paste0("    + baseline: ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
+                       paste0("    + baseline: ", paste(attr(terms(x[["stabilization"]][[i]]), "term.labels"), collapse = ", "))
                      }
                      else {
-                       paste0("    + after time ", i-1, ": ", paste(all.vars(x$stabilization[[i]]), collapse = ", "))
+                       paste0("    + after time ", i-1, ": ", paste(attr(terms(x[["stabilization"]][[i]]), "term.labels"), collapse = ", "))
                      }
                    }), collapse = "")
                  }))
     }
   }
 
-  if (length(trim) > 0 && trim != 1) cat(paste0(" - weights trimmed at ", round(100*trim, 2), "%\n"))
+  if (length(trim) > 0) {
+    if (trim < 1) {
+      if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
+      cat(paste(" - weights trimmed at", word.list(paste0(round(100*trim, 2), "%")), "\n"))
+    }
+    else {
+      if (attr(x[["weights"]], "trim.lower")) t.b <- "top and bottom" else t.b <- "top"
+      cat(paste(" - weights trimmed at the", t.b, trim, "\n"))
+    }
+  }
   invisible(x)
 }
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
@@ -248,7 +253,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   else sw <- object$s.weights
   w <- object$weights*sw
   treat.types <- sapply(object[["treat.list"]], function(y) attr(y, "treat.type"))
-  stabilized <- length(Wmsm$stabilization) > 0
+  stabilized <- length(object[["stabilization"]]) > 0
 
   for (ti in seq_along(object$treat.list)) {
     if (treat.types[ti] == "continuous") {
