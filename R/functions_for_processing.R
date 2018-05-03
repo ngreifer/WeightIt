@@ -226,6 +226,7 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
     mf.treat <- quote(stats::model.frame(tt.treat, data,
                                    drop.unused.levels = TRUE,
                                    na.action = "na.pass"))
+
     tryCatch({mf.treat <- eval(mf.treat, c(data, env))},
              error = function(e) {stop(conditionMessage(e), call. = FALSE)})
     treat <- model.response(mf.treat)
@@ -269,6 +270,8 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
            error = function(e) {stop(conditionMessage(e), call. = FALSE)})
 
   if (length(rhs.vars.mentioned) == 0) covs <- data.frame(Intercept = rep(1, if (length(treat) == 0 ) 1 else length(treat)))
+
+  attr(covs, "terms") <- NULL
 
   return(list(covs = covs,
               treat = treat,
