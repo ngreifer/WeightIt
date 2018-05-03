@@ -1,4 +1,4 @@
-weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
+weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
                      exact = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE,
                      verbose = FALSE, ...) {
 
@@ -9,12 +9,6 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
     if (length(formula) == 0 || length(class(formula)) == 0) {
       stop("formula must be a formula relating treatment to covariates.", call. = FALSE)
     }
-    if (missing(data)) {
-      data <- environment(formula)
-      #stop("Data must be specified.", call. = FALSE)
-    }
-    if (!is.data.frame(data)) {
-      stop("Data must be a data.frame.", call. = FALSE)}
   }
   else {
     if (!(is.character(ps) && length(ps) == 1) && !is.numeric(ps)) {
@@ -46,35 +40,20 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   method <- method.to.proper.method(tolower(method))
 
   #Process treat and covs from formula and data
-  mf <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data"), names(mf), 0L)
-  mf <- mf[c(1L, m)]
-  mf$drop.unused.levels <- TRUE
-  mf$na.action <- "na.pass"
-  mf[[1L]] <- quote(stats::model.frame)
-  tt <- terms(formula)
-  attr(tt, "intercept") <- 0
-  if (is.na(match(all.vars(tt[[2]]), names(data)))) {
-    stop(paste0("The given response variable, \"", all.vars(tt[[2]]), "\", is not a variable in data."), call. = FALSE)
-  }
-  vars.mentioned <- all.vars(tt[[3]])
+  t.c <- get.covs.and.treat.from.formula(formula, data)
+  covs <- t.c[["covs"]]
+  treat <- t.c[["treat"]]
 
-  tryCatch({mf <- eval(mf, parent.frame())}, error = function(e) {
-    stop(paste0(c("All variables in formula must be variables in data or objects in the global environment.\nMissing variables: ",
-                  paste(vars.mentioned[is.na(match(vars.mentioned, c(names(data), names(.GlobalEnv))))], collapse=", "))), call. = FALSE)})
+  if (length(covs) == 0) stop("No covariates were specified.", call. = FALSE)
+  if (length(treat) == 0) stop("No treatment variable was specified.", call. = FALSE)
 
-  covs <- mf[,-1, drop = FALSE]
-  #colnames(covs) <- paste0("`", colnames(covs), "`")
-  treat <- model.response(mf)
-  #covs <- data[!is.na(match(names(data), vars.mentioned[vars.mentioned != all.vars(tt[[2]])]))]
-
-  n <- nrow(data)
+  n <- length(treat)
 
   if (any(is.na(covs)) || nrow(covs) != n) {
     warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
     #stop("No missing values are allowed in the covariates.", call. = FALSE)
   }
-  if (any(is.na(treat)) || length(treat) != n) {
+  if (any(is.na(treat))) {
     stop("No missing values are allowed in the treatment variable.", call. = FALSE)
   }
   nunique.treat <- nunique(treat)
@@ -140,6 +119,10 @@ weightit <- function(formula, data, method = "ps", estimand = "ATE", stabilize =
   if (any(sapply(levels(exact.factor), function(x) nunique(treat) != nunique(treat[exact.factor == x])))) {
     stop("Not all the groups formed by exact contain all treatment levels. Consider coarsening exact.", call. = FALSE)
   }
+
+  #Recreate data and formula
+  data <- data.frame(treat, covs)
+  formula <- formula(data)
 
   #Check to ensure formula makes sense with levels
   if (length(exact.vars) > 0) {

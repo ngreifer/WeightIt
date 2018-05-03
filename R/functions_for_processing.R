@@ -193,6 +193,87 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
 
   return(out)
 }
+null.or.error <- function(x) {length(x) == 0 || class(x) == "try-error"}
+get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
+  A <- list(...)
+
+  tt <- terms(f, data = data)
+  attr(tt, "intercept") <- 0
+
+  #Check if data exists
+  if (length(data) > 0 && is.data.frame(data)) {
+    data.specified <- TRUE
+  }
+  else data.specified <- FALSE
+
+  #Check if response exists
+  if (is.formula(tt, 2)) {
+    resp.vars.mentioned <- as.character(tt)[2]
+    resp.vars.failed <- sapply(resp.vars.mentioned, function(v) {
+      null.or.error(try(eval(parse(text = v), c(data, env)), silent = TRUE))
+    })
+
+    if (any(resp.vars.failed)) {
+      if (length(A[["treat"]]) == 0) stop(paste0("The given response variable, \"", as.character(tt)[2], "\", is not a variable in ", word.list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
+      tt <- delete.response(tt)
+    }
+  }
+  else resp.vars.failed <- TRUE
+
+  if (any(!resp.vars.failed)) {
+    treat.name <- resp.vars.mentioned[!resp.vars.failed][1]
+    tt.treat <- terms(as.formula(paste0(treat.name, " ~ 1")))
+    mf.treat <- quote(stats::model.frame(tt.treat, data,
+                                   drop.unused.levels = TRUE,
+                                   na.action = "na.pass"))
+    tryCatch({mf.treat <- eval(mf.treat, c(data, env))},
+             error = function(e) {stop(conditionMessage(e), call. = FALSE)})
+    treat <- model.response(mf.treat)
+  }
+  else {
+    treat <- A[["treat"]]
+    treat.name <- NULL
+  }
+
+  #Check if RHS variables exist
+  tt.covs <- delete.response(tt)
+  rhs.vars.mentioned <- attr(tt.covs, "term.labels")
+  rhs.vars.failed <- sapply(rhs.vars.mentioned, function(v) {
+    null.or.error(try(eval(parse(text = v), c(data, env)), silent = TRUE))
+  })
+
+  if (any(rhs.vars.failed)) {
+    stop(paste0(c("All variables in formula must be variables in data or objects in the global environment.\nMissing variables: ",
+                  paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), call. = FALSE)
+
+  }
+
+  rhs.df <- sapply(rhs.vars.mentioned, function(v) {
+    is.data.frame(try(eval(parse(text = v), c(data, env)), silent = TRUE))
+  })
+
+  if (any(rhs.df)) {
+    addl.dfs <- lapply(rhs.vars.mentioned[rhs.df], function(x) {eval(parse(text = x), env)})
+    new.form <- paste0("~ . - ",
+                       paste(rhs.vars.mentioned[rhs.df], collapse = " - "), " + ",
+                       paste(unlist(sapply(addl.dfs, names)), collapse = " + "))
+    tt.covs <- update(tt.covs, as.formula(new.form))
+    data <- do.call("cbind", c(addl.dfs, data))
+  }
+
+  #Get model.frame, report error
+  mf.covs <- quote(stats::model.frame(tt.covs, data,
+                                 drop.unused.levels = TRUE,
+                                 na.action = "na.pass"))
+  tryCatch({covs <- eval(mf.covs, c(data, env))},
+           error = function(e) {stop(conditionMessage(e), call. = FALSE)})
+
+  if (length(rhs.vars.mentioned) == 0) covs <- data.frame(Intercept = rep(1, if (length(treat) == 0 ) 1 else length(treat)))
+
+  return(list(covs = covs,
+              treat = treat,
+              treat.name = treat.name))
+}
 equivalent.factors <- function(f1, f2) {
   return(nunique(f1) == nunique(interaction(f1, f2)))
 }
@@ -317,6 +398,18 @@ binarize <- function(variable) {
   else zero <- min(unique(variable.numeric))
   newvar <- setNames(ifelse(variable.numeric==zero, 0, 1), names(variable))
   return(newvar)
+}
+ordinal <- function(x) {
+  x <- abs(x)
+  if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 1) {
+    return(paste0(x, 'st'))
+  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 2) {
+    return(paste0(x, 'nd'))
+  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 3) {
+    return(paste0(x, 'rd'))
+  } else {
+    return(paste0(x, 'th'))
+  }
 }
 
 #To pass CRAN checks:

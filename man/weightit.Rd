@@ -5,7 +5,7 @@
 \title{Generate Balancing Weights}
 \usage{
 weightit(formula,
-         data,
+         data = NULL,
          method = "ps",
          estimand = "ATE",
          stabilize = FALSE,
@@ -15,7 +15,6 @@ weightit(formula,
          ps = NULL,
          moments = 1,
          int = FALSE,
-         truncate = 1,
          verbose = FALSE,
          ...)
 
@@ -30,7 +29,7 @@ weightit(formula,
 a formula with a treatment variable on the left hand side and the covariates to be balanced on the right hand side. See \code{\link{glm}} for more details. Interactions and functions of covariates are allowed.
 }
   \item{data}{
-a data set in the form of a data frame that contains the variables in \code{formula}.
+an optional data set in the form of a data frame that contains the variables in \code{formula}.
 }
   \item{method}{
 a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is \code{"ps"}.
@@ -59,9 +58,6 @@ A vector of propensity scores or the name of a variable in \code{data} containin
   \item{int}{
 \code{logical}; for entropy balancing, empirical balancing callibration weights, and stable balancing weights, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
 }
-  \item{truncate}{
-\code{numeric}; the quantile at which the weights will be truncated. All weights greater than the weight at the specified quantile will be sent to the weight at the quantile. If the estimand is the ATT or ATC, only the control or treated units, respectively, will have their weights truncated. Default is 1, or no truncation.
-}
   \item{verbose}{
 whether to print additional information output by the fitting function.
 }
@@ -83,7 +79,6 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
   \item{method}{The weight estimation method specified.}
   \item{ps}{The estimated or provided propensity scores.}
   \item{s.weights}{The provided sampling weights.}
-  \item{treat.type}{The type of treatment: binary, continuous, or multinomial (\code{"multi"}).}
   \item{focal}{The focal variable if the ATT was requested with a multinomial treatment.}
 }
 \details{
@@ -170,7 +165,7 @@ Robins, J. M., Hernán, M. Á., & Brumback, B. (2000). Marginal Structural Model
 
 \code{method = "cbps"}
 
-Fong, Christian, Chad Hazlett, and Kosuke Imai (2015). Parametric and Nonparametric Covariate Balancing Propensity Score for General Treatment Regimes. Unpublished Manuscript. <\url{http://imai.princeton.edu/research/files/CBGPS.pdf}>
+Fong, C., Hazlett, C. , and Imai, K. (2015). Parametric and Nonparametric Covariate Balancing Propensity Score for General Treatment Regimes. Unpublished Manuscript. <\url{http://imai.princeton.edu/research/files/CBGPS.pdf}>
 
 }
 

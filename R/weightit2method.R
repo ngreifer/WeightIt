@@ -4,7 +4,7 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
 
   if (length(ps) == 0) {
     tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+    mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
     t <- factor(model.response(mf))
     covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
 
@@ -13,6 +13,7 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
     data <- data.frame(t, covs)
+    formula <- formula(data)
 
     if (length(A$link) == 0) A$link <- "logit"
     else {
@@ -42,7 +43,8 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
     if (!nunique.gt(t, 2)) {
       ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
                      levels(t))
-      fit <- glm(formula(data), data = data,
+
+      fit <- glm(formula, data = data,
                  weights = s.weights[subset],
                  family = binomial(link = A$link),
                  control = list(),
@@ -56,9 +58,8 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
         if (check.package("mlogit", alternative = TRUE) && (length(A$use.mlogit) == 0 ||
                                                             (length(A$use.mlogit) > 0 && A$use.mlogit != FALSE))) {
           message(paste0("Using multinomial ", A$link, " regression."))
-          covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
-          mult <- mlogit::mlogit.data(data.frame(.t = t, covs, .s.weights = s.weights[subset]), varying = NULL, shape = "wide", sep = "", choice = ".t")
-          tryCatch({fit <- mlogit::mlogit(as.formula(paste0(".t ~ 1 | ", paste(colnames(covs), collapse = " + "),
+          mult <- mlogit::mlogit.data(data.frame(t = data[[1]], .s.weights = s.weights[subset], data[-1]), varying = NULL, shape = "wide", sep = "", choice = "t")
+          tryCatch({fit <- mlogit::mlogit(as.formula(paste0("t ~ 1 | ", paste(names(data)[-1], collapse = " + "),
                                                             " | 1")), data = mult, estimate = TRUE,
                                           probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
                                           weights = .s.weights, ...)},
@@ -68,13 +69,12 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
         }
         else {
           message(paste0("Using a series of ", nunique(t), " binomial ", A$link, " regressions."))
-          covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
           ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
                          levels(t))
 
           for (i in levels(t)) {
             t_i <- rep(0, length(t)); t_i[t == i] <- 1
-            data_i <- data.frame(t_i, covs)
+            data_i <- data.frame(t_i, data[-1])
             fit_i <- glm(formula(data_i), data = data_i,
                          family = binomial(link = A$link),
                          weights = s.weights[subset])
@@ -84,7 +84,7 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
       }
       else if (A$link == "bayes.probit") {
         check.package("MNP")
-        fit <- MNP::mnp(formula, data[subset,], verbose = TRUE)
+        fit <- MNP::mnp(formula, data, verbose = TRUE)
         ps <- MNP::predict.mnp(fit, type = "prob")$p
       }
       else {
@@ -432,7 +432,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
 
         covs_[treat_ == 1,] <- covs_[treat_ == 1,] * s.weights[subset][treat == focal] * sum(treat == focal)/ sum(s.weights[subset][treat == focal])
 
-        ebal.out <<- ebal::ebalance(Treatment = treat_, X = covs_,
+        ebal.out <- ebal::ebalance(Treatment = treat_, X = covs_,
                                     base.weight = A[["base.weight"]],
                                     norm.constant = A[["norm.constant"]],
                                     coefs = A[["coefs"]],
@@ -469,7 +469,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
                                      constraint.tolerance = A[["constraint.tolerance"]],
                                      print.level = 3)
 
-        if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebalanceobj = ebal.out,
+        if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebalanceobj = ebal.out_i,
                                                          max.weight = A[["max.weight"]],
                                                          min.weight = A[["min.weight"]],
                                                          max.trim.iterations = A[["max.trim.iterations"]],

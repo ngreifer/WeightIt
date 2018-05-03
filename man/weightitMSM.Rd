@@ -4,7 +4,7 @@
 \title{Generate Balancing Weights}
 \usage{
 weightitMSM(formula.list,
-            data,
+            data = NULL,
             method = "ps",
             stabilize = FALSE,
             exact = NULL,
@@ -12,7 +12,6 @@ weightitMSM(formula.list,
             num.formula = NULL,
             moments = 1,
             int = FALSE,
-            truncate = 1,
             verbose = FALSE,
             ...)
 
@@ -29,7 +28,7 @@ Currently only "wide" data sets, where each row corresponds to a unit's entire v
 a list of formulas corresponding to each time point with the time-specific treatment variable on the left hand side and pre-treatment covariates to be balanced on the right hand side. The formulas must be in temporal order, and must contain all covariates to be balanced at that time point (i.e., treatments and covariates featured in early formulas should appear in later ones). Interactions and functions of covariates are allowed.
 }
   \item{data}{
-a data set in the form of a data frame that contains the variables in the formulas in \code{formula.list}. This must be a wide data set with exactly one row per unit.
+an optional data set in the form of a data frame that contains the variables in the formulas in \code{formula.list}. This must be a wide data set with exactly one row per unit.
 }
   \item{method}{
 a string of length 1 containing the name of the method that will be used to estimate weights. See \code{\link{weightit}} for allowable options. The default is \code{"ps"}, which estimates the weights using generalized linear models. See Details below.
@@ -38,7 +37,7 @@ a string of length 1 containing the name of the method that will be used to esti
 \code{logical}; whether or not to stabilize the weights. Stabilizing the weights involves fitting a model predicting treatment at each time point from treatment status at prior time points. If \code{TRUE}, a saturated model will be fit, essentially using the observed treatment probabilities in the numerator (for binary and multinomial treatments). This may yield an error if some combinations are not observed. Default is \code{FALSE}. To manually specify stabilization model formulas, use \code{num.formula}.
 }
 \item{num.formula}{
-optional; a list of formulas used in the numerator of the weights if stabilization is to occur. These formulas should specify the relationship between the treatment and the stabilization factors (including previous treatments) at each time point. They should not contain time-varying covariates except those measured prior to the first treatment. Can also be specified as a single one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernan (2008) for a discussion of how to specifiy this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
+optional; a one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernán (2008) for a discussion of how to specifiy this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
 }
   \item{exact}{
 a vector or the names of variables in data for which weighting is to be done within catgories. For example, if \code{exact = "gender"}, weights will be generated seperately within each level of the variable \code{"gender"}.
@@ -51,9 +50,6 @@ a vector of sampling weights or the name of a variable in \code{data} that conta
 }
   \item{int}{
 \code{logical}; for entropy balancing, empirical balancing callibration weights, and stable balancing weights, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
-}
-  \item{truncate}{
-\code{numeric}; the quantile at which the weights will be truncated. All weights greater than the weight at the specified quantile will be sent to the weight at the quantile. If the estimand is the ATT or ATC, only the control or treated units, respectively, will have their weights truncated. Default is 1, or no truncation.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.
@@ -76,7 +72,6 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM()}.
   \item{method}{The weight estimation method specified.}
   \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
   \item{s.weights}{The provided sampling weights.}
-  \item{treat.type}{The type of treatment: binary, continuous, or multinomial (\code{"multi"}).}
   \item{stabilization}{The stabilization factors, if any.}
 }
 \details{
@@ -93,7 +88,7 @@ Noah Greifer
 }
 
 \references{
-Cole, S. R., & Hernan, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. <doi:10.1093/aje/kwn164>
+Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. <doi:10.1093/aje/kwn164>
 }
 
 \examples{
