@@ -50,7 +50,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     if (!s.weights.specified) s.weights <- rep(1, length(treat.list[[i]]))
 
     #Get weights into a list
-    weightit_obj <- do.call("weightit", list(formula.list[[i]],
+    weightit_obj <- do.call("weightit", c(list(formula.list[[i]],
                              data = data.list[[i]],
                              method = method,
                              estimand = estimand,
@@ -59,7 +59,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                              s.weights = s.weights,
                              verbose = verbose,
                              moments = moments,
-                             int = int,
+                             int = int),
                              A))
     w.list[[i]] <- weightit_obj[["weights"]]
     if (length(weightit_obj[["ps"]]) > 0) ps.list[[i]] <- weightit_obj[["ps"]]
@@ -146,14 +146,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
       }
     }
     for (i in seq_along(formula.list)) {
-      sw_obj <- do.call("weightit", list(stabilization.formula.list[[i]],
+      sw_obj <- do.call("weightit", c(list(stabilization.formula.list[[i]],
                          data = data,
                          method = "ps",
                          estimand = estimand,
                          stabilize = FALSE,
                          exact = exact,
                          s.weights = s.weights,
-                         verbose = verbose,
+                         verbose = verbose),
                          A))
       sw.list[[i]] <- 1/cobalt::get.w(sw_obj)
 
