@@ -1,17 +1,18 @@
-trim <- function(x, at = .99, ...) {
+trim <- function(x, ...) {
   UseMethod("trim")
 }
 
-trim.weightit <- function(x, at = .99, ...) {
+trim.weightit <- function(x, at = .99, lower = FALSE, ...) {
   x[["weights"]] <- trim.weights(x[["weights"]],
-                                     trim = at,
-                                     treat = x[["treat"]],
-                                     estimand = x[["estimand"]],
-                                     focal = x[["focal"]],
-                                     treat.type = attr(x[["treat"]], "treat.type"))
+                                 at = at,
+                                 treat = x[["treat"]],
+                                 estimand = x[["estimand"]],
+                                 focal = x[["focal"]],
+                                 treat.type = attr(x[["treat"]], "treat.type"),
+                                 lower = lower)
   return(x)
 }
-trim.numeric <- function(x, at = .99, treat = NULL, ...) {
+trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
   if (length(treat) > 0 && length(attr(treat, "treat.type")) == 0) {
     nunique.treat <- nunique(treat)
     if (nunique.treat == 2) {
@@ -50,14 +51,15 @@ trim.numeric <- function(x, at = .99, treat = NULL, ...) {
   }
 
   w <- trim.weights(x, trim = at,
-                        treat = treat,
-                        estimand = estimand,
-                        focal = focal,
-                        treat.type = treat.type)
+                    treat = treat,
+                    estimand = estimand,
+                    focal = focal,
+                    treat.type = treat.type,
+                    lower = lower)
   return(w)
 }
 
-trim.weights <- function(weights, trim, treat, estimand, focal, treat.type = NULL) {
+trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL, lower) {
   estimand <- toupper(estimand)
   if (length(estimand) != 1 ||
       !is.character(estimand) ||
@@ -70,39 +72,40 @@ trim.weights <- function(weights, trim, treat, estimand, focal, treat.type = NUL
   estimand <- f.e.r[["estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
 
-  if (length(trim) == 0) {
-    trim <- 1
+  if (length(at) == 0) {
+    at <- 1
   }
-  else if (length(trim) > 1 || !is.numeric(trim)) {
-    warning("trim must be a single number between 0 and 1. Weights will not be trimmed.", call. = FALSE)
-    trim <- 1
+  else if (length(at) > 1 || !is.numeric(at)) {
+    warning("\"at\" must be a single number between 0 and 1. Weights will not be trimmed.", call. = FALSE)
+    at <- 1
   }
-  else  {
-    if (trim <= 0 || trim >= 1) {
-      warning("trim must be between 0 and 1. Weights will not be trimmed.", call. = FALSE)
-      trim <- 1
-    }
-    else {
-      trim <- max(trim, 1 - trim)
-    }
+  else  if (at <= 0 || at >= 1) {
+    warning("\"at\" must be between 0 and 1. Weights will not be trimmed.", call. = FALSE)
+    at <- 1
+  }
+  else {
+    if (lower) at <- sort(c(at, 1 - at))
+    else at <- c(0, max(at, 1 - at))
   }
 
-  if (trim != 1) {
+  if (all(at != 1)) {
     if (toupper(estimand) == "ATT") {
-      max.trim.w <- quantile(weights[treat != focal], probs = trim)
-      weights[treat != focal & weights > max.trim.w] <- max.trim.w
-      message(paste0("Trimming weights where treat ≠ ", focal, " to ", round(100*trim, 2), "%."))
+      trim.w <- quantile(weights[treat != focal], probs = at)
+      weights[treat != focal & weights < trim.w] <- trim.w[1]
+      weights[treat != focal & weights > trim.w] <- trim.w[2]
+      message(paste0("Trimming weights where treat ≠ ", focal, " to ", round(100*at, 2), "%."))
     }
     else {
-      max.trim.w <- quantile(weights, probs = trim)
-      weights[weights > max.trim.w] <- max.trim.w
+      trim.w <- quantile(weights, probs = at)
+      weights[weights < trim.w] <- trim.w[1]
+      weights[weights > trim.w] <- trim.w[2]
       if (sum(abs(weights - 1) < sqrt(.Machine$double.eps)) > 10) {
         warning("Several weights are equal to 1. You should enter the treatment variable as an argument to treat in trim().", call. = FALSE)
       }
-      message(paste0("Trimming weights to ", round(100*trim, 2), "%."))
+      message(paste0("Trimming weights to ", word.list(paste0(round(100*at[c(lower, TRUE)], 2), "%")), "."))
     }
   }
 
-  attr(weights, "trim") <- trim
+  attr(weights, "trim") <- at
   return(weights)
 }

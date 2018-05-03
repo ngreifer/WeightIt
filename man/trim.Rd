@@ -10,9 +10,9 @@ Trim Large Weights
 Trims (i.e., truncates) large weights by setting all weights higher than that at a given quantile to the weight at the quantile. This can be useful in controlling extreme weights, which can reduce effective sample size by enlarging the variability of the weights.
 }
 \usage{
-\method{trim}{weightit}(x, at = .99, ...)
+\method{trim}{weightit}(x, at = .99, lower = FALSE, ...)
 
-\method{trim}{numeric}(x, at = .99, treat = NULL, ...)
+\method{trim}{numeric}(x, at = .99, lower = FALSE, treat = NULL, ...)
 }
 \arguments{
   \item{x}{
@@ -20,6 +20,9 @@ A \code{weightit} object or a vector of weights.
 }
   \item{at}{
 \code{numeric}; the quantile of the weights above which weights are to be trimmed. A single number between .5 and 1.
+}
+  \item{lower}{
+\code{logical}; whether also to trim at the lower quantile (e.g., for \code{at = .9}, trimming at both .1 and .9).
 }
   \item{treat}{
 A vector of treatment status for each unit. This should always be included, but you can get away with leaving it out if the treatment is continuous or the estimand is the ATE for binary or multinomial treatments.
@@ -29,7 +32,7 @@ Not used.
 }
 }
 \details{
-\code{trim} takes in a \code{weightit} object (the output of a call to \code{weightit()} or \code{weightitMSM}) or a numeric vector of weights and trims them to the specified quantile. All weights above that quantile are set to the weight at that quantile. Note that this only applies to the upper quantiles; small weights are typically not as problematic as large ones. In general, trimming weights decreases balance but also decreases the variability of the weights, improving precision at the potential expense of unbiasedness (Cole & Hernán, 2008). See Lee, Lessler, and Stuart (2011) and Thoemmes and Ong (2015) for discussions and simulation results of trimming weights at various quantiles.
+\code{trim} takes in a \code{weightit} object (the output of a call to \code{weightit()} or \code{weightitMSM}) or a numeric vector of weights and trims them to the specified quantile. All weights above that quantile are set to the weight at that quantile. If \code{lower = TRUE}, all weights below 1 minus the quantile are to set the weight at 1 minus the quantile. In general, trimming weights decreases balance but also decreases the variability of the weights, improving precision at the potential expense of unbiasedness (Cole & Hernán, 2008). See Lee, Lessler, and Stuart (2011) and Thoemmes and Ong (2015) for discussions and simulation results of trimming weights at various quantiles.
 
 When using \code{trim} on a numeric vector of weights, it is helpful to include the treatment vector as well. The helps determine the type of treatment and estimand, which are used to specify how trimming is performed. In particular, if the estimand is determined to be the ATT or ATC, the weights of the target (i.e., focal) group are ignored, since they should all be equal to 1. Otherwise, if the estimand is the ATE or the treatment is continuous, all weights are considered for trimming.
 }
