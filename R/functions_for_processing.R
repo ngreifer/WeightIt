@@ -1,43 +1,3 @@
-word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
-  #When given a vector of strings, creates a string of the form "a and b"
-  #or "a, b, and c"
-  #If is.are, adds "is" or "are" appropriately
-  L <- length(word.list)
-  if (quotes) word.list <- sapply(word.list, function(x) paste0("\"", x, "\""))
-  if (L == 0) {
-    out <- ""
-    attr(out, "plural") = FALSE
-  }
-  else {
-    word.list <- word.list[!word.list %in% c(NA, "")]
-    L <- length(word.list)
-    if (L == 0) {
-      out <- ""
-      attr(out, "plural") = FALSE
-    }
-    else if (L == 1) {
-      out <- word.list
-      if (is.are) out <- paste(out, "is")
-      attr(out, "plural") = FALSE
-    }
-    else {
-      and.or <- match.arg(and.or)
-      if (L == 2) {
-        out <- paste(word.list, collapse = paste0(" ", and.or," "))
-      }
-      else {
-        out <- paste(paste(word.list[seq_len(L-1)], collapse = ", "),
-                     word.list[L], sep = paste0(", ", and.or," "))
-
-      }
-      if (is.are) out <- paste(out, "are")
-      attr(out, "plural") = TRUE
-    }
-
-
-  }
-  return(out)
-}
 method.to.proper.method <- function(method) {
   if (method %in% c("ps")) return("ps")
   else if (method %in% c("gbm", "gbr", "twang")) return("gbm")
@@ -145,6 +105,154 @@ check.moments.int <- function(method, moments, int) {
   }
   return(c(moments = as.integer(moments), int = int))
 }
+between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
+  if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
+  if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
+  if (any(is.na(range) | !is.numeric(range))) stop("range must contain numeric entries only.", call. = FALSE)
+  range <- sort(range)
+
+  if (any(is.na(x))) {
+    if (length(na.action) != 1 || !is.atomic(na.action)) stop("na.action must be an atomic vector of length 1.", call. = FALSE)
+  }
+  if (inclusive) out <- ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
+  else out <- ifelse(is.na(x), na.action, x > range[1] & x < range[2])
+
+  return(out)
+}
+equivalent.factors <- function(f1, f2) {
+  return(nunique(f1) == nunique(interaction(f1, f2)))
+}
+text.box.plot <- function(range.list, width = 12) {
+  full.range <- range(unlist(range.list))
+  ratio = diff(full.range)/(width+1)
+  rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
+  rescaled.full.range <- round(full.range/ratio)
+  d <- as.data.frame(matrix(NA_character_, ncol = 3, nrow = length(range.list),
+                            dimnames = list(names(range.list), c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"))),
+                     stringsAsFactors = FALSE)
+  d[,"Min"] <- sapply(range.list, function(x) x[1])
+  d[,"Max"] <- sapply(range.list, function(x) x[2])
+  for (i in seq_len(nrow(d))) {
+    spaces1 <- rescaled.range.list[[i]][1] - rescaled.full.range[1]
+    #|
+    dashes <- max(0, diff(rescaled.range.list[[i]]) - 2)
+    #|
+    spaces2 <- max(0, diff(rescaled.full.range) - (spaces1 + 1 + dashes + 1))
+
+    d[i, 2] <- paste0(paste(rep(" ", spaces1), collapse = ""), "|", paste(rep("-", dashes), collapse = ""), "|", paste(rep(" ", spaces2), collapse = ""))
+  }
+  return(d)
+}
+check.package <- function(package.name, alternative = FALSE) {
+  package.is.installed <- any(.packages(all.available = TRUE) == package.name)
+  if (!package.is.installed && !alternative) {
+    stop(paste0("Package \"", package.name, "\" needed for this function to work. Please install it."),
+         call. = FALSE)
+  }
+  return(invisible(package.is.installed))
+}
+make.closer.to.1 <- function(x) {
+  if (nunique.gt(x, 2)) {
+    ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)]))), na.rm = TRUE))
+    if (abs(ndigits) > 2) return(x/(10^ndigits))
+    else return(x)
+  }
+  else {
+    return(as.numeric(x == x[1]))
+  }
+}
+remove.collinearity <- function(mat) {
+  keep <- rep(TRUE, ncol(mat))
+  for (i in seq_along(keep)) {
+    keep. <- keep; keep.[i] <- FALSE
+    if (qr(mat[, keep., drop = FALSE])$rank == qr(mat[, keep, drop = FALSE])$rank) {
+      keep[i] <- FALSE
+    }
+  }
+  return(mat[,keep, drop = FALSE])
+}
+ordinal <- function(x) {
+  x <- abs(x)
+  if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 1) {
+    return(paste0(x, 'st'))
+  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 2) {
+    return(paste0(x, 'nd'))
+  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 3) {
+    return(paste0(x, 'rd'))
+  } else {
+    return(paste0(x, 'th'))
+  }
+}
+
+#Shared with cobalt
+word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
+  #When given a vector of strings, creates a string of the form "a and b"
+  #or "a, b, and c"
+  #If is.are, adds "is" or "are" appropriately
+  L <- length(word.list)
+  if (quotes) word.list <- sapply(word.list, function(x) paste0("\"", x, "\""))
+  if (L == 0) {
+    out <- ""
+    attr(out, "plural") = FALSE
+  }
+  else {
+    word.list <- word.list[!word.list %in% c(NA, "")]
+    L <- length(word.list)
+    if (L == 0) {
+      out <- ""
+      attr(out, "plural") = FALSE
+    }
+    else if (L == 1) {
+      out <- word.list
+      if (is.are) out <- paste(out, "is")
+      attr(out, "plural") = FALSE
+    }
+    else {
+      and.or <- match.arg(and.or)
+      if (L == 2) {
+        out <- paste(word.list, collapse = paste0(" ", and.or," "))
+      }
+      else {
+        out <- paste(paste(word.list[seq_len(L-1)], collapse = ", "),
+                     word.list[L], sep = paste0(", ", and.or," "))
+
+      }
+      if (is.are) out <- paste(out, "are")
+      attr(out, "plural") = TRUE
+    }
+
+
+  }
+  return(out)
+}
+nunique <- function(x, nmax = NA, na.rm = TRUE) {
+  if (length(x) == 0) return(0)
+  else {
+    if (na.rm) x <- x[!is.na(x)]
+    if (is.factor(x)) return(nlevels(x))
+    else return(length(unique(x, nmax = nmax)))
+  }
+
+}
+nunique.gt <- function(x, n, na.rm = TRUE) {
+  if (n < 0) stop("n must be non-negative.", call. = FALSE)
+  if (length(x) == 0) FALSE
+  else {
+    if (na.rm) x <- x[!is.na(x)]
+    if (length(x) < 2000) nunique(x) > n
+    else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
+  }
+}
+binarize <- function(variable) {
+  nas <- is.na(variable)
+  if (nunique.gt(variable[!nas], 2)) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
+  variable.numeric <- as.numeric(variable)
+  if (!is.na(match(0, unique(variable.numeric)))) zero <- 0
+  else zero <- min(unique(variable.numeric), na.rm = TRUE)
+  newvar <- setNames(ifelse(!nas & variable.numeric==zero, 0, 1), names(variable))
+  newvar[nas] <- NA
+  return(newvar)
+}
 int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
   #Adds to data frame interactions and polynomial terms; interaction terms will be named "v1_v2" and polynomials will be named "v1_2"
   #Only to be used in base.bal.tab; for general use see int.poly()
@@ -179,20 +287,6 @@ int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
   #new <- setNames(data.frame(new), new.names)[!single.value]
   return(new[, !single.value, drop = FALSE])
 }
-between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
-  if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
-  if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
-  if (any(is.na(range) | !is.numeric(range))) stop("range must contain numeric entries only.", call. = FALSE)
-  range <- sort(range)
-
-  if (any(is.na(x))) {
-    if (length(na.action) != 1 || !is.atomic(na.action)) stop("na.action must be an atomic vector of length 1.", call. = FALSE)
-  }
-  if (inclusive) out <- ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
-  else out <- ifelse(is.na(x), na.action, x > range[1] & x < range[2])
-
-  return(out)
-}
 null.or.error <- function(x) {length(x) == 0 || class(x) == "try-error"}
 get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   A <- list(...)
@@ -224,8 +318,8 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
     treat.name <- resp.vars.mentioned[!resp.vars.failed][1]
     tt.treat <- terms(as.formula(paste0(treat.name, " ~ 1")))
     mf.treat <- quote(stats::model.frame(tt.treat, data,
-                                   drop.unused.levels = TRUE,
-                                   na.action = "na.pass"))
+                                         drop.unused.levels = TRUE,
+                                         na.action = "na.pass"))
 
     tryCatch({mf.treat <- eval(mf.treat, c(data, env))},
              error = function(e) {stop(conditionMessage(e), call. = FALSE)})
@@ -264,8 +358,8 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
 
   #Get model.frame, report error
   mf.covs <- quote(stats::model.frame(tt.covs, data,
-                                 drop.unused.levels = TRUE,
-                                 na.action = "na.pass"))
+                                      drop.unused.levels = TRUE,
+                                      na.action = "na.pass"))
   tryCatch({covs <- eval(mf.covs, c(data, env))},
            error = function(e) {stop(conditionMessage(e), call. = FALSE)})
 
@@ -276,30 +370,6 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   return(list(covs = covs,
               treat = treat,
               treat.name = treat.name))
-}
-equivalent.factors <- function(f1, f2) {
-  return(nunique(f1) == nunique(interaction(f1, f2)))
-}
-text.box.plot <- function(range.list, width = 12) {
-  full.range <- range(unlist(range.list))
-  ratio = diff(full.range)/(width+1)
-  rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
-  rescaled.full.range <- round(full.range/ratio)
-  d <- as.data.frame(matrix(NA_character_, ncol = 3, nrow = length(range.list),
-                            dimnames = list(names(range.list), c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"))),
-                     stringsAsFactors = FALSE)
-  d[,"Min"] <- sapply(range.list, function(x) x[1])
-  d[,"Max"] <- sapply(range.list, function(x) x[2])
-  for (i in seq_len(nrow(d))) {
-    spaces1 <- rescaled.range.list[[i]][1] - rescaled.full.range[1]
-    #|
-    dashes <- max(0, diff(rescaled.range.list[[i]]) - 2)
-    #|
-    spaces2 <- max(0, diff(rescaled.full.range) - (spaces1 + 1 + dashes + 1))
-
-    d[i, 2] <- paste0(paste(rep(" ", spaces1), collapse = ""), "|", paste(rep("-", dashes), collapse = ""), "|", paste(rep(" ", spaces2), collapse = ""))
-  }
-  return(d)
 }
 round_df <- function(df, digits) {
   nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
@@ -348,34 +418,6 @@ round_df_char <- function(df, digits, pad = "0") {
 
   return(df)
 }
-check.package <- function(package.name, alternative = FALSE) {
-  package.is.installed <- any(.packages(all.available = TRUE) == package.name)
-  if (!package.is.installed && !alternative) {
-    stop(paste0("Package \"", package.name, "\" needed for this function to work. Please install it."),
-         call. = FALSE)
-  }
-  return(invisible(package.is.installed))
-}
-make.closer.to.1 <- function(x) {
-  if (nunique.gt(x, 2)) {
-    ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)]))), na.rm = TRUE))
-    if (abs(ndigits) > 2) return(x/(10^ndigits))
-    else return(x)
-  }
-  else {
-    return(as.numeric(x == x[1]))
-  }
-}
-remove.collinearity <- function(mat) {
-  keep <- rep(TRUE, ncol(mat))
-  for (i in seq_along(keep)) {
-    keep. <- keep; keep.[i] <- FALSE
-    if (qr(mat[, keep., drop = FALSE])$rank == qr(mat[, keep, drop = FALSE])$rank) {
-      keep[i] <- FALSE
-    }
-  }
-  return(mat[,keep, drop = FALSE])
-}
 is.formula <- function(f, sides = NULL) {
   res <- is.name(f[[1]])  && deparse(f[[1]]) %in% c( '~', '!') &&
     length(f) >= 2
@@ -383,36 +425,6 @@ is.formula <- function(f, sides = NULL) {
     res <- res && length(f) == sides + 1
   }
   return(res)
-}
-nunique <- function(x, nmax = NA, na.rm = TRUE) {
-  if (na.rm) x <- x[!is.na(x)]
-  if (is.factor(x)) return(nlevels(x))
-  else return(length(unique(x, nmax = nmax)))
-}
-nunique.gt <- function(x, n, na.rm = TRUE) {
-  if (na.rm) x <- x[!is.na(x)]
-  if (length(x) < 2000) nunique(x, na.rm = na.rm) > n
-  else tryCatch(nunique(x, nmax = n, na.rm = na.rm) > n, error = function(e) TRUE)
-}
-binarize <- function(variable) {
-  if (nunique.gt(variable, 2)) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
-  variable.numeric <- as.numeric(variable)
-  if (!is.na(match(0, unique(variable.numeric)))) zero <- 0
-  else zero <- min(unique(variable.numeric))
-  newvar <- setNames(ifelse(variable.numeric==zero, 0, 1), names(variable))
-  return(newvar)
-}
-ordinal <- function(x) {
-  x <- abs(x)
-  if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 1) {
-    return(paste0(x, 'st'))
-  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 2) {
-    return(paste0(x, 'nd'))
-  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 3) {
-    return(paste0(x, 'rd'))
-  } else {
-    return(paste0(x, 'th'))
-  }
 }
 
 #To pass CRAN checks:
