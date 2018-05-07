@@ -13,7 +13,7 @@ trim.weightit <- function(x, at = .99, lower = FALSE, ...) {
   return(x)
 }
 trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
-  if (length(treat) > 0 && length(attr(treat, "treat.type")) == 0) {
+  if (is_not_null(treat) && is_null(attr(treat, "treat.type"))) {
     nunique.treat <- nunique(treat)
     if (nunique.treat == 2) {
       treat.type <- "binary"
@@ -31,8 +31,8 @@ trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
   }
   else treat.type <- "continuous"
 
-  if (treat.type != "continuous" && length(treat) > 0) {
-    nunique.w.gt.1 <- tapply(x, treat, function(y) (max(y) - min(y))^2 > .Machine$double.eps)
+  if (treat.type != "continuous" && is_not_null(treat)) {
+    nunique.w.gt.1 <- tapply(x, treat, all_the_same)
     if (all(nunique.w.gt.1)) {
       estimand <- "ATE"
       focal <- NULL
@@ -61,9 +61,9 @@ trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
 
 trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL, lower) {
   estimand <- toupper(estimand)
-  if (length(estimand) != 1 ||
+  if (treat.type != "continuous" && (length(estimand) != 1 ||
       !is.character(estimand) ||
-      !estimand %in% c("ATT", "ATC", "ATE", "ATO", "ATM")) {
+      !estimand %in% c("ATT", "ATC", "ATE", "ATO", "ATM"))) {
     stop("estimand must be a character vector of length 1 with an acceptable estimand value (e.g., ATT, ATC, ATE).", call. = FALSE)
   }
 
@@ -72,7 +72,7 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
   estimand <- f.e.r[["estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
 
-  if (length(at) == 0 || isTRUE(at == 0)) {
+  if (is_null(at) || isTRUE(at == 0)) {
     at <- NULL
   }
   else if (length(at) > 1 || !is.numeric(at) || at < 0) {
@@ -96,14 +96,14 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
         trim.w <- quantile(weights, probs = trim.q, type = 3)
         weights[weights < trim.w[1]] <- trim.w[1]
         weights[weights > trim.w[2]] <- trim.w[2]
-        if (sum(abs(weights - 1) < sqrt(.Machine$double.eps)) > 10) {
+        if (sum(check_if_zero(weights - 1)) > 10) {
           warning("Several weights are equal to 1. You should enter the treatment variable as an argument to treat in trim().", call. = FALSE)
         }
         message(paste0("Trimming weights to ", word.list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
       }
     }
     else {
-      if (toupper(estimand) == "ATT") {
+      if (treat.type != "continuous" && toupper(estimand) == "ATT") {
         if (at >= sum(treat != focal)) {
           warning(paste0("'at' must be less than ", sum(treat != focal), ", the number of units not in the focal treatment. Weights will not be trimmed."), call. = FALSE)
           at <- NULL
@@ -151,6 +151,6 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
   }
 
   attr(weights, "trim") <- at
-  if (length(at) > 0) attr(weights, "trim.lower") <- lower
+  if (is_not_null(at)) attr(weights, "trim.lower") <- lower
   return(weights)
 }

@@ -5,8 +5,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   ## Checks and processing ----
 
   #Checks
-  if (length(ps) == 0) {
-    if (length(formula) == 0 || length(class(formula)) == 0) {
+  if (is_null(ps)) {
+    if (is_null(formula) || is_null(class(formula))) {
       stop("formula must be a formula relating treatment to covariates.", call. = FALSE)
     }
   }
@@ -31,9 +31,9 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           "ebal", "entropy", "ebalance",
                           "sbw",
                           "ebcw", "ate")
-  if (missing(method) || length(ps) > 0) method <- "ps"
+  if (missing(method) || is_not_null(ps)) method <- "ps"
   else if (!is.character(method)) bad.method <- TRUE
-  else if (length(method) != 1) bad.method <- TRUE
+  else if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (!tolower(method) %in% acceptable.methods) bad.method <- TRUE
 
   if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method.", call. = FALSE)
@@ -44,8 +44,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   covs <- t.c[["covs"]]
   treat <- t.c[["treat"]]
 
-  if (length(covs) == 0) stop("No covariates were specified.", call. = FALSE)
-  if (length(treat) == 0) stop("No treatment variable was specified.", call. = FALSE)
+  if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
+  if (is_null(treat)) stop("No treatment variable was specified.", call. = FALSE)
 
   n <- length(treat)
 
@@ -80,7 +80,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   reported.estimand <- f.e.r[["reported.estimand"]]
 
   #Process s.weights
-  if (length(s.weights) > 0) {
+  if (is_not_null(s.weights)) {
     if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
       stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights.", call. = FALSE)
     }
@@ -102,7 +102,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   acceptable.exacts <- names(data)
   exact.vars <- character(0)
 
-  if (missing(exact) || length(exact) == 0) exact.factor <- factor(rep(1, n))
+  if (missing(exact) || is_null(exact)) exact.factor <- factor(rep(1, n))
   else if (!is.atomic(exact)) bad.exact <- TRUE
   else if (is.character(exact) && all(exact %in% acceptable.exacts)) {
     exact.factor <- factor(apply(data[exact], 1, paste, collapse = "|"))
@@ -125,7 +125,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   formula <- formula(data)
 
   #Check to ensure formula makes sense with levels
-  if (length(exact.vars) > 0) {
+  if (is_not_null(exact.vars)) {
     formula <- update.formula(formula, as.formula(paste("~ . -", paste(exact.vars, collapse = " - "))))
   }
 
@@ -139,9 +139,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   ## Running models ----
   w <- p.score <- rep(NA_real_, n)
 
-  if (verbose) {
-    eval.verbose <- base::eval
-  }
+  if (verbose) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
   eval.verbose({
@@ -275,12 +273,12 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
       #Extract weights
       if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
       w[exact.factor == i] <- obj$w
-      if (length(obj$ps) > 0) p.score[exact.factor == i] <- obj$ps
+      if (is_not_null(obj$ps)) p.score[exact.factor == i] <- obj$ps
     }
 
   })
 
-  if (!nunique.gt(w, 1)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
+  if (all_the_same(w)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
 
   ## Assemble output object----
   out <- list(weights = w,
@@ -305,14 +303,13 @@ print.weightit <- function(x, ...) {
   trim <- attr(x[["weights"]], "trim")
 
   cat("A weightit object\n")
-  cat(paste0(" - method: \"", x$method, "\" (", method.to.phrase(x$method), ")\n"))
-  cat(paste0(" - number of obs.: ", length(x$weights), "\n"))
-  cat(paste0(" - sampling weights: ", ifelse(max(x$s.weights) - min(x$s.weights) < sqrt(.Machine$double.eps),
-                                             "none", "present"), "\n"))
-  cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x$treat), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x$treat), collapse = ", "), ")"), ""))), "\n"))
-  if (length(x$estimand) > 0) cat(paste0(" - estimand: ", x$estimand, ifelse(length(x$focal)>0, paste0(" (focal: ", x$focal, ")"), ""), "\n"))
-  cat(paste0(" - covariates: ", ifelse(length(names(x$covs)) > 60, "too many to name", paste(names(x$covs), collapse = ", ")), "\n"))
-  if (length(trim) > 0) {
+  cat(paste0(" - method: \"", x[["method"]], "\" (", method.to.phrase(x[["method"]]), ")\n"))
+  cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
+  cat(paste0(" - sampling weights: ", ifelse(all_the_same(x[["s.weights"]]),"none", "present"), "\n"))
+  cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x[["treat"]]), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")"), ""))), "\n"))
+  if (is_not_null(x[["estimand"]])) cat(paste0(" - estimand: ", x[["estimand"]], ifelse(is_not_null(x[["focal"]]), paste0(" (focal: ", x[["focal"]], ")"), ""), "\n"))
+  cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
+  if (is_not_null(trim)) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
       cat(paste(" - weights trimmed at", word.list(paste0(round(100*trim, 2), "%")), "\n"))

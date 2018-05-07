@@ -48,20 +48,22 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
   reported.estimand <- estimand
 
   #Check focal
-  if (estimand == "ATT") {
-    if (length(focal) == 0L) {
-      if (treat.type == "multinomial") {
-        stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
+  if (treat.type %in% c("binary", "multinomial")) {
+    if (estimand == "ATT") {
+      if (is_null(focal)) {
+        if (treat.type == "multinomial") {
+          stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
+        }
+      }
+      else if (length(focal) > 1L || !any(unique(treat) == focal)) {
+        stop("The argument supplied to focal must be the name of a level of treat.", call. = FALSE)
       }
     }
-    else if (length(focal) > 1L || !any(unique(treat) == focal)) {
-      stop("The argument supplied to focal must be the name of a level of treat.", call. = FALSE)
-    }
-  }
-  else {
-    if (length(focal) > 0L) {
-      warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
-      focal <- NULL
+    else {
+      if (is_not_null(focal)) {
+        warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
+        focal <- NULL
+      }
     }
   }
 
@@ -70,7 +72,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
     unique.treat <- unique(treat, nmax = 2)
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
     if (estimand == "ATT") {
-      if (length(focal) == 0) {
+      if (is_null(focal)) {
         focal <- unique.treat[unique.treat.bin == 1]
       }
       else if (focal == unique.treat[unique.treat.bin == 0]){
@@ -92,7 +94,7 @@ check.moments.int <- function(method, moments, int) {
       stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
     }
     if (length(moments) != 1 || !is.numeric(moments) ||
-        abs(moments - round(moments)) > sqrt(.Machine$double.eps) ||
+        check_if_zero(moments - round(moments)) ||
         moments < 1) {
       stop("moments must be a positive integer of length 1.", call. = FALSE)
     }
@@ -104,23 +106,6 @@ check.moments.int <- function(method, moments, int) {
     int <- FALSE
   }
   return(c(moments = as.integer(moments), int = int))
-}
-between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
-  if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
-  if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
-  if (any(is.na(range) | !is.numeric(range))) stop("range must contain numeric entries only.", call. = FALSE)
-  range <- sort(range)
-
-  if (any(is.na(x))) {
-    if (length(na.action) != 1 || !is.atomic(na.action)) stop("na.action must be an atomic vector of length 1.", call. = FALSE)
-  }
-  if (inclusive) out <- ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
-  else out <- ifelse(is.na(x), na.action, x > range[1] & x < range[2])
-
-  return(out)
-}
-equivalent.factors <- function(f1, f2) {
-  return(nunique(f1) == nunique(interaction(f1, f2)))
 }
 text.box.plot <- function(range.list, width = 12) {
   full.range <- range(unlist(range.list))
@@ -153,7 +138,7 @@ check.package <- function(package.name, alternative = FALSE) {
 }
 make.closer.to.1 <- function(x) {
   if (nunique.gt(x, 2)) {
-    ndigits <- round(mean(floor(log10(abs(x[abs(x) > sqrt(.Machine$double.eps)]))), na.rm = TRUE))
+    ndigits <- round(mean(floor(log10(abs(x[!check_if_zero(x)]))), na.rm = TRUE))
     if (abs(ndigits) > 2) return(x/(10^ndigits))
     else return(x)
   }
@@ -171,18 +156,7 @@ remove.collinearity <- function(mat) {
   }
   return(mat[,keep, drop = FALSE])
 }
-ordinal <- function(x) {
-  x <- abs(x)
-  if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 1) {
-    return(paste0(x, 'st'))
-  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 2) {
-    return(paste0(x, 'nd'))
-  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 3) {
-    return(paste0(x, 'rd'))
-  } else {
-    return(paste0(x, 'th'))
-  }
-}
+
 
 #Shared with cobalt
 word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
@@ -225,27 +199,10 @@ word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
   }
   return(out)
 }
-nunique <- function(x, nmax = NA, na.rm = TRUE) {
-  if (length(x) == 0) return(0)
-  else {
-    if (na.rm) x <- x[!is.na(x)]
-    if (is.factor(x)) return(nlevels(x))
-    else return(length(unique(x, nmax = nmax)))
-  }
-
-}
-nunique.gt <- function(x, n, na.rm = TRUE) {
-  if (n < 0) stop("n must be non-negative.", call. = FALSE)
-  if (length(x) == 0) FALSE
-  else {
-    if (na.rm) x <- x[!is.na(x)]
-    if (length(x) < 2000) nunique(x) > n
-    else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
-  }
-}
 binarize <- function(variable) {
   nas <- is.na(variable)
   if (nunique.gt(variable[!nas], 2)) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
+  if (is.character(variable)) variable <- factor(variable)
   variable.numeric <- as.numeric(variable)
   if (!is.na(match(0, unique(variable.numeric)))) zero <- 0
   else zero <- min(unique(variable.numeric), na.rm = TRUE)
@@ -262,7 +219,7 @@ int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
   #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
   #nunder=number of underscores between variables
 
-  if (length(ex) > 0) d <- mat[, !colnames(mat) %in% colnames(ex), drop = FALSE]
+  if (is_not_null(ex)) d <- mat[, !colnames(mat) %in% colnames(ex), drop = FALSE]
   else d <- mat
   nd <- ncol(d)
   nrd <- nrow(d)
@@ -282,12 +239,12 @@ int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
     new.names[(nc - .5*nd*(nd-1) + 1):nc] <- combn(colnames(d), 2, paste, collapse=paste0(replicate(nunder, "_"), collapse = ""))
   }
 
-  single.value <- apply(new, 2, function(x) abs(max(x) - min(x)) < sqrt(.Machine$double.eps))
+  single.value <- apply(new, 2, all_the_same)
   colnames(new) <- new.names
   #new <- setNames(data.frame(new), new.names)[!single.value]
   return(new[, !single.value, drop = FALSE])
 }
-null.or.error <- function(x) {length(x) == 0 || class(x) == "try-error"}
+null.or.error <- function(x) {is_null(x) || class(x) == "try-error"}
 get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   A <- list(...)
 
@@ -295,7 +252,7 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   attr(tt, "intercept") <- 0
 
   #Check if data exists
-  if (length(data) > 0 && is.data.frame(data)) {
+  if (is_not_null(data) && is.data.frame(data)) {
     data.specified <- TRUE
   }
   else data.specified <- FALSE
@@ -308,7 +265,7 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
     })
 
     if (any(resp.vars.failed)) {
-      if (length(A[["treat"]]) == 0) stop(paste0("The given response variable, \"", as.character(tt)[2], "\", is not a variable in ", word.list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
+      if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", as.character(tt)[2], "\", is not a variable in ", word.list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
       tt <- delete.response(tt)
     }
   }
@@ -363,7 +320,7 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   tryCatch({covs <- eval(mf.covs, c(data, env))},
            error = function(e) {stop(conditionMessage(e), call. = FALSE)})
 
-  if (length(rhs.vars.mentioned) == 0) covs <- data.frame(Intercept = rep(1, if (length(treat) == 0 ) 1 else length(treat)))
+  if (is_null(rhs.vars.mentioned)) covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))
 
   attr(covs, "terms") <- NULL
 
@@ -376,11 +333,18 @@ round_df <- function(df, digits) {
   df[, nums] <- round(df[, nums], digits = digits)
   return(df)
 }
-round_df_char <- function(df, digits, pad = "0") {
+round_df_char <- function(df, digits, pad = "0", na_vals = "") {
+
   nas <- is.na(df)
-  if (!is.data.frame(df)) df <- as.data.frame(df, stringsAsFactors = FALSE)
+  if (!is.data.frame(df)) {
+    # Fixes a sneaky error
+    df <- as.data.frame.matrix(df, stringsAsFactors = FALSE)
+
+  }
+
   rn <- rownames(df)
   cn <- colnames(df)
+
   df <- as.data.frame(lapply(df, function(col) {
     if (suppressWarnings(all(!is.na(as.numeric(as.character(col)))))) {
       as.numeric(as.character(col))
@@ -388,44 +352,139 @@ round_df_char <- function(df, digits, pad = "0") {
       col
     }
   }), stringsAsFactors = FALSE)
+
   nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
-  df[nums] <- round(df[nums], digits = digits)
-  df[nas] <- ""
 
-  df <- as.data.frame(lapply(df, as.character), stringsAsFactors = FALSE)
+  # Using a format function here to force trailing zeroes to be printed
+  # "formatC" allows signed zeros (e.g., "-0.00")
+  df <- as.data.frame(lapply(df, formatC, digits = digits, format = "f"),
+                      stringsAsFactors = FALSE)
 
+  # Convert missings to blank character
+  if (any(nas)) {
+    df[nas] <- ""
+  }
+
+  # Here's where we align the the decimals
   for (i in which(nums)) {
     if (any(grepl(".", df[[i]], fixed = TRUE))) {
+
       s <- strsplit(df[[i]], ".", fixed = TRUE)
       lengths <- lengths(s)
       digits.r.of.. <- sapply(seq_along(s), function(x) {
-        if (lengths[x] > 1) nchar(s[[x]][lengths[x]])
-        else 0 })
+
+        if (lengths[x] > 1) {
+          nchar(s[[x]][lengths[x]])
+        } else {
+          0
+        }
+      })
+
       df[[i]] <- sapply(seq_along(df[[i]]), function(x) {
-        if (df[[i]][x] == "") ""
-        else if (lengths[x] <= 1) {
-          paste0(c(df[[i]][x], rep(".", pad == 0), rep(pad, max(digits.r.of..) - digits.r.of..[x] + as.numeric(pad != 0))),
+        if (df[[i]][x] == "") {
+          ""
+        } else if (lengths[x] <= 1) {
+          paste0(c(df[[i]][x],
+                   rep(".", pad == 0),
+                   rep(pad, max(digits.r.of..) -
+                         digits.r.of..[x] + as.numeric(pad != 0))),
+                 collapse = "")
+        } else {
+          paste0(c(df[[i]][x], rep(pad, max(digits.r.of..) - digits.r.of..[x])),
                  collapse = "")
         }
-        else paste0(c(df[[i]][x], rep(pad, max(digits.r.of..) - digits.r.of..[x])),
-                    collapse = "")
       })
     }
   }
 
-  if (length(rn) > 0) rownames(df) <- rn
-  if (length(cn) > 0) names(df) <- cn
+  if (is_not_null(rn)) rownames(df) <- rn
+  if (is_not_null(cn)) names(df) <- cn
+
+  # Insert NA placeholders
+  df[df == ""] <- na_vals
 
   return(df)
 }
+nunique <- function(x, nmax = NA, na.rm = TRUE) {
+  if (is_null(x)) return(0)
+  else {
+    if (na.rm) x <- x[!is.na(x)]
+    if (is.factor(x)) return(nlevels(x))
+    else return(length(unique(x, nmax = nmax)))
+  }
+
+}
+nunique.gt <- function(x, n, na.rm = TRUE) {
+  if (n < 0) stop("n must be non-negative.", call. = FALSE)
+  if (is_null(x)) FALSE
+  else {
+    if (na.rm) x <- x[!is.na(x)]
+    if (n == 1 && is.numeric(x)) !check_if_zero(max(x) - min(x))
+    if (length(x) < 2000) nunique(x) > n
+    else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
+  }
+}
+all_the_same <- function(x) !nunique.gt(x, 1)
 is.formula <- function(f, sides = NULL) {
   res <- is.name(f[[1]])  && deparse(f[[1]]) %in% c( '~', '!') &&
     length(f) >= 2
-  if (length(sides) > 0 && is.numeric(sides) && sides %in% c(1,2)) {
+  if (is_not_null(sides) && is.numeric(sides) && sides %in% c(1,2)) {
     res <- res && length(f) == sides + 1
   }
   return(res)
 }
+check_if_zero_base <- function(x) {
+  # this is the default tolerance used in all.equal
+  tolerance <- .Machine$double.eps^0.5
+  # If the absolute deviation between the number and zero is less than
+  # the tolerance of the floating point arithmetic, then return TRUE.
+  # This means, to me, that I can treat the number as 0 rather than
+  # -3.20469e-16 or some such.
+  abs(x - 0) < tolerance
+}
+check_if_zero <- Vectorize(check_if_zero_base)
+is_null <- function(x) length(x) == 0L
+is_not_null <- function(x) !is_null(x)
+
+#Other helpful tools
+##Check if value is between other values
+between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
+  if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
+  if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
+  if (any(is.na(range) | !is.numeric(range))) stop("range must contain numeric entries only.", call. = FALSE)
+  range <- sort(range)
+
+  if (any(is.na(x))) {
+    if (length(na.action) != 1 || !is.atomic(na.action)) stop("na.action must be an atomic vector of length 1.", call. = FALSE)
+  }
+  if (inclusive) out <- ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
+  else out <- ifelse(is.na(x), na.action, x > range[1] & x < range[2])
+
+  return(out)
+}
+##Check if factors are equivalent
+equivalent.factors <- function(f1, f2) {
+  return(nunique(f1) == nunique(interaction(f1, f2)))
+}
+##Produce ordinal version of number (e.g., 1 -> 1st, etc.)
+ordinal <- function(x) {
+  x <- abs(x)
+  if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 1) {
+    return(paste0(x, 'st'))
+  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 2) {
+    return(paste0(x, 'nd'))
+  } else if (as.integer(substring(x, seq(nchar(x)), seq(nchar(x))))[nchar(x)] == 3) {
+    return(paste0(x, 'rd'))
+  } else {
+    return(paste0(x, 'th'))
+  }
+}
+## Making a "opposite of %in%" or "not %in%" function to simplify code
+`%nin%` <- function(x, table) is.na(match(x, table, nomatch = NA_integer_))
+## Quicker way to get last item of vector
+last <- function(x) {return(x[length(x)])}
+## Just so code reads more clearly when using last(x)
+first <- function(x) {return(x[1])}
 
 #To pass CRAN checks:
 utils::globalVariables(c(".s.weights"))
