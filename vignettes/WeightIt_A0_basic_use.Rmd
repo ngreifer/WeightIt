@@ -81,7 +81,7 @@ Indeed, we have achieved perfect balance on the means of the covariates. However
 
 Now that we have our weights stored in `W.out`, let's extract them and estimate our treatment effect. We'll use the `survey` package to incorprate the weights into our analysis.
 
-```{r}
+```{r, message=FALSE}
 library("survey")
 d.w <- svydesign(ids = ~1, weights = get.w(W.out),
                      data = lalonde)
@@ -104,7 +104,7 @@ Our confidence interval for `treat` contains 0, so there isn't evidence that `tr
 
 Next let's use bootstrapping to estimate confidence intervals. We don't need to use `svyglm()` and can simply use `glm()` to compute the effect estimates in each bootstrapped sample because we are not computing standard errors, and the estimated treatment effect estimates will be the same.
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 #Bootstrapping
 library("boot")
 est.fun <- function(data, index) {
@@ -165,7 +165,7 @@ bal.tab(Wmsm.out, m.threshold = .1, disp.v.ratio = TRUE, which.time = NA)
 
 By setting `which.time = NA` in `bal.tab()`, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and variances. Now we can estimate our treatment effects. We'll sequentially simplify our model by checking whether interaction terms are needed (implying that specific patterns of treatment yield different outcomes), then by checking whether different coefficients are needed for the treatments (implying that outcomes depend on which treatments are received).
 
-```{r}
+```{r, message=FALSE}
 library("survey")
 d.w.msm <- svydesign(ids = ~1, weights = get.w(Wmsm.out),
                      data = iptwExWide)
