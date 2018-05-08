@@ -28,12 +28,12 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
   call <- match.call()
 
-  covs.list <- treat.list <- data.list <- w.list <- ps.list <- vector("list", length(formula.list))
+  covs.list <- reported.covs.list <- treat.list <- data.list <- w.list <- ps.list <- vector("list", length(formula.list))
   for (i in seq_along(formula.list)) {
     #Process treat and covs from formula and data
-
     t.c <- get.covs.and.treat.from.formula(formula.list[[i]], data)
-    covs.list[[i]] <- t.c[["covs"]]
+    reported.covs.list[[i]] <- t.c[["reported.covs"]]
+    covs.list[[i]] <- t.c[["model.covs"]]
     treat.list[[i]] <- t.c[["treat"]]
     names(treat.list)[i] <- t.c[["treat.name"]]
 
@@ -172,7 +172,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
   ## Assemble output object----
   out <- list(weights = w,
               treat.list = treat.list,
-              covs.list = covs.list,
+              covs.list = reported.covs.list,
               data = data,
               estimand = estimand,
               method = method,

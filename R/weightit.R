@@ -41,7 +41,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   #Process treat and covs from formula and data
   t.c <- get.covs.and.treat.from.formula(formula, data)
-  covs <- t.c[["covs"]]
+  reported.covs <- t.c[["reported.covs"]]
+  covs <- t.c[["model.covs"]]
   treat <- t.c[["treat"]]
 
   if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
@@ -283,7 +284,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   ## Assemble output object----
   out <- list(weights = w,
               treat = treat,
-              covs = covs,
+              covs = reported.covs,
               #data = data,
               estimand = if (treat.type == "continuous") NULL else reported.estimand,
               method = method,

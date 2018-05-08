@@ -94,7 +94,7 @@ check.moments.int <- function(method, moments, int) {
       stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
     }
     if (length(moments) != 1 || !is.numeric(moments) ||
-        check_if_zero(moments - round(moments)) ||
+        !check_if_zero(moments - round(moments)) ||
         moments < 1) {
       stop("moments must be a positive integer of length 1.", call. = FALSE)
     }
@@ -289,9 +289,10 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
 
   #Check if RHS variables exist
   tt.covs <- delete.response(tt)
-  rhs.vars.mentioned <- attr(tt.covs, "term.labels")
-  rhs.vars.failed <- sapply(rhs.vars.mentioned, function(v) {
-    null.or.error(try(eval(parse(text = v), c(data, env)), silent = TRUE))
+  rhs.vars.mentioned.lang <- attr(tt.covs, "variables")[-1]
+  rhs.vars.mentioned <- sapply(rhs.vars.mentioned.lang, deparse)
+  rhs.vars.failed <- sapply(rhs.vars.mentioned.lang, function(v) {
+    null.or.error(try(eval(v, c(data, env)), silent = TRUE))
   })
 
   if (any(rhs.vars.failed)) {
@@ -300,16 +301,26 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
 
   }
 
-  rhs.df <- sapply(rhs.vars.mentioned, function(v) {
-    is.data.frame(try(eval(parse(text = v), c(data, env)), silent = TRUE))
+  rhs.term.labels <- attr(tt.covs, "term.labels")
+  rhs.term.orders <- attr(tt.covs, "order")
+
+  rhs.df <- sapply(rhs.vars.mentioned.lang, function(v) {
+    is.data.frame(try(eval(v, c(data, env)), silent = TRUE))
   })
 
   if (any(rhs.df)) {
-    addl.dfs <- lapply(rhs.vars.mentioned[rhs.df], function(x) {eval(parse(text = x), env)})
-    new.form <- paste0("~ . - ",
-                       paste(rhs.vars.mentioned[rhs.df], collapse = " - "), " + ",
-                       paste(unlist(sapply(addl.dfs, names)), collapse = " + "))
-    tt.covs <- update(tt.covs, as.formula(new.form))
+    if (any(rhs.vars.mentioned[rhs.df] %in% unlist(sapply(rhs.term.labels[rhs.term.orders > 1], function(x) strsplit(x, ":", fixed = TRUE))))) {
+      stop("Interactions with data.frames are not allowed in the input formula.", call. = FALSE)
+    }
+    addl.dfs <- setNames(lapply(rhs.vars.mentioned.lang[rhs.df], function(x) {eval(x, env)}),
+                         rhs.vars.mentioned[rhs.df])
+
+    for (i in rhs.term.labels[rhs.term.labels %in% rhs.vars.mentioned[rhs.df]]) {
+      ind <- which(rhs.term.labels == i)
+      rhs.term.labels <- append(rhs.term.labels[-ind], names(addl.dfs[[i]]), ind - 1)
+    }
+    new.form <- as.formula(paste("~", paste(rhs.term.labels, collapse = " + ")))
+    tt.covs <- terms(new.form)
     data <- do.call("cbind", c(addl.dfs, data))
   }
 
@@ -322,9 +333,15 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
 
   if (is_null(rhs.vars.mentioned)) covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))
 
+  #Get full model matrix with interactions too
+  covs.matrix <- model.matrix(tt.covs, data = covs,
+                              contrasts.arg = lapply(covs[sapply(covs, is.factor)], contrasts, contrasts=FALSE)
+                              )[,-1, drop = FALSE]
+
   attr(covs, "terms") <- NULL
 
-  return(list(covs = covs,
+  return(list(reported.covs = covs,
+              model.covs = covs.matrix,
               treat = treat,
               treat.name = treat.name))
 }
