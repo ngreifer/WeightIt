@@ -3,15 +3,22 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
   A <- list(...)
 
   if (is_null(ps)) {
+    if (is_not_null(A$covs) && is_not_null(A$treat)) {
+      covs <- A$covs[subset, , drop = FALSE]
+      t <- factor(A$treat)[subset]
+    }
+    else {
     tt <- terms(formula)
     mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
     t <- factor(model.response(mf))
-    covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+    }
 
     vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
+    covs <- apply(covs, 2, make.closer.to.1)
     data <- data.frame(t, covs)
     formula <- formula(data)
 
@@ -57,8 +64,8 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
       if (A$link %in% c("logit", "probit")) {
         if (check.package("mlogit", alternative = TRUE) && (is_null(A$use.mlogit) || A$use.mlogit == TRUE)) {
           message(paste0("Using multinomial ", A$link, " regression."))
-          mult <- mlogit::mlogit.data(data.frame(t = data[[1]], .s.weights = s.weights[subset], data[-1]), varying = NULL, shape = "wide", sep = "", choice = "t")
-          tryCatch({fit <- mlogit::mlogit(as.formula(paste0("t ~ 1 | ", paste(names(data)[-1], collapse = " + "),
+          mult <- mlogit::mlogit.data(data.frame(t = t, .s.weights = s.weights[subset], colnames(covs)), varying = NULL, shape = "wide", sep = "", choice = "t")
+          tryCatch({fit <- mlogit::mlogit(as.formula(paste0("t ~ 1 | ", paste(colnames(covs), collapse = " + "),
                                                             " | 1")), data = mult, estimate = TRUE,
                                           probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
                                           weights = .s.weights, ...)},
@@ -73,7 +80,7 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
 
           for (i in levels(t)) {
             t_i <- rep(0, length(t)); t_i[t == i] <- 1
-            data_i <- data.frame(t_i, data[-1])
+            data_i <- data.frame(t_i, covs)
             fit_i <- glm(formula(data_i), data = data_i,
                          family = binomial(link = A$link),
                          weights = s.weights[subset])
@@ -133,29 +140,37 @@ weightit2ps.cont <- function(formula, data, s.weights, subset, stabilize, ps, ..
   if (is_null(A$link)) A$link <- "identity"
   if (is_null(A$family)) A$family <- gaussian(link = A$link)
 
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- A$treat[subset]
+    new.data <- data.frame(treat, covs)
+  }
+  else {
   mf <- model.frame(formula, data[subset,])
-  t <- model.response(mf)
+  treat <- model.response(mf)
+  new.data <- data
+  }
 
   stabilize <- TRUE
 
   if (is_null(ps)) {
-    fit <- glm(formula, data = data.frame(data, .s.weights = s.weights)[subset,],
+    fit <- glm(formula(new.data), data = data.frame(new.data, .s.weights = s.weights)[subset,],
                weights = .s.weights,
                family = A$family,
                control = list(),
                ...)
     p.denom <- fit$fitted.values
-    dens.denom <- dnorm(t, p.denom, sqrt(summary(fit)$dispersion))
+    dens.denom <- dnorm(treat, p.denom, sqrt(summary(fit)$dispersion))
 
     if (stabilize) {
       if (is_null(A$num.formula)) A$num.formula <- ~ 1
       num.fit <- glm(update.formula(A$num.formula, .t ~ .),
-                     data = data.frame(.t = t, data, .s.weights = s.weights)[subset,],
+                     data = data.frame(.t = treat, data, .s.weights = s.weights)[subset,],
                      weights = .s.weights,
                      family = A$family,
                      control = list(), ...)
       p.num <- num.fit$fitted.values
-      dens.num <- dnorm(t, p.num, sqrt(summary(num.fit)$dispersion))
+      dens.num <- dnorm(treat, p.num, sqrt(summary(num.fit)$dispersion))
       w <- dens.num/dens.denom
     }
     else {
@@ -182,12 +197,19 @@ weightit2gbm <- function(formula, data, s.weights, estimand, focal, subset, stab
     A$stop.method <- A$stop.method[1]
   }
 
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- A$treat[subset]
+  }
+  else {
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+  mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
   covs <- model.matrix(tt, data=mf,
                        contrasts.arg = lapply(mf[sapply(mf, is.factor)],
                                               contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+  }
+
   covs <- apply(covs, 2, make.closer.to.1)
 
   if (check.package("twang")) {
@@ -250,15 +272,22 @@ weightit2gbm <- function(formula, data, s.weights, estimand, focal, subset, stab
 weightit2cbps <- function(formula, data, s.weights, estimand, focal, subset, stabilize, ...) {
   A <- list(...)
 
-  tt <- terms(formula)
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- factor(A$treat)[subset]
+  }
+  else {
+    tt <- terms(formula)
   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
-  covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+  covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
   missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
   covs[is.na(covs)] <- 0
   covs <- cbind(covs, missing.ind)
+  covs <- apply(covs, 2, make.closer.to.1)
 
   if (check.package("CBPS")) {
     if (estimand == "ATT") {
@@ -334,10 +363,23 @@ weightit2cbps <- function(formula, data, s.weights, estimand, focal, subset, sta
 weightit2cbps.cont <- function(formula, data, s.weights, subset, ...) {
   A <- list(...)
 
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- A$treat[subset]
+  }
+  else {
   tt <- terms(formula)
   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- model.response(mf)
-  covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+  covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  }
+
+  vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
+  missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  covs[is.na(covs)] <- 0
+  covs <- cbind(covs, missing.ind)
+  covs <- apply(covs, 2, make.closer.to.1)
+
   new.data <- data.frame(treat = treat, covs)
 
   if (check.package("CBPS")) {
@@ -361,15 +403,24 @@ weightit2cbps.cont <- function(formula, data, s.weights, subset, ...) {
 weightit2npcbps <- function(formula, data, subset, ...) {
   A <- list(...)
 
-  tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-  treat <- factor(model.response(mf))
-  covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- factor(A$treat)[subset]
+  }
+  else {
+    tt <- terms(formula)
+    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+    treat <- factor(model.response(mf))
+    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  }
+
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
   missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
   covs[is.na(covs)] <- 0
   covs <- cbind(covs, missing.ind)
+  covs <- apply(covs, 2, make.closer.to.1)
+
   new.data <- data.frame(treat = treat, covs)
 
   if (check.package("CBPS")) {
@@ -384,10 +435,23 @@ weightit2npcbps <- function(formula, data, subset, ...) {
 weightit2npcbps.cont <- function(formula, data, subset, estimand, ...) {
   A <- list(...)
 
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- A$treat[subset]
+  }
+  else {
   tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+  mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- model.response(mf)
-  covs <- apply(model.matrix(tt, data=mf)[,-1, drop = FALSE], 2, make.closer.to.1)
+  covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  }
+
+  vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
+  missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  covs[is.na(covs)] <- 0
+  covs <- cbind(covs, missing.ind)
+  covs <- apply(covs, 2, make.closer.to.1)
+
   new.data <- data.frame(treat = treat, covs)
 
   if (check.package("CBPS")) {
@@ -404,10 +468,17 @@ weightit2npcbps.cont <- function(formula, data, subset, estimand, ...) {
 weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, stabilize, moments, int, ...) {
   A <- list(...)
 
-  tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-  treat <- factor(model.response(mf))
-  covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- factor(A$treat)[subset]
+  }
+  else {
+    tt <- terms(formula)
+    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+    treat <- factor(model.response(mf))
+    covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
+  }
+
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
 
@@ -435,7 +506,9 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
         treat_ <- ifelse(treat[treat.in.i.focal] == i, 0, 1)
         covs_ <- covs[treat.in.i.focal, , drop = FALSE]
 
-        covs_ <- covs_[, colnames(covs_) %in% Reduce("intersect", lapply(unique(treat_, nmax = 2), function(j) colnames(remove.collinearity(cbind(covs_[treat_ == j, , drop = FALSE], treat_[treat_ == j])))))]
+        colinear.covs.to.remove <- colnames(covs_)[colnames(covs_) %nin% colnames(remove.collinearity(covs_[treat_ == 0, , drop = FALSE]))]
+
+        covs_ <- covs_[, colnames(covs_) %nin% colinear.covs.to.remove]
 
         covs_[treat_ == 1,] <- covs_[treat_ == 1,] * s.weights[subset][treat == focal] * sum(treat == focal)/ sum(s.weights[subset][treat == focal])
 
@@ -445,7 +518,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
                                    coefs = A[["coefs"]],
                                    max.iterations = A[["max.iterations"]],
                                    constraint.tolerance = A[["constraint.tolerance"]],
-                                   print.level = 3)
+                                   print.level = 0)
         if (stabilize) ebal.out <- ebal::ebalance.trim(ebalanceobj = ebal.out,
                                                        max.weight = A[["max.weight"]],
                                                        min.weight = A[["min.weight"]],
@@ -464,7 +537,9 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
         covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
         treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
-        covs_i <- covs_i[, colnames(covs_i) %in% Reduce("intersect", lapply(unique(treat_i, nmax = 2), function(j) colnames(remove.collinearity(cbind(covs_i[treat_i == j, , drop = FALSE], treat_i[treat_i == j])))))]
+        colinear.covs.to.remove <- colnames(covs_i)[colnames(covs_i) %nin% colnames(remove.collinearity(covs_i[treat_i == 0, , drop = FALSE]))]
+
+        covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove]
 
         covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights[subset] * sum(treat_i == 1) / sum(s.weights[subset])
 
@@ -497,10 +572,16 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
 weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, moments, int, ...) {
   A <- list(...)
 
+  if (is_not_null(A$covs) && is_not_null(A$treat)) {
+    covs <- A$covs[subset, , drop = FALSE]
+    treat <- factor(A$treat)[subset]
+  }
+  else {
   tt <- terms(formula)
   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
   treat <- factor(model.response(mf))
   covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
+  }
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
 
@@ -523,7 +604,9 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
         treat_ <- ifelse(treat[treat.in.i.focal] == i, 0, 1)
         covs_ <- covs[treat.in.i.focal, , drop = FALSE]
 
-        covs_ <- covs_[, colnames(covs_) %in% Reduce("intersect", lapply(unique(treat_, nmax = 2), function(j) colnames(remove.collinearity(cbind(covs_[treat_ == j, , drop = FALSE], treat_[treat_ == j])))))]
+        colinear.covs.to.remove <- colnames(covs_)[colnames(covs_) %nin% colnames(remove.collinearity(covs_[treat_ == 0, , drop = FALSE]))]
+
+        covs_ <- covs_[, colnames(covs_) %nin% colinear.covs.to.remove]
 
         covs_[treat_ == 1,] <- covs_[treat_ == 1,] * s.weights[subset][treat == focal] * sum(treat == focal)/ sum(s.weights[subset][treat == focal])
 
@@ -550,7 +633,9 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
         covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
         treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
 
-        covs_i <- covs_i[, colnames(covs_i) %in% Reduce("intersect", lapply(unique(treat_i, nmax = 2), function(j) colnames(remove.collinearity(cbind(covs_i[treat_i == j, , drop = FALSE], treat_i[treat_i == j])))))]
+        colinear.covs.to.remove <- colnames(covs_i)[colnames(covs_i) %nin% colnames(remove.collinearity(covs_i[treat_i == 0, , drop = FALSE]))]
+
+        covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove]
 
         covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights[subset] * sum(treat_i == 1) / sum(s.weights[subset])
 
@@ -608,12 +693,19 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, focal, mome
       need.to.detach.solver <- FALSE
     }
 
+    if (is_not_null(A$covs) && is_not_null(A$treat)) {
+      covs <- A$covs[subset, , drop = FALSE]
+      treat <- factor(A$treat)[subset]
+    }
+    else {
     tt <- terms(formula)
     mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
     treat <- factor(model.response(mf))
     covs <- model.matrix(tt, data=mf,
                          contrasts.arg = lapply(mf[sapply(mf, is.factor)],
                                                 contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+    }
+
     if (any(is.na(covs))) {
       stop("Stable balancing weights are not compatible with missing values.", call. = FALSE)
     }
