@@ -34,7 +34,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   if (missing(method) || is_not_null(ps)) method <- "ps"
   else if (!is.character(method)) bad.method <- TRUE
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
-  else if (!tolower(method) %in% acceptable.methods) bad.method <- TRUE
+  else if (tolower(method) %nin% acceptable.methods) bad.method <- TRUE
 
   if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method.", call. = FALSE)
   method <- method.to.proper.method(tolower(method))
@@ -44,34 +44,25 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   reported.covs <- t.c[["reported.covs"]]
   covs <- t.c[["model.covs"]]
   treat <- t.c[["treat"]]
+  treat.name <- t.c[["treat.name"]]
 
   if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
   if (is_null(treat)) stop("No treatment variable was specified.", call. = FALSE)
 
   n <- length(treat)
 
-  if (any(is.na(covs)) || nrow(covs) != n) {
+  if (any(is.na(reported.covs)) || nrow(reported.covs) != n) {
     warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
     #stop("No missing values are allowed in the covariates.", call. = FALSE)
   }
   if (any(is.na(treat))) {
     stop("No missing values are allowed in the treatment variable.", call. = FALSE)
   }
-  nunique.treat <- nunique(treat)
-  if (nunique.treat == 2) {
-    treat.type <- "binary"
-  }
-  else if (nunique.treat < 2) {
-    stop("The treatment must have at least two unique values.", call. = FALSE)
-  }
-  else if (is.factor(treat) || is.character(treat)) {
-    treat.type <- "multinomial"
-    treat <- factor(treat)
-  }
-  else {
-    treat.type <- "continuous"
-  }
-  attr(treat, "treat.type") <- treat.type
+
+  #Get treat type
+  treat <- get.treat.type(treat)
+  treat.type <- attr(treat, "treat.type")
+
 
   #Process estimand and focal
   estimand <- process.estimand(estimand, method, treat.type)
@@ -81,54 +72,17 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   reported.estimand <- f.e.r[["reported.estimand"]]
 
   #Process s.weights
-  if (is_not_null(s.weights)) {
-    if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
-      stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights.", call. = FALSE)
-    }
-    if (is.character(s.weights) && length(s.weights)==1) {
-      if (s.weights %in% names(data)) {
-        s.weights <- data[[s.weights]]
-      }
-      else stop("The name supplied to s.weights is not the name of a variable in data.", call. = FALSE)
-    }
-    s.weights.specified <- TRUE
-  }
-  else {
-    s.weights.specified <- FALSE
-    s.weights <- rep(1, n)
-  }
+  s.weights <- process.s.weights(s.weights, data)
+
+  if (is_null(s.weights)) s.weights <- rep(1, n)
 
   ##Process exact
-  bad.exact <- FALSE
-  acceptable.exacts <- names(data)
-  exact.vars <- character(0)
-
-  if (missing(exact) || is_null(exact)) exact.factor <- factor(rep(1, n))
-  else if (!is.atomic(exact)) bad.exact <- TRUE
-  else if (is.character(exact) && all(exact %in% acceptable.exacts)) {
-    exact.factor <- factor(apply(data[exact], 1, paste, collapse = "|"))
-    exact.vars <- exact
-  }
-  else if (length(exact) == n) {
-    exact.factor <- factor(exact)
-    exact.vars <- acceptable.exacts[sapply(acceptable.exacts, function(x) equivalent.factors(exact, data[,x]))]
-  }
-  else bad.exact <- TRUE
-
-  if (bad.exact) stop("exact must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself.", call. = FALSE)
-
-  if (any(sapply(levels(exact.factor), function(x) nunique(treat) != nunique(treat[exact.factor == x])))) {
-    stop("Not all the groups formed by exact contain all treatment levels. Consider coarsening exact.", call. = FALSE)
-  }
+  processed.exact <- process.exact(exact = exact, data= data,
+                                   treat = treat)
 
   #Recreate data and formula
-  data <- data.frame(treat, covs)
-  formula <- formula(data)
-
-  #Check to ensure formula makes sense with levels
-  if (is_not_null(exact.vars)) {
-    formula <- update.formula(formula, as.formula(paste("~ . -", paste(exact.vars, collapse = " - "))))
-  }
+  w.data <- data.frame(treat, covs)
+  w.formula <- formula(w.data)
 
   #Process moments and int
   moments.int <- check.moments.int(method, moments, int)
@@ -138,160 +92,50 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   args <- list(...)
 
   ## Running models ----
-  w <- p.score <- rep(NA_real_, n)
 
   if (verbose) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
   eval.verbose({
-    for (i in levels(exact.factor)) {
-
-      #Run method
-      if (method == "ps") {
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2ps(formula = formula,
-                                   data = data,
-                                   s.weights = s.weights,
-                                   subset = exact.factor == i,
-                                   estimand = estimand,
-                                   focal = focal,
-                                   stabilize = stabilize,
-                                   ps = ps,
-                                   ...)
-        }
-        else if (treat.type == "continuous") {
-          obj <- weightit2ps.cont(formula = formula,
-                                  data = data,
-                                  s.weights = s.weights,
-                                  subset = exact.factor == i,
-                                  stabilize = stabilize,
-                                  ps = ps,
-                                  ...)
-        }
-      }
-      else if (method == "gbm") {
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2gbm(formula = formula,
-                                    data = data,
-                                    s.weights = s.weights,
-                                    estimand = estimand,
-                                    focal = focal,
-                                    subset = exact.factor == i,
-                                    stabilize = stabilize,
-                                    ...)
-        }
-        else stop("Generalized boosted modeling is not compatible with continuous treatments.", call. = FALSE)
-
-      }
-      else if (method == "cbps") {
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2cbps(formula = formula,
-                                     data = data,
-                                     subset = exact.factor == i,
-                                     s.weights = s.weights,
-                                     stabilize = stabilize,
-                                     estimand = estimand,
-                                     focal = focal,
-                                     ...)
-        }
-        else if (treat.type == "continuous") {
-          obj <- weightit2cbps.cont(formula = formula,
-                                    data = data,
-                                    subset = exact.factor == i,
-                                    s.weights = s.weights,
-                                    #stabilize = stabilize,
-                                    ...)
-
-        }
-
-      }
-      else if (method == "npcbps") {
-        if (s.weights.specified) stop(paste0("Sampling weights cannot be used with ", method.to.phrase(method), "."),
-                                      call. = FALSE)
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2npcbps(formula = formula,
-                                 data = data,
-                                 subset = exact.factor == i,
-                                 ...)
-        }
-        else if (treat.type == "continuous") {
-          obj <- weightit2npcbps.cont(formula = formula,
-                                      data = data,
-                                      subset = exact.factor == i,
-                                      ...)
-        }
-
-      }
-      else if (method == "ebal") {
-        if (treat.type %in% c("binary", "multinomial")) {
-            obj <- weightit2ebal(formula = formula,
-                                       data = data,
-                                       s.weights = s.weights,
-                                       subset = exact.factor == i,
-                                       estimand = estimand,
-                                       focal = focal,
-                                       stabilize = stabilize,
-                                       moments = moments,
-                                       int = int,
-                                       ...)
-        }
-        else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
-      }
-      else if (method == "sbw") {
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2sbw(formula = formula,
-                                    data = data,
-                                    s.weights = s.weights,
-                                    subset = exact.factor == i,
-                                    estimand = estimand,
-                                    focal = focal,
-                                    moments = moments,
-                                    int = int,
-                                    ...)
-        }
-        else {
-          stop("Stable balancing weights are not compatible with continuous treatments.", call. = FALSE)
-        }
-      }
-      else if (method == "ebcw") {
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2ebcw(formula = formula,
-                                     data = data,
-                                     s.weights = s.weights,
-                                     subset = exact.factor == i,
-                                     estimand = estimand,
-                                     focal = focal,
-                                     #stabilize = stabilize,
-                                     moments = moments,
-                                     int = int,
-                                     ...)
-        }
-        else {
-          stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
-        }
-      }
-
-      #Extract weights
-      if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
-      w[exact.factor == i] <- obj$w
-      if (is_not_null(obj$ps)) p.score[exact.factor == i] <- obj$ps
-    }
-
+    #Returns weights (w) and propensty score (ps)
+      obj <- weightit.fit(#formula = w.formula,
+                          #data = w.data,
+                          treat.type = treat.type,
+                          s.weights = s.weights,
+                          exact.factor = processed.exact[["exact.factor"]],
+                          estimand = estimand,
+                          focal = focal,
+                          stabilize = stabilize,
+                          method = method,
+                          moments = moments,
+                          int = int,
+                          ps = ps,
+                          treat = treat,
+                          covs = covs, ...)
   })
 
-  if (all_the_same(w)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
+  if (all_the_same(obj$w)) stop(paste0("All weights are ", obj$w[1], "."), call. = FALSE)
+
+  # #Create new data set
+  # #treat, covs, data (not in treat or covs), exact
+  # treat.in.data <- treat; attr(treat.in.data, "treat.type") <- NULL
+  # data.list <- list(treat.in.data, reported.covs)
+  # o.data <- setNames(do.call("data.frame", data.list[sapply(data.list, is_not_null)]),
+  #                    c(treat.name, names(reported.covs)))
+  # o.data <- data.frame(o.data, data[names(data) %nin% names(o.data)])
 
   ## Assemble output object----
-  out <- list(weights = w,
+  out <- list(weights = obj$w,
               treat = treat,
               covs = reported.covs,
-              #data = data,
+              #data = o.data,
               estimand = if (treat.type == "continuous") NULL else reported.estimand,
               method = method,
-              ps = if (all(is.na(p.score))) NULL else p.score,
+              ps = if (is_null(obj$ps) || all(is.na(obj$ps))) NULL else obj$ps,
               s.weights = s.weights,
               #discarded = NULL,
               focal = if (reported.estimand == "ATT") focal else NULL,
+              exact = processed.exact[["exact.components"]],
               call = call)
   class(out) <- "weightit"
 
@@ -310,6 +154,9 @@ print.weightit <- function(x, ...) {
   cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x[["treat"]]), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")"), ""))), "\n"))
   if (is_not_null(x[["estimand"]])) cat(paste0(" - estimand: ", x[["estimand"]], ifelse(is_not_null(x[["focal"]]), paste0(" (focal: ", x[["focal"]], ")"), ""), "\n"))
   cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
+  if (is_not_null(x[["exact"]])) {
+    cat(paste0(" - exact: ", paste(names(x[["exact"]]), collapse = ", "), "\n"))
+  }
   if (is_not_null(trim)) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
