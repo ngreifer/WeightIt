@@ -3,9 +3,13 @@ WeightIt News and Updates
 
 Version 0.3.3
 
-* Added `truncate` option to allow truncation of weights.
+* Added `trim()` function to trim weights.
 
-* Under-the-hood changes to facilitate adding new features and debugging.
+* The input formula is now much mroe forgiving, allowing objects in the environment to be included. The `data` argument to `weightit()` is now optional. To simplify things, the output object no longer contains a `data` field.
+
+* Under-the-hood changes to facilitate adding new features and debugging. Some aspects of the output objects have been slightly changed, but it shouldn't affect use for most users.
+
+* Fixed a bug where variables would be thrown out when `method = "ebal"`.
 
 Version 0.3.2
 
