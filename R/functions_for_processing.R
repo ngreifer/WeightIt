@@ -18,6 +18,24 @@ method.to.phrase <- function(method) {
   else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
   else return("the chosen method of weighting")
 }
+process.s.weights <- function(s.weights, data = NULL) {
+  #Process s.weights
+  if (is_not_null(s.weights)) {
+    if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
+      stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights.", call. = FALSE)
+    }
+    if (is.character(s.weights) && length(s.weights)==1) {
+      if (is_null(data)) {
+        stop("s.weights was specified as a string but there was no argument to data.", call. = FALSE)
+      }
+      else if (s.weights %in% names(data)) {
+        s.weights <- data[[s.weights]]
+      }
+      else stop("The name supplied to s.weights is not the name of a variable in data.", call. = FALSE)
+    }
+  }
+  return(s.weights)
+}
 process.estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
   AE <- list(binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM"),
@@ -35,7 +53,7 @@ process.estimand <- function(estimand, method, treat.type) {
                                 sbw = c("ATT", "ATE"),
                                 ebcw = c("ATT", "ATE")))
 
-  if (treat.type != "continuous" && !toupper(estimand) %in% AE[[treat.type]][[method]]) {
+  if (treat.type != "continuous" && toupper(estimand) %nin% AE[[treat.type]][[method]]) {
     stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
                 " with ", treat.type, " treatments. Only ", word.list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
                 " allowed."), call. = FALSE)
@@ -87,6 +105,57 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
   return(list(focal = focal,
               estimand = estimand,
               reported.estimand = reported.estimand))
+}
+process.exact <- function(exact, data, treat, treat.name = NULL) {
+
+  ##Process exact
+  bad.exact <- FALSE
+  acceptable.exacts <- names(data)
+  exact.vars <- character(0)
+  exact.components <- NULL
+  n <- length(treat)
+
+  if (missing(exact) || is_null(exact)) exact.factor <- factor(rep(1, n))
+  else if (!is.atomic(exact)) bad.exact <- TRUE
+  else if (is.character(exact) && all(exact %in% acceptable.exacts)) {
+    exact.components <- data[exact]
+    exact.factor <- factor(apply(exact.components, 1, paste, collapse = "|"))
+    exact.vars <- exact
+  }
+  else if (length(exact) == n) {
+    exact.components <- setNames(data.frame(exact), deparse(substitute(exact)))
+    exact.factor <- factor(exact.components[[1]])
+    exact.vars <- acceptable.exacts[sapply(acceptable.exacts, function(x) equivalent.factors(exact, data[[x]]))]
+  }
+  else bad.exact <- TRUE
+
+  if (bad.exact) stop("exact must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself.", call. = FALSE)
+
+  if (any(sapply(levels(exact.factor), function(x) nunique(treat) != nunique(treat[exact.factor == x])))) {
+    stop("Not all the groups formed by exact contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening exact.", call. = FALSE)
+  }
+
+  return(list(exact.components = exact.components,
+              exact.factor = exact.factor))
+}
+get.treat.type <- function(treat) {
+  #Returns treat with treat.type attribute
+  nunique.treat <- nunique(treat)
+  if (nunique.treat == 2) {
+    treat.type <- "binary"
+  }
+  else if (nunique.treat < 2) {
+    stop("The treatment must have at least two unique values.", call. = FALSE)
+  }
+  else if (is.factor(treat) || is.character(treat)) {
+    treat.type <- "multinomial"
+    treat <- factor(treat)
+  }
+  else {
+    treat.type <- "continuous"
+  }
+  attr(treat, "treat.type") <- treat.type
+  return(treat)
 }
 check.moments.int <- function(method, moments, int) {
   if (method %in% c("ebal", "ebcw", "sbw")) {
@@ -146,17 +215,33 @@ make.closer.to.1 <- function(x) {
     return(as.numeric(x == x[1]))
   }
 }
-remove.collinearity <- function(mat) {
-  keep <- rep(TRUE, ncol(mat))
-  for (i in seq_along(keep)) {
-    keep. <- keep; keep.[i] <- FALSE
-    if (qr(mat[, keep., drop = FALSE])$rank == qr(mat[, keep, drop = FALSE])$rank) {
+remove.collinearity <- function(mat, with.intercept = TRUE) {
+  keep <- setNames(rep(TRUE, ncol(mat)), colnames(mat))
+
+  #Variables that have only 1 value can be removed
+  all.the.same <- apply(mat, 2, all_the_same)
+  keep[all.the.same] <- FALSE
+
+  #If intercept is to be included in check, add column of 1s
+  if (with.intercept) mat1 <- cbind(mat, rep(1, nrow(mat)))
+  else mat1 <- mat
+
+  for (i in colnames(mat)[keep]) {
+    #Add extra value for intercept if desired
+    keep1 <- c(keep, TRUE[with.intercept])
+
+    #Create vector of keep with ith entry FALSE to compare rank with full vector
+    keep1. <- keep1
+    keep1[i] <- FALSE
+
+    #Check if rank without is the same as rank with; if so, remove variable i
+    if (qr(mat1[, keep1., drop = FALSE])$rank == qr(mat1[, keep1, drop = FALSE])$rank) {
       keep[i] <- FALSE
     }
   }
-  return(mat[,keep, drop = FALSE])
-}
 
+  return(mat[, keep, drop = FALSE])
+}
 
 #Shared with cobalt
 word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
@@ -170,7 +255,7 @@ word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
     attr(out, "plural") = FALSE
   }
   else {
-    word.list <- word.list[!word.list %in% c(NA, "")]
+    word.list <- word.list[word.list %nin% c(NA, "")]
     L <- length(word.list)
     if (L == 0) {
       out <- ""
@@ -219,7 +304,7 @@ int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
   #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
   #nunder=number of underscores between variables
 
-  if (is_not_null(ex)) d <- mat[, !colnames(mat) %in% colnames(ex), drop = FALSE]
+  if (is_not_null(ex)) d <- mat[, colnames(mat) %nin% colnames(ex), drop = FALSE]
   else d <- mat
   nd <- ncol(d)
   nrd <- nrow(d)
@@ -336,7 +421,7 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   #Get full model matrix with interactions too
   covs.matrix <- model.matrix(tt.covs, data = covs,
                               contrasts.arg = lapply(covs[sapply(covs, is.factor)], contrasts, contrasts=FALSE)
-                              )[,-1, drop = FALSE]
+                              )
 
   attr(covs, "terms") <- NULL
 
