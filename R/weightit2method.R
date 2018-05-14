@@ -8,10 +8,10 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
       t <- factor(A$treat)[subset]
     }
     else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
-    t <- factor(model.response(mf))
-    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+      tt <- terms(formula)
+      mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
+      t <- factor(model.response(mf))
+      covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
     }
 
     vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
@@ -146,9 +146,9 @@ weightit2ps.cont <- function(formula, data, s.weights, subset, stabilize, ps, ..
     new.data <- data.frame(treat, covs)
   }
   else {
-  mf <- model.frame(formula, data[subset,])
-  treat <- model.response(mf)
-  new.data <- data
+    mf <- model.frame(formula, data[subset,])
+    treat <- model.response(mf)
+    new.data <- data
   }
 
   stabilize <- TRUE
@@ -202,12 +202,12 @@ weightit2gbm <- function(formula, data, s.weights, estimand, focal, subset, stab
     treat <- A$treat[subset]
   }
   else {
-  tt <- terms(formula)
-  mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
-  treat <- factor(model.response(mf))
-  covs <- model.matrix(tt, data=mf,
-                       contrasts.arg = lapply(mf[sapply(mf, is.factor)],
-                                              contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+    tt <- terms(formula)
+    mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
+    treat <- factor(model.response(mf))
+    covs <- model.matrix(tt, data=mf,
+                         contrasts.arg = lapply(mf[sapply(mf, is.factor)],
+                                                contrasts, contrasts=FALSE))[,-1, drop = FALSE]
   }
 
   covs <- apply(covs, 2, make.closer.to.1)
@@ -278,9 +278,9 @@ weightit2cbps <- function(formula, data, s.weights, estimand, focal, subset, sta
   }
   else {
     tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-  treat <- factor(model.response(mf))
-  covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+    treat <- factor(model.response(mf))
+    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
   }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
@@ -368,10 +368,10 @@ weightit2cbps.cont <- function(formula, data, s.weights, subset, ...) {
     treat <- A$treat[subset]
   }
   else {
-  tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-  treat <- model.response(mf)
-  covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+    tt <- terms(formula)
+    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+    treat <- model.response(mf)
+    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
   }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
@@ -440,10 +440,10 @@ weightit2npcbps.cont <- function(formula, data, subset, estimand, ...) {
     treat <- A$treat[subset]
   }
   else {
-  tt <- terms(formula)
-  mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
-  treat <- model.response(mf)
-  covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+    tt <- terms(formula)
+    mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
+    treat <- model.response(mf)
+    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
   }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
@@ -518,7 +518,7 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
                                    coefs = A[["coefs"]],
                                    max.iterations = A[["max.iterations"]],
                                    constraint.tolerance = A[["constraint.tolerance"]],
-                                   print.level = 0)
+                                   print.level = 3)
         if (stabilize) ebal.out <- ebal::ebalance.trim(ebalanceobj = ebal.out,
                                                        max.weight = A[["max.weight"]],
                                                        min.weight = A[["min.weight"]],
@@ -577,10 +577,10 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
     treat <- factor(A$treat)[subset]
   }
   else {
-  tt <- terms(formula)
-  mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-  treat <- factor(model.response(mf))
-  covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
+    tt <- terms(formula)
+    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+    treat <- factor(model.response(mf))
+    covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
   }
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
@@ -698,12 +698,12 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, focal, mome
       treat <- factor(A$treat)[subset]
     }
     else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- factor(model.response(mf))
-    covs <- model.matrix(tt, data=mf,
-                         contrasts.arg = lapply(mf[sapply(mf, is.factor)],
-                                                contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+      tt <- terms(formula)
+      mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+      treat <- factor(model.response(mf))
+      covs <- model.matrix(tt, data=mf,
+                           contrasts.arg = lapply(mf[sapply(mf, is.factor)],
+                                                  contrasts, contrasts=FALSE))[,-1, drop = FALSE]
     }
 
     if (any(is.na(covs))) {

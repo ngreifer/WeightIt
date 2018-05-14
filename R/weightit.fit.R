@@ -133,6 +133,9 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
     if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
     out$w[exact.factor == i] <- obj$w
     if (is_not_null(obj$ps)) out$ps[exact.factor == i] <- obj$ps
+
+
   }
+
   return(out)
 }
