@@ -98,8 +98,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   eval.verbose({
     #Returns weights (w) and propensty score (ps)
-      obj <- weightit.fit(#formula = w.formula,
-                          #data = w.data,
+      obj <- weightit.fit(treat = treat,
+                          covs = covs,
                           treat.type = treat.type,
                           s.weights = s.weights,
                           exact.factor = processed.exact[["exact.factor"]],
@@ -110,8 +110,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           moments = moments,
                           int = int,
                           ps = ps,
-                          treat = treat,
-                          covs = covs, ...)
+                          ...)
   })
 
   if (all_the_same(obj$w)) stop(paste0("All weights are ", obj$w[1], "."), call. = FALSE)

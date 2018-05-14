@@ -1,4 +1,4 @@
-weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.factor, estimand, focal, stabilize, ps, moments, int, ...){
+weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.factor, estimand, focal, stabilize, ps, moments, int, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
   out <- setNames(vector("list", 2), c("w", "ps"))
@@ -7,8 +7,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
     #Run method
     if (method == "ps") {
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2ps(formula = formula,
-                           data = data,
+        obj <- weightit2ps(covs = covs,
+                           treat = treat,
                            s.weights = s.weights,
                            subset = exact.factor == i,
                            estimand = estimand,
@@ -18,8 +18,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
                            ...)
       }
       else if (treat.type == "continuous") {
-        obj <- weightit2ps.cont(formula = formula,
-                                data = data,
+        obj <- weightit2ps.cont(covs = covs,
+                                treat = treat,
                                 s.weights = s.weights,
                                 subset = exact.factor == i,
                                 stabilize = stabilize,
@@ -29,8 +29,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
     }
     else if (method == "gbm") {
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2gbm(formula = formula,
-                            data = data,
+        obj <- weightit2gbm(covs = covs,
+                            treat = treat,
                             s.weights = s.weights,
                             estimand = estimand,
                             focal = focal,
@@ -43,8 +43,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
     }
     else if (method == "cbps") {
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2cbps(formula = formula,
-                             data = data,
+        obj <- weightit2cbps(covs = covs,
+                             treat = treat,
                              subset = exact.factor == i,
                              s.weights = s.weights,
                              stabilize = stabilize,
@@ -53,8 +53,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
                              ...)
       }
       else if (treat.type == "continuous") {
-        obj <- weightit2cbps.cont(formula = formula,
-                                  data = data,
+        obj <- weightit2cbps.cont(covs = covs,
+                                  treat = treat,
                                   subset = exact.factor == i,
                                   s.weights = s.weights,
                                   #stabilize = stabilize,
@@ -67,14 +67,14 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
       if (s.weights.specified) stop(paste0("Sampling weights cannot be used with ", method.to.phrase(method), "."),
                                     call. = FALSE)
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2npcbps(formula = formula,
-                               data = data,
+        obj <- weightit2npcbps(covs = covs,
+                               treat = treat,
                                subset = exact.factor == i,
                                ...)
       }
       else if (treat.type == "continuous") {
-        obj <- weightit2npcbps.cont(formula = formula,
-                                    data = data,
+        obj <- weightit2npcbps.cont(covs = covs,
+                                    treat = treat,
                                     subset = exact.factor == i,
                                     ...)
       }
@@ -82,8 +82,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
     }
     else if (method == "ebal") {
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2ebal(formula = formula,
-                             data = data,
+        obj <- weightit2ebal(covs = covs,
+                             treat = treat,
                              s.weights = s.weights,
                              subset = exact.factor == i,
                              estimand = estimand,
@@ -97,8 +97,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
     }
     else if (method == "sbw") {
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2sbw(formula = formula,
-                            data = data,
+        obj <- weightit2sbw(covs = covs,
+                            treat = treat,
                             s.weights = s.weights,
                             subset = exact.factor == i,
                             estimand = estimand,
@@ -113,8 +113,8 @@ weightit.fit <- function(formula, data, method, treat.type, s.weights, exact.fac
     }
     else if (method == "ebcw") {
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2ebcw(formula = formula,
-                             data = data,
+        obj <- weightit2ebcw(covs = covs,
+                             treat = treat,
                              s.weights = s.weights,
                              subset = exact.factor == i,
                              estimand = estimand,

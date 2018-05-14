@@ -92,8 +92,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     treat.type <- attr(treat.list[[i]], "treat.type")
 
     #Recreate data and formula
-    w.data <- data.frame(treat.list[[i]], covs.list[[i]])
-    w.formula <- formula(w.data)
+    # w.data <- data.frame(treat.list[[i]], covs.list[[i]])
+    # w.formula <- formula(w.data)
 
     processed.exact <- process.exact(exact = exact, data = data,
                                        treat = treat.list[[i]],
@@ -112,8 +112,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
     eval.verbose({
       #Returns weights (w) and propensty score (ps)
-      obj <- do.call("weightit.fit", c(list(formula = w.formula,
-                                            data = w.data,
+      obj <- do.call("weightit.fit", c(list(covs = covs.list[[i]],
+                                            treat = treat.list[[i]],
                                             treat.type = treat.type,
                                             s.weights = s.weights_i,
                                             exact.factor = processed.exact[["exact.factor"]],
@@ -146,9 +146,12 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
           stab.f <- as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * ")))
         }
       }
+      stab.t.c_i <- get.covs.and.treat.from.formula(stab.f, data)
+      stab.covs_i <- stab.t.c_i[["model.covs"]]
+
       eval.verbose({
-        sw_obj <- do.call("weightit.fit", c(list(formula = stab.f,
-                                                 data = data,
+        sw_obj <- do.call("weightit.fit", c(list(covs = stab.covs_i,
+                                                 treat = treat.list[[i]],
                                                  treat.type = treat.type,
                                                  s.weights = s.weights_i,
                                                  exact.factor = processed.exact[["exact.factor"]],

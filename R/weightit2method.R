@@ -1,18 +1,18 @@
 #Propensity score estimation with regression
-weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabilize, ps, ...) {
+weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, ps, ...) {
   A <- list(...)
 
   if (is_null(ps)) {
-    if (is_not_null(A$covs) && is_not_null(A$treat)) {
-      covs <- A$covs[subset, , drop = FALSE]
-      t <- factor(A$treat)[subset]
-    }
-    else {
-      tt <- terms(formula)
-      mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
-      t <- factor(model.response(mf))
-      covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
-    }
+    # if (is_not_null(covs) && is_not_null(treat)) {
+      covs <- covs[subset, , drop = FALSE]
+      t <- factor(treat)[subset]
+    # }
+    # else {
+    #   tt <- terms(formula)
+    #   mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
+    #   t <- factor(model.response(mf))
+    #   covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+    # }
 
     vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -135,21 +135,21 @@ weightit2ps <- function(formula, data, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, ps = p.score)
   return(obj)
 }
-weightit2ps.cont <- function(formula, data, s.weights, subset, stabilize, ps, ...) {
+weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...) {
   A <- list(...)
   if (is_null(A$link)) A$link <- "identity"
   if (is_null(A$family)) A$family <- gaussian(link = A$link)
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- A$treat[subset]
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- treat[subset]
     new.data <- data.frame(treat, covs)
-  }
-  else {
-    mf <- model.frame(formula, data[subset,])
-    treat <- model.response(mf)
-    new.data <- data
-  }
+  # }
+  # else {
+  #   mf <- model.frame(formula, data[subset,])
+  #   treat <- model.response(mf)
+  #   new.data <- data
+  # }
 
   stabilize <- TRUE
 
@@ -184,7 +184,7 @@ weightit2ps.cont <- function(formula, data, s.weights, subset, stabilize, ps, ..
 }
 
 #Generalized boosted modeling with twang
-weightit2gbm <- function(formula, data, s.weights, estimand, focal, subset, stabilize, ...) {
+weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
   A <- list(...)
   if (is_null(A$stop.method)) {
     warning("No stop.method was provided. Using \"es.mean\".",
@@ -197,18 +197,18 @@ weightit2gbm <- function(formula, data, s.weights, estimand, focal, subset, stab
     A$stop.method <- A$stop.method[1]
   }
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- A$treat[subset]
-  }
-  else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- factor(model.response(mf))
-    covs <- model.matrix(tt, data=mf,
-                         contrasts.arg = lapply(mf[sapply(mf, is.factor)],
-                                                contrasts, contrasts=FALSE))[,-1, drop = FALSE]
-  }
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- treat[subset]
+  # }
+  # else {
+  #   tt <- terms(formula)
+  #   mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
+  #   treat <- factor(model.response(mf))
+  #   covs <- model.matrix(tt, data=mf,
+  #                        contrasts.arg = lapply(mf[sapply(mf, is.factor)],
+  #                                               contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+  # }
 
   covs <- apply(covs, 2, make.closer.to.1)
 
@@ -269,19 +269,19 @@ weightit2gbm <- function(formula, data, s.weights, estimand, focal, subset, stab
 }
 
 #CBPS
-weightit2cbps <- function(formula, data, s.weights, estimand, focal, subset, stabilize, ...) {
+weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
   A <- list(...)
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- factor(A$treat)[subset]
-  }
-  else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- factor(model.response(mf))
-    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
-  }
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- factor(treat)[subset]
+  # }
+  # else {
+  #   tt <- terms(formula)
+  #   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+  #   treat <- factor(model.response(mf))
+  #   covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  # }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
   missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -360,19 +360,19 @@ weightit2cbps <- function(formula, data, s.weights, estimand, focal, subset, sta
 
   obj <- list(w = w)
 }
-weightit2cbps.cont <- function(formula, data, s.weights, subset, ...) {
+weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
   A <- list(...)
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- A$treat[subset]
-  }
-  else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- model.response(mf)
-    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
-  }
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- treat[subset]
+  # }
+  # else {
+  #   tt <- terms(formula)
+  #   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+  #   treat <- model.response(mf)
+  #   covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  # }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
   missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -400,20 +400,19 @@ weightit2cbps.cont <- function(formula, data, s.weights, subset, ...) {
 
   obj <- list(w = w)
 }
-weightit2npcbps <- function(formula, data, subset, ...) {
+weightit2npcbps <- function(covs, treat, subset, ...) {
   A <- list(...)
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- factor(A$treat)[subset]
-  }
-  else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- factor(model.response(mf))
-    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
-  }
-
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- factor(treat)[subset]
+  # }
+  # else {
+  #   tt <- terms(formula)
+  #   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+  #   treat <- factor(model.response(mf))
+  #   covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  # }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
   missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -432,19 +431,19 @@ weightit2npcbps <- function(formula, data, subset, ...) {
 
   return(obj)
 }
-weightit2npcbps.cont <- function(formula, data, subset, estimand, ...) {
+weightit2npcbps.cont <- function(covs, treat, subset, estimand, ...) {
   A <- list(...)
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- A$treat[subset]
-  }
-  else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- model.response(mf)
-    covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
-  }
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- treat[subset]
+  # }
+  # else {
+  #   tt <- terms(formula)
+  #   mf <- model.frame(tt, data[subset, , drop = FALSE], drop.unused.levels = TRUE, na.action = "na.pass")
+  #   treat <- model.response(mf)
+  #   covs <- model.matrix(tt, data=mf)[,-1, drop = FALSE]
+  # }
 
   vars.w.missing <- apply(covs, 2, function(x) any(is.na(x)))
   missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -465,19 +464,19 @@ weightit2npcbps.cont <- function(formula, data, subset, estimand, ...) {
 }
 
 #Entropy balancing with ebal
-weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, stabilize, moments, int, ...) {
+weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, moments, int, ...) {
   A <- list(...)
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- factor(A$treat)[subset]
-  }
-  else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- factor(model.response(mf))
-    covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
-  }
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- factor(treat)[subset]
+  # }
+  # else {
+  #   tt <- terms(formula)
+  #   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+  #   treat <- factor(model.response(mf))
+  #   covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
+  # }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
@@ -569,19 +568,19 @@ weightit2ebal <- function(formula, data, s.weights, subset, estimand, focal, sta
 }
 
 #Empirical Balancing Calibration weights with ATE
-weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, moments, int, ...) {
+weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, moments, int, ...) {
   A <- list(...)
 
-  if (is_not_null(A$covs) && is_not_null(A$treat)) {
-    covs <- A$covs[subset, , drop = FALSE]
-    treat <- factor(A$treat)[subset]
-  }
-  else {
-    tt <- terms(formula)
-    mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-    treat <- factor(model.response(mf))
-    covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
-  }
+  # if (is_not_null(covs) && is_not_null(treat)) {
+    covs <- covs[subset, , drop = FALSE]
+    treat <- factor(treat)[subset]
+  # }
+  # else {
+  #   tt <- terms(formula)
+  #   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+  #   treat <- factor(model.response(mf))
+  #   covs <- model.matrix(tt, data=mf)[, -1, drop = FALSE]
+  # }
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
 
@@ -665,7 +664,7 @@ weightit2ebcw <- function(formula, data, s.weights, subset, estimand, focal, mom
 # }
 
 #SBW--------
-weightit2sbw <- function(formula, data, s.weights, subset, estimand, focal, moments, int, ...) {
+weightit2sbw <- function(covs, treat, s.weights, subset, estimand, focal, moments, int, ...) {
   A <- list(...)
 
   if (check.package("sbw")) {
@@ -693,18 +692,18 @@ weightit2sbw <- function(formula, data, s.weights, subset, estimand, focal, mome
       need.to.detach.solver <- FALSE
     }
 
-    if (is_not_null(A$covs) && is_not_null(A$treat)) {
-      covs <- A$covs[subset, , drop = FALSE]
-      treat <- factor(A$treat)[subset]
-    }
-    else {
-      tt <- terms(formula)
-      mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
-      treat <- factor(model.response(mf))
-      covs <- model.matrix(tt, data=mf,
-                           contrasts.arg = lapply(mf[sapply(mf, is.factor)],
-                                                  contrasts, contrasts=FALSE))[,-1, drop = FALSE]
-    }
+    # if (is_not_null(covs) && is_not_null(treat)) {
+      covs <- covs[subset, , drop = FALSE]
+      treat <- factor(treat)[subset]
+    # }
+    # else {
+    #   tt <- terms(formula)
+    #   mf <- model.frame(tt, data[subset,], drop.unused.levels = TRUE, na.action = "na.pass")
+    #   treat <- factor(model.response(mf))
+    #   covs <- model.matrix(tt, data=mf,
+    #                        contrasts.arg = lapply(mf[sapply(mf, is.factor)],
+    #                                               contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+    # }
 
     if (any(is.na(covs))) {
       stop("Stable balancing weights are not compatible with missing values.", call. = FALSE)
