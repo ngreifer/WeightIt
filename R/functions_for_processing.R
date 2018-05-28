@@ -431,17 +431,10 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
               treat.name = treat.name))
 }
 round_df_char <- function(df, digits, pad = "0", na_vals = "") {
-
   nas <- is.na(df)
-  if (!is.data.frame(df)) {
-    # Fixes a sneaky error
-    df <- as.data.frame.matrix(df, stringsAsFactors = FALSE)
-
-  }
-
+  if (!is.data.frame(df)) df <- as.data.frame.matrix(df, stringsAsFactors = FALSE)
   rn <- rownames(df)
   cn <- colnames(df)
-
   df <- as.data.frame(lapply(df, function(col) {
     if (suppressWarnings(all(!is.na(as.numeric(as.character(col)))))) {
       as.numeric(as.character(col))
@@ -449,60 +442,42 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
       col
     }
   }), stringsAsFactors = FALSE)
-
   nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
+  o.negs <- df < 0
+  df[nums] <- round(df[nums], digits = digits)
+  df[nas] <- ""
 
-  # Using a format function here to force trailing zeroes to be printed
-  # "formatC" allows signed zeros (e.g., "-0.00")
-  df <- as.data.frame(lapply(df, formatC, digits = digits, format = "f"),
-                      stringsAsFactors = FALSE)
+  df <- as.data.frame(lapply(df, as.character), stringsAsFactors = FALSE)
 
-  # Convert missings to blank character
-  if (any(nas)) {
-    df[nas] <- ""
-  }
-
-  # Here's where we align the the decimals
   for (i in which(nums)) {
     if (any(grepl(".", df[[i]], fixed = TRUE))) {
-
       s <- strsplit(df[[i]], ".", fixed = TRUE)
       lengths <- lengths(s)
       digits.r.of.. <- sapply(seq_along(s), function(x) {
-
-        if (lengths[x] > 1) {
-          nchar(s[[x]][lengths[x]])
-        } else {
-          0
-        }
-      })
-
+        if (lengths[x] > 1) nchar(s[[x]][lengths[x]])
+        else 0 })
       df[[i]] <- sapply(seq_along(df[[i]]), function(x) {
-        if (df[[i]][x] == "") {
-          ""
-        } else if (lengths[x] <= 1) {
-          paste0(c(df[[i]][x],
-                   rep(".", pad == 0),
-                   rep(pad, max(digits.r.of..) -
-                         digits.r.of..[x] + as.numeric(pad != 0))),
-                 collapse = "")
-        } else {
-          paste0(c(df[[i]][x], rep(pad, max(digits.r.of..) - digits.r.of..[x])),
+        if (df[[i]][x] == "") ""
+        else if (lengths[x] <= 1) {
+          paste0(c(df[[i]][x], rep(".", pad == 0), rep(pad, max(digits.r.of..) - digits.r.of..[x] + as.numeric(pad != 0))),
                  collapse = "")
         }
+        else paste0(c(df[[i]][x], rep(pad, max(digits.r.of..) - digits.r.of..[x])),
+                    collapse = "")
       })
     }
   }
 
-  if (is_not_null(rn)) rownames(df) <- rn
-  if (is_not_null(cn)) names(df) <- cn
+  df[o.negs & df >= 0] <- paste0("-", df[o.negs & df >= 0])
 
   # Insert NA placeholders
   df[df == ""] <- na_vals
 
+  if (length(rn) > 0) rownames(df) <- rn
+  if (length(cn) > 0) names(df) <- cn
+
   return(df)
-}
-nunique <- function(x, nmax = NA, na.rm = TRUE) {
+}nunique <- function(x, nmax = NA, na.rm = TRUE) {
   if (is_null(x)) return(0)
   else {
     if (na.rm) x <- x[!is.na(x)]
