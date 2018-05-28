@@ -38,7 +38,14 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
                             stabilize = stabilize,
                             ...)
       }
-      else stop("Generalized boosted modeling is not compatible with continuous treatments.", call. = FALSE)
+      else {
+        obj <- weightit2gbm.cont(covs = covs,
+                                treat = treat,
+                                s.weights = s.weights,
+                                subset = exact.factor == i,
+                                stabilize = stabilize,
+                                ...)
+      }
 
     }
     else if (method == "cbps") {
