@@ -1,11 +1,13 @@
 WeightIt News and Updates
 ======
 
-Version 0.3.3
+Version 0.4.0
 
 * Added `trim()` function to trim weights.
 
-* The input formula is now much mroe forgiving, allowing objects in the environment to be included. The `data` argument to `weightit()` is now optional. To simplify things, the output object no longer contains a `data` field.
+* Added `ps.cont()` function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in `twang`. This function uses the same syntax as `ps()` in `twang`, and is probably better accessed using `wightit()` with `method = "gbm"`. Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.
+
+* The input formula is now much more forgiving, allowing objects in the environment to be included. The `data` argument to `weightit()` is now optional. To simplify things, the output object no longer contains a `data` field.
 
 * Under-the-hood changes to facilitate adding new features and debugging. Some aspects of the output objects have been slightly changed, but it shouldn't affect use for most users.
 
