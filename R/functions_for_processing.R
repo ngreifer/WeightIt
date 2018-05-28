@@ -420,8 +420,8 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
 
   #Get full model matrix with interactions too
   covs.matrix <- model.matrix(tt.covs, data = covs,
-                              contrasts.arg = lapply(covs[sapply(covs, is.factor)], contrasts, contrasts=FALSE)
-                              )
+                              contrasts.arg = lapply(covs[sapply(covs, is.factor)],
+                                                     contrasts, contrasts=FALSE))[,-1, drop = FALSE]
 
   attr(covs, "terms") <- NULL
 
@@ -429,11 +429,6 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
               model.covs = covs.matrix,
               treat = treat,
               treat.name = treat.name))
-}
-round_df <- function(df, digits) {
-  nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
-  df[, nums] <- round(df[, nums], digits = digits)
-  return(df)
 }
 round_df_char <- function(df, digits, pad = "0", na_vals = "") {
 
