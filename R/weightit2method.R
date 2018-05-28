@@ -143,7 +143,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
   covs <- apply(covs, 2, make.closer.to.1)
   data <- data.frame(t, covs)
   formula <- formula(data)
-print(summary(data))
+  print(summary(data))
   stabilize <- TRUE
 
   if (is_null(ps)) {
@@ -170,7 +170,7 @@ print(summary(data))
       w <- 1/dens.denom
     }
   }
-print(length(p.denom))
+  print(length(p.denom))
   obj <- list(ps = p.denom,
               w = w)
   return(obj)
@@ -253,9 +253,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   A <- list(...)
   if (is_null(A$stop.method)) {
-    warning("No stop.method was provided. Using \"s.mean\".",
+    warning("No stop.method was provided. Using \"s.mean.z\".",
             call. = FALSE, immediate. = TRUE)
-    A$stop.method <- "s.mean"
+    A$stop.method <- "s.mean.z"
   }
   else if (length(A$stop.method) > 1) {
     warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
@@ -277,14 +277,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   if (check.package("wCorr")) {
     fit <- ps.cont(formula(new.data), data = new.data,
                    n.trees = A[["n.trees"]],
-                    interaction.depth = A[["interaction.depth"]],
-                    shrinkage = A[["shrinkage"]],
-                    bag.fraction = A[["bag.fraction"]],
-                    stop.method = A[["stop.method"]],
-                    use.optimize = A[["use.optimize"]],
-                    sampw = s.weights[subset],
-                   verbose = TRUE,
-                   print.level = 2)
+                   interaction.depth = A[["interaction.depth"]],
+                   shrinkage = A[["shrinkage"]],
+                   bag.fraction = A[["bag.fraction"]],
+                   stop.method = A[["stop.method"]],
+                   use.optimize = A[["use.optimize"]],
+                   sampw = s.weights[subset],
+                   verbose = TRUE)
   }
 
   w <- fit[["w"]][[A[["stop.method"]]]]
