@@ -375,7 +375,7 @@ print.summary.weightitMSM <- function(x, ...) {
   for (ti in seq_along(x)) {
     if (!only.one) cat(paste0(" - - - - - - - - - - Time ", ti, " - - - - - - - - - -\n"))
     cat("- Weight ranges:\n")
-    print.data.frame(round_df(text.box.plot(x[[ti]]$weight.range, 28), 4))
+    print.data.frame(round_df_char(text.box.plot(x[[ti]]$weight.range, 28), 4))
 
     df <- setNames(data.frame(do.call("c", lapply(names(x[[ti]]$weight.top), function(y) c(" ", y))),
                               matrix(do.call("c", lapply(x[[ti]]$weight.top, function(y) c(names(y), round(y, 4)))),
@@ -384,13 +384,14 @@ print.summary.weightitMSM <- function(x, ...) {
     cat(paste("\n- Units with", length(x[[ti]]$weight.top[[1]]), "greatest weights by group:\n"))
     print.data.frame(df, row.names = FALSE)
     cat("\n")
-    print.data.frame(as.data.frame(round(matrix(c(x[[ti]]$weight.ratio, x[[ti]]$coef.of.var), ncol = 2,
+    print.data.frame(round_df_char(as.data.frame(matrix(c(x[[ti]]$weight.ratio, x[[ti]]$coef.of.var), ncol = 2,
                                                 dimnames = list(names(x[[ti]]$weight.ratio),
-                                                                c("Ratio", "Coef of Var"))), 4)))
+                                                                c("Ratio", "Coef of Var")))), 4))
+
     if (is_not_null(x[[ti]][["weight.mean"]])) cat("\n- Mean of Weights =", round(x[[ti]][["weight.mean"]], 4), "\n")
 
     cat("\n- Effective Sample Sizes:\n")
-    print.data.frame(round(x[[ti]]$effective.sample.size, 3))
+    print.data.frame(round_df_char(x[[ti]]$effective.sample.size, 3))
     cat("\n")
     if (only.one) break
   }
