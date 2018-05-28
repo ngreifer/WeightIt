@@ -84,9 +84,15 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
 \details{
 The primary purpose of \code{weightit()} is as a dispatcher to other functions in other packages that perform the estimation of balancing weights. These functions are identified by a name, which is used in \code{method} to request them. Each method has some slight distinctions in how it is called, but in general, simply entering the method will cause \code{weightit()} to generate the weights correctly using the function. To use each method, the package containing the function must be installed, or else an error will appear. Below are the methods allowed and some information about each.
 \describe{
-\item{\code{"ps"}}{\strong{Propensity score weighting using GLM.} For binary treatments, this method estimates the propensity scores using \code{glm()}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li, Morgan, & Zaslavsky (2016), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Li & Greene (2013). For multinomial treatments, the propensity scores are estimated using multinomial regression from one of two functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{mlogit()} from the \pkg{mlogit} package is used, and for the Bayesian probit  (\code{"bayes.probit"}) link, \code{MNP()} from the \pkg{MNP} package is used. If \code{mlogit} in not installed, a series of binary regressions using \code{glm()} will be run instead, with estimated propensities normalized to sum to 1. These are the only three links allowed for multinomial treatments at this time. (These methods can fail to converge, yielding errors that may seem foreign.) For continuous treatments, the generalized propensity score is estimated using linear regression with a normal density, but other families and links are allowed, such as poisson for count treatments, using the \code{family} and \code{link} arguments. An additional argument, \code{num.formula}, may be specified, containing the stabilization variables on the right hand side. For all treatment types except multinomial treatments with a Bayesian probit link, sampling weights are supported, but a warning message from \code{glm()} may appear.}
+\item{\code{"ps"}}{\strong{Propensity score weighting using GLM.} For binary treatments, this method estimates the propensity scores using \code{glm()}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li, Morgan, & Zaslavsky (2016), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Li & Greene (2013).
 
-\item{\code{"gbm"}}{\strong{Propensity score weighting using generalized boosted modeling.} This method, which can also be requested as \code{"gbr"} or \code{"twang"}, uses functions from the \pkg{twang} package to perform generalized boosted modeling to estimate propensity scores that yield balance on the requested covariates. For binary treatments, \code{ps()} is used, and the ATE, ATT, and ATC can be requested. For multinomial treatments, \code{mnps()} is used, and the ATE or ATT can be requested. For both, the \code{weightit()} argument \code{s.weights} corresponds to the \code{ps()} and \code{mnps()} argument \code{sampw}. The \code{weightit()} argument \code{focal} corresponds to the \code{mnps()} argument \code{treatATT}. For both, a single stop method must be supplied to \code{stop.method}; only one can be entered at a time. The other arguments to \code{ps()} and \code{mnps} can be specified in the call to \code{weightit()}. See \code{\link[twang]{ps}} and \code{\link[twang]{mnps}} for details.}
+For multinomial treatments, the propensity scores are estimated using multinomial regression from one of two functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{mlogit()} from the \pkg{mlogit} package is used, and for the Bayesian probit  (\code{"bayes.probit"}) link, \code{MNP()} from the \pkg{MNP} package is used. If \code{mlogit} in not installed, a series of binary regressions using \code{glm()} will be run instead, with estimated propensities normalized to sum to 1. These are the only three links allowed for multinomial treatments at this time. (These methods can fail to converge, yielding errors that may seem foreign.)
+
+For continuous treatments, the generalized propensity score is estimated using linear regression with a normal density, but other families and links are allowed, such as poisson for count treatments, using the \code{family} and \code{link} arguments. An additional argument, \code{num.formula}, may be specified, containing the stabilization variables on the right hand side. For all treatment types except multinomial treatments with a Bayesian probit link, sampling weights are supported, but a warning message from \code{glm()} may appear.}
+
+\item{\code{"gbm"}}{\strong{Propensity score weighting using generalized boosted modeling.} This method, which can also be requested as \code{"gbr"} or \code{"twang"}, uses functions from the \pkg{twang} package to perform generalized boosted modeling to estimate propensity scores that yield balance on the requested covariates. For binary treatments, \code{ps()} is used, and the ATE, ATT, and ATC can be requested. For multinomial treatments, \code{mnps()} is used, and the ATE or ATT can be requested. For both, the \code{weightit()} argument \code{s.weights} corresponds to the \code{ps()} and \code{mnps()} argument \code{sampw}. The \code{weightit()} argument \code{focal} corresponds to the \code{mnps()} argument \code{treatATT}. For both, a single stop method must be supplied to \code{stop.method}; only one can be entered at a time. The other arguments to \code{ps()} and \code{mnps} can be specified in the call to \code{weightit()}. See \code{\link[twang]{ps}} and \code{\link[twang]{mnps}} for details.
+
+For continuous treatments, the generalized propensity score is estimated using an internal function that implements generalized boosted modeling with \code{gbm()}, since \pkg{twang} does not support continuous treatments. Balance is optimized by a function of the correlation between the treatment and covariates in the weighted sample. The argument \code{stop.method} involves three components: the correlation to be computed (\code{p} for Pearson (with biserial for categorical covariates) and \code{s} for Spearman), the function of the correlation to be optimized (\code{mean} or \code{max}, as in \pkg{twang}, but also \code{mse} for mean squared distance from 0), and whether to first Z-transform the correlations (\code{z} for yes, nothing for no); for example, \code{"s.mean.z"}, the default, uses the tree that minimizes the mean Z-transformed Spearman correlation. In addition to the options relevant to \code{gbm()}, an additional option, \code{use.optimize}, is present. If \code{0}, the tree with the best balance is selected by brute force. If \code{1}, the tree with the best balance is selected by the \code{\link{optimize}} function. If \code{2}, the tree with the best balance is selected by a combination of optimization and brute force, using the same algorithm employed by \code{ps()} in \pkg{twang}. \code{1} is the fastest but the least guaranteed to find optimal balance among he trees, while \code{0} is the slowest (and very slow) but is guranteed to find optimal balance among the trees.}
 
 \item{\code{"cbps"}}{\strong{Covariate Balancing Propensity Score weighting.} This method uses the \code{CBPS()} function from the \pkg{CBPS} package to estimate propensity scores and weights. It works with binary, multinomial, and continuous treatments. For binary treatments, the ATE, ATT, and ATC can be requested. For multinomial treatments, only the ATE can be requested. The \code{weightit()} argument \code{s.weights} corresponds to the \code{CBPS()} argument \code{sampling.weights}. \code{CBPS()} can fit either an over-identified model or a model that only contains covariate balancing conditions; this option is typically specified with the \code{method} argument to \code{CBPS()}, but because this argument is already used in \code{weightit()}, a new argument, \code{over}, can be specified. \code{over = FALSE} in \code{weightit()} is equivalent to \code{method = "exact"} in \code{CBPS()}. The other arguments to \code{CBPS()} can be specified in the call to \code{weightit()}. See \code{\link[CBPS]{CBPS}} for details.}
 
@@ -102,6 +108,9 @@ The primary purpose of \code{weightit()} is as a dispatcher to other functions i
 
 \author{
 Noah Greifer
+
+The code used for using generalized boosted modeling with continuous treatments was adapted from that which appeared in Zhu, Coffman, & Ghosh (2015).
+
 }
 
 \references{
@@ -163,6 +172,10 @@ McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., 
 
 Robins, J. M., Hernán, M. Á., & Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. Epidemiology, 11(5), 550–560.
 
+\code{method = "gbm"}
+
+Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1).
+
 \code{method = "cbps"}
 
 Fong, C., Hazlett, C. , and Imai, K. (2015). Parametric and Nonparametric Covariate Balancing Propensity Score for General Treatment Regimes. Unpublished Manuscript. <\url{http://imai.princeton.edu/research/files/CBGPS.pdf}>
@@ -180,14 +193,14 @@ The other packages are on CRAN and can be installed in the regular way.
 library("cobalt")
 data("lalonde", package = "cobalt")
 
-#Balancing covariates between treatment groups
+#Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
                 nodegree + re74, data = lalonde,
                 method = "ps", estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
 
-#Balancing covariates with respect to re75 (continuous)
+#Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                 nodegree + re74, data = lalonde,
                 method = "ebal", estimand = "ATE"))
