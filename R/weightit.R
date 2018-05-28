@@ -80,9 +80,9 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   processed.exact <- process.exact(exact = exact, data= data,
                                    treat = treat)
 
-  #Recreate data and formula
-  w.data <- data.frame(treat, covs)
-  w.formula <- formula(w.data)
+  # #Recreate data and formula
+  # w.data <- data.frame(treat, covs)
+  # w.formula <- formula(w.data)
 
   #Process moments and int
   moments.int <- check.moments.int(method, moments, int)
