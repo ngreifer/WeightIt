@@ -143,7 +143,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
   covs <- apply(covs, 2, make.closer.to.1)
   data <- data.frame(t, covs)
   formula <- formula(data)
-  print(summary(data))
+
   stabilize <- TRUE
 
   if (is_null(ps)) {
@@ -170,7 +170,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
       w <- 1/dens.denom
     }
   }
-  print(length(p.denom))
+
   obj <- list(ps = p.denom,
               w = w)
   return(obj)
@@ -274,7 +274,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
 
   new.data <- data.frame(treat, covs)
 
-  if (check.package("wCorr")) {
+  if (check.package("wCorr") && check.package("gbm")) {
     fit <- ps.cont(formula(new.data), data = new.data,
                    n.trees = A[["n.trees"]],
                    interaction.depth = A[["interaction.depth"]],
@@ -284,9 +284,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
                    use.optimize = A[["use.optimize"]],
                    sampw = s.weights[subset],
                    verbose = TRUE)
+    w <- cobalt::get.w(fit, stop.method = s)
   }
 
-  w <- fit[["w"]][[A[["stop.method"]]]]
   #ps <- fit[["ps"]][[A[["stop.method"]]]]
 
   out <- list(w = w)
