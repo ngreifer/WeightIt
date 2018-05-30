@@ -74,7 +74,7 @@ Returns an object of class \code{ps} and \code{ps.cont}, a list containing
    \item{desc}{a list containing balance tables for each method selected in
               \code{stop.method}. Includes a component for the unweighted
               analysis names \dQuote{unw}. Each \code{desc} component includes
-              a list with the following components
+              a list with the following components:
   \describe{
      \item{ess}{The effective sample size}
      \item{n}{The number of subjects}
@@ -89,7 +89,7 @@ Returns an object of class \code{ps} and \code{ps.cont}, a list containing
    }
 }
   \item{ps}{a data frame containing the estimated generalized propensity scores. Each column is associated with one of the methods selected in \code{stop.methods}.}
-  \item{w}{a data frame containing the propensity score weights. Each column is associated with one of the methods selected in \code{stop.methods}. If sampling weights are given then these are NOT incorporated into these weights, in contrast to \pkg{twang}.}
+  \item{w}{a data frame containing the propensity score weights. Each column is associated with one of the methods selected in \code{stop.methods}. If sampling weights are given then these are incorporated into the weights.}
 \item{estimand}{\code{NULL}}
   \item{datestamp}{Records the date of the analysis.}
   \item{parameters}{Saves the \code{ps.cont} call.}
@@ -98,9 +98,9 @@ Returns an object of class \code{ps} and \code{ps.cont}, a list containing
 \item{balance}{\code{The balance summary for each tree examined, with a column for each stop.method. If \code{optimize = 0}, this will contain balance summaries for all trees. If \code{optimize = 1}, this will contain balance summaries for the 25 trees corresponding to \code{iters}. If \code{optimize = 2}, this will be NULL.}}
 \item{n.trees}{Maximum number of trees considered in GBM fit.}
 \item{data}{Data as specified in the \code{data} argument.}
-}
 
 The \code{NULL} entries exist so the output object is similar to that of \code{ps} in \pkg{twang}.
+}
 
 \references{
 Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1). \doi{10.1515/jci-2014-0022}

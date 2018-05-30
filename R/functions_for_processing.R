@@ -477,7 +477,8 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   if (length(cn) > 0) names(df) <- cn
 
   return(df)
-}nunique <- function(x, nmax = NA, na.rm = TRUE) {
+}
+nunique <- function(x, nmax = NA, na.rm = TRUE) {
   if (is_null(x)) return(0)
   else {
     if (na.rm) x <- x[!is.na(x)]
