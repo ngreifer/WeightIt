@@ -26,9 +26,9 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   desc.wts.cont <- function(t, covs, weights, which.tree) {
     desc <- setNames(vector("list", 10),
                      c("ess", "n", "max.p.cor", "mean.p.cor", "rms.p.cor", "max.s.cor", "mean.s.cor", "rms.s.cor", "bal.tab", "n.trees"))
-    desc[["bal.tab"]][["results"]] <- data.frame(p.cor = apply(covs, 2, function(c) weightedCorr(t, c, method = "pearson", weights = weights)),
+    desc[["bal.tab"]][["results"]] <- data.frame(p.cor = apply(covs, 2, function(c) wCorr::weightedCorr(t, c, method = "pearson", weights = weights)),
                                                  p.cor.z = NA,
-                                                 s.cor = apply(covs, 2, function(c) weightedCorr(t, c, method = "spearman", weights = weights)),
+                                                 s.cor = apply(covs, 2, function(c) wCorr::weightedCorr(t, c, method = "spearman", weights = weights)),
                                                  s.cor.z = NA,
                                                  row.names = colnames(covs))
     desc[["bal.tab"]][["results"]][["p.cor.z"]] <- cor2z(desc[["bal.tab"]][["results"]][["p.cor"]])
@@ -87,20 +87,24 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   #form.num <- update(formula, . ~ 1)
   #model.num <- glm(form.num, data = data.frame(data, s.weights = s.weights), weights = s.weights)
 
-  desc <- setNames(vector("list", 1 + length(stop.method)),
-                   c("unw", stop.method))
 
-  desc[["unw"]] <- desc.wts.cont(t, covs, s.weights, NA)
 
   #model.num <- lm.wfit
   ps.num <- dnorm((t - weighted.mean(t, s.weights))/sqrt(cov.wt(matrix(t, ncol = 1), s.weights)[["cov"]][1,1]), 0 ,1)
   #ps.num <- dnorm((t - model.num$fitted.values)/sqrt(summary(model.num)$dispersion), 0 ,1)
+  if(verbose) cat("Fitting gbm model\n")
   model.den <- gbm::gbm(formula(new.data), data = new.data, shrinkage = shrinkage,
                         interaction.depth = interaction.depth, distribution = "gaussian", n.trees = n.trees,
                         bag.fraction = bag.fraction,
                         n.minobsinnode = 10, train.fraction = 1, keep.data = FALSE,
                         verbose = FALSE,
                         weights = s.weights)
+
+  desc <- setNames(vector("list", 1 + length(stop.method)),
+                   c("unw", stop.method))
+
+  if(verbose) cat("Diagnosis of unweighted analysis\n")
+  desc[["unw"]] <- desc.wts.cont(t, covs, s.weights, NA)
 
   if (use.optimize == 1) {
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
@@ -112,7 +116,10 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
                       dimnames = list(iters, stop.method))
 
     for (s in seq_along(stop.method)) {
+
       sm <- stop.method[s]
+
+      if(verbose) cat("Optimizing with", sm,"stopping rule\n")
 
       # get optimal number of iterations
       # Step #1: evaluate at 25 equally spaced points
@@ -151,6 +158,8 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
     best.tree <- setNames(numeric(length(stop.method)), stop.method)
     for (s in seq_along(stop.method)) {
+      if(verbose) cat("Optimizing with", stop.method[s],"stopping rule\n")
+
       opt <- optimize(F.aac.w, interval = c(1, n.trees), data = new.data, t = t, covs = covs,
                       ps.model = model.den,
                       ps.num = ps.num, corr.type = corr.type[s], mean.max = mean.max[[s]],
@@ -208,13 +217,9 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
     best.tree <- setNames(numeric(length(stop.method)), stop.method)
     for (s in seq_along(stop.method)) {
+      if(verbose) cat("Optimizing with", stop.method[s],"stopping rule\n")
       best.tree[s] <- floor(which.min(balance[,s]))
-      # if (z.trans[s]) {
-      #   best.tree[s] <- floor(which.min(sapply(bal, function(b) mean.max[[s]](cor2z(b[[s]])))))
-      # }
-      # else {
-      #   best.tree[s] <- floor(which.min(sapply(bal, function(b) mean.max[[s]](b[[s]]))))
-      # }
+
       ps[[s]] <- ps.den[[best.tree[s]]]
       w[[s]] <- wt[[best.tree[s]]]
     }
@@ -223,8 +228,11 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
 
   if(any(n.trees - best.tree < 100)) warning("Optimal number of iterations is close to the specified n.trees. n.trees is likely set too small and better balance might be obtainable by setting n.trees to be larger.", call. = FALSE)
 
-  for (s in stop.method) {
-    desc[[s]] <- desc.wts.cont(t, covs, w[[s]]*s.weights, best.tree[s])
+  for (sm in stop.method) {
+    if(verbose) cat("Diagnosis of",sm,"weights\n")
+
+    w[[sm]] <- w[[sm]]*s.weights
+    desc[[sm]] <- desc.wts.cont(t, covs, w[[sm]], best.tree[sm])
   }
 
   out <- list(treat = t, desc = desc, ps = ps, w = w,
