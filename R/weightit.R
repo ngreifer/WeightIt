@@ -115,6 +115,11 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   if (all_the_same(obj$w)) stop(paste0("All weights are ", obj$w[1], "."), call. = FALSE)
 
+  warn <- FALSE
+  test.w <- obj$w*s.weights
+  if (treat.type == "continuous") {if (sd(test.w)/mean(test.w) > 4) warn <- TRUE}
+  else {if (any(sapply(unique(treat), function(x) sd(test.w[treat == x])/mean(test.w[treat == x]) > 4))) warn <- TRUE}
+  if (warn) warning("Some extreme weights were generated. Examine them with summary() and maybe trim them with trim().", call. = FALSE)
   # #Create new data set
   # #treat, covs, data (not in treat or covs), exact
   # treat.in.data <- treat; attr(treat.in.data, "treat.type") <- NULL
