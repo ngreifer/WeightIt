@@ -6,7 +6,7 @@
 Generalized Propensity Score Estimation using GBM
 }
 \description{
-\code{ps.cont} calculates generalized propensity scores and corresponding weights using boosted linear regression as implemented in \code{\link[gbm]{gbm}}. This function extends \code{\link[twang]{ps}} in \pkg{twang} to continuous treatments. The syntax and output are largely the same. The parameter defaults are those found in Zhu, Coffman, & Ghosh (2015).
+\code{ps.cont} calculates generalized propensity scores and corresponding weights using boosted linear regression as implemented in \code{\link[gbm]{gbm}}. This function extends \code{\link[twang]{ps}} in \pkg{twang} to continuous treatments. The syntax and output are largely the same. The GBM parameter defaults are those found in Zhu, Coffman, & Ghosh (2015).
 }
 \usage{
 ps.cont(formula, data,
@@ -18,7 +18,9 @@ ps.cont(formula, data,
         verbose = FALSE,
         stop.method,
         use.optimize = 1,
-        sampw = NULL)
+        use.kernel = FALSE,
+        sampw = NULL,
+        ...)
 \method{summary}{ps.cont}(object, ...)
 \method{plot}{ps.cont}(x, ...)
 \method{boxplot}{ps.cont}(x, ...)
@@ -47,18 +49,23 @@ The \code{bag.fraction} passed on to \code{\link[gbm]{gbm}}.
 Currently ignored.
 }
   \item{verbose}{
-If \code{TRUE}, lots of information will be printed to monitor the the progress of the fitting.
+If \code{TRUE}, information will be printed to monitor the the progress of the fitting.
 }
 \item{stop.method}{A method or methods of measuring and summarizing balance across pretreatment variables.  Current options are \code{p.max}, \code{p.mean}, \code{p.rms}, \code{p.mean.z}, \code{p.rms.z}, \code{s.max}, \code{s.mean}, \code{s.rms}, \code{s.mean.z}, and \code{s.rms.z}. \code{p} refers to the Pearson correlation and \code{s} refers to the Spearman correlation, both implemented in the \pkg{wCorr} package. These are summarized across the pretreatment variables by the maximum (\code{max}), the mean (\code{mean}), or the square root of the mean of the squares (\code{rms}). The correlations can first be Fisher's Z-tranformed (\code{z}) or not.
 }
 \item{use.optimize}{A numeric value, either \code{0}, \code{1}, or \code{2}. If \code{0}, balance will be checked for every tree, and the tree with the best balance will be the one used to generate the final weights. If \code{1}, the default, balance will be checked for 25 trees, and then \code{\link{optimize}} will be used to find the tree with the best balance within the tree interval chosen. If \code{2}, \code{optimize} will be used to find the tree that yields the best balance. \code{0} takes the longest but is guaranteed to find the best balance among the trees. \code{2} is the quickest but will often choose a tree that that suboptimal balance, though not by much. \code{1} is a compromise between speed and comprehensiveness and is the algorthm implemented in \pkg{twang}.
 }
+\item{use.kernel}{Whether to use kernel density estimation as implemented in \code{\link{density}} to estimate the numerator of the weights. If \code{TRUE}, \code{density} will be used. If \code{FALSE}, the default, a normal density will be assumed and will be estimated using \code{\link{dnorm}}.}
 \item{sampw}{Optional sampling weights.}
 \item{object, x}{A \code{ps.cont} object.}
-\item{\dots}{For \code{ps.cont}, mostly ignored. For \code{summary.ps.cont}, additional arguments affecting the summary produced.}
+\item{\dots}{For \code{ps.cont}, if \code{use.density = TRUE}, additional arguments to \code{\link{density}}, which is used to produce the density for the numerator of the weights. These include \code{bw}, \code{adjust}, \code{kernel}, and \code{n}. The default values are the defaults for \code{density}, except \code{n}, which is 10 times the number of units.
+
+For \code{summary.ps.cont}, additional arguments affecting the summary produced.}
 }
 \details{
 \code{ps.cont} extends \code{ps} in \pkg{twang} to continuous treatments. It estimates weights from a series of trees and then outputs the weights that optimize a user-set criterion. The criterion employed involves the correlation between the treatment and each covariate. In a fully balanced sample, the treatment will have a correlation of 0 with covariates sufficient for removing confounding. Zhu, Coffman, & Ghosh (2015), who were the first to describe GBM for propensity score weighting with continuous treatments, recommend this procedure and provided R code to implement the methods they describe. \code{ps.cont} adapts their syntax to make it consistent with that of \code{ps} in \pkg{twang}. As in Zhu et al. (2015), when the Pearson correlation is requested, weighted biserial correlations will be computed for binary covariates.
+
+The weights are estimated as the marginal density of the treatment divided by the conditional density of the treatment on the covariates for each unit. For the marginal density, a kernel density estimator can be implemented using the \code\link{density}} function. For the conditional density, a Gaussian density is assumed. Note that with treatment with outlying values, extreme weights can be produced, so it is important to examine the weights and trim them if necessary.
 
 It is recommended to use as many trees as possible, though this requires more computation time, especially with \code{use.optimize} set to \code{0}. There is little difference between using Pearson and Spearman correlations or between using the raw correlations and the Z-transformed correlations. Typically the only \code{gbm}-related options that should be changed are the interaction depth and number of trees.
 
@@ -109,7 +116,7 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 \author{
 Noah Greifer
 
-\code{ps.cont} is heavily adapted from the R code in Zhu, Coffman, & Ghosh (2015). In contrast with their code, \code{ps.cont} uses weighted Pearson and Spearman correlations rather than weighted bootstrapped correlations and allows for different degrees of optimization in searching for the best solution. \code{ps.cont} also takes inspiration from \code{ps} in \pkg{twang}.
+\code{ps.cont} is heavily adapted from the R code in Zhu, Coffman, & Ghosh (2015). In contrast with their code, \code{ps.cont} uses weighted Pearson and Spearman correlations rather than probability weighted bootstrapped correlations and allows for different degrees of optimization in searching for the best solution. \code{ps.cont} also takes inspiration from \code{ps} in \pkg{twang}.
 }
 
 \seealso{
