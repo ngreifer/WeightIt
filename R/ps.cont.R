@@ -1,6 +1,7 @@
 #GBM for continuous treatments adapted from Zhu, Coffman, & Ghosh (2015) code
 ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrinkage = 0.0005, bag.fraction = 1,
-                    print.level = 0, verbose = FALSE, stop.method, use.optimize = 2, sampw = NULL, ...) {
+                    print.level = 0, verbose = FALSE, stop.method, use.optimize = 1, use.kernel = FALSE, sampw = NULL, ...) {
+  #Program checks
 
   A <- list(...)
   terms <- match.call()
@@ -48,8 +49,11 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
 
   # Find the optimal number of trees using correlation
 
+  check.package("gbm")
+  check.package("wCorr")
+
   if (missing(stop.method)) {
-    warning("No stop.method was entered. Using \"s.mean.z\", the mean of the absolute Z-tranformed Spearman correlations.", call. = FALSE)
+    warning("No stop.method was entered. Using \"s.mean.z\", the mean of the absolute Z-tranformed Spearman correlations.", call. = FALSE, immediate. = TRUE)
     stop.method <- "s.mean.z"
   }
   else {
@@ -58,9 +62,8 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
                                                                               c("", ".z")), 1, paste, collapse = ""),
                                       several.ok = TRUE),
                             error = function(e) {
-                              warning("The entered stop.method is not one of the accepted values.\nSee ?ps.cont for the accepted values of stop.method for continuous treatments.\nUsing \"s.mean.z\".",
-                                      call. = FALSE, immediate. = TRUE)
-                              return("s.mean.z")
+                              stop("The entered stop.method is not one of the accepted values.\n\tSee ?ps.cont for the accepted values of stop.method for continuous treatments.",
+                                      call. = FALSE)
                             })
   }
 
@@ -84,19 +87,41 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   }
   else s.weights <- sampw
 
-  #form.num <- update(formula, . ~ 1)
-  #model.num <- glm(form.num, data = data.frame(data, s.weights = s.weights), weights = s.weights)
+  if(verbose) cat("Estimating marginal density of the treatment ")
+  num.fit <- glm(t ~ 1,
+                 data = data.frame(t = t),
+                 weights = s.weights)
+  p.num <- num.fit$fitted.values
 
+  if (isTRUE(use.kernel)) {
+    if(verbose) cat("using kernel density estimation\n")
+    if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
+    if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
+    if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
+    if (is_null(A[["n"]])) A[["n"]] <- 10*length(t)
 
+    d.n <- density(t - p.num, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+    if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
+    ps.num <- with(d.n, approxfun(x = x, y = y))(t)
+  }
+  else {
+    if(verbose) cat("using a normal approximation\n")
+    ps.num <- dnorm(t, p.num, sqrt(summary(num.fit)$dispersion))
+  }
 
-  #model.num <- lm.wfit
-  ps.num <- dnorm((t - weighted.mean(t, s.weights))/sqrt(cov.wt(matrix(t, ncol = 1), s.weights)[["cov"]][1,1]), 0 ,1)
-  #ps.num <- dnorm((t - model.num$fitted.values)/sqrt(summary(model.num)$dispersion), 0 ,1)
   if(verbose) cat("Fitting gbm model\n")
-  model.den <- gbm::gbm(formula(new.data), data = new.data, shrinkage = shrinkage,
-                        interaction.depth = interaction.depth, distribution = "gaussian", n.trees = n.trees,
+  model.den <- gbm::gbm(formula(new.data),
+                        data = new.data,
+                        shrinkage = shrinkage,
+                        interaction.depth = interaction.depth,
+                        distribution = "gaussian",
+                        n.trees = n.trees,
                         bag.fraction = bag.fraction,
-                        n.minobsinnode = 10, train.fraction = 1, keep.data = FALSE,
+                        n.minobsinnode = 10,
+                        train.fraction = 1,
+                        keep.data = FALSE,
                         verbose = FALSE,
                         weights = s.weights)
 
