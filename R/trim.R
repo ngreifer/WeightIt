@@ -86,7 +86,7 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
       if (lower) trim.q <- c(1 - at, at)
       else trim.q <- c(0, at)
 
-      if (toupper(estimand) == "ATT") {
+      if (treat.type != "continuous" && toupper(estimand) == "ATT") {
         trim.w <- quantile(weights[treat != focal], probs = trim.q, type = 3)
         weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
         weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
