@@ -206,6 +206,7 @@ check.package <- function(package.name, alternative = FALSE) {
   return(invisible(package.is.installed))
 }
 make.closer.to.1 <- function(x) {
+  if (is.factor(x) || is.character(x)) return(x)
   if (nunique.gt(x, 2)) {
     ndigits <- round(mean(floor(log10(abs(x[!check_if_zero(x)]))), na.rm = TRUE))
     if (abs(ndigits) > 2) return(x/(10^ndigits))
@@ -402,11 +403,15 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
 
     for (i in rhs.term.labels[rhs.term.labels %in% rhs.vars.mentioned[rhs.df]]) {
       ind <- which(rhs.term.labels == i)
-      rhs.term.labels <- append(rhs.term.labels[-ind], names(addl.dfs[[i]]), ind - 1)
+      rhs.term.labels <- append(rhs.term.labels[-ind],
+                                values = names(addl.dfs[[i]]),
+                                after = ind - 1)
     }
     new.form <- as.formula(paste("~", paste(rhs.term.labels, collapse = " + ")))
+
     tt.covs <- terms(new.form)
-    data <- do.call("cbind", c(addl.dfs, data))
+    if (is_not_null(data)) data <- do.call("cbind", unname(c(addl.dfs, list(data))))
+    else data <- do.call("cbind", unname(addl.dfs))
   }
 
   #Get model.frame, report error
@@ -421,7 +426,7 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   #Get full model matrix with interactions too
   covs.matrix <- model.matrix(tt.covs, data = covs,
                               contrasts.arg = lapply(covs[sapply(covs, is.factor)],
-                                                     contrasts, contrasts=FALSE))[,-1, drop = FALSE]
+                                                     contrasts, contrasts=FALSE))
 
   attr(covs, "terms") <- NULL
 
@@ -443,11 +448,11 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
     }
   }), stringsAsFactors = FALSE)
   nums <- vapply(df, is.numeric, FUN.VALUE = logical(1))
-  o.negs <- df < 0
+  o.negs <- sapply(1:ncol(df), function(x) if (nums[x]) df[[x]] < 0 else rep(FALSE, length(df[[x]])))
   df[nums] <- round(df[nums], digits = digits)
   df[nas] <- ""
 
-  df <- as.data.frame(lapply(df, as.character), stringsAsFactors = FALSE)
+  df <- as.data.frame(lapply(df, format, scientific = FALSE), stringsAsFactors = FALSE)
 
   for (i in which(nums)) {
     if (any(grepl(".", df[[i]], fixed = TRUE))) {
@@ -468,7 +473,7 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
     }
   }
 
-  df[o.negs & df >= 0] <- paste0("-", df[o.negs & df >= 0])
+  df[o.negs & df == 0] <- paste0("-", df[o.negs & df == 0])
 
   # Insert NA placeholders
   df[df == ""] <- na_vals
