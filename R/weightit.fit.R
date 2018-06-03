@@ -71,18 +71,18 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
 
     }
     else if (method == "npcbps") {
-      if (s.weights.specified) stop(paste0("Sampling weights cannot be used with ", method.to.phrase(method), "."),
-                                    call. = FALSE)
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2npcbps(covs = covs,
                                treat = treat,
                                subset = exact.factor == i,
+                               s.weights = s.weights,
                                ...)
       }
       else if (treat.type == "continuous") {
         obj <- weightit2npcbps.cont(covs = covs,
                                     treat = treat,
                                     subset = exact.factor == i,
+                                    s.weights = s.weights,
                                     ...)
       }
 
@@ -138,6 +138,9 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
 
     #Extract weights
     if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
+    if (is_null(obj$w) || all(is.na(obj$w))) stop("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
+    if (any(is.na(obj$w))) warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA values will be set to 0.", call. = FALSE)
+    obj$w[is.na(obj$w)] <- 0
     out$w[exact.factor == i] <- obj$w
     if (is_not_null(obj$ps)) out$ps[exact.factor == i] <- obj$ps
 
