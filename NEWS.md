@@ -13,6 +13,8 @@ Version 0.4.0
 
 * Fixed a bug where variables would be thrown out when `method = "ebal"`.
 
+* Added support for sampling weights with `method = "sbw"`.
+
 Version 0.3.2
 
 * Added new `moments` and `int` options for some `weightit()` methods to easily specify moments and interactions of covariates.

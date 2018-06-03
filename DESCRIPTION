@@ -20,6 +20,8 @@ Suggests:
     jtools,
     boot,
     wCorr,
+    gbm (>= 2.1.3),
+    gbm (<= 2.1.3),
     knitr,
     rmarkdown
 License: GPL (>=2)
