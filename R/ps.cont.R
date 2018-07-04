@@ -1,11 +1,12 @@
 #GBM for continuous treatments adapted from Zhu, Coffman, & Ghosh (2015) code
 ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrinkage = 0.0005, bag.fraction = 1,
-                    print.level = 0, verbose = FALSE, stop.method, use.optimize = 1, use.kernel = FALSE, sampw = NULL, ...) {
+                    print.level = 0, verbose = FALSE, stop.method, sampw = NULL, optimize = 1, use.kernel = FALSE, ...) {
   #Program checks
 
   A <- list(...)
   terms <- match.call()
 
+  #Set up subfunctions
   F.aac.w <- function(i, data, t, covs, ps.model, ps.num, corr.type, mean.max, z.trans, s.weights) {
     GBM.fitted <- predict(ps.model, newdata = data, n.trees = floor(i),
                           type = "response")
@@ -47,8 +48,6 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     return(desc)
   }
 
-  # Find the optimal number of trees using correlation
-
   check.package("gbm")
   check.package("wCorr")
 
@@ -75,11 +74,14 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
                                                            rms = function(y) sqrt(mean(y^2, na.rm = TRUE))))
   z.trans <- sapply(stop.method.split, function(x) length(x) == 3 && x[3] == "z")
 
+  if (missing(formula)) stop("A formula must be supplied.", call. = FALSE)
+  if (missing(data)) data <- NULL
+
   t.c <- get.covs.and.treat.from.formula(formula, data)
   t <- t.c[["treat"]]
   covs <- t.c[["model.covs"]]
   #covs <- apply(covs, 2, function(x) if (is.factor(x) || is.character(x) || !nunique.gt(x, 2)) factor(x))
-  new.data <- data.frame(t, t.c[["reported.covs"]])
+  new.data <- data.frame(t = t, t.c[["reported.covs"]])
 
   if (is_null(sampw)) {
     if (is_not_null(A[["s.weights"]])) s.weights <- A[["s.weights"]]
@@ -89,9 +91,9 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
 
   if(verbose) cat("Estimating marginal density of the treatment ")
   num.fit <- glm(t ~ 1,
-                 data = data.frame(t = t),
+                 data = new.data,
                  weights = s.weights)
-  p.num <- num.fit$fitted.values
+  p.num <- t - num.fit$fitted.values
 
   if (isTRUE(use.kernel)) {
     if(verbose) cat("using kernel density estimation\n")
@@ -100,15 +102,16 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
     if (is_null(A[["n"]])) A[["n"]] <- 10*length(t)
 
-    d.n <- density(t - p.num, n = A[["n"]],
+    d.n <- density(p.num, n = A[["n"]],
                    weights = s.weights/sum(s.weights), give.Rkern = FALSE,
                    bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
     if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
-    ps.num <- with(d.n, approxfun(x = x, y = y))(t)
+    ps.num <- with(d.n, approxfun(x = x, y = y))(p.num)
+    #if any(is.na(ps.num)) stop("NAs were estimated in the numerator densty")
   }
   else {
     if(verbose) cat("using a normal approximation\n")
-    ps.num <- dnorm(t, p.num, sqrt(summary(num.fit)$dispersion))
+    ps.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
   }
 
   if(verbose) cat("Fitting gbm model\n")
@@ -131,7 +134,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   if(verbose) cat("Diagnosis of unweighted analysis\n")
   desc[["unw"]] <- desc.wts.cont(t, covs, s.weights, NA)
 
-  if (use.optimize == 1) {
+  if (optimize == 1) {
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
     best.tree <- setNames(numeric(length(stop.method)), stop.method)
     nintervals <- 25
@@ -179,7 +182,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
       w[[sm]] <- ps.num/ps[[s]]
     }
   }
-  else if (use.optimize == 2) {
+  else if (optimize == 2) {
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
     best.tree <- setNames(numeric(length(stop.method)), stop.method)
     for (s in seq_along(stop.method)) {
