@@ -13,13 +13,15 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       covs <- cbind(covs, missing.ind)
     }
     covs <- apply(covs, 2, make.closer.to.1)
-    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(remove.collinearity(covs))]
 
-    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+    if (ncol(covs) > 1) {
+      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(remove.collinearity(covs))]
+      covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+    }
 
     if (is_null(A$link)) A$link <- "logit"
+    else if (is_binary(t)) A$link <- which.link
     else {
-      if (nunique.gt(t, 2)) {
         acceptable.links <- c("logit", "probit", "bayes.probit")
         which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
         if (is.na(which.link)) {
@@ -28,21 +30,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                   call. = FALSE)
         }
         else A$link <- which.link
-      }
-      else {
-        acceptable.links <- c("logit", "probit", "cloglog")
-        which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
-        if (is.na(which.link)) {
-          A$link <- "logit"
-          warning("Only \"logit\",\"probit\" and \"cloglog\" are allowed as links for binary treatments. Using link = \"logit\".",
-                  call. = FALSE)
-        }
-        else A$link <- which.link
-      }
-
     }
 
-    if (!nunique.gt(t, 2)) {
+    if (is_binary(t)) {
       data <- data.frame(t, covs)
       formula <- formula(data)
 
@@ -163,7 +153,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
                family = A$family,
                control = list(),
                ...)
-    p.denom <- fit$fitted.values
+    p.denom <- t - fit$fitted.values
 
     if (isTRUE(A[["use.kernel"]])) {
       if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
@@ -171,14 +161,14 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
       if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
       if (is_null(A[["n"]])) A[["n"]] <- 10*length(t)
 
-      d.d <- density(t - p.denom, n = A[["n"]],
+      d.d <- density(p.denom, n = A[["n"]],
                      weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                      bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
       if (isTRUE(A[["plot"]])) plot(d.d, main = "Denominator density")
-      dens.denom <- with(d.d, approxfun(x = x, y = y))(t)
+      dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
     }
     else {
-      dens.denom <- dnorm(t, mean = p.denom, sd = sqrt(summary(fit)$dispersion))
+      dens.denom <- dnorm(p.denom, 0, sd = sqrt(summary(fit)$dispersion))
     }
 
     if (stabilize) {
@@ -187,17 +177,17 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
                      weights = s.weights[subset],
                      family = A$family,
                      control = list(), ...)
-      p.num <- num.fit$fitted.values
+      p.num <- t - num.fit$fitted.values
 
       if (isTRUE(A[["use.kernel"]])) {
-        d.n <- density(t - p.num, n = A[["n"]],
+        d.n <- density(p.num, n = A[["n"]],
                        weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                        bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
         if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
-        dens.num <- with(d.n, approxfun(x = x, y = y))(t)
+        dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
       }
       else {
-        dens.num <- dnorm(t, p.num, sqrt(summary(num.fit)$dispersion))
+        dens.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
       }
       w <- dens.num/dens.denom
     }
@@ -206,8 +196,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
     }
   }
 
-  obj <- list(ps = p.denom,
-              w = w)
+  obj <- list(w = w)
   return(obj)
 }
 
@@ -316,6 +305,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 }
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   A <- list(...)
+  A[c("formula", "data", "sampw", "verbose")] <- NULL
   if (is_null(A$stop.method)) {
     warning("No stop.method was provided. Using \"s.mean.z\".",
             call. = FALSE, immediate. = TRUE)
@@ -327,10 +317,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
     A$stop.method <- A$stop.method[1]
   }
 
-  for (f in names(formals(ps.cont))) {
-    if (is_null(A[[f]])) A[[f]] <- formals(ps.cont)[[f]]
-  }
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
@@ -339,15 +325,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   new.data <- data.frame(treat, covs)
 
   if (check.package("wCorr") && check.package("gbm")) {
-    fit <- ps.cont(formula(new.data), data = new.data,
-                   n.trees = A[["n.trees"]],
-                   interaction.depth = A[["interaction.depth"]],
-                   shrinkage = A[["shrinkage"]],
-                   bag.fraction = A[["bag.fraction"]],
-                   stop.method = A[["stop.method"]],
-                   use.optimize = A[["use.optimize"]],
-                   sampw = s.weights[subset],
-                   verbose = TRUE)
+    fit <- do.call("ps.cont", c(list(formula(new.data),
+                                     data = new.data,
+                                     sampw = s.weights[subset],
+                                     verbose = TRUE), A))
     w <- cobalt::get.w(fit, stop.method = A[["stop.method"]])
   }
 
@@ -401,7 +382,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     }
     else {
       new.data <- data.frame(treat, covs)
-      if (nunique(treat) <= 4) {
+      if (!nunique.gt(treat, 4)) {
         tryCatch({fit <- CBPS::CBPS(formula(new.data),
                                     data = new.data,
                                     method = if (is_null(A$over) || A$over == TRUE) "over" else "exact",
@@ -758,7 +739,7 @@ weightit2sbw <- function(covs, treat, s.weights, subset, estimand, focal, moment
 
     #new.data <- setNames(data.frame(treat, covs), as.character(seq_len(1+ncol(covs))))
 
-    binary.vars <- apply(covs, 2, function(x) !nunique.gt(x, 2))
+    binary.vars <- apply(covs, 2, is_binary)
 
     if (is_null(A$bal_tols)) bal_tols <- .0001
     else {
