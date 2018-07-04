@@ -57,30 +57,27 @@ library("cobalt")
 bal.tab(W, un = TRUE)
 ```
 
-``` 
-
-Call:
-  weightit(formula = treat ~ age + educ + nodegree + married + 
-      race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
-
-Balance Measures:
-                Type Diff.Un Diff.Adj
-prop.score  Distance  1.7569   0.1360
-age          Contin. -0.2419  -0.1676
-educ         Contin.  0.0448   0.1296
-nodegree      Binary  0.1114  -0.0547
-married       Binary -0.3236  -0.0944
-race_black    Binary  0.6404   0.0499
-race_hispan   Binary -0.0827   0.0047
-race_white    Binary -0.5577  -0.0546
-re74         Contin. -0.5958  -0.2740
-re75         Contin. -0.2870  -0.1579
-
-Effective sample sizes:
-           Control Treated
-Unadjusted     429  185.00
-Adjusted       329   58.33
-```
+    Call
+     weightit(formula = treat ~ age + educ + nodegree + married + 
+        race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
+    
+    Balance Measures
+                    Type Diff.Un Diff.Adj
+    prop.score  Distance  1.7569   0.1360
+    age          Contin. -0.2419  -0.1676
+    educ         Contin.  0.0448   0.1296
+    nodegree      Binary  0.1114  -0.0547
+    married       Binary -0.3236  -0.0944
+    race_black    Binary  0.6404   0.0499
+    race_hispan   Binary -0.0827   0.0047
+    race_white    Binary -0.5577  -0.0546
+    re74         Contin. -0.5958  -0.2740
+    re75         Contin. -0.2870  -0.1579
+    
+    Effective sample sizes
+               Control Treated
+    Unadjusted 429.000 185.000
+    Adjusted   329.008  58.327
 
 For the second goal, qualities of the distributions of weights can be
 assessed using `summary()`, as demonstrated below.
@@ -121,27 +118,28 @@ estimating weights for binary, multinomial, and continuous treatments
 using various methods and functions from various
 packages.
 
-| Treatment type  | Method (`method =`)                                                | Function     | Package  |
-| --------------- | ------------------------------------------------------------------ | ------------ | -------- |
-| **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`      | `base`   |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`       | `twang`  |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`   |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`   |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()` | `ebal`   |
-| \-              | Stabilized Balancing Weights (`"sbw"`)                             | `sbw()`      | `sbw`    |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`      | `ATE`    |
-| **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`      | `base`   |
-| \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`   | `mlogit` |
-| \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`      | `MNP`    |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`       | `twang`  |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`   |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`   |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()` | `ebal`   |
-| \-              | Stabilized Balancing Weights (`"sbw"`)                             | `sbw()`      | `sbw`    |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`      | `ATE`    |
-| **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`      | `base`   |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`   |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`   |
+| Treatment type  | Method (`method =`)                                                | Function     | Package    |
+| --------------- | ------------------------------------------------------------------ | ------------ | ---------- |
+| **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`      | `base`     |
+| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`       | `twang`    |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`     |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`     |
+| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()` | `ebal`     |
+| \-              | Stabilized Balancing Weights (`"sbw"`)                             | `sbw()`      | `sbw`      |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`      | `ATE`      |
+| **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`      | `base`     |
+| \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`   | `mlogit`   |
+| \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`      | `MNP`      |
+| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`       | `twang`    |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`     |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`     |
+| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()` | `ebal`     |
+| \-              | Stable Balancing Weights (`"sbw"`)                                 | `sbw()`      | `sbw`      |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`      | `ATE`      |
+| **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`      | `base`     |
+| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps.cont()`  | `WeightIt` |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`     |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`     |
 
 If you would like to see your package or method integrated into
 `WeightIt`, or for any other questions or comments about `WeightIt`,

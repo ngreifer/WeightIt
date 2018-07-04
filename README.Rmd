@@ -78,9 +78,10 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
  - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
  - | Entropy Balancing (`"ebal"`) | `ebalance()` | `ebal`
- - | Stabilized Balancing Weights (`"sbw"`) | `sbw()` | `sbw`
+ - | Stable Balancing Weights (`"sbw"`) | `sbw()` | `sbw`
  - | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE()` | `ATE`
  **Continuous** | Generalized linear model PS (`"ps"`) | `glm()` | `base`
+ - | Generalized boosted modeling PS (`"gbm"`) | `ps.cont()` | `WeightIt`
  - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
  - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
 

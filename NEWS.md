@@ -5,7 +5,7 @@ Version 0.4.0
 
 * Added `trim()` function to trim weights.
 
-* Added `ps.cont()` function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in `twang`. This function uses the same syntax as `ps()` in `twang`, and is probably better accessed using `wightit()` with `method = "gbm"`. Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.
+* Added `ps.cont()` function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in `twang`. This function uses the same syntax as `ps()` in `twang`, and can also be accessed using `weightit()` with `method = "gbm"`. Support functions were added to make it compatible with `twang` functions for assessing balance (e.g., `summary`, `bal.table`, `plot`). Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.
 
 * The input formula is now much more forgiving, allowing objects in the environment to be included. The `data` argument to `weightit()` is now optional. To simplify things, the output object no longer contains a `data` field.
 
@@ -13,7 +13,7 @@ Version 0.4.0
 
 * Fixed a bug where variables would be thrown out when `method = "ebal"`.
 
-* Added support for sampling weights with `method = "sbw"`.
+* Added support for sampling weights with stable balancing weighting and empirical balancing calibration weighting.
 
 Version 0.3.2
 

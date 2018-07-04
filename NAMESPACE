@@ -1,7 +1,6 @@
-importFrom("stats", "terms", "glm", "setNames", "sd", "model.frame", "model.response",
-           "update.formula", "as.formula", "quantile", "model.matrix", "binomial",
-           "gaussian", "dnorm", "fitted", "contrasts", "na.pass")
+import(stats)
 importFrom("utils", "data", "combn")
+importFrom("graphics", "boxplot", "plot")
 
 export(weightit, weightitMSM, trim, ps.cont)
 S3method(print, weightit)
