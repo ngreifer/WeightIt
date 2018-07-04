@@ -50,7 +50,7 @@ trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
     focal <- NULL
   }
 
-  w <- trim.weights(x, trim = at,
+  w <- trim.weights(x, at = at,
                     treat = treat,
                     estimand = estimand,
                     focal = focal,
@@ -90,7 +90,7 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
         trim.w <- quantile(weights[treat != focal], probs = trim.q, type = 3)
         weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
         weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
-        message(paste0("Trimming weights where treat ≠ ", focal, " to ", word.list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
+        message(paste0("Trimming weights where treat \u2260 ", focal, " to ", word.list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
       }
       else {
         trim.w <- quantile(weights, probs = trim.q, type = 3)
@@ -122,7 +122,7 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
             else weights.text <- "weight"
           }
           else weights.text <- paste(at, "weights")
-          message(paste0("Trimming the ", word.list(c("top", "bottom")[c(TRUE, lower)]), " ", weights.text, " where treat ≠ ", focal, "."))
+          message(paste0("Trimming the ", word.list(c("top", "bottom")[c(TRUE, lower)]), " ", weights.text, " where treat \u2260 ", focal, "."))
         }
       }
       else {
