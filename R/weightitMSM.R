@@ -21,13 +21,17 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                           "ebal", "entropy", "ebalance",
                           "sbw",
                           "ebcw", "ate")
-  if (missing(method) || is_not_null(ps)) method <- "ps"
+
+  if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (!is.character(method)) bad.method <- TRUE
-  else if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (tolower(method) %nin% acceptable.methods) bad.method <- TRUE
 
   if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method.", call. = FALSE)
   method <- method.to.proper.method(tolower(method))
+
+  #Process moments and int
+  moments.int <- check.moments.int(method, moments, int)
+  moments <- moments.int["moments"]; int <- moments.int["int"]
 
   s.weights <- process.s.weights(s.weights, data)
 
@@ -44,7 +48,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
           rhs.vars.mentioned.lang <- attr(terms(num.formula), "variables")[-1]
           rhs.vars.mentioned <- sapply(rhs.vars.mentioned.lang, deparse)
           rhs.vars.failed <- sapply(rhs.vars.mentioned.lang, function(v) {
-            null.or.error(try(eval(v, c(data, env)), silent = TRUE))
+            null.or.error(try(eval(v, c(data, .GlobalEnv)), silent = TRUE))
           })
 
           if (any(rhs.vars.failed)) {
@@ -98,10 +102,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     processed.exact <- process.exact(exact = exact, data = data,
                                        treat = treat.list[[i]],
                                        treat.name = treat.name)
-
-    #Process moments and int
-    moments.int <- check.moments.int(method, moments, int)
-    moments <- moments.int["moments"]; int <- moments.int["int"]
 
     if (is_null(s.weights)) s.weights_i <- rep(1, n)
 
@@ -182,6 +182,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
   else stabout <- NULL
 
   if (all_the_same(w)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
+  if (all(sapply(ps.list, is_null))) ps.list <- NULL
 
   ## Assemble output object----
   out <- list(weights = w,
@@ -267,7 +268,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   out.list <- setNames(vector("list", length(object$treat.list)),
                        names(object$treat.list))
 
-  if (ignore.s.weights) sw <- rep(1, length(object$weights))
+  if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
   w <- object$weights*sw
   treat.types <- sapply(object[["treat.list"]], function(y) attr(y, "treat.type"))
@@ -373,7 +374,7 @@ print.summary.weightitMSM <- function(x, ...) {
 
   cat("Summary of weights:\n\n")
   for (ti in seq_along(x)) {
-    if (!only.one) cat(paste0(" - - - - - - - - - - Time ", ti, " - - - - - - - - - -\n"))
+    if (!only.one) cat(paste(" - - - - - - - - - - Time", ti, "- - - - - - - - - -\n"))
     cat("- Weight ranges:\n")
     print.data.frame(round_df_char(text.box.plot(x[[ti]]$weight.range, 28), 4))
 
