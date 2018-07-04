@@ -168,7 +168,7 @@ check.moments.int <- function(method, moments, int) {
       stop("moments must be a positive integer of length 1.", call. = FALSE)
     }
   }
-  else if (any(mi0 <- c(as.integer(moments) != 1L, int == TRUE))) {
+  else if (any(mi0 <- c(as.integer(moments) != 1L, int))) {
     warning(paste0(word.list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
                    " not compatible with ", method.to.phrase(method), ". Ignoring ", word.list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
     moments <- 1
@@ -207,13 +207,13 @@ check.package <- function(package.name, alternative = FALSE) {
 }
 make.closer.to.1 <- function(x) {
   if (is.factor(x) || is.character(x)) return(x)
-  if (nunique.gt(x, 2)) {
+  else if (is_binary(x)) {
+    return(as.numeric(x == x[1]))
+  }
+  else {
     ndigits <- round(mean(floor(log10(abs(x[!check_if_zero(x)]))), na.rm = TRUE))
     if (abs(ndigits) > 2) return(x/(10^ndigits))
     else return(x)
-  }
-  else {
-    return(as.numeric(x == x[1]))
   }
 }
 remove.collinearity <- function(mat, with.intercept = TRUE) {
@@ -287,7 +287,7 @@ word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
 }
 binarize <- function(variable) {
   nas <- is.na(variable)
-  if (nunique.gt(variable[!nas], 2)) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
+  if (!is_binary(variable[!nas])) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
   if (is.character(variable)) variable <- factor(variable)
   variable.numeric <- as.numeric(variable)
   if (!is.na(match(0, unique(variable.numeric)))) zero <- 0
@@ -309,15 +309,15 @@ int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
   else d <- mat
   nd <- ncol(d)
   nrd <- nrow(d)
-  no.poly <- apply(d, 2, function(x) !nunique.gt(x, 2))
+  no.poly <- apply(d, 2, is_binary)
   npol <- nd - sum(no.poly)
-  new <- matrix(ncol = (poly-1)*npol + int*(.5*(nd)*(nd-1)), nrow = nrd)
+  new <- matrix(0, ncol = (poly-1)*npol + int*(.5*(nd)*(nd-1)), nrow = nrd)
   nc <- ncol(new)
   new.names <- character(nc)
   if (poly > 1 && npol != 0) {
     for (i in 2:poly) {
       new[, (1 + npol*(i - 2)):(npol*(i - 1))] <- apply(d[, !no.poly, drop = FALSE], 2, function(x) x^i)
-      new.names[(1 + npol*(i - 2)):(npol*(i - 1))] <- paste0(colnames(d)[!no.poly], paste0(replicate(ncarrot, "_"), collapse = ""), i)
+      new.names[(1 + npol*(i - 2)):(npol*(i - 1))] <- paste0(colnames(d)[!no.poly], num_to_superscript(i))
     }
   }
   if (int && nd > 1) {
@@ -330,12 +330,28 @@ int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
   #new <- setNames(data.frame(new), new.names)[!single.value]
   return(new[, !single.value, drop = FALSE])
 }
+num_to_superscript <- function(x) {
+  nums <- setNames(c("\u2070",
+                     "\u00B9",
+                     "\u00B2",
+                     "\u00B3",
+                     "\u2074",
+                     "\u2075",
+                     "\u2076",
+                     "\u2077",
+                     "\u2078",
+                     "\u2079"),
+                   as.character(0:9))
+  x <- as.character(x)
+  splitx <- strsplit(x, "")
+  supx <- sapply(splitx, function(y) paste0(nums[y], collapse = ""))
+  return(supx)
+}
 null.or.error <- function(x) {is_null(x) || class(x) == "try-error"}
-get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
+get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ...) {
   A <- list(...)
 
   tt <- terms(f, data = data)
-  attr(tt, "intercept") <- 0
 
   #Check if data exists
   if (is_not_null(data) && is.data.frame(data)) {
@@ -421,13 +437,15 @@ get.covs.and.treat.from.formula <- function(f, data, env = .GlobalEnv, ...) {
   tryCatch({covs <- eval(mf.covs, c(data, env))},
            error = function(e) {stop(conditionMessage(e), call. = FALSE)})
 
-  if (is_null(rhs.vars.mentioned)) covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))
+  if (is_null(rhs.vars.mentioned)) {
+    covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))
+  }
+  else attr(tt.covs, "intercept") <- 0
 
   #Get full model matrix with interactions too
   covs.matrix <- model.matrix(tt.covs, data = covs,
                               contrasts.arg = lapply(covs[sapply(covs, is.factor)],
                                                      contrasts, contrasts=FALSE))
-
   attr(covs, "terms") <- NULL
 
   return(list(reported.covs = covs,
@@ -452,7 +470,7 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   df[nums] <- round(df[nums], digits = digits)
   df[nas] <- ""
 
-  df <- as.data.frame(lapply(df, format, scientific = FALSE), stringsAsFactors = FALSE)
+  df <- as.data.frame(lapply(df, format, scientific = FALSE, justify = "none"), stringsAsFactors = FALSE)
 
   for (i in which(nums)) {
     if (any(grepl(".", df[[i]], fixed = TRUE))) {
@@ -476,7 +494,7 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   df[o.negs & df == 0] <- paste0("-", df[o.negs & df == 0])
 
   # Insert NA placeholders
-  df[df == ""] <- na_vals
+  df[nas] <- na_vals
 
   if (length(rn) > 0) rownames(df) <- rn
   if (length(cn) > 0) names(df) <- cn
@@ -493,12 +511,13 @@ nunique <- function(x, nmax = NA, na.rm = TRUE) {
 
 }
 nunique.gt <- function(x, n, na.rm = TRUE) {
-  if (n < 0) stop("n must be non-negative.", call. = FALSE)
+  if (missing(n)) stop("n must be supplied.")
+  if (n < 0) stop("n must be non-negative.")
   if (is_null(x)) FALSE
   else {
     if (na.rm) x <- x[!is.na(x)]
     if (n == 1 && is.numeric(x)) !check_if_zero(max(x) - min(x))
-    if (length(x) < 2000) nunique(x) > n
+    else if (length(x) < 2000) nunique(x) > n
     else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
   }
 }
@@ -521,6 +540,7 @@ check_if_zero_base <- function(x) {
   abs(x - 0) < tolerance
 }
 check_if_zero <- Vectorize(check_if_zero_base)
+is_binary <- function(x) !nunique.gt(x, 2)
 is_null <- function(x) length(x) == 0L
 is_not_null <- function(x) !is_null(x)
 
