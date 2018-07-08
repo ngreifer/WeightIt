@@ -1,4 +1,5 @@
 method.to.proper.method <- function(method) {
+  method <- tolower(method)
   if (method %in% c("ps")) return("ps")
   else if (method %in% c("gbm", "gbr", "twang")) return("gbm")
   else if (method %in% c("cbps")) return("cbps")
@@ -8,8 +9,16 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("ebcw", "ate")) return("ebcw")
   else return(method)
 }
+check.user.method <- function(method) {
+  #Check to make sure it accepts treat and covs
+  if (any(c("covs", "treat") %nin% names(formals(method)))) {
+    stop("The user-provided function to method must contain \"covs\" and \"treat\" as named parameters.", call. = FALSE)
+  }
+  return(method)
+}
 method.to.phrase <- function(method) {
-  if (method %in% c("ps")) return("propensity score weighting")
+  if (is.function(method)) return("a user-defined method")
+  else if (method %in% c("ps")) return("propensity score weighting")
   else if (method %in% c("gbm", "gbr", "twang")) return("generalized boosted modeling")
   else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
   else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
@@ -53,7 +62,8 @@ process.estimand <- function(estimand, method, treat.type) {
                                 sbw = c("ATT", "ATE"),
                                 ebcw = c("ATT", "ATE")))
 
-  if (treat.type != "continuous" && toupper(estimand) %nin% AE[[treat.type]][[method]]) {
+  if (treat.type != "continuous" && !is.function(method) &&
+      toupper(estimand) %nin% AE[[treat.type]][[method]]) {
     stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
                 " with ", treat.type, " treatments. Only ", word.list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
                 " allowed."), call. = FALSE)
@@ -158,21 +168,23 @@ get.treat.type <- function(treat) {
   return(treat)
 }
 check.moments.int <- function(method, moments, int) {
-  if (method %in% c("ebal", "ebcw", "sbw")) {
-    if (length(int) != 1 || !is.logical(int)) {
-      stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
+  if (!is.function(method)) {
+    if (method %in% c("ebal", "ebcw", "sbw")) {
+      if (length(int) != 1 || !is.logical(int)) {
+        stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
+      }
+      if (length(moments) != 1 || !is.numeric(moments) ||
+          !check_if_zero(moments - round(moments)) ||
+          moments < 1) {
+        stop("moments must be a positive integer of length 1.", call. = FALSE)
+      }
     }
-    if (length(moments) != 1 || !is.numeric(moments) ||
-        !check_if_zero(moments - round(moments)) ||
-        moments < 1) {
-      stop("moments must be a positive integer of length 1.", call. = FALSE)
+    else if (any(mi0 <- c(as.integer(moments) != 1L, int))) {
+      warning(paste0(word.list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
+                     " not compatible with ", method.to.phrase(method), ". Ignoring ", word.list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
+      moments <- 1
+      int <- FALSE
     }
-  }
-  else if (any(mi0 <- c(as.integer(moments) != 1L, int))) {
-    warning(paste0(word.list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
-                   " not compatible with ", method.to.phrase(method), ". Ignoring ", word.list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
-    moments <- 1
-    int <- FALSE
   }
   return(c(moments = as.integer(moments), int = int))
 }

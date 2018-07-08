@@ -1,3 +1,94 @@
+#User-defined weighting function
+weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, stabilize, ps, moments, int, ...) {
+  A <- list(...)
+  if (is_not_null(covs)) {
+    covs <- covs[subset, , drop = FALSE]
+  }
+  if (is_not_null(treat)) {
+    treat <- treat[subset]
+  }
+  if (is_not_null(s.weights)) {
+    s.weights <- s.weights[subset]
+  }
+  if (is_not_null(ps)) {
+    ps <- ps[subset]
+  }
+
+  #Get a list of function args for the user-defined function Fun
+  Fun_formal <- as.list(formals(Fun))
+  if (has_dots <- any(names(Fun_formal) == "...")) {
+    Fun_formal[["..."]] <- NULL
+  }
+
+  fun_args <- Fun_formal
+  for (i in names(fun_args)) {
+    if (is_not_null(get0(i))) fun_args[[i]] <- get0(i)
+    else if (is_not_null(A[[i]])) {
+      fun_args[[i]] <- A[[i]]
+      A[[i]] <- NULL
+    }
+    #else just use Fun default
+  }
+
+  if (has_dots) fun_args <- c(fun_args, A)
+  else {
+    if (is_not_null(A)) {
+      Anames <- names(A)
+      namedAnames <- Anames[Anames != ""]
+      unnamedAnames <- Anames[Anames == ""]
+      if (length(unnamedAnames) > 1) {
+        if (length(namedAnames) > 0) {
+          Anames <- c(sapply(namedAnames, word.list, quotes = TRUE),
+                      "other arguments without names")
+        }
+        else {
+          Anames <- c("Arguments without names")
+        }
+        was_were <- "were"
+      }
+      else if (length(unnamedAnames) == 1) {
+        if (length(namedAnames) > 0) {
+          Anames <- c(sapply(namedAnames, word.list, quotes = TRUE),
+                      "another argument without a name")
+          was_were <- "were"
+        }
+        else {
+          Anames <- c("An argument without a name")
+          was_were <- "was"
+        }
+      }
+      else {
+        Anames <- sapply(namedAnames, word.list, quotes = TRUE)
+        if (length(namedAnames) > 0) {
+          was_were <- "were"
+        }
+        else {
+          was_were <- "was"
+        }
+      }
+
+      warning(paste(word.list(names(A)), was_were, "specified but are not suitable arguments to the provided function."), call. = FALSE)
+    }
+  }
+
+  obj <- do.call(Fun, fun_args)
+
+  if (is.numeric(obj)) {
+    obj <- list(w = obj)
+  }
+  else if (!is.list(obj) || "w" %nin% names(obj)) {
+    stop("The output of the user-provided function must be a list with an entry named \"w\" containing the estimated weights.", call. = FALSE)
+  }
+  if (is_null(obj[["w"]])) stop("No weights were estimated.", call. = FALSE)
+  if (!is.vector(obj[["w"]], mode = "numeric")) stop("The \"w\" entry of the output of the user-provided function must be a numeric vector of weights.", call. = FALSE)
+  if (all(is.na(obj[["w"]]))) stop("All weights were generated as NA.", call = FALSE)
+  if (length(obj[["w"]]) != length(treat)) {
+    stop(paste(length(obj[["w"]]), "weights were estimated, but there are", length(treat), "units."), call. = FALSE)
+  }
+
+  return(obj)
+}
+
 #Propensity score estimation with regression
 weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, ps, ...) {
   A <- list(...)
@@ -22,14 +113,14 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     if (is_null(A$link)) A$link <- "logit"
     else if (is_binary(t)) A$link <- which.link
     else {
-        acceptable.links <- c("logit", "probit", "bayes.probit")
-        which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
-        if (is.na(which.link)) {
-          A$link <- "logit"
-          warning("Only \"logit\",\"probit\" and \"bayes.probit\" are allowed as links for multinomial treatments. Using link = \"logit\".",
-                  call. = FALSE)
-        }
-        else A$link <- which.link
+      acceptable.links <- c("logit", "probit", "bayes.probit")
+      which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
+      if (is.na(which.link)) {
+        A$link <- "logit"
+        warning("Only \"logit\",\"probit\" and \"bayes.probit\" are allowed as links for multinomial treatments. Using link = \"logit\".",
+                call. = FALSE)
+      }
+      else A$link <- which.link
     }
 
     if (is_binary(t)) {

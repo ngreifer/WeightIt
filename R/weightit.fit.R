@@ -5,7 +5,19 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
 
   for (i in levels(exact.factor)) {
     #Run method
-    if (method == "ps") {
+    if (is.function(method)) {
+      obj <- weightit2user(Fun = method,
+                           covs = covs,
+                           treat = treat,
+                           s.weights = s.weights,
+                           subset = exact.factor == i,
+                           estimand = estimand,
+                           focal = focal,
+                           stabilize = stabilize,
+                           ps = ps,
+                           ...)
+    }
+    else if (method == "ps") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2ps(covs = covs,
                            treat = treat,

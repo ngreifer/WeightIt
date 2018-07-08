@@ -31,13 +31,25 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           "ebal", "entropy", "ebalance",
                           "sbw",
                           "ebcw", "ate")
-  if (missing(method) || is_not_null(ps)) method <- "ps"
-  else if (!is.character(method)) bad.method <- TRUE
-  else if (is_null(method) || length(method) > 1) bad.method <- TRUE
-  else if (tolower(method) %nin% acceptable.methods) bad.method <- TRUE
 
-  if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method.", call. = FALSE)
-  method <- method.to.proper.method(tolower(method))
+  if (missing(method) || is_not_null(ps)) method <- "ps"
+  else if (is_null(method) || length(method) > 1) bad.method <- TRUE
+  else if (is.character(method)) {
+    if (tolower(method) %nin% acceptable.methods) bad.method <- TRUE
+  }
+  else if (!is.function(method)) bad.method <- TRUE
+
+  if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.", call. = FALSE)
+
+  if (is.character(method)) {
+    method <- method.to.proper.method(method)
+    attr(method, "name") <- method
+  }
+  else if (is.function(method)) {
+    method.name <- paste(deparse(substitute(method)))
+    method <- check.user.method(method)
+    attr(method, "name") <- method.name
+  }
 
   #Process treat and covs from formula and data
   t.c <- get.covs.and.treat.from.formula(formula, data)
@@ -63,7 +75,6 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   treat <- get.treat.type(treat)
   treat.type <- attr(treat, "treat.type")
 
-
   #Process estimand and focal
   estimand <- process.estimand(estimand, method, treat.type)
   f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
@@ -79,10 +90,6 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   ##Process exact
   processed.exact <- process.exact(exact = exact, data= data,
                                    treat = treat)
-
-  # #Recreate data and formula
-  # w.data <- data.frame(treat, covs)
-  # w.formula <- formula(w.data)
 
   #Process moments and int
   moments.int <- check.moments.int(method, moments, int)
@@ -152,7 +159,7 @@ print.weightit <- function(x, ...) {
   trim <- attr(x[["weights"]], "trim")
 
   cat("A weightit object\n")
-  cat(paste0(" - method: \"", x[["method"]], "\" (", method.to.phrase(x[["method"]]), ")\n"))
+  cat(paste0(" - method: \"", attr(x[["method"]], "name"), "\" (", method.to.phrase(x[["method"]]), ")\n"))
   cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
   cat(paste0(" - sampling weights: ", ifelse(all_the_same(x[["s.weights"]]),"none", "present"), "\n"))
   cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x[["treat"]]), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")"), ""))), "\n"))
