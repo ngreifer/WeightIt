@@ -6,16 +6,28 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
   for (i in levels(exact.factor)) {
     #Run method
     if (is.function(method)) {
-      obj <- weightit2user(Fun = method,
-                           covs = covs,
-                           treat = treat,
-                           s.weights = s.weights,
-                           subset = exact.factor == i,
-                           estimand = estimand,
-                           focal = focal,
-                           stabilize = stabilize,
-                           ps = ps,
-                           ...)
+      if (attr(method, "is.MSM.method")) {
+        obj <- weightitMSM2user(Fun = method,
+                             covs.list = covs,
+                             treat.list = treat,
+                             s.weights = s.weights,
+                             subset = exact.factor == i,
+                             stabilize = stabilize,
+                             ...)
+      }
+      else {
+        obj <- weightit2user(Fun = method,
+                             covs = covs,
+                             treat = treat,
+                             s.weights = s.weights,
+                             subset = exact.factor == i,
+                             estimand = estimand,
+                             focal = focal,
+                             stabilize = stabilize,
+                             ps = ps,
+                             ...)
+      }
+
     }
     else if (method == "ps") {
       if (treat.type %in% c("binary", "multinomial")) {

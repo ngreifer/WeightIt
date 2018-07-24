@@ -11,7 +11,13 @@ method.to.proper.method <- function(method) {
 }
 check.user.method <- function(method) {
   #Check to make sure it accepts treat and covs
-  if (any(c("covs", "treat") %nin% names(formals(method)))) {
+  if (all(c("covs", "treat") %in% names(formals(method)))) {
+    #attr(method, "is.MSM.method") <- FALSE
+  }
+  else if (all(c("covs.list", "treat.list") %in% names(formals(method)))) {
+    #attr(method, "is.MSM.method") <- TRUE
+  }
+  else {
     stop("The user-provided function to method must contain \"covs\" and \"treat\" as named parameters.", call. = FALSE)
   }
   return(method)
@@ -135,13 +141,13 @@ process.exact <- function(exact, data, treat, treat.name = NULL) {
   else if (length(exact) == n) {
     exact.components <- setNames(data.frame(exact), deparse(substitute(exact)))
     exact.factor <- factor(exact.components[[1]])
-    exact.vars <- acceptable.exacts[sapply(acceptable.exacts, function(x) equivalent.factors(exact, data[[x]]))]
+    exact.vars <- acceptable.exacts[vapply(acceptable.exacts, function(x) equivalent.factors(exact, data[[x]]), logical(1L))]
   }
   else bad.exact <- TRUE
 
   if (bad.exact) stop("exact must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself.", call. = FALSE)
 
-  if (any(sapply(levels(exact.factor), function(x) nunique(treat) != nunique(treat[exact.factor == x])))) {
+  if (any(vapply(levels(exact.factor), function(x) nunique(treat) != nunique(treat[exact.factor == x]), logical(1L)))) {
     stop("Not all the groups formed by exact contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening exact.", call. = FALSE)
   }
 
@@ -196,8 +202,8 @@ text.box.plot <- function(range.list, width = 12) {
   d <- as.data.frame(matrix(NA_character_, ncol = 3, nrow = length(range.list),
                             dimnames = list(names(range.list), c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"))),
                      stringsAsFactors = FALSE)
-  d[,"Min"] <- sapply(range.list, function(x) x[1])
-  d[,"Max"] <- sapply(range.list, function(x) x[2])
+  d[,"Min"] <- vapply(range.list, function(x) x[1], numeric(1L))
+  d[,"Max"] <- vapply(range.list, function(x) x[2], numeric(1L))
   for (i in seq_len(nrow(d))) {
     spaces1 <- rescaled.range.list[[i]][1] - rescaled.full.range[1]
     #|
@@ -262,7 +268,7 @@ word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
   #or "a, b, and c"
   #If is.are, adds "is" or "are" appropriately
   L <- length(word.list)
-  if (quotes) word.list <- sapply(word.list, function(x) paste0("\"", x, "\""))
+  if (quotes) word.list <- vapply(word.list, function(x) paste0("\"", x, "\""), character(1L))
   if (L == 0) {
     out <- ""
     attr(out, "plural") = FALSE
@@ -374,9 +380,9 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ..
   #Check if response exists
   if (is.formula(tt, 2)) {
     resp.vars.mentioned <- as.character(tt)[2]
-    resp.vars.failed <- sapply(resp.vars.mentioned, function(v) {
+    resp.vars.failed <- vapply(resp.vars.mentioned, function(v) {
       null.or.error(try(eval(parse(text = v), c(data, env)), silent = TRUE))
-    })
+    }, logical(1L))
 
     if (any(resp.vars.failed)) {
       if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", as.character(tt)[2], "\", is not a variable in ", word.list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
@@ -404,10 +410,10 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ..
   #Check if RHS variables exist
   tt.covs <- delete.response(tt)
   rhs.vars.mentioned.lang <- attr(tt.covs, "variables")[-1]
-  rhs.vars.mentioned <- sapply(rhs.vars.mentioned.lang, deparse)
-  rhs.vars.failed <- sapply(rhs.vars.mentioned.lang, function(v) {
+  rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse, character(1L))
+  rhs.vars.failed <- vapply(rhs.vars.mentioned.lang, function(v) {
     null.or.error(try(eval(v, c(data, env)), silent = TRUE))
-  })
+  }, logical(1L))
 
   if (any(rhs.vars.failed)) {
     stop(paste0(c("All variables in formula must be variables in data or objects in the global environment.\nMissing variables: ",
@@ -418,9 +424,9 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ..
   rhs.term.labels <- attr(tt.covs, "term.labels")
   rhs.term.orders <- attr(tt.covs, "order")
 
-  rhs.df <- sapply(rhs.vars.mentioned.lang, function(v) {
+  rhs.df <- vapply(rhs.vars.mentioned.lang, function(v) {
     is.data.frame(try(eval(v, c(data, env)), silent = TRUE))
-  })
+  }, logical(1L))
 
   if (any(rhs.df)) {
     if (any(rhs.vars.mentioned[rhs.df] %in% unlist(sapply(rhs.term.labels[rhs.term.orders > 1], function(x) strsplit(x, ":", fixed = TRUE))))) {
@@ -456,7 +462,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ..
 
   #Get full model matrix with interactions too
   covs.matrix <- model.matrix(tt.covs, data = covs,
-                              contrasts.arg = lapply(covs[sapply(covs, is.factor)],
+                              contrasts.arg = lapply(Filter(is.factor, covs),
                                                      contrasts, contrasts=FALSE))
   attr(covs, "terms") <- NULL
 
@@ -488,9 +494,9 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
     if (any(grepl(".", df[[i]], fixed = TRUE))) {
       s <- strsplit(df[[i]], ".", fixed = TRUE)
       lengths <- lengths(s)
-      digits.r.of.. <- sapply(seq_along(s), function(x) {
+      digits.r.of.. <- vapply(seq_along(s), function(x) {
         if (lengths[x] > 1) nchar(s[[x]][lengths[x]])
-        else 0 })
+        else 0 }, numeric(1L))
       df[[i]] <- sapply(seq_along(df[[i]]), function(x) {
         if (df[[i]][x] == "") ""
         else if (lengths[x] <= 1) {
@@ -542,7 +548,7 @@ is.formula <- function(f, sides = NULL) {
   }
   return(res)
 }
-check_if_zero_base <- function(x) {
+check_if_zero <- function(x) {
   # this is the default tolerance used in all.equal
   tolerance <- .Machine$double.eps^0.5
   # If the absolute deviation between the number and zero is less than
@@ -551,7 +557,6 @@ check_if_zero_base <- function(x) {
   # -3.20469e-16 or some such.
   abs(x - 0) < tolerance
 }
-check_if_zero <- Vectorize(check_if_zero_base)
 is_binary <- function(x) !nunique.gt(x, 2)
 is_null <- function(x) length(x) == 0L
 is_not_null <- function(x) !is_null(x)

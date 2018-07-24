@@ -34,40 +34,13 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
   else {
     if (is_not_null(A)) {
       Anames <- names(A)
-      namedAnames <- Anames[Anames != ""]
       unnamedAnames <- Anames[Anames == ""]
-      if (length(unnamedAnames) > 1) {
-        if (length(namedAnames) > 0) {
-          Anames <- c(sapply(namedAnames, word.list, quotes = TRUE),
-                      "other arguments without names")
-        }
-        else {
-          Anames <- c("Arguments without names")
-        }
-        was_were <- "were"
-      }
-      else if (length(unnamedAnames) == 1) {
-        if (length(namedAnames) > 0) {
-          Anames <- c(sapply(namedAnames, word.list, quotes = TRUE),
-                      "another argument without a name")
-          was_were <- "were"
-        }
-        else {
-          Anames <- c("An argument without a name")
-          was_were <- "was"
-        }
-      }
-      else {
-        Anames <- sapply(namedAnames, word.list, quotes = TRUE)
-        if (length(namedAnames) > 0) {
-          was_were <- "were"
-        }
-        else {
-          was_were <- "was"
-        }
-      }
+      namedAnames <- Anames[Anames != ""]
+      if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
+      else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
 
-      warning(paste(word.list(names(A)), was_were, "specified but are not suitable arguments to the provided function."), call. = FALSE)
+      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word.list(Anames)), call. = FALSE)
+      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE)
     }
   }
 
@@ -76,14 +49,79 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
   if (is.numeric(obj)) {
     obj <- list(w = obj)
   }
-  else if (!is.list(obj) || "w" %nin% names(obj)) {
-    stop("The output of the user-provided function must be a list with an entry named \"w\" containing the estimated weights.", call. = FALSE)
+  else if (!is.list(obj) || !any(c("w", "weights") %nin% names(obj))) {
+    stop("The output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights.", call. = FALSE)
+  }
+  else {
+    names(obj)[names(obj) == "weights"] <- "w"
   }
   if (is_null(obj[["w"]])) stop("No weights were estimated.", call. = FALSE)
-  if (!is.vector(obj[["w"]], mode = "numeric")) stop("The \"w\" entry of the output of the user-provided function must be a numeric vector of weights.", call. = FALSE)
+  if (!is.vector(obj[["w"]], mode = "numeric")) stop("The \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights.", call. = FALSE)
   if (all(is.na(obj[["w"]]))) stop("All weights were generated as NA.", call = FALSE)
   if (length(obj[["w"]]) != length(treat)) {
     stop(paste(length(obj[["w"]]), "weights were estimated, but there are", length(treat), "units."), call. = FALSE)
+  }
+
+  return(obj)
+}
+weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize, moments, int, ...) {
+  A <- list(...)
+  if (is_not_null(covs.list)) {
+    covs.list <- covs <- lapply(covs.list, function(c) c[subset, , drop = FALSE])
+  }
+  if (is_not_null(treat.list)) {
+    treat.list <- treat <- lapply(treat.list, function(t) t[subset])
+  }
+  if (is_not_null(s.weights)) {
+    s.weights <- s.weights[subset]
+  }
+
+  #Get a list of function args for the user-defined function Fun
+  Fun_formal <- as.list(formals(Fun))
+  if (has_dots <- any(names(Fun_formal) == "...")) {
+    Fun_formal[["..."]] <- NULL
+  }
+
+  fun_args <- Fun_formal
+  for (i in names(fun_args)) {
+    if (is_not_null(get0(i))) fun_args[[i]] <- get0(i)
+    else if (is_not_null(A[[i]])) {
+      fun_args[[i]] <- A[[i]]
+      A[[i]] <- NULL
+    }
+    #else just use Fun default
+  }
+
+  if (has_dots) fun_args <- c(fun_args, A)
+  else {
+    if (is_not_null(A)) {
+      Anames <- names(A)
+      unnamedAnames <- Anames[Anames == ""]
+      namedAnames <- Anames[Anames != ""]
+      if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
+      else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
+
+      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word.list(Anames)), call. = FALSE)
+      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE)
+    }
+  }
+
+  obj <- do.call(Fun, fun_args)
+
+  if (is.numeric(obj)) {
+    obj <- list(w = obj)
+  }
+  else if (!is.list(obj) || !any(c("w", "weights") %nin% names(obj))) {
+    stop("The output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights.", call. = FALSE)
+  }
+  else {
+    names(obj)[names(obj) == "weights"] <- "w"
+  }
+  if (is_null(obj[["w"]])) stop("No weights were estimated.", call. = FALSE)
+  if (!is.vector(obj[["w"]], mode = "numeric")) stop("The \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights.", call. = FALSE)
+  if (all(is.na(obj[["w"]]))) stop("All weights were generated as NA.", call = FALSE)
+  if (length(obj[["w"]]) != length(treat.list[[1]])) {
+    stop(paste(length(obj[["w"]]), "weights were estimated, but there are", length(treat.list[[1]]), "units."), call. = FALSE)
   }
 
   return(obj)
