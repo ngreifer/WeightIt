@@ -134,7 +134,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
   if (is_null(ps)) {
 
     covs <- covs[subset, , drop = FALSE]
-    t <- factor(treat)[subset]
+    t <- factor(treat[subset])
 
     if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
       missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -329,6 +329,110 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
   return(obj)
 }
 
+#Targeting stable balancing weights with optweight
+weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, moments, int, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  covs <- apply(covs, 2, make.closer.to.1)
+
+  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+    missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+
+  for (f in names(formals(optweight::optweight))) {
+    if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
+  }
+  A[names(A) %in% names(formals(weightit2optweight))] <- NULL
+  A[["verbose"]] <- NULL
+
+  if (check.package("optweight")) {
+    out <- do.call(optweight::optweight.fit, c(list(treat = treat,
+                                                    covs = covs,
+                                                    estimand = estimand,
+                                                    s.weights = s.weights[subset],
+                                                    focal = focal,
+                                                    verbose = TRUE),
+                                               A), quote = TRUE)
+    obj <- list(w = out[["w"]])
+    return(obj)
+  }
+}
+weightit2optweight.cont <- function(covs, treat, s.weights, subset, moments, int, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  covs <- apply(covs, 2, make.closer.to.1)
+
+  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+    missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+
+  for (f in names(formals(optweight::optweight))) {
+    if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
+  }
+  A[names(A) %in% names(formals(weightit2optweight))] <- NULL
+  A[["verbose"]] <- NULL
+
+  if (check.package("optweight")) {
+    out <- do.call(optweight::optweight.fit, c(list(treat = treat,
+                                                    covs = covs,
+                                                    s.weights = s.weights[subset],
+                                                    verbose = TRUE),
+                                               A), quote = TRUE)
+    obj <- list(w = out[["w"]])
+    return(obj)
+  }
+}
+weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, moments, int, ...) {
+  A <- list(...)
+  if (is_not_null(covs.list)) {
+    covs.list <- lapply(covs.list, function(c) {
+      covs <- c[subset, , drop = FALSE]
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+      covs <- apply(covs, 2, make.closer.to.1)
+
+      if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+        missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+        covs[is.na(covs)] <- 0
+        covs <- cbind(covs, missing.ind)
+      }
+      return(covs)
+    })
+  }
+  if (is_not_null(treat.list)) {
+    treat.list <- lapply(treat.list, function(t) {
+      treat <- t[subset]
+      if (attr(t, "treat.type") != "continuous") treat <- factor(treat)
+      return(treat)
+    })
+  }
+  if (is_not_null(s.weights)) {
+    s.weights <- s.weights[subset]
+  }
+
+  out <- do.call(optweight::optweight.fit, c(list(treat = treat.list,
+                                                  covs = covs.list,
+                                                  s.weights = s.weights,
+                                                  verbose = TRUE),
+                                             A), quote = TRUE)
+  obj <- list(w = out$w)
+
+
+}
+
 #Generalized boosted modeling with twang
 weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
   A <- list(...)
@@ -430,7 +534,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       w <- w * sapply(t, function(x) sum(t==x) / sum(1*(t==x)*w))
     }
   }
-  out <- list(w = w)
+  obj <- list(w = w)
+  return(obj)
 }
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   A <- list(...)
@@ -463,7 +568,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
 
   #ps <- fit[["ps"]][[A[["stop.method"]]]]
 
-  out <- list(w = w)
+  obj <- list(w = w)
+  return(obj)
 }
 
 #CBPS
@@ -549,6 +655,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   }
 
   obj <- list(w = w)
+  return(obj)
 }
 weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
   A <- list(...)
@@ -582,6 +689,10 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
   w <- cobalt::get.w(fit) #/ s.weights[subset]
 
   obj <- list(w = w)
+  return(obj)
+}
+weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, ...) {
+
 }
 weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
   A <- list(...)

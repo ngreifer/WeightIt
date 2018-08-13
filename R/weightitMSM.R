@@ -1,6 +1,6 @@
 weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FALSE, exact = NULL, s.weights = NULL,
                         num.formula = NULL, moments = 1L, int = FALSE,
-                        verbose = FALSE, is.MSM.method = FALSE, ...) {
+                        verbose = FALSE, is.MSM.method, ...) {
 
   A <- list(...)
 
@@ -18,7 +18,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                           "npcbps",
                           "ebal", "entropy", "ebalance",
                           "sbw",
-                          "ebcw", "ate")
+                          "ebcw", "ate",
+                          "optweight", "opt")
 
   if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (is.character(method)) {
@@ -31,12 +32,13 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
   if (is.character(method)) {
     method <- method.to.proper.method(method)
     attr(method, "name") <- method
+    if (missing(is.MSM.method)) is.MSM.method <- NULL
+    is.MSM.method <- check.MSM.method(method, is.MSM.method)
   }
   else if (is.function(method)) {
     method.name <- paste(deparse(substitute(method)))
     method <- check.user.method(method)
     attr(method, "name") <- method.name
-    attr(method, "is.MSM.method") <- is.MSM.method
   }
 
   #Process moments and int
@@ -96,7 +98,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
     if (any(is.na(reported.covs.list[[i]])) || nrow(reported.covs.list[[i]]) != n) {
       warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
-      #stop("No missing values are allowed in the covariates.", call. = FALSE)
     }
     if (any(is.na(treat.list[[i]]))) {
       stop(paste0("No missing values are allowed in the treatment variable. Missing values found in ", treat.name, "."), call. = FALSE)
@@ -119,21 +120,22 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
   if (verbose) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
-  if (is_not_null(attr(method, "is.MSM.method")) && attr(method, "is.MSM.method") == TRUE) {
+  if (is.MSM.method) {
     eval.verbose({
-      #Returns weights (w) and propensty score (ps)
+      #Returns weights (w)
       obj <- do.call("weightit.fit", c(list(covs = covs.list,
                                             treat = treat.list,
-                                            #treat.type = attr(treat.list[[i]], "treat.type"),
                                             s.weights = s.weights,
                                             exact.factor = processed.exact[["exact.factor"]],
-                                            stabilize = FALSE,
+                                            stabilize = stabilize,
                                             method = method,
                                             moments = moments,
                                             int = int,
-                                            ps = NULL), A))
+                                            ps = NULL,
+                                            is.MSM.method = TRUE), A))
     })
     w <- obj$w
+    stabout <- NULL
   }
   else {
     A[["estimand"]] <- NULL
@@ -156,7 +158,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                               method = method,
                                               moments = moments,
                                               int = int,
-                                              ps = NULL), A))
+                                              ps = NULL,
+                                              is.MSM.method = FALSE), A))
       })
       w.list[[i]] <- obj[["w"]]
       ps.list[[i]] <- obj[["ps"]]
@@ -260,7 +263,7 @@ print.weightitMSM <- function(x, ...) {
                  paste0("    + baseline: ", paste(names(x$covs.list[[i]]), collapse = ", "), "\n")
                }
                else {
-                 paste0("    + after time ", i-1, ": ", paste(names(x$covs.list[[i]])[!names(x$covs.list[[i]]) %in% c(names(x$treat.list)[i-1], names(x$covs.list[[i-1]]))], collapse = ", "), "\n")
+                 paste0("    + after time ", i-1, ": ", paste(names(x$covs.list[[i]]), collapse = ", "), "\n")
                }
              }), collapse = ""), collapse = "\n"))
   if (is_not_null(x[["exact"]])) {
@@ -401,7 +404,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   return(out.list)
 }
 print.summary.weightitMSM <- function(x, ...) {
-  if (all(sapply(x, function(y) isTRUE(all.equal(x[[1]], y))))) {
+  if (all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))) {
     only.one <- TRUE
   }
   else only.one <- FALSE

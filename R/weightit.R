@@ -30,7 +30,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           "npcbps",
                           "ebal", "entropy", "ebalance",
                           "sbw",
-                          "ebcw", "ate")
+                          "ebcw", "ate",
+                          "optweight", "opt")
 
   if (missing(method) || is_not_null(ps)) method <- "ps"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
@@ -186,7 +187,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                 "effective.sample.size")
   out <- setNames(vector("list", length(outnames)), outnames)
 
-  if (ignore.s.weights) sw <- rep(1, length(object$weights))
+  if (ignore.s.weights  || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
   w <- object$weights*sw
   t <- object$treat

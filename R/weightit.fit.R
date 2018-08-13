@@ -1,4 +1,4 @@
-weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.factor, estimand, focal, stabilize, ps, moments, int, ...){
+weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.factor, estimand, focal, stabilize, ps, moments, int, is.MSM.method = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
   out <- setNames(vector("list", 2), c("w", "ps"))
@@ -6,7 +6,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
   for (i in levels(exact.factor)) {
     #Run method
     if (is.function(method)) {
-      if (attr(method, "is.MSM.method")) {
+      if (is.MSM.method) {
         obj <- weightitMSM2user(Fun = method,
                              covs.list = covs,
                              treat.list = treat,
@@ -51,6 +51,39 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
                                 ...)
       }
     }
+    else if (method == "optweight") {
+      if (is.MSM.method) {
+        obj <- weightit2optweight.msm(covs.list = covs,
+                                      treat.list = treat,
+                                      s.weights = s.weights,
+                                      subset = exact.factor == i,
+                                      moments = moments,
+                                      int = int,
+                                      ...)
+      }
+      else {
+        if (treat.type %in% c("binary", "multinomial")) {
+          obj <- weightit2optweight(covs = covs,
+                                    treat = treat,
+                                    s.weights = s.weights,
+                                    subset = exact.factor ==i,
+                                    estimand = estimand,
+                                    focal = focal,
+                                    moments = moments,
+                                    int = int, ...)
+        }
+        else if (treat.type == "continuous") {
+          obj <- weightit2optweight.cont(covs = covs,
+                                    treat = treat,
+                                    subset = exact.factor == i,
+                                    s.weights = s.weights,
+                                    moments = moments,
+                                    int = int,
+                                    ...)
+
+        }
+      }
+    }
     else if (method == "gbm") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2gbm(covs = covs,
@@ -73,6 +106,10 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
 
     }
     else if (method == "cbps") {
+      if (is.MSM.method) {
+        obj <- weightit2cbps.msm()
+      }
+      else {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2cbps(covs = covs,
                              treat = treat,
@@ -91,6 +128,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
                                   #stabilize = stabilize,
                                   ...)
 
+      }
       }
 
     }
@@ -161,8 +199,8 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
     }
 
     #Extract weights
-    if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
-    if (is_null(obj$w) || all(is.na(obj$w))) stop("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call = FALSE)
+    if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
+    if (is_null(obj$w) || all(is.na(obj$w))) stop("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
     if (any(is.na(obj$w))) warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA values will be set to 0.", call. = FALSE)
     obj$w[is.na(obj$w)] <- 0
     out$w[exact.factor == i] <- obj$w

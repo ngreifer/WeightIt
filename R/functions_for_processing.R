@@ -7,6 +7,7 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
   else if (method %in% c("sbw")) return("sbw")
   else if (method %in% c("ebcw", "ate")) return("ebcw")
+  else if (method %in% c("optweight", "opt")) return("optweight")
   else return(method)
 }
 check.user.method <- function(method) {
@@ -31,6 +32,7 @@ method.to.phrase <- function(method) {
   else if (method %in% c("entropy", "ebal", "ebalance")) return("entropy balancing")
   else if (method %in% c("sbw")) return("stable balancing weights")
   else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
+  else if (method %in% c("optweight", "opt")) return("targeted stable balancing weights")
   else return("the chosen method of weighting")
 }
 process.s.weights <- function(s.weights, data = NULL) {
@@ -59,14 +61,16 @@ process.estimand <- function(estimand, method, treat.type) {
                            npcbps = c("ATE"),
                            ebal = c("ATT", "ATC", "ATE"),
                            sbw = c("ATT", "ATC", "ATE"),
-                           ebcw = c("ATT", "ATC", "ATE")),
+                           ebcw = c("ATT", "ATC", "ATE"),
+                           optweight = c("ATT", "ATC", "ATE")),
              multinomial = list(ps = c("ATT", "ATE", "ATO"),
                                 gbm = c("ATT", "ATE"),
                                 cbps = c("ATT", "ATE"),
                                 npcbps = c("ATE"),
                                 ebal = c("ATT", "ATE"),
                                 sbw = c("ATT", "ATE"),
-                                ebcw = c("ATT", "ATE")))
+                                ebcw = c("ATT", "ATE"),
+                                optweight = c("ATT", "ATE")))
 
   if (treat.type != "continuous" && !is.function(method) &&
       toupper(estimand) %nin% AE[[treat.type]][[method]]) {
@@ -175,7 +179,7 @@ get.treat.type <- function(treat) {
 }
 check.moments.int <- function(method, moments, int) {
   if (!is.function(method)) {
-    if (method %in% c("ebal", "ebcw", "sbw")) {
+    if (method %in% c("ebal", "ebcw", "sbw", "optweight")) {
       if (length(int) != 1 || !is.logical(int)) {
         stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
       }
@@ -193,6 +197,23 @@ check.moments.int <- function(method, moments, int) {
     }
   }
   return(c(moments = as.integer(moments), int = int))
+}
+check.MSM.method <- function(method, is.MSM.method) {
+  methods.with.MSM <- c("optweight")
+  if (method %in% methods.with.MSM) {
+    if (is_null(is.MSM.method)) is.MSM.method <- TRUE
+    else if (!isTRUE(is.MSM.method)) {
+    message(paste0(method.to.phrase(method), " can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set is.MSM.method to TRUE."))
+    }
+  }
+  else if (method %nin% methods.with.MSM) {
+    if (isTRUE(is.MSM.method)) warning(paste0(method.to.phrase(method), " cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point."),
+                                       call. = FALSE, immediate. = TRUE)
+    is.MSM.method <- FALSE
+  }
+
+  return(is.MSM.method)
+
 }
 text.box.plot <- function(range.list, width = 12) {
   full.range <- range(unlist(range.list))
@@ -452,8 +473,11 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ..
   mf.covs <- quote(stats::model.frame(tt.covs, data,
                                       drop.unused.levels = TRUE,
                                       na.action = "na.pass"))
+
   tryCatch({covs <- eval(mf.covs, c(data, env))},
            error = function(e) {stop(conditionMessage(e), call. = FALSE)})
+
+  if (is_not_null(treat.name) && treat.name %in% names(covs)) stop("The variable on the left side of the formula appears on the right side too.", call. = FALSE)
 
   if (is_null(rhs.vars.mentioned)) {
     covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))
