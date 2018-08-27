@@ -22,7 +22,7 @@ To install and load `WeightIt`, use the code below:
 
 ``` r
 install.packages("WeightIt")  #CRAN version
-devtools::install_github("ngrefer/WeightIt")  #Development version
+devtools::install_github("ngreifer/WeightIt")  #Development version
 library("WeightIt")
 ```
 
