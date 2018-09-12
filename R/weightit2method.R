@@ -149,13 +149,13 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     }
 
     if (is_null(A$link)) A$link <- "logit"
-    else if (is_binary(t)) A$link <- which.link
     else {
-      acceptable.links <- c("logit", "probit", "bayes.probit")
+      if (bin.treat <- is_binary(t)) acceptable.links <- c("logit", "probit", "cloglog", "identity", "log", "cauchit")
+      else acceptable.links <- c("logit", "probit", "bayes.probit")
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
-      if (is.na(which.link)) {
-        A$link <- "logit"
-        warning("Only \"logit\",\"probit\" and \"bayes.probit\" are allowed as links for multinomial treatments. Using link = \"logit\".",
+      if (is_null(which.link)) {
+        A$link <- acceptable.links[1]
+        warning(paste0("Only ", word.list(acceptable.links, quotes = TRUE), " are allowed as links for ", if (bin.treat) "binary" else "multinomial", " treatments. Using link = ", word.list(acceptable.links[1], quotes = TRUE), "."),
                 call. = FALSE)
       }
       else A$link <- which.link
@@ -277,11 +277,12 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
   stabilize <- TRUE
 
   if (is_null(ps)) {
-    fit <- glm(formula, data = data,
-               weights = s.weights[subset],
-               family = A$family,
-               control = list(),
-               ...)
+    fit <- do.call("glm", c(list(formula, data = data,
+                                 weights = s.weights[subset],
+                                 family = A$family,
+                                 control = list()),
+                            A[names(A %nin% "family")]),
+                   quote = TRUE)
     p.denom <- t - fit$fitted.values
 
     if (isTRUE(A[["use.kernel"]])) {
@@ -301,11 +302,13 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
     }
 
     if (stabilize) {
-      num.fit <- glm(t ~ 1,
-                     data = data.frame(t = t),
-                     weights = s.weights[subset],
-                     family = A$family,
-                     control = list(), ...)
+      num.fit <- do.call("glm", c(list(t ~ 1, data = data.frame(t = t),
+                                       weights = s.weights[subset],
+                                       family = A$family,
+                                       control = list()),
+                                  A[names(A %nin% "family")]),
+                         quote = TRUE)
+
       p.num <- t - num.fit$fitted.values
 
       if (isTRUE(A[["use.kernel"]])) {
@@ -345,16 +348,19 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
     covs <- cbind(covs, missing.ind)
   }
 
+  new.data <- data.frame(treat, covs)
+  new.formula <- formula(new.data)
 
   for (f in names(formals(optweight::optweight))) {
     if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
   }
   A[names(A) %in% names(formals(weightit2optweight))] <- NULL
   A[["verbose"]] <- NULL
+  if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
 
   if (check.package("optweight")) {
-    out <- do.call(optweight::optweight.fit, c(list(treat = treat,
-                                                    covs = covs,
+    out <- do.call(optweight::optweight, c(list(formula = new.formula,
+                                                    data = new.data,
                                                     estimand = estimand,
                                                     s.weights = s.weights[subset],
                                                     focal = focal,
@@ -691,9 +697,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
   obj <- list(w = w)
   return(obj)
 }
-weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, ...) {
-
-}
+# weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, ...) {}
 weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
   A <- list(...)
   if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
@@ -714,7 +718,8 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
   new.data <- data.frame(treat = treat, covs)
 
   if (check.package("CBPS")) {
-    fit <- CBPS::npCBPS(formula(new.data), data = new.data, print.level = 1, ...)
+    fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
+                   quote = TRUE)
   }
   w <- cobalt::get.w(fit)
 
@@ -743,7 +748,8 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, estimand, ...) 
   new.data <- data.frame(treat = treat, covs)
 
   if (check.package("CBPS")) {
-    fit <- CBPS::npCBPS(formula(new.data), data = new.data, print.level = 1, ...)
+    fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
+                   quote = TRUE)
   }
   w <- cobalt::get.w(fit)
 
@@ -934,6 +940,184 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, momen
   }
 }
 
+#PS weights using SuperLearner
+weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  t <- factor(treat[subset])
+
+  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+    missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+  covs <- data.frame(apply(covs, 2, make.closer.to.1))
+
+  # if (ncol(covs) > 1) {
+  #   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(remove.collinearity(covs))]
+  #   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  # }
+
+  for (f in names(formals(SuperLearner::SuperLearner))) {
+    if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[[f]]}
+    else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+  }
+
+  if (is_binary(t)) {
+
+    ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
+                   levels(t))
+
+    fit <- do.call(SuperLearner::SuperLearner, list(Y = as.numeric(as.character(t)),
+                                                     X = covs, newX = covs,
+                                      family = binomial(),
+                                      SL.library = A[["SL.library"]],
+                                      verbose = FALSE,
+                                      method = A[["SL.method"]],
+                                      #method = method.bal(e = estimand, C = covs),
+                                      id = NULL,
+                                      obsWeights = s.weights[subset],
+                                      control = A[["cvControl"]],
+                                      cvControl = A[["cvControl"]],
+                                      env = A[["env"]]))
+    ps[[2]] <- p.score <- fit$SL.predict
+    ps[[1]] <- 1 - ps[[2]]
+
+  }
+  else {
+
+    ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
+                   levels(t))
+
+    for (i in levels(t)) {
+      t_i <- rep(0, length(t)); t_i[t == i] <- 1
+
+      fit_i <- SuperLearner::SuperLearner(t_i, covs, newX = NULL,
+                                          family = binomial(),
+                                          SL.library = A[["SL.library"]],
+                                          verbose = FALSE,
+                                          method = A[["SL.method"]],
+                                          id = NULL,
+                                          obsWeights = s.weights[subset],
+                                          control = A[["control"]],
+                                          cvControl = A[["cvControl"]],
+                                          env = A[["env"]])
+      ps[[i]] <- fit_i$SL.predict
+    }
+
+    p.score <- NULL
+  }
+
+
+  #ps should be matrix of probs for each treat
+  #Computing weights
+  w <- rep(0, nrow(ps))
+  w <- rep(0, nrow(ps))
+  for (i in seq_len(nunique(t))) {
+    w[t == levels(t)[i]] <- 1/ps[t == levels(t)[i], i]
+  }
+
+  if (toupper(estimand) == "ATE") {
+    w <- w
+  }
+  else if (toupper(estimand) == "ATT") {
+    w <- w*ps[, levels(t) == focal]
+  }
+  else if (toupper(estimand) == "ATO") {
+    w <- w*apply(ps, 1, prod)
+  }
+  else if (toupper(estimand) == "ATM") {
+    w <- w*apply(ps, 1, min)
+  }
+  else w <- NULL
+
+  if (stabilize) {
+    w <- w * ave(w, t, FUN = function(x) length(x) / sum(x))
+  }
+
+  obj <- list(w = w, ps = p.score)
+  return(obj)
+}
+weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  t <- treat[subset]
+
+  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+    missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+  covs <- apply(covs, 2, make.closer.to.1)
+
+  stabilize <- TRUE
+
+  for (f in names(formals(SuperLearner::SuperLearner))) {
+    if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[[f]]}
+    if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+  }
+
+  fit <- SuperLearner::SuperLearner(t, covs, newX = NULL,
+                                    family = gaussian(),
+                                    SL.library = A[["SL.library"]],
+                                    verbose = TRUE,
+                                    method = A[["SL.method"]],
+                                    id = NULL,
+                                    obsWeights = s.weights[subset],
+                                    control = A[["control"]],
+                                    cvControl = A[["cvControl"]],
+                                    env = A[["env"]])
+    p.denom <- t - fit$SL.predict
+
+    if (isTRUE(A[["use.kernel"]])) {
+      if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
+      if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
+      if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
+      if (is_null(A[["n"]])) A[["n"]] <- 10*length(t)
+
+      d.d <- density(p.denom, n = A[["n"]],
+                     weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
+                     bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+      if (isTRUE(A[["plot"]])) plot(d.d, main = "Denominator density")
+      dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
+    }
+    else {
+      dens.denom <- dnorm(p.denom, 0, sd = sd(p.denom))
+    }
+
+    if (stabilize) {
+      num.fit <- do.call("glm", c(list(t ~ 1, data = data.frame(t = t),
+                                       weights = s.weights[subset],
+                                       family = A$family,
+                                       control = list()),
+                                  A[names(A %nin% "family")]),
+                         quote = TRUE)
+
+      p.num <- t - num.fit$fitted.values
+
+      if (isTRUE(A[["use.kernel"]])) {
+        d.n <- density(p.num, n = A[["n"]],
+                       weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
+                       bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+        if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
+        dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
+      }
+      else {
+        dens.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
+      }
+      w <- dens.num/dens.denom
+    }
+    else {
+      w <- 1/dens.denom
+    }
+
+  obj <- list(w = w)
+  return(obj)
+}
+
 #Stable balancing weights with sbw
 # weightit2sbw <- function(...) {
 #   stop("Stable balancing weights are not currently supported. Please choose another method.\n        The github version of WeightIt may allow stable balancing weights.\n        Install it with devtools::install_github(\"ngreifer/WeightIt\").", call. = FALSE)
@@ -960,10 +1144,14 @@ weightit2sbw <- function(covs, treat, s.weights, subset, estimand, focal, moment
     if (is_null(A$gap_stop)) A$gap_stop <- TRUE
     if (is_null(A$adaptive_rho)) A$adaptive_rho <- TRUE
 
-    check.package(A$solver)
-    if (!paste0("package:", A$solver) %in% search()) {
+    solve.package = switch(A$solver, quadprog = "quadprog",
+                           cplex = "Rcplex",
+                           gurobi = "gurobi",
+                           pogs = "pogs")
+    check.package(solve.package)
+    if (!paste0("package:", solve.package) %in% search()) {
       need.to.detach.solver <- TRUE
-      attachNamespace(A$solver)
+      attachNamespace(solve.package)
     } else {
       need.to.detach.solver <- FALSE
     }
@@ -1087,7 +1275,7 @@ weightit2sbw <- function(covs, treat, s.weights, subset, estimand, focal, moment
   }
 
   if (need.to.detach.slam) detach("package:slam", character.only = TRUE)
-  if (need.to.detach.solver) detach(paste0("package:", A$solver), character.only = TRUE)
+  if (need.to.detach.solver) detach(paste0("package:", solve.package), character.only = TRUE)
 
   obj <- list(w = w)
   return(obj)
