@@ -164,6 +164,28 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
       }
       else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
     }
+    else if (method == "super") {
+      if (treat.type %in% c("binary", "multinomial")) {
+        obj <- weightit2super(covs = covs,
+                           treat = treat,
+                           s.weights = s.weights,
+                           subset = exact.factor == i,
+                           estimand = estimand,
+                           focal = focal,
+                           stabilize = stabilize,
+                           ps = ps,
+                           ...)
+      }
+      else if (treat.type == "continuous") {
+        obj <- weightit2super.cont(covs = covs,
+                                treat = treat,
+                                s.weights = s.weights,
+                                subset = exact.factor == i,
+                                stabilize = stabilize,
+                                ps = ps,
+                                ...)
+      }
+    }
     else if (method == "sbw") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2sbw(covs = covs,
@@ -200,7 +222,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
 
     #Extract weights
     if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
-    if (is_null(obj$w) || all(is.na(obj$w))) stop("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
+    if (is_null(obj$w) || all(is.na(obj$w))) warning("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
     if (any(is.na(obj$w))) warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA values will be set to 0.", call. = FALSE)
     obj$w[is.na(obj$w)] <- 0
     out$w[exact.factor == i] <- obj$w

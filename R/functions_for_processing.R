@@ -8,6 +8,7 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("sbw")) return("sbw")
   else if (method %in% c("ebcw", "ate")) return("ebcw")
   else if (method %in% c("optweight", "opt")) return("optweight")
+  else if (method %in% c("super", "superlearner")) return("super")
   else return(method)
 }
 check.user.method <- function(method) {
@@ -24,8 +25,11 @@ check.user.method <- function(method) {
   return(method)
 }
 method.to.phrase <- function(method) {
+
   if (is.function(method)) return("a user-defined method")
-  else if (method %in% c("ps")) return("propensity score weighting")
+  else {
+    method <- tolower(method)
+    if (method %in% c("ps")) return("propensity score weighting")
   else if (method %in% c("gbm", "gbr", "twang")) return("generalized boosted modeling")
   else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
   else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
@@ -33,7 +37,9 @@ method.to.phrase <- function(method) {
   else if (method %in% c("sbw")) return("stable balancing weights")
   else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
   else if (method %in% c("optweight", "opt")) return("targeted stable balancing weights")
+  else if (method %in% c("super", "superlearner")) return("propensity score weighting with SuperLearner")
   else return("the chosen method of weighting")
+  }
 }
 process.s.weights <- function(s.weights, data = NULL) {
   #Process s.weights
@@ -62,7 +68,8 @@ process.estimand <- function(estimand, method, treat.type) {
                            ebal = c("ATT", "ATC", "ATE"),
                            sbw = c("ATT", "ATC", "ATE"),
                            ebcw = c("ATT", "ATC", "ATE"),
-                           optweight = c("ATT", "ATC", "ATE")),
+                           optweight = c("ATT", "ATC", "ATE"),
+                           super = c("ATT", "ATC", "ATE", "ATO", "ATM")),
              multinomial = list(ps = c("ATT", "ATE", "ATO"),
                                 gbm = c("ATT", "ATE"),
                                 cbps = c("ATT", "ATE"),
@@ -70,7 +77,8 @@ process.estimand <- function(estimand, method, treat.type) {
                                 ebal = c("ATT", "ATE"),
                                 sbw = c("ATT", "ATE"),
                                 ebcw = c("ATT", "ATE"),
-                                optweight = c("ATT", "ATE")))
+                                optweight = c("ATT", "ATE"),
+                                super = c("ATT", "ATE")))
 
   if (treat.type != "continuous" && !is.function(method) &&
       toupper(estimand) %nin% AE[[treat.type]][[method]]) {
@@ -488,7 +496,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ..
   covs.matrix <- model.matrix(tt.covs, data = covs,
                               contrasts.arg = lapply(Filter(is.factor, covs),
                                                      contrasts, contrasts=FALSE))
-  attr(covs, "terms") <- NULL
+  #attr(covs, "terms") <- NULL
 
   return(list(reported.covs = covs,
               model.covs = covs.matrix,

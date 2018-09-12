@@ -31,7 +31,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           "ebal", "entropy", "ebalance",
                           "sbw",
                           "ebcw", "ate",
-                          "optweight", "opt")
+                          "optweight", "opt",
+                          "super", "superlearner")
 
   if (missing(method) || is_not_null(ps)) method <- "ps"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
