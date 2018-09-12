@@ -141,6 +141,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     A[["estimand"]] <- NULL
     estimand <- "ATE"
 
+    if (length(A[["link"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
+    if (length(A[["link"]]) == 1) A[["link"]] <- rep(A[["link"]], length(formula.list))
+    if (length(A[["family"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
+    if (length(A[["family"]]) == 1) A[["family"]] <- rep(A[["family"]], length(formula.list))
+
     for (i in seq_along(formula.list)) {
 
       ## Running models ----
@@ -159,7 +164,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                               moments = moments,
                                               int = int,
                                               ps = NULL,
-                                              is.MSM.method = FALSE), A))
+                                              is.MSM.method = FALSE,
+                                              link = A[["link"]][i],
+                                              family = A[["family"]][i]), A[names(A) %nin% c("link", "family")]))
       })
       w.list[[i]] <- obj[["w"]]
       ps.list[[i]] <- obj[["ps"]]
