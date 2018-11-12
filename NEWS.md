@@ -1,6 +1,12 @@
 WeightIt News and Updates
 ======
 
+Version 0.5.0
+
+* Added `SuperLearner` method to estimate propensity scores.
+
+* Added `optweight` method to estimate weights (but you should probably just use the `optweight` package).
+
 Version 0.4.0
 
 * Added `trim()` function to trim weights.
