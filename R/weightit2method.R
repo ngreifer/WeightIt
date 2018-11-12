@@ -355,18 +355,20 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
     if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
   }
   A[names(A) %in% names(formals(weightit2optweight))] <- NULL
-  A[["verbose"]] <- NULL
+
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
+  if ("targets" %in% names(A)) A[["targets"]] <- optweight::check.targets(new.formula, new.data, A[["targets"]], stop = TRUE)
+
+  A[["formula"]] <- new.formula
+  A[["data"]] <- new.data
+  A[["estimand"]] <- estimand
+  A[["s.weights"]] <- s.weights[subset]
+  A[["focal"]] <- focal
+  A[["verbose"]] <- TRUE
 
   if (check.package("optweight")) {
-    out <- do.call(optweight::optweight, c(list(formula = new.formula,
-                                                    data = new.data,
-                                                    estimand = estimand,
-                                                    s.weights = s.weights[subset],
-                                                    focal = focal,
-                                                    verbose = TRUE),
-                                               A), quote = TRUE)
-    obj <- list(w = out[["w"]])
+    out <- do.call(optweight::optweight, A, quote = TRUE)
+    obj <- list(w = out[["weights"]])
     return(obj)
   }
 }
@@ -385,20 +387,25 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, moments, int
     covs <- cbind(covs, missing.ind)
   }
 
+  new.data <- data.frame(treat, covs)
+  new.formula <- formula(new.data)
 
   for (f in names(formals(optweight::optweight))) {
     if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
   }
-  A[names(A) %in% names(formals(weightit2optweight))] <- NULL
-  A[["verbose"]] <- NULL
+  A[names(A) %in% names(formals(weightit2optweight.cont))] <- NULL
+
+  if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
+  if ("targets" %in% names(A)) A[["targets"]] <- optweight::check.targets(new.formula, new.data, A[["targets"]], stop = TRUE)
+
+  A[["formula"]] <- new.formula
+  A[["data"]] <- new.data
+  A[["s.weights"]] <- s.weights[subset]
+  A[["verbose"]] <- TRUE
 
   if (check.package("optweight")) {
-    out <- do.call(optweight::optweight.fit, c(list(treat = treat,
-                                                    covs = covs,
-                                                    s.weights = s.weights[subset],
-                                                    verbose = TRUE),
-                                               A), quote = TRUE)
-    obj <- list(w = out[["w"]])
+    out <- do.call(optweight::optweight, A, quote = TRUE)
+    obj <- list(w = out[["weights"]])
     return(obj)
   }
 }
@@ -954,13 +961,14 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   }
   covs <- data.frame(apply(covs, 2, make.closer.to.1))
 
-  # if (ncol(covs) > 1) {
-  #   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(remove.collinearity(covs))]
-  #   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-  # }
+  if (ncol(covs) > 1) {
+    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(remove.collinearity(covs))]
+    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  }
 
   for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[[f]]}
+    if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]}
+    else if (f == "env") {if (is_null(A[["env"]])) A[["env"]] <- environment(SuperLearner::SuperLearner)}
     else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
@@ -975,10 +983,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
                                       SL.library = A[["SL.library"]],
                                       verbose = FALSE,
                                       method = A[["SL.method"]],
-                                      #method = method.bal(e = estimand, C = covs),
                                       id = NULL,
                                       obsWeights = s.weights[subset],
-                                      control = A[["cvControl"]],
+                                      control = A[["control"]],
                                       cvControl = A[["cvControl"]],
                                       env = A[["env"]]))
     ps[[2]] <- p.score <- fit$SL.predict
@@ -993,16 +1000,17 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     for (i in levels(t)) {
       t_i <- rep(0, length(t)); t_i[t == i] <- 1
 
-      fit_i <- SuperLearner::SuperLearner(t_i, covs, newX = NULL,
-                                          family = binomial(),
-                                          SL.library = A[["SL.library"]],
-                                          verbose = FALSE,
-                                          method = A[["SL.method"]],
-                                          id = NULL,
-                                          obsWeights = s.weights[subset],
-                                          control = A[["control"]],
-                                          cvControl = A[["cvControl"]],
-                                          env = A[["env"]])
+      fit <- do.call(SuperLearner::SuperLearner, list(Y = t_i,
+                                                      X = covs, newX = covs,
+                                                      family = binomial(),
+                                                      SL.library = A[["SL.library"]],
+                                                      verbose = FALSE,
+                                                      method = A[["SL.method"]],
+                                                      id = NULL,
+                                                      obsWeights = s.weights[subset],
+                                                      control = A[["control"]],
+                                                      cvControl = A[["cvControl"]],
+                                                      env = A[["env"]]))
       ps[[i]] <- fit_i$SL.predict
     }
 
@@ -1012,7 +1020,6 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- rep(0, nrow(ps))
   w <- rep(0, nrow(ps))
   for (i in seq_len(nunique(t))) {
     w[t == levels(t)[i]] <- 1/ps[t == levels(t)[i], i]
@@ -1040,7 +1047,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   return(obj)
 }
 weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...) {
-  A <- list(...)
+  A <- B <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
   t <- treat[subset]
@@ -1051,25 +1058,32 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
     covs <- cbind(covs, missing.ind)
   }
 
-  covs <- apply(covs, 2, make.closer.to.1)
+  covs <- data.frame(apply(covs, 2, make.closer.to.1))
+
+  if (ncol(covs) > 1) {
+    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(remove.collinearity(covs))]
+    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  }
 
   stabilize <- TRUE
 
   for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[[f]]}
-    if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+    if (f == "method") {if (is_null(B[["SL.method"]])) B[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]}
+    else if (f == "env") {if (is_null(B[["env"]])) B[["env"]] <- environment(SuperLearner::SuperLearner)}
+    else if (is_null(B[[f]])) B[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
-  fit <- SuperLearner::SuperLearner(t, covs, newX = NULL,
-                                    family = gaussian(),
-                                    SL.library = A[["SL.library"]],
-                                    verbose = TRUE,
-                                    method = A[["SL.method"]],
-                                    id = NULL,
-                                    obsWeights = s.weights[subset],
-                                    control = A[["control"]],
-                                    cvControl = A[["cvControl"]],
-                                    env = A[["env"]])
+  fit <- do.call(SuperLearner::SuperLearner, list(Y = t,
+                                                  X = covs, newX = covs,
+                                                  family = gaussian(),
+                                                  SL.library = B[["SL.library"]],
+                                                  verbose = FALSE,
+                                                  method = B[["SL.method"]],
+                                                  id = NULL,
+                                                  obsWeights = s.weights[subset],
+                                                  control = B[["control"]],
+                                                  cvControl = B[["cvControl"]],
+                                                  env = B[["env"]]))
     p.denom <- t - fit$SL.predict
 
     if (isTRUE(A[["use.kernel"]])) {
@@ -1089,9 +1103,12 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
     }
 
     if (stabilize) {
-      num.fit <- do.call("glm", c(list(t ~ 1, data = data.frame(t = t),
+      if (is_null(A$link)) A$link <- "identity"
+      if (is_null(A$family)) A$family <- gaussian(link = A$link)
+      num.fit <- do.call("glm", c(list(t ~ 1,
+                                       data = data.frame(t = t),
                                        weights = s.weights[subset],
-                                       family = A$family,
+                                       family = A[["family"]],
                                        control = list()),
                                   A[names(A %nin% "family")]),
                          quote = TRUE)
