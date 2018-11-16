@@ -1,12 +1,12 @@
 weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
                      exact = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE,
-                     verbose = FALSE, ...) {
+                     verbose = FALSE, include.obj = FALSE, ...) {
 
   ## Checks and processing ----
 
   #Checks
   if (is_null(ps)) {
-    if (is_null(formula) || is_null(class(formula))) {
+    if (is_null(formula) || is_null(class(formula)) || !is.formula(formula, 2)) {
       stop("formula must be a formula relating treatment to covariates.", call. = FALSE)
     }
   }
@@ -58,7 +58,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   reported.covs <- t.c[["reported.covs"]]
   covs <- t.c[["model.covs"]]
   treat <- t.c[["treat"]]
-  treat.name <- t.c[["treat.name"]]
+  # treat.name <- t.c[["treat.name"]]
 
   if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
   if (is_null(treat)) stop("No treatment variable was specified.", call. = FALSE)
@@ -98,7 +98,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   moments <- moments.int["moments"]; int <- moments.int["int"]
 
   call <- match.call()
-  args <- list(...)
+  # args <- list(...)
 
   ## Running models ----
 
@@ -119,6 +119,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           moments = moments,
                           int = int,
                           ps = ps,
+                          include.obj = include.obj,
                           ...)
   })
 
@@ -126,8 +127,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   warn <- FALSE
   test.w <- obj$w*s.weights
-  if (treat.type == "continuous") {if (sd(test.w)/mean(test.w) > 4) warn <- TRUE}
-  else {if (any(sapply(unique(treat), function(x) sd(test.w[treat == x])/mean(test.w[treat == x]) > 4))) warn <- TRUE}
+  if (treat.type == "continuous") {if (sd(test.w, na.rm = TRUE)/mean(test.w, na.rm = TRUE) > 4) warn <- TRUE}
+  else {if (any(sapply(unique(treat), function(x) sd(test.w[treat == x], na.rm = TRUE)/mean(test.w[treat == x], na.rm = TRUE) > 4))) warn <- TRUE}
   if (warn) warning("Some extreme weights were generated. Examine them with summary() and maybe trim them with trim().", call. = FALSE)
   # #Create new data set
   # #treat, covs, data (not in treat or covs), exact
@@ -149,7 +150,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
               #discarded = NULL,
               focal = if (reported.estimand == "ATT") focal else NULL,
               exact = processed.exact[["exact.components"]],
-              call = call)
+              call = call,
+              obj = obj$fit.obj)
   class(out) <- "weightit"
 
   return(out)
@@ -203,8 +205,8 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$coef.of.var <- c(all = sd(w)/mean(w))
 
     nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
-    nn[1, ] <- (sum(sw)^2)/sum(sw^2)
-    nn[2, ] <- (sum(w)^2)/sum((w)^2)
+    nn[1, ] <- ESS(sw)
+    nn[2, ] <- ESS(w)
     dimnames(nn) <- list(c("Unweighted", "Weighted"),
                          c("Total"))
 
@@ -233,10 +235,10 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     #dc <- weightit$discarded
 
     nn <- as.data.frame(matrix(0, nrow = 2, ncol = 2))
-    nn[1, ] <- c((sum(sw[t==0])^2)/sum(sw[t==0]^2),
-                 (sum(sw[t==1])^2)/sum(sw[t==1]^2))
-    nn[2, ] <- c((sum(w[t==0])^2)/sum((w[t==0])^2),
-                 (sum(w[t==1])^2)/sum((w[t==1])^2))
+    nn[1, ] <- c(ESS(sw[t==0]),
+                 ESS(sw[t==1]))
+    nn[2, ] <- c(ESS(w[t==0]),
+                 ESS(w[t==1]))
     # nn[3, ] <- c(sum(t==0 & dc==1), #Discarded
     #              sum(t==1 & dc==1))
     dimnames(nn) <- list(c("Unweighted", "Weighted"),
@@ -258,8 +260,8 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 
     nn <- as.data.frame(matrix(0, nrow = 2, ncol = nunique(t)))
     for (i in seq_len(nunique(t))) {
-      nn[1, i] <- (sum(sw[t==levels(t)[i]])^2)/sum(sw[t==levels(t)[i]]^2)
-      nn[2, i] <- (sum(w[t==levels(t)[i]])^2)/sum((w[t==levels(t)[i]])^2)
+      nn[1, i] <- ESS(sw[t==levels(t)[i]])
+      nn[2, i] <- ESS(w[t==levels(t)[i]])
       # nn[3, i] <- sum(t==levels(t)[i] & dc==1) #Discarded
     }
     dimnames(nn) <- list(c("Unweighted", "Weighted"),
