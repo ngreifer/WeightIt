@@ -7,6 +7,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   terms <- match.call()
 
   #Set up subfunctions
+  cor2z <- function(x) {return(.5 * log((1+x)/(1-x)))}
   F.aac.w <- function(i, data, t, covs, ps.model, ps.num, corr.type, mean.max, z.trans, s.weights) {
     GBM.fitted <- predict(ps.model, newdata = data, n.trees = floor(i),
                           type = "response")
@@ -22,9 +23,8 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     if (z.trans) corr_ <- cor2z(corr_)
 
     return(mean.max(abs(corr_)))
-
   }
-  cor2z <- function(x) {return(.5 * log((1+x)/(1-x)))}
+
   desc.wts.cont <- function(t, covs, weights, which.tree) {
     desc <- setNames(vector("list", 10),
                      c("ess", "n", "max.p.cor", "mean.p.cor", "rms.p.cor", "max.s.cor", "mean.s.cor", "rms.s.cor", "bal.tab", "n.trees"))
@@ -52,7 +52,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   check.package("wCorr")
 
   if (missing(stop.method)) {
-    warning("No stop.method was entered. Using \"s.mean.z\", the mean of the absolute Z-tranformed Spearman correlations.", call. = FALSE, immediate. = TRUE)
+    warning("No stop.method was entered. Using \"s.mean.z\", the mean of the absolute Z-transformed Spearman correlations.", call. = FALSE, immediate. = TRUE)
     stop.method <- "s.mean.z"
   }
   else {
