@@ -30,15 +30,15 @@ method.to.phrase <- function(method) {
   else {
     method <- tolower(method)
     if (method %in% c("ps")) return("propensity score weighting")
-  else if (method %in% c("gbm", "gbr", "twang")) return("generalized boosted modeling")
-  else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
-  else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
-  else if (method %in% c("entropy", "ebal", "ebalance")) return("entropy balancing")
-  else if (method %in% c("sbw")) return("stable balancing weights")
-  else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
-  else if (method %in% c("optweight", "opt")) return("targeted stable balancing weights")
-  else if (method %in% c("super", "superlearner")) return("propensity score weighting with SuperLearner")
-  else return("the chosen method of weighting")
+    else if (method %in% c("gbm", "gbr", "twang")) return("generalized boosted modeling")
+    else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
+    else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
+    else if (method %in% c("entropy", "ebal", "ebalance")) return("entropy balancing")
+    else if (method %in% c("sbw")) return("stable balancing weights")
+    else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
+    else if (method %in% c("optweight", "opt")) return("targeted stable balancing weights")
+    else if (method %in% c("super", "superlearner")) return("propensity score weighting with SuperLearner")
+    else return("the chosen method of weighting")
   }
 }
 process.s.weights <- function(s.weights, data = NULL) {
@@ -211,10 +211,10 @@ check.MSM.method <- function(method, is.MSM.method) {
   if (method %in% methods.with.MSM) {
     if (is_null(is.MSM.method)) is.MSM.method <- TRUE
     else if (!isTRUE(is.MSM.method)) {
-    message(paste0(method.to.phrase(method), " can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set is.MSM.method to TRUE."))
+      message(paste0(method.to.phrase(method), " can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set is.MSM.method to TRUE."))
     }
   }
-  else if (method %nin% methods.with.MSM) {
+  else {
     if (isTRUE(is.MSM.method)) warning(paste0(method.to.phrase(method), " cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point."),
                                        call. = FALSE, immediate. = TRUE)
     is.MSM.method <- FALSE
@@ -290,6 +290,43 @@ remove.collinearity <- function(mat, with.intercept = TRUE) {
 
   return(mat[, keep, drop = FALSE])
 }
+int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, center = FALSE, sep = " * ") {
+  #Adds to data frame interactions and polynomial terms; interaction terms will be named "v1 * v2" and polynomials will be named "v1_2"
+  #mat=matrix input
+  #ex=matrix of variables to exclude in interactions and polynomials; a subset of df
+  #int=whether to include interactions or not; currently only 2-way are supported
+  #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
+  #nunder=number of underscores between variables
+
+  if (is_not_null(ex)) d <- mat[, colnames(mat) %nin% colnames(ex), drop = FALSE]
+  else d <- mat
+  binary.vars <- apply(d, 2, is_binary)
+  if (center) {
+    d[,!binary.vars] <- center(d[, !binary.vars, drop = FALSE])
+  }
+  nd <- ncol(d)
+  nrd <- nrow(d)
+  no.poly <- binary.vars
+  npol <- nd - sum(no.poly)
+  new <- matrix(0, ncol = (poly-1)*npol + int*(.5*(nd)*(nd-1)), nrow = nrd)
+  nc <- ncol(new)
+  new.names <- character(nc)
+  if (poly > 1 && npol != 0) {
+    for (i in 2:poly) {
+      new[, (1 + npol*(i - 2)):(npol*(i - 1))] <- apply(d[, !no.poly, drop = FALSE], 2, function(x) x^i)
+      new.names[(1 + npol*(i - 2)):(npol*(i - 1))] <- paste0(colnames(d)[!no.poly], num_to_superscript(i))
+    }
+  }
+  if (int && nd > 1) {
+    new[,(nc - .5*nd*(nd-1) + 1):nc] <- matrix(t(apply(d, 1, combn, 2, prod)), nrow = nrd)
+    new.names[(nc - .5*nd*(nd-1) + 1):nc] <- combn(colnames(d), 2, paste, collapse = sep)
+  }
+
+  single.value <- apply(new, 2, all_the_same)
+  colnames(new) <- new.names
+
+  return(new[, !single.value, drop = FALSE])
+}
 
 #Shared with cobalt
 word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
@@ -342,40 +379,6 @@ binarize <- function(variable) {
   newvar <- setNames(ifelse(!nas & variable.numeric==zero, 0, 1), names(variable))
   newvar[nas] <- NA
   return(newvar)
-}
-int.poly.f <- function(mat, ex=NULL, int=FALSE, poly=1, nunder=1, ncarrot=1) {
-  #Adds to data frame interactions and polynomial terms; interaction terms will be named "v1_v2" and polynomials will be named "v1_2"
-  #Only to be used in base.bal.tab; for general use see int.poly()
-  #mat=matrix input
-  #ex=matrix of variables to exclude in interactions and polynomials; a subset of df
-  #int=whether to include interactions or not; currently only 2-way are supported
-  #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
-  #nunder=number of underscores between variables
-
-  if (is_not_null(ex)) d <- mat[, colnames(mat) %nin% colnames(ex), drop = FALSE]
-  else d <- mat
-  nd <- ncol(d)
-  nrd <- nrow(d)
-  no.poly <- apply(d, 2, is_binary)
-  npol <- nd - sum(no.poly)
-  new <- matrix(0, ncol = (poly-1)*npol + int*(.5*(nd)*(nd-1)), nrow = nrd)
-  nc <- ncol(new)
-  new.names <- character(nc)
-  if (poly > 1 && npol != 0) {
-    for (i in 2:poly) {
-      new[, (1 + npol*(i - 2)):(npol*(i - 1))] <- apply(d[, !no.poly, drop = FALSE], 2, function(x) x^i)
-      new.names[(1 + npol*(i - 2)):(npol*(i - 1))] <- paste0(colnames(d)[!no.poly], num_to_superscript(i))
-    }
-  }
-  if (int && nd > 1) {
-    new[,(nc - .5*nd*(nd-1) + 1):nc] <- matrix(t(apply(d, 1, combn, 2, prod)), nrow = nrd)
-    new.names[(nc - .5*nd*(nd-1) + 1):nc] <- combn(colnames(d), 2, paste, collapse=paste0(replicate(nunder, "_"), collapse = ""))
-  }
-
-  single.value <- apply(new, 2, all_the_same)
-  colnames(new) <- new.names
-  #new <- setNames(data.frame(new), new.names)[!single.value]
-  return(new[, !single.value, drop = FALSE])
 }
 num_to_superscript <- function(x) {
   nums <- setNames(c("\u2070",
@@ -592,6 +595,26 @@ check_if_zero <- function(x) {
 is_binary <- function(x) !nunique.gt(x, 2)
 is_null <- function(x) length(x) == 0L
 is_not_null <- function(x) !is_null(x)
+probably.a.bug <- function() {
+  fun <- paste(deparse(sys.call(-1)), collapse = "\n")
+  stop(paste0("An error was produced and is likely a bug. Please let the maintainer know a bug was produced by the function\n",
+              fun), call. = FALSE)
+}
+ESS <- function(w) {
+  sum(w)^2/sum(w^2)
+}
+center <- function(x, na.rm = TRUE, at = NULL) {
+  if (!is.numeric(x)) warning("x is not numeric and will not be centered.")
+  else {
+    if (is.matrix(x)) x <- apply(x, 2, center, na.rm = na.rm, at = at)
+    else {
+      if (is_null(at)) at <- mean(x, na.rm = na.rm)
+      else if (!is.numeric(at)) stop("at must be numeric.")
+      x <- x - at
+    }
+  }
+  return(x)
+}
 
 #Other helpful tools
 ##Check if value is between other values
