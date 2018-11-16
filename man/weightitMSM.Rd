@@ -13,6 +13,7 @@ weightitMSM(formula.list,
             moments = 1,
             int = FALSE,
             verbose = FALSE,
+            is.MSM.method,
             ...)
 
 \method{print}{weightitMSM}(x, ...)
@@ -53,6 +54,9 @@ a vector of sampling weights or the name of a variable in \code{data} that conta
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.
+}
+  \item{is.MSM.method}{
+whether the method estimates weights for multiple time points all at once (\code{TRUE}) or by estimating weights at each time point and then multiplying them together (\code{FALSE}). This is only relevant for \code{method = "optweight")}, which estimates weights for longitudinal treatments all at once, and for user-specified functions.
 }
   \item{...}{
 other arguments for functions called by \code{weightit} that control aspects of fitting that are not covered by the above arguments. See Details at \code{\link{weightit}}.

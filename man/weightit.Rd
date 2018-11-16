@@ -53,10 +53,10 @@ A vector of sampling weights or the name of a variable in \code{data} that conta
 A vector of propensity scores or the name of a variable in \code{data} containing propensity scores. If not \code{NULL}, \code{method} is ignored, and the propensity scores will be used to create weights. \code{formula} must include the treatment variable in \code{data}, but the listed covariates will play no role in the weight estimation.
 }
   \item{moments}{
-\code{numeric}; for entropy balancing, empirical balancing callibration weights, and stable balancing weights, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}.
+\code{numeric}; for entropy balancing, empirical balancing callibration weights, optimization-based weights, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}.
 }
   \item{int}{
-\code{logical}; for entropy balancing, empirical balancing callibration weights, and stable balancing weights, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
+\code{logical}; for entropy balancing, empirical balancing callibration weights, and soptimization-based weights, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.
@@ -74,7 +74,6 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
   \item{weights}{The estimated weights, one for each unit.}
   \item{treat}{The values of the treatment variable.}
   \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
-  \item{data}{The data.frame originally entered to \code{weightit()}.}
   \item{estimand}{The estimand requested.}
   \item{method}{The weight estimation method specified.}
   \item{ps}{The estimated or provided propensity scores.}
@@ -84,7 +83,7 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
 \details{
 The primary purpose of \code{weightit()} is as a dispatcher to other functions in other packages that perform the estimation of balancing weights. These functions are identified by a name, which is used in \code{method} to request them. Each method has some slight distinctions in how it is called, but in general, simply entering the method will cause \code{weightit()} to generate the weights correctly using the function. To use each method, the package containing the function must be installed, or else an error will appear. Below are the methods allowed and some information about each.
 \describe{
-\item{\code{"ps"}}{\strong{Propensity score weighting using GLM.} For binary treatments, this method estimates the propensity scores using \code{glm()}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li, Morgan, & Zaslavsky (2016), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Li & Greene (2013).
+\item{\code{"ps"}}{\strong{Propensity score weighting using GLM.} For binary treatments, this method estimates the propensity scores using \code{glm()}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017).
 
 For multinomial treatments, the propensity scores are estimated using multinomial regression from one of two functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{mlogit()} from the \pkg{mlogit} package is used, and for the Bayesian probit  (\code{"bayes.probit"}) link, \code{MNP()} from the \pkg{MNP} package is used. If \code{mlogit} in not installed, a series of binary regressions using \code{glm()} will be run instead, with estimated propensities normalized to sum to 1. These are the only three links allowed for multinomial treatments at this time. (These methods can fail to converge, yielding errors that may seem foreign.)
 
@@ -102,9 +101,13 @@ For continuous treatments, the generalized propensity score is estimated using \
 
 \item{\code{"ebal"}}{\strong{Entropy balancing.} This method uses the \code{ebalance()} function from the \pkg{ebal} package to estimate weights. It works with binary and multinomial treatments. For binary treatments, the ATE, ATT, and ATC can be requested. For multinomial treatments, the ATE and ATT can be requested. If the ATT is requetsed with a mutlinomial treatment, one treatment level must be entered to \code{focal} to serve as the "treated". Sampling weights are supported and are automatically entered into \code{base.weight} in \code{ebal()}. When \code{stabilize = TRUE}, \code{ebalance.trim()} is used to trim and reduce the variance of the weights. The other arguments to \code{ebalance()} can be specified in the call to \code{weightit()}. See \code{\link[ebal]{ebalance}} for details.}
 
-\item{\code{"sbw"}}{\strong{Stable balancing weights.} This method uses the \code{sbw()} function from the \pkg{sbw} package to estimate weights. For binary treatments, the ATE, ATT, and ATC can be requested. For multinomial treatments, the ATE and ATT can be requested. If the ATT is requested with a multinomial treatment, one treatment level must be entered to \code{focal} to serve as the "treated". Sampling weights are supported for all estimands. The other arguments to \code{sbw()} can be specified in the call to \code{weightit()}. See \code{sbw} for details. There are some slight difference between the default options in \code{weightit()} and \code{sbw()}; importantly, in \code{weightit()} when \code{bal_tols_sd} is \code{TRUE} (the default), the standardized mean difference is not used for categorical variables, and the demoninator of the standardized mean difference corresponds to the standard deviation of the target group (e.g., for the ATT, the denominator is the standard deviation of the treated group).}
+%\item{\code{"sbw"}}{\strong{Stable balancing weights.} This method uses the \code{sbw()} function from the \pkg{sbw} package to estimate weights. For binary treatments, the ATE, ATT, and ATC can be requested. For multinomial treatments, the ATE and ATT can be requested. If the ATT is requested with a multinomial treatment, one treatment level must be entered to \code{focal} to serve as the "treated". Sampling weights are supported for all estimands. The other arguments to \code{sbw()} can be specified in the call to \code{weightit()}. See \code{sbw} for details. There are some slight difference between the default options in \code{weightit()} and \code{sbw()}; importantly, in \code{weightit()} when \code{bal_tols_sd} is \code{TRUE} (the default), the standardized mean difference is not used for categorical variables, and the demoninator of the standardized mean difference corresponds to the standard deviation of the target group (e.g., for the ATT, the denominator is the standard deviation of the treated group).}
 
-\item{\code{"ebcw"}}{\strong{Empirical balancing calibration weighting.} This method uses the \code{ATE()} function from the \pkg{ATE} package to estimate weights. It works with binary and multinomial treatments. For binary treatments, the ATE, ATT, and ATC can be requested. For multinomial treatments, the ATE and ATT can be requested, and an argument ot \code{focal} must be specified for the ATT. Sampling weights are supported for all estimands. The other arguments to \code{ATE()} can be specified in the call to \code{weightit()}. See \code{\link[ATE]{ATE}} for details.}
+\item{\code{"ebcw"}}{\strong{Empirical balancing calibration weighting.} This method uses the \code{ATE()} function from the \pkg{ATE} package to estimate weights. It works with binary and multinomial treatments. For binary treatments, the ATE, ATT, and ATC can be requested. For multinomial treatments, the ATE and ATT can be requested, and an argument to \code{focal} must be specified for the ATT. Sampling weights are supported for all estimands. The other arguments to \code{ATE()} can be specified in the call to \code{weightit()}. See \code{\link[ATE]{ATE}} for details.}
+
+\item{\code{"optweight"}}{\strong{Optimization-based weights.} This method uses the \code{optweight()} function from the \pkg{optweight} package to estimate weights. It works with binary, multinomial, continuous, and longitudinal treatments. For binary treatments, the ATE, ATT, and ATC can be requested. For multinomial treatments, the ATE and ATT can be requested, and an argument to \code{focal} must be specified for the ATT. Sampling weights are supported for all estimands. The other arguments to \code{optweight()} can be specified in the call to \code{optweight()}. Note that \code{weightit()} processes the formula containing the covariates differently from how \code{optweight()} processes it; importantly, when using \code{tols} to specify balance thresholds in \code{weightit()}, a threshold must be set for each level of factor variables. This problem is aleviated if only one tolerance value is set for all covariates. When using \code{moments} or \code{int}, it is recommended to supply only one tolerance value. See \code{\link[optweight]{optweight}} for details on other options and arguments. Because \code{optweight()} offers very similar functionality to \code{weightit()}, it is recommended to use that function directly. The syntax and output are almost identical.}
+
+\item{\code{"super"}}{\strong{Propensity score weighting using SuperLearner.} This method uses the \code{SuperLearner()} function from the \pkg{SuperLearner} package to estimate propensity scores, which are used to compute weights. It works with binary, multinomial, and continuous treatments. For binary treatments, the ATE, ATT, ATC, ATO and ATM can be requested. For multinomial treatments, the ATE, ATT, ATO, and ATM can be requested. An argument to \code{focal} must be specified for the ATT. Sampling weights are supported for all estimands using \code{s.weights}, which replaces the \code{obsWeights} argument in \code{SuperLearner()}. The other arguments to \code{SuperLearner()} can be specified in the call to \code{weightit()}. An argument to \code{SL.library} must be supplied; use \code{SuperLearner::listWrappers()} to see all options (\pkg{SuperLearner} may to be loaded for this to work). To pass an argument to \code{method} in \code{SuperLearner()}, an argument to \code{SL.method} must be used instead (because \code{method} is already used in \code{weightit()}). See \code{\link[SuperLearner]{SuperLearner}} for details. All arguments and options that work for \code{method = "ps"} work here as well.}
 }
 }
 
@@ -129,7 +132,6 @@ Li, F., Morgan, K. L., & Zaslavsky, A. M. (2016). Balancing Covariates via Prope
 
 Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. The International Journal of Biostatistics, 9(2). \doi{10.1515/ijb-2012-0030}
 
-
  - Other estimands
 
 Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. Multivariate Behavioral Research, 46(3), 399–424. \doi{10.1080/00273171.2011.568786}
@@ -150,17 +152,33 @@ Fong, Christian, Chad Hazlett, and Kosuke Imai (2015). Parametric and Nonparamet
 
 Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25–46. \doi{10.1093/pan/mpr025}
 
-\code{method = "sbw"}
-
-Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. Journal of the American Statistical Association, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
-
 \code{method = "ebcw"}
 
 Chan, K. C. G., Yam, S. C. P., & Zhang, Z. (2016). Globally efficient non-parametric inference of average treatment effects by empirical balancing calibration weighting. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 78(3), 673–700. \doi{10.1111/rssb.12129}
 
+\code{method = "optweight"}
+
+Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. Journal of the American Statistical Association, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
+
+\code{method = "super"}
+
+Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity Score Estimators’ Robustness to Model Misspecification Using Super Learner. American Journal of Epidemiology, 181(2), 108–119. \doi{10.1093/aje/kwu253}
+
 \strong{Multinomial Treatments}
 
 \code{method = "ps"}
+
+ - \code{estimand = "ATO"}
+
+Li, F., & Li, F. (2018). Propensity Score Weighting for Causal Inference with Multi-valued Treatments. ArXiv:1808.05339 [Stat]. Retrieved from http://arxiv.org/abs/1808.05339
+
+
+ - \code{estimand = "ATM"}
+
+Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J. J., Glynn, R. J., & Franklin, J. M. (2017). Matching weights to simultaneously compare three treatment groups: Comparison to three-way matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395. \doi{10.1097/EDE.0000000000000627}
+
+
+ - Other estimands
 
 McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 
@@ -185,11 +203,7 @@ Fong, C., Hazlett, C. , and Imai, K. (2015). Parametric and Nonparametric Covari
 }
 
 \note{
-The \pkg{sbw} package is not on CRAN and can be downloaded with the following code:
-\code{install.packages("http://www.jrzubizarreta.com/sbw_0.0.2.tar.gz", repos = NULL, type="source")}
-
-The other packages are on CRAN and can be installed in the regular way.
-
+\code{method = "sbw"} has been deprecated in favor of \code{optweight}, which does the same thing.
 }
 \examples{
 library("cobalt")

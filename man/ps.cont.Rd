@@ -57,11 +57,17 @@ If \code{TRUE}, information will be printed to monitor the the progress of the f
 }
 \item{sampw}{Optional sampling weights.
 }
-\item{optimize}{A numeric value, either \code{0}, \code{1}, or \code{2}. If \code{0}, balance will be checked for every tree, and the tree with the best balance will be the one used to generate the final weights. If \code{1}, the default, balance will be checked for 25 trees, and then \code{\link{optimize}} will be used to find the tree with the best balance within the tree interval chosen. If \code{2}, \code{optimize} will be used to find the tree that yields the best balance. \code{0} takes the longest but is guaranteed to find the best balance among the trees. \code{2} is the quickest but will often choose a tree that that suboptimal balance, though not by much. \code{1} is a compromise between speed and comprehensiveness and is the algorthm implemented in \pkg{twang}.
+\item{optimize}{
+A numeric value, either \code{0}, \code{1}, or \code{2}. If \code{0}, balance will be checked for every tree, and the tree with the best balance will be the one used to generate the final weights. If \code{1}, the default, balance will be checked for 25 trees, and then \code{\link{optimize}} will be used to find the tree with the best balance within the tree interval chosen. If \code{2}, \code{optimize} will be used to find the tree that yields the best balance. \code{0} takes the longest but is guaranteed to find the best balance among the trees. \code{2} is the quickest but will often choose a tree that that suboptimal balance, though not by much. \code{1} is a compromise between speed and comprehensiveness and is the algorithm implemented in \pkg{twang}.
 }
-\item{use.kernel}{Whether to use kernel density estimation as implemented in \code{\link{density}} to estimate the numerator of the weights. If \code{TRUE}, \code{density} will be used. If \code{FALSE}, the default, a normal density will be assumed and will be estimated using \code{\link{dnorm}}.}
-\item{object, x}{A \code{ps.cont} object.}
-\item{\dots}{For \code{ps.cont}, if \code{use.density = TRUE}, additional arguments to \code{\link{density}}, which is used to produce the density for the numerator of the weights. These include \code{bw}, \code{adjust}, \code{kernel}, and \code{n}. The default values are the defaults for \code{density}, except \code{n}, which is 10 times the number of units.
+\item{use.kernel}{
+Whether to use kernel density estimation as implemented in \code{\link{density}} to estimate the numerator of the weights. If \code{TRUE}, \code{density} will be used. If \code{FALSE}, the default, a normal density will be assumed and will be estimated using \code{\link{dnorm}}.
+}
+\item{object, x}{
+A \code{ps.cont} object.
+}
+\item{\dots}{
+For \code{ps.cont}, if \code{use.density = TRUE}, additional arguments to \code{\link{density}}, which is used to produce the density for the numerator of the weights. These include \code{bw}, \code{adjust}, \code{kernel}, and \code{n}. The default values are the defaults for \code{density}, except \code{n}, which is 10 times the number of units.
 
 For \code{summary.ps.cont}, additional arguments affecting the summary produced.}
 }
@@ -119,7 +125,7 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 \author{
 Noah Greifer
 
-\code{ps.cont} is heavily adapted from the R code in Zhu, Coffman, & Ghosh (2015). In contrast with their code, \code{ps.cont} uses weighted Pearson and Spearman correlations rather than probability weighted bootstrapped correlations and allows for different degrees of optimization in searching for the best solution. \code{ps.cont} also takes inspiration from \code{ps} in \pkg{twang}.
+\code{ps.cont} is heavily adapted from the R code in Zhu, Coffman, & Ghosh (2015). In contrast with their code, \code{ps.cont} uses weighted Pearson and Spearman correlations rather than probability weighted bootstrapped correlations, allows for different degrees of optimization in searching for the best solution, and allows for the use of kernel density estimation for the generalized propensity score. \code{ps.cont} also takes inspiration from \code{ps} in \pkg{twang}.
 }
 
 \seealso{
