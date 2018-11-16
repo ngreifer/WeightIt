@@ -3,7 +3,7 @@ trim <- function(x, ...) {
 }
 
 trim.weightit <- function(x, at = .99, lower = FALSE, ...) {
-  x[["weights"]] <- trim.weights(x[["weights"]],
+  x[["weights"]] <- trim_weights(x[["weights"]],
                                  at = at,
                                  treat = x[["treat"]],
                                  estimand = x[["estimand"]],
@@ -13,21 +13,11 @@ trim.weightit <- function(x, at = .99, lower = FALSE, ...) {
   return(x)
 }
 trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
-  if (is_not_null(treat) && is_null(attr(treat, "treat.type"))) {
-    nunique.treat <- nunique(treat)
-    if (nunique.treat == 2) {
-      treat.type <- "binary"
+  if (is_not_null(treat)) {
+    if (is_null(attr(treat, "treat.type"))) {
+      treat <- get.treat.type(treat)
     }
-    else if (nunique.treat < 2) {
-      stop("The treatment must have at least two unique values.", call. = FALSE)
-    }
-    else if (is.factor(treat) || is.character(treat)) {
-      treat.type <- "multinomial"
-      treat <- factor(treat)
-    }
-    else {
-      treat.type <- "continuous"
-    }
+    treat.type <- attr(treat, "treat.type")
   }
   else treat.type <- "continuous"
 
@@ -50,7 +40,7 @@ trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
     focal <- NULL
   }
 
-  w <- trim.weights(x, at = at,
+  w <- trim_weights(x, at = at,
                     treat = treat,
                     estimand = estimand,
                     focal = focal,
@@ -59,7 +49,7 @@ trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
   return(w)
 }
 
-trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL, lower) {
+trim_weights <- function(weights, at, treat, estimand, focal, treat.type = NULL, lower) {
   estimand <- toupper(estimand)
   if (treat.type != "continuous" && (length(estimand) != 1 ||
       !is.character(estimand) ||
@@ -70,7 +60,7 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
   f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
   focal <- f.e.r[["focal"]]
   estimand <- f.e.r[["estimand"]]
-  reported.estimand <- f.e.r[["reported.estimand"]]
+  #reported.estimand <- f.e.r[["reported.estimand"]]
 
   if (is_null(at) || isTRUE(at == 0)) {
     at <- NULL
@@ -90,7 +80,7 @@ trim.weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
         trim.w <- quantile(weights[treat != focal], probs = trim.q, type = 3)
         weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
         weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
-        message(paste0("Trimming weights where treat \u2260 ", focal, " to ", word.list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
+        message(paste0("Trimming weights where treat is not ", focal, " to ", word.list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
       }
       else {
         trim.w <- quantile(weights, probs = trim.q, type = 3)
