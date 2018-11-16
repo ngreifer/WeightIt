@@ -1,7 +1,9 @@
-weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.factor, estimand, focal, stabilize, ps, moments, int, is.MSM.method = FALSE, ...){
+weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.factor, estimand, focal, stabilize, ps, moments, int, is.MSM.method = FALSE, include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
-  out <- setNames(vector("list", 2), c("w", "ps"))
+  out <- setNames(vector("list", 3), c("w", "ps", "fit.obj"))
+
+  if (include.obj) fit.obj <- setNames(vector("list", nlevels(exact.factor)), levels(exact.factor))
 
   for (i in levels(exact.factor)) {
     #Run method
@@ -225,10 +227,17 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
     if (is_null(obj$w) || all(is.na(obj$w))) warning("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
     if (any(is.na(obj$w))) warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA values will be set to 0.", call. = FALSE)
     obj$w[is.na(obj$w)] <- 0
+    if (any(!is.finite(obj$w))) probably.a.bug()
+
     out$w[exact.factor == i] <- obj$w
     if (is_not_null(obj$ps)) out$ps[exact.factor == i] <- obj$ps
 
+    if (include.obj) fit.obj[[i]] <- obj$fit.obj
+  }
 
+  if (include.obj) {
+    if (nlevels(exact.factor) == 1) fit.obj <- fit.obj[[1]]
+    out$fit.obj <- fit.obj
   }
 
   return(out)
