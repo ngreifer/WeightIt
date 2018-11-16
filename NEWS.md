@@ -3,9 +3,11 @@ WeightIt News and Updates
 
 Version 0.5.0
 
-* Added `SuperLearner` method to estimate propensity scores.
+* Added `super` method to estimate propensity scores using the `SuperLearner` package.
 
-* Added `optweight` method to estimate weights (but you should probably just use the `optweight` package).
+* Added `optweight` method to estimate weights using optimization (but you should probably just use the `optweight` package).
+
+* `weightit()` now uses the correct formula to estimate weights for the ATO with multinomial treatments as described by Li & Li (2018).
 
 Version 0.4.0
 
