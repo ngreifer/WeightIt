@@ -9,6 +9,10 @@ Version 0.5.0
 
 * `weightit()` now uses the correct formula to estimate weights for the ATO with multinomial treatments as described by Li & Li (2018).
 
+* Added `include.obj` option in `weightit()` and `weightitMSM()` to include the fitted object in the output object for inspection. For example, with `method = "ps"`, the `glm` object containing the propensity score model will be included in the output.
+
+* Rearranged the help pages. Each method now has its own documentation page, linked from the `weightit` help page.
+
 Version 0.4.0
 
 * Added `trim()` function to trim weights.
