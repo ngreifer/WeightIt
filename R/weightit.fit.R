@@ -239,6 +239,5 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
     if (nlevels(by.factor) == 1) fit.obj <- fit.obj[[1]]
     out$fit.obj <- fit.obj
   }
-
   return(out)
 }

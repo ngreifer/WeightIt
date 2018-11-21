@@ -506,7 +506,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, env = .GlobalEnv, ..
   covs.matrix <- model.matrix(tt.covs, data = covs,
                               contrasts.arg = lapply(Filter(is.factor, covs),
                                                      contrasts, contrasts=FALSE))
-  #attr(covs, "terms") <- NULL
+  attr(covs, "terms") <- NULL
 
   return(list(reported.covs = covs,
               model.covs = covs.matrix,
