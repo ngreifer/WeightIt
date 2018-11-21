@@ -14,7 +14,7 @@ Suggests:
     CBPS (>= 0.18),
     ebal (>= 0.1-6),
     ATE (>= 0.2.0),
-    optweight (>=0.2.0),
+    optweight (>= 0.2.0),
     SuperLearner,
     mlogit (>= 0.3-0),
     MNP (>= 3.1-0),
