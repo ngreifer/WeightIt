@@ -134,37 +134,37 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
               estimand = estimand,
               reported.estimand = reported.estimand))
 }
-process.exact <- function(exact, data, treat, treat.name = NULL) {
+process.by <- function(by, data, treat, treat.name = NULL) {
 
-  ##Process exact
-  bad.exact <- FALSE
-  acceptable.exacts <- names(data)
-  exact.vars <- character(0)
-  exact.components <- NULL
+  ##Process by
+  bad.by <- FALSE
+  acceptable.bys <- names(data)
+  by.vars <- character(0)
+  by.components <- NULL
   n <- length(treat)
 
-  if (missing(exact) || is_null(exact)) exact.factor <- factor(rep(1, n))
-  else if (!is.atomic(exact)) bad.exact <- TRUE
-  else if (is.character(exact) && all(exact %in% acceptable.exacts)) {
-    exact.components <- data[exact]
-    exact.factor <- factor(apply(exact.components, 1, paste, collapse = "|"))
-    exact.vars <- exact
+  if (missing(by) || is_null(by)) by.factor <- factor(rep(1, n))
+  else if (!is.atomic(by)) bad.by <- TRUE
+  else if (is.character(by) && all(by %in% acceptable.bys)) {
+    by.components <- data[by]
+    by.factor <- factor(apply(by.components, 1, paste, collapse = "|"))
+    by.vars <- by
   }
-  else if (length(exact) == n) {
-    exact.components <- setNames(data.frame(exact), deparse(substitute(exact)))
-    exact.factor <- factor(exact.components[[1]])
-    exact.vars <- acceptable.exacts[vapply(acceptable.exacts, function(x) equivalent.factors(exact, data[[x]]), logical(1L))]
+  else if (length(by) == n) {
+    by.components <- setNames(data.frame(by), deparse(substitute(by)))
+    by.factor <- factor(by.components[[1]])
+    by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
   }
-  else bad.exact <- TRUE
+  else bad.by <- TRUE
 
-  if (bad.exact) stop("exact must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself.", call. = FALSE)
+  if (bad.by) stop("by must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself.", call. = FALSE)
 
-  if (any(vapply(levels(exact.factor), function(x) nunique(treat) != nunique(treat[exact.factor == x]), logical(1L)))) {
-    stop("Not all the groups formed by exact contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening exact.", call. = FALSE)
+  if (any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
+    stop("Not all the groups formed by by contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening by.", call. = FALSE)
   }
 
-  return(list(exact.components = exact.components,
-              exact.factor = exact.factor))
+  return(list(by.components = by.components,
+              by.factor = by.factor))
 }
 get.treat.type <- function(treat) {
   #Returns treat with treat.type attribute
@@ -208,7 +208,11 @@ check.moments.int <- function(method, moments, int) {
 }
 check.MSM.method <- function(method, is.MSM.method) {
   methods.with.MSM <- c("optweight")
-  if (method %in% methods.with.MSM) {
+  if (is.function(method)) {
+    if (isTRUE(is.MSM.method)) stop("Currently, only user-defined methods that work with is.MSM.method = FALSE are allowed.", call. = FALSE)
+    is.MSM.method <- FALSE
+  }
+  else if (method %in% methods.with.MSM) {
     if (is_null(is.MSM.method)) is.MSM.method <- TRUE
     else if (!isTRUE(is.MSM.method)) {
       message(paste0(method.to.phrase(method), " can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set is.MSM.method to TRUE."))
@@ -263,7 +267,10 @@ make.closer.to.1 <- function(x) {
     else return(x)
   }
 }
-remove.collinearity <- function(mat, with.intercept = TRUE) {
+make.full.rank <- function(mat, with.intercept = TRUE) {
+
+  if (!all(apply(mat, 2, is.numeric))) stop("All columns in mat must be numeric.", call. = FALSE)
+
   keep <- setNames(rep(TRUE, ncol(mat)), colnames(mat))
 
   #Variables that have only 1 value can be removed
