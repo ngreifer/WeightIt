@@ -7,12 +7,13 @@ weightitMSM(formula.list,
             data = NULL,
             method = "ps",
             stabilize = FALSE,
-            exact = NULL,
+            by = NULL,
             s.weights = NULL,
             num.formula = NULL,
             moments = 1,
             int = FALSE,
             verbose = FALSE,
+            include.obj = FALSE,
             is.MSM.method,
             ...)
 
@@ -40,8 +41,8 @@ a string of length 1 containing the name of the method that will be used to esti
 \item{num.formula}{
 optional; a one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernán (2008) for a discussion of how to specifiy this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
 }
-  \item{exact}{
-a vector or the names of variables in data for which weighting is to be done within catgories. For example, if \code{exact = "gender"}, weights will be generated seperately within each level of the variable \code{"gender"}.
+  \item{by}{
+a vector or the names of variables in data for which weighting is to be done within catgories. For example, if \code{by = "gender"}, weights will be generated seperately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message.
 }
   \item{s.weights}{
 a vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These are ignored for some methods.
