@@ -98,6 +98,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     treat.list[[i]] <- t.c[["treat"]]
     treat.name <- t.c[["treat.name"]]
     names(treat.list)[i] <- treat.name
+    names(reported.covs.list)[i] <- treat.name
 
     if (is_null(covs.list[[i]])) stop("No covariates were specified in the ", ordinal(i), " formula.", call. = FALSE)
     if (is_null(treat.list[[i]])) stop("No treatment variable was specified in the ", ordinal(i), " formula.", call. = FALSE)
@@ -184,7 +185,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
       })
       w.list[[i]] <- obj[["w"]]
       ps.list[[i]] <- obj[["ps"]]
-      obj.list[[i]] <- obj$fit.obj
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
@@ -240,8 +240,12 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     else stabout <- NULL
   }
 
+
   if (all_the_same(w)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
   if (all(sapply(ps.list, is_null))) ps.list <- NULL
+  else names(ps.list) <- names(treat.list)
+
+  if (include.obj) names(obj.list) <- names(treat.list)
 
   ## Assemble output object----
   out <- list(weights = w,
