@@ -1,10 +1,6 @@
 #Test
-source('~/Dropbox (Personal)/Research/R/WeightIt/R/weightit2method.R')
-source('~/Dropbox (Personal)/Research/R/WeightIt/R/functions_for_processing.R')
-source('~/Dropbox (Personal)/Research/R/WeightIt/R/weightit.R')
-#source('~/Dropbox (Personal)/Research/R/WeightIt/R/weightitMSM.R')
-source('~/Dropbox (Personal)/Research/R/WeightIt/R/weightitMSM2.R')
-source('~/Dropbox (Personal)/Research/R/WeightIt/R/weightit.fit.R')
+for (i in dir("R/")) source(paste0("R/", i))
+
 
 #Tests things quickly
 library("cobalt")
@@ -28,8 +24,7 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "ps", estimand =
               focal = "A", s.weights = s)
 
 W <- weightit(f.build("re78", covs), data = lalonde, method = "ps")
-W <- weightit(f.build("re78", covs), data = lalonde, method = "ps",
-              num.formula = ~ age + educ + race + married)
+W <- weightit(f.build("re78", covs), data = lalonde, method = "ps", use.kernel = T, plot = T)
 
 #method = "gbm"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
@@ -39,7 +34,11 @@ W <- weightit(f.build("treat", covs), data = lalonde, method = "gbr", estimand =
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATE")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATT",
-              focal = "A", s.weights = s)
+              focal = "A", s.weights = s, stop.method = "es.blarg")
+
+W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max", use.optimize = 2)
+W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max", use.kernel = TRUE)
+
 
 #method = "cbps"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "cbps", estimand = "ATE", over = FALSE)
@@ -63,11 +62,11 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "npcbps", estima
 W <- weightit(f.build("re78", covs), data = lalonde, method = "npcbps")
 
 #method = "ebal"
-W <- weightit(f.build("treat", covs), data = lalonde, method = "ebal", estimand = "ATE")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "ebal", estimand = "ATE", moments = 2)
 W <- weightit(f.build("treat", covs), data = lalonde, method = "ebal", estimand = "ATC",
               stabilize = TRUE)
 W <- weightit(f.build("treat", covs), data = lalonde, method = "entropy", estimand = "ATT",
-              s.weights = s)
+              s.weights = s, int = T)
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebal", estimand = "ATE")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebal", estimand = "ATT",
@@ -83,15 +82,32 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebcw", estimand
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebcw", estimand = "ATT",
               focal = "A", s.weights = s)
 
-m <- model.matrix(formula, data=lalonde,
-                  contrasts.arg = lapply(lalonde[sapply(lalonde, is.factor)],
-                                         contrasts, contrasts=FALSE))
+#method = "optweight"
+W <- weightit(f.build("treat", covs), data = lalonde, method = "optweight", estimand = "ATE")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "optweight", estimand = "ATC", tols = .1)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "optweight", estimand = "ATT",
+              s.weights = s, tols = .1)
 
-est.fun <- function(data, which.sample, stabilize) {
-  W <- weightit(f.build("treat", covs), data = data[which.sample,], method = "ps", stabilize = stabilize)
-  est <- coef(lm(re78 ~ treat, data = data[which.sample,], weights = get.w(W)))["treat"]
-  return(est)
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "optweight", estimand = "ATE")
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "optweight", estimand = "ATT",
+              focal = "A", s.weights = s)
+
+W <- weightit(f.build("re78", covs), data = lalonde, method = "optweight")
+
+#user defined
+
+myfun <- function(treat, covs, estimand, r = FALSE) {
+  d <- data.frame(treat, covs)
+  f <- formula(d)
+  ps <- glm(f, data = d, family = "binomial")$fitted
+  if (estimand == "ATT") w <- ifelse(treat == 1, 1, ps/(1-ps))
+  else if (estimand == "ATE") w <- ifelse(treat == 1, 1/ps, 1/(1-ps))
+
+  if (r) w[1] <- 100
+  return(list(w = w, ps = ps))
 }
+W <- weightit(f.build("treat", covs), data = lalonde, method = myfun, estimand = "ATE")
+
 
 library("twang")
 data(iptwExWide)
@@ -112,7 +128,14 @@ Wmsm <- weightitMSM(list(tx1 ~ use0 + gender + age,
                          tx3 ~ use2 + use1 + use0 + tx2 + tx1 + gender + age),
                     data = iptwExWide,
                     verbose = FALSE,
-                    method = "ebal")
+                    method = "ps")
+data(mnIptwExWide, package = "twang")
+Wmsm <- weightitMSM(list(tx1 ~ use0 + gender + age,
+                         tx2 ~ use1 + use0 + tx1 + gender + age,
+                         tx3 ~ use2 + use1 + use0 + tx2 + tx1 + gender + age),
+                    data = mnIptwExWide,
+                    verbose = FALSE,
+                    method = "ps", link = "logit")
 
 data("iptwExLong")
 pre <- iptwExLong$covariates
@@ -121,6 +144,13 @@ wide <- reshape(pre, timevar = "time",
                 idvar = c("ID"),
                 direction = "wide",
                 sep = "")
+long <- reshape(iptwExWide, timevar = "time",
+                        v.names = c("use", "tx"),
+                        idvar = c("ID"),
+                        direction = "long",
+                        sep = "",
+                varying = list(use = c("use0", "use1", "use2"),
+                               tx = c("tx1", "tx2", "tx3")))
 
 library("cobalt")
 data("lalonde_mis")
@@ -128,3 +158,10 @@ covs_mis <- subset(lalonde_mis, select = -c(re78, treat))
 
 W <- weightit(f.build("treat", covs_mis), data = lalonde_mis, estimand = "ATE",
               method = "ps")
+
+k <- 0;
+at <- .95
+while(k<.1) {
+  at <- at-.01
+  k <- max(abs(bal.tab(trim(W, at))$Balance$Corr.Adj[-1]))
+}
