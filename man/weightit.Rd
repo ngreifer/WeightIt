@@ -80,7 +80,7 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
   \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
   \item{estimand}{The estimand requested.}
   \item{method}{The weight estimation method specified.}
-  \item{ps}{The estimated or provided propensity scores.}
+  \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"ps"}, \code{"gbm"}, \code{"cbps"}, or \code{"super"}.}
   \item{s.weights}{The provided sampling weights.}
   \item{focal}{The focal variable if the ATT was requested with a multinomial treatment.}
   \item{obj}{When \code{include.obj = TRUE}, the fit object.}
