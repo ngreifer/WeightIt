@@ -1,6 +1,6 @@
-weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FALSE, exact = NULL, s.weights = NULL,
+weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FALSE, by = NULL, s.weights = NULL,
                         num.formula = NULL, moments = 1L, int = FALSE,
-                        verbose = FALSE, is.MSM.method, ...) {
+                        verbose = FALSE, include.obj = FALSE, is.MSM.method, ...) {
 
   A <- list(...)
 
@@ -39,6 +39,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
   else if (is.function(method)) {
     method.name <- paste(deparse(substitute(method)))
     method <- check.user.method(method)
+    if (missing(is.MSM.method)) is.MSM.method <- NULL
+    is.MSM.method <- check.MSM.method(method, is.MSM.method)
     attr(method, "name") <- method.name
   }
 
@@ -79,6 +81,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     }
   }
 
+  if (is_not_null(A[["exact"]]) && is_null(by)) {
+    message("'by' has replaced 'exact' in the weightitMSM() syntax, but 'exact' will always work.")
+    by <- A[["exact"]]
+  }
+
   reported.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
     stabout <- sw.list <- vector("list", length(formula.list))
 
@@ -110,7 +117,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     # w.data <- data.frame(treat.list[[i]], covs.list[[i]])
     # w.formula <- formula(w.data)
 
-    processed.exact <- process.exact(exact = exact, data = data,
+    processed.by <- process.by(by = by, data = data,
                                        treat = treat.list[[i]],
                                        treat.name = treat.name)
 
@@ -121,33 +128,39 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
   if (verbose) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
+  obj.list <- NULL
+
   if (is.MSM.method) {
     eval.verbose({
       #Returns weights (w)
       obj <- do.call("weightit.fit", c(list(covs = covs.list,
                                             treat = treat.list,
                                             s.weights = s.weights,
-                                            exact.factor = processed.exact[["exact.factor"]],
+                                            by.factor = processed.by[["by.factor"]],
                                             stabilize = stabilize,
                                             method = method,
                                             moments = moments,
                                             int = int,
                                             ps = NULL,
-                                            is.MSM.method = TRUE), A))
+                                            is.MSM.method = TRUE,
+                                            include.obj = include.obj), A))
     })
     w <- obj$w
     stabout <- NULL
+    obj.list <- obj$fit.obj
   }
   else {
     A[["estimand"]] <- NULL
     estimand <- "ATE"
 
     if (length(A[["link"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
-    if (length(A[["link"]]) == 1) A[["link"]] <- rep(A[["link"]], length(formula.list))
-    if (length(A[["family"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
-    if (length(A[["family"]]) == 1) A[["family"]] <- rep(A[["family"]], length(formula.list))
+    else if (length(A[["link"]]) == 1) A[["link"]] <- rep(A[["link"]], length(formula.list))
+    # if (length(A[["family"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
+    # if (length(A[["family"]]) == 1) A[["family"]] <- rep(A[["family"]], length(formula.list))
 
     for (i in seq_along(formula.list)) {
+      A_i <- A
+      if (is_not_null(A[["link"]])) A_i[["link"]] <- A[["link"]][[i]]
 
       ## Running models ----
 
@@ -157,7 +170,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                               treat = treat.list[[i]],
                                               treat.type = attr(treat.list[[i]], "treat.type"),
                                               s.weights = s.weights,
-                                              exact.factor = processed.exact[["exact.factor"]],
+                                              by.factor = processed.by[["by.factor"]],
                                               estimand = estimand,
                                               focal = NULL,
                                               stabilize = FALSE,
@@ -166,11 +179,12 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                               int = int,
                                               ps = NULL,
                                               is.MSM.method = FALSE,
-                                              link = A[["link"]][i],
-                                              family = A[["family"]][i]), A[names(A) %nin% c("link", "family")]))
+                                              include.obj = include.obj
+                                              ), A_i))
       })
       w.list[[i]] <- obj[["w"]]
       ps.list[[i]] <- obj[["ps"]]
+      obj.list[[i]] <- obj$fit.obj
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
@@ -198,7 +212,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                                    treat = treat.list[[i]],
                                                    treat.type = attr(treat.list[[i]], "treat.type"),
                                                    s.weights = s.weights,
-                                                   exact.factor = processed.exact[["exact.factor"]],
+                                                   by.factor = processed.by[["by.factor"]],
                                                    estimand = estimand,
                                                    focal = NULL,
                                                    stabilize = FALSE,
@@ -239,9 +253,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
               ps.list = ps.list,
               s.weights = s.weights,
               #discarded = NULL,
-              exact = processed.exact[["exact.components"]],
+              by = processed.by[["by.components"]],
               call = call,
-              stabilization = stabout
+              stabilization = stabout,
+              obj = obj.list
   )
 
   class(out) <- c("weightitMSM", "weightit")
@@ -255,7 +270,7 @@ print.weightitMSM <- function(x, ...) {
   trim <- attr(x[["weights"]], "trim")
 
   cat("A weightitMSM object\n")
-  cat(paste0(" - method: \"", x[["method"]], "\" (", method.to.phrase(x[["method"]]), ")\n"))
+  cat(paste0(" - method: \"", attr(x[["method"]], "name"), "\" (", method.to.phrase(x[["method"]]), ")\n"))
   cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
   cat(paste0(" - sampling weights: ", ifelse(all_the_same(x[["s.weights"]]), "none", "present"), "\n"))
   cat(paste0(" - number of time points: ", length(x[["treat.list"]]), " (", paste(names(x[["treat.list"]]), collapse = ", "), ")\n"))
@@ -274,8 +289,8 @@ print.weightitMSM <- function(x, ...) {
                  paste0("    + after time ", i-1, ": ", paste(names(x$covs.list[[i]]), collapse = ", "), "\n")
                }
              }), collapse = ""), collapse = "\n"))
-  if (is_not_null(x[["exact"]])) {
-    cat(paste0(" - exact: ", paste(names(x[["exact"]]), collapse = ", "), "\n"))
+  if (is_not_null(x[["by"]])) {
+    cat(paste0(" - by: ", paste(names(x[["by"]]), collapse = ", "), "\n"))
   }
   if (is_not_null(x$stabilization)) {
     cat(" - stabilized")
