@@ -1,8 +1,10 @@
 weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
-                     exact = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE,
+                     by = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE,
                      verbose = FALSE, include.obj = FALSE, ...) {
 
   ## Checks and processing ----
+
+  A <- list(...)
 
   #Checks
   if (is_null(ps)) {
@@ -89,9 +91,12 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   if (is_null(s.weights)) s.weights <- rep(1, n)
 
-  ##Process exact
-  processed.exact <- process.exact(exact = exact, data= data,
-                                   treat = treat)
+  ##Process by
+  if (is_not_null(A[["exact"]]) && is_null(by)) {
+    message("'by' has replaced 'exact' in the weightit() syntax, but 'exact' will always work.")
+    by <- A[["exact"]]
+  }
+  processed.by <- process.by(by = by, data = data, treat = treat)
 
   #Process moments and int
   moments.int <- check.moments.int(method, moments, int)
@@ -111,7 +116,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           covs = covs,
                           treat.type = treat.type,
                           s.weights = s.weights,
-                          exact.factor = processed.exact[["exact.factor"]],
+                          by.factor = processed.by[["by.factor"]],
                           estimand = estimand,
                           focal = focal,
                           stabilize = stabilize,
@@ -131,7 +136,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   else {if (any(sapply(unique(treat), function(x) sd(test.w[treat == x], na.rm = TRUE)/mean(test.w[treat == x], na.rm = TRUE) > 4))) warn <- TRUE}
   if (warn) warning("Some extreme weights were generated. Examine them with summary() and maybe trim them with trim().", call. = FALSE)
   # #Create new data set
-  # #treat, covs, data (not in treat or covs), exact
+  # #treat, covs, data (not in treat or covs), by
   # treat.in.data <- treat; attr(treat.in.data, "treat.type") <- NULL
   # data.list <- list(treat.in.data, reported.covs)
   # o.data <- setNames(do.call("data.frame", data.list[sapply(data.list, is_not_null)]),
@@ -149,7 +154,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
               s.weights = s.weights,
               #discarded = NULL,
               focal = if (reported.estimand == "ATT") focal else NULL,
-              exact = processed.exact[["exact.components"]],
+              by = processed.by[["by.components"]],
               call = call,
               obj = obj$fit.obj)
   class(out) <- "weightit"
@@ -169,8 +174,8 @@ print.weightit <- function(x, ...) {
   cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x[["treat"]]), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")"), ""))), "\n"))
   if (is_not_null(x[["estimand"]])) cat(paste0(" - estimand: ", x[["estimand"]], ifelse(is_not_null(x[["focal"]]), paste0(" (focal: ", x[["focal"]], ")"), ""), "\n"))
   cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
-  if (is_not_null(x[["exact"]])) {
-    cat(paste0(" - exact: ", paste(names(x[["exact"]]), collapse = ", "), "\n"))
+  if (is_not_null(x[["by"]])) {
+    cat(paste0(" - by: ", paste(names(x[["by"]]), collapse = ", "), "\n"))
   }
   if (is_not_null(trim)) {
     if (trim < 1) {

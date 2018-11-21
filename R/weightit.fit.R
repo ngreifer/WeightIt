@@ -1,11 +1,11 @@
-weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.factor, estimand, focal, stabilize, ps, moments, int, is.MSM.method = FALSE, include.obj = FALSE, ...){
+weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, estimand, focal, stabilize, ps, moments, int, is.MSM.method = FALSE, include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
   out <- setNames(vector("list", 3), c("w", "ps", "fit.obj"))
 
-  if (include.obj) fit.obj <- setNames(vector("list", nlevels(exact.factor)), levels(exact.factor))
+  if (include.obj) fit.obj <- setNames(vector("list", nlevels(by.factor)), levels(by.factor))
 
-  for (i in levels(exact.factor)) {
+  for (i in levels(by.factor)) {
     #Run method
     if (is.function(method)) {
       if (is.MSM.method) {
@@ -13,7 +13,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
                              covs.list = covs,
                              treat.list = treat,
                              s.weights = s.weights,
-                             subset = exact.factor == i,
+                             subset = by.factor == i,
                              stabilize = stabilize,
                              ...)
       }
@@ -22,7 +22,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
                              covs = covs,
                              treat = treat,
                              s.weights = s.weights,
-                             subset = exact.factor == i,
+                             subset = by.factor == i,
                              estimand = estimand,
                              focal = focal,
                              stabilize = stabilize,
@@ -36,7 +36,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2ps(covs = covs,
                            treat = treat,
                            s.weights = s.weights,
-                           subset = exact.factor == i,
+                           subset = by.factor == i,
                            estimand = estimand,
                            focal = focal,
                            stabilize = stabilize,
@@ -47,7 +47,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2ps.cont(covs = covs,
                                 treat = treat,
                                 s.weights = s.weights,
-                                subset = exact.factor == i,
+                                subset = by.factor == i,
                                 stabilize = stabilize,
                                 ps = ps,
                                 ...)
@@ -58,7 +58,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2optweight.msm(covs.list = covs,
                                       treat.list = treat,
                                       s.weights = s.weights,
-                                      subset = exact.factor == i,
+                                      subset = by.factor == i,
                                       moments = moments,
                                       int = int,
                                       ...)
@@ -68,7 +68,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
           obj <- weightit2optweight(covs = covs,
                                     treat = treat,
                                     s.weights = s.weights,
-                                    subset = exact.factor ==i,
+                                    subset = by.factor ==i,
                                     estimand = estimand,
                                     focal = focal,
                                     moments = moments,
@@ -77,7 +77,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         else if (treat.type == "continuous") {
           obj <- weightit2optweight.cont(covs = covs,
                                     treat = treat,
-                                    subset = exact.factor == i,
+                                    subset = by.factor == i,
                                     s.weights = s.weights,
                                     moments = moments,
                                     int = int,
@@ -93,7 +93,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
                             s.weights = s.weights,
                             estimand = estimand,
                             focal = focal,
-                            subset = exact.factor == i,
+                            subset = by.factor == i,
                             stabilize = stabilize,
                             ...)
       }
@@ -101,7 +101,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2gbm.cont(covs = covs,
                                 treat = treat,
                                 s.weights = s.weights,
-                                subset = exact.factor == i,
+                                subset = by.factor == i,
                                 stabilize = stabilize,
                                 ...)
       }
@@ -115,7 +115,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2cbps(covs = covs,
                              treat = treat,
-                             subset = exact.factor == i,
+                             subset = by.factor == i,
                              s.weights = s.weights,
                              stabilize = stabilize,
                              estimand = estimand,
@@ -125,7 +125,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
       else if (treat.type == "continuous") {
         obj <- weightit2cbps.cont(covs = covs,
                                   treat = treat,
-                                  subset = exact.factor == i,
+                                  subset = by.factor == i,
                                   s.weights = s.weights,
                                   #stabilize = stabilize,
                                   ...)
@@ -138,14 +138,14 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2npcbps(covs = covs,
                                treat = treat,
-                               subset = exact.factor == i,
+                               subset = by.factor == i,
                                s.weights = s.weights,
                                ...)
       }
       else if (treat.type == "continuous") {
         obj <- weightit2npcbps.cont(covs = covs,
                                     treat = treat,
-                                    subset = exact.factor == i,
+                                    subset = by.factor == i,
                                     s.weights = s.weights,
                                     ...)
       }
@@ -156,7 +156,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2ebal(covs = covs,
                              treat = treat,
                              s.weights = s.weights,
-                             subset = exact.factor == i,
+                             subset = by.factor == i,
                              estimand = estimand,
                              focal = focal,
                              stabilize = stabilize,
@@ -171,7 +171,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2super(covs = covs,
                            treat = treat,
                            s.weights = s.weights,
-                           subset = exact.factor == i,
+                           subset = by.factor == i,
                            estimand = estimand,
                            focal = focal,
                            stabilize = stabilize,
@@ -182,7 +182,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2super.cont(covs = covs,
                                 treat = treat,
                                 s.weights = s.weights,
-                                subset = exact.factor == i,
+                                subset = by.factor == i,
                                 stabilize = stabilize,
                                 ps = ps,
                                 ...)
@@ -193,7 +193,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2sbw(covs = covs,
                             treat = treat,
                             s.weights = s.weights,
-                            subset = exact.factor == i,
+                            subset = by.factor == i,
                             estimand = estimand,
                             focal = focal,
                             moments = moments,
@@ -209,7 +209,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
         obj <- weightit2ebcw(covs = covs,
                              treat = treat,
                              s.weights = s.weights,
-                             subset = exact.factor == i,
+                             subset = by.factor == i,
                              estimand = estimand,
                              focal = focal,
                              #stabilize = stabilize,
@@ -229,14 +229,14 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, exact.facto
     obj$w[is.na(obj$w)] <- 0
     if (any(!is.finite(obj$w))) probably.a.bug()
 
-    out$w[exact.factor == i] <- obj$w
-    if (is_not_null(obj$ps)) out$ps[exact.factor == i] <- obj$ps
+    out$w[by.factor == i] <- obj$w
+    if (is_not_null(obj$ps)) out$ps[by.factor == i] <- obj$ps
 
     if (include.obj) fit.obj[[i]] <- obj$fit.obj
   }
 
   if (include.obj) {
-    if (nlevels(exact.factor) == 1) fit.obj <- fit.obj[[1]]
+    if (nlevels(by.factor) == 1) fit.obj <- fit.obj[[1]]
     out$fit.obj <- fit.obj
   }
 
