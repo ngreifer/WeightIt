@@ -4,7 +4,7 @@
 \title{Entropy Balancing}
 
 \description{
-This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary and multinomialtreatments.
+This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary and multinomial treatments.
 
 In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ebal]{ebalance}} from the \pkg{ebal} package.
 

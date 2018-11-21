@@ -21,11 +21,11 @@ knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, messages = FALSE)
 
 `WeightIt` contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see Austin (2011), Austin & Stuart (2015), Robins, Hernan & Brumback (2000), or Thoemmes & Ong (2016).
 
-Typically, the analysis of an observation study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through all these steps for two observational studies: estimatign the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a difinitive guide, but rather an introduction to the relevant issues.
+Typically, the analysis of an observation study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through all these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a definitive guide, but rather an introduction to the relevant issues.
 
 ## Estimating the Effect of a Point Treatment
 
-First we will use the Lalonde dataset to estimate the effect of a point treatment. We'll use the version of the data set that resides withn the `cobalt` package, which we will use later on as well. Here, we are interested in the average treatment effect on the treated (ATT).
+First we will use the Lalonde dataset to estimate the effect of a point treatment. We'll use the version of the data set that resides within the `cobalt` package, which we will use later on as well. Here, we are interested in the average treatment effect on the treated (ATT).
 
 ```{r}
 data("lalonde", package = "cobalt")
@@ -51,7 +51,7 @@ W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
 W.out #print the ooutput
 ```
 
-Printing the output of `weightit()` displays a summary of how the weights were estimated. Let's examine the quality of the weights using `summary()`. Weights with low variability are desirable because they improve the precision of the estimator. This variability is presented in several ways: by the ratio of the largest weight to the smallest in each group, the coefficient of variation (standard deviation divided by the mean) of the weights in each group, and the effective sample size computed from the weights. We want a small ratio, a smaller coefficient of variation, and a large effective sample size (ESS). What consitutes these values is mostly relative, though, and must be balanced with other constraints, including covariate balance. These metrics are best used when comparing weighting methods, but the ESS can give a sense of how much information remains in the weighted sample on a familiar scale.
+Printing the output of `weightit()` displays a summary of how the weights were estimated. Let's examine the quality of the weights using `summary()`. Weights with low variability are desirable because they improve the precision of the estimator. This variability is presented in several ways: by the ratio of the largest weight to the smallest in each group, the coefficient of variation (standard deviation divided by the mean) of the weights in each group, and the effective sample size computed from the weights. We want a small ratio, a smaller coefficient of variation, and a large effective sample size (ESS). What constitutes these values is mostly relative, though, and must be balanced with other constraints, including covariate balance. These metrics are best used when comparing weighting methods, but the ESS can give a sense of how much information remains in the weighted sample on a familiar scale.
 
 ```{r}
 summary(W.out)
@@ -79,7 +79,7 @@ bal.tab(W.out, m.threshold = .1, disp.v.ratio = TRUE)
 
 Indeed, we have achieved perfect balance on the means of the covariates. However, the variance ratio of `age` is still quite high. We could continue to try to adjust for this imbalance, but if there is reason to believe it is unlikely to affect the outcome, it may be best to leave it as is. (You can try adding `I(age^2)` to the formula and see what changes this causes.)
 
-Now that we have our weights stored in `W.out`, let's extract them and estimate our treatment effect. We'll use the `survey` package to incorprate the weights into our analysis.
+Now that we have our weights stored in `W.out`, let's extract them and estimate our treatment effect. We'll use the `survey` package to incorporate the weights into our analysis.
 
 ```{r, message=FALSE}
 library("survey")
@@ -140,7 +140,7 @@ bal.tab(list(tx1 ~ age + gender + use0,
         data = iptwExWide, m.threshold = .1)
 ```
 
-`bal.tab()` indicates significant imbalance on most covariates at most time points, so we need to do some work to eliminate that imbalance in our weighted data set. We'll use the `weightitMSM()` function to specifiy our weight models. The syntax is similar both to that of `weightit()` for point treatments and to that of `bal.tab()` for longitduinal treatments. We'll use `method = "ps"` for propensity score weights estimated using logistic regression.
+`bal.tab()` indicates significant imbalance on most covariates at most time points, so we need to do some work to eliminate that imbalance in our weighted data set. We'll use the `weightitMSM()` function to specify our weight models. The syntax is similar both to that of `weightit()` for point treatments and to that of `bal.tab()` for longitudinal treatments. We'll use `method = "ps"` for propensity score weights estimated using logistic regression.
 
 ```{r}
 Wmsm.out <- weightitMSM(list(tx1 ~ age + gender + use0,
@@ -150,7 +150,7 @@ Wmsm.out <- weightitMSM(list(tx1 ~ age + gender + use0,
 Wmsm.out
 ```
 
-No matter which method is selected, `weightitMSM()` estimates seperate weights for each time period and then take the product of the weights for each individual to arrive at the final estimated weights. Printing the output of `weightitMSM()` provides some details about the function call and the output. We can take a look at the quality of the weights with `summary()`, just as we could for point treatments.
+No matter which method is selected, `weightitMSM()` estimates separate weights for each time period and then take the product of the weights for each individual to arrive at the final estimated weights. Printing the output of `weightitMSM()` provides some details about the function call and the output. We can take a look at the quality of the weights with `summary()`, just as we could for point treatments.
 
 ```{r}
 summary(Wmsm.out)

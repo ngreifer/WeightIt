@@ -45,7 +45,7 @@ the desired estimand. For binary treatments, can be "ATE", "ATT", "ATC", and, fo
 when multinomial treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group.
 }
   \item{by}{
-a vector or the names of variables in data for which weighting is to be done within catgories. For example, if \code{by = "gender"}, weights will be generated seperately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message.
+a vector or the names of variables in data for which weighting is to be done within categories. For example, if \code{by = "gender"}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message.
 }
   \item{s.weights}{
 A vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These can also be matching weights if weighting is to be used on matched data.
@@ -54,10 +54,10 @@ A vector of sampling weights or the name of a variable in \code{data} that conta
 A vector of propensity scores or the name of a variable in \code{data} containing propensity scores. If not \code{NULL}, \code{method} is ignored, and the propensity scores will be used to create weights. \code{formula} must include the treatment variable in \code{data}, but the listed covariates will play no role in the weight estimation.
 }
   \item{moments}{
-\code{numeric}; for entropy balancing, empirical balancing callibration weights, optimization-based weights, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}.
+\code{numeric}; for entropy balancing, empirical balancing calibration weights, optimization-based weights, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}.
 }
   \item{int}{
-\code{logical}; for entropy balancing, empirical balancing callibration weights, and soptimization-based weights, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
+\code{logical}; for entropy balancing, empirical balancing calibration weights, and optimization-based weights, whether first-order interactions of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.

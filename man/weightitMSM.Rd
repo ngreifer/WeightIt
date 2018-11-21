@@ -39,10 +39,10 @@ a string of length 1 containing the name of the method that will be used to esti
 \code{logical}; whether or not to stabilize the weights. Stabilizing the weights involves fitting a model predicting treatment at each time point from treatment status at prior time points. If \code{TRUE}, a saturated model will be fit, essentially using the observed treatment probabilities in the numerator (for binary and multinomial treatments). This may yield an error if some combinations are not observed. Default is \code{FALSE}. To manually specify stabilization model formulas, use \code{num.formula}.
 }
 \item{num.formula}{
-optional; a one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernán (2008) for a discussion of how to specifiy this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
+optional; a one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernán (2008) for a discussion of how to specify this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
 }
   \item{by}{
-a vector or the names of variables in data for which weighting is to be done within catgories. For example, if \code{by = "gender"}, weights will be generated seperately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message.
+a vector or the names of variables in data for which weighting is to be done within categories. For example, if \code{by = "gender"}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message.
 }
   \item{s.weights}{
 a vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These are ignored for some methods.
@@ -51,13 +51,13 @@ a vector of sampling weights or the name of a variable in \code{data} that conta
 \code{numeric}; for some methods, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{moments}.
 }
   \item{int}{
-\code{logical}; for some methods, whether first-order interactons of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{int}.
+\code{logical}; for some methods, whether first-order interactions of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{int}.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.
 }
   \item{include.obj}{
-whether to include in the output a list of the fit objects created in the process of estimating the weights at each time point. For example, with \code{method = "ps"}, a list of the \code{glm} objects containing the propensity score models at eahc time point will be included. See the help pages for each method for information on what object will be included if \code{TRUE}.
+whether to include in the output a list of the fit objects created in the process of estimating the weights at each time point. For example, with \code{method = "ps"}, a list of the \code{glm} objects containing the propensity score models at each time point will be included. See the help pages for each method for information on what object will be included if \code{TRUE}.
 }
   \item{is.MSM.method}{
 whether the method estimates weights for multiple time points all at once (\code{TRUE}) or by estimating weights at each time point and then multiplying them together (\code{FALSE}). This is only relevant for \code{method = "optweight")}, which estimates weights for longitudinal treatments all at once, and for user-specified functions.
@@ -83,9 +83,9 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM}.
   \item{stabilization}{The stabilization factors, if any.}
 }
 \details{
-In general, \code{weightitMSM} works by seperating the estimation of weights into seperate procedures for each time period based on the formulas provided. For each formula, \code{weightitMSM} simply calls \code{weightit} to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing weights.
+In general, \code{weightitMSM} works by separating the estimation of weights into separate procedures for each time period based on the formulas provided. For each formula, \code{weightitMSM} simply calls \code{weightit} to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing weights.
 
-Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in seperate variables.
+Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in separate variables.
 
 The \code{"gbm"} method, which calls \code{ps} in \pkg{twang}, yields the same results to a call to \code{iptw} in \pkg{twang}. However, the \code{cbps} method, which calls \code{CBPS} in \pkg{CBPS}, will yield different results from \code{CBMSM} in \pkg{CBPS} because \code{CBMSM} takes a different approach to generating weights than simply estimating several time-specific models.
 

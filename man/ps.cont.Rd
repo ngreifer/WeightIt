@@ -53,7 +53,7 @@ Currently ignored.
   \item{verbose}{
 If \code{TRUE}, information will be printed to monitor the the progress of the fitting.
 }
-\item{stop.method}{A method or methods of measuring and summarizing balance across pretreatment variables.  Current options are \code{p.max}, \code{p.mean}, \code{p.rms}, \code{p.mean.z}, \code{p.rms.z}, \code{s.max}, \code{s.mean}, \code{s.rms}, \code{s.mean.z}, and \code{s.rms.z}. \code{p} refers to the Pearson correlation and \code{s} refers to the Spearman correlation, both implemented in the \pkg{wCorr} package. These are summarized across the pretreatment variables by the maximum (\code{max}), the mean (\code{mean}), or the square root of the mean of the squares (\code{rms}). The correlations can first be Fisher's Z-tranformed (\code{z}) or not.
+\item{stop.method}{A method or methods of measuring and summarizing balance across pretreatment variables.  Current options are \code{p.max}, \code{p.mean}, \code{p.rms}, \code{p.mean.z}, \code{p.rms.z}, \code{s.max}, \code{s.mean}, \code{s.rms}, \code{s.mean.z}, and \code{s.rms.z}. \code{p} refers to the Pearson correlation and \code{s} refers to the Spearman correlation, both implemented in the \pkg{wCorr} package. These are summarized across the pretreatment variables by the maximum (\code{max}), the mean (\code{mean}), or the square root of the mean of the squares (\code{rms}). The correlations can first be Fisher's Z-transformed (\code{z}) or not.
 }
 \item{sampw}{Optional sampling weights.
 }

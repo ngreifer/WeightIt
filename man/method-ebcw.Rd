@@ -4,7 +4,7 @@
 \title{Empirical Balancing Calibration Weighting}
 
 \description{
-This page explains the details of estimating weights useing entropy balancing by setting \code{method = "ebal"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary and multinomialtreatments.
+This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary and multinomial treatments.
 
 In general, this method relies on estimating weights by minimizing a function of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ATE]{ATE}} from the \pkg{ATE} package.
 

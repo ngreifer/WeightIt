@@ -6,7 +6,7 @@
 \description{
 This page explains the details of estimating optimization-based weights by setting \code{method = "optweight"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating weights by solviing a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \code{\link[optweight]{optweight}} from the \pkg{optweight} package.
+In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \code{\link[optweight]{optweight}} from the \pkg{optweight} package.
 
 Because \code{optweight} offers finer control and uses the same syntax as \code{weightit}, it is recommended that \code{\link[optweight]{optweight}} be used instead of \code{weightit} with \code{method = "optweight"}.
 
@@ -35,7 +35,7 @@ All arguments take on the defaults of those in \code{optweight}.
 
 }
 \note{
-The specification of \code{tols} differs between \code{weightit} and \code{optweight}. In \code{weightit}, one tolerance value should be included per level of each factor variable, whereas in \code{optweight}, all levels of a factor are given the same tolerance, and only one value needs ot be supplied for a factor variable. Because of the potential for confusion and ambiguity, it is recommended to only supply one value for \code{tols} in \code{weightit} that applies to all variables. For finer control, use \code{optweight} directly.
+The specification of \code{tols} differs between \code{weightit} and \code{optweight}. In \code{weightit}, one tolerance value should be included per level of each factor variable, whereas in \code{optweight}, all levels of a factor are given the same tolerance, and only one value needs to be supplied for a factor variable. Because of the potential for confusion and ambiguity, it is recommended to only supply one value for \code{tols} in \code{weightit} that applies to all variables. For finer control, use \code{optweight} directly.
 
 With point treatments, the returned fit object when \code{include.obj = TRUE} is an \code{optweight} obj, but with longitudinal treatments, the returned object is the output of a call to \code{optweight.fit}.
 
