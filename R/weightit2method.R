@@ -228,11 +228,10 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     }
   }
   else {
-    if (ps) {
+      p.score <- ps
       ps <- setNames(as.data.frame(matrix(c(1-ps, ps), ncol = 2)),
                      levels(t))
-      p.score <- ps
-    }
+
   }
 
   #ps should be matrix of probs for each treat
@@ -499,9 +498,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
   covs <- apply(covs, 2, make.closer.to.1)
 
+  w <- rep(1, length(treat))
+  ps <- NULL
+
   if (check.package("twang")) {
     if (estimand == "ATT") {
-      w <- rep(1, length(treat))
+
       control.levels <- levels(treat)[levels(treat) != focal]
       fit.list <- setNames(vector("list", length(control.levels)), control.levels)
 
@@ -510,7 +512,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
         treat_ <- ifelse(treat[treat.in.i.focal] == i, 0, 1)
         covs_ <- covs[treat.in.i.focal, , drop = FALSE]
         new.data <- data.frame(treat_, covs_)
-print(class(new.data)); stop()
+
         fit.list[[i]] <- twang::ps(formula(new.data),
                                    data = new.data,
                                    estimand = "ATT",
@@ -530,10 +532,14 @@ print(class(new.data)); stop()
 
         w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat_ == 0]
 
+        if (nunique(treat) == 2) {
+          ps <- fit.list[[i]][["ps"]][[1]]
+          fit.list <- fit.list[[i]]
+        }
+
       }
     }
     else if (estimand == "ATE") {
-      w <- rep(1, length(treat))
       fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
 
       for (i in levels(treat)) {
@@ -560,8 +566,9 @@ print(class(new.data)); stop()
 
         s <- fit.list[[i]]$stopMethods[1]
 
-        if (nlevels(treat) == 2) {
+        if (nunique(treat) == 2) {
           w <- cobalt::get.w(fit.list[[i]], stop.method = s)
+          ps <- fit.list[[i]][["ps"]][[1]]
           fit.list <- fit.list[[i]]
           break
         }
@@ -576,7 +583,7 @@ print(class(new.data)); stop()
       w <- w * tab[t]
     }
   }
-  obj <- list(w = w, fit.obj = fit.list)
+  obj <- list(w = w, ps = ps, fit.obj = fit.list)
   return(obj)
 }
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
@@ -627,6 +634,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     covs <- cbind(covs, missing.ind)
   }
   covs <- apply(covs, 2, make.closer.to.1)
+  ps <- NULL
 
   if (check.package("CBPS")) {
     if (estimand == "ATT") {
@@ -656,6 +664,10 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
 
         w[treat == i] <- cobalt::get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
 
+        if (nlevels(treat) == 2) {
+          ps <- fit.list[[i]][["fitted.values"]]
+          fit.list <- fit.list[[1]]
+        }
       }
     }
     else {
@@ -676,6 +688,10 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
         )
 
         w <- cobalt::get.w(fit.list, estimand = "ATE") / s.weights[subset]
+        if (nunique(treat) == 2) {
+          ps <- fit.list[["fitted.values"]]
+          fit.list <- fit.list[[1]]
+        }
       }
       else {
         w <- rep(1, length(treat))
@@ -700,7 +716,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     w <- w * tab[t]
   }
 
-  obj <- list(w = w, fit.obj = fit.list)
+  obj <- list(w = w, ps = ps, fit.obj = fit.list)
   return(obj)
 }
 weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
