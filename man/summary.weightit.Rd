@@ -17,11 +17,11 @@
 \method{print}{summary.weightitMSM}(x, ...)
 }
 \description{
-\code{summary()} generates a summary of the \code{weightit} or \code{weightitMSM} object to evaluate the properties of the estimated weights.
+\code{summary} generates a summary of the \code{weightit} or \code{weightitMSM} object to evaluate the properties of the estimated weights.
 }
 \arguments{
   \item{object}{
-a \code{weightit} or \code{weightitMSM} object; the output of a call to \code{weightit()} or \code{weightitMSM()}.
+a \code{weightit} or \code{weightitMSM} object; the output of a call to \code{weightit} or \code{weightitMSM}.
 }
   \item{top}{
 how many of the largest and smallest weights to display. Default is 5.
@@ -30,7 +30,7 @@ how many of the largest and smallest weights to display. Default is 5.
 whether or not to ignore sampling weights when computing the weight summary. If \code{FALSE}, the default, the estimated weights will be multiplied by the sampling weights (if any) before values are computed.
 }
   \item{x}{
-a \code{summary.weightit} or \code{summary.weightitMSM} object; the output of a call to \code{summary.weightit()} or \code{summary.weightitMSM()}.
+a \code{summary.weightit} or \code{summary.weightitMSM} object; the output of a call to \code{summary.weightit} or \code{summary.weightitMSM}.
 }
   \item{...}{
 arguments passed to \code{\link{print}}.

@@ -13,7 +13,7 @@ In general, this method relies on estimating propensity scores with a parametric
 For binary treatments, this method estimates the propensity scores using \code{\link{glm}}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). When \code{include.obj = TRUE}, the returned object is the \code{glm} fit.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, the propensity scores are estimated using multinomial regression from one of two functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{mlogit()} from the \pkg{mlogit} package is used, and for the Bayesian probit  (\code{"bayes.probit"}) link, \code{mnp()} from the \pkg{MNP} package is used. If \code{mlogit} in not installed, a series of binomial regressions using \code{glm()} will be run instead, with estimated propensities normalized to sum to 1. These are the only three links allowed for multinomial treatments at this time. (These methods can fail to converge, yielding errors that may seem foreign.) The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. When \code{include.obj = TRUE}, the returned object is the fit object from \code{mlogit} or \code{mnp} or the list of \code{glm} fit objects if binomial models are used.
+For multinomial treatments, the propensity scores are estimated using multinomial regression from one of two functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{mlogit} from the \pkg{mlogit} package is used, and for the Bayesian probit  (\code{"bayes.probit"}) link, \code{mnp} from the \pkg{MNP} package is used. If \code{mlogit} in not installed, a series of binomial regressions using \code{glm} will be run instead, with estimated propensities normalized to sum to 1. These are the only three links allowed for multinomial treatments at this time. (These methods can fail to converge, yielding errors that may seem foreign.) The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. When \code{include.obj = TRUE}, the returned object is the fit object from \code{mlogit} or \code{mnp} or the list of \code{glm} fit objects if binomial models are used.
 }
 \subsection{Continuous Treatments}{
 For continuous treatments, the generalized propensity score is estimated using linear regression. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights. When \code{include.obj = TRUE}, the returned object is the \code{glm} fit from denominator model.
@@ -86,15 +86,15 @@ data("lalonde", package = "cobalt")
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
                 nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATT"))
+                method = "ps", estimand = "ATT",
+                link = "probit"))
 summary(W1)
 bal.tab(W1)
 
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                 nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATE",
-                link = "probit"))
+                method = "ps", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
 

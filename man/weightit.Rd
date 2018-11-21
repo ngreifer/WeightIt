@@ -23,7 +23,7 @@ weightit(formula,
 
 }
 \description{
-\code{weightit()} allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which \code{weightit()} calls; these packages must be installed to use the desired method. Also included are \code{print} and \code{summary} methods for examining the output.
+\code{weightit} allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which \code{weightit} calls; these packages must be installed to use the desired method. Also included are \code{print} and \code{summary} methods for examining the output.
 }
 \arguments{
   \item{formula}{
@@ -39,7 +39,7 @@ a string of length 1 containing the name of the method that will be used to esti
 the desired estimand. For binary treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO" or "ATM". For multinomial treatments, can be "ATE" or "ATT". The default for both is "ATE". This argument is ignored for continuous treatments. See Details for more information.
 }
   \item{stabilize}{
-\code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim()} to reduce the variance of the weights. Default is \code{FALSE}.
+\code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim} to reduce the variance of the weights. Default is \code{FALSE}.
 }
   \item{focal}{
 when multinomial treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group.
@@ -69,7 +69,7 @@ whether to include in the output any fit objects created in the process of estim
 other arguments for functions called by \code{weightit} that control aspects of fitting that are not covered by the above arguments. See Details.
 }
   \item{x}{
-a \code{weightit} object; the output of a call to \code{weightit()}.
+a \code{weightit} object; the output of a call to \code{weightit}.
 }
 
 }
@@ -86,7 +86,7 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
   \item{obj}{When \code{include.obj = TRUE}, the fit object.}
 }
 \details{
-The primary purpose of \code{weightit()} is as a dispatcher to other functions in other packages that perform the estimation of balancing weights. These functions are identified by a name, which is used in \code{method} to request them. Each method has some slight distinctions in how it is called, but in general, simply entering the method will cause \code{weightit()} to generate the weights correctly using the function. To use each method, the package containing the function must be installed, or else an error will appear. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when \code{include.obj = TRUE}).
+The primary purpose of \code{weightit} is as a dispatcher to other functions in other packages that perform the estimation of balancing weights. These functions are identified by a name, which is used in \code{method} to request them. Each method has some slight distinctions in how it is called, but in general, simply entering the method will cause \code{weightit} to generate the weights correctly using the function. To use each method, the package containing the function must be installed, or else an error will appear. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when \code{include.obj = TRUE}).
 \itemize{
 \item{\code{\link[=method_ps]{"ps"}} - Propensity score weighting using generalized linear models.}
 \item{\code{\link[=method_gbm]{"gbm"}} - Propensity score weighting using generalized boosted modeling.}
