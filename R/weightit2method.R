@@ -283,6 +283,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
   stabilize <- TRUE
 
   if (is_null(ps)) {
+    if (is_null(A$link)) A$link <- "identity"
     fit <- do.call("glm", c(list(formula, data = data,
                                  weights = s.weights[subset],
                                  family = gaussian(link = A$link),
@@ -301,7 +302,10 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
       d.d <- density(p.denom, n = A[["n"]],
                      weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                      bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-      if (isTRUE(A[["plot"]])) plot(d.d, main = "Denominator density")
+      if (isTRUE(A[["plot"]])) {
+        par(mfrow=c(2,1))
+        plot(d.d, main = "Denominator density")
+      }
       dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
     }
     else {
@@ -1153,7 +1157,10 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
     d.d <- density(p.denom, n = A[["n"]],
                    weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                    bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-    if (isTRUE(A[["plot"]])) plot(d.d, main = "Denominator density")
+    if (isTRUE(A[["plot"]])) {
+      par(mfrow=c(2,1))
+      plot(d.d, main = "Denominator density")
+    }
     dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
   }
   else {
@@ -1162,11 +1169,10 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
 
   if (stabilize) {
     if (is_null(A$link)) A$link <- "identity"
-    if (is_null(A$family)) A$family <- gaussian(link = A$link)
     num.fit <- do.call("glm", c(list(t ~ 1,
                                      data = data.frame(t = t),
                                      weights = s.weights[subset],
-                                     family = A[["family"]],
+                                     family = gaussian(link = A$link),
                                      control = list()),
                                 A[names(A %nin% "family")]),
                        quote = TRUE)
