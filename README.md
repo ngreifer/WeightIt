@@ -118,28 +118,33 @@ estimating weights for binary, multinomial, and continuous treatments
 using various methods and functions from various
 packages.
 
-| Treatment type  | Method (`method =`)                                                | Function     | Package    |
-| --------------- | ------------------------------------------------------------------ | ------------ | ---------- |
-| **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`      | `base`     |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`       | `twang`    |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`     |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`     |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()` | `ebal`     |
-| \-              | Stabilized Balancing Weights (`"sbw"`)                             | `sbw()`      | `sbw`      |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`      | `ATE`      |
-| **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`      | `base`     |
-| \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`   | `mlogit`   |
-| \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`      | `MNP`      |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`       | `twang`    |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`     |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`     |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()` | `ebal`     |
-| \-              | Stable Balancing Weights (`"sbw"`)                                 | `sbw()`      | `sbw`      |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`      | `ATE`      |
-| **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`      | `base`     |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps.cont()`  | `WeightIt` |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`     | `CBPS`     |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`   | `CBPS`     |
+| Treatment type  | Method (`method =`)                                                | Function         | Package        |
+| --------------- | ------------------------------------------------------------------ | ---------------- | -------------- |
+| **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`          | `base`         |
+| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`           | `twang`        |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`         | `CBPS`         |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`       | `CBPS`         |
+| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`     | `ebal`         |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`          | `ATE`          |
+| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`    | `optweight`    |
+| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()` | `SuperLearner` |
+| **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`          | `base`         |
+| \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`       | `mlogit`       |
+| \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`          | `MNP`          |
+| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`           | `twang`        |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`         | `CBPS`         |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`       | `CBPS`         |
+| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`     | `ebal`         |
+| \-              | Stable Balancing Weights (`"sbw"`)                                 | `sbw()`          | `sbw`          |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`          | `ATE`          |
+| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`    | `optweight`    |
+| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()` | `SuperLearner` |
+| **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`          | `base`         |
+| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps.cont()`      | `WeightIt`     |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`         | `CBPS`         |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`       | `CBPS`         |
+| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`    | `optweight`    |
+| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()` | `SuperLearner` |
 
 If you would like to see your package or method integrated into
 `WeightIt`, or for any other questions or comments about `WeightIt`,
