@@ -1,6 +1,6 @@
 import(stats)
 importFrom("utils", "data", "combn")
-importFrom("graphics", "boxplot", "plot")
+importFrom("graphics", "boxplot", "plot", "par")
 
 export(weightit, weightitMSM, trim, ps.cont)
 S3method(print, weightit)

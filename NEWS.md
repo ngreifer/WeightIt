@@ -13,6 +13,10 @@ Version 0.5.0
 
 * Rearranged the help pages. Each method now has its own documentation page, linked from the `weightit` help page.
 
+* Propensity scores are now included in the output for binary tretaments with `gbm` and `cbps` methods. Thanks to @Blanch-Font for the suggestion.
+
+* Other bug fixes and minor changes.
+
 Version 0.4.0
 
 * Added `trim()` function to trim weights.

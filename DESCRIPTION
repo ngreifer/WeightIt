@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.4.0.9000
+Version: 0.5.0
 Author: Noah Greifer [aut, cre]
 Maintainer: Noah Greifer <noah.greifer@gmail.com>
 Description: Generates weights to form equivalent groups in observational studies by easing and extending the functionality of the R packages 'twang' (Ridgeway et al., 2017) <https://CRAN.R-project.org/package=twang> for generalized boosted modeling, 'CBPS' (Fong, Ratkovic, & Imai, 2018) <https://CRAN.R-project.org/package=CBPS> for covariate balancing propensity score weighting, 'ebal' (Hainmueller, 2014) <https://CRAN.R-project.org/package=ebal> for entropy balancing, 'sbw' (Zubizarreta, 2015) <doi:10.1080/01621459.2015.1023805>, and 'ATE' (Haris & Chan, 2015) <https://CRAN.R-project.org/package=ATE> for empirical balancing calibration weighting. Also allows for assessment of weights and checking of covariate balance by interfacing directly with 'cobalt' (Greifer, 2018) <https://CRAN.R-project.org/package=cobalt>.
@@ -16,6 +16,7 @@ Suggests:
     ATE (>= 0.2.0),
     optweight (>= 0.2.0),
     SuperLearner,
+    class,
     mlogit (>= 0.3-0),
     MNP (>= 3.1-0),
     survey,
