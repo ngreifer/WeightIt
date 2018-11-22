@@ -52,7 +52,7 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 \note{
 The weights may be very slightly different from those estimated by a call to \code{ps}, but this difference is inconsequential.
 }
-\examples{
+\examples{\donttest{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -79,4 +79,4 @@ bal.tab(W2)
                 stop.method = "p.max"))
 summary(W3)
 bal.tab(W3)
-}
+}}
