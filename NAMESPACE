@@ -2,7 +2,7 @@ import(stats)
 importFrom("utils", "data", "combn")
 importFrom("graphics", "boxplot", "plot", "par")
 
-export(weightit, weightitMSM, trim, ps.cont)
+export(weightit, weightitMSM, trim, ps.cont, make.full.rank)
 S3method(print, weightit)
 S3method(summary, weightit)
 S3method(print, summary.weightit)
