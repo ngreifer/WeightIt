@@ -137,8 +137,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     covs <- covs[subset, , drop = FALSE]
     t <- factor(treat[subset])
+    bin.treat <- is_binary(t)
 
-    if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+    if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
       missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -152,7 +153,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     if (is_null(A$link)) A$link <- "logit"
     else {
-      if (bin.treat <- is_binary(t)) acceptable.links <- c("logit", "probit", "cloglog", "identity", "log", "cauchit")
+      if (bin.treat) acceptable.links <- c("logit", "probit", "cloglog", "identity", "log", "cauchit")
       else acceptable.links <- c("logit", "probit", "bayes.probit")
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
@@ -163,15 +164,15 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       else A$link <- which.link
     }
 
-    if (is_binary(t)) {
-      data <- data.frame(t, covs)
+    if (bin.treat) {
+      data <- data.frame(binarize(t), covs)
       formula <- formula(data)
 
       ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
                      levels(t))
 
       fit <- do.call("glm", list(formula, data = data,
-                                 weights = s.weights[subset],
+                                 # weights = s.weights[subset],
                                  family = binomial(link = A$link),
                                  control = as.list(A$control)), quote = TRUE)
       ps[[2]] <- p.score <- fit$fitted.values
@@ -228,9 +229,76 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     }
   }
   else {
-      p.score <- ps
-      ps <- setNames(as.data.frame(matrix(c(1-ps, ps), ncol = 2)),
-                     levels(t))
+    p.score <- NULL
+    t <- factor(treat[subset])
+    bin.treat <- is_binary(t)
+
+    if (bin.treat) {
+      bad.ps <- FALSE
+      if (is.matrix(ps) || is.data.frame(ps)) {
+        if (dim(ps) == c(length(t), 2)) {
+          ps <- setNames(as.data.frame(ps), levels(t))[subset, , drop = FALSE]
+          p.score <- ps[[2]]
+        }
+        else if (dim(ps) == c(length(t), 1)) {
+          ps <- setNames(as.data.frame(matrix(c(1-ps[,1], ps[,1]), ncol = 2)),
+                         levels(t))[subset, , drop = FALSE]
+          p.score <- ps[[2]]
+        }
+        else {
+          bad.ps <- TRUE
+        }
+      }
+      else if (is.numeric(ps)) {
+        if (length(ps) == length(t)) {
+          ps <- setNames(as.data.frame(matrix(c(1-ps, ps), ncol = 2)),
+                         levels(t))[subset, , drop = FALSE]
+          p.score <- ps[[2]]
+        }
+        else {
+          bad.ps <- TRUE
+        }
+      }
+      else bad.ps <- TRUE
+
+      if (bad.ps) stop("ps must be a numeric vector with a propensity score for each unit.", call. = FALSE)
+
+    }
+    else {
+      print('here')
+      bad.ps <- FALSE
+      if (is.matrix(ps) || is.data.frame(ps)) {
+        if (dim(ps) == c(length(t), nunique(t))) {
+          ps <- setNames(as.data.frame(ps), levels(t))[subset, , drop = FALSE]
+        }
+        else if (dim(ps) == c(length(t), 1)) {
+          ps <- setNames(do.call("cbind", lapply(levels(t), function(x) {
+            p_ <- rep(1, length(t))
+            p_[t == x] <- ps[t == x, 1]
+            return(p_)
+          })), levels(t))[subset, , drop = FALSE]
+        }
+        else {
+          bad.ps <- TRUE
+        }
+      }
+      else if (is.numeric(ps)) {
+        if (length(ps) == length(t)) {
+          ps <- setNames(do.call("cbind", lapply(levels(t), function(x) {
+            p_ <- rep(1, length(t))
+            p_[t == x] <- ps[t == x]
+            return(p_)
+          })), levels(t))[subset, , drop = FALSE]
+        }
+        else {
+          bad.ps <- TRUE
+        }
+      }
+      else bad.ps <- TRUE
+
+      if (bad.ps) stop("ps must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit.", call. = FALSE)
+
+    }
 
   }
 
@@ -271,7 +339,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
   covs <- covs[subset, , drop = FALSE]
   t <- treat[subset]
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -353,7 +421,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -396,7 +464,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, moments, int
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -436,7 +504,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mom
       covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
       covs <- apply(covs, 2, make.closer.to.1)
 
-      if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+      if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
         missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
         covs[is.na(covs)] <- 0
         covs <- cbind(covs, missing.ind)
@@ -455,7 +523,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mom
     s.weights <- s.weights[subset]
   }
 
-  baseline.data <- cbind(treat.list[[1]], covs.list[[1]])
+  baseline.data <- data.frame(treat.list[[1]], covs.list[[1]])
   baseline.formula <- formula(baseline.data)
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(baseline.formula, baseline.data, A[["tols"]], stop = TRUE)
   if ("targets" %in% names(A)) {
@@ -632,7 +700,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat)[subset]
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -729,7 +797,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -768,7 +836,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat)[subset]
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -798,7 +866,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, estimand, ...) 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -830,7 +898,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
   covs <- apply(covs, 2, make.closer.to.1)
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -930,7 +998,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, momen
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -1017,7 +1085,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   covs <- covs[subset, , drop = FALSE]
   t <- factor(treat[subset])
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -1114,7 +1182,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
   covs <- covs[subset, , drop = FALSE]
   t <- treat[subset]
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -1241,7 +1309,7 @@ weightit2sbw <- function(...) {
 #     covs <- covs[subset, , drop = FALSE]
 #     treat <- factor(treat)[subset]
 #
-#     if (any(is.na(covs))) {
+#     if (anyNA(covs)) {
 #       stop("Stable balancing weights are not compatible with missing values.", call. = FALSE)
 #     }
 #     covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
