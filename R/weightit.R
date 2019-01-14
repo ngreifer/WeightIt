@@ -22,28 +22,11 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
       }
       else stop("The name supplied to ps is not the name of a variable in data.", call. = FALSE)
     }
+    method <- "ps"
   }
 
   ##Process method
-  bad.method <- FALSE
-  acceptable.methods <- c("ps",
-                          "gbm", "twang", "gbr",
-                          "cbps",
-                          "npcbps",
-                          "ebal", "entropy", "ebalance",
-                          "sbw",
-                          "ebcw", "ate",
-                          "optweight", "opt",
-                          "super", "superlearner")
-
-  if (missing(method) || is_not_null(ps)) method <- "ps"
-  else if (is_null(method) || length(method) > 1) bad.method <- TRUE
-  else if (is.character(method)) {
-    if (tolower(method) %nin% acceptable.methods) bad.method <- TRUE
-  }
-  else if (!is.function(method)) bad.method <- TRUE
-
-  if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.", call. = FALSE)
+  check.acceptable.method(method, msm = FALSE, force = FALSE)
 
   if (is.character(method)) {
     method <- method.to.proper.method(method)
@@ -51,7 +34,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   }
   else if (is.function(method)) {
     method.name <- paste(deparse(substitute(method)))
-    method <- check.user.method(method)
+    check.user.method(method)
     attr(method, "name") <- method.name
   }
 
@@ -67,11 +50,11 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   n <- length(treat)
 
-  if (any(is.na(reported.covs)) || nrow(reported.covs) != n) {
+  if (anyNA(reported.covs) || nrow(reported.covs) != n) {
     warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
     #stop("No missing values are allowed in the covariates.", call. = FALSE)
   }
-  if (any(is.na(treat))) {
+  if (anyNA(treat)) {
     stop("No missing values are allowed in the treatment variable.", call. = FALSE)
   }
 
@@ -99,7 +82,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   processed.by <- process.by(by = by, data = data, treat = treat)
 
   #Process moments and int
-  moments.int <- check.moments.int(method, moments, int)
+  moments.int <- process.moments.int(moments, int, method)
   moments <- moments.int["moments"]; int <- moments.int["int"]
 
   call <- match.call()
