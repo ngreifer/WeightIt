@@ -165,3 +165,11 @@ while(k<.1) {
   at <- at-.01
   k <- max(abs(bal.tab(trim(W, at))$Balance$Corr.Adj[-1]))
 }
+
+k <- kbal(lalonde[-c(1,4,9)],
+          lalonde$treat,
+          whiten = F,
+          method = "ebal")
+bal.tab(lalonde[-c(1,4,9)],
+        lalonde$treat,
+        weights = k$w)
