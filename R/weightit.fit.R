@@ -4,18 +4,18 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
   out <- setNames(vector("list", 3), c("w", "ps", "fit.obj"))
 
   if (include.obj) fit.obj <- setNames(vector("list", nlevels(by.factor)), levels(by.factor))
-
+  obj <- NULL
   for (i in levels(by.factor)) {
     #Run method
     if (is.function(method)) {
       if (is.MSM.method) {
         obj <- weightitMSM2user(Fun = method,
-                             covs.list = covs,
-                             treat.list = treat,
-                             s.weights = s.weights,
-                             subset = by.factor == i,
-                             stabilize = stabilize,
-                             ...)
+                                covs.list = covs,
+                                treat.list = treat,
+                                s.weights = s.weights,
+                                subset = by.factor == i,
+                                stabilize = stabilize,
+                                ...)
       }
       else {
         obj <- weightit2user(Fun = method,
@@ -76,12 +76,12 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
         }
         else if (treat.type == "continuous") {
           obj <- weightit2optweight.cont(covs = covs,
-                                    treat = treat,
-                                    subset = by.factor == i,
-                                    s.weights = s.weights,
-                                    moments = moments,
-                                    int = int,
-                                    ...)
+                                         treat = treat,
+                                         subset = by.factor == i,
+                                         s.weights = s.weights,
+                                         moments = moments,
+                                         int = int,
+                                         ...)
 
         }
       }
@@ -99,11 +99,11 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
       }
       else {
         obj <- weightit2gbm.cont(covs = covs,
-                                treat = treat,
-                                s.weights = s.weights,
-                                subset = by.factor == i,
-                                stabilize = stabilize,
-                                ...)
+                                 treat = treat,
+                                 s.weights = s.weights,
+                                 subset = by.factor == i,
+                                 stabilize = stabilize,
+                                 ...)
       }
 
     }
@@ -112,25 +112,25 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
         obj <- weightit2cbps.msm()
       }
       else {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2cbps(covs = covs,
-                             treat = treat,
-                             subset = by.factor == i,
-                             s.weights = s.weights,
-                             stabilize = stabilize,
-                             estimand = estimand,
-                             focal = focal,
-                             ...)
-      }
-      else if (treat.type == "continuous") {
-        obj <- weightit2cbps.cont(covs = covs,
-                                  treat = treat,
-                                  subset = by.factor == i,
-                                  s.weights = s.weights,
-                                  #stabilize = stabilize,
-                                  ...)
+        if (treat.type %in% c("binary", "multinomial")) {
+          obj <- weightit2cbps(covs = covs,
+                               treat = treat,
+                               subset = by.factor == i,
+                               s.weights = s.weights,
+                               stabilize = stabilize,
+                               estimand = estimand,
+                               focal = focal,
+                               ...)
+        }
+        else if (treat.type == "continuous") {
+          obj <- weightit2cbps.cont(covs = covs,
+                                    treat = treat,
+                                    subset = by.factor == i,
+                                    s.weights = s.weights,
+                                    #stabilize = stabilize,
+                                    ...)
 
-      }
+        }
       }
 
     }
@@ -169,23 +169,23 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
     else if (method == "super") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2super(covs = covs,
-                           treat = treat,
-                           s.weights = s.weights,
-                           subset = by.factor == i,
-                           estimand = estimand,
-                           focal = focal,
-                           stabilize = stabilize,
-                           ps = ps,
-                           ...)
+                              treat = treat,
+                              s.weights = s.weights,
+                              subset = by.factor == i,
+                              estimand = estimand,
+                              focal = focal,
+                              stabilize = stabilize,
+                              ps = ps,
+                              ...)
       }
       else if (treat.type == "continuous") {
         obj <- weightit2super.cont(covs = covs,
-                                treat = treat,
-                                s.weights = s.weights,
-                                subset = by.factor == i,
-                                stabilize = stabilize,
-                                ps = ps,
-                                ...)
+                                   treat = treat,
+                                   s.weights = s.weights,
+                                   subset = by.factor == i,
+                                   stabilize = stabilize,
+                                   ps = ps,
+                                   ...)
       }
     }
     else if (method == "sbw") {
@@ -223,10 +223,12 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
     }
 
     #Extract weights
-    if (!exists("obj")) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
+    if (is_null(obj)) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
     if (is_null(obj$w) || all(is.na(obj$w))) warning("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
-    if (any(is.na(obj$w))) warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA values will be set to 0.", call. = FALSE)
-    obj$w[is.na(obj$w)] <- 0
+    if (anyNA(obj$w)) {
+      warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA values will be set to 0.", call. = FALSE)
+      obj$w[is.na(obj$w)] <- 0
+    }
     if (any(!is.finite(obj$w))) probably.a.bug()
 
     out$w[by.factor == i] <- obj$w
