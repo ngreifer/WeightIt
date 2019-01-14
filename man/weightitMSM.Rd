@@ -15,6 +15,7 @@ weightitMSM(formula.list,
             verbose = FALSE,
             include.obj = FALSE,
             is.MSM.method,
+            weightit.force = FALSE,
             ...)
 
 \method{print}{weightitMSM}(x, ...)
@@ -61,6 +62,9 @@ whether to include in the output a list of the fit objects created in the proces
 }
   \item{is.MSM.method}{
 whether the method estimates weights for multiple time points all at once (\code{TRUE}) or by estimating weights at each time point and then multiplying them together (\code{FALSE}). This is only relevant for \code{method = "optweight")}, which estimates weights for longitudinal treatments all at once, and for user-specified functions.
+}
+  \item{weightit.force}{
+several methods are not valid for estimating weights with longitudinal treatments, and will produce an error message if attempted. Set to \code{TRUE} to bypass this error message.
 }
   \item{...}{
 other arguments for functions called by \code{weightit} that control aspects of fitting that are not covered by the above arguments. See Details at \code{\link{weightit}}.
