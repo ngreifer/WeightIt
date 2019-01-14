@@ -12,12 +12,12 @@ To supply  user-defined function, the function object should be entered directly
 The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:
 \itemize{
 \item{\code{treat}: a vector of treatment status for each unit. This comes directly from the left hand side of the formula passed to \code{weightit} and so will have it's type (e.g., numeric, factor, etc.), which may need to be converted.}
-\item{\code{covs}: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to \code{weightit}. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use \code{weightit:::make.full.rank}, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
+\item{\code{covs}: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to \code{weightit}. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use \code{\link{make.full.rank}}, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
 \item{\code{s.weights}: a numeric vector of sampling weights, one for each unit.}
 \item{\code{ps}: a numeric vector of propensity scores.}
 \item{\code{subset}: a logical vector the same length as \code{treat} that is \code{TRUE} for units to be included in the estimation and \code{FALSE} otherwise. This is used to subset the input objects when \code{exact} is used. \code{treat}, \code{covs}, \code{s.weights}, and \code{ps}, if supplied, will already have been subsetted by \code{subset}.}
 \item{\code{estimand}: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to estimand, \code{weightit} sets \code{focal} to the control level (usually 0 or the lowest level of \code{treat}) and sets \code{estimand} to "ATT".}
-\item{\code{focal}: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). \code{weightit} ensures the focal variable is a level of \code{treat}.}
+\item{\code{focal}: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). \code{weightit} ensures the value of focal is a level of \code{treat}.}
 \item{\code{stabilize}: a logical vector of length 1. It is not processed by \code{weightit} before it reaches the fitting function.}
 \item{\code{moments}: a numeric vector of length 1. It is not processed by \code{weightit} before it reaches the fitting function except that \code{as.integer} is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.}
 \item{\code{int}: a logical vector of length 1. It is not processed by \code{weightit} before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.}
@@ -43,7 +43,7 @@ data("lalonde", package = "cobalt")
 
 #A user-defined version of method = "ps"
 my.ps <- function(treat, covs, estimand, focal = NULL) {
-  covs <- WeightIt:::make.full.rank(covs)
+  covs <- make.full.rank(covs)
   d <- data.frame(treat, covs)
   f <- formula(d)
   ps <- glm(f, data = d, family = "binomial")$fitted
