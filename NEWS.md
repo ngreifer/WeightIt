@@ -1,6 +1,14 @@
 WeightIt News and Updates
 ======
 
+Version 0.5.1
+
+* Fixed a bug when using the `ps` argument in `weightit()`.
+
+* Fixed a bug when setting `include.obj = TRUE` in `weightitMSM()`.
+
+* Added warnings for using certain methods with longitudinal treatments as they are not validated and may lead to incorrect inferences.
+
 Version 0.5.0
 
 * Added `super` method to estimate propensity scores using the `SuperLearner` package.
