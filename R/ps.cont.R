@@ -107,7 +107,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
                    bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
     if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
     ps.num <- with(d.n, approxfun(x = x, y = y))(p.num)
-    #if any(is.na(ps.num)) stop("NAs were estimated in the numerator densty")
+    #if anyNA(ps.num) stop("NAs were estimated in the numerator densty")
   }
   else {
     if(verbose) cat("using a normal approximation\n")
