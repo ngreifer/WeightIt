@@ -42,7 +42,7 @@ the desired estimand. For binary treatments, can be "ATE", "ATT", "ATC", and, fo
 \code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim} to reduce the variance of the weights. Default is \code{FALSE}.
 }
   \item{focal}{
-when multinomial treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group.
+when multinomial treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. If specified, \code{estimand} will automatically be set to \code{"ATT"}.
 }
   \item{by}{
 a vector or the names of variables in data for which weighting is to be done within categories. For example, if \code{by = "gender"}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message.
