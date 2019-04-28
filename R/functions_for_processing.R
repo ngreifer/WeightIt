@@ -114,8 +114,8 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
     }
     else {
       if (is_not_null(focal)) {
-        warning(paste(estimand, "is not compatible with focal. Ignoring focal."), call. = FALSE)
-        focal <- NULL
+        warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
+        estimand <- "ATT"
       }
     }
   }
