@@ -1,7 +1,7 @@
 #This document is shared across cobalt, WeightIt, and optweight as a symbolic link.
 #Any edits will be automatically synced across all folders. Make sure functions work
 #in all packages!
-#The original file is in cobalt/R/. :)
+#The original file is in cobalt/R/.
 
 #Strings
 word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
@@ -320,15 +320,16 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
   rhs.term.labels <- attr(tt.covs, "term.labels")
   rhs.term.orders <- attr(tt.covs, "order")
 
-  rhs.df <- vapply(rhs.vars.mentioned.lang, function(v) {
-    is.data.frame(try(eval(parse(text=v)[[1]], data, env), silent = TRUE))
+  rhs.df <- vapply(rhs.vars.mentioned, function(v) {
+    d <- try(eval(parse(text=v)[[1]], data, env), silent = TRUE)
+    is.data.frame(d) || is.matrix(d)
   }, logical(1L))
 
   if (any(rhs.df)) {
     if (any(rhs.vars.mentioned[rhs.df] %in% unlist(lapply(rhs.term.labels[rhs.term.orders > 1], function(x) strsplit(x, ":", fixed = TRUE))))) {
       stop("Interactions with data.frames are not allowed in the input formula.", call. = FALSE)
     }
-    addl.dfs <- setNames(lapply(rhs.vars.mentioned[rhs.df], function(x) {eval(parse(text=x)[[1]], data, env)}),
+    addl.dfs <- setNames(lapply(rhs.vars.mentioned[rhs.df], function(x) {as.data.frame(eval(parse(text=x)[[1]], data, env))}),
                          rhs.vars.mentioned[rhs.df])
 
     for (i in rhs.term.labels[rhs.term.labels %in% rhs.vars.mentioned[rhs.df]]) {
