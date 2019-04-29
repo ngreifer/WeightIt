@@ -40,7 +40,7 @@ bal.tab(treat ~ age + educ + race + married + nodegree + re74 + re75,
         data = lalonde, estimand = "ATT", m.threshold = .1)
 ```
 
-Based on this output, we can see that most variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .1 for most variables. In particular, `re74` and `re75` are quite imabalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using `weightit()` to try to attain balance on these covariates.
+Based on this output, we can see that most variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .1 for most variables. In particular, `re74` and `re75` are quite imbalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using `weightit()` to try to attain balance on these covariates.
 
 First, we'll start simple, and use inverse probability weights from propensity scores generated through logistic regression. We need to supply `weightit()` with the formula for the model, the data set, the estimand (ATT), and the method of estimation (`"ps"`) for propensity score weights).
 
@@ -150,7 +150,7 @@ Wmsm.out <- weightitMSM(list(tx1 ~ age + gender + use0,
 Wmsm.out
 ```
 
-No matter which method is selected, `weightitMSM()` estimates separate weights for each time period and then take the product of the weights for each individual to arrive at the final estimated weights. Printing the output of `weightitMSM()` provides some details about the function call and the output. We can take a look at the quality of the weights with `summary()`, just as we could for point treatments.
+No matter which method is selected, `weightitMSM()` estimates separate weights for each time period and then takes the product of the weights for each individual to arrive at the final estimated weights. Printing the output of `weightitMSM()` provides some details about the function call and the output. We can take a look at the quality of the weights with `summary()`, just as we could for point treatments.
 
 ```{r}
 summary(Wmsm.out)
