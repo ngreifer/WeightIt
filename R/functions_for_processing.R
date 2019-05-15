@@ -288,6 +288,8 @@ make.full.rank <- function(mat, with.intercept = TRUE) {
     stop("mat must be a numeric matrix or data.frame.", call. = FALSE)
   }
 
+  if (anyNA(mat)) stop("Missing values are not allowed in mat.", call. = FALSE)
+
   keep <- setNames(rep(TRUE, ncol(mat)), colnames(mat))
 
   #Variables that have only 1 value can be removed

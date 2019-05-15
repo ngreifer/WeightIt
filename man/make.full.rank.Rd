@@ -14,7 +14,7 @@ make.full.rank(mat,
 }
 \arguments{
   \item{mat}{
-a numeric matrix or data frame to be transformed. Typically this contains covariates.
+a numeric matrix or data frame to be transformed. Typically this contains covariates. \code{NA}s are not allowed.
 }
   \item{with.intercept}{
 whether an itnercept (i.e., a vector of 1s) should be added to \code{mat} before making it full rank. If \code{TRUE}, the intercept will be used in determining whether a column is linearly dependent on others. Regardless, no intercept will be included in the output.

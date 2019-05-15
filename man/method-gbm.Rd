@@ -23,6 +23,9 @@ For longitudinal treatments, the weights are the product of the weights estimate
 \subsection{Sampling Weights}{
 Sampling weights are supported through \code{s.weights} in all scenarios.
 }
+\subsection{Missing Data}{
+Missing data is compatible with generalized boosted modeling. \code{NA} values are simply considered their own plausible value for the covariate.
+}
 }
 \section{Additional Arguments}{
 Any argument to \code{ps} or \code{ps.cont} can be passed through \code{weightit} or \code{weightitMSM}. The argument \code{stop.method} is required, and, in contrast to \code{ps} and \code{ps.cont}, can only be of length 1. If not provided, a default will be used (\code{"es.mean"} for binary and multinomial treatments and \code{"s.mean.z"} for continuous treatments).
