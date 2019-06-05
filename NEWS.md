@@ -1,6 +1,14 @@
 WeightIt News and Updates
 ======
 
+Version 0.5.2
+
+* Bug fixes. Functions now work better when used inside other functions (e.g., `lapply`).
+
+* Behavior of `weightit()` in the presence of non-`NULL` `focal` has changed. When `focal` is specified, `estimand` is assumed to be `ATT`. Previously, `focal` would be ignored unless `estimand = "ATT"`.
+
+* Updated documentation to describe how missing data in the covariates is handled.
+
 Version 0.5.1
 
 * Fixed a bug when using the `ps` argument in `weightit()`.
