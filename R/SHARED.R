@@ -44,6 +44,11 @@ word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
     }
     return(out)
 }
+firstup <- function(x) {
+    #Capitalize first letter
+    substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+    x
+}
 expand.grid_string <- function(..., collapse = "") {
     return(apply(expand.grid(...), 1, paste, collapse = collapse))
 }
@@ -153,7 +158,10 @@ text.box.plot <- function(range.list, width = 12) {
     return(d)
 }
 equivalent.factors <- function(f1, f2) {
-    return(nunique(f1) == nunique(interaction(f1, f2)))
+    return(nunique(f1) == nunique(interaction(f1, f2, drop = TRUE)))
+}
+equivalent.factors2 <- function(f1, f2) {
+    return(qr(matrix(c(rep(1, length(f1)), as.numeric(f1), as.numeric(f2)), ncol = 3))$rank == 2)
 }
 paste. <- function(..., collapse = NULL) {
     #Like paste0 but with sep = ".'
@@ -286,8 +294,15 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     A <- list(...)
 
     #Check if data exists
-    if (is_not_null(data) && is.data.frame(data)) {
-        data.specified <- TRUE
+    if (is_not_null(data)) {
+        if (is.data.frame(data)) {
+            data.specified <- TRUE
+        }
+        else {
+            warning("The argument supplied to data is not a data.frame object. This may causes errors or unexpected results.", call. = FALSE)
+            data <- environment(f)
+            data.specified <- FALSE
+        }
     }
     else {
         data <- environment(f)
@@ -296,7 +311,13 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
     env <- environment(f)
 
-    tt <- terms(f)
+    tryCatch(tt <- terms(f, data = data),
+             error = function(e) {
+                 if (conditionMessage(e) == "'.' in formula and no 'data' argument") {
+                     stop("'.' is not allowed in formulas.", call. = FALSE)
+                 }
+                 else stop(conditionMessage(e), call. = FALSE)
+             })
 
     #Check if response exists
     if (is.formula(tt, 2)) {
