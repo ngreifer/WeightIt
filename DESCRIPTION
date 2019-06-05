@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.5.2
+Version: 0.5.1.9000
 Author: Noah Greifer [aut, cre]
 Maintainer: Noah Greifer <noah.greifer@gmail.com>
 Description: Generates weights to form equivalent groups in observational studies with point or longitudinal treatments by easing and extending the functionality of the R packages 'twang' for generalized boosted modeling, 'CBPS' for covariate balancing propensity score weighting, 'ebal' for entropy balancing, 'optweight' for optimization-based weights, 'ATE' for empirical balancing calibration weighting, and 'SuperLearner' for stacked machine learning-based propensity scores. Also allows for assessment of weights and checking of covariate balance by interfacing directly with 'cobalt'.
@@ -26,7 +26,8 @@ Suggests:
     wCorr,
     gbm (>= 2.1.3),
     knitr,
-    rmarkdown
+    rmarkdown,
+    KBAL
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true

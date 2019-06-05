@@ -188,22 +188,6 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
                                    ...)
       }
     }
-    else if (method == "sbw") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2sbw(covs = covs,
-                            treat = treat,
-                            s.weights = s.weights,
-                            subset = by.factor == i,
-                            estimand = estimand,
-                            focal = focal,
-                            moments = moments,
-                            int = int,
-                            ...)
-      }
-      else {
-        stop("Stable balancing weights are not compatible with continuous treatments.", call. = FALSE)
-      }
-    }
     else if (method == "ebcw") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2ebcw(covs = covs,
@@ -219,6 +203,31 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
       }
       else {
         stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
+      }
+    }
+    else if (method == "kbal") {
+      if (treat.type %in% c("binary", "multinomial")) {
+        obj <- weightit2kbal(covs = covs,
+                             treat = treat,
+                             s.weights = s.weights,
+                             subset = by.factor == i,
+                             estimand = estimand,
+                             focal = focal,
+                             ...)
+      }
+      else stop("Kernel balancing is not compatible with continuous treatments.", call. = FALSE)
+    }
+    else if (method == "sbps") {
+      if (treat.type %in% c("binary", "multinomial")) {
+        obj <- weightit2sbps(covs = covs,
+                           treat = treat,
+                           s.weights = s.weights,
+                           subset = by.factor == i,
+                           estimand = estimand,
+                           focal = focal,
+                           stabilize = stabilize,
+                           ps = ps,
+                           ...)
       }
     }
 

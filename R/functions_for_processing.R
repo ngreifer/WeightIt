@@ -1,14 +1,15 @@
 method.to.proper.method <- function(method) {
   method <- tolower(method)
-  if (method %in% c("ps")) return("ps")
+  if      (method %in% c("ps")) return("ps")
   else if (method %in% c("gbm", "gbr", "twang")) return("gbm")
   else if (method %in% c("cbps")) return("cbps")
   else if (method %in% c("npcbps")) return("npcbps")
   else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
-  else if (method %in% c("sbw")) return("sbw")
   else if (method %in% c("ebcw", "ate")) return("ebcw")
-  else if (method %in% c("optweight", "opt")) return("optweight")
+  else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
   else if (method %in% c("super", "superlearner")) return("super")
+  else if (method %in% c("kbal")) return("kbal")
+  else if (method %in% c("sbps", "subgroup")) return("sbps")
   else return(method)
 }
 check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
@@ -21,7 +22,9 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
                           "sbw",
                           "ebcw", "ate",
                           "optweight", "opt",
-                          "super", "superlearner")
+                          "super", "superlearner",
+                          "kbal",
+                          "sbps", "subgroup")
 
   if (missing(method)) method <- "ps"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
@@ -34,7 +37,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
 
   if (msm && !force && is.character(method)) {
     m <- method.to.proper.method(method)
-    if (m %in% c("nbcbps", "ebal", "sbw", "ebcw", "optweight")) {
+    if (m %in% c("nbcbps", "ebal", "ebcw", "optweight", "kbal")) {
       stop(paste0("The use of ", method.to.phrase(m), " with longitudinal treatments has not been validated. Set weightit.force = TRUE to bypass this error."), call. = FALSE)
     }
   }
@@ -53,16 +56,17 @@ method.to.phrase <- function(method) {
 
   if (is.function(method)) return("a user-defined method")
   else {
-    method <- tolower(method)
+    method <- method.to.proper.method(method)
     if (method %in% c("ps")) return("propensity score weighting")
-    else if (method %in% c("gbm", "gbr", "twang")) return("generalized boosted modeling")
+    else if (method %in% c("gbm")) return("generalized boosted modeling")
     else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
     else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
-    else if (method %in% c("entropy", "ebal", "ebalance")) return("entropy balancing")
-    else if (method %in% c("sbw")) return("stable balancing weights")
-    else if (method %in% c("ebcw", "ate")) return("empirical balancing calibration weighting")
-    else if (method %in% c("optweight", "opt")) return("targeted stable balancing weights")
-    else if (method %in% c("super", "superlearner")) return("propensity score weighting with SuperLearner")
+    else if (method %in% c("ebal")) return("entropy balancing")
+    else if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
+    else if (method %in% c("optweight")) return("targeted stable balancing weights")
+    else if (method %in% c("super")) return("propensity score weighting with SuperLearner")
+    else if (method %in% c("kbal")) return("kernel balancing")
+    else if (method %in% c("sbps")) return("subgroup balancing propensity score weighting")
     else return("the chosen method of weighting")
   }
 }
@@ -73,19 +77,20 @@ process.estimand <- function(estimand, method, treat.type) {
                            cbps = c("ATT", "ATC", "ATE"),
                            npcbps = c("ATE"),
                            ebal = c("ATT", "ATC", "ATE"),
-                           sbw = c("ATT", "ATC", "ATE"),
                            ebcw = c("ATT", "ATC", "ATE"),
                            optweight = c("ATT", "ATC", "ATE"),
-                           super = c("ATT", "ATC", "ATE", "ATO", "ATM")),
+                           super = c("ATT", "ATC", "ATE", "ATO", "ATM"),
+                           kbal = c("ATT", "ATC", "ATE"),
+                           sbps = c("ATT", "ATC", "ATE", "ATO", "ATM")),
              multinomial = list(ps = c("ATT", "ATE", "ATO"),
                                 gbm = c("ATT", "ATE"),
                                 cbps = c("ATT", "ATE"),
                                 npcbps = c("ATE"),
                                 ebal = c("ATT", "ATE"),
-                                sbw = c("ATT", "ATE"),
                                 ebcw = c("ATT", "ATE"),
                                 optweight = c("ATT", "ATE"),
-                                super = c("ATT", "ATE")))
+                                super = c("ATT", "ATE"),
+                                kbal = c("ATT", "ATE")))
 
   if (treat.type != "continuous" && !is.function(method) &&
       toupper(estimand) %nin% AE[[treat.type]][[method]]) {
@@ -141,7 +146,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
               estimand = estimand,
               reported.estimand = reported.estimand))
 }
-process.by <- function(by, data, treat, treat.name = NULL) {
+process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
   ##Process by
   bad.by <- FALSE
@@ -164,10 +169,10 @@ process.by <- function(by, data, treat, treat.name = NULL) {
   }
   else bad.by <- TRUE
 
-  if (bad.by) stop("by must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself.", call. = FALSE)
+  if (bad.by) stop(paste(by.arg, "must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself."), call. = FALSE)
 
   if (any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
-    stop("Not all the groups formed by by contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening by.", call. = FALSE)
+    stop(paste0("Not all the groups formed by ", by.arg, " contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening", by.arg, "."), call. = FALSE)
   }
 
   return(list(by.components = by.components,
@@ -175,7 +180,7 @@ process.by <- function(by, data, treat, treat.name = NULL) {
 }
 process.moments.int <- function(moments, int, method) {
   if (!is.function(method)) {
-    if (method %in% c("ebal", "ebcw", "sbw", "optweight")) {
+    if (method %in% c("ebal", "ebcw", "optweight")) {
       if (length(int) != 1 || !is.logical(int)) {
         stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
       }
@@ -216,12 +221,16 @@ process.MSM.method <- function(is.MSM.method, method) {
 
 }
 check.package <- function(package.name, alternative = FALSE) {
-  package.is.installed <- any(.packages(all.available = TRUE) == package.name)
-  if (!package.is.installed && !alternative) {
-    stop(paste0("Package \"", package.name, "\" needed for this function to work. Please install it."),
+  package.not.installed <- package.name[package.name %nin% .packages(all.available = TRUE)]
+  if (is_not_null(package.not.installed) && !alternative) {
+    plural <- length(package.not.installed) > 1
+    stop(paste0("Package", if (plural) "s " else " ",
+                word.list(package.not.installed, quotes = TRUE, is.are = TRUE),
+                " needed for this function to work. Please install ",
+                if (plural) "them" else "it","."),
          call. = FALSE)
   }
-  return(invisible(package.is.installed))
+  else return(invisible(TRUE))
 }
 make.closer.to.1 <- function(x) {
   if (is.factor(x) || is.character(x)) return(x)
@@ -273,7 +282,7 @@ int.poly.f <- function(mat, ex = NULL, int = FALSE, poly = 1, center = FALSE, se
 }
 
 #For the user to use
-make.full.rank <- function(mat, with.intercept = TRUE) {
+make_full_rank <- function(mat, with.intercept = TRUE) {
 
   if (is.data.frame(mat)) {
     is.mat <- FALSE
@@ -317,6 +326,41 @@ make.full.rank <- function(mat, with.intercept = TRUE) {
   if (is.mat) return(mat[, keep, drop = FALSE])
   else return(as.data.frame(mat[, keep, drop = FALSE]))
 
+}
+get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL) {
+  #ps must be a matrix/df with columns named after treat levels
+
+  w <- rep(0, nrow(ps))
+
+  if (is_null(attr(treat, "treat.type"))) treat <- get.treat.type(treat)
+
+  treat.type <- attr(treat, "treat.type")
+
+  processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+  estimand <- processed.estimand$estimand
+
+  if (is.factor(treat)) t.levels <- levels(treat)
+  else t.levels <- unique(treat, nmax = length(treat)/4)
+
+  for (i in seq_len(nunique(treat))) {
+    w[treat == levels(treat)[i]] <- 1/ps[treat == levels(treat)[i], i]
+  }
+
+  if (toupper(estimand) == "ATE") {
+    # w <- w
+  }
+  else if (toupper(estimand) == "ATT") {
+    w <- w*ps[, levels(treat) == focal]
+  }
+  else if (toupper(estimand) == "ATO") {
+    w <- w/apply(ps, 1, function(x) sum(1/x)) #Li & Li (2018)
+  }
+  else if (toupper(estimand) == "ATM") {
+    w <- w*apply(ps, 1, min)
+  }
+  else w <- NULL
+
+  return(w)
 }
 
 #To pass CRAN checks:
