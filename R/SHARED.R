@@ -250,18 +250,18 @@ w.cov.scale <- function(w, type = 3, na.rm = TRUE) {
 col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
     if (is_null(w)) {
         w <- 1
-        w.sum <- apply(mat, 2, function(x) sum(!is.na(x)))
     }
-    else {
-        w.sum <- rep(sum(w, na.rm = na.rm), ncol(mat))
-    }
+    w.sum <- colSums(w*!is.na(mat))
     return(colSums(mat*w, na.rm = na.rm)/w.sum)
 }
 col.w.v <- function(mat, w = NULL, na.rm = TRUE) {
     if (is_null(w)) {
         w <- rep(1, nrow(mat))
     }
-    return(colSums(t((t(mat) - col.w.m(mat, w, na.rm = na.rm))^2) * w, na.rm = na.rm) / w.cov.scale(w, na.rm = na.rm))
+    means <- col.w.m(mat, w, na.rm)
+    w.scale <- apply(mat, 2, function(x) w.cov.scale(w[!is.na(x)]))
+    covs <- colSums(t(t(mat) - means)^2, na.rm = na.rm)/w.scale
+    return(covs)
 }
 coef.of.var <- function(x, pop = TRUE, na.rm = TRUE) {
     if (na.rm) x <- x[!is.na(x)]
