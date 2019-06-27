@@ -78,6 +78,8 @@ The weights are estimated as the marginal density of the treatment divided by th
 
 It is recommended to use as many trees as possible, though this requires more computation time, especially with \code{use.optimize} set to \code{0}. There is little difference between using Pearson and Spearman correlations or between using the raw correlations and the Z-transformed correlations. Typically the only \code{gbm}-related options that should be changed are the interaction depth and number of trees.
 
+Missing data is not allowed in the covariates because of the ambiguity in computing correlations with missing values.
+
 \code{summary.ps.cont} compresses the information in the \code{desc} component of the \code{ps.cont} object into a short summary table describing the size of the dataset and the quality of the generalized propensity score weights, in a similar way to \code{\link[twang]{summary.ps}}.
 
 \code{plot.ps.cont} and \code{boxplot.ps.cont} function almost identically to \code{\link[twang]{plot.ps}} and \code{\link[twang]{boxplot.ps}}. See the help pages there for more information. Note that for \code{plot.ps}, only options 1, 2, and 6 are available for the \code{plots} argument. When \code{use.optimize = 2}, option 1 is not available.
