@@ -9,6 +9,8 @@ Generalized Propensity Score Estimation using GBM
 }
 \description{
 \code{ps.cont} calculates generalized propensity scores and corresponding weights using boosted linear regression as implemented in \code{\link[gbm]{gbm}}. This function extends \code{\link[twang]{ps}} in \pkg{twang} to continuous treatments. The syntax and output are largely the same. The GBM parameter defaults are those found in Zhu, Coffman, & Ghosh (2015).
+
+Note: \code{ps.cont} will phased out when \pkg{twang} adds functionality for continuous treatments.
 }
 \usage{
 ps.cont(formula, data,
