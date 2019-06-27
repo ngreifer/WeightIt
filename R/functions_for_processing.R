@@ -235,7 +235,7 @@ check.package <- function(package.name, alternative = FALSE) {
 make.closer.to.1 <- function(x) {
   if (is.factor(x) || is.character(x)) return(x)
   else if (is_binary(x)) {
-    return(as.numeric(x == x[1]))
+    return(as.numeric(x == x[!is.na(x)][1]))
   }
   else {
     ndigits <- round(mean(floor(log10(abs(x[!check_if_zero(x)]))), na.rm = TRUE))
