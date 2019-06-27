@@ -83,7 +83,13 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   #covs <- apply(covs, 2, function(x) if (is.factor(x) || is.character(x) || !nunique.gt(x, 2)) factor(x))
   new.data <- data.frame(t = t, t.c[["reported.covs"]])
 
-  if (is_null(sampw)) {
+  if (any(is.na(t))) stop("Missingness is not allowed in the treatment variable.", call. = FALSE)
+  if (any(with.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
+    stop(paste0("Missingness is not allowed in the covariates.\n\tMissingness was found in ", word.list(colnames(covs)[with.missing]), "."),
+         call. = FALSE)
+  }
+
+    if (is_null(sampw)) {
     if (is_not_null(A[["s.weights"]])) s.weights <- A[["s.weights"]]
     else s.weights <- rep(1, length(t))
   }
