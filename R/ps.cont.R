@@ -14,10 +14,12 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     ps.den <- dnorm((t - GBM.fitted)/sd(t - GBM.fitted), 0, 1)
     wt <- ps.num/ps.den
 
-    if (corr.type == "spearman") corr_ <- apply(covs, 2, wCorr::weightedCorr, y = t, method = "spearman", weights = wt * s.weights)
+    if (corr.type == "spearman") {
+      ranked.t <- rank(t)
+      corr_ <- apply(covs, 2, function(c) w.r(rank(c), y = ranked.t, w = wt, s.weights = s.weights))
+    }
     else if (corr.type == "pearson") corr_ <- apply(covs, 2, function(c) {
-      if (is.factor(c)) wCorr::weightedCorr(c, y = t, method = "polyserial", weights = wt * s.weights)
-      else wCorr::weightedCorr(c, y = t, method = "pearson", weights = wt * s.weights)})
+      w.r(c, y = t, w = wt, s.weights = s.weights)})
     else stop("stop.method is not correctly specified.", call. = FALSE)
 
     if (z.trans) corr_ <- cor2z(corr_)
@@ -28,9 +30,9 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   desc.wts.cont <- function(t, covs, weights, which.tree) {
     desc <- setNames(vector("list", 10),
                      c("ess", "n", "max.p.cor", "mean.p.cor", "rms.p.cor", "max.s.cor", "mean.s.cor", "rms.s.cor", "bal.tab", "n.trees"))
-    desc[["bal.tab"]][["results"]] <- data.frame(p.cor = apply(covs, 2, function(c) wCorr::weightedCorr(t, c, method = "pearson", weights = weights)),
+    desc[["bal.tab"]][["results"]] <- data.frame(p.cor = apply(covs, 2, function(c) w.r(t, c, w = weights, s.weights = s.weights)),
                                                  p.cor.z = NA,
-                                                 s.cor = apply(covs, 2, function(c) wCorr::weightedCorr(t, c, method = "spearman", weights = weights)),
+                                                 s.cor = apply(covs, 2, function(c) w.r(rank(t), rank(c), w = weights, s.weights = s.weights)),
                                                  s.cor.z = NA,
                                                  row.names = colnames(covs))
     desc[["bal.tab"]][["results"]][["p.cor.z"]] <- cor2z(desc[["bal.tab"]][["results"]][["p.cor"]])
@@ -49,7 +51,6 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   }
 
   check.package("gbm")
-  check.package("wCorr")
 
   if (missing(stop.method)) {
     warning("No stop.method was entered. Using \"s.mean.z\", the mean of the absolute Z-transformed Spearman correlations.", call. = FALSE, immediate. = TRUE)
@@ -84,12 +85,8 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   new.data <- data.frame(t = t, t.c[["reported.covs"]])
 
   if (any(is.na(t))) stop("Missingness is not allowed in the treatment variable.", call. = FALSE)
-  if (any(with.missing <- apply(covs, 2, function(x) any(is.na(x))))) {
-    stop(paste0("Missingness is not allowed in the covariates.\n\tMissingness was found in ", word.list(colnames(covs)[with.missing]), "."),
-         call. = FALSE)
-  }
 
-    if (is_null(sampw)) {
+  if (is_null(sampw)) {
     if (is_not_null(A[["s.weights"]])) s.weights <- A[["s.weights"]]
     else s.weights <- rep(1, length(t))
   }
@@ -157,8 +154,6 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
 
       # get optimal number of iterations
       # Step #1: evaluate at 25 equally spaced points
-      bal <- rep(0,length(iters))
-
       for (j in 1:length(iters)) {
 
         balance[j, sm] <- F.aac.w(iters[j], data = new.data, t = t, covs = covs,
@@ -216,10 +211,11 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
                       dimnames = list(iters, stop.method))
     corr_ <- array(NA, dim = c(n.trees, ncol(covs), length(stop.method)),
                     dimnames = list(iters, colnames(covs), stop.method))
+    ps = predict(model.den, newdata = data,
+                               n.trees = iters, type = "response")
     for (i in iters) {
       # Calculate the inverse probability weights
-      model.den$fitted = predict(model.den, newdata = data,
-                                 n.trees = floor(i), type = "response")
+      model.den$fitted = ps[,i]
       ps.den[[i]] = dnorm((t - model.den$fitted)/sd(t - model.den$fitted), 0, 1)
       wt[[i]] <- ps.num/ps.den[[i]]
 
@@ -229,10 +225,15 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
           corr_[i, , s] <- corr_[i, , which(corr.type == corr.type[s])[1]]
         }
         else {
-          if (corr.type[s] == "spearman") corr_[i, , s] <- apply(covs, 2, wCorr::weightedCorr, y = t, method = "spearman", weights = wt[[i]] * s.weights)
-          else if (corr.type[s] == "pearson") corr_[i, , s] <- apply(covs, 2, function(c) {
-            if (is.factor(c)) wCorr::weightedCorr(t, y = c, method = "polyserial", weights = wt[[i]] * s.weights)
-            else wCorr::weightedCorr(t, y = c, method = "pearson", weights = wt[[i]] * s.weights)})
+          if (corr.type[s] == "spearman") {
+            ranked.t <- rank(t)
+            corr_[i, , s] <- apply(covs, 2, function(c) {
+              w.r(rank(c), y = ranked.t, w = wt[[i]], s.weights = s.weights)})
+          }
+          else if (corr.type[s] == "pearson") {
+            corr_[i, , s] <- apply(covs, 2, function(c) {
+              w.r(c, y = t, w = wt[[i]], s.weights = s.weights)})
+          }
           else stop("stop.method is not correctly specified.", call. = FALSE)
 
           #bal[[i]][[s]] <- setNames(corr_, colnames(covs))

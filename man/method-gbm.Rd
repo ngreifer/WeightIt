@@ -24,7 +24,7 @@ For longitudinal treatments, the weights are the product of the weights estimate
 Sampling weights are supported through \code{s.weights} in all scenarios.
 }
 \subsection{Missing Data}{
-For binary and multinomial treatments, missing data is compatible with generalized boosted modeling. \code{NA} values are simply considered their own plausible value for the covariate. For continuous variables, missing data is not allowed and will produce an error.
+Missing data is compatible with generalized boosted modeling. \code{NA} values are simply considered their own plausible value for the covariate. When balance statistics are computed to choose the optimal tree, they are computed using only the non-missing values for the variable in question.
 }
 }
 \section{Additional Arguments}{
