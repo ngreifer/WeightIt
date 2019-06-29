@@ -327,7 +327,7 @@ weightit2kbal <- function(covs, treat, s.weights, subset, estimand, focal, ...) 
     names(A)[names(A) == "kbal.method"] <- "method"
   }
   for (f in names(formals(KBAL::kbal))) {
-    if (is_null(A[[f]])) A[[f]] <- formals(ebal::ebalance)[[f]]
+    if (is_null(A[[f]])) A[[f]] <- formals(KBAL::kbal)[[f]]
   }
   A[names(A) %nin% setdiff(names(formals(KBAL::kbal)), c("X", "D"))] <- NULL
 
