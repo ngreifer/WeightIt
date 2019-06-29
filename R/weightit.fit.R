@@ -205,31 +205,31 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights, by.factor, 
         stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
       }
     }
-    else if (method == "kbal") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2kbal(covs = covs,
-                             treat = treat,
-                             s.weights = s.weights,
-                             subset = by.factor == i,
-                             estimand = estimand,
-                             focal = focal,
-                             ...)
-      }
-      else stop("Kernel balancing is not compatible with continuous treatments.", call. = FALSE)
-    }
-    else if (method == "sbps") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2sbps(covs = covs,
-                           treat = treat,
-                           s.weights = s.weights,
-                           subset = by.factor == i,
-                           estimand = estimand,
-                           focal = focal,
-                           stabilize = stabilize,
-                           ps = ps,
-                           ...)
-      }
-    }
+    # else if (method == "kbal") {
+    #   if (treat.type %in% c("binary", "multinomial")) {
+    #     obj <- weightit2kbal(covs = covs,
+    #                          treat = treat,
+    #                          s.weights = s.weights,
+    #                          subset = by.factor == i,
+    #                          estimand = estimand,
+    #                          focal = focal,
+    #                          ...)
+    #   }
+    #   else stop("Kernel balancing is not compatible with continuous treatments.", call. = FALSE)
+    # }
+    # else if (method == "sbps") {
+    #   if (treat.type %in% c("binary", "multinomial")) {
+    #     obj <- weightit2sbps(covs = covs,
+    #                        treat = treat,
+    #                        s.weights = s.weights,
+    #                        subset = by.factor == i,
+    #                        estimand = estimand,
+    #                        focal = focal,
+    #                        stabilize = stabilize,
+    #                        ps = ps,
+    #                        ...)
+    #   }
+    # }
 
     #Extract weights
     if (is_null(obj)) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)

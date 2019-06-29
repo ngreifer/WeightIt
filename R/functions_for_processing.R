@@ -8,23 +8,24 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("ebcw", "ate")) return("ebcw")
   else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
   else if (method %in% c("super", "superlearner")) return("super")
-  else if (method %in% c("kbal")) return("kbal")
-  else if (method %in% c("sbps", "subgroup")) return("sbps")
+  # else if (method %in% c("kbal")) return("kbal")
+  # else if (method %in% c("sbps", "subgroup")) return("sbps")
   else return(method)
 }
 check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
-  acceptable.methods <- c("ps",
-                          "gbm", "twang", "gbr",
-                          "cbps",
-                          "npcbps",
-                          "ebal", "entropy", "ebalance",
-                          "sbw",
-                          "ebcw", "ate",
-                          "optweight", "opt",
-                          "super", "superlearner",
-                          "kbal",
-                          "sbps", "subgroup")
+  acceptable.methods <- c("ps"
+                          , "gbm", "twang", "gbr"
+                          , "cbps"
+                          , "npcbps"
+                          , "ebal", "entropy", "ebalance"
+                          , "sbw"
+                          , "ebcw", "ate"
+                          , "optweight", "opt"
+                          , "super", "superlearner"
+                          # "kbal",
+                          # "sbps", "subgroup"
+                          )
 
   if (missing(method)) method <- "ps"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
@@ -65,8 +66,8 @@ method.to.phrase <- function(method) {
     else if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
     else if (method %in% c("optweight")) return("targeted stable balancing weights")
     else if (method %in% c("super")) return("propensity score weighting with SuperLearner")
-    else if (method %in% c("kbal")) return("kernel balancing")
-    else if (method %in% c("sbps")) return("subgroup balancing propensity score weighting")
+    # else if (method %in% c("kbal")) return("kernel balancing")
+    # else if (method %in% c("sbps")) return("subgroup balancing propensity score weighting")
     else return("the chosen method of weighting")
   }
 }
