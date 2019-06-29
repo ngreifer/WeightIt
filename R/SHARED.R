@@ -219,7 +219,8 @@ center <- function(x, na.rm = TRUE, at = NULL) {
     return(x)
 }
 w.m <- function(x, w = NULL, na.rm = TRUE) {
-    if (is_null(w)) w <- as.numeric(!is.na(x))
+    if (is_null(w)) w <- rep(1, length(x))
+    w[is.na(x)] <- NA_real_
     return(sum(x*w, na.rm=na.rm)/sum(w, na.rm=na.rm))
 }
 w.v <- function(x, w = NULL, na.rm = TRUE) {
@@ -227,7 +228,13 @@ w.v <- function(x, w = NULL, na.rm = TRUE) {
 }
 w.cov <- function(x, y, w = NULL, na.rm = TRUE, type = 3) {
 
-    if (is_null(w)) w <- as.numeric(!is.na(x))
+    if (length(x) != length(y)) stop("x and y must the same length")
+
+    if (is_null(w)) w <- rep(1, length(x))
+    else if (length(w) != length(x)) stop("weights must be same length as x and y")
+
+    w[is.na(x) | is.na(y)] <- NA_real_
+
     wmx <- w.m(x, w, na.rm = na.rm)
     wmy <- w.m(y, w, na.rm = na.rm)
 
@@ -246,6 +253,20 @@ w.cov.scale <- function(w, type = 3, na.rm = TRUE) {
     else if (type == 3) sw*(n-1)/n - vw1*n/sw
     # else if (type == 4) sw*(n-1)/n - vw2*n/sw
 
+}
+w.r <- function(x, y, w = NULL, s.weights = NULL) {
+    #Computes weighted correlation but using the unweighted (s.weighted) variances
+    #in the denominator.
+    if (is_null(s.weights)) s.weights <- rep(1, length(x))
+    else if (length(s.weights) != length(x)) stop("s.weights must be same length as x and y")
+
+    s.weights[is.na(x) | is.na(y)] <- NA_real_
+
+    w_ <- w*s.weights
+
+    r <- w.cov(x, y, w_) / (sqrt(w.v(x, s.weights) * w.v(y, s.weights)))
+
+    return(r)
 }
 col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
     if (is_null(w)) {
@@ -277,6 +298,10 @@ geom.mean <- function(y, na.rm = TRUE) {
 }
 mat_div <- function(mat, vec) {
     mat/vec[col(mat)]
+}
+abs_ <- function(x, ratio = FALSE) {
+    if (ratio) pmax(x, 1/x)
+    else (abs(x))
 }
 
 #Formulas
