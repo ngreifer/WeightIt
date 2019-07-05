@@ -25,7 +25,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
                           , "super", "superlearner"
                           # "kbal",
                           # "sbps", "subgroup"
-                          )
+  )
 
   if (missing(method)) method <- "ps"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
@@ -103,49 +103,98 @@ process.estimand <- function(estimand, method, treat.type) {
     return(toupper(estimand))
   }
 }
-process.focal.and.estimand <- function(focal, estimand, treat, treat.type) {
+process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treated = NULL) {
   reported.estimand <- estimand
 
   #Check focal
-  if (treat.type %in% c("binary", "multinomial")) {
+  unique.treat <- unique(treat, nmax = 2)
+  if (treat.type == "multinomial") {
+    unique.treat <- unique(treat, nmax = length(treat)/4)
+    if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
+      warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
+      reported.estimand <- estimand <- "ATT"
+    }
+
     if (estimand == "ATT") {
       if (is_null(focal)) {
-        if (treat.type == "multinomial") {
+        if (is_null(treated) || treated %nin% unique.treat) {
           stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
         }
+        focal <- treated
       }
-      else if (length(focal) > 1L || !any(unique(treat) == focal)) {
-        stop("The argument supplied to focal must be the name of a level of treat.", call. = FALSE)
+    }
+    else if (estimand == "ATC") {
+      if (is_null(focal)) {
+          stop("When estimand = \"ATC\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
       }
     }
     else {
       if (is_not_null(focal)) {
         warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
-        estimand <- "ATT"
+        reported.estimand <- estimand <- "ATT"
       }
     }
   }
-
-  #Get focal, estimand, and reported estimand
-  if (isTRUE(treat.type == "binary")) {
-    unique.treat <- unique(treat, nmax = 2)
+  else if (treat.type == "binary") {
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
+    if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
+        warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
+        reported.estimand <- estimand <- "ATT"
+    }
+
     if (estimand == "ATT") {
       if (is_null(focal)) {
-        focal <- unique.treat[unique.treat.bin == 1]
+        if (is_null(treated) || treated %nin% unique.treat) {
+          if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
+            #If is 0/1
+            treated <- unique.treat[unique.treat.bin == 1]
+          }
+          else {
+            treated <- names(which.min(table(treat))) #Smaller group is treated
+            message(paste0("Assuming ", word.list(treated, quotes = !is.numeric(treat), is.are = TRUE),
+                           " the treated level. If not, supply an argument to focal."))
+          }
+        }
+        focal <- treated
       }
-      else if (focal == unique.treat[unique.treat.bin == 0]){
-        reported.estimand <- "ATC"
+      else {
+        if (is_null(treated) || treated %nin% unique.treat) {
+          treated <- focal
+        }
       }
     }
     else if (estimand == "ATC") {
-      focal <- unique.treat[unique.treat.bin == 0]
+      if (is_null(focal)) {
+        if (is_null(treated) || treated %nin% unique.treat) {
+
+          if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
+            treated <- unique.treat[unique.treat.bin == 1]
+          }
+          else {
+            treated <- names(which.min(table(treat))) #Smaller group is treated
+            message(paste0("Assuming ", word.list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE),
+                           " the control level. If not, supply an argument to focal."))
+          }
+        }
+        focal <- unique.treat[unique.treat %nin% treated]
+      }
+      else {
+        if (is_null(treated) || treated %nin% unique.treat) {
+          treated <- unique.treat[unique.treat %nin% focal]
+        }
+      }
       estimand <- "ATT"
     }
   }
-  return(list(focal = focal,
+
+  if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
+    stop("The argument supplied to focal must be the name of a level of treat.", call. = FALSE)
+  }
+
+  return(list(focal = as.character(focal),
               estimand = estimand,
-              reported.estimand = reported.estimand))
+              reported.estimand = reported.estimand,
+              treated = if (is.factor(treated)) as.character(treated) else treated))
 }
 process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
@@ -328,30 +377,114 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
   else return(as.data.frame(mat[, keep, drop = FALSE]))
 
 }
-get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL) {
+get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL) {
   #ps must be a matrix/df with columns named after treat levels
 
-  w <- rep(0, nrow(ps))
 
   if (is_null(attr(treat, "treat.type"))) treat <- get.treat.type(treat)
 
   treat.type <- attr(treat, "treat.type")
 
-  processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+  processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treat.type, treated)
   estimand <- processed.estimand$estimand
+  focal <- processed.estimand$focal
+  reported.estimand <- processed.estimand$reported.estimand
+  assumed.treated <- processed.estimand$treated
 
-  if (is.factor(treat)) t.levels <- levels(treat)
-  else t.levels <- unique(treat, nmax = length(treat)/4)
+  if (treat.type == "continuous") {
+    stop("get_w_from_ps can only be used with binary or multinomial treatments.", call. = FALSE)
+  }
+  else {
+    if (is.vector(ps, mode = "numeric")) {
+      ps.names <- names(ps)
+      ps <- matrix(ps, ncol = 1)
+    }
+    else if (is.matrix(ps) || is.data.frame(ps)) {
+      ps.names <- rownames(ps)
+    }
 
-  for (i in seq_len(nunique(treat))) {
-    w[treat == levels(treat)[i]] <- 1/ps[treat == levels(treat)[i], i]
+    if (is.factor(treat)) t.levels <- levels(treat)
+    else t.levels <- unique(treat, nmax = length(treat)/4)
+
+    if (treat.type == "binary") {
+      if ((is.matrix(ps) && all(is.numeric(ps))) ||
+          (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
+        if (ncol(ps) == 1) {
+          if (suppressWarnings(!any(is.na(as.numeric(as.character(treat))))) &&
+            all(check_if_zero(binarize(treat) - as.numeric(as.character(treat))))) treated.level <- 1
+          else if (is_not_null(treated)) {
+            if (treated %in% treat) treated.level <- treated
+            else stop("The argument to treated must be a value in treat.", call. = FALSE)
+          }
+          else if (is_not_null(assumed.treated)) {
+            treated.level <- assumed.treated
+          }
+          else if (is_not_null(colnames(ps)) && colnames(ps) %in% as.character(t.levels)) {
+            treated.level <- colnames(ps)
+          }
+          else {
+            stop("If the treatment has two non-0/1 levels and ps is a vector or has only one column, an argument to treated must be supplied.", call. = FALSE)
+          }
+
+          t.levels <- c(treated.level, t.levels[t.levels != treated.level])
+          ps <- matrix(c(ps[,1], 1-ps[,1]), ncol = 2, dimnames = list(ps.names, as.character(t.levels)))
+        }
+        else if (ncol(ps) == 2) {
+          if (!all(as.character(t.levels) %in% colnames(ps))) {
+            stop("If ps has two columns, they must be named with the treatment levels.", call. = FALSE)
+          }
+          else ps <- ps
+        }
+        else {
+          stop("ps cannot have more than two columns if the treatment is binary.", call. = FALSE)
+        }
+      }
+      else {
+        stop("ps must be a matrix, data.frame, or vector of propensity scores.", call. = FALSE)
+      }
+    }
+    else if (treat.type == "multinomial") {
+      if ((is.matrix(ps) && all(is.numeric(ps))) ||
+          (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
+        if (ncol(ps) == 1) {
+          if (toupper(estimand) == "ATE") {
+            ps <- matrix(rep(ps, nunique(treat)), ncol = nunique(treat), dimnames = list(ps.names, t.levels))
+          }
+          else {
+            stop("With multinomial treatments, ps can be a vector or have only one column only if the estimand is the ATE.", call. = FALSE)
+          }
+        }
+        else if (ncol(ps) == nunique(treat)) {
+          if (!all(t.levels %in% colnames(ps))) {
+            stop("The columns of ps must be named with the treatment levels.", call. = FALSE)
+          }
+          else ps <- ps
+        }
+        else {
+          stop("ps must have as many columns as there are treatment levels.", call. = FALSE)
+        }
+      }
+      else {
+        stop("ps must be a matrix or data.frame of propensity scores.", call. = FALSE)
+      }
+    }
+  }
+
+  if (nrow(ps) != length(treat)) {
+    stop("ps and treat must have the same number of units.", call. = FALSE)
+  }
+
+  w <- setNames(rep(0, nrow(ps)), ps.names)
+
+  for (i in t.levels) {
+    w[treat == i] <- 1/ps[treat == i, as.character(i)]
   }
 
   if (toupper(estimand) == "ATE") {
     # w <- w
   }
   else if (toupper(estimand) == "ATT") {
-    w <- w*ps[, levels(treat) == focal]
+    w <- w*ps[, as.character(focal)]
   }
   else if (toupper(estimand) == "ATO") {
     w <- w/apply(ps, 1, function(x) sum(1/x)) #Li & Li (2018)
