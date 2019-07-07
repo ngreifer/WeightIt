@@ -39,7 +39,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
       if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
       else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
 
-      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word.list(Anames)), call. = FALSE)
+      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE)
       else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE)
     }
   }
@@ -101,7 +101,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
       if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
       else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
 
-      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word.list(Anames)), call. = FALSE)
+      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE)
       else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE)
     }
   }
@@ -158,7 +158,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
         A$link <- acceptable.links[1]
-        warning(paste0("Only ", word.list(acceptable.links, quotes = TRUE), " are allowed as links for ", if (bin.treat) "binary" else "multinomial", " treatments. Using link = ", word.list(acceptable.links[1], quotes = TRUE), "."),
+        warning(paste0("Only ", word_list(acceptable.links, quotes = TRUE), " are allowed as links for ", if (bin.treat) "binary" else "multinomial", " treatments. Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
                 call. = FALSE)
       }
       else A$link <- which.link
@@ -497,7 +497,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mom
   if (is_not_null(treat.list)) {
     treat.list <- lapply(treat.list, function(t) {
       treat <- t[subset]
-      if (attr(t, "treat.type") != "continuous") treat <- factor(treat)
+      if (get.treat.type(t) != "continuous") treat <- factor(treat)
       return(treat)
     })
   }
@@ -540,7 +540,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
   available.stop.methods <- c("ks.mean", "es.mean", "ks.max", "es.max")
   s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
-  if (is.na(s.m.matches) || s.m.matches == 0L) {stop(paste0("stop.method must be one of ", word.list(available.stop.methods, "or", quotes = TRUE), "."), call. = FALSE)}
+  if (is.na(s.m.matches) || s.m.matches == 0L) {stop(paste0("stop.method must be one of ", word_list(available.stop.methods, "or", quotes = TRUE), "."), call. = FALSE)}
   else A[["stop.method"]] <- available.stop.methods[s.m.matches]
 
   for (f in names(formals(twang::ps))) {

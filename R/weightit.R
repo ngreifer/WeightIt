@@ -59,8 +59,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   }
 
   #Get treat type
-  treat <- get.treat.type(treat)
-  treat.type <- attr(treat, "treat.type")
+  treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
 
   #Process estimand and focal
   estimand <- process.estimand(estimand, method, treat.type)
@@ -147,23 +147,23 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 }
 
 print.weightit <- function(x, ...) {
-  treat.type <- attr(x[["treat"]], "treat.type")
+  treat.type <- get.treat.type(x[["treat"]])
   trim <- attr(x[["weights"]], "trim")
 
   cat("A weightit object\n")
-  cat(paste0(" - method: \"", attr(x[["method"]], "name"), "\" (", method.to.phrase(x[["method"]]), ")\n"))
+  if (is_not_null(x[["method"]])) cat(paste0(" - method: \"", attr(x[["method"]], "name"), "\" (", method.to.phrase(x[["method"]]), ")\n"))
   cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
-  cat(paste0(" - sampling weights: ", ifelse(all_the_same(x[["s.weights"]]),"none", "present"), "\n"))
+  cat(paste0(" - sampling weights: ", if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present", "\n"))
   cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x[["treat"]]), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")"), ""))), "\n"))
   if (is_not_null(x[["estimand"]])) cat(paste0(" - estimand: ", x[["estimand"]], ifelse(is_not_null(x[["focal"]]), paste0(" (focal: ", x[["focal"]], ")"), ""), "\n"))
-  cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
+  if (is_not_null(x[["covs"]])) cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
   if (is_not_null(x[["by"]])) {
     cat(paste0(" - by: ", paste(names(x[["by"]]), collapse = ", "), "\n"))
   }
   if (is_not_null(trim)) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(paste(" - weights trimmed at", word.list(paste0(round(100*trim, 2), "%")), "\n"))
+      cat(paste(" - weights trimmed at", word_list(paste0(round(100*trim, 2), "%")), "\n"))
     }
     else {
       if (attr(x[["weights"]], "trim.lower")) t.b <- "top and bottom" else t.b <- "top"
@@ -182,7 +182,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   else sw <- object$s.weights
   w <- object$weights*sw
   t <- object$treat
-  treat.type <- attr(object[["treat"]], "treat.type")
+  treat.type <- get.treat.type(object[["treat"]])
 
   if (treat.type == "continuous") {
     out$weight.range <- list(all = c(min(w[w > 0]),
@@ -268,7 +268,7 @@ print.summary.weightit <- function(x, ...) {
   top <- max(lengths(x$weight.top))
   cat("Summary of weights:\n\n")
   cat("- Weight ranges:\n")
-  print.data.frame(round_df_char(text.box.plot(x$weight.range, 28), 4), ...)
+  print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
   df <- setNames(data.frame(do.call("c", lapply(names(x$weight.top), function(x) c(" ", x))),
                    matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), rep("", top - length(x)), round(x, 4), rep("", top - length(x))))),
                byrow = TRUE, nrow = 2*length(x$weight.top))),

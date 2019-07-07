@@ -46,7 +46,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
           rhs.vars.mentioned.lang <- attr(terms(num.formula), "variables")[-1]
           rhs.vars.mentioned <- sapply(rhs.vars.mentioned.lang, deparse)
           rhs.vars.failed <- sapply(rhs.vars.mentioned.lang, function(v) {
-            null.or.error(try(eval(v, c(data, .GlobalEnv)), silent = TRUE))
+            null_or_error(try(eval(v, c(data, .GlobalEnv)), silent = TRUE))
           })
 
           if (any(rhs.vars.failed)) {
@@ -95,7 +95,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
       stop(paste0("No missing values are allowed in the treatment variable. Missing values found in ", treat.name, "."), call. = FALSE)
     }
 
-    treat.list[[i]] <- get.treat.type(treat.list[[i]])
+    treat.list[[i]] <- assign.treat.type(treat.list[[i]])
 
     #Recreate data and formula
     # w.data <- data.frame(treat.list[[i]], covs.list[[i]])
@@ -152,7 +152,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
         #Returns weights (w) and propensty score (ps)
         obj <- do.call("weightit.fit", c(list(covs = covs.list[[i]],
                                               treat = treat.list[[i]],
-                                              treat.type = attr(treat.list[[i]], "treat.type"),
+                                              treat.type = get.treat.type(treat.list[[i]]),
                                               s.weights = s.weights,
                                               by.factor = processed.by[["by.factor"]],
                                               estimand = estimand,
@@ -194,7 +194,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
         eval.verbose({
           sw_obj <- do.call("weightit.fit", c(list(covs = stab.covs_i,
                                                    treat = treat.list[[i]],
-                                                   treat.type = attr(treat.list[[i]], "treat.type"),
+                                                   treat.type = get.treat.type(treat.list[[i]]),
                                                    s.weights = s.weights,
                                                    by.factor = processed.by[["by.factor"]],
                                                    estimand = estimand,
@@ -254,7 +254,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 }
 
 print.weightitMSM <- function(x, ...) {
-  treat.types <- sapply(x[["treat.list"]], function(y) attr(y, "treat.type"))
+  treat.types <- vapply(x[["treat.list"]], get.treat.type, character(1L))
   trim <- attr(x[["weights"]], "trim")
 
   cat("A weightitMSM object\n")
@@ -300,7 +300,7 @@ print.weightitMSM <- function(x, ...) {
   if (is_not_null(trim)) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(paste(" - weights trimmed at", word.list(paste0(round(100*trim, 2), "%")), "\n"))
+      cat(paste(" - weights trimmed at", word_list(paste0(round(100*trim, 2), "%")), "\n"))
     }
     else {
       if (attr(x[["weights"]], "trim.lower")) t.b <- "top and bottom" else t.b <- "top"
@@ -319,7 +319,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
   w <- object$weights*sw
-  treat.types <- sapply(object[["treat.list"]], function(y) attr(y, "treat.type"))
+  treat.types <- vapply(object[["treat.list"]], get.treat.type, character(1L))
   stabilized <- is_not_null(object[["stabilization"]])
 
   for (ti in seq_along(object$treat.list)) {
@@ -424,7 +424,7 @@ print.summary.weightitMSM <- function(x, ...) {
   for (ti in seq_along(x)) {
     if (!only.one) cat(paste(" - - - - - - - - - - Time", ti, "- - - - - - - - - -\n"))
     cat("- Weight ranges:\n")
-    print.data.frame(round_df_char(text.box.plot(x[[ti]]$weight.range, 28), 4))
+    print.data.frame(round_df_char(text_box_plot(x[[ti]]$weight.range, 28), 4))
 
     df <- setNames(data.frame(do.call("c", lapply(names(x[[ti]]$weight.top), function(y) c(" ", y))),
                               matrix(do.call("c", lapply(x[[ti]]$weight.top, function(y) c(names(y), round(y, 4)))),
