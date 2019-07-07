@@ -494,7 +494,7 @@ get.treat.type <- function(treat) {
     return(attr(treat, "treat.type"))
 }
 has.treat.type <- function(treat) {
-    is_null(get.treat.type(treat))
+    is_not_null(get.treat.type(treat))
 }
 process.s.weights <- function(s.weights, data = NULL) {
     #Process s.weights
