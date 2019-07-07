@@ -96,7 +96,7 @@ process.estimand <- function(estimand, method, treat.type) {
   if (treat.type != "continuous" && !is.function(method) &&
       toupper(estimand) %nin% AE[[treat.type]][[method]]) {
     stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
-                " with ", treat.type, " treatments. Only ", word.list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
+                " with ", treat.type, " treatments. Only ", word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
                 " allowed."), call. = FALSE)
   }
   else {
@@ -106,8 +106,10 @@ process.estimand <- function(estimand, method, treat.type) {
 process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treated = NULL) {
   reported.estimand <- estimand
 
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
   #Check focal
-  unique.treat <- unique(treat, nmax = 2)
   if (treat.type == "multinomial") {
     unique.treat <- unique(treat, nmax = length(treat)/4)
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
@@ -151,7 +153,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
           }
           else {
             treated <- names(which.min(table(treat))) #Smaller group is treated
-            message(paste0("Assuming ", word.list(treated, quotes = !is.numeric(treat), is.are = TRUE),
+            message(paste0("Assuming ", word_list(treated, quotes = !is.numeric(treat), is.are = TRUE),
                            " the treated level. If not, supply an argument to focal."))
           }
         }
@@ -172,7 +174,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
           }
           else {
             treated <- names(which.min(table(treat))) #Smaller group is treated
-            message(paste0("Assuming ", word.list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE),
+            message(paste0("Assuming ", word_list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE),
                            " the control level. If not, supply an argument to focal."))
           }
         }
@@ -241,8 +243,8 @@ process.moments.int <- function(moments, int, method) {
       }
     }
     else if (any(mi0 <- c(as.integer(moments) != 1L, int))) {
-      warning(paste0(word.list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
-                     " not compatible with ", method.to.phrase(method), ". Ignoring ", word.list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
+      warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
+                     " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
       moments <- 1
       int <- FALSE
     }
@@ -275,7 +277,7 @@ check.package <- function(package.name, alternative = FALSE) {
   if (is_not_null(package.not.installed) && !alternative) {
     plural <- length(package.not.installed) > 1
     stop(paste0("Package", if (plural) "s " else " ",
-                word.list(package.not.installed, quotes = TRUE, is.are = TRUE),
+                word_list(package.not.installed, quotes = TRUE, is.are = TRUE),
                 " needed for this function to work. Please install ",
                 if (plural) "them" else "it","."),
          call. = FALSE)
@@ -380,10 +382,9 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
 get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL) {
   #ps must be a matrix/df with columns named after treat levels
 
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
 
-  if (is_null(attr(treat, "treat.type"))) treat <- get.treat.type(treat)
-
-  treat.type <- attr(treat, "treat.type")
+  treat.type <- get.treat.type(treat)
 
   processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treat.type, treated)
   estimand <- processed.estimand$estimand
@@ -495,6 +496,106 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   else w <- NULL
 
   return(w)
+}
+as.weightit <- function(weights, treat, covs = NULL, estimand = NULL, s.weights = NULL, ps = NULL, ...) {
+
+  if (missing(weights)) stop("weights must be supplied.")
+  if (missing(treat)) stop("treat must be supplied.")
+
+  if (!is.vector(weights, "numeric")) stop("weights must be a numeric vector.", call. = FALSE)
+
+  if (!is.atomic(treat) && !is.factor(treat)) stop("treat must be an atomic vector (i.e., numeric, logical, or character) or a factor.", call. = FALSE)
+  if (length(weights) != length(treat)) stop("weights and treat must be the same length.", call. = FALSE)
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+
+  if (is_not_null(covs)) {
+    if (!is.data.frame(covs)) stop("covs must be a data.frame of covariates.", call. = FALSE)
+    if (nrow(covs) != length(weights)) stop("covs and weights must be the same length.", call. = FALSE)
+  }
+  if (is_not_null(estimand)) {
+    if (!is.vector(estimand, "character") || length(estimand) != 1L) stop("estimand must be a character vector of length 1.", call. = FALSE)
+  }
+  if (is_not_null(s.weights)) {
+    if (!is.vector(s.weights, "numeric")) stop("s.weights must be a numeric vector.", call. = FALSE)
+    if (length(s.weights) != length(weights)) stop("s.weights and weights must be the same length.", call. = FALSE)
+  }
+  if (is_not_null(ps)) {
+    if (!is.vector(ps, "numeric")) stop("ps must be a numeric vector.", call. = FALSE)
+    if (length(ps) != length(ps)) stop("ps and weights must be the same length.", call. = FALSE)
+  }
+
+  w.list <- list(weights = weights,
+                 treat = assign.treat.type(treat),
+                 covs = covs,
+                 estimand = estimand,
+                 s.weights = s.weights,
+                 ps = ps)
+
+  if (...length() > 0L) {
+    A <- list(...)
+    if (is_null(names(A)) || any(names(A) == "")) {
+      stop("All arguments in ... must be named.")
+    }
+    w.list <- c(w.list, A)
+  }
+
+  class(w.list) <- "weightit"
+
+  return(w.list)
+}
+as.weightitMSM <- function(weights, treat.list, covs.list = NULL, estimand = NULL, s.weights = NULL, ps.list = NULL, ...) {
+
+  if (missing(weights)) stop("weights must be supplied.")
+  if (missing(treat.list)) stop("treat.list must be supplied.")
+
+  if (!is.vector(weights, "numeric")) stop("weights must be a numeric vector.", call. = FALSE)
+
+  if (!is.vector(treat.list, "list")) stop("treat.list must be a list of treatment statuses for each individual at each time point.", call. = FALSE)
+  if (any(vapply(treat.list, function(x) !is.atomic(x) && !is.factor(x), logical(1L)))) stop("treat.list must be a list of atomic vectors (i.e., numeric, logical, or character) or factors.", call. = FALSE)
+  if (!all_the_same(lengths(treat.list))) stop("Each component of treat.list must have the same length.", call. = FALSE)
+  if (length(weights) != length(treat.list[[1]])) stop("weights and each component of treat.list must be the same length.", call. = FALSE)
+  treat.list <- sapply(treat.list, function(t) if (!has.treat.type(t)) assign.treat.type(t) else t, simplify = FALSE)
+
+  if (is_not_null(covs.list)) {
+    if (!is.vector(covs.list, "list") || any(vapply(covs.list, function(x) !is.data.frame(x), logical(1L)))) stop("covs.list must be a list of data.frames for each time point.", call. = FALSE)
+    if (length(covs.list) != length(treat.list)) stop("covs.list must have the same number of time points as treat.list.", call. = FALSE)
+    if (!all_the_same(vapply(covs.list, nrow, numeric(1L)))) stop("Each component of covs.list must have the same number of rows.", call. = FALSE)
+    if (length(weights) != nrow(covs.list[[1]])) stop("weights and each component of covs.list must be the same length.", call. = FALSE)
+  }
+  if (is_not_null(estimand)) {
+    if (!is.vector(estimand, "character") || length(estimand) != 1L) stop("estimand must be a character vector of length 1.", call. = FALSE)
+  }
+  if (is_not_null(s.weights)) {
+    if (!is.vector(s.weights, "numeric")) stop("s.weights must be a numeric vector.", call. = FALSE)
+    if (length(s.weights) != length(weights)) stop("s.weights and weights must be the same length.", call. = FALSE)
+  }
+  if (is_not_null(ps.list)) {
+    if (!is.vector(ps.list, "list")) stop("ps.list must be a list of propensity scores for each individual at each time point.", call. = FALSE)
+    if (length(ps.list) != length(treat.list)) stop("ps.list must have the same number of time points as treat.list.", call. = FALSE)
+    if (any(vapply(ps.list, function(x) !is.vector(x, "numeric"), logical(1L)))) stop("ps.list must be a list of numeric vectors.", call. = FALSE)
+    if (!all_the_same(lengths(ps.list))) stop("Each component of ps.list must have the same length.", call. = FALSE)
+    if (length(weights) != length(ps.list[[1]])) stop("weights and each component of ps.list must be the same length.", call. = FALSE)
+  }
+
+  w.list <- list(weights = weights,
+                   treat.list = treat.list,
+                   covs.list = covs.list,
+                   estimand = estimand,
+                   s.weights = s.weights,
+                   ps.list = ps.list)
+
+
+  if (...length() > 0L) {
+    A <- list(...)
+    if (is_null(names(A)) || any(names(A) == "")) {
+      stop("All arguments in ... must be named.")
+    }
+    w.list <- c(w.list, A)
+  }
+
+  class(w.list) <- c("weightitMSM", "weightit")
+
+  return(w.list)
 }
 
 #To pass CRAN checks:
