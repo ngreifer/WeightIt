@@ -4,7 +4,7 @@
 #The original file is in cobalt/R/.
 
 #Strings
-word.list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
+word_list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
     #When given a vector of strings, creates a string of the form "a and b"
     #or "a, b, and c"
     #If is.are, adds "is" or "are" appropriately
@@ -136,7 +136,7 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
 
     return(df)
 }
-text.box.plot <- function(range.list, width = 12) {
+text_box_plot <- function(range.list, width = 12) {
     full.range <- range(unlist(range.list))
     ratio = diff(full.range)/(width+1)
     rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
@@ -194,14 +194,27 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
 }
 
 #Statistics
-binarize <- function(variable) {
+binarize <- function(variable, zero = NULL, one = NULL) {
     nas <- is.na(variable)
     if (!is_binary(variable[!nas])) stop(paste0("Cannot binarize ", deparse(substitute(variable)), ": more than two levels."))
     if (is.character(variable)) variable <- factor(variable)
     variable.numeric <- as.numeric(variable)
-    if (0 %in% variable.numeric) zero <- 0
-    else zero <- min(variable.numeric, na.rm = TRUE)
-    newvar <- setNames(ifelse(!nas & variable.numeric==zero, 0L, 1L), names(variable))
+    if (is_null(zero)) {
+        if (is_null(one)) {
+            if (0 %in% variable.numeric) zero <- 0
+            else zero <- min(variable.numeric, na.rm = TRUE)
+        }
+        else {
+            if (one %in% levels(variable)) zero <- levels(variable)[levels(variable) != one]
+            else stop("The argument to \"one\" is not the name of a level of variable.", call. = FALSE)
+        }
+    }
+    else {
+        if (zero %in% levels(variable)) zero <- zero
+        else stop("The argument to \"zero\" is not the name of a level of variable.", call. = FALSE)
+    }
+
+    newvar <- setNames(ifelse(!nas & variable.numeric == zero, 0L, 1L), names(variable))
     newvar[nas] <- NA_integer_
     return(newvar)
 }
@@ -348,11 +361,11 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     if (is.formula(tt, 2)) {
         resp.vars.mentioned <- as.character(tt)[2]
         resp.vars.failed <- vapply(resp.vars.mentioned, function(v) {
-            null.or.error(try(eval(parse(text=v)[[1]], data, env), silent = TRUE))
+            null_or_error(try(eval(parse(text=v)[[1]], data, env), silent = TRUE))
         }, logical(1L))
 
         if (any(resp.vars.failed)) {
-            if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", as.character(tt)[2], "\", is not a variable in ", word.list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
+            if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", as.character(tt)[2], "\", is not a variable in ", word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
             tt <- delete.response(tt)
         }
     }
@@ -373,7 +386,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     rhs.vars.mentioned.lang <- attr(tt.covs, "variables")[-1]
     rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse, character(1L))
     rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
-        null.or.error(try(eval(parse(text=v)[[1]], data, env), silent = TRUE))
+        null_or_error(try(eval(parse(text=v)[[1]], data, env), silent = TRUE))
     }, logical(1L))
 
     if (any(rhs.vars.failed)) {
@@ -458,7 +471,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
                 treat = treat,
                 treat.name = treat.name))
 }
-get.treat.type <- function(treat) {
+assign.treat.type <- function(treat) {
     #Returns treat with treat.type attribute
     nunique.treat <- nunique(treat)
     if (nunique.treat == 2) {
@@ -476,6 +489,12 @@ get.treat.type <- function(treat) {
     }
     attr(treat, "treat.type") <- treat.type
     return(treat)
+}
+get.treat.type <- function(treat) {
+    return(attr(treat, "treat.type"))
+}
+has.treat.type <- function(treat) {
+    is_null(get.treat.type(treat))
 }
 process.s.weights <- function(s.weights, data = NULL) {
     #Process s.weights
@@ -539,7 +558,7 @@ is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
             s0 <- ifelse(arg.to, "The argument to ", "")
             s2 <- ifelse(any(types %in% c("factor", "character", "numeric", "logical")),
                          "vector", "")
-            stop(paste0(s0, s1, " must be a ", word.list(types, and.or = "or"), " ", s2, "."), call. = FALSE)
+            stop(paste0(s0, s1, " must be a ", word_list(types, and.or = "or"), " ", s2, "."), call. = FALSE)
         }
     }
     else {
@@ -558,7 +577,7 @@ probably.a.bug <- function() {
                 fun), call. = FALSE)
 }
 `%nin%` <- function(x, table) is.na(match(x, table, nomatch = NA_integer_))
-null.or.error <- function(x) {is_null(x) || class(x) == "try-error"}
+null_or_error <- function(x) {is_null(x) || class(x) == "try-error"}
 match_arg <- function(arg, choices, several.ok = FALSE) {
     #Replaces match.arg() but gives cleaner error message and processing
     #of arg.
@@ -587,7 +606,7 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
 
     i <- pmatch(arg, choices, nomatch = 0L, duplicates.ok = TRUE)
     if (all(i == 0L))
-        stop(paste0("'", arg.name, "' should be one of ", word.list(choices, and.or = "or", quotes = TRUE), "."),
+        stop(paste0("'", arg.name, "' should be one of ", word_list(choices, and.or = "or", quotes = TRUE), "."),
              call. = FALSE)
     i <- i[i > 0L]
     if (!several.ok && length(i) > 1)
