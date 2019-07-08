@@ -138,6 +138,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
     }
   }
   else if (treat.type == "binary") {
+    unique.treat <- unique(treat, nmax = 2)
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
         warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
