@@ -60,6 +60,8 @@ my.ps <- function(treat, covs, estimand, focal = NULL) {
 summary(W1)
 bal.tab(W1)
 
+#Balancing covariates for logitdinal treatments
+# my.ps is used at each time point.
 library("twang")
 data("iptwExWide", package = "twang")
 (W2 <- weightitMSM(list(tx1 ~ age + gender + use0,
@@ -70,4 +72,35 @@ data("iptwExWide", package = "twang")
 summary(W2)
 bal.tab(W2)
 
+
+\dontrun{
+# Kernel balancing using the KBAL package, available
+# using devtools::install_github("chadhazlett/KBAL").
+# Only the ATT and ATC are available. Use 'kbal.method'
+# instead of 'method' in weightit() to choose between
+# "ebal" and "el".
+
+kbal.fun <- function (treat, covs, estimand, focal, ...) {
+    args <- list(...)
+    if (is_not_null(focal))
+        treat <- as.numeric(treat == focal)
+    else if (estimand != "ATT")
+        stop("estimand must be 'ATT' or 'ATC'.", call. = FALSE)
+    if ("kbal.method" \%in\% names(args)) {
+        names(args)[names(args) == "kbal.method"] <- "method"
+    }
+    args[names(args) \%nin\% setdiff(names(formals(KBAL::kbal)),
+        c("X", "D"))] <- NULL
+    k.out <- do.call(KBAL::kbal, c(list(X = covs, D = treat),
+        args))
+    w <- k.out$w
+    return(list(w = w))
+}
+
+(Wk <- weightit(treat ~ age + educ + married +
+                nodegree + re74, data = lalonde,
+                method = kbal.ps, estimand = "ATT"))
+summary(Wk)
+bal.tab(Wk, disp.ks = TRUE)
+}
 }
