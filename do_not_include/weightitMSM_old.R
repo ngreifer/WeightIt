@@ -171,7 +171,7 @@
           rhs.vars.mentioned.lang <- attr(tt.covs, "variables")[-1]
           rhs.vars.mentioned <- sapply(rhs.vars.mentioned.lang, deparse)
           rhs.vars.failed <- sapply(rhs.vars.mentioned.lang, function(v) {
-            null.or.error(try(eval(v, c(data, env)), silent = TRUE))
+            null_or_error(try(eval(v, c(data, env)), silent = TRUE))
           })
 
           if (any(rhs.vars.failed)) {
@@ -322,7 +322,7 @@
   if (is_not_null(trim)) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(paste(" - weights trimmed at", word.list(paste0(round(100*trim, 2), "%")), "\n"))
+      cat(paste(" - weights trimmed at", word_list(paste0(round(100*trim, 2), "%")), "\n"))
     }
     else {
       if (attr(x[["weights"]], "trim.lower")) t.b <- "top and bottom" else t.b <- "top"
@@ -446,7 +446,7 @@
   for (ti in seq_along(x)) {
     if (!only.one) cat(paste0(" - - - - - - - - - - Time ", ti, " - - - - - - - - - -\n"))
     cat("- Weight ranges:\n")
-    print.data.frame(round_df(text.box.plot(x[[ti]]$weight.range, 28), 4))
+    print.data.frame(round_df(text_box_plot(x[[ti]]$weight.range, 28), 4))
 
     df <- setNames(data.frame(do.call("c", lapply(names(x[[ti]]$weight.top), function(y) c(" ", y))),
                               matrix(do.call("c", lapply(x[[ti]]$weight.top, function(y) c(names(y), round(y, 4)))),

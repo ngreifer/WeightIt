@@ -36,7 +36,7 @@ weightitG <- function(Sformula = NULL, data = NULL, targetdata = NULL, targetmar
 
     allowable.methods = c("ebal", "sbw", "ebcw")
     if (!method.to.proper.method(method) %in% allowable.methods) {
-      stop(paste("Only methods", word.list(allowable.methods, quotes = TRUE, and.or = "and"),
+      stop(paste("Only methods", word_list(allowable.methods, quotes = TRUE, and.or = "and"),
                  "are allowed with targetmargins."), call. = FALSE)
     }
   }
