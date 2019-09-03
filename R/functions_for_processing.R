@@ -73,25 +73,27 @@ method.to.phrase <- function(method) {
 }
 process.estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
-  AE <- list(binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM"),
-                           gbm = c("ATT", "ATC", "ATE"),
-                           cbps = c("ATT", "ATC", "ATE"),
-                           npcbps = c("ATE"),
-                           ebal = c("ATT", "ATC", "ATE"),
-                           ebcw = c("ATT", "ATC", "ATE"),
-                           optweight = c("ATT", "ATC", "ATE"),
-                           super = c("ATT", "ATC", "ATE", "ATO", "ATM"),
-                           kbal = c("ATT", "ATC", "ATE"),
-                           sbps = c("ATT", "ATC", "ATE", "ATO", "ATM")),
-             multinomial = list(ps = c("ATT", "ATE", "ATO"),
-                                gbm = c("ATT", "ATE"),
-                                cbps = c("ATT", "ATE"),
-                                npcbps = c("ATE"),
-                                ebal = c("ATT", "ATE"),
-                                ebcw = c("ATT", "ATE"),
-                                optweight = c("ATT", "ATE"),
-                                super = c("ATT", "ATE"),
-                                kbal = c("ATT", "ATE")))
+  AE <- list(binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                           , gbm = c("ATT", "ATC", "ATE")
+                           , cbps = c("ATT", "ATC", "ATE")
+                           , npcbps = c("ATE")
+                           , ebal = c("ATT", "ATC", "ATE")
+                           , ebcw = c("ATT", "ATC", "ATE")
+                           , optweight = c("ATT", "ATC", "ATE")
+                           , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                           # , kbal = c("ATT", "ATC", "ATE")
+                           # , sbps = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                           ),
+             multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                                , gbm = c("ATT", "ATC", "ATE")
+                                , cbps = c("ATT", "ATC", "ATE")
+                                , npcbps = c("ATE")
+                                , ebal = c("ATT", "ATC", "ATE")
+                                , ebcw = c("ATT", "ATC", "ATE")
+                                , optweight = c("ATT", "ATC", "ATE")
+                                , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                                # , kbal = c("ATT", "ATE")
+                                ))
 
   if (treat.type != "continuous" && !is.function(method) &&
       toupper(estimand) %nin% AE[[treat.type]][[method]]) {
@@ -128,12 +130,6 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
     else if (estimand == "ATC") {
       if (is_null(focal)) {
           stop("When estimand = \"ATC\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
-      }
-    }
-    else {
-      if (is_not_null(focal)) {
-        warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
-        reported.estimand <- estimand <- "ATT"
       }
     }
   }
@@ -390,7 +386,6 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treat.type, treated)
   estimand <- processed.estimand$estimand
   focal <- processed.estimand$focal
-  reported.estimand <- processed.estimand$reported.estimand
   assumed.treated <- processed.estimand$treated
 
   if (treat.type == "continuous") {
