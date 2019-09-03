@@ -36,7 +36,7 @@ an optional data set in the form of a data frame that contains the variables in 
 a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is \code{"ps"}.
 }
   \item{estimand}{
-the desired estimand. For binary treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO" or "ATM". For multinomial treatments, can be "ATE" or "ATT". The default for both is "ATE". This argument is ignored for continuous treatments. See Details for more information.
+the desired estimand. For binary and multinomial treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO" or "ATM". The default for both is "ATE". This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.
 }
   \item{stabilize}{
 \code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim} to reduce the variance of the weights. Default is \code{FALSE}.
@@ -96,6 +96,8 @@ The primary purpose of \code{weightit} is as a dispatcher to other functions in 
 \item{\code{\link[=method_ebcw]{"ebcw"}} - Empirical balancing calibration weighting.}
 \item{\code{\link[=method_optweight]{"optweight"}} - Optimization-based weighting.}
 \item{\code{\link[=method_super]{"super"}} - Propensity score weighting using SuperLearner.}
+\item{\code{\link[=method_user]{"user-defined"}} - Weighting using a user-defined weighting function.}
+
 }
 }
 
