@@ -495,4 +495,4 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 }
 
 #To pass CRAN checks:
-utils::globalVariables(c(".s.weights"))
+utils::globalVariables(c(".s.weights", "dens", "x", "y"))
