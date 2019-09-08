@@ -1,21 +1,21 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.5.1.9000
+Version: 0.6.0
 Author: Noah Greifer [aut, cre]
 Maintainer: Noah Greifer <noah.greifer@gmail.com>
-Description: Generates weights to form equivalent groups in observational studies with point or longitudinal treatments by easing and extending the functionality of the R packages 'twang' for generalized boosted modeling, 'CBPS' for covariate balancing propensity score weighting, 'ebal' for entropy balancing, 'optweight' for optimization-based weights, 'ATE' for empirical balancing calibration weighting, and 'SuperLearner' for stacked machine learning-based propensity scores. Also allows for assessment of weights and checking of covariate balance by interfacing directly with 'cobalt'.
+Description: Generates weights to form equivalent groups in observational studies with point or longitudinal treatments by easing and extending the functionality of the R packages 'twang' for generalized boosted modeling (McCaffrey, Ridgeway & Morral, 2004) <doi:10.1037/1082-989X.9.4.403>, 'CBPS' for covariate balancing propensity score weighting (Imai & Ratkovic, 2014) <doi:10.1111/rssb.12027>, 'ebal' for entropy balancing (Hainmueller, 2012) <doi:10.1093/pan/mpr025>, 'optweight' for optimization-based weights (Zubizarreta, 2015) <doi:10.1080/01621459.2015.1023805>, 'ATE' for empirical balancing calibration weighting (Chan, Yam, & Zhang, 2016) <doi:10.1111/rssb.12129>, and 'SuperLearner' for stacked machine learning-based propensity scores (Pirracchio, Petersen, & van der Laan, 2015) <doi:10.1093/aje/kwu253>. Also allows for assessment of weights and checking of covariate balance by interfacing directly with 'cobalt'.
 Depends:
     R (>= 3.3.0)
 Imports:
-    cobalt (>= 3.7.0)
+    ggplot2 (>= 3.0.0)
 Suggests:
     twang (>= 1.5),
     CBPS (>= 0.18),
     ebal (>= 0.1-6),
     ATE (>= 0.2.0),
     optweight (>= 0.2.4),
-    SuperLearner,
+    SuperLearner (>= 2.0-25),
     class,
     gam,
     mlogit (>= 0.3-0),
@@ -23,14 +23,13 @@ Suggests:
     survey,
     jtools,
     boot,
-    wCorr,
     gbm (>= 2.1.3),
     knitr,
-    rmarkdown,
-    KBAL
+    rmarkdown
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr
+RoxygenNote: 6.1.1
