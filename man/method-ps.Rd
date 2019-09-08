@@ -82,13 +82,13 @@ Robins, J. M., Hernán, M. Á., & Brumback, B. (2000). Marginal Structural Model
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
 }
-\examples{
+\examples{\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "ps", estimand = "ATT",
                 link = "probit"))
 summary(W1)
@@ -96,15 +96,15 @@ bal.tab(W1)
 
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "ps", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "ps", use.kernel = TRUE))
 summary(W3)
 bal.tab(W3)
-}
+}}

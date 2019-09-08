@@ -12,7 +12,7 @@ To supply  user-defined function, the function object should be entered directly
 The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:
 \itemize{
 \item{\code{treat}: a vector of treatment status for each unit. This comes directly from the left hand side of the formula passed to \code{weightit} and so will have it's type (e.g., numeric, factor, etc.), which may need to be converted.}
-\item{\code{covs}: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to \code{weightit}. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use \code{\link{make.full.rank}}, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
+\item{\code{covs}: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to \code{weightit}. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use \code{\link{make_full_rank}}, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.}
 \item{\code{s.weights}: a numeric vector of sampling weights, one for each unit.}
 \item{\code{ps}: a numeric vector of propensity scores.}
 \item{\code{subset}: a logical vector the same length as \code{treat} that is \code{TRUE} for units to be included in the estimation and \code{FALSE} otherwise. This is used to subset the input objects when \code{exact} is used. \code{treat}, \code{covs}, \code{s.weights}, and \code{ps}, if supplied, will already have been subsetted by \code{subset}.}
@@ -38,6 +38,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 }
 
 \examples{
+\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -55,7 +56,7 @@ my.ps <- function(treat, covs, estimand, focal = NULL) {
 
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = my.ps, estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
@@ -65,22 +66,20 @@ bal.tab(W1)
 library("twang")
 data("iptwExWide", package = "twang")
 (W2 <- weightitMSM(list(tx1 ~ age + gender + use0,
-                      tx2 ~ tx1 + use1 + age + gender + use0,
-                      tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-                 data = iptwExWide,
-                 method = my.ps))
+                        tx2 ~ tx1 + use1 + age + gender + use0,
+                        tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
+                   data = iptwExWide,
+                   method = my.ps))
 summary(W2)
 bal.tab(W2)
 
-
-\dontrun{
 # Kernel balancing using the KBAL package, available
 # using devtools::install_github("chadhazlett/KBAL").
 # Only the ATT and ATC are available. Use 'kbal.method'
 # instead of 'method' in weightit() to choose between
 # "ebal" and "el".
 
-kbal.fun <- function (treat, covs, estimand, focal, ...) {
+kbal.fun <- function(treat, covs, estimand, focal, ...) {
     args <- list(...)
     if (is_not_null(focal))
         treat <- as.numeric(treat == focal)
@@ -99,7 +98,7 @@ kbal.fun <- function (treat, covs, estimand, focal, ...) {
 
 (Wk <- weightit(treat ~ age + educ + married +
                 nodegree + re74, data = lalonde,
-                method = kbal.ps, estimand = "ATT"))
+                method = kbal.fun, estimand = "ATT"))
 summary(Wk)
 bal.tab(Wk, disp.ks = TRUE)
 }

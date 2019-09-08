@@ -44,22 +44,22 @@ Chan, K. C. G., Yam, S. C. P., & Zhang, Z. (2016). Globally efficient non-parame
 \code{\link{weightit}}
 }
 
-\examples{
+\examples{\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "ebcw", estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
 
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "ebcw", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
 
-}
+}}

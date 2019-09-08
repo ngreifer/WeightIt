@@ -50,24 +50,24 @@ Noah Greifer
 \seealso{
 \code{\link{method_ps}}
 }
-\examples{
+\examples{\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
 ps.fit <- glm(treat ~ age + educ + race + married +
-               nodegree + re74 + re75, data = lalonde,
-               family = binomial)
+                nodegree + re74 + re75, data = lalonde,
+              family = binomial)
 ps <- ps.fit$fitted.values
 
 w1 <- get_w_from_ps(ps, treat = lalonde$treat,
-                   estimand = "ATT")
+                    estimand = "ATT")
 
 treatAB <- factor(ifelse(lalonde$treat == 1, "A", "B"))
 w2 <- get_w_from_ps(ps, treat = treatAB,
-                   estimand = "ATT", focal = "A")
+                    estimand = "ATT", focal = "A")
 all.equal(w1, w2)
 w3 <- get_w_from_ps(ps, treat = treatAB,
-                   estimand = "ATT", treated = "A")
+                    estimand = "ATT", treated = "A")
 all.equal(w1, w3)
 
 #A multinomial example using GBM predicted probabilities
@@ -75,11 +75,11 @@ library(gbm)
 T3 <- factor(sample(c("A", "B", "C"), nrow(lalonde), replace = TRUE))
 
 gbm.fit <- gbm(T3 ~ age + educ + race + married +
-               nodegree + re74 + re75, data = lalonde,
+                 nodegree + re74 + re75, data = lalonde,
                distribution = "multinomial", n.trees = 200,
                interaction.depth = 3)
 ps.multi <- drop(predict(gbm.fit, type = "response",
                          n.trees = 200, single.tree = TRUE))
 w <- get_w_from_ps(ps.multi, T3, estimand = "ATE")
 
-}
+}}

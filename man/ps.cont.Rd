@@ -55,12 +55,12 @@ Currently ignored.
   \item{verbose}{
 If \code{TRUE}, information will be printed to monitor the the progress of the fitting.
 }
-\item{stop.method}{A method or methods of measuring and summarizing balance across pretreatment variables.  Current options are \code{p.max}, \code{p.mean}, \code{p.rms}, \code{p.mean.z}, \code{p.rms.z}, \code{s.max}, \code{s.mean}, \code{s.rms}, \code{s.mean.z}, and \code{s.rms.z}. \code{p} refers to the Pearson correlation and \code{s} refers to the Spearman correlation, both implemented in the \pkg{wCorr} package. These are summarized across the pretreatment variables by the maximum (\code{max}), the mean (\code{mean}), or the square root of the mean of the squares (\code{rms}). The correlations can first be Fisher's Z-transformed (\code{z}) or not.
+\item{stop.method}{A method or methods of measuring and summarizing balance across pretreatment variables.  Current options are \code{p.max}, \code{p.mean}, \code{p.rms}, \code{s.max}, \code{s.mean}, and \code{s.rms}. \code{p} refers to the Pearson correlation and \code{s} refers to the Spearman correlation. These are summarized across the pretreatment variables by the maximum (\code{max}), the mean (\code{mean}), or the square root of the mean of the squares (\code{rms}).
 }
 \item{sampw}{Optional sampling weights.
 }
 \item{optimize}{
-A numeric value, either \code{0}, \code{1}, or \code{2}. If \code{0}, balance will be checked for every tree, and the tree with the best balance will be the one used to generate the final weights. If \code{1}, the default, balance will be checked for 25 trees, and then \code{\link{optimize}} will be used to find the tree with the best balance within the tree interval chosen. If \code{2}, \code{optimize} will be used to find the tree that yields the best balance. \code{0} takes the longest but is guaranteed to find the best balance among the trees. \code{2} is the quickest but will often choose a tree that that suboptimal balance, though not by much. \code{1} is a compromise between speed and comprehensiveness and is the algorithm implemented in \pkg{twang}.
+A numeric value, either \code{0}, \code{1}, or \code{2}. If \code{0}, balance will be checked for every tree, and the tree with the best balance will be the one used to generate the final weights. If \code{1}, the default, balance will be checked for a susbet of trees, and then \code{\link{optimize}} will be used to find the tree with the best balance within the tree interval chosen. If \code{2}, \code{optimize} will be used to find the tree that yields the best balance. \code{0} takes the longest but is guaranteed to find the best balance among the trees. \code{2} is the quickest but will often choose a tree that that suboptimal balance, though not by much. \code{1} is a compromise between speed and comprehensiveness and is the algorithm implemented in \pkg{twang}.
 }
 \item{use.kernel}{
 Whether to use kernel density estimation as implemented in \code{\link{density}} to estimate the numerator of the weights. If \code{TRUE}, \code{density} will be used. If \code{FALSE}, the default, a normal density will be assumed and will be estimated using \code{\link{dnorm}}.
@@ -115,7 +115,7 @@ Returns an object of class \code{ps} and \code{ps.cont}, a list containing
   \item{parameters}{Saves the \code{ps.cont} call.}
   \item{alerts}{\code{NULL}}
 \item{iters}{A sequence of iterations used in the GBM fits used by \code{plot.ps.cont}.}
-\item{balance}{The balance summary for each tree examined, with a column for each stop.method. If \code{optimize = 0}, this will contain balance summaries for all trees. If \code{optimize = 1}, this will contain balance summaries for the 25 trees corresponding to \code{iters}. If \code{optimize = 2}, this will be NULL.}
+\item{balance}{The balance summary for each tree examined, with a column for each stop.method. If \code{optimize = 0}, this will contain balance summaries for all trees. If \code{optimize = 1}, this will contain balance summaries for the subset of trees corresponding to \code{iters}. If \code{optimize = 2}, this will be NULL.}
 \item{n.trees}{Maximum number of trees considered in GBM fit.}
 \item{data}{Data as specified in the \code{data} argument.}
 

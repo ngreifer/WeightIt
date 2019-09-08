@@ -53,13 +53,16 @@ Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
 }
-\examples{
+\note{
+Some methods formerly available in \pkg{SuperLearner} are now in SuperLearnerExtra, which can be found on Github at \url{https://github.com/ecpolley/SuperLearnerExtra}.
+}
+\examples{\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "super", estimand = "ATT",
                 SL.library = c("SL.glm", "SL.gam",
                                "SL.knn")))
@@ -68,7 +71,7 @@ bal.tab(W1)
 
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "super", estimand = "ATE",
                 SL.library = c("SL.glm", "SL.gam",
                                "SL.knn")))
@@ -77,10 +80,10 @@ bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
-                nodegree + re74, data = lalonde,
+                  nodegree + re74, data = lalonde,
                 method = "super", use.kernel = TRUE,
                 SL.library = c("SL.glm", "SL.gam",
                                "SL.ridge")))
 summary(W3)
 bal.tab(W3)
-}
+}}

@@ -56,13 +56,13 @@ Noah Greifer
 \seealso{
 \code{link{weightit}}, \code{link{weightitMSM}}
 }
-\examples{
+\examples{\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
 (W <- weightit(treat ~ age + educ + married +
-                nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATT"))
+                 nodegree + re74, data = lalonde,
+               method = "ps", estimand = "ATT"))
 summary(W)
 
 #Trimming the top and bottom 5 weights
@@ -79,4 +79,12 @@ weights <- cobalt::get.w(W)
 
 all.equal(trim(weights, at = .9, treat = lalonde$treat),
           W.trim$weights)
+}
+#Using made up data and as.weightit()
+treat <- rbinom(500, 1, .3)
+weights <- rchisq(500, df = 2)
+W <- as.weightit(weights= weights, treat = treat,
+                 estimand = "ATE")
+summary(W)
+summary(trim(W, at = .95))
 }

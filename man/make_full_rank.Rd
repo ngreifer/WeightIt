@@ -34,7 +34,7 @@ Noah Greifer
 }
 
 \seealso{
-\code{link{method_user}}, \code{link{model.matrix}}
+\code{\link{method_user}}, \code{\link{model.matrix}}
 }
 \examples{
 set.seed(1000)
