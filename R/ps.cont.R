@@ -7,8 +7,10 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   terms <- match.call()
 
   #Set up subfunctions
-  cor2z <- function(x) {return(.5 * log((1+x)/(1-x)))}
-  F.aac.w <- function(i, data, t, covs, ps.model, ps.num, corr.type, mean.max, z.trans, s.weights) {
+  # cor2z <- function(x) {return(.5 * log((1+x)/(1-x)))}
+  F.aac.w <- function(i, data, t, covs, ps.model, ps.num, corr.type, mean.max,
+                      # z.trans,
+                      s.weights) {
     GBM.fitted <- predict(ps.model, newdata = data, n.trees = floor(i),
                           type = "response")
     ps.den <- dnorm((t - GBM.fitted)/sd(t - GBM.fitted), 0, 1)
@@ -22,7 +24,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
       w.r(c, y = t, w = wt, s.weights = s.weights)})
     else stop("stop.method is not correctly specified.", call. = FALSE)
 
-    if (z.trans) corr_ <- cor2z(corr_)
+    # if (z.trans) corr_ <- cor2z(corr_)
 
     return(mean.max(abs(corr_)))
   }
@@ -31,12 +33,12 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     desc <- setNames(vector("list", 10),
                      c("ess", "n", "max.p.cor", "mean.p.cor", "rms.p.cor", "max.s.cor", "mean.s.cor", "rms.s.cor", "bal.tab", "n.trees"))
     desc[["bal.tab"]][["results"]] <- data.frame(p.cor = apply(covs, 2, function(c) w.r(t, c, w = weights, s.weights = s.weights)),
-                                                 p.cor.z = NA,
+                                                 # p.cor.z = NA,
                                                  s.cor = apply(covs, 2, function(c) w.r(rank(t), rank(c), w = weights, s.weights = s.weights)),
-                                                 s.cor.z = NA,
+                                                 # s.cor.z = NA,
                                                  row.names = colnames(covs))
-    desc[["bal.tab"]][["results"]][["p.cor.z"]] <- cor2z(desc[["bal.tab"]][["results"]][["p.cor"]])
-    desc[["bal.tab"]][["results"]][["s.cor.z"]] <- cor2z(desc[["bal.tab"]][["results"]][["s.cor"]])
+    # desc[["bal.tab"]][["results"]][["p.cor.z"]] <- cor2z(desc[["bal.tab"]][["results"]][["p.cor"]])
+    # desc[["bal.tab"]][["results"]][["s.cor.z"]] <- cor2z(desc[["bal.tab"]][["results"]][["s.cor"]])
     desc[["ess"]] <- (sum(weights)^2)/sum(weights^2)
     desc[["n"]] <- length(t)
     desc[["max.p.cor"]] <- max(abs(desc[["bal.tab"]][["results"]][["p.cor"]]))
@@ -53,13 +55,15 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   check.package("gbm")
 
   if (missing(stop.method)) {
-    warning("No stop.method was entered. Using \"s.mean.z\", the mean of the absolute Z-transformed Spearman correlations.", call. = FALSE, immediate. = TRUE)
-    stop.method <- "s.mean.z"
+    warning("No stop.method was entered. Using \"p.mean\", the mean of the absolute Pearson correlations.", call. = FALSE, immediate. = TRUE)
+    stop.method <- "p.mean"
   }
   else {
     stop.method <- tryCatch(match.arg(tolower(stop.method), apply(expand.grid(c("s", "p"),
                                                                               c(".mean", ".max", ".rms"),
-                                                                              c("", ".z")), 1, paste, collapse = ""),
+                                                                              c(""
+                                                                                # , ".z"
+                                                                                )), 1, paste, collapse = ""),
                                       several.ok = TRUE),
                             error = function(e) {
                               stop("The entered stop.method is not one of the accepted values.\n\tSee ?ps.cont for the accepted values of stop.method for continuous treatments.",
@@ -73,7 +77,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
                                                            mean = function(y) mean(abs(y), na.rm = TRUE),
                                                            max = function(y) max(abs(y), na.rm = TRUE),
                                                            rms = function(y) sqrt(mean(y^2, na.rm = TRUE))))
-  z.trans <- sapply(stop.method.split, function(x) length(x) == 3 && x[3] == "z")
+  # z.trans <- sapply(stop.method.split, function(x) length(x) == 3 && x[3] == "z")
 
   if (missing(formula)) stop("A formula must be supplied.", call. = FALSE)
   if (missing(data)) data <- NULL
@@ -108,9 +112,22 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     d.n <- density(p.num, n = A[["n"]],
                    weights = s.weights/sum(s.weights), give.Rkern = FALSE,
                    bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-    if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
     ps.num <- with(d.n, approxfun(x = x, y = y))(p.num)
     #if anyNA(ps.num) stop("NAs were estimated in the numerator densty")
+    if (isTRUE(A[["plot"]])) {
+      d.n_ <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
+      d.all <- rbind(d.n_)
+      d.all$dens <- factor(d.all$dens, levels = c("Numerator Density"))
+      pl <- ggplot(d.all, aes(x=x,y=y)) + geom_line() + labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
+        facet_grid(rows = vars(dens)) + theme(panel.background = element_rect(fill = "white"),
+                                              panel.border = element_rect(fill = NA, color = "black"),
+                                              axis.text.x = element_text(color = "black"),
+                                              axis.text.y = element_text(color = "black"),
+                                              panel.grid.major = element_blank(),
+                                              panel.grid.minor = element_blank()
+        )
+      print(pl)
+    }
   }
   else {
     if(verbose) cat("using a normal approximation\n")
@@ -140,7 +157,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   if (optimize == 1) {
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
     best.tree <- setNames(numeric(length(stop.method)), stop.method)
-    nintervals <- 25
+    nintervals <- round(1+sqrt(2*n.trees))
     iters <- round(seq(1, n.trees, length = nintervals))
 
     balance <- matrix(NA, ncol = length(stop.method), nrow = nintervals,
@@ -153,13 +170,14 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
       if(verbose) cat("Optimizing with", sm,"stopping rule\n")
 
       # get optimal number of iterations
-      # Step #1: evaluate at 25 equally spaced points
+      # Step #1: evaluate at (round(1+sqrt(2*n.trees))) equally spaced points
       for (j in 1:length(iters)) {
 
         balance[j, sm] <- F.aac.w(iters[j], data = new.data, t = t, covs = covs,
                                   ps.model = model.den,
                                   ps.num = ps.num, corr.type = corr.type[s], mean.max = mean.max[[s]],
-                                  z.trans = z.trans[s], s.weights = s.weights)
+                                  # z.trans = z.trans[s],
+                                  s.weights = s.weights)
       }
 
       # Step #2: find the interval containing the approximate minimum
@@ -172,7 +190,8 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
       opt <- optimize(F.aac.w, interval = iters[interval], data = new.data, t = t, covs = covs,
                       ps.model = model.den,
                       ps.num = ps.num, corr.type = corr.type[s], mean.max = mean.max[[s]],
-                      z.trans = z.trans[s], s.weights = s.weights, tol = .Machine$double.eps)
+                      # z.trans = z.trans[s],
+                      s.weights = s.weights, tol = .Machine$double.eps)
 
       best.tree[sm] <- floor(opt$minimum)
 
@@ -192,7 +211,8 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
       opt <- optimize(F.aac.w, interval = c(1, n.trees), data = new.data, t = t, covs = covs,
                       ps.model = model.den,
                       ps.num = ps.num, corr.type = corr.type[s], mean.max = mean.max[[s]],
-                      z.trans = z.trans[s], s.weights = s.weights, tol = .Machine$double.eps)
+                      # z.trans = z.trans[s],
+                      s.weights = s.weights, tol = .Machine$double.eps)
       best.tree[s] <- floor(opt$minimum)
 
       GBM.fitted <- predict(model.den, newdata = new.data, n.trees = floor(best.tree[s]),
@@ -211,7 +231,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
                       dimnames = list(iters, stop.method))
     corr_ <- array(NA, dim = c(n.trees, ncol(covs), length(stop.method)),
                     dimnames = list(iters, colnames(covs), stop.method))
-    ps = predict(model.den, newdata = data,
+    ps <- predict(model.den, newdata = data,
                                n.trees = iters, type = "response")
     for (i in iters) {
       # Calculate the inverse probability weights
@@ -238,12 +258,12 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
 
           #bal[[i]][[s]] <- setNames(corr_, colnames(covs))
 
-          if (z.trans[s]) {
-            balance[i, s] <- mean.max[[s]](cor2z(corr_[i, , s]))
-          }
-          else {
+          # if (z.trans[s]) {
+          #   balance[i, s] <- mean.max[[s]](cor2z(corr_[i, , s]))
+          # }
+          # else {
             balance[i, s] <- mean.max[[s]](corr_[i, , s])
-          }
+          # }
         }
       }
 
