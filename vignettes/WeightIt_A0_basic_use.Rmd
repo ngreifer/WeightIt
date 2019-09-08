@@ -14,7 +14,8 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, messages = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, messages = FALSE, 
+                      eval=FALSE)
 ```
 
 ## Introduction
