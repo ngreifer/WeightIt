@@ -923,6 +923,10 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
         covs_ <- covs_[, colnames(covs_) %nin% colinear.covs.to.remove, drop = FALSE]
 
+        if (is_not_null(A[["base.weight"]])) {
+          A[["base.weight"]] <- A[["base.weight"]][treat == i]
+        }
+
         ebal.out <- ebal::ebalance(Treatment = treat_, X = covs_,
                                    base.weight = A[["base.weight"]],
                                    norm.constant = A[["norm.constant"]],
@@ -954,6 +958,10 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
         covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove, drop = FALSE]
 
         covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights[subset] * sum(treat_i == 1) / sum(s.weights[subset])
+
+        if (is_not_null(A[["base.weight"]])) {
+          A[["base.weight"]] <- A[["base.weight"]][treat == i]
+        }
 
         ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i,
                                      base.weight = A[["base.weight"]],
