@@ -136,8 +136,8 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
   if (is_null(ps)) {
 
     covs <- covs[subset, , drop = FALSE]
-    t <- factor(treat[subset])
-    bin.treat <- is_binary(t)
+    treat <- factor(treat[subset])
+    bin.treat <- is_binary(treat)
 
     if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
       missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -165,11 +165,11 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     }
 
     if (bin.treat) {
-      data <- data.frame(binarize(t), covs)
+      data <- data.frame(binarize(treat), covs)
       formula <- formula(data)
 
-      ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
-                     levels(t))
+      ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
+                     levels(treat))
 
       fit <- do.call("glm", list(formula, data = data,
                                  weights = s.weights[subset],
@@ -184,10 +184,10 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       if (A$link %in% c("logit", "probit")) {
         if (check.package("mlogit", alternative = TRUE) && (is_null(A$use.mlogit) || A$use.mlogit == TRUE)) {
           message(paste0("Using multinomial ", A$link, " regression."))
-          data <- data.frame(t = t , s.weights = s.weights[subset], covs)
+          data <- data.frame(treat = treat , s.weights = s.weights[subset], covs)
           covnames <- names(data)[-c(1,2)]
-          mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "t")
-          tryCatch({fit <- mlogit::mlogit(as.formula(paste0("t ~ 1 | ", paste(covnames, collapse = " + "),
+          mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
+          tryCatch({fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "),
                                                             " | 1")), data = mult, estimate = TRUE,
                                           probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
                                           weights = s.weights, ...)},
@@ -197,13 +197,13 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           fit.obj <- fit
         }
         else {
-          message(paste0("Using a series of ", nunique(t), " binomial ", A$link, " regressions."))
-          ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
-                         levels(t))
+          message(paste0("Using a series of ", nunique(treat), " binomial ", A$link, " regressions."))
+          ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
+                         levels(treat))
 
-          fit.list <- setNames(vector("list", nlevels(t)), levels(t))
-          for (i in levels(t)) {
-            t_i <- rep(0, length(t)); t_i[t == i] <- 1
+          fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
+          for (i in levels(treat)) {
+            t_i <- rep(0, length(treat)); t_i[treat == i] <- 1
             data_i <- data.frame(t_i, covs)
             fit.list[[i]] <- glm(formula(data_i), data = data_i,
                                  family = quasibinomial(link = A$link),
@@ -215,7 +215,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else if (A$link == "bayes.probit") {
         check.package("MNP")
-        data <- data.frame(t, covs)
+        data <- data.frame(treat, covs)
         formula <- formula(data)
         tryCatch({fit <- MNP::mnp(formula, data, verbose = TRUE)},
                  error = function(e) stop("There was a problem with the Bayes probit regression. Try a different link.", call. = FALSE))
@@ -230,19 +230,19 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
   }
   else {
     p.score <- NULL
-    t <- factor(treat[subset])
-    bin.treat <- is_binary(t)
+    treat <- factor(treat[subset])
+    bin.treat <- is_binary(treat)
 
     if (bin.treat) {
       bad.ps <- FALSE
       if (is.matrix(ps) || is.data.frame(ps)) {
-        if (dim(ps) == c(length(t), 2)) {
-          ps <- setNames(as.data.frame(ps), levels(t))[subset, , drop = FALSE]
+        if (dim(ps) == c(length(treat), 2)) {
+          ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
         }
-        else if (dim(ps) == c(length(t), 1)) {
+        else if (dim(ps) == c(length(treat), 1)) {
           ps <- setNames(as.data.frame(matrix(c(1-ps[,1], ps[,1]), ncol = 2)),
-                         levels(t))[subset, , drop = FALSE]
+                         levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
         }
         else {
@@ -250,9 +250,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         }
       }
       else if (is.numeric(ps)) {
-        if (length(ps) == length(t)) {
+        if (length(ps) == length(treat)) {
           ps <- setNames(as.data.frame(matrix(c(1-ps, ps), ncol = 2)),
-                         levels(t))[subset, , drop = FALSE]
+                         levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
         }
         else {
@@ -267,27 +267,27 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     else {
       bad.ps <- FALSE
       if (is.matrix(ps) || is.data.frame(ps)) {
-        if (dim(ps) == c(length(t), nunique(t))) {
-          ps <- setNames(as.data.frame(ps), levels(t))[subset, , drop = FALSE]
+        if (dim(ps) == c(length(treat), nunique(treat))) {
+          ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
         }
-        else if (dim(ps) == c(length(t), 1)) {
-          ps <- setNames(do.call("cbind", lapply(levels(t), function(x) {
-            p_ <- rep(1, length(t))
-            p_[t == x] <- ps[t == x, 1]
+        else if (dim(ps) == c(length(treat), 1)) {
+          ps <- setNames(do.call("cbind", lapply(levels(treat), function(x) {
+            p_ <- rep(1, length(treat))
+            p_[treat == x] <- ps[treat == x, 1]
             return(p_)
-          })), levels(t))[subset, , drop = FALSE]
+          })), levels(treat))[subset, , drop = FALSE]
         }
         else {
           bad.ps <- TRUE
         }
       }
       else if (is.numeric(ps)) {
-        if (length(ps) == length(t)) {
-          ps <- setNames(do.call("cbind", lapply(levels(t), function(x) {
-            p_ <- rep(1, length(t))
-            p_[t == x] <- ps[t == x]
+        if (length(ps) == length(treat)) {
+          ps <- setNames(do.call("cbind", lapply(levels(treat), function(x) {
+            p_ <- rep(1, length(treat))
+            p_[treat == x] <- ps[treat == x]
             return(p_)
-          })), levels(t))[subset, , drop = FALSE]
+          })), levels(treat))[subset, , drop = FALSE]
         }
         else {
           bad.ps <- TRUE
@@ -303,11 +303,11 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = t, estimand, focal)
+  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal)
 
   if (stabilize) {
-    tab <- vapply(levels(t), function(x) mean(t == x), numeric(1L))
-    w <- w * tab[t]
+    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
+    w <- w * tab[treat]
   }
 
   obj <- list(w = w, ps = p.score, fit.obj = fit.obj)
@@ -319,7 +319,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
   fit.obj <- NULL
 
   covs <- covs[subset, , drop = FALSE]
-  t <- treat[subset]
+  treat <- treat[subset]
 
   if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -327,7 +327,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
     covs <- cbind(covs, missing.ind)
   }
   covs <- apply(covs, 2, make.closer.to.1)
-  data <- data.frame(t, covs)
+  data <- data.frame(treat, covs)
   formula <- formula(data)
 
   stabilize <- TRUE
@@ -339,7 +339,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
                                  family = gaussian(link = A$link),
                                  control = as.list(A$control))),
                    quote = TRUE)
-    p.denom <- t - fit$fitted.values
+    p.denom <- treat - fit$fitted.values
 
     fit.obj <- fit
 
@@ -347,15 +347,11 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
       if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
       if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
       if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
-      if (is_null(A[["n"]])) A[["n"]] <- 10*length(t)
+      if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
 
       d.d <- density(p.denom, n = A[["n"]],
                      weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                      bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-      if (isTRUE(A[["plot"]])) {
-        par(mfrow=c(2,1))
-        plot(d.d, main = "Denominator density")
-      }
       dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
     }
     else {
@@ -364,19 +360,18 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
 
     if (stabilize) {
 
-      num.fit <- do.call("glm", c(list(t ~ 1, data = data.frame(t = t),
+      num.fit <- do.call("glm", c(list(treat ~ 1, data = data.frame(treat = treat),
                                        weights = s.weights[subset],
                                        family = gaussian(link = A$link),
                                        control = as.list(A$control))),
                          quote = TRUE)
 
-      p.num <- t - num.fit$fitted.values
+      p.num <- treat - num.fit$fitted.values
 
       if (isTRUE(A[["use.kernel"]])) {
         d.n <- density(p.num, n = A[["n"]],
                        weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                        bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-        if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
         dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
       }
       else {
@@ -387,6 +382,22 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
     else {
       w <- 1/dens.denom
     }
+  }
+
+  if (isTRUE(A[["use.kernel"]]) && isTRUE(A[["plot"]])) {
+    d.d_ <- cbind(as.data.frame(d.d[c("x", "y")]), dens = "Denominator Density", stringsAsfactors = FALSE)
+    d.n_ <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
+    d.all <- rbind(d.d_, d.n_)
+    d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
+    pl <- ggplot(d.all, aes(x=x,y=y)) + geom_line() + labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
+      facet_grid(rows = vars(dens)) + theme(panel.background = element_rect(fill = "white"),
+                                            panel.border = element_rect(fill = NA, color = "black"),
+                                            axis.text.x = element_text(color = "black"),
+                                            axis.text.y = element_text(color = "black"),
+                                            panel.grid.major = element_blank(),
+                                            panel.grid.minor = element_blank()
+      )
+    print(pl)
   }
 
   obj <- list(w = w, fit.obj = fit.obj)
@@ -584,7 +595,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
         s <- fit.list[[i]]$stopMethods[1]
 
-        w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat_ == 0]
+        w[treat == i] <- get.w.ps(fit.list[[i]], stop.method = s)[treat_ == 0]
 
         if (nunique(treat) == 2) {
           ps <- fit.list[[i]][["ps"]][[1]]
@@ -621,20 +632,20 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
         s <- fit.list[[i]]$stopMethods[1]
 
         if (nunique(treat) == 2) {
-          w <- cobalt::get.w(fit.list[[i]], stop.method = s)
+          w <- get.w.ps(fit.list[[i]], stop.method = s)
           ps <- fit.list[[i]][["ps"]][[1]]
           fit.list <- fit.list[[i]]
           break
         }
         else {
-          w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat == i]
+          w[treat == i] <- get.w.ps(fit.list[[i]], stop.method = s)[treat == i]
         }
       }
     }
 
     if (stabilize) {
-      tab <- vapply(levels(t), function(x) mean(t == x), numeric(1L))
-      w <- w * tab[t]
+      tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
+      w <- w * tab[treat]
     }
   }
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
@@ -643,10 +654,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   A <- list(...)
   A[c("formula", "data", "sampw", "verbose")] <- NULL
-  if (is_null(A$stop.method)) {
-    warning("No stop.method was provided. Using \"s.mean.z\".",
+  if (is_null(A[["stop.method"]])) {
+    warning("No stop.method was entered. Using \"p.mean\", the mean of the absolute Pearson correlations.",
             call. = FALSE, immediate. = TRUE)
-    A$stop.method <- "s.mean.z"
+    A[["stop.method"]] <- "p.mean"
   }
   else if (length(A$stop.method) > 1) {
     warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
@@ -661,12 +672,12 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
 
   new.data <- data.frame(treat, covs)
 
-  if (check.package("wCorr") && check.package("gbm")) {
+  if (check.package("gbm")) {
     fit <- do.call("ps.cont", c(list(formula(new.data),
                                      data = new.data,
                                      sampw = s.weights[subset],
                                      verbose = TRUE), A))
-    w <- cobalt::get.w(fit, stop.method = A[["stop.method"]])
+    w <- get.w.ps.cont(fit, stop.method = A[["stop.method"]])
   }
 
   #ps <- fit[["ps"]][[A[["stop.method"]]]]
@@ -680,7 +691,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat)[subset]
+  treat <- factor(treat[subset])
 
   if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -716,7 +727,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                  }
         )
 
-        w[treat == i] <- cobalt::get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
+        w[treat == i] <- get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
 
         if (nlevels(treat) == 2) {
           ps <- fit.list[[i]][["fitted.values"]]
@@ -741,7 +752,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                  }
         )
 
-        w <- cobalt::get.w(fit.list, estimand = "ATE") / s.weights[subset]
+        w <- get.w(fit.list, estimand = "ATE") / s.weights[subset]
         if (nunique(treat) == 2) {
           ps <- fit.list[["fitted.values"]]
           fit.list <- fit.list[[1]]
@@ -759,15 +770,15 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                                       sample.weights = s.weights[subset],
                                       ATT = 0, ...)
 
-          w[treat==i] <- cobalt::get.w(fit.list[[i]], estimand = "ATE")[treat==i] / s.weights[subset][treat==i]
+          w[treat==i] <- get.w(fit.list[[i]], estimand = "ATE")[treat==i] / s.weights[subset][treat==i]
         }
       }
     }
 
   }
   if (stabilize) {
-    tab <- vapply(levels(t), function(x) mean(t == x), numeric(1L))
-    w <- w * tab[t]
+    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
+    w <- w * tab[treat]
   }
 
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
@@ -802,7 +813,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
              }
     )
   }
-  w <- cobalt::get.w(fit) #/ s.weights[subset]
+  w <- get.w(fit) #/ s.weights[subset]
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -816,7 +827,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
                                      call. = FALSE)
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat)[subset]
+  treat <- factor(treat[subset])
 
   if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -833,7 +844,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
     fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
                    quote = TRUE)
   }
-  w <- cobalt::get.w(fit)
+  w <- get.w(fit)
 
   obj <- list(w = w, fit.obj = fit)
 
@@ -863,7 +874,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, estimand, ...) 
     fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
                    quote = TRUE)
   }
-  w <- cobalt::get.w(fit)
+  w <- get.w(fit)
 
   obj <- list(w = w, fit.obj = fit)
 
@@ -875,7 +886,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat)[subset]
+  treat <- factor(treat[subset])
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
   covs <- apply(covs, 2, make.closer.to.1)
@@ -975,7 +986,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, momen
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat)[subset]
+  treat <- factor(treat[subset])
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
@@ -1065,7 +1076,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   check.package("SuperLearner")
 
   covs <- covs[subset, , drop = FALSE]
-  t <- factor(treat[subset])
+  treat <- factor(treat[subset])
 
   if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1085,12 +1096,12 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
-  ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(t), nrow = length(t))),
-                 levels(t))
+  ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
+                 levels(treat))
 
-  if (is_binary(t)) {
+  if (is_binary(treat)) {
 
-    fit.list <- do.call(SuperLearner::SuperLearner, list(Y = as.numeric(as.character(t)),
+    fit.list <- do.call(SuperLearner::SuperLearner, list(Y = as.numeric(as.character(treat)),
                                                          X = covs, newX = covs,
                                                          family = binomial(),
                                                          SL.library = A[["SL.library"]],
@@ -1106,12 +1117,12 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   }
   else {
-    fit.list <- setNames(vector("list", nlevels(t)), levels(t))
+    fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
 
-    for (i in levels(t)) {
-      t_i <- rep(0, length(t)); t_i[t == i] <- 1
+    for (i in levels(treat)) {
+      treat_i <- as.numeric(treat == i)
 
-      fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = t_i,
+      fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = treat_i,
                                                                 X = covs, newX = covs,
                                                                 family = binomial(),
                                                                 SL.library = A[["SL.library"]],
@@ -1128,14 +1139,13 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     p.score <- NULL
   }
 
-
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = t, estimand, focal)
+  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal)
 
   if (stabilize) {
-    tab <- vapply(levels(t), function(x) mean(t == x), numeric(1L))
-    w <- w * tab[t]
+    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
+    w <- w * tab[treat]
   }
 
   obj <- list(w = w, ps = p.score, fit.obj = fit.list)
@@ -1145,7 +1155,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
   A <- B <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
-  t <- treat[subset]
+  treat <- treat[subset]
 
   if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1168,7 +1178,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
     else if (is_null(B[[f]])) B[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
-  fit <- do.call(SuperLearner::SuperLearner, list(Y = t,
+  fit <- do.call(SuperLearner::SuperLearner, list(Y = treat,
                                                   X = covs, newX = covs,
                                                   family = gaussian(),
                                                   SL.library = B[["SL.library"]],
@@ -1179,21 +1189,17 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
                                                   control = B[["control"]],
                                                   cvControl = B[["cvControl"]],
                                                   env = B[["env"]]))
-  p.denom <- t - fit$SL.predict
+  p.denom <- treat - fit$SL.predict
 
   if (isTRUE(A[["use.kernel"]])) {
     if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
     if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
     if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
-    if (is_null(A[["n"]])) A[["n"]] <- 10*length(t)
+    if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
 
     d.d <- density(p.denom, n = A[["n"]],
                    weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                    bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-    if (isTRUE(A[["plot"]])) {
-      par(mfrow=c(2,1))
-      plot(d.d, main = "Denominator density")
-    }
     dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
   }
   else {
@@ -1202,21 +1208,20 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
 
   if (stabilize) {
     if (is_null(A$link)) A$link <- "identity"
-    num.fit <- do.call("glm", c(list(t ~ 1,
-                                     data = data.frame(t = t),
+    num.fit <- do.call("glm", c(list(treat ~ 1,
+                                     data = data.frame(treat = treat),
                                      weights = s.weights[subset],
                                      family = gaussian(link = A$link),
                                      control = list()),
                                 A[names(A %nin% "family")]),
                        quote = TRUE)
 
-    p.num <- t - num.fit$fitted.values
+    p.num <- treat - num.fit$fitted.values
 
     if (isTRUE(A[["use.kernel"]])) {
       d.n <- density(p.num, n = A[["n"]],
                      weights = s.weights[subset]/sum(s.weights[subset]), give.Rkern = FALSE,
                      bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-      if (isTRUE(A[["plot"]])) plot(d.n, main = "Numerator density")
       dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
     }
     else {
@@ -1226,6 +1231,23 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
   }
   else {
     w <- 1/dens.denom
+  }
+
+  if (isTRUE(A[["use.kernel"]]) && isTRUE(A[["plot"]])) {
+    d.d_ <- cbind(as.data.frame(d.d[c("x", "y")]), dens = "Denominator Density", stringsAsfactors = FALSE)
+    d.n_ <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
+    d.all <- rbind(d.d_, d.n_)
+    d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
+    pl <- ggplot(d.all, aes(x = x, y = y)) + geom_line() +
+      labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
+      facet_grid(rows = vars(dens)) + theme(panel.background = element_rect(fill = "white"),
+                                            panel.border = element_rect(fill = NA, color = "black"),
+                                            axis.text.x = element_text(color = "black"),
+                                            axis.text.y = element_text(color = "black"),
+                                            panel.grid.major = element_blank(),
+                                            panel.grid.minor = element_blank()
+      )
+    print(pl)
   }
 
   obj <- list(w = w, fit.obj = fit)
