@@ -261,6 +261,11 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 
   out$effective.sample.size <- nn
 
+  if (is_not_null(object$focal)) {
+    w <- w[t != object$focal]
+    attr(w, "focal") <- object$focal
+  }
+  attr(out, "weights") <- w
   class(out) <- "summary.weightit"
   return(out)
 }
@@ -282,4 +287,23 @@ print.summary.weightit <- function(x, ...) {
   cat("\n- Effective Sample Sizes:\n")
   print.data.frame(round_df_char(x$effective.sample.size, 3))
   invisible(x)
+}
+plot.summary.weightit <- function(x, ...) {
+  w <- attr(x, "weights")
+  focal <- attr(w, "focal")
+
+  if (is_not_null(focal)) subtitle <- paste0("For Units Not in Treatment Group \"", focal, "\"")
+  else subtitle <- NULL
+
+  p <- ggplot(data = data.frame(w), mapping = aes(x = w)) +
+    geom_histogram(breaks = hist(w, plot = FALSE,
+                                 ...)$breaks,
+                   color = "black",
+                   fill = "gray", alpha = .8) +
+    scale_y_continuous(expand = expand_scale(c(0, .05))) +
+    geom_vline(xintercept = mean(w), linetype = "12") +
+    labs(x = "Weight", y = "Count", title = "Distribution of Weights",
+         subtitle = subtitle) +
+    theme_bw()
+  p
 }

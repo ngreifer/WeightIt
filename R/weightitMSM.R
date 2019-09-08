@@ -412,6 +412,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   }
 
   class(out.list) <- "summary.weightitMSM"
+  attr(out.list, "weights") <- w
   return(out.list)
 }
 print.summary.weightitMSM <- function(x, ...) {
