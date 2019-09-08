@@ -13,7 +13,9 @@ as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
 
   if (is_not_null(covs)) {
-    if (!is.data.frame(covs)) stop("covs must be a data.frame of covariates.", call. = FALSE)
+    if (!is.data.frame(covs) && !is.matrix(covs)) stop("covs must be a data.frame of covariates.", call. = FALSE)
+    else if (is.matrix(covs)) covs <- as.data.frame.matrix(covs)
+
     if (nrow(covs) != length(weights)) stop("covs and weights must be the same length.", call. = FALSE)
   }
   if (is_not_null(estimand)) {
@@ -48,6 +50,7 @@ as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.
   return(w.list)
 }
 as.weightit.CBPS <- function(cbps, s.weights = NULL, ...) {
+
   treat <- model.response(model.frame(cbps$terms, cbps$data))
   treat <- assign.treat.type(treat)
   treat.type <- get.treat.type(treat)
