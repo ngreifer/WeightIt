@@ -167,6 +167,12 @@ paste. <- function(..., collapse = NULL) {
     #Like paste0 but with sep = ".'
     paste(..., sep = ".", collapse = collapse)
 }
+wrap <- function(s, nchar, ...) {
+    vapply(s, function(s_) {
+        x <- strwrap(s_, width = nchar, ...)
+        paste(x, collapse = "\n")
+    }, character(1L))
+}
 
 #Numbers
 check_if_zero <- function(x) {
@@ -221,15 +227,36 @@ binarize <- function(variable, zero = NULL, one = NULL) {
 ESS <- function(w) {
     sum(w)^2/sum(w^2)
 }
-center <- function(x, na.rm = TRUE, at = NULL) {
-    if (!is.numeric(x)) warning("x is not numeric and will not be centered.")
-    else if (is.matrix(x)) x <- apply(x, 2, center, na.rm = na.rm, at = at)
+.center <- function(x, na.rm = TRUE, at = NULL) {
+    dimx <- dim(x)
+    if (length(dimx) == 2L) x <- apply(x, 2, center, na.rm = na.rm, at = at)
+    else if (length(dimx) > 2L) stop("x must be a numeric or matrix-like (not array).")
+    else if (!is.numeric(x)) warning("x is not numeric and will not be centered.")
     else {
         if (is_null(at)) at <- mean(x, na.rm = na.rm)
         else if (!is.numeric(at)) stop("at must be numeric.")
         x <- x - at
     }
     return(x)
+}
+center <- function(x, at = NULL, na.rm = TRUE) {
+    if (is.data.frame(x)) {
+        x <- as.matrix.data.frame(x)
+        type <- "df"
+    }
+    if (!is.numeric(x)) stop("x must be numeric.")
+    else if (is.array(x) && length(dim(x)) > 2) stop("x must be a numeric or matrix-like (not array).")
+    else if (!is.matrix(x)) {
+        x <- matrix(x, ncol = 1)
+        type <- "vec"
+    }
+    else type <- "matrix"
+    if (is_null(at)) at <- colMeans(x, na.rm = na.rm)
+    else if (length(at) %nin% c(1, ncol(x))) stop("at is not the right length.")
+    out <- x - matrix(at, byrow = TRUE, ncol = ncol(x), nrow = nrow(x))
+    if (type == "df") out <- as.data.frame.matrix(out)
+    else if (type == "vec") out <- drop(out)
+    return(out)
 }
 w.m <- function(x, w = NULL, na.rm = TRUE) {
     if (is_null(w)) w <- rep(1, length(x))
@@ -294,8 +321,16 @@ col.w.v <- function(mat, w = NULL, na.rm = TRUE) {
     }
     means <- col.w.m(mat, w, na.rm)
     w.scale <- apply(mat, 2, function(x) w.cov.scale(w[!is.na(x)]))
-    covs <- colSums(t(t(mat) - means)^2, na.rm = na.rm)/w.scale
-    return(covs)
+    vars <- colSums(w*t(t(mat) - means)^2, na.rm = na.rm)/w.scale
+    return(vars)
+}
+col.w.v.bin <- function(mat, w = NULL, na.rm = TRUE) {
+    if (is_null(w)) {
+        w <- rep(1, nrow(mat))
+    }
+    means <- col.w.m(mat, w, na.rm)
+    vars <- means * (1 - means)
+    return(vars)
 }
 coef.of.var <- function(x, pop = TRUE, na.rm = TRUE) {
     if (na.rm) x <- x[!is.na(x)]
@@ -544,7 +579,8 @@ is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
     s1 <- deparse(substitute(x))
     if (is_not_null(x)) {
         for (i in types) {
-            if (is_not_null(get0(paste.("is", i)))) {
+            if (i == "list") it.is <- is.vector(x, "list")
+            else if (is_not_null(get0(paste.("is", i)))) {
                 it.is <- get0(paste.("is", i))(x)
             }
             else it.is <- inherits(x, i)
@@ -612,4 +648,7 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
     if (!several.ok && length(i) > 1)
         stop("there is more than one match in 'match_arg'")
     choices[i]
+}
+last <- function(x) {
+    x[[length(x)]]
 }
