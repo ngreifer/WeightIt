@@ -31,7 +31,7 @@ Missing data is not directly compatible with estimating propensity scores, so a 
 \section{Additional Arguments}{
 The following additional arguments can be specified:
 \describe{
-\item{\code{link}}{The link used in the generalized linear model for the propensity scores. For binary treatments, \code{link} can be any of those allowed by \code{binomial}. For multinomial treatments, \code{link} can be "logit", "probit", or "bayes.probit". For continuous treatments, \code{link} can be any of those allowed by \code{gaussian}.
+\item{\code{link}}{The link used in the generalized linear model for the propensity scores. For binary treatments, \code{link} can be any of those allowed by \code{binomial}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the bias-corrected generalized linear models implemented in the \pkg{brglm2} package. For multinomial treatments, \code{link} can be "logit", "probit", "bayes.probit", or "br.logit". For continuous treatments, \code{link} can be any of those allowed by \code{gaussian}.
 }
 \item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through \code{\link{density}} to estimate the numerator and denominator densities for the weights with continuous treatments. If \code{FALSE}, assumes a normal distribution.
 }
@@ -66,7 +66,6 @@ Li, F., & Li, F. (2018). Propensity Score Weighting for Causal Inference with Mu
  - \code{estimand = "ATM"}
 
 Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J. J., Glynn, R. J., & Franklin, J. M. (2017). Matching weights to simultaneously compare three treatment groups: Comparison to three-way matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395. \doi{10.1097/EDE.0000000000000627}
-
 
  - Other estimands
 

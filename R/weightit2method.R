@@ -153,8 +153,8 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     if (is_null(A$link)) A$link <- "logit"
     else {
-      if (bin.treat) acceptable.links <- c("logit", "probit", "cloglog", "identity", "log", "cauchit")
-      else acceptable.links <- c("logit", "probit", "bayes.probit")
+      if (bin.treat) acceptable.links <- expand.grid_string(c("br.", ""), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
+      else acceptable.links <- c("logit", "probit", "bayes.probit", "br.logit")
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
         A$link <- acceptable.links[1]
@@ -164,6 +164,12 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       else A$link <- which.link
     }
 
+    if (startsWith(A$link, "br.")) {
+      A$link <- substr(A$link, 4, nchar(A$link))
+      use.br <- TRUE
+    }
+    else use.br <- FALSE
+
     if (bin.treat) {
       data <- data.frame(binarize(treat), covs)
       formula <- formula(data)
@@ -171,10 +177,25 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
                      levels(treat))
 
-      fit <- do.call("glm", list(formula, data = data,
-                                 weights = s.weights[subset],
-                                 family = quasibinomial(link = A$link),
-                                 control = as.list(A$control)), quote = TRUE)
+      if (use.br) {
+        check.package("brglm2")
+        control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
+        fit <- do.call("glm", c(list(formula, data = data,
+                                   weights = s.weights[subset],
+                                   family = binomial(link = A[["link"]]),
+                                   method = "brglmFit"),
+                                   control), quote = TRUE)
+      }
+      else {
+        if (is_null(A[["glm.method"]])) A[["glm.method"]] <- "glm.fit"
+        control <- A[names(formals(glm.control))[pmatch(names(A), names(formals(glm.control)), 0)]]
+        fit <- do.call("glm", c(list(formula, data = data,
+                                   weights = s.weights[subset],
+                                   family = quasibinomial(link = A[["link"]]),
+                                   method = A[["glm.method"]]),
+                                   control), quote = TRUE)
+      }
+
       ps[[2]] <- p.score <- fit$fitted.values
       ps[[1]] <- 1 - ps[[2]]
 
@@ -201,13 +222,15 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
                          levels(treat))
 
+          control <- A[names(formals(glm.control))[pmatch(names(A), names(formals(glm.control)), 0)]]
           fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
           for (i in levels(treat)) {
             t_i <- rep(0, length(treat)); t_i[treat == i] <- 1
             data_i <- data.frame(t_i, covs)
-            fit.list[[i]] <- glm(formula(data_i), data = data_i,
+            fit.list[[i]] <- do.call(glm, c(list(formula(data_i), data = data_i,
                                  family = quasibinomial(link = A$link),
-                                 weights = s.weights[subset])
+                                 weights = s.weights[subset]),
+                                 control))
             ps[[i]] <- fit.list[[i]]$fitted.values
           }
           fit.obj <- fit.list
@@ -222,8 +245,22 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         ps <- MNP::predict.mnp(fit, type = "prob")$p
         fit.obj <- fit
       }
+      else if (A$link == "br.logit") {
+        check.package("brglm2")
+        data <- data.frame(treat, covs)
+        formula <- formula(data)
+        control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
+        tryCatch({fit <- do.call(brglm2::brmultinom,
+                                 c(list(formula, data,
+                                        weights = s.weights),
+                                   control))},
+                 error = function(e) stop("There was a problem with the bias-reduced logit regression. Try a different link.", call. = FALSE))
+
+        ps <- fit$fitted.values
+        fit.obj <- fit
+      }
       else {
-        stop('link must be "logit", "probit", or "bayes.probit".', call. = FALSE)
+        stop('link must be "logit", "probit", "bayes.probit", or "br.logit.', call. = FALSE)
       }
       p.score <- NULL
     }
