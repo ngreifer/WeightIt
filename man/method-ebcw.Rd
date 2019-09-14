@@ -44,7 +44,7 @@ Chan, K. C. G., Yam, S. C. P., & Zhang, Z. (2016). Globally efficient non-parame
 \code{\link{weightit}}
 }
 
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -62,4 +62,4 @@ bal.tab(W1)
 summary(W2)
 bal.tab(W2)
 
-}}
+}

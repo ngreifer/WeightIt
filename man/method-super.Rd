@@ -56,7 +56,7 @@ Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity
 \note{
 Some methods formerly available in \pkg{SuperLearner} are now in SuperLearnerExtra, which can be found on Github at \url{https://github.com/ecpolley/SuperLearnerExtra}.
 }
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -86,4 +86,4 @@ bal.tab(W2)
                                "SL.ridge")))
 summary(W3)
 bal.tab(W3)
-}}
+}

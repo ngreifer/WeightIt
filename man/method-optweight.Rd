@@ -52,7 +52,7 @@ Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
 }
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -78,4 +78,4 @@ bal.tab(W2)
                 method = "optweight", tols = .05))
 summary(W3)
 bal.tab(W3)
-}}
+}

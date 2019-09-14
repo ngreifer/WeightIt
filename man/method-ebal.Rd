@@ -46,7 +46,7 @@ Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Rew
 \code{\link{weightit}}, \code{\link{weightitMSM}}
 }
 
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -65,4 +65,4 @@ bal.tab(W1)
 summary(W2)
 bal.tab(W2)
 
-}}
+}

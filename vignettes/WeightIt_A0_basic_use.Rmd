@@ -14,8 +14,7 @@ vignette: >
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, messages = FALSE, 
-                      eval=FALSE)
+knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, messages = FALSE)
 ```
 
 ## Introduction
@@ -84,7 +83,7 @@ Now that we have our weights stored in `W.out`, let's extract them and estimate 
 
 ```{r, message=FALSE}
 library("survey")
-d.w <- svydesign(ids = ~1, weights = get.w(W.out),
+d.w <- svydesign(ids = ~1, weights = W.out$weights,
                      data = lalonde)
 fit <- svyglm(re78 ~ treat, design = d.w)
 coef(fit)
@@ -110,7 +109,7 @@ library("boot")
 est.fun <- function(data, index) {
   W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
         data = data[index,], estimand = "ATT", method = "ebal")
-  fit <- glm(re78 ~ treat, data = data[index,], weights = get.w(W.out))
+  fit <- glm(re78 ~ treat, data = data[index,], weights = W.out$weights)
   return(coef(fit)["treat"])
 }
 boot.out <- boot(est.fun, data = lalonde, R = 999)
@@ -167,7 +166,7 @@ By setting `which.time = NA` in `bal.tab()`, we can focus on the overall balance
 
 ```{r, message=FALSE}
 library("survey")
-d.w.msm <- svydesign(ids = ~1, weights = get.w(Wmsm.out),
+d.w.msm <- svydesign(ids = ~1, weights = Wmsm.out$weights,
                      data = iptwExWide)
 full.fit <- svyglm(outcome ~ tx1*tx2*tx3, design = d.w.msm)
 main.effects.fit <- svyglm(outcome ~ tx1 + tx2 + tx3, design = d.w.msm)

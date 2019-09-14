@@ -50,7 +50,7 @@ Noah Greifer
 \seealso{
 \code{\link{method_ps}}
 }
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -82,4 +82,4 @@ ps.multi <- drop(predict(gbm.fit, type = "response",
                          n.trees = 200, single.tree = TRUE))
 w <- get_w_from_ps(ps.multi, T3, estimand = "ATE")
 
-}}
+}

@@ -38,7 +38,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 }
 
 \examples{
-\dontrun{
+
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -101,5 +101,5 @@ kbal.fun <- function(treat, covs, estimand, focal, ...) {
                 method = kbal.fun, estimand = "ATT"))
 summary(Wk)
 bal.tab(Wk, disp.ks = TRUE)
-}
+
 }

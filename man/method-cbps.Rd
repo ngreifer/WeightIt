@@ -61,7 +61,7 @@ Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score f
 \note{
 When sampling weights are used with \code{CBPS}, the estimated weights already incorporate the sampling weights. When \code{weightit} is used with \code{method = "cbps"}, the estimated weights are separated from the sampling weights, as they are with all other methods.
 }
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -85,4 +85,4 @@ bal.tab(W2)
                 method = "cbps", over = FALSE))
 summary(W3)
 bal.tab(W3)
-}}
+}

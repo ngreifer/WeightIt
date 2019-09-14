@@ -81,7 +81,7 @@ Robins, J. M., Hernán, M. Á., & Brumback, B. (2000). Marginal Structural Model
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
 }
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -106,4 +106,4 @@ bal.tab(W2)
                 method = "ps", use.kernel = TRUE))
 summary(W3)
 bal.tab(W3)
-}}
+}

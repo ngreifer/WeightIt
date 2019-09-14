@@ -56,7 +56,7 @@ Noah Greifer
 \seealso{
 \code{link{weightit}}, \code{link{weightitMSM}}
 }
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -79,7 +79,7 @@ weights <- cobalt::get.w(W)
 
 all.equal(trim(weights, at = .9, treat = lalonde$treat),
           W.trim$weights)
-}
+
 #Using made up data and as.weightit()
 treat <- rbinom(500, 1, .3)
 weights <- rchisq(500, df = 2)

@@ -105,7 +105,7 @@ The primary purpose of \code{weightit} is as a dispatcher to other functions in 
 Noah Greifer
 }
 
-\examples{\dontrun{
+\examples{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -129,4 +129,4 @@ bal.tab(W2)
                 method = "cbps", over = FALSE))
 summary(W3)
 bal.tab(W3)
-}}
+}
