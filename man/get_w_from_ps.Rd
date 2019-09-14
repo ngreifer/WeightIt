@@ -79,7 +79,7 @@ gbm.fit <- gbm(T3 ~ age + educ + race + married +
                distribution = "multinomial", n.trees = 200,
                interaction.depth = 3)
 ps.multi <- drop(predict(gbm.fit, type = "response",
-                         n.trees = 200, single.tree = TRUE))
+                         n.trees = 200))
 w <- get_w_from_ps(ps.multi, T3, estimand = "ATE")
 
 }
