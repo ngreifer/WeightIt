@@ -1,4 +1,5 @@
-#From cobalt during absence
+#Extract weights from output objects; duplicated from cobalt
+
 get.w <- function(x, ...) UseMethod("get.w")
 get.w.ps <- function(x, stop.method = NULL, estimand = NULL, s.weights = FALSE, ...) {
   ps <- x
