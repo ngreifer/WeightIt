@@ -138,6 +138,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     covs <- covs[subset, , drop = FALSE]
     treat <- factor(treat[subset])
     bin.treat <- is_binary(treat)
+    ord.treat <- is.ordered(treat)
 
     if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
       missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -153,12 +154,16 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     if (is_null(A$link)) A$link <- "logit"
     else {
-      if (bin.treat) acceptable.links <- expand.grid_string(c("br.", ""), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
+      if (bin.treat || isFALSE(A$use.mlogit)) acceptable.links <- expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
+      else if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit")
       else acceptable.links <- c("logit", "probit", "bayes.probit", "br.logit")
+
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
         A$link <- acceptable.links[1]
-        warning(paste0("Only ", word_list(acceptable.links, quotes = TRUE), " are allowed as links for ", if (bin.treat) "binary" else "multinomial", " treatments. Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
+        warning(paste0("Only ", word_list(acceptable.links, quotes = TRUE), " are allowed as links for ",
+                       if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
+                       " treatments. Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
                 call. = FALSE)
       }
       else A$link <- which.link
@@ -183,7 +188,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         fit <- do.call("glm", c(list(formula, data = data,
                                    weights = s.weights[subset],
                                    family = binomial(link = A[["link"]]),
-                                   method = "brglmFit"),
+                                   method = brglm2::brglmFit),
                                    control), quote = TRUE)
       }
       else {
@@ -201,10 +206,46 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
       fit.obj <- fit
     }
+    else if (ord.treat) {
+      if (A[["link"]] == "logit") A[["link"]] <- "logistic"
+      check.package("MASS")
+      message(paste("Using ordinal", A$link, "regression."))
+      data <- data.frame(treat, covs)
+      formula <- formula(data)
+      control <- A[names(A) %nin% names(formals(MASS::polr))]
+      tryCatch({fit <- do.call(MASS::polr,
+                               c(list(formula,
+                                      data = data,
+                                      weights = s.weights,
+                                      Hess = FALSE,
+                                      model = FALSE,
+                                      method = A[["link"]],
+                                      contrasts = NULL),
+                                 control))},
+               error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment."), call. = FALSE)})
+
+      ps <- fit$fitted.values
+      fit.obj <- fit
+      p.score <- NULL
+    }
     else {
-      if (A$link %in% c("logit", "probit")) {
+      if (use.br) {
+        check.package("brglm2")
+        data <- data.frame(treat, covs)
+        formula <- formula(data)
+        control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
+        tryCatch({fit <- do.call(brglm2::brmultinom,
+                                 c(list(formula, data,
+                                        weights = s.weights),
+                                   control))},
+                 error = function(e) stop("There was a problem with the bias-reduced logit regression. Try a different link.", call. = FALSE))
+
+        ps <- fit$fitted.values
+        fit.obj <- fit
+      }
+      else if (A$link %in% c("logit", "probit")) {
         if (check.package("mlogit", alternative = TRUE) && (is_null(A$use.mlogit) || A$use.mlogit == TRUE)) {
-          message(paste0("Using multinomial ", A$link, " regression."))
+          message(paste("Using multinomial", A$link, "regression."))
           data <- data.frame(treat = treat , s.weights = s.weights[subset], covs)
           covnames <- names(data)[-c(1,2)]
           mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
@@ -218,7 +259,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           fit.obj <- fit
         }
         else {
-          message(paste0("Using a series of ", nunique(treat), " binomial ", A$link, " regressions."))
+          message(paste("Using a series of", nunique(treat), "binomial", A$link, "regressions."))
           ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
                          levels(treat))
 
@@ -243,20 +284,6 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         tryCatch({fit <- MNP::mnp(formula, data, verbose = TRUE)},
                  error = function(e) stop("There was a problem with the Bayes probit regression. Try a different link.", call. = FALSE))
         ps <- MNP::predict.mnp(fit, type = "prob")$p
-        fit.obj <- fit
-      }
-      else if (A$link == "br.logit") {
-        check.package("brglm2")
-        data <- data.frame(treat, covs)
-        formula <- formula(data)
-        control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
-        tryCatch({fit <- do.call(brglm2::brmultinom,
-                                 c(list(formula, data,
-                                        weights = s.weights),
-                                   control))},
-                 error = function(e) stop("There was a problem with the bias-reduced logit regression. Try a different link.", call. = FALSE))
-
-        ps <- fit$fitted.values
         fit.obj <- fit
       }
       else {
