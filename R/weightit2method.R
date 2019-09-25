@@ -164,7 +164,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         warning(paste0("Only ", word_list(acceptable.links, quotes = TRUE), " are allowed as links for ",
                        if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
                        " treatments. Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
-                call. = FALSE)
+                call. = FALSE, immediate. = TRUE)
       }
       else A$link <- which.link
     }
@@ -212,16 +212,16 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       message(paste("Using ordinal", A$link, "regression."))
       data <- data.frame(treat, covs)
       formula <- formula(data)
-      control <- A[names(A) %nin% names(formals(MASS::polr))]
+      control <- A[names(A) %nin% c("link", names(formals(MASS::polr)))]
       tryCatch({fit <- do.call(MASS::polr,
-                               c(list(formula,
-                                      data = data,
-                                      weights = s.weights,
-                                      Hess = FALSE,
-                                      model = FALSE,
-                                      method = A[["link"]],
-                                      contrasts = NULL),
-                                 control))},
+                               list(formula,
+                                    data = data,
+                                    weights = s.weights,
+                                    Hess = FALSE,
+                                    model = FALSE,
+                                    method = A[["link"]],
+                                    contrasts = NULL,
+                                    control = control))},
                error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment."), call. = FALSE)})
 
       ps <- fit$fitted.values
