@@ -22,14 +22,14 @@ trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
   else treat.type <- "continuous"
 
   if (treat.type != "continuous" && is_not_null(treat)) {
-    nunique.w.gt.1 <- tapply(x, treat, all_the_same)
-    if (all(nunique.w.gt.1)) {
+    w_all_same <- tapply(x, treat, all_the_same)
+    if (!any(w_all_same)) {
       estimand <- "ATE"
       focal <- NULL
     }
-    else if (sum(!nunique.w.gt.1) == 1) {
+    else if (sum(w_all_same) == 1) {
       estimand <- "ATT"
-      focal <- names(nunique.w.gt.1)[!nunique.w.gt.1]
+      focal <- names(w_all_same)[w_all_same]
     }
     else {
       stop("It appears there is more than one focal group, which is a no-no.", call. = FALSE)
