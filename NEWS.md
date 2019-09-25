@@ -3,7 +3,7 @@ WeightIt News and Updates
 
 Version 0.6.1
 
-* Bug fixes when `stabilize = TRUE` for some methods, thanks to @ulriksartipy.
+* Bug fixes when `stabilize = TRUE`, thanks to @ulriksartipy and Sven Rieger.
 
 * Fixes for using `base.weight` argument with `method = "ebal"`. Now the supplied vector should have a length equal to the number of units in the dataset (in contrast to its use in `ebalce`, which requires a length equal to the number of control units).
 
@@ -11,7 +11,7 @@ Version 0.6.1
 
 * Restored dependency on `cobalt` for examples and vignette.
 
-* When `method = "ps"` nd the treatment is ordered (i.e., ordinal), `MASS::polr()` is used to fit an ordinal regression. make the treatment un-ordered to to use multinomial regression instead.
+* When `method = "ps"` and the treatment is ordered (i.e., ordinal), `MASS::polr()` is used to fit an ordinal regression. Make the treatment un-ordered to to use multinomial regression instead.
 
 * Added support for using bias-reduced fitting functions when `method = "ps"` as provided by the `brglm2` package. These can be accessed by changing the `link` to, for example, `"br.logit"` or `"br.probit"`. For multinomial treatments, setting `link = "br.logit"` fits a bias-reduced multinomial regression model using `brglm2::brmultinom()`. This can be helpful when regular maximum likelihood models fail to converge, though this may also be a sign of lack of overlap.
 

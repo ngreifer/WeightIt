@@ -35,4 +35,3 @@ LazyData: true
 URL: https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr
-RoxygenNote: 6.1.1
