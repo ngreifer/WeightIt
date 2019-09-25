@@ -263,10 +263,10 @@ w.m <- function(x, w = NULL, na.rm = TRUE) {
     w[is.na(x)] <- NA_real_
     return(sum(x*w, na.rm=na.rm)/sum(w, na.rm=na.rm))
 }
-w.v <- function(x, w = NULL, na.rm = TRUE) {
+.w.v <- function(x, w = NULL, na.rm = TRUE) {
     w.cov(x, x, w = w, na.rm = na.rm)
 }
-w.cov <- function(x, y, w = NULL, na.rm = TRUE, type = 3) {
+.w.cov <- function(x, y, w = NULL, na.rm = TRUE, type = 3) {
 
     if (length(x) != length(y)) stop("x and y must the same length")
 
@@ -281,7 +281,7 @@ w.cov <- function(x, y, w = NULL, na.rm = TRUE, type = 3) {
     wcov <- sum(w*(x - wmx)*(y - wmy), na.rm = na.rm) / w.cov.scale(w, na.rm = na.rm, type = type)
     return(wcov)
 }
-w.cov.scale <- function(w, type = 3, na.rm = TRUE) {
+.w.cov.scale <- function(w, type = 3, na.rm = TRUE) {
 
     sw <- sum(w, na.rm = na.rm)
     n <- sum(!is.na(w))
@@ -294,7 +294,7 @@ w.cov.scale <- function(w, type = 3, na.rm = TRUE) {
     # else if (type == 4) sw*(n-1)/n - vw2*n/sw
 
 }
-w.r <- function(x, y, w = NULL, s.weights = NULL) {
+.w.r <- function(x, y, w = NULL, s.weights = NULL) {
     #Computes weighted correlation but using the unweighted (s.weighted) variances
     #in the denominator.
     if (is_null(s.weights)) s.weights <- rep(1, length(x))
@@ -309,20 +309,45 @@ w.r <- function(x, y, w = NULL, s.weights = NULL) {
     return(r)
 }
 col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
-    if (is_null(w)) {
-        w <- 1
-    }
+    if (is_null(w)) w <- 1
     w.sum <- colSums(w*!is.na(mat))
     return(colSums(mat*w, na.rm = na.rm)/w.sum)
 }
-col.w.v <- function(mat, w = NULL, na.rm = TRUE) {
+.col.w.v <- function(mat, w = NULL, na.rm = TRUE) {
     if (is_null(w)) {
         w <- rep(1, nrow(mat))
     }
     means <- col.w.m(mat, w, na.rm)
     w.scale <- apply(mat, 2, function(x) w.cov.scale(w[!is.na(x)]))
-    vars <- colSums(w*t(t(mat) - means)^2, na.rm = na.rm)/w.scale
+    vars <- colSums(w*center(mat, at = means)^2, na.rm = na.rm)/w.scale
+
     return(vars)
+}
+col.w.v <- function(mat, w = NULL, na.rm = TRUE) {
+    if (!is.matrix(mat)) {
+        if (is_null(w)) return(var(mat, na.rm = na.rm))
+        else mat <- matrix(mat, ncol = 1)
+    }
+    if (is_null(w)) {
+        den <- colSums(!is.na(mat)) - 1
+        var <- colSums(mat^2, na.rm = na.rm)/den -
+            (colSums(mat, na.rm = na.rm)/den)^2
+    }
+    else if (na.rm && any(is.na(mat))) {
+        n <- nrow(mat)
+        w <- array(w, dim = dim(mat))
+        w[is.na(mat)] <- NA_real_
+        s <- colSums(w, na.rm = na.rm)
+        w <- mat_div(w, s)
+        x <- sqrt(w) * center(mat, at = colSums(w * mat, na.rm = na.rm))
+        var <- colSums(x*x, na.rm = na.rm)/(1 - colSums(w^2, na.rm = na.rm))
+    }
+    else {
+        w <- w/sum(w)
+        x <- sqrt(w) * center(mat, at = colSums(w * mat, na.rm = na.rm))
+        var <- colSums(x*x, na.rm = na.rm)/(1 - sum(w^2))
+    }
+    return(var)
 }
 col.w.v.bin <- function(mat, w = NULL, na.rm = TRUE) {
     if (is_null(w)) {
@@ -331,6 +356,43 @@ col.w.v.bin <- function(mat, w = NULL, na.rm = TRUE) {
     means <- col.w.m(mat, w, na.rm)
     vars <- means * (1 - means)
     return(vars)
+}
+col.w.cov <- function(mat, y, w = NULL, na.rm = TRUE) {
+    if (!is.matrix(mat)) {
+        if (is_null(w)) return(cov(mat, y, use = if (na.rm) "pair" else "everything"))
+        else mat <- matrix(mat, ncol = 1)
+    }
+    if (is_null(w)) {
+        y <- array(y, dim = dim(mat))
+        y[is.na(mat)] <- NA
+        mat[is.na(y)] <- NA
+        den <- colSums(!is.na(mat*y)) - 1
+        cov <- colSums(center(mat, na.rm = na.rm)*center(y, na.rm = na.rm), na.rm = na.rm)/den
+    }
+    else if (na.rm && any(is.na(mat))) {
+        n <- nrow(mat)
+        w <- array(w, dim = dim(mat))
+        w[is.na(mat)] <- NA_real_
+        s <- colSums(w, na.rm = na.rm)
+        w <- mat_div(w, s)
+        x <- w * center(mat, at = colSums(w * mat, na.rm = na.rm))
+        cov <- colSums(x*y, na.rm = na.rm)/(1 - colSums(w^2, na.rm = na.rm))
+    }
+    else {
+        n <- nrow(mat)
+        w <- w/sum(w)
+        x <- w * center(mat, at = colSums(w * mat, na.rm = na.rm))
+        cov <- colSums(x*y, na.rm = na.rm)/(1 - sum(w^2))
+    }
+    return(cov)
+}
+col.w.r <- function(mat, y, w = NULL, s.weights = NULL, na.rm = TRUE) {
+    if (is_null(w) && is_null(s.weights)) return(cor(mat, y, w, use = if (na.rm) "pair" else "everything"))
+    else {
+        cov <- col.w.cov(mat, y, w, na.rm)
+        den <- sqrt(col.w.v(mat, s.weights, na.rm)) * sqrt(col.w.v(y, s.weights, na.rm))
+        return(cov/den)
+    }
 }
 coef.of.var <- function(x, pop = TRUE, na.rm = TRUE) {
     if (na.rm) x <- x[!is.na(x)]
@@ -456,23 +518,29 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
         else data <- do.call("cbind", unname(addl.dfs))
     }
 
-    new.form <- as.formula(paste("~", paste(rhs.term.labels, collapse = " + ")))
-    tt.covs <- terms(new.form)
-
-    #Get model.frame, report error
-    mf.covs <- quote(stats::model.frame(tt.covs, data,
-                                        drop.unused.levels = TRUE,
-                                        na.action = "na.pass"))
-
-    tryCatch({covs <- eval(mf.covs)},
-             error = function(e) {stop(conditionMessage(e), call. = FALSE)})
-
-    if (is_not_null(treat.name) && treat.name %in% names(covs)) stop("The variable on the left side of the formula appears on the right side too.", call. = FALSE)
-
-    if (is_null(rhs.vars.mentioned)) {
+    if (is_null(rhs.term.labels)) {
+        new.form <- as.formula("~ 1")
+        tt.covs <- terms(new.form)
         covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))
+        if (is_not_null(treat.name) && treat.name == "Intercept") {
+            names(covs) <- "Intercept_"
+        }
     }
-    else attr(tt.covs, "intercept") <- 0
+    else {
+        new.form <- as.formula(paste("~", paste(rhs.term.labels, collapse = " + ")))
+        tt.covs <- terms(new.form)
+        attr(tt.covs, "intercept") <- 0
+
+        #Get model.frame, report error
+        mf.covs <- quote(stats::model.frame(tt.covs, data,
+                                            drop.unused.levels = TRUE,
+                                            na.action = "na.pass"))
+
+        tryCatch({covs <- eval(mf.covs)},
+                 error = function(e) {stop(conditionMessage(e), call. = FALSE)})
+
+        if (is_not_null(treat.name) && treat.name %in% names(covs)) stop("The variable on the left side of the formula appears on the right side too.", call. = FALSE)
+    }
 
     if (s <- !identical(sep, "")) {
         if (!is.character(sep) || length(sep) > 1) stop("sep must be a string of length 1.", call. = FALSE)
@@ -566,13 +634,13 @@ nunique.gt <- function(x, n, na.rm = TRUE) {
     if (is_null(x)) FALSE
     else {
         if (na.rm) x <- x[!is.na(x)]
-        if (n == 1 && is.numeric(x)) !check_if_zero(max(x) - min(x))
+        if (n == 1) !all_the_same(x)
         else if (length(x) < 2000) nunique(x) > n
         else tryCatch(nunique(x, nmax = n) > n, error = function(e) TRUE)
     }
 }
-all_the_same <- function(x) !nunique.gt(x, 1)
-is_binary <- function(x) !nunique.gt(x, 2)
+all_the_same <- function(x) !any(x != x[1])
+is_binary <- function(x) !all_the_same(x) && all_the_same(x[x != x[1]])
 
 #R Processing
 is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
