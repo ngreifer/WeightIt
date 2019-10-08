@@ -178,10 +178,6 @@ wrap <- function(s, nchar, ...) {
 check_if_zero <- function(x) {
     # this is the default tolerance used in all.equal
     tolerance <- .Machine$double.eps^0.5
-    # If the absolute deviation between the number and zero is less than
-    # the tolerance of the floating point arithmetic, then return TRUE.
-    # This means, to me, that I can treat the number as 0 rather than
-    # -3.20469e-16 or some such.
     abs(x - 0) < tolerance
 }
 between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
@@ -256,39 +252,68 @@ col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
     w.sum <- colSums(w*!is.na(mat))
     return(colSums(mat*w, na.rm = na.rm)/w.sum)
 }
-col.w.v <- function(mat, w = NULL, na.rm = TRUE) {
+col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
     if (!is.matrix(mat)) {
-        if (is_null(w)) return(var(mat, na.rm = na.rm))
-        else mat <- matrix(mat, ncol = 1)
+        if (is.data.frame(mat)) {
+            if (any(vapply(mat, is_, logical(1L), types = c("factor", "character")))) {
+                stop("mat must be a numeric matrix.")
+            }
+            else mat <- as.matrix.data.frame(mat)
+        }
+        else if (is.numeric(mat)) {
+            mat <- matrix(mat, ncol = 1)
+        }
+        else stop("mat must be a numeric matrix.")
     }
+
+    if (is_null(bin.vars)) bin.vars <- rep(FALSE, ncol(mat))
+    else if (length(bin.vars) != ncol(mat) || anyNA(as.logical(bin.vars))) {
+        stop("bin.vars must be a logical vector with length equal to the number of columns of mat.", call. = FALSE)
+    }
+    bin.var.present <- any(bin.vars)
+    non.bin.vars.present <- any(!bin.vars)
+
+    var <- setNames(numeric(ncol(mat)), colnames(mat))
     if (is_null(w)) {
-        den <- colSums(!is.na(mat)) - 1
-        var <- colSums(mat^2, na.rm = na.rm)/den -
-            (colSums(mat, na.rm = na.rm)/den)^2
+        if (non.bin.vars.present) {
+            den <- colSums(!is.na(mat[, !bin.vars, drop = FALSE])) - 1
+            var[!bin.vars] <- colSums(center(mat[, !bin.vars, drop = FALSE])^2, na.rm = na.rm)/den
+        }
+        if (bin.var.present) {
+            means <- colMeans(mat[, bin.vars, drop = FALSE], na.rm = na.rm)
+            var[bin.vars] <- means * (1 - means)
+        }
     }
-    else if (na.rm && any(is.na(mat))) {
-        n <- nrow(mat)
+    else if (na.rm && anyNA(mat)) {
+        # n <- nrow(mat)
         w <- array(w, dim = dim(mat))
         w[is.na(mat)] <- NA_real_
         s <- colSums(w, na.rm = na.rm)
         w <- mat_div(w, s)
-        x <- sqrt(w) * center(mat, at = colSums(w * mat, na.rm = na.rm))
-        var <- colSums(x*x, na.rm = na.rm)/(1 - colSums(w^2, na.rm = na.rm))
+        if (non.bin.vars.present) {
+            x <- sqrt(w[, !bin.vars, drop = FALSE]) * center(mat[, !bin.vars, drop = FALSE],
+                                                             at = colSums(w[, !bin.vars, drop = FALSE] * mat[, !bin.vars, drop = FALSE], na.rm = na.rm))
+            var[!bin.vars] <- colSums(x*x, na.rm = na.rm)/(1 - colSums(w[, !bin.vars, drop = FALSE]^2, na.rm = na.rm))
+        }
+        if (bin.var.present) {
+            means <- colSums(w[, bin.vars, drop = FALSE] * mat[, bin.vars, drop = FALSE], na.rm = na.rm)
+            var[bin.vars] <- means * (1 - means)
+        }
     }
     else {
+        if (is_null(w)) w <- rep(1, nrow(mat))
         w <- w/sum(w)
-        x <- sqrt(w) * center(mat, at = colSums(w * mat, na.rm = na.rm))
-        var <- colSums(x*x, na.rm = na.rm)/(1 - sum(w^2))
+        if (non.bin.vars.present) {
+            x <- sqrt(w) * center(mat[, !bin.vars, drop = FALSE],
+                                  at = colSums(w * mat[, !bin.vars, drop = FALSE], na.rm = na.rm))
+            var[!bin.vars] <- colSums(x*x, na.rm = na.rm)/(1 - sum(w^2))
+        }
+        if (bin.var.present) {
+            means <- colSums(w * mat[, bin.vars, drop = FALSE], na.rm = na.rm)
+            var[bin.vars] <- means * (1 - means)
+        }
     }
     return(var)
-}
-col.w.v.bin <- function(mat, w = NULL, na.rm = TRUE) {
-    if (is_null(w)) {
-        w <- rep(1, nrow(mat))
-    }
-    means <- col.w.m(mat, w, na.rm)
-    vars <- means * (1 - means)
-    return(vars)
 }
 col.w.cov <- function(mat, y, w = NULL, na.rm = TRUE) {
     if (!is.matrix(mat)) {
@@ -302,7 +327,7 @@ col.w.cov <- function(mat, y, w = NULL, na.rm = TRUE) {
         den <- colSums(!is.na(mat*y)) - 1
         cov <- colSums(center(mat, na.rm = na.rm)*center(y, na.rm = na.rm), na.rm = na.rm)/den
     }
-    else if (na.rm && any(is.na(mat))) {
+    else if (na.rm && anyNA(mat)) {
         n <- nrow(mat)
         w <- array(w, dim = dim(mat))
         w[is.na(mat)] <- NA_real_
@@ -319,11 +344,12 @@ col.w.cov <- function(mat, y, w = NULL, na.rm = TRUE) {
     }
     return(cov)
 }
-col.w.r <- function(mat, y, w = NULL, s.weights = NULL, na.rm = TRUE) {
+col.w.r <- function(mat, y, w = NULL, s.weights = NULL, bin.vars = NULL, na.rm = TRUE) {
     if (is_null(w) && is_null(s.weights)) return(cor(mat, y, w, use = if (na.rm) "pair" else "everything"))
     else {
-        cov <- col.w.cov(mat, y, w, na.rm)
-        den <- sqrt(col.w.v(mat, s.weights, na.rm)) * sqrt(col.w.v(y, s.weights, na.rm))
+        cov <- col.w.cov(mat, y = y, w = w, na.rm = na.rm)
+        den <- sqrt(col.w.v(mat, w = s.weights, bin.vars = bin.vars, na.rm = na.rm)) *
+            sqrt(col.w.v(y, w = s.weights, na.rm = na.rm))
         return(cov/den)
     }
 }
@@ -616,7 +642,7 @@ probably.a.bug <- function() {
     stop(paste0("An error was produced and is likely a bug. Please let the maintainer know a bug was produced by the function\n",
                 fun), call. = FALSE)
 }
-`%nin%` <- function(x, table) is.na(match(x, table, nomatch = NA_integer_))
+`%nin%` <- function(x, table) anyNA(match(x, table, nomatch = NA_integer_))
 null_or_error <- function(x) {is_null(x) || class(x) == "try-error"}
 match_arg <- function(arg, choices, several.ok = FALSE) {
     #Replaces match.arg() but gives cleaner error message and processing
@@ -655,6 +681,11 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
 }
 last <- function(x) {
     x[[length(x)]]
+}
+len <- function(x, recursive = TRUE) {
+    if (is.vector(x, "list")) sapply(x, len)
+    else if (length(dim(x)) > 1) NROW(x)
+    else length(x)
 }
 
 #Defunct; delete if everything works without them
@@ -723,5 +754,13 @@ last <- function(x) {
     w.scale <- apply(mat, 2, function(x) .w.cov.scale(w[!is.na(x)]))
     vars <- colSums(w*center(mat, at = means)^2, na.rm = na.rm)/w.scale
 
+    return(vars)
+}
+.col.w.v.bin <- function(mat, w = NULL, na.rm = TRUE) {
+    if (is_null(w)) {
+        w <- rep(1, nrow(mat))
+    }
+    means <- col.w.m(mat, w, na.rm)
+    vars <- means * (1 - means)
     return(vars)
 }
