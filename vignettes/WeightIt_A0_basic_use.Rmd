@@ -19,7 +19,7 @@ knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, messages = FALSE)
 
 ## Introduction
 
-`WeightIt` contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see Austin (2011), Austin & Stuart (2015), Robins, Hernan & Brumback (2000), or Thoemmes & Ong (2016).
+`WeightIt` contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see Austin (2011), Austin and Stuart (2015), Robins, Hernán, and Brumback (2000), or Thoemmes and Ong (2016).
 
 Typically, the analysis of an observation study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through all these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a definitive guide, but rather an introduction to the relevant issues.
 
