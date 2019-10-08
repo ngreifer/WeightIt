@@ -407,7 +407,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       if ((is.matrix(ps) && all(is.numeric(ps))) ||
           (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
         if (ncol(ps) == 1) {
-          if (suppressWarnings(!any(is.na(as.numeric(as.character(treat))))) &&
+          if (suppressWarnings(!anyNA(as.numeric(as.character(treat)))) &&
             all(check_if_zero(binarize(treat) - as.numeric(as.character(treat))))) treated.level <- 1
           else if (is_not_null(treated)) {
             if (treated %in% treat) treated.level <- treated
