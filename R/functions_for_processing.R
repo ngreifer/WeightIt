@@ -199,7 +199,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
               reported.estimand = reported.estimand,
               treated = if (is.factor(treated)) as.character(treated) else treated))
 }
-process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
+process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
 
   ##Process by
   bad.by <- FALSE
@@ -208,40 +208,47 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
   by.components <- NULL
   n <- length(treat)
 
-  if (missing(by) || is_null(by)) {
-    by.components <- data.frame()
-    by.factor <- factor(rep(1, n))
+  if (missing(by.name) || !is.character(by.name)) {
+    stop("by.name must be a character with the name of the by variable to be evaluated. Use deparse(substitute()) to pass a vector.", call. = FALSE)
   }
-  else if (is.character(by) && all(by %in% acceptable.bys)) {
-    by.components <- data[by]
-    by.combos <- do.call(expand.grid, lapply(by.components, function(x) sort(unique(x))))
-    rownames(by.combos) <- do.call(expand.grid_string, c(lapply(names(by.components), function(x) paste0(x, " = ", sort(unique(by.components[[x]])))),
-                                                          list(collapse = ", ")))
-    by.levels <- apply(by.combos, 1, paste, collapse = " | ")
-    by.factor <- factor(apply(by.components, 1, paste, collapse = " | "),
-                        levels = by.levels, labels = rownames(by.combos))
-    by.vars <- by
-  }
-  else if (len(by) == n) {
-    by.components <- setNames(data.frame(by), deparse(substitute(by)))
-    by.combos <- do.call(expand.grid, lapply(by.components, function(x) sort(unique(x))))
-    rownames(by.combos) <- do.call(expand.grid_string, c(lapply(names(by.components), function(x) paste0(x, " = ", sort(unique(by.components[[x]])))),
-                                                         list(collapse = ", ")))
-    by.levels <- apply(by.combos, 1, paste, collapse = " | ")
-    by.factor <- factor(apply(by.components, 1, paste, collapse = " | "),
-                        levels = by.levels, labels = rownames(by.combos))
-    by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
-  }
-  else bad.by <- TRUE
+  else {
+    by <- try(eval(parse(text = by.name)))
 
-  if (bad.by) stop(paste(by.arg, "must be the quoted names of variables in data for which weighting is to occur within strata or the variable itself."), call. = FALSE)
+    if (is_null(by)) {
+      by.components <- data.frame()
+      by.factor <- factor(rep(1, n))
 
-  if (any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
-    stop(paste0("Not all the groups formed by ", by.arg, " contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening", by.arg, "."), call. = FALSE)
+    }
+    else {
+      if (null_or_error(by)) bad.by <- TRUE
+      if (len(by) == 1) {
+        if (by %in% names(data)) {
+          by.name <- by
+          by <- data[[by]]
+        }
+        else bad.by <- TRUE
+      }
+      else if (len(by) != n || (is_not_null(dim(by)) && dim(by)[2] > 1L)) bad.by <- TRUE
+
+      if (!bad.by) {
+        by.components <- data.frame(by)
+        if (is_not_null(colnames(by))) names(by.components) <- colnames(by)
+        else names(by.components) <- by.name
+        by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
+                            labels = paste(names(by.components), "=", unique(by.components[[1]])))
+        # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
+      }
+      else {
+        stop(paste(by.arg, "must be the quoted name of a variable in data for which weighting is to occur within strata or the variable itself."), call. = FALSE)
+      }
+
+      if (any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
+        stop(paste0("Not all the groups formed by ", by.arg, " contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening ", by.arg, "."), call. = FALSE)
+      }
+    }
+    attr(by.components, "by.factor") <- by.factor
+    return(by.components)
   }
-
-  attr(by.components, "by.factor") <- by.factor
-  return(by.components)
 }
 process.moments.int <- function(moments, int, method) {
   if (!is.function(method)) {
