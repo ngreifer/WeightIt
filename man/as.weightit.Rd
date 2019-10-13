@@ -34,13 +34,13 @@ as.weightitMSM(...)
 
 \arguments{
   \item{weights}{
-a \code{numeric} vector of weights, one for each unit.
+required; a \code{numeric} vector of weights, one for each unit.
 }
   \item{treat}{
-a vector of treatment statuses, one for each unit.
+required; a vector of treatment statuses, one for each unit.
 }
   \item{covs}{
-an option \code{data.frame} of covariates. For using \pkg{WeightIt} functions, this is not necessary, but for use with \pkg{cobalt} it is.
+an optional \code{data.frame} of covariates. For using \pkg{WeightIt} functions, this is not necessary, but for use with \pkg{cobalt} it is.
 }
   \item{estimand}{
 an optional \code{character} of length 1 giving the estimand. The text is not checked.
