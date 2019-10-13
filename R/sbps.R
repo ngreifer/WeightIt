@@ -6,51 +6,50 @@
 
 sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL, smooth = FALSE, full.search) {
 
+  mod.name <- paste(deparse(substitute(moderator)), collapse = "")
+
   if (is_null(obj2) && is_null(moderator)) {
     stop("Either obj2 or moderator must be specified.", call. = FALSE)
   }
-  else if (is_null(obj2)) {
-    original.covs <- obj[["covs"]]
-    combined.data <- do.call(data.frame, c(original.covs, data))
-    processed.moderator <- process.by(moderator, data = clear_null(combined.data),
+
+    data.list <- list(data, obj2[["covs"]], obj[["covs"]])
+    combined.data <- do.call(data.frame, clear_null(data.list))
+    processed.moderator <- process.by(mod.name, data = clear_null(combined.data),
                                       treat = obj[["treat"]], treat.name = NULL,
                                       by.arg = "moderator")
     moderator.factor <- attr(processed.moderator, "by.factor")
 
+  if (is_not_null(obj2)) {
+    if (!inherits(obj2, "weightit")) {
+      stop("obj2 must be a weightit object, ideally with a 'by' component.", call. = FALSE)
+    }
+    else if (is_not_null(obj2[["by"]])) {
+      if (is_not_null(obj[["by"]])) {
+        if (is_null(processed.moderator)) stop("Cannot figure out moderator. Please supply a value to moderator.", call. = FALSE)
+      }
+      else {
+        processed.moderator <- obj2[["by"]]
+
+        moderator.factor <- attr(processed.moderator, "by.factor")
+      }
+    }
+    else if (is_null(processed.moderator)) stop("No moderator was specified.", call. = FALSE)
+  }
+  else {
     call <- obj[["call"]]
 
-    if ("by" %in% names(call)) {
-      processed.by <- process.by(call[["by"]], data = combined.data,
-                                 treat = obj[["treat"]], treat.name = NULL,
-                                 by.arg = "by")
-      by.factor <- attr(processed.by, "by.factor")
-
-      call[["by"]] <- factor(paste(moderator.factor,
-                                   by.factor, sep = "|"))
+    if (is_not_null(obj[["by"]])) {
+      call[["by"]] <- setNames(data.frame(factor(paste(processed.moderator[[1]],
+                                                       obj[["by"]][[1]], sep = " | "))),
+                               paste(names(processed.moderator), names(obj[["by"]]), sep = " | "))
 
     }
-    else call$by <- moderator.factor
+    else call[["by"]] <- processed.moderator
 
     obj2 <- eval(call)
   }
-  else if (!inherits(obj2, "weightit")) {
-    stop("obj2 must be a weightit object, ideally with a 'by' component.", call. = FALSE)
-  }
 
   if ((is_null(obj[["ps"]]) || is_null(obj2[["ps"]])) && smooth) stop("Smooth SBPS can only be used with methods that produce a propensity score.", call. = FALSE)
-
-  data.list <- list(data, obj2[["covs"]], obj[["covs"]])
-  combined.data <- do.call(data.frame, clear_null(data.list))
-
-  if (is_null(moderator)) {
-    if (is_not_null(obj2[["by"]])) moderator <- obj2[["by"]]
-    else stop("No moderator was specified.", call = FALSE)
-  }
-
-  processed.moderator <- process.by(moderator, data = combined.data,
-                                    treat = obj2[["treat"]], treat.name = NULL,
-                                    by.arg = "moderator")
-  moderator.factor <- attr(processed.moderator, "by.factor")
 
   call <- obj[["call"]]
   if (is_null(formula) && "formula" %in% names(call)) formula <- eval(call[["formula"]])
@@ -66,15 +65,14 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   s.d.denom <- get.s.d.denom.weightit(estimand = obj[["estimand"]], weights = obj[["weights"]],
                              treat = treat)
 
-  mod_vec <- factor(moderator.factor)
-  R <- levels(mod_vec)
+  R <- levels(moderator.factor)
 
   if (smooth) {
     ps_o <- obj[["ps"]]
     ps_s <- obj2[["ps"]]
 
-    get_w <- function(coefs, mod_vec, treat, ps_o, ps_s, estimand) {
-      ind.coefs <- coefs[mod_vec] #Gives each unit the coef for their subgroup
+    get_w <- function(coefs, moderator.factor, treat, ps_o, ps_s, estimand) {
+      ind.coefs <- coefs[moderator.factor] #Gives each unit the coef for their subgroup
       ps_ <- (1-ind.coefs)*ps_o + ind.coefs*ps_s
       w_ <- get_w_from_ps(ps_, treat, estimand)
       return(w_)
@@ -82,16 +80,16 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
     get_F <- function(ps_o, ps_s, ...) {
       coefs <- unlist(list(...))
-      w_ <- get_w(coefs, mod_vec, treat, ps_o, ps_s, estimand = obj[["estimand"]])
+      w_ <- get_w(coefs, moderator.factor, treat, ps_o, ps_s, estimand = obj[["estimand"]])
 
       F0_o <- cobalt::col_w_smd(covs, treat, w_, std = TRUE, s.d.denom = s.d.denom,
                                 abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
-      F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[mod_vec == g, , drop = FALSE],
-                                                             treat[mod_vec == g], w_[mod_vec == g],
+      F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
+                                                             treat[moderator.factor == g], w_[moderator.factor == g],
                                                              std = TRUE, s.d.denom = s.d.denom,
-                                                             abs = TRUE, s.weights = s.weights[mod_vec == g],
+                                                             abs = TRUE, s.weights = s.weights[moderator.factor == g],
                                                              bin.vars = bin.vars)))
-      # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(mod_vec, drop.first = FALSE),
+      # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(moderator.factor, drop.first = FALSE),
       #                           treat, w_, std = FALSE,
       #                           abs = TRUE, s.weights = s.weights,
       #                           bin.vars = rep(TRUE, length(R)))
@@ -106,8 +104,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
                      method = "L-BFGS-B")
 
     s_min <- setNames(opt.out$par, R) #coef is proportion subgroup vs. overall
-    weights <- get_w(s_min, mod_vec, treat, ps_o, ps_s, estimand = obj[["estimand"]])
-    ps <- (1-s_min[mod_vec])*ps_o + s_min[mod_vec]*ps_s
+    weights <- get_w(s_min, moderator.factor, treat, ps_o, ps_s, estimand = obj[["estimand"]])
+    ps <- (1-s_min[moderator.factor])*ps_o + s_min[moderator.factor]*ps_s
   }
   else {
     w_o <- obj[["weights"]]
@@ -121,28 +119,28 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       stop("full.search must be a logical of length 1.", call. = FALSE)
     }
 
-    get_w <- function(s, mod_vec, w_o, w_s) {
+    get_w <- function(s, moderator.factor, w_o, w_s) {
       #Get weights for given permutation of "O" and "S"
-      w_ <- numeric(length(mod_vec))
-      for (g in levels(mod_vec)) {
-        if (s[g] == 0) w_[mod_vec == g] <- w_o[mod_vec == g]
-        else if (s[g] == 1) w_[mod_vec == g] <- w_s[mod_vec == g]
+      w_ <- numeric(length(moderator.factor))
+      for (g in levels(moderator.factor)) {
+        if (s[g] == 0) w_[moderator.factor == g] <- w_o[moderator.factor == g]
+        else if (s[g] == 1) w_[moderator.factor == g] <- w_s[moderator.factor == g]
       }
       return(w_)
     }
 
     get_F <- function(s) {
       #Get value of loss function for given permutation of "O" and "S"
-      w_ <- get_w(s, mod_vec, w_o, w_s)
+      w_ <- get_w(s, moderator.factor, w_o, w_s)
 
       F0_o <- cobalt::col_w_smd(covs, treat, w_, std = TRUE, s.d.denom = s.d.denom,
                                 abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
-      F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[mod_vec == g, , drop = FALSE],
-                                                             treat[mod_vec == g], w_[mod_vec == g],
+      F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
+                                                             treat[moderator.factor == g], w_[moderator.factor == g],
                                                              std = TRUE, s.d.denom = s.d.denom,
-                                                             abs = TRUE, s.weights = s.weights[mod_vec == g],
+                                                             abs = TRUE, s.weights = s.weights[moderator.factor == g],
                                                              bin.vars = bin.vars)))
-      # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(mod_vec, drop.first = FALSE),
+      # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(moderator.factor, drop.first = FALSE),
       #                           treat, w_, std = FALSE,
       #                           abs = TRUE, s.weights = s.weights,
       #                           bin.vars = rep(TRUE, length(R)))
@@ -212,8 +210,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       }
     }
 
-    weights <- get_w(s_min, mod_vec, w_o, w_s)
-    if (is_not_null(obj[["ps"]]) && is_not_null(obj2[["ps"]])) ps <- get_w(s_min, mod_vec, obj[["ps"]], obj2[["ps"]])
+    weights <- get_w(s_min, moderator.factor, w_o, w_s)
+    if (is_not_null(obj[["ps"]]) && is_not_null(obj2[["ps"]])) ps <- get_w(s_min, moderator.factor, obj[["ps"]], obj2[["ps"]])
     else ps <- NULL
   }
 
@@ -221,9 +219,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   out[["covs"]] <- t.c[["reported.covs"]]
   out[["weights"]] <- weights
   out[["ps"]] <- ps
-  out[["moderator"]] <- setNames(processed.moderator, names(moderator))
+  out[["moderator"]] <- processed.moderator
   out[["prop.subgroup"]] <- s_min
   out[["call"]] <- match.call()
+
+  out <- clear_null(out)
 
   class(out) <- c("weightit.sbps", "weightit")
   return(out)
