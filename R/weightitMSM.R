@@ -3,6 +3,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                         verbose = FALSE, include.obj = FALSE, is.MSM.method, weightit.force = FALSE, ...) {
 
   A <- list(...)
+  by.name <- paste(deparse(substitute(by)), collapse = "")
 
   call <- match.call()
 
@@ -101,7 +102,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     # w.data <- data.frame(treat.list[[i]], covs.list[[i]])
     # w.formula <- formula(w.data)
 
-    processed.by <- process.by(by = by, data = data,
+    processed.by <- process.by(by = by.name, data = data,
                                        treat = treat.list[[i]],
                                        treat.name = treat.name)
 
@@ -246,6 +247,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
               stabilization = stabout,
               obj = obj.list
   )
+
+  out <- clear_null(out)
 
   class(out) <- c("weightitMSM", "weightit")
 

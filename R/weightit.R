@@ -4,7 +4,8 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   ## Checks and processing ----
 
-  A <- list(...)
+  A <- alist(...)
+  by.name <- paste(deparse(substitute(by)), collapse = "")
 
   #Checks
   if (is_null(ps)) {
@@ -75,11 +76,12 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   if (is_null(s.weights)) s.weights <- rep(1, n)
 
   ##Process by
-  if (is_not_null(A[["exact"]]) && is_null(by)) {
+  if (is_not_null(eval(A[["exact"]]))) {
     message("'by' has replaced 'exact' in the weightit() syntax, but 'exact' will always work.")
-    by <- A[["exact"]]
+    by.name <- deparse(A[["exact"]])
   }
-  processed.by <- process.by(by = by, data = data, treat = treat)
+
+  processed.by <- process.by(by.name, data = data, treat = treat)
 
   #Process moments and int
   moments.int <- process.moments.int(moments, int, method)
@@ -140,6 +142,9 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
               by = processed.by,
               call = call,
               obj = obj$fit.obj)
+
+  out <- clear_null(out)
+
   class(out) <- "weightit"
 
   return(out)
