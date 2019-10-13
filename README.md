@@ -18,6 +18,9 @@ effects for continuous treatments when available. In these ways,
 `WeightIt` does for weighting what `MatchIt` has done for matching, and
 `MatchIt` users will find the syntax familiar.
 
+For a complete vignette, see the [CRAN
+page](https://cran.r-project.org/web/packages/WeightIt/) for `WeightIt`.
+
 To install and load `WeightIt`, use the code below:
 
 ``` r
@@ -135,7 +138,6 @@ packages.
 | \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`         | `CBPS`         |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`       | `CBPS`         |
 | \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`     | `ebal`         |
-| \-              | Stable Balancing Weights (`"sbw"`)                                 | `sbw()`          | `sbw`          |
 | \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`          | `ATE`          |
 | \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`    | `optweight`    |
 | \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()` | `SuperLearner` |
