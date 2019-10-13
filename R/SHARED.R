@@ -190,7 +190,8 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
     if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
     if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
     if (anyNA(range) || !is.numeric(range)) stop("range must contain numeric entries only.", call. = FALSE)
-    range <- sort(range)
+
+    if (range[2] < range[1]) range <- c(range[2], range[1])
 
     if (anyNA(x)) {
         if (length(na.action) != 1 || !is.atomic(na.action)) stop("na.action must be an atomic vector of length 1.", call. = FALSE)
