@@ -1,11 +1,15 @@
 WeightIt News and Updates
 ======
 
-Version 0.6.1
+
+
+Version 0.7.0
+
+* Added new `sbps()` function for estimating subgroup balancing propensity score weights.
 
 * Bug fixes when `stabilize = TRUE`, thanks to @ulriksartipy and Sven Rieger.
 
-* Fixes for using `base.weight` argument with `method = "ebal"`. Now the supplied vector should have a length equal to the number of units in the dataset (in contrast to its use in `ebalce`, which requires a length equal to the number of control units).
+* Fixes for using `base.weight` argument with `method = "ebal"`. Now the supplied vector should have a length equal to the number of units in the dataset (in contrast to its use in `ebalance`, which requires a length equal to the number of control units).
 
 * Fixed bug when trying to use `method = "gbm"` with a continuous treatment and no `stop.method` entered.
 
