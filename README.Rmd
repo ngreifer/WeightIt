@@ -24,6 +24,8 @@ knitr::opts_chunk$set(
 
 `WeightIt` is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Contained within `WeightIt` are methods that call on other R packages to estimate weights. The value of `WeightIt` is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. `WeightIt` extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, and ATC for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, `WeightIt` does for weighting what `MatchIt` has done for matching, and `MatchIt` users will find the syntax familiar.
 
+For a complete vignette, see the [CRAN page](https://cran.r-project.org/web/packages/WeightIt/) for `WeightIt`.
+
 To install and load `WeightIt`, use the code below:
 
 ```{r, eval = FALSE}
@@ -79,7 +81,6 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | Covariate Balancing PS (`"cbps"`) | `CBPS()` | `CBPS`
  - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `npCBPS()` | `CBPS`
  - | Entropy Balancing (`"ebal"`) | `ebalance()` | `ebal`
- - | Stable Balancing Weights (`"sbw"`) | `sbw()` | `sbw`
  - | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE()` | `ATE`
  - | Optimization-Based Weights (`"optweight"`) | `optweight()` | `optweight`
  - | SuperLearner PS (`"super"`) | `SuperLearner()` | `SuperLearner`
