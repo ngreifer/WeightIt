@@ -102,7 +102,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     # w.data <- data.frame(treat.list[[i]], covs.list[[i]])
     # w.formula <- formula(w.data)
 
-    processed.by <- process.by(by = by.name, data = data,
+    processed.by <- process.by(by.name, data = data,
                                        treat = treat.list[[i]],
                                        treat.name = treat.name)
 
