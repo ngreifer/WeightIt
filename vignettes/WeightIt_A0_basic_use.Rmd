@@ -96,7 +96,8 @@ Now let's do some inference. Although some authors recommend using "robust" sand
 ```{r}
 #Robust standard errors and confidence intervals
 library("jtools")
-summ(fit, confint = TRUE) 
+summ(fit, confint = TRUE, 
+     model.fit = FALSE, mod.info = FALSE) 
 ```
 
 Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`.
@@ -183,7 +184,8 @@ anova(main.effects.fit, cum.fit)
 Based on the non-significant p-value, we can assume the effects of each treatment are close enough to be treated as the same, indicating that the number of treatments received is the relevant predictor of the outcome. Now we can examine what that treatment effect is with `summ()` in `jtools` (or `summary()`).
 
 ```{r}
-summ(cum.fit, confint = TRUE) 
+summ(cum.fit, confint = TRUE, 
+     model.fit = FALSE, mod.info = FALSE) 
 ```
 
 For each additional treatment received, the outcome is expected to decrease by 0.15 points. The confidence interval excludes 0, so there is evidence of a treatment effect in the population.
