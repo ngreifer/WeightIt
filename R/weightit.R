@@ -99,7 +99,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           covs = covs,
                           treat.type = treat.type,
                           s.weights = s.weights,
-                          by.factor = processed.by[["by.factor"]],
+                          by.factor = attr(processed.by, "by.factor"),
                           estimand = estimand,
                           focal = focal,
                           stabilize = stabilize,
@@ -137,7 +137,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
               s.weights = s.weights,
               #discarded = NULL,
               focal = if (reported.estimand == "ATT") focal else NULL,
-              by = processed.by[["by.components"]],
+              by = processed.by,
               call = call,
               obj = obj$fit.obj)
   class(out) <- "weightit"
