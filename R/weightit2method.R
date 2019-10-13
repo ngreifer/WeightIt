@@ -186,19 +186,19 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         check.package("brglm2")
         control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
         fit <- do.call("glm", c(list(formula, data = data,
-                                   weights = s.weights[subset],
-                                   family = binomial(link = A[["link"]]),
-                                   method = brglm2::brglmFit),
-                                   control), quote = TRUE)
+                                     weights = s.weights[subset],
+                                     family = binomial(link = A[["link"]]),
+                                     method = brglm2::brglmFit),
+                                control), quote = TRUE)
       }
       else {
         if (is_null(A[["glm.method"]])) A[["glm.method"]] <- "glm.fit"
         control <- A[names(formals(glm.control))[pmatch(names(A), names(formals(glm.control)), 0)]]
         fit <- do.call("glm", c(list(formula, data = data,
-                                   weights = s.weights[subset],
-                                   family = quasibinomial(link = A[["link"]]),
-                                   method = A[["glm.method"]]),
-                                   control), quote = TRUE)
+                                     weights = s.weights[subset],
+                                     family = quasibinomial(link = A[["link"]]),
+                                     method = A[["glm.method"]]),
+                                control), quote = TRUE)
       }
 
       ps[[2]] <- p.score <- fit$fitted.values
@@ -269,9 +269,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
             t_i <- rep(0, length(treat)); t_i[treat == i] <- 1
             data_i <- data.frame(t_i, covs)
             fit.list[[i]] <- do.call(glm, c(list(formula(data_i), data = data_i,
-                                 family = quasibinomial(link = A$link),
-                                 weights = s.weights[subset]),
-                                 control))
+                                                 family = quasibinomial(link = A$link),
+                                                 weights = s.weights[subset]),
+                                            control))
             ps[[i]] <- fit.list[[i]]$fitted.values
           }
           fit.obj <- fit.list
@@ -599,7 +599,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mom
 }
 
 #Generalized boosted modeling with twang
-weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
+weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
   A <- list(...)
 
   if (is_null(A$stop.method)) {
@@ -715,7 +715,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
   return(obj)
 }
-weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
+weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   A <- list(...)
   A[c("formula", "data", "sampw", "verbose")] <- NULL
   if (is_null(A[["stop.method"]])) {
@@ -745,6 +745,362 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   }
 
   #ps <- fit[["ps"]][[A[["stop.method"]]]]
+
+  obj <- list(w = w, fit.obj = fit)
+  return(obj)
+}
+
+#Generalized boosted modeling with gbm and cobalt
+weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  covs <- apply(covs, 2, make.closer.to.1)
+  bin.vars <- apply(covs, 2, is_binary)
+
+  if (is_null(A[["stop.method"]])) {
+    warning("No stop.method was provided. Using \"es.mean\".",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- "es.mean"
+  }
+  else if (length(A[["stop.method"]]) > 1) {
+    warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- A[["stop.method"]][1]
+  }
+
+  available.stop.methods <- c("ks.mean", "es.mean", "ks.max", "es.max", "ks.rms", "es.rms")
+  s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
+  if (is.na(s.m.matches) || s.m.matches == 0L) {stop(paste0("stop.method must be one of ", word_list(available.stop.methods, "or", quotes = TRUE), "."), call. = FALSE)}
+  else stop.method <- available.stop.methods[s.m.matches]
+
+  if (startsWith(stop.method, "es.")) stop.fun <- function(mat, treat, weights, estimand, s.weights, bin.vars, subset = NULL) {
+    s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
+    cobalt::col_w_smd(mat, treat, weights, std = rep(TRUE, ncol(mat)), s.d.denom, abs = TRUE,
+                      s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+  }
+  else if (startsWith(stop.method, "ks.")) stop.fun <- function(mat, treat, weights, estimand, s.weights, bin.vars, subset = NULL) {
+    cobalt::col_w_ks(mat, treat, weights, s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+  }
+
+  if (endsWith(stop.method, ".mean")) stop.sum <- mean
+  else if (endsWith(stop.method, ".max")) stop.sum <- max
+  else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
+
+  if (is_null(A[["trim.at"]])) trim.at <- .99
+  else trim.at <- A[["trim.at"]]
+
+  for (f in names(formals(gbm::gbm.fit))) {
+    if (f %in% c("x", "y", "misc", "w", "verbose", "var.names",
+                 "response.name", "group", "distribution", "keep.data")) default <- NULL
+    else default <- switch(f, n.trees = 1e4,
+                           interaction.depth = 3,
+                           shrinkage = .01,
+                           bag.fraction = 1,
+                           formals(gbm::gbm.fit)[[f]])
+
+    if (is_null(A[[f]])) A[[f]] <- default
+  }
+
+  if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*A[["n.trees"]]))
+  else n.grid <- A[["n.grid"]]
+
+  A[names(A) %nin% names(formals(gbm::gbm.fit))] <- NULL
+
+  if (treat.type == "binary")  available.distributions <- c("bernoulli", "adaboost")
+  else available.distributions <- "multinomial"
+
+  if (is_null(distribution <- A[["distribution"]])) distribution <- available.distributions[1]
+  distribution <- match_arg(distribution, available.distributions)
+  A[["distribution"]] <- NULL
+
+  check.package("gbm")
+
+  if (treat.type == "binary") {
+
+    fit <- do.call(gbm::gbm.fit, c(list(x = covs,
+                                        y = treat,
+                                        distribution = distribution,
+                                        w = s.weights,
+                                        verbose = FALSE),
+                                   A))
+    n.trees <- fit[["n.trees"]]
+    iters <- 1:n.trees
+    iters.grid <- round(seq(1, n.trees, length.out = n.grid))
+    # iters.grid <- iters
+
+    if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
+
+    ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
+    w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+    iter.grid.balance <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, estimand, s.weights, bin.vars)))
+
+    it <- which.min(iter.grid.balance) + c(-1, 1)
+    it[1] <- iters.grid[max(1, it[1])]
+    it[2] <- iters.grid[min(length(iters.grid), it[2])]
+    # iters.to.check <- iters[iters >= iters[it[1]] & iters <= iters[it[2]]]
+    iters.to.check <- iters[between(iters, iters[it])]
+
+    if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
+
+    ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
+    w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+    iter.grid.balance.fine <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, estimand, s.weights, bin.vars)))
+
+    best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
+
+    w <- w[,as.character(best.tree)]
+    ps <- ps[,as.character(best.tree)]
+  }
+  else if (treat.type == "multinomial") {
+
+    treat <- factor(treat)
+
+    fit <- do.call(gbm::gbm.fit, c(list(x = covs,
+                                        y = treat,
+                                        distribution = distribution,
+                                        w = s.weights,
+                                        verbose = FALSE),
+                                   A))
+
+    n.trees <- fit[["n.trees"]]
+    iters <- 1:n.trees
+    iters.grid <- round(seq(1, n.trees, length.out = n.grid))
+
+    if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
+
+    ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
+    w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+    iter.grid.balance <- apply(w, 2, function(w_) {
+      if (is_not_null(focal)) {
+        bin.treat <- as.numeric(treat == focal)
+        bal <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
+          stop.fun(covs, bin.treat, weights = w_, estimand = "ATT", s.weights, bin.vars, subset = treat %in% c(t, focal))
+        }))
+      }
+      else {
+        bal <- unlist(lapply(levels(treat), function(i) {
+          covs_i <- rbind(covs, covs[treat == i, , drop = FALSE])
+          treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == i)))
+          w_i <- c(rep(1, nrow(covs)), w_[treat == i])
+          if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == i])
+          else s.weights_i <- NULL
+          stop.fun(covs_i, treat_i, weights = w_i, estimand = "ATT", s.weights_i, bin.vars)
+        }))
+      }
+      stop.sum(bal)
+    })
+
+    it <- which.min(iter.grid.balance) + c(-1, 1)
+    it[1] <- iters.grid[max(1, it[1])]
+    it[2] <- iters.grid[min(length(iters.grid), it[2])]
+    # iters.to.check <- iters[iters >= iters[it[1]] & iters <= iters[it[2]]]
+    iters.to.check <- iters[between(iters, iters[it])]
+
+    if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
+
+    ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
+    w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+    iter.grid.balance.fine <- apply(w, 2, function(w_) {
+      if (is_not_null(focal)) {
+        bin.treat <- as.numeric(treat == focal)
+        bal <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
+          stop.fun(covs, bin.treat, weights = w_, estimand = "ATT", s.weights, bin.vars, subset = treat %in% c(t, focal))
+        }))
+      }
+      else {
+        bal <- unlist(lapply(levels(treat), function(i) {
+          covs_i <- rbind(covs, covs[treat == i, , drop = FALSE])
+          treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == i)))
+          w_i <- c(rep(1, nrow(covs)), w_[treat == i])
+          if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == i])
+          else s.weights_i <- NULL
+          stop.fun(covs_i, treat_i, weights = w_i, estimand = "ATT", s.weights_i, bin.vars)
+        }))
+      }
+      stop.sum(bal)
+    })
+
+    best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
+
+    ps <- ps[, , as.character(best.tree)]
+    w <- get_w_from_ps(ps, treat, estimand, focal)
+    ps <- NULL
+  }
+
+  if (stabilize) {
+    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
+    w <- w * tab[treat]
+  }
+
+  obj <- list(w = w, ps = ps, fit.obj = fit)
+  return(obj)
+}
+weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  covs <- apply(covs, 2, make.closer.to.1)
+  bin.vars <- apply(covs, 2, is_binary)
+
+  if (is_null(A[["stop.method"]])) {
+    warning("No stop.method was provided. Using \"es.mean\".",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- "es.mean"
+  }
+  else if (length(A[["stop.method"]]) > 1) {
+    warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- A[["stop.method"]][1]
+  }
+
+  available.stop.methods <- c("p.mean", "s.mean", "p.max", "s.max", "p.rms", "s.rms")
+  s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
+  if (is.na(s.m.matches) || s.m.matches == 0L) {stop(paste0("stop.method must be one of ", word_list(available.stop.methods, "or", quotes = TRUE), "."), call. = FALSE)}
+  else stop.method <- available.stop.methods[s.m.matches]
+
+  if (startsWith(stop.method, "s.")) stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
+    cobalt::col_w_corr(mat, treat, weights, type = "spearman", abs = TRUE,
+                      s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+  }
+  else if (startsWith(stop.method, "p.")) stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
+    cobalt::col_w_corr(mat, treat, weights, type = "pearson", abs = TRUE,
+                       s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+  }
+
+  if (endsWith(stop.method, ".mean")) stop.sum <- mean
+  else if (endsWith(stop.method, ".max")) stop.sum <- max
+  else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
+
+  if (is_null(A[["trim.at"]])) trim.at <- .99
+  else trim.at <- A[["trim.at"]]
+
+  for (f in names(formals(gbm::gbm.fit))) {
+    if (f %in% c("x", "y", "misc", "w", "verbose", "var.names",
+                 "response.name", "group", "distribution", "keep.data")) default <- NULL
+    else default <- switch(f, n.trees = 2e4,
+                           interaction.depth = 4,
+                           shrinkage = 0.0005,
+                           bag.fraction = 1,
+                           formals(gbm::gbm.fit)[[f]])
+
+    if (is_null(A[[f]])) A[[f]] <- default
+  }
+
+  if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*A[["n.trees"]]))
+  else n.grid <- A[["n.grid"]]
+
+  A[names(A) %nin% names(formals(gbm::gbm.fit))] <- NULL
+
+  available.distributions <- c("gaussian", "laplace", "tdist", "poisson")
+
+  if (is_null(distribution <- A[["distribution"]])) distribution <- available.distributions[1]
+  distribution <- match_arg(distribution, available.distributions)
+  A[["distribution"]] <- NULL
+
+  check.package("gbm")
+
+  get_cont_weights <- function(ps, treat, s.weights) {
+    p.denom <- treat - ps
+
+    if (isTRUE(A[["use.kernel"]])) {
+      if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
+      if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
+      if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
+      if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
+
+      d.d <- density(p.denom, n = A[["n"]],
+                     weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                     bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+      dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
+    }
+    else {
+      dens.denom <- dnorm(p.denom, 0, sd = sd(p.denom))
+    }
+
+    num.fit <- do.call("glm", c(list(treat ~ 1,
+                                     data = data.frame(treat = treat),
+                                     weights = s.weights,
+                                     family = gaussian(),
+                                     control = list()),
+                                A[names(A %nin% "family")]),
+                       quote = TRUE)
+
+    p.num <- treat - num.fit$fitted.values
+
+    if (isTRUE(A[["use.kernel"]])) {
+      d.n <- density(p.num, n = A[["n"]],
+                     weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                     bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+      dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
+    }
+    else {
+      dens.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
+    }
+    w <- dens.num/dens.denom
+
+    return(w)
+  }
+
+  if (treat.type == "continuous") {
+
+    fit <- do.call(gbm::gbm.fit, c(list(x = covs,
+                                        y = treat,
+                                        distribution = distribution,
+                                        w = s.weights,
+                                        verbose = FALSE),
+                                   A))
+    n.trees <- fit[["n.trees"]]
+    iters <- 1:n.trees
+    iters.grid <- round(seq(1, n.trees, length.out = n.grid))
+    # iters.grid <- iters
+
+    if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
+
+    ps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
+
+    w <- apply(ps, 2, get_cont_weights, treat = treat, s.weights = s.weights)
+    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+    iter.grid.balance <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, s.weights, bin.vars)))
+
+    it <- which.min(iter.grid.balance) + c(-1, 1)
+    it[1] <- iters.grid[max(1, it[1])]
+    it[2] <- iters.grid[min(length(iters.grid), it[2])]
+    # iters.to.check <- iters[iters >= iters[it[1]] & iters <= iters[it[2]]]
+    iters.to.check <- iters[between(iters, iters[it])]
+
+    if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
+
+    ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
+    w <- apply(ps, 2, get_cont_weights, treat = treat, s.weights = s.weights)
+    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+    iter.grid.balance.fine <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, s.weights, bin.vars)))
+
+    best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
+
+    w <- w[,as.character(best.tree)]
+    # ps <- ps[,as.character(best.tree)]
+  }
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
