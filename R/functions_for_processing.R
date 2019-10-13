@@ -1,7 +1,8 @@
 method.to.proper.method <- function(method) {
   method <- tolower(method)
   if      (method %in% c("ps")) return("ps")
-  else if (method %in% c("gbm", "gbr", "twang")) return("gbm")
+  else if (method %in% c("gbm", "gbr")) return("gbm")
+  else if (method %in% c("twang")) return("twang")
   else if (method %in% c("cbps")) return("cbps")
   else if (method %in% c("npcbps")) return("npcbps")
   else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
@@ -60,6 +61,7 @@ method.to.phrase <- function(method) {
     method <- method.to.proper.method(method)
     if (method %in% c("ps")) return("propensity score weighting")
     else if (method %in% c("gbm")) return("generalized boosted modeling")
+    else if (method %in% c("twang")) return("generalized boosted modeling with TWANG")
     else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
     else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
     else if (method %in% c("ebal")) return("entropy balancing")
@@ -74,7 +76,8 @@ method.to.phrase <- function(method) {
 process.estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
   AE <- list(binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                           , gbm = c("ATT", "ATC", "ATE")
+                           , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                           , twang = c("ATT", "ATC", "ATE")
                            , cbps = c("ATT", "ATC", "ATE")
                            , npcbps = c("ATE")
                            , ebal = c("ATT", "ATC", "ATE")
@@ -85,7 +88,8 @@ process.estimand <- function(estimand, method, treat.type) {
                            # , sbps = c("ATT", "ATC", "ATE", "ATO", "ATM")
                            ),
              multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                                , gbm = c("ATT", "ATC", "ATE")
+                                , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                                , twang = c("ATT", "ATC", "ATE")
                                 , cbps = c("ATT", "ATC", "ATE")
                                 , npcbps = c("ATE")
                                 , ebal = c("ATT", "ATC", "ATE")
