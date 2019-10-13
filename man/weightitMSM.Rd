@@ -43,7 +43,7 @@ a string of length 1 containing the name of the method that will be used to esti
 optional; a one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernán (2008) for a discussion of how to specify this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
 }
   \item{by}{
-a vector or the names of variables in data for which weighting is to be done within categories. For example, if \code{by = "gender"}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message.
+a vector or the name of the variable in data for which weighting is to be done within categories. For example, if \code{by = "gender"}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message. Only one \code{by} variable is allowed.
 }
   \item{s.weights}{
 a vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These are ignored for some methods.
@@ -84,6 +84,7 @@ a \code{weightitMSM} object; the output of a call to \code{weightitMSM}.
   \item{method}{The weight estimation method specified.}
   \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
   \item{s.weights}{The provided sampling weights.}
+  \item{by}{A data.frame containing the \code{by} variable when specified.}
   \item{stabilization}{The stabilization factors, if any.}
 }
 \details{
