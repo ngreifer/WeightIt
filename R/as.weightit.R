@@ -3,8 +3,8 @@ as.weightit <- function(...) {
 }
 as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.weights = NULL, ps = NULL, ...) {
 
-  if (missing(weights)) stop("weights must be supplied.")
-  if (missing(treat)) stop("treat must be supplied.")
+  if (missing(weights)) stop("weights must be supplied to as.weightit.", call. = FALSE)
+  if (missing(treat)) stop("treat must be supplied to as.weightit.", call. = FALSE)
 
   if (!is.vector(weights, "numeric")) stop("weights must be a numeric vector.", call. = FALSE)
 
@@ -21,6 +21,7 @@ as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.
   if (is_not_null(estimand)) {
     if (!is.vector(estimand, "character") || length(estimand) != 1L) stop("estimand must be a character vector of length 1.", call. = FALSE)
   }
+
   if (is_not_null(s.weights)) {
     if (!is.vector(s.weights, "numeric")) stop("s.weights must be a numeric vector.", call. = FALSE)
     if (length(s.weights) != length(weights)) stop("s.weights and weights must be the same length.", call. = FALSE)
@@ -122,8 +123,8 @@ as.weightitMSM <- function(...) {
 }
 as.weightitMSM.default <- function(weights, treat.list, covs.list = NULL, estimand = NULL, s.weights = NULL, ps.list = NULL, ...) {
 
-  if (missing(weights)) stop("weights must be supplied.")
-  if (missing(treat.list)) stop("treat.list must be supplied.")
+  if (missing(weights)) stop("weights must be supplied to as.weightitMSM.", call. = FALSE)
+  if (missing(treat.list)) stop("treat.list must be supplied to as.weightitMSM.", call. = FALSE)
 
   if (!is.vector(weights, "numeric")) stop("weights must be a numeric vector.", call. = FALSE)
 
