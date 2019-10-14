@@ -797,7 +797,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   else if (endsWith(stop.method, ".max")) stop.sum <- max
   else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
 
-  if (is_null(A[["trim.at"]])) trim.at <- .99
+  if (is_null(A[["trim.at"]])) trim.at <- 0
   else trim.at <- A[["trim.at"]]
 
   for (f in names(formals(gbm::gbm.fit))) {
@@ -994,7 +994,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   else if (endsWith(stop.method, ".max")) stop.sum <- max
   else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
 
-  if (is_null(A[["trim.at"]])) trim.at <- .99
+  if (is_null(A[["trim.at"]])) trim.at <- 0
   else trim.at <- A[["trim.at"]]
 
   for (f in names(formals(gbm::gbm.fit))) {
