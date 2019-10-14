@@ -51,10 +51,10 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 
 }
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}
+\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{method_gbm}}
 }
 \note{
-See the Note section at \code{\link{method-gbm}} for a disucssion how this method differs from \code{method = "gbm"}.
+See the Note section at \code{\link{method_gbm}} for a disucssion how this method differs from \code{method = "gbm"}.
 }
 \examples{
 library("cobalt")

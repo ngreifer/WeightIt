@@ -6,7 +6,7 @@ Version 0.7.0
 
 * Added new `sbps()` function for estimating subgroup balancing propensity score weights, including both the standard method and a new smooth version.
 
-* Setting `method = "gbm"` and `method = "twang"` will now do two different things. `method = "gbm"` uses `gbm` and `cobalt` functions to estimate the weights and is much faster, while `method = "twang"` uses `twang` functions to estimate the weights. Prior to this version, `method = "gbm"` and `method = "twang"` both did what `method = "twang"` does now. 
+* Setting `method = "gbm"` and `method = "twang"` will now do two different things. `method = "gbm"` uses `gbm` and `cobalt` functions to estimate the weights and is much faster, while `method = "twang"` uses `twang` functions to estimate the weights. The results are similar between the two methods. Prior to this version, `method = "gbm"` and `method = "twang"` both did what `method = "twang"` does now. 
 
 * Bug fixes when `stabilize = TRUE`, thanks to @ulriksartipy and Sven Rieger.
 

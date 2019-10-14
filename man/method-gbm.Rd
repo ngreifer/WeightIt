@@ -67,7 +67,7 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 
 }
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{method-twang}}
+\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{method_twang}}
 }
 \note{
 This method used to implement what is now implemented by \code{method = "twang"}. Using \code{method = "gbm"} is \emph{much} faster than using \code{method = "twang"} or \code{twang::ps} because of efficiency improvements that are not present in \pkg{twang}, but the results will differ slightly between the two methods. Notably, for multinomial treatments, the methods use different strategies: \code{method = "gbm"} estimates multinomial propensity scores (one for each individual for each treatment level) and chooses the tree that optimizes balance between each treatment and the target population, while \code{method = "twang"} estimates a set of binary propensity scores for each treatment, each optimizing balance for the treatment and the target population, and then combines the weights. For continuous treatments, the results will be identical.
@@ -79,7 +79,7 @@ data("lalonde", package = "cobalt")
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "gbm", estimand = "ATT",
+                method = "gbm", estimand = "ATE",
                 stop.method = "es.max"))
 summary(W1)
 bal.tab(W1)
@@ -87,8 +87,8 @@ bal.tab(W1)
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "gbm", estimand = "ATE",
-                stop.method = "ks.mean"))
+                method = "gbm", estimand = "ATT",
+                focal = "hispan", stop.method = "ks.mean"))
 summary(W2)
 bal.tab(W2)
 
@@ -96,7 +96,7 @@ bal.tab(W2)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", use.kernel = TRUE,
-                stop.method = "p.rms"), trim.at = .97)
+                stop.method = "p.rms", trim.at = .97))
 summary(W3)
 bal.tab(W3)
 }
