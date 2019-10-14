@@ -10,7 +10,7 @@ Depends:
 Imports:
     ggplot2 (>= 3.0.0)
 Suggests:
-    cobalt (>= 3.8.0),
+    cobalt (>= 3.9.0),
     twang (>= 1.5),
     CBPS (>= 0.18),
     ebal (>= 0.1-6),

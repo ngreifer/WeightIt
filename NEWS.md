@@ -2,16 +2,15 @@ WeightIt News and Updates
 ======
 
 
-
 Version 0.7.0
 
-* Added new `sbps()` function for estimating subgroup balancing propensity score weights.
+* Added new `sbps()` function for estimating subgroup balancing propensity score weights, including both the standard method and a new smooth version.
+
+* Setting `method = "gbm"` and `method = "twang"` will now do two different things. `method = "gbm"` uses `gbm` and `cobalt` functions to estimate the weights and is much faster, while `method = "twang"` uses `twang` functions to estimate the weights. Prior to this version, `method = "gbm"` and `method = "twang"` both did what `method = "twang"` does now. 
 
 * Bug fixes when `stabilize = TRUE`, thanks to @ulriksartipy and Sven Rieger.
 
 * Fixes for using `base.weight` argument with `method = "ebal"`. Now the supplied vector should have a length equal to the number of units in the dataset (in contrast to its use in `ebalance`, which requires a length equal to the number of control units).
-
-* Fixed bug when trying to use `method = "gbm"` with a continuous treatment and no `stop.method` entered.
 
 * Restored dependency on `cobalt` for examples and vignette.
 
@@ -33,7 +32,7 @@ Version 0.6.0
 
 * Updated documentation to describe how missing data in the covariates is handled. Some bugs related to missing data have been fixed as well, thanks to Yong Hao Pua.
 
-* `ps.cont()` had the "z-transfromed correlation" options removed to simplify output. This function and its supporting functions will be deprecated as soon as the new version fo `twang` is released.
+* `ps.cont()` had the "z-transfromed correlation" options removed to simplify output. This function and its supporting functions will be deprecated as soon as the new version of `twang` is released.
 
 * When using `method = "ps"` or `method = "super"` with continuous treatments, setting `use.kernel = TRUE` and `plot = TRUE`, the plot is now made with `ggplot2` rather than the base R plots.
 

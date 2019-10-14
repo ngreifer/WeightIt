@@ -13,10 +13,10 @@ weights. The value of `WeightIt` is in its unified and familiar syntax
 used to generate the weights, as each of these other packages have their
 own, often challenging to navigate, syntax. `WeightIt` extends the
 capabilities of these packages to generate weights used to estimate the
-ATE, ATT, and ATC for binary or multinomial treatments, and treatment
-effects for continuous treatments when available. In these ways,
-`WeightIt` does for weighting what `MatchIt` has done for matching, and
-`MatchIt` users will find the syntax familiar.
+ATE, ATT, ATC, and other estimands for binary or multinomial treatments,
+and treatment effects for continuous treatments when available. In these
+ways, `WeightIt` does for weighting what `MatchIt` has done for
+matching, and `MatchIt` users will find the syntax familiar.
 
 For a complete vignette, see the [CRAN
 page](https://cran.r-project.org/web/packages/WeightIt/) for `WeightIt`.
@@ -121,32 +121,36 @@ estimating weights for binary, multinomial, and continuous treatments
 using various methods and functions from various
 packages.
 
-| Treatment type  | Method (`method =`)                                                | Function         | Package        |
-| --------------- | ------------------------------------------------------------------ | ---------------- | -------------- |
-| **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`          | `base`         |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`           | `twang`        |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`         | `CBPS`         |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`       | `CBPS`         |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`     | `ebal`         |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`          | `ATE`          |
-| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`    | `optweight`    |
-| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()` | `SuperLearner` |
-| **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`          | `base`         |
-| \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`       | `mlogit`       |
-| \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`          | `MNP`          |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps()`           | `twang`        |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`         | `CBPS`         |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`       | `CBPS`         |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`     | `ebal`         |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`          | `ATE`          |
-| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`    | `optweight`    |
-| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()` | `SuperLearner` |
-| **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`          | `base`         |
-| \-              | Generalized boosted modeling PS (`"gbm"`)                          | `ps.cont()`      | `WeightIt`     |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`         | `CBPS`         |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`       | `CBPS`         |
-| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`    | `optweight`    |
-| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()` | `SuperLearner` |
+| Treatment type  | Method (`method =`)                                                | Function                | Package          |
+| --------------- | ------------------------------------------------------------------ | ----------------------- | ---------------- |
+| **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`                 | `base`           |
+| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `ps()`/`gbm.fit()`      | `twang`/`gbm`    |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
+| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`            | `ebal`           |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`                 | `ATE`            |
+| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
+| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
+| **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`                 | `base`           |
+| \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`              | `mlogit`         |
+| \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`                 | `MNP`            |
+| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `ps()`/`gbm.fit()`      | `twang`/`gbm`    |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
+| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`            | `ebal`           |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`                 | `ATE`            |
+| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
+| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
+| **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`                 | `base`           |
+| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `ps.cont()`/`gbm.fit()` | `WeightIt`/`gbm` |
+| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
+| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
+| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
+
+In addition, `WeightIt` implements the subgroup balancing propensity
+score using the function `sbps()`. Several other tools and utilities are
+available.
 
 If you would like to see your package or method integrated into
 `WeightIt`, or for any other questions or comments about `WeightIt`,
