@@ -12,12 +12,18 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     stop("Either obj2 or moderator must be specified.", call. = FALSE)
   }
 
-    data.list <- list(data, obj2[["covs"]], obj[["covs"]])
-    combined.data <- do.call(data.frame, clear_null(data.list))
-    processed.moderator <- process.by(mod.name, data = clear_null(combined.data),
-                                      treat = obj[["treat"]], treat.name = NULL,
-                                      by.arg = "moderator")
-    moderator.factor <- attr(processed.moderator, "by.factor")
+  treat <- obj[["treat"]]
+  treat.type <- get.treat.type(treat)
+
+  focal <- obj[["focal"]]
+  estimand <- obj[["estimand"]]
+
+  data.list <- list(data, obj2[["covs"]], obj[["covs"]])
+  combined.data <- do.call(data.frame, clear_null(data.list))
+  processed.moderator <- process.by(mod.name, data = clear_null(combined.data),
+                                    treat = obj[["treat"]], treat.name = NULL,
+                                    by.arg = "moderator")
+  moderator.factor <- attr(processed.moderator, "by.factor")
 
   if (is_not_null(obj2)) {
     if (!inherits(obj2, "weightit")) {
@@ -59,11 +65,16 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   if (is_null(t.c[["reported.covs"]])) stop("No covariates were found.", call. = FALSE)
   covs <- t.c[["model.covs"]]
   s.weights <- obj[["s.weights"]]
-  treat <- obj[["treat"]]
+
+  mod.split <- cobalt::splitfactor(moderator.factor, drop.first = "if2")
+  same.as.moderator <- apply(covs, 2, function(c) {
+    any(vapply(mod.split, function(x) equivalent.factors(x, c), logical(1L)))
+  })
+  covs <- covs[, !same.as.moderator, drop = FALSE]
 
   bin.vars <- apply(covs, 2, is_binary)
   s.d.denom <- get.s.d.denom.weightit(estimand = obj[["estimand"]], weights = obj[["weights"]],
-                             treat = treat)
+                                      treat = treat)
 
   R <- levels(moderator.factor)
 
@@ -71,24 +82,78 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     ps_o <- obj[["ps"]]
     ps_s <- obj2[["ps"]]
 
-    get_w <- function(coefs, moderator.factor, treat, ps_o, ps_s, estimand) {
+    get_w_smooth <- function(coefs, moderator.factor, treat, ps_o, ps_s, estimand) {
       ind.coefs <- coefs[moderator.factor] #Gives each unit the coef for their subgroup
       ps_ <- (1-ind.coefs)*ps_o + ind.coefs*ps_s
       w_ <- get_w_from_ps(ps_, treat, estimand)
       return(w_)
     }
 
-    get_F <- function(ps_o, ps_s, ...) {
+    get_F_smooth <- function(ps_o, ps_s, treat.type, ...) {
       coefs <- unlist(list(...))
-      w_ <- get_w(coefs, moderator.factor, treat, ps_o, ps_s, estimand = obj[["estimand"]])
+      w_ <- get_w_smooth(coefs, moderator.factor, treat, ps_o, ps_s, estimand = obj[["estimand"]])
 
-      F0_o <- cobalt::col_w_smd(covs, treat, w_, std = TRUE, s.d.denom = s.d.denom,
-                                abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
-      F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
-                                                             treat[moderator.factor == g], w_[moderator.factor == g],
-                                                             std = TRUE, s.d.denom = s.d.denom,
-                                                             abs = TRUE, s.weights = s.weights[moderator.factor == g],
-                                                             bin.vars = bin.vars)))
+      if (treat.type == "binary") {
+        F0_o <- cobalt::col_w_smd(covs, treat, w_, std = TRUE, s.d.denom = s.d.denom,
+                                  abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
+        F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
+                                                               treat[moderator.factor == g], w_[moderator.factor == g],
+                                                               std = TRUE, s.d.denom = s.d.denom,
+                                                               abs = TRUE, s.weights = s.weights[moderator.factor == g],
+                                                               bin.vars = bin.vars)))
+      }
+      else if (treat.type == "multinomial") {
+        if (is_not_null(focal)) {
+          bin.treat <- as.numeric(treat == focal)
+          s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
+          F0_o <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
+            cobalt::col_w_smd(covs, bin.treat, w_, std = TRUE, s.d.denom = s.d.denom,
+                              abs = TRUE, s.weights = s.weights, bin.vars = bin.vars,
+                              subset = treat %in% c(t, focal))
+          }))
+          F0_s <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
+            unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
+                                                           bin.treat[moderator.factor == g], w_[moderator.factor == g],
+                                                           std = TRUE, s.d.denom = s.d.denom,
+                                                           abs = TRUE, s.weights = s.weights[moderator.factor == g],
+                                                           bin.vars = bin.vars,
+                                                           subset = treat[moderator.factor == g] %in% c(t, focal))))
+          }))
+
+        }
+        else {
+          F0_o <- unlist(lapply(levels(treat), function(t) {
+            covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
+            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
+            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
+            else s.weights_i <- NULL
+            cobalt::col_w_smd(covs_i, treat_i, w_i, std = TRUE, s.d.denom = "treated",
+                              abs = TRUE, s.weights = s.weights_i, bin.vars = bin.vars)
+          }))
+          F0_s <- unlist(lapply(levels(treat), function(t) {
+            covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
+            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
+            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            moderator.factor_i <- c(moderator.factor, moderator.factor[treat == t])
+            if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
+            else s.weights_i <- NULL
+            unlist(lapply(R, function(g) cobalt::col_w_smd(covs_i[moderator.factor_i == g, , drop = FALSE],
+                                                           treat_i[moderator.factor_i == g], w_i[moderator.factor_i == g],
+                                                           std = TRUE, s.d.denom = "treated",
+                                                           abs = TRUE, s.weights = s.weights_i[moderator.factor_i == g],
+                                                           bin.vars = bin.vars)))
+          }))
+        }
+      }
+      else if (treat.type == "continuous") {
+        F0_o <- cobalt::col_w_corr(covs, treat, w_, abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
+        F0_s <- unlist(lapply(R, function(g) cobalt::col_w_corr(covs[moderator.factor == g, , drop = FALSE],
+                                                                treat[moderator.factor == g], w_[moderator.factor == g],
+                                                                abs = TRUE, s.weights = s.weights[moderator.factor == g],
+                                                                bin.vars = bin.vars)))
+      }
+
       # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(moderator.factor, drop.first = FALSE),
       #                           treat, w_, std = FALSE,
       #                           abs = TRUE, s.weights = s.weights,
@@ -98,13 +163,13 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       return(F0)
     }
 
-    opt.out <- optim(rep(.5, length(R)), fn = get_F,
-                     ps_o = ps_o, ps_s = ps_s,
+    opt.out <- optim(rep(.5, length(R)), fn = get_F_smooth,
+                     ps_o = ps_o, ps_s = ps_s, treat.type = treat.type,
                      lower = 0, upper = 1,
                      method = "L-BFGS-B")
 
     s_min <- setNames(opt.out$par, R) #coef is proportion subgroup vs. overall
-    weights <- get_w(s_min, moderator.factor, treat, ps_o, ps_s, estimand = obj[["estimand"]])
+    weights <- get_w_smooth(s_min, moderator.factor, treat, ps_o, ps_s, estimand = obj[["estimand"]])
     ps <- (1-s_min[moderator.factor])*ps_o + s_min[moderator.factor]*ps_s
   }
   else {
@@ -129,17 +194,71 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       return(w_)
     }
 
-    get_F <- function(s) {
+    get_F <- function(s, moderator.factor, w_o, w_s, treat.type) {
       #Get value of loss function for given permutation of "O" and "S"
       w_ <- get_w(s, moderator.factor, w_o, w_s)
 
-      F0_o <- cobalt::col_w_smd(covs, treat, w_, std = TRUE, s.d.denom = s.d.denom,
-                                abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
-      F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
-                                                             treat[moderator.factor == g], w_[moderator.factor == g],
-                                                             std = TRUE, s.d.denom = s.d.denom,
-                                                             abs = TRUE, s.weights = s.weights[moderator.factor == g],
-                                                             bin.vars = bin.vars)))
+      if (treat.type == "binary") {
+        F0_o <- cobalt::col_w_smd(covs, treat, w_, std = TRUE, s.d.denom = s.d.denom,
+                                  abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
+        F0_s <- unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
+                                                               treat[moderator.factor == g], w_[moderator.factor == g],
+                                                               std = TRUE, s.d.denom = s.d.denom,
+                                                               abs = TRUE, s.weights = s.weights[moderator.factor == g],
+                                                               bin.vars = bin.vars)))
+      }
+      else if (treat.type == "multinomial") {
+        if (is_not_null(focal)) {
+          bin.treat <- as.numeric(treat == focal)
+          s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
+          F0_o <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
+            cobalt::col_w_smd(covs, bin.treat, w_, std = TRUE, s.d.denom = s.d.denom,
+                              abs = TRUE, s.weights = s.weights, bin.vars = bin.vars,
+                              subset = treat %in% c(t, focal))
+          }))
+          F0_s <- unlist(lapply(levels(treat)[levels(treat) != focal], function(t) {
+            unlist(lapply(R, function(g) cobalt::col_w_smd(covs[moderator.factor == g, , drop = FALSE],
+                                                           bin.treat[moderator.factor == g], w_[moderator.factor == g],
+                                                           std = TRUE, s.d.denom = s.d.denom,
+                                                           abs = TRUE, s.weights = s.weights[moderator.factor == g],
+                                                           bin.vars = bin.vars,
+                                                           subset = treat[moderator.factor == g] %in% c(t, focal))))
+          }))
+
+        }
+        else {
+          F0_o <- unlist(lapply(levels(treat), function(t) {
+            covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
+            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
+            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
+            else s.weights_i <- NULL
+            cobalt::col_w_smd(covs_i, treat_i, w_i, std = TRUE, s.d.denom = "treated",
+                              abs = TRUE, s.weights = s.weights_i, bin.vars = bin.vars)
+          }))
+          F0_s <- unlist(lapply(levels(treat), function(t) {
+            covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
+            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
+            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            moderator.factor_i <- c(moderator.factor, moderator.factor[treat == t])
+            if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
+            else s.weights_i <- NULL
+            unlist(lapply(R, function(g) cobalt::col_w_smd(covs_i[moderator.factor_i == g, , drop = FALSE],
+                                                           treat_i[moderator.factor_i == g], w_i[moderator.factor_i == g],
+                                                           std = TRUE, s.d.denom = "treated",
+                                                           abs = TRUE, s.weights = s.weights_i[moderator.factor_i == g],
+                                                           bin.vars = bin.vars)))
+          }))
+        }
+      }
+      else if (treat.type == "continuous") {
+        F0_o <- cobalt::col_w_corr(covs, treat, w_, abs = TRUE, s.weights = s.weights, bin.vars = bin.vars)
+        F0_s <- unlist(lapply(R, function(g) cobalt::col_w_corr(covs[moderator.factor == g, , drop = FALSE],
+                                                                treat[moderator.factor == g], w_[moderator.factor == g],
+                                                                abs = TRUE, s.weights = s.weights[moderator.factor == g],
+                                                                bin.vars = bin.vars)))
+      }
+
       # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(moderator.factor, drop.first = FALSE),
       #                           treat, w_, std = FALSE,
       #                           abs = TRUE, s.weights = s.weights,
@@ -157,7 +276,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
       for (i in 1:nrow(S)) {
         s_try <- S[i,]
-        F_try <- get_F(s_try)
+        F_try <- get_F(s_try, moderator.factor, w_o, w_s, treat.type)
 
         if (F_try < F_min) {
           F_min <- F_try
@@ -188,7 +307,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
           s_try_prev <- s_try
           for (i in Ar) {
             s_alt <- s_try; s_alt[i] <- ifelse(s_try[i] == 0, 1, 0)
-            F_alt <- get_F(s_alt)
+            F_alt <- get_F(s_alt, moderator.factor, w_o, w_s, treat.type)
             if (F_alt < F_try) {
               s_try <- s_alt
               F_try <- F_alt
