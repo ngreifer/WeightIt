@@ -16,7 +16,8 @@ method.to.proper.method <- function(method) {
 check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
   acceptable.methods <- c("ps"
-                          , "gbm", "twang", "gbr"
+                          , "gbm", "gbr"
+                          , "twang"
                           , "cbps"
                           , "npcbps"
                           , "ebal", "entropy", "ebalance"
@@ -204,9 +205,10 @@ process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
   ##Process by
   bad.by <- FALSE
   acceptable.bys <- names(data)
-  by.vars <- character(0)
-  by.components <- NULL
   n <- length(treat)
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
 
   if (missing(by.name) || !is.character(by.name)) {
     stop("by.name must be a character with the name of the by variable to be evaluated. Use deparse(substitute()) to pass a vector.", call. = FALSE)
@@ -217,7 +219,6 @@ process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
     if (is_null(by)) {
       by.components <- data.frame()
       by.factor <- factor(rep(1, n))
-
     }
     else {
       if (null_or_error(by)) bad.by <- TRUE
@@ -242,7 +243,7 @@ process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
         stop(paste(by.arg, "must be the quoted name of a variable in data for which weighting is to occur within strata or the variable itself."), call. = FALSE)
       }
 
-      if (any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
+      if (treat.type != "continuous" && any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
         stop(paste0("Not all the groups formed by ", by.arg, " contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening ", by.arg, "."), call. = FALSE)
       }
     }
