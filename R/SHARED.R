@@ -179,6 +179,10 @@ strsplits <- function(x, splits, fixed = TRUE, ...) {
     for (split in splits) x <- unlist(strsplit(x, split, fixed = TRUE, ...))
     return(x[x != ""]) # Remove empty values
 }
+c.factor <- function(..., recursive=TRUE) {
+    #c() for factors
+    unlist(list(...), recursive=recursive)
+}
 
 #Numbers
 check_if_zero <- function(x) {
@@ -690,10 +694,11 @@ last <- function(x) {
     x[[length(x)]]
 }
 len <- function(x, recursive = TRUE) {
-    if (is.vector(x, "list")) sapply(x, len)
+    if (is.vector(x, "list") && recursive) sapply(x, len)
     else if (length(dim(x)) > 1) NROW(x)
     else length(x)
 }
+
 
 #Defunct; delete if everything works without them
 .center <- function(x, na.rm = TRUE, at = NULL) {
