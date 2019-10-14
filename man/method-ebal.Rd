@@ -28,11 +28,9 @@ Missing data is not compatible with the entropy balancing algorithm, so a few ex
 }
 }
 \section{Additional Arguments}{
-All argument to \code{ebalance} can be passed through \code{weightit} or \code{weightitMSM}, with the following exceptions:
+All arguments to \code{ebalance} can be passed through \code{weightit} or \code{weightitMSM} and take on the defaults of those in \code{ebalance}.
 
-\code{base.weight} is ignored because sampling weights are passed using \code{s.weights}.
-
-All arguments take on the defaults of those in \code{ebalance}.
+For \code{base.weights}, a vector wth length equal to the total number of units can be supplied, in contrast to \code{ebalance()}, which requires a vector wth length equal to the number of controls.
 
 When \code{standardize = TRUE} in the call to \code{weightit}, \code{\link[ebal]{ebalance.trim}} is run on the resulting \code{ebalance} fit objects. Doing so can reduce the variability of the weights while maintaining covariate balance.
 
