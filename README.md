@@ -19,7 +19,7 @@ ways, `WeightIt` does for weighting what `MatchIt` has done for
 matching, and `MatchIt` users will find the syntax familiar.
 
 For a complete vignette, see the [CRAN
-page](https://cran.r-project.org/web/packages/WeightIt/) for `WeightIt`.
+page](https://CRAN.R-project.org/package=WeightIt) for `WeightIt`.
 
 To install and load `WeightIt`, use the code below:
 
@@ -32,7 +32,8 @@ library("WeightIt")
 The workhorse function of `WeightIt` is `weightit()`, which generates
 weights from a given formula and data input according to methods and
 other parameters sepcified by the user. Below is an example of the use
-of `weightit()` to generate weights for estimating the ATE:
+of `weightit()` to generate propensity score weights for estimating the
+ATE:
 
 ``` r
 data("lalonde", package = "cobalt")
@@ -124,7 +125,7 @@ packages.
 | Treatment type  | Method (`method =`)                                                | Function                | Package          |
 | --------------- | ------------------------------------------------------------------ | ----------------------- | ---------------- |
 | **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`                 | `base`           |
-| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `ps()`/`gbm.fit()`      | `twang`/`gbm`    |
+| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `gbm.fit()`/`ps()`      | `gbm`/`twang`    |
 | \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
 | \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`            | `ebal`           |
@@ -134,7 +135,7 @@ packages.
 | **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`                 | `base`           |
 | \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`              | `mlogit`         |
 | \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`                 | `MNP`            |
-| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `ps()`/`gbm.fit()`      | `twang`/`gbm`    |
+| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `gbm.fit()`/`mnps()`    | `gbm`/`twang`    |
 | \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
 | \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`            | `ebal`           |
@@ -142,7 +143,7 @@ packages.
 | \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
 | \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
 | **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`                 | `base`           |
-| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `ps.cont()`/`gbm.fit()` | `WeightIt`/`gbm` |
+| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `gbm.fit()`/`ps.cont()` | `gbm`/`WeightIt` |
 | \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
 | \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
@@ -152,6 +153,8 @@ In addition, `WeightIt` implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are
 available.
 
-If you would like to see your package or method integrated into
-`WeightIt`, or for any other questions or comments about `WeightIt`,
-please contact Noah Greifer at <noah.greifer@gmail.com>.
+Please submit bug reports or other issues to
+<https://github.com/ngreifer/WeightIt/issues>. If you would like to see
+your package or method integrated into `WeightIt`, or for any other
+questions or comments about `WeightIt`, please contact Noah Greifer at
+<noah.greifer@gmail.com>. Fanmail is greatly appreciated.
