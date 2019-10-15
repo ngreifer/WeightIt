@@ -32,7 +32,7 @@ Version 0.6.0
 
 * Updated documentation to describe how missing data in the covariates is handled. Some bugs related to missing data have been fixed as well, thanks to Yong Hao Pua.
 
-* `ps.cont()` had the "z-transfromed correlation" options removed to simplify output. This function and its supporting functions will be deprecated as soon as the new version of `twang` is released.
+* `ps.cont()` had the "z-transformed correlation" options removed to simplify output. This function and its supporting functions will be deprecated as soon as the new version of `twang` is released.
 
 * When using `method = "ps"` or `method = "super"` with continuous treatments, setting `use.kernel = TRUE` and `plot = TRUE`, the plot is now made with `ggplot2` rather than the base R plots.
 

@@ -54,7 +54,7 @@ Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity
 \code{\link{weightit}}, \code{\link{weightitMSM}}
 }
 \note{
-Some methods formerly available in \pkg{SuperLearner} are now in SuperLearnerExtra, which can be found on Github at \url{https://github.com/ecpolley/SuperLearnerExtra}.
+Some methods formerly available in \pkg{SuperLearner} are now in SuperLearnerExtra, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
 }
 \examples{
 library("cobalt")

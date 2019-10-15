@@ -31,7 +31,7 @@ library("WeightIt")
 
 The workhorse function of `WeightIt` is `weightit()`, which generates
 weights from a given formula and data input according to methods and
-other parameters sepcified by the user. Below is an example of the use
+other parameters specified by the user. Below is an example of the use
 of `weightit()` to generate propensity score weights for estimating the
 ATE:
 
@@ -157,4 +157,4 @@ Please submit bug reports or other issues to
 <https://github.com/ngreifer/WeightIt/issues>. If you would like to see
 your package or method integrated into `WeightIt`, or for any other
 questions or comments about `WeightIt`, please contact Noah Greifer at
-<noah.greifer@gmail.com>. Fanmail is greatly appreciated.
+<noah.greifer@gmail.com>. Fan mail is greatly appreciated.

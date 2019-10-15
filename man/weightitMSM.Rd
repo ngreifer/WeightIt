@@ -103,7 +103,7 @@ Noah Greifer
 \code{\link{weightit}} for information on the allowable methods
 }
 \references{
-Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. <doi:10.1093/aje/kwn164>
+Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 }
 
 \examples{

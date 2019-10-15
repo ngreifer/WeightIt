@@ -1,12 +1,14 @@
 #Test
 for (i in dir("R/")) source(paste0("R/", i))
-
+library(ggplot2)
+stop("Done sourcing.", call. = FALSE)
 
 #Tests things quickly
 library("cobalt")
 data("lalonde", package = "cobalt")
+data("lalonde_mis", package = "cobalt")
 covs <- subset(lalonde, select = -c(re78, treat))
-lalonde$treat3 <- factor(ifelse(lalonde$treat == 1, "A", sample(c("B", "C"), nrow(lalonde), T)))
+lalonde$treat3 <- factor(ifelse(lalonde$treat == 1, "A", sample(c("B", "C"), nrow(lalonde), T)), ordered = F)
 lalonde$treat5 <- factor(sample(c(LETTERS[1:5]), nrow(lalonde), T))
 
 s <- runif(nrow(lalonde), 0, 2)
@@ -15,7 +17,8 @@ s <- runif(nrow(lalonde), 0, 2)
 W <- weightit(treat ~ covs, data = lalonde, method = "ps", estimand = "ATE")
 W <- weightit(lalonde$treat ~ covs, method = "ps", estimand = "ATT", link = "probit")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "ps", estimand = "ATC", s.weights = s)
-W <- weightit(f.build("treat", covs), data = lalonde, method = "ps", estimand = "ATO", stabilize = T)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "ps", estimand = "ATO", stabilize = T,
+              link = "br.logit")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "ps", estimand = "ATM")
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "ps", estimand = "ATE",
@@ -23,13 +26,16 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "ps", estimand =
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "ps", estimand = "ATT",
               focal = "A", s.weights = s)
 
+W <- weightit(f.build("treat5", covs), data = lalonde, method = "ps", estimand = "ATE",
+              link = "logit", focal = "A")
+
 W <- weightit(f.build("re78", covs), data = lalonde, method = "ps")
 W <- weightit(f.build("re78", covs), data = lalonde, method = "ps", use.kernel = T, plot = T)
 
 #method = "gbm"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
               stop.method = c("es.mean", "ks.mean"), estimand = "ATE")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "twang", estimand = "ATT")
+W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "twang", estimand = "ATT")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbr", estimand = "ATC", s.weights = s)
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATE")
@@ -37,13 +43,13 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand 
               focal = "A", s.weights = s, stop.method = "es.blarg")
 
 W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max", use.optimize = 2)
-W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max", use.kernel = TRUE)
+W <- weightit(f.build("re78", covs), data = lalonde_mis, method = "gbm", stop.method = "p.max", use.kernel = TRUE)
 
 
 #method = "cbps"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "cbps", estimand = "ATE", over = FALSE)
 W <- weightit(f.build("treat", covs), data = lalonde, method = "cbps", estimand = "ATT")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "cbps", estimand = "ATC", s.weights = s)
+W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "cbps", estimand = "ATC", s.weights = s)
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "cbps", estimand = "ATE", s.weights = s)
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "cbps", estimand = "ATT")
@@ -108,6 +114,11 @@ myfun <- function(treat, covs, estimand, r = FALSE) {
 }
 W <- weightit(f.build("treat", covs), data = lalonde, method = myfun, estimand = "ATE")
 
+#as.weightit
+W <- weightit(treat ~ covs, data = lalonde, method = "ps", estimand = "ATE")
+W_ <- as.weightit(W$weights, lalonde$treat, covs = covs, estimand = "ATE", s.weights = NULL, ps = NULL)
+summary(W_)
+bal.tab(W_)
 
 library("twang")
 data(iptwExWide)
@@ -124,11 +135,11 @@ psmsm <- iptw(list(tx1 ~ use0 + gender + age,
               n.trees = 200)
 
 Wmsm <- weightitMSM(list(tx1 ~ use0 + gender + age,
-                         tx2 ~ use1 + use0 + tx1 + gender + age,
+                         tx2_ ~ use1 + use0 + tx1 + gender + age,
                          tx3 ~ use2 + use1 + use0 + tx2 + tx1 + gender + age),
                     data = iptwExWide,
                     verbose = FALSE,
-                    method = "ps")
+                    method = "ps", stabilize = TRUE)
 data(mnIptwExWide, package = "twang")
 Wmsm <- weightitMSM(list(tx1 ~ use0 + gender + age,
                          tx2 ~ use1 + use0 + tx1 + gender + age,
@@ -166,10 +177,29 @@ while(k<.1) {
   k <- max(abs(bal.tab(trim(W, at))$Balance$Corr.Adj[-1]))
 }
 
-k <- kbal(lalonde[-c(1,4,9)],
+library("KBAL")
+covs_ <- splitfactor(covs, drop.first = F)
+invisible(capture.output(k <- kbal(covs_,
           lalonde$treat,
           whiten = F,
-          method = "ebal")
-bal.tab(lalonde[-c(1,4,9)],
+          method = "ebal")))
+bal.tab(lalonde[-c(1,9)],
         lalonde$treat,
         weights = k$w)
+
+kbal.fun <- function(treat, covs, estimand, focal, ...) {
+  args <- list(...)
+
+  if (is_not_null(focal)) treat <- as.numeric(treat == focal)
+  else if (estimand != "ATT") stop("estimand must be 'ATT' or 'ATC'.", call. = FALSE)
+
+  if ("kbal.method" %in% names(args)) {
+    names(args)[names(args) == "kbal.method"] <- "method"
+  }
+
+  args[names(args) %nin% setdiff(names(formals(KBAL::kbal)), c("X", "D"))] <- NULL
+  k.out <- do.call(KBAL::kbal, c(list(X = covs, D = treat), args))
+
+  w <- k.out$w
+  return(list(w = w))
+}
