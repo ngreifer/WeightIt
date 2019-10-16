@@ -73,6 +73,8 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 This method used to implement what is now implemented by \code{method = "twang"}. Using \code{method = "gbm"} is \emph{much} faster than using \code{method = "twang"} or \code{twang::ps} because of efficiency improvements that are not present in \pkg{twang}, but the results will differ slightly between the two methods. Notably, for multinomial treatments, the methods use different strategies: \code{method = "gbm"} estimates multinomial propensity scores (one for each individual for each treatment level) and chooses the tree that optimizes balance between each treatment and the target population, while \code{method = "twang"} estimates a set of binary propensity scores for each treatment, each optimizing balance for the treatment and the target population, and then combines the weights. For continuous treatments, the results will be identical.
 }
 \examples{
+# Examples take a long time to run
+\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -99,4 +101,5 @@ bal.tab(W2)
                 stop.method = "p.rms", trim.at = .97))
 summary(W3)
 bal.tab(W3)
+}
 }

@@ -138,7 +138,8 @@ Noah Greifer
 \code{\link[gbm]{gbm}} for the underlying machinery and explanation of the parameters.
 }
 \examples{
-
+# Examples take a long time
+\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -149,4 +150,5 @@ psc.out <- ps.cont(re75 ~ age + educ + married +
                 use.optimize = 2)
 summary(psc.out)
 twang::bal.table(psc.out) #twang's bal.table
+}
 }

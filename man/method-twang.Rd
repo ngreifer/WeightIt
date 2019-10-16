@@ -57,6 +57,8 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 See the Note section at \code{\link{method_gbm}} for a discussion how this method differs from \code{method = "gbm"}.
 }
 \examples{
+# Examples take a while to run
+\dontrun{
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -83,4 +85,5 @@ bal.tab(W2)
                 stop.method = "p.max"))
 summary(W3)
 bal.tab(W3)
+}
 }
