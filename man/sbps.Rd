@@ -36,7 +36,7 @@ a \code{weightit} object containing weights estimated in the overall sample.
 a \code{weightit} object containing weights estimated in the subgroups. Typically this has been estimated by including \code{by} in the call to \code{weightit()}. Either \code{obj2} or \code{moderator} must be specified.
 }
   \item{moderator}{
-optional; a vector or the name of the variable for which weighting is to be done within subgroups. This argument is analogous to the \code{by} argument in \code{weightit()}, and in fact it is passed on to \code{by}. Either \code{obj2} or \code{moderator} must be specified.
+optional; a string containg the name of the variable in \code{data} for which weighting is to be done within subgroups or a one-sided formula with the subgrouping variable on the right-hand side. This argument is analogous to the \code{by} argument in \code{weightit()}, and in fact it is passed on to \code{by}. Either \code{obj2} or \code{moderator} must be specified.
 }
   \item{formula}{
 an optional formula with the covariates for which balance is to be optimized. If not specified, the formula in \code{obj$call} will be used.
