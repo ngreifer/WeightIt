@@ -65,10 +65,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     }
   }
 
-  if (is_not_null(A[["exact"]]) && is_null(by)) {
-    message("'by' has replaced 'exact' in the weightitMSM() syntax, but 'exact' will always work.")
+  ##Process by
+  if (is_not_null(A[["exact"]])) {
+    message("'by' has replaced 'exact' in the weightit() syntax, but 'exact' will always work.")
+    # by.name <- deparse(A[["exact"]])
     by <- A[["exact"]]
+    by.arg <- "exact"
   }
+  else by.arg <- "by"
 
   reported.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
     stabout <- sw.list <- vector("list", length(formula.list))
@@ -102,9 +106,16 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     # w.data <- data.frame(treat.list[[i]], covs.list[[i]])
     # w.formula <- formula(w.data)
 
-    processed.by <- process.by(by.name, data = data,
-                                       treat = treat.list[[i]],
-                                       treat.name = treat.name)
+    # processed.by <- process.by(by.name, data = data,
+    #                                    treat = treat.list[[i]],
+    #                                    treat.name = treat.name)
+
+    #By is processed each for each time, but only last time is used for by.factor.
+    processed.by <- process.by(by, data = data,
+                               treat = treat.list[[i]],
+                               treat.name = treat.name,
+                               by.arg = by.arg)
+
 
   }
 

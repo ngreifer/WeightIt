@@ -200,7 +200,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
               reported.estimand = reported.estimand,
               treated = if (is.factor(treated)) as.character(treated) else treated))
 }
-process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
+.process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
 
   ##Process by
   bad.by <- FALSE
@@ -214,26 +214,26 @@ process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
     stop("by.name must be a character with the name of the by variable to be evaluated. Use deparse(substitute()) to pass a vector.", call. = FALSE)
   }
   else {
-    by <- try(eval(parse(text = by.name)))
+    .by <- try(eval(parse(text = by.name)))
 
-    if (is_null(by)) {
+    if (is_null(.by)) {
       by.components <- data.frame()
       by.factor <- factor(rep(1, n))
     }
     else {
-      if (null_or_error(by)) bad.by <- TRUE
-      if (len(by) == 1) {
-        if (by %in% names(data)) {
-          by.name <- by
-          by <- data[[by]]
+      if (null_or_error(.by)) bad.by <- TRUE
+      else if (len(.by) == 1 && is.character(.by)) {
+        if (.by %in% names(data)) {
+          by.name <- .by
+          .by <- data[[.by]]
         }
         else bad.by <- TRUE
       }
-      else if (len(by) != n || (is_not_null(dim(by)) && dim(by)[2] > 1L)) bad.by <- TRUE
+      else if (len(.by) != n || (is_not_null(dim(.by)) && dim(.by)[2] > 1L)) bad.by <- TRUE
 
       if (!bad.by) {
-        by.components <- data.frame(by)
-        if (is_not_null(colnames(by))) names(by.components) <- colnames(by)
+        by.components <- data.frame(.by)
+        if (is_not_null(colnames(.by))) names(by.components) <- colnames(.by)
         else names(by.components) <- by.name
         by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
                             labels = paste(names(by.components), "=", unique(by.components[[1]])))
@@ -251,6 +251,54 @@ process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
     return(by.components)
   }
 }
+process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
+
+  ##Process by
+  bad.by <- FALSE
+  n <- length(treat)
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  if (missing(by)) {
+    bad.by <- TRUE
+  }
+  else if (is_null(by)) {
+    by.components <- data.frame()
+    by.factor <- factor(rep(1, n))
+  }
+  else if (is.character(by) && length(by) == 1 && by %in% names(data)) {
+      by.name <- by
+      by <- data[[by]]
+  }
+  else if (is.formula(by, 1)) {
+      t.c <- get.covs.and.treat.from.formula(by, data)
+      by <- t.c[["reported.covs"]]
+      if (NCOL(by) != 1) stop(paste0("Only one variable can be on the right-hand side of the formula for ", by.arg, "."), call. = FALSE)
+      else by.name <- colnames(by)
+  }
+  else bad.by <- TRUE
+
+  if (!bad.by) {
+    by.components <- data.frame(by)
+    if (is_not_null(colnames(by))) names(by.components) <- colnames(by)
+    else names(by.components) <- by.name
+    by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
+                        labels = paste(names(by.components), "=", unique(by.components[[1]])))
+    # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
+  }
+  else {
+    stop(paste(by.arg, "must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side."), call. = FALSE)
+  }
+
+  if (treat.type != "continuous" && any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
+    stop(paste0("Not all the groups formed by ", by.arg, " contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening ", by.arg, "."), call. = FALSE)
+  }
+  attr(by.components, "by.factor") <- by.factor
+  return(by.components)
+}
+
+
 process.moments.int <- function(moments, int, method) {
   if (!is.function(method)) {
     if (method %in% c("ebal", "ebcw", "optweight")) {

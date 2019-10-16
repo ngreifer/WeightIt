@@ -6,8 +6,6 @@
 
 sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL, smooth = FALSE, full.search) {
 
-  mod.name <- paste(deparse(substitute(moderator)), collapse = "")
-
   if (is_null(obj2) && is_null(moderator)) {
     stop("Either obj2 or moderator must be specified.", call. = FALSE)
   }
@@ -20,7 +18,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   data.list <- list(data, obj2[["covs"]], obj[["covs"]])
   combined.data <- do.call(data.frame, clear_null(data.list))
-  processed.moderator <- process.by(mod.name, data = clear_null(combined.data),
+  processed.moderator <- process.by(moderator, data = clear_null(combined.data),
                                     treat = obj[["treat"]], treat.name = NULL,
                                     by.arg = "moderator")
   moderator.factor <- attr(processed.moderator, "by.factor")
