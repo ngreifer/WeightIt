@@ -264,8 +264,8 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     bad.by <- TRUE
   }
   else if (is_null(by)) {
-    by.components <- data.frame()
-    by.factor <- factor(rep(1, n))
+    by <- NULL
+    by.name <- NULL
   }
   else if (is.character(by) && length(by) == 1 && by %in% names(data)) {
       by.name <- by
@@ -281,9 +281,12 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
   if (!bad.by) {
     by.components <- data.frame(by)
+
     if (is_not_null(colnames(by))) names(by.components) <- colnames(by)
     else names(by.components) <- by.name
-    by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
+
+    if (is_null(by)) by.factor <- factor(rep(1, n))
+    else by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
                         labels = paste(names(by.components), "=", unique(by.components[[1]])))
     # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
   }
