@@ -1,6 +1,9 @@
 WeightIt News and Updates
 ======
 
+Version 0.7.1
+
+* Fixed bug when using `weightit()` inside another function that passed a `by` argument explcitly. Also changed teh syntax for `by`; it must now either be a string which was always possible) or a one-sided formula with the stratifying variable on the right-hand side. To use a variable that is not in `data`, you must use the formula interface. 
 
 Version 0.7.0
 
