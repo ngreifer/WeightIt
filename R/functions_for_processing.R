@@ -268,8 +268,12 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     by.name <- NULL
   }
   else if (is.character(by) && length(by) == 1 && by %in% names(data)) {
-      by.name <- by
-      by <- data[[by]]
+    by.name <- by
+    by <- data[[by]]
+  }
+  else if (length(dim(by)) == 2L && len(by) == n) {
+    by.name <- colnames(by)[1]
+    by <- drop(by[, 1])
   }
   else if (is.formula(by, 1)) {
       t.c <- get.covs.and.treat.from.formula(by, data)
