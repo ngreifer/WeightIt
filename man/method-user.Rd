@@ -48,8 +48,8 @@ my.ps <- function(treat, covs, estimand, focal = NULL) {
   d <- data.frame(treat, covs)
   f <- formula(d)
   ps <- glm(f, data = d, family = "binomial")$fitted
-  if (estimand == "ATT") w <- ifelse(treat == focal, 1, ps/(1-ps))
-  else if (estimand == "ATE") w <- ifelse(treat == 1, 1/ps, 1/(1-ps))
+  w <- get_w_from_ps(ps, treat = treat, estimand = estimand,
+                     focal = focal)
 
   return(list(w = w, ps = ps))
 }
@@ -61,7 +61,7 @@ my.ps <- function(treat, covs, estimand, focal = NULL) {
 summary(W1)
 bal.tab(W1)
 
-#Balancing covariates for logitdinal treatments
+#Balancing covariates for longitudinal treatments
 # my.ps is used at each time point.
 library("twang")
 data("iptwExWide", package = "twang")
@@ -99,7 +99,8 @@ kbal.fun <- function(treat, covs, estimand, focal, ...) {
 
 (Wk <- weightit(treat ~ age + educ + married +
                 nodegree + re74, data = lalonde,
-                method = kbal.fun, estimand = "ATT"))
+                method = kbal.fun, estimand = "ATT",
+                kbal.method = "ebal"))
 summary(Wk)
 bal.tab(Wk, disp.ks = TRUE)
 }
