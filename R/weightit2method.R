@@ -136,9 +136,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
   if (is_null(ps)) {
 
     covs <- covs[subset, , drop = FALSE]
-    treat <- factor(treat[subset])
-    bin.treat <- is_binary(treat)
-    ord.treat <- is.ordered(treat)
+    treat_sub <- factor(treat[subset])
+    bin.treat <- is_binary(treat_sub)
+    ord.treat <- is.ordered(treat_sub)
 
     if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
       missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -176,11 +176,11 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     else use.br <- FALSE
 
     if (bin.treat) {
-      data <- data.frame(binarize(treat), covs)
+      data <- data.frame(binarize(treat_sub), covs)
       formula <- formula(data)
 
-      ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
-                     levels(treat))
+      ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat_sub), nrow = length(treat_sub))),
+                     levels(treat_sub))
 
       if (use.br) {
         check.package("brglm2")
@@ -210,7 +210,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       if (A[["link"]] == "logit") A[["link"]] <- "logistic"
       check.package("MASS")
       message(paste("Using ordinal", A$link, "regression."))
-      data <- data.frame(treat, covs)
+      data <- data.frame(treat_sub, covs)
       formula <- formula(data)
       control <- A[names(A) %nin% c("link", names(formals(MASS::polr)))]
       tryCatch({fit <- do.call(MASS::polr,
@@ -231,7 +231,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     else {
       if (use.br) {
         check.package("brglm2")
-        data <- data.frame(treat, covs)
+        data <- data.frame(treat_sub, covs)
         formula <- formula(data)
         control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
         tryCatch({fit <- do.call(brglm2::brmultinom,
@@ -246,7 +246,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       else if (A$link %in% c("logit", "probit")) {
         if (check.package("mlogit", alternative = TRUE) && (is_null(A$use.mlogit) || A$use.mlogit == TRUE)) {
           message(paste("Using multinomial", A$link, "regression."))
-          data <- data.frame(treat = treat , s.weights = s.weights[subset], covs)
+          data <- data.frame(treat = treat_sub , s.weights = s.weights[subset], covs)
           covnames <- names(data)[-c(1,2)]
           mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
           tryCatch({fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "),
@@ -259,14 +259,14 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           fit.obj <- fit
         }
         else {
-          message(paste("Using a series of", nunique(treat), "binomial", A$link, "regressions."))
-          ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
-                         levels(treat))
+          message(paste("Using a series of", nunique(treat_sub), "binomial", A$link, "regressions."))
+          ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat_sub), nrow = length(treat_sub))),
+                         levels(treat_sub))
 
           control <- A[names(formals(glm.control))[pmatch(names(A), names(formals(glm.control)), 0)]]
-          fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
-          for (i in levels(treat)) {
-            t_i <- rep(0, length(treat)); t_i[treat == i] <- 1
+          fit.list <- setNames(vector("list", nlevels(treat_sub)), levels(treat_sub))
+          for (i in levels(treat_sub)) {
+            t_i <- rep(0, length(treat_sub)); t_i[treat_sub == i] <- 1
             data_i <- data.frame(t_i, covs)
             fit.list[[i]] <- do.call(glm, c(list(formula(data_i), data = data_i,
                                                  family = quasibinomial(link = A$link),
@@ -279,7 +279,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else if (A$link == "bayes.probit") {
         check.package("MNP")
-        data <- data.frame(treat, covs)
+        data <- data.frame(treat_sub, covs)
         formula <- formula(data)
         tryCatch({fit <- MNP::mnp(formula, data, verbose = TRUE)},
                  error = function(e) stop("There was a problem with the Bayes probit regression. Try a different link.", call. = FALSE))
@@ -293,14 +293,16 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     }
   }
   else {
+    n <- length(treat)
     p.score <- NULL
-    treat <- factor(treat[subset])
-    bin.treat <- is_binary(treat)
+    treat <- factor(treat)
+    treat_sub <- factor(treat[subset])
+    bin.treat <- is_binary(treat_sub)
 
     if (bin.treat) {
       bad.ps <- FALSE
       if (is.matrix(ps) || is.data.frame(ps)) {
-        if (dim(ps) == c(length(treat), 2)) {
+        if (dim(ps) == c(n, 2)) {
           ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
         }
@@ -314,7 +316,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         }
       }
       else if (is.numeric(ps)) {
-        if (length(ps) == length(treat)) {
+        if (length(ps) == n) {
           ps <- setNames(as.data.frame(matrix(c(1-ps, ps), ncol = 2)),
                          levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
@@ -331,10 +333,10 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     else {
       bad.ps <- FALSE
       if (is.matrix(ps) || is.data.frame(ps)) {
-        if (dim(ps) == c(length(treat), nunique(treat))) {
+        if (dim(ps) == c(n, nunique(treat))) {
           ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
         }
-        else if (dim(ps) == c(length(treat), 1)) {
+        else if (dim(ps) == c(n, 1)) {
           ps <- setNames(do.call("cbind", lapply(levels(treat), function(x) {
             p_ <- rep(1, length(treat))
             p_[treat == x] <- ps[treat == x, 1]
@@ -346,7 +348,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         }
       }
       else if (is.numeric(ps)) {
-        if (length(ps) == length(treat)) {
+        if (length(ps) == n) {
           ps <- setNames(do.call("cbind", lapply(levels(treat), function(x) {
             p_ <- rep(1, length(treat))
             p_[treat == x] <- ps[treat == x]
@@ -367,11 +369,11 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal)
+  w <- get_w_from_ps(ps = ps, treat = treat_sub, estimand, focal)
 
   if (stabilize) {
-    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
-    w <- w * tab[treat]
+    tab <- vapply(levels(treat_sub), function(x) mean(treat_sub == x), numeric(1L))
+    w <- w * tab[treat_sub]
   }
 
   obj <- list(w = w, ps = p.score, fit.obj = fit.obj)
