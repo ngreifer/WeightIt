@@ -72,12 +72,14 @@ data("lalonde", package = "cobalt")
 summary(W1)
 bal.tab(W1)
 
+\dontrun{
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "cbps", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
+}
 
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
