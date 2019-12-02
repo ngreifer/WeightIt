@@ -1,5 +1,5 @@
 #User-defined weighting function
-weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, stabilize, ps, moments, int, ...) {
+weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, ps, moments, int, ...) {
   A <- list(...)
   if (is_not_null(covs)) {
     covs <- covs[subset, , drop = FALSE]
@@ -128,8 +128,10 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 }
 
 #Propensity score estimation with regression
-weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, ps, ...) {
+weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, ps, ...) {
   A <- list(...)
+
+
 
   fit.obj <- NULL
 
@@ -209,20 +211,20 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     else if (ord.treat) {
       if (A[["link"]] == "logit") A[["link"]] <- "logistic"
       check.package("MASS")
-      message(paste("Using ordinal", A$link, "regression."))
+      # message(paste("Using ordinal", A$link, "regression."))
       data <- data.frame(treat_sub, covs)
       formula <- formula(data)
-      control <- A[names(A) %nin% c("link", names(formals(MASS::polr)))]
+      # control <- A[names(A) %nin% c("link", names(formals(MASS::polr)))]
       tryCatch({fit <- do.call(MASS::polr,
-                               list(formula,
+                               c(list(formula,
                                     data = data,
                                     weights = s.weights,
                                     Hess = FALSE,
                                     model = FALSE,
                                     method = A[["link"]],
-                                    contrasts = NULL,
-                                    control = control))},
-               error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment."), call. = FALSE)})
+                                    contrasts = NULL)))},
+               error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment.",
+                                                "\n       Error message: ", conditionMessage(e)), call. = FALSE)})
 
       ps <- fit$fitted.values
       fit.obj <- fit
@@ -245,7 +247,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else if (A$link %in% c("logit", "probit")) {
         if (check.package("mlogit", alternative = TRUE) && (is_null(A$use.mlogit) || A$use.mlogit == TRUE)) {
-          message(paste("Using multinomial", A$link, "regression."))
+          # message(paste("Using multinomial", A$link, "regression."))
           data <- data.frame(treat = treat_sub , s.weights = s.weights[subset], covs)
           covnames <- names(data)[-c(1,2)]
           mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
@@ -259,7 +261,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           fit.obj <- fit
         }
         else {
-          message(paste("Using a series of", nunique(treat_sub), "binomial", A$link, "regressions."))
+          # message(paste("Using a series of", nunique(treat_sub), "binomial", A$link, "regressions."))
           ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat_sub), nrow = length(treat_sub))),
                          levels(treat_sub))
 
@@ -369,12 +371,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat_sub, estimand, focal)
-
-  if (stabilize) {
-    tab <- vapply(levels(treat_sub), function(x) mean(treat_sub == x), numeric(1L))
-    w <- w * tab[treat_sub]
-  }
+  w <- get_w_from_ps(ps = ps, treat = treat_sub, estimand, focal, stabilize = stabilize, subclass = subclass)
 
   obj <- list(w = w, ps = p.score, fit.obj = fit.obj)
   return(obj)
@@ -601,7 +598,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mom
 }
 
 #Generalized boosted modeling with twang
-weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
+weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, ...) {
   A <- list(...)
 
   if (is_null(A$stop.method)) {
@@ -710,8 +707,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
     }
 
     if (stabilize) {
-      tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
-      w <- w * tab[treat]
+      w <- stabilize_w(w, treat)
     }
   }
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
@@ -753,8 +749,10 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, ...) 
 }
 
 #Generalized boosted modeling with gbm and cobalt
-weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
+weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, ...) {
   A <- list(...)
+
+
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -844,7 +842,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
-    w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
     w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
     iter.grid.balance <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, estimand, s.weights, bin.vars)))
@@ -858,7 +856,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
-    w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
     w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
     iter.grid.balance.fine <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, estimand, s.weights, bin.vars)))
 
@@ -885,7 +883,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
-    w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
     w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
     iter.grid.balance <- apply(w, 2, function(w_) {
@@ -917,7 +915,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
-    w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal)
+    w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
     w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
     iter.grid.balance.fine <- apply(w, 2, function(w_) {
@@ -943,13 +941,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
 
     ps <- ps[, , as.character(best.tree)]
-    w <- get_w_from_ps(ps, treat, estimand, focal)
+    w <- get_w_from_ps(ps, treat, estimand, focal, stabilize = stabilize, subclass = subclass)
     ps <- NULL
-  }
-
-  if (stabilize) {
-    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
-    w <- w * tab[treat]
   }
 
   obj <- list(w = w, ps = ps, fit.obj = fit)
@@ -1113,8 +1106,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
 }
 
 #CBPS
-weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, ...) {
+weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, ...) {
   A <- list(...)
+
+
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -1151,13 +1146,18 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                    e. <- gsub("method = \"exact\"", "over = FALSE", e., fixed = TRUE)
                    stop(e., call. = FALSE)
                  }
+
         )
 
-        w[treat == i] <- get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
 
-        if (nlevels(treat) == 2) {
+        if (length(control.levels) == 1) {
           ps <- fit.list[[i]][["fitted.values"]]
           fit.list <- fit.list[[1]]
+          w <- get_w_from_ps(ps, treat_, estimand = "ATT",
+                                         treated = 1, subclass = subclass, stabilize = stabilize)
+        }
+        else {
+          w[treat == i] <- get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
         }
       }
     }
@@ -1166,7 +1166,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
       if (!nunique.gt(treat, 4)) {
         tryCatch({fit.list <- CBPS::CBPS(formula(new.data),
                                          data = new.data,
-                                         method = if (is_not_null(A$over) && A$over == FALSE) "exact" else "over",
+                                         method = if (isFALSE(A$over)) "exact" else "over",
                                          standardize = FALSE,
                                          sample.weights = s.weights[subset],
                                          ATT = 0,
@@ -1178,10 +1178,14 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                  }
         )
 
-        w <- get.w(fit.list, estimand = "ATE") / s.weights[subset]
-        if (nunique(treat) == 2) {
+        if (is_binary(treat)) {
           ps <- fit.list[["fitted.values"]]
           fit.list <- fit.list[[1]]
+          w <- get_w_from_ps(ps, treat, estimand = "ATE",
+                                         subclass = subclass, stabilize = stabilize)
+        }
+        else {
+          w <- get.w(fit.list, estimand = "ATE") / s.weights[subset]
         }
       }
       else {
@@ -1202,9 +1206,9 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     }
 
   }
-  if (stabilize) {
-    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
-    w <- w * tab[treat]
+
+  if (stabilize && !is_binary(treat)) {
+    w <- stabilize_w(w, treat)
   }
 
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
@@ -1504,8 +1508,10 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, momen
 }
 
 #PS weights using SuperLearner
-weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, ...) {
+weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, ...) {
   A <- list(...)
+
+
 
   check.package("SuperLearner")
 
@@ -1575,12 +1581,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal)
-
-  if (stabilize) {
-    tab <- vapply(levels(treat), function(x) mean(treat == x), numeric(1L))
-    w <- w * tab[treat]
-  }
+  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
 
   obj <- list(w = w, ps = p.score, fit.obj = fit.list)
   return(obj)
