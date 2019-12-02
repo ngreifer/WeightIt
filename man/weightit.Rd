@@ -15,6 +15,7 @@ weightit(formula,
          ps = NULL,
          moments = 1,
          int = FALSE,
+         subclass = NULL,
          verbose = FALSE,
          include.obj = FALSE,
          ...)
@@ -58,6 +59,9 @@ A vector of propensity scores or the name of a variable in \code{data} containin
 }
   \item{int}{
 \code{logical}; for entropy balancing, empirical balancing calibration weights, and optimization-based weights, whether first-order interactions of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
+}
+  \item{subclass}{
+\code{numeric}; the number of subclasses to use when computing weights using marginal mean weighting with subclasses. If \code{NULL}, inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Attempting to set a non-\code{NULL} value for methods that don't compute a propensity score will result in an error.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.

@@ -6,14 +6,14 @@
 \description{
 This page explains the details of estimating weights from generalized linear model-based propensity scores by setting \code{method = "ps"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating propensity scores with a parametric generalized linear model and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, a binomial or multinomial regression model is used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, a generalized linear model is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
+In general, this method relies on estimating propensity scores with a parametric generalized linear model and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, a binomial or multinomial regression model is used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For ordinal treatments, an ordinal regression model is used to estimate generalized propensity scores. For continuous treatments, a generalized linear model is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link{glm}}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). When \code{include.obj = TRUE}, the returned object is the \code{glm} fit.
+For binary treatments, this method estimates the propensity scores using \code{\link{glm}}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). When \code{include.obj = TRUE}, the returned object is the \code{glm} fit. Weights can also be computed using marginal mean weight with subclassification for the ATE, ATT, and ATC.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{\link[mlogit]{mlogit}} from the \pkg{mlogit} package is used; for the Bayesian probit (\code{"bayes.probit"}) link, \code{\link[MNP]{mnp}} from the \pkg{MNP} package is used; and for the biased-reduced multinomial logistic regression (\code{"br.logit"}), \code{\link[brglm2]{brmultinom}} from the \pkg{brglm2} package is used. If the treatment variable is an ordered factor, \code{\link[MASS]{polr}} from the \pkg{MASS} package is used to fit ordinal regression. Any of the methods allowed in the \code{method} argument of \code{polr} can be supplied to \code{link}. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. When \code{include.obj = TRUE}, the returned object is the fit object from the fitting function used.
+For multinomial treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{\link[mlogit]{mlogit}} from the \pkg{mlogit} package is used; for the Bayesian probit (\code{"bayes.probit"}) link, \code{\link[MNP]{mnp}} from the \pkg{MNP} package is used; and for the biased-reduced multinomial logistic regression (\code{"br.logit"}), \code{\link[brglm2]{brmultinom}} from the \pkg{brglm2} package is used. If the treatment variable is an ordered factor, \code{\link[MASS]{polr}} from the \pkg{MASS} package is used to fit ordinal regression. Any of the methods allowed in the \code{method} argument of \code{polr} can be supplied to \code{link}. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. When \code{include.obj = TRUE}, the returned object is the fit object from the fitting function used. Weights can also be computed using marginal mean weight with subclassification for the ATE, ATT, and ATC.
 }
 \subsection{Continuous Treatments}{
 For continuous treatments, the generalized propensity score is estimated using linear regression. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights. When \code{include.obj = TRUE}, the returned object is the \code{glm} fit from denominator model.
@@ -58,6 +58,11 @@ Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity
 
 Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. Multivariate Behavioral Research, 46(3), 399–424. \doi{10.1080/00273171.2011.568786}
 
+ - Marginal mean weighting through subclassification
+
+Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. Journal of Educational and Behavioral Statistics, 35(5), 499–531. \doi{10.3102/1076998609359785}
+
+
 \strong{Multinomial Treatments}
 
  - \code{estimand = "ATO"}
@@ -72,6 +77,10 @@ Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J. J.,
  - Other estimands
 
 McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+
+ - Marginal mean weighting through subclassification
+
+Hong, G. (2012). Marginal mean weighting through stratification: A generalized method for evaluating multivalued and multiple treatments with nonexperimental data. Psychological Methods, 17(1), 44–60. \doi{10.1037/a0024918}
 
 \strong{Continuous treatments}
 

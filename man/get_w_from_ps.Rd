@@ -11,7 +11,9 @@ get_w_from_ps(ps,
               treat,
               estimand = "ATE",
               focal = NULL,
-              treated = NULL)
+              treated = NULL,
+              subclass = NULL,
+              stabilize = FALSE)
 }
 \arguments{
   \item{ps}{
@@ -28,6 +30,12 @@ When the estimand is the ATT or ATC, which group should be consider the (focal) 
 }
   \item{treated}{
 When treatment is binary, the value of \code{treat} that is considered the "treated" group (i.e., the group for which the propensity scores are the probability of being in). If \code{NULL}, \code{get_w_from_ps} will attempt to figure it out on its own using some heuristics. This really only matters when \code{treat} has values other than 0 and 1 and when \code{ps} is given as a vector or an unnamed single-column matrix or data frame.
+}
+  \item{subclass}{
+\code{numeric}; the number of subclasses to use when computing weights using marginal mean weighting with subclasses. If \code{NULL}, inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership.
+}
+  \item{stabilize}{
+\code{logical}; whether to compute stabilized weights or not. This simply involve multiplying each unit's weight by the proportion of units in their treatment group. For saturated outcome models, this won't make a difference; otherwise, this can improve performance.
 }
 }
 \details{
