@@ -234,8 +234,7 @@ binarize <- function(variable, zero = NULL, one = NULL) {
         }
     }
     else {
-        if (zero %in% unique.vals) zero <- zero
-        else stop("The argument to \"zero\" is not the name of a level of variable.", call. = FALSE)
+        if (zero %nin% unique.vals) stop("The argument to \"zero\" is not the name of a level of variable.", call. = FALSE)
     }
 
     newvar <- setNames(ifelse(!nas & variable.numeric == zero, 0L, 1L), names(variable))
@@ -548,7 +547,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     else {
         new.form.char <- paste("~", paste(vapply(rhs.term.labels, function(x) {
             try.form <- try(as.formula(paste("~", x)), silent = TRUE)
-            if (null_or_error(try.form) || grepl("^", x, fixed = TRUE)) {
+            if (null_or_error(try.form) || (grepl("^", x, fixed = TRUE) && !startsWith(x, "I("))) {
                 paste0("`", x, "`")
             }
             else x
