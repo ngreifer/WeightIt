@@ -1,6 +1,14 @@
 WeightIt News and Updates
 ======
 
+Version 0.7.2
+
+* Formula interfaces now accept `poly(x, .)` and other matrix-generating functions of variables, including the `rms`-class-generating functions from the `rms` package (e.g., `pol()`, `rcs()`, etc.) (the `rms` package must be loaded to use these latter ones).
+
+* Added support for marginal mean weighting through subclassification (MMWS) as described by Hong (2010) (see References at `?method-ps`). With this method, subclasses are formed based on the propensity score and weights are computed based on the number of units in each subclass. This was already implemented in `MatchIt` for the ATT; other estimands are avalable here and any method that produces a propensity score can be used with MMWS.
+
+* Added `stabilize` option to `get_w_from_ps()`. 
+
 Version 0.7.1
 
 * Fixed bug when using `weightit()` inside another function that passed a `by` argument explicitly. Also changed the syntax for `by`; it must now either be a string (which was always possible) or a one-sided formula with the stratifying variable on the right-hand side. To use a variable that is not in `data`, you must use the formula interface. 
@@ -83,8 +91,6 @@ Version 0.4.0
 
 * Fixed a bug where variables would be thrown out when `method = "ebal"`.
 
-* Added support for sampling weights with stable balancing weighting and empirical balancing calibration weighting.
-
 Version 0.3.2
 
 * Added new `moments` and `int` options for some `weightit()` methods to easily specify moments and interactions of covariates.
@@ -99,7 +105,7 @@ Version 0.3.1
 
 * Edits to code and help files to protect against missing `CBPS` package.
 
-* Corrected sampling weights functionality so they work correctly. Also expanded sampling weights to be able to be used with all methods, including those that do not natively allow for sampling weights (e.g., `sbw` and `ATE`)
+* Corrected sampling weights functionality so they work correctly. Also expanded sampling weights to be able to be used with all methods, including those that do not natively allow for sampling weights (e.g., `ATE`)
 
 * Minor bug fixes and spelling corrections.
 
