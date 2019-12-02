@@ -655,7 +655,7 @@ stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal =
                                        all.inside = TRUE))
 
         sub.tab <- table(treat, sub)
-        sub.weights <- setNames(sub.tab[focal, ] / sub.tab[as.character(i), ],
+        sub.weights <- setNames(sub.tab[focal, ] / (sub.tab[as.character(i), ] * mean(treat == focal)),
                                 colnames(sub.tab))
 
         w[treat == i] <- sub.weights[sub[treat == i]]
