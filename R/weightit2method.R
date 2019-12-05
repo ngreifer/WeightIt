@@ -418,7 +418,33 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
       dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
     }
     else {
-      dens.denom <- dnorm(p.denom, 0, sd = sqrt(summary(fit)$dispersion))
+      if (is_null(A[["density"]])) densfun <- dnorm
+      else if (is.function(A[["density"]])) densfun <- A[["density"]]
+      else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
+        splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
+        if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+          if (length(splitdens) > 1 && anyNA(suppressWarnings(as.numeric(splitdens[-1])))) {
+              stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                         word_list(splitdens[-1]), "cannot be coerced to numeric."), call. = FALSE)
+          }
+          densfun <- function(x) {
+            tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(as.numeric(splitdens[-1])))),
+                     error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+          }
+        }
+        else {
+          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                     splitdens[1], "is not an available function."), call. = FALSE)
+        }
+      }
+      else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+      dens.denom <- densfun(p.denom/sqrt(summary(fit)$dispersion))
+      if (is_null(dens.denom) || !is.atomic(dens.denom) || anyNA(dens.denom)) {
+        stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      }
+      else if (any(dens.denom <= 0)) {
+        warning("The input to density may not accept the full range of standardized residuals of the treatment model. Some weights may be NA or zero.", call. = FALSE)
+      }
     }
 
     if (stabilize) {
@@ -438,7 +464,13 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
         dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
       }
       else {
-        dens.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
+        dens.num <- densfun(p.num/sqrt(summary(num.fit)$dispersion))
+        if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
+          stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+        }
+        else if (any(dens.num <= 0) && !any(dens.denom <= 0)) {
+          warning("The input to density may not accept the full range of treatment values. Some weights may be NA or zero.", call. = FALSE)
+        }
       }
       w <- dens.num/dens.denom
     }
@@ -752,8 +784,6 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, ...) 
 weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, ...) {
   A <- list(...)
 
-
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -815,7 +845,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*A[["n.trees"]]))
   else n.grid <- A[["n.grid"]]
 
-  A[names(A) %nin% names(formals(gbm::gbm.fit))] <- NULL
+  # A[names(A) %nin% names(formals(gbm::gbm.fit))] <- NULL
 
   if (treat.type == "binary")  available.distributions <- c("bernoulli", "adaboost")
   else available.distributions <- "multinomial"
@@ -833,13 +863,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
                                         distribution = distribution,
                                         w = s.weights,
                                         verbose = FALSE),
-                                   A))
+                                   A[names(A) %in% names(formals(gbm::gbm.fit))]))
     n.trees <- fit[["n.trees"]]
     iters <- 1:n.trees
     iters.grid <- round(seq(1, n.trees, length.out = n.grid))
-    # iters.grid <- iters
 
-    if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
+    if (anyNA(iters.grid) || is_null(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
     w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -850,10 +879,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     it <- which.min(iter.grid.balance) + c(-1, 1)
     it[1] <- iters.grid[max(1, it[1])]
     it[2] <- iters.grid[min(length(iters.grid), it[2])]
-    # iters.to.check <- iters[iters >= iters[it[1]] & iters <= iters[it[2]]]
     iters.to.check <- iters[between(iters, iters[it])]
 
-    if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
+    if (anyNA(iters.to.check) || is_null(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
     w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -874,13 +902,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
                                         distribution = distribution,
                                         w = s.weights,
                                         verbose = FALSE),
-                                   A))
+                                   A[names(A) %in% names(formals(gbm::gbm.fit))]))
 
     n.trees <- fit[["n.trees"]]
     iters <- 1:n.trees
     iters.grid <- round(seq(1, n.trees, length.out = n.grid))
 
-    if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
+    if (anyNA(iters.grid) || is_null(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
     w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -909,10 +937,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     it <- which.min(iter.grid.balance) + c(-1, 1)
     it[1] <- iters.grid[max(1, it[1])]
     it[2] <- iters.grid[min(length(iters.grid), it[2])]
-    # iters.to.check <- iters[iters >= iters[it[1]] & iters <= iters[it[2]]]
     iters.to.check <- iters[between(iters, iters[it])]
 
-    if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
+    if (anyNA(iters.to.check) || is_null(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
     ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
     w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -954,9 +981,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
-
   covs <- apply(covs, 2, make.closer.to.1)
   bin.vars <- apply(covs, 2, is_binary)
 
@@ -989,8 +1013,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   else if (endsWith(stop.method, ".max")) stop.sum <- max
   else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
 
-  if (is_null(A[["trim.at"]])) trim.at <- 0
-  else trim.at <- A[["trim.at"]]
+  if (is_null(trim.at <- A[["trim.at"]])) trim.at <- 0
 
   for (f in names(formals(gbm::gbm.fit))) {
     if (f %in% c("x", "y", "misc", "w", "verbose", "var.names",
@@ -1007,7 +1030,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
   if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*A[["n.trees"]]))
   else n.grid <- A[["n.grid"]]
 
-  A[names(A) %nin% names(formals(gbm::gbm.fit))] <- NULL
+  # A[names(A) %nin% names(formals(gbm::gbm.fit))] <- NULL
 
   available.distributions <- c("gaussian", "laplace", "tdist", "poisson")
 
@@ -1017,89 +1040,114 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
 
   check.package("gbm")
 
-  get_cont_weights <- function(ps, treat, s.weights) {
+  if (isTRUE(A[["use.kernel"]])) {
+    if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
+    if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
+    if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
+    if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
+  }
+  else {
+    if (is_null(A[["density"]])) densfun <- dnorm
+    else if (is.function(A[["density"]])) densfun <- A[["density"]]
+    else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
+      splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
+      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+        if (length(splitdens) > 1 && anyNA(suppressWarnings(as.numeric(splitdens[-1])))) {
+          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                     word_list(splitdens[-1]), "cannot be coerced to numeric."), call. = FALSE)
+        }
+        densfun <- function(x) {
+          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(as.numeric(splitdens[-1])))),
+                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+        }
+      }
+      else {
+        stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                   splitdens[1], "is not an available function."), call. = FALSE)
+      }
+    }
+    else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+  }
+
+  #Stabilization
+  p.num <- treat - mean(treat)
+
+  if (isTRUE(A[["use.kernel"]])) {
+    d.n <- density(p.num, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+    dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
+  }
+  else {
+    dens.num <- densfun(p.num/sd(treat))
+    if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
+      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+    }
+    else if (any(dens.num <= 0)) {
+      stop("The input to density may not accept the full range of treatment values.", call. = FALSE)
+    }
+  }
+
+  get_cont_weights <- function(ps, treat, s.weights, dens.num) {
     p.denom <- treat - ps
 
     if (isTRUE(A[["use.kernel"]])) {
-      if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
-      if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
-      if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
-      if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
-
       d.d <- density(p.denom, n = A[["n"]],
                      weights = s.weights/sum(s.weights), give.Rkern = FALSE,
                      bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
       dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
     }
     else {
-      dens.denom <- dnorm(p.denom, 0, sd = sd(p.denom))
+      dens.denom <- densfun(p.denom/sd(p.denom))
+      if (is_null(dens.denom) || !is.atomic(dens.denom) || anyNA(dens.denom)) {
+        stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      }
+      else if (any(dens.denom <= 0)) {
+        stop("The input to density may not accept the full range of standardized residuals of the treatment model.", call. = FALSE)
+      }
+
     }
 
-    num.fit <- do.call("glm", c(list(treat ~ 1,
-                                     data = data.frame(treat = treat),
-                                     weights = s.weights,
-                                     family = gaussian(),
-                                     control = list()),
-                                A[names(A %nin% "family")]),
-                       quote = TRUE)
-
-    p.num <- treat - num.fit$fitted.values
-
-    if (isTRUE(A[["use.kernel"]])) {
-      d.n <- density(p.num, n = A[["n"]],
-                     weights = s.weights/sum(s.weights), give.Rkern = FALSE,
-                     bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
-      dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
-    }
-    else {
-      dens.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
-    }
     w <- dens.num/dens.denom
 
     return(w)
   }
 
-  if (treat.type == "continuous") {
+  fit <- do.call(gbm::gbm.fit, c(list(x = covs,
+                                      y = treat,
+                                      distribution = distribution,
+                                      w = s.weights,
+                                      verbose = FALSE),
+                                 A[names(A) %in% names(formals(gbm::gbm.fit))]))
+  n.trees <- fit[["n.trees"]]
+  iters <- 1:n.trees
+  iters.grid <- round(seq(1, n.trees, length.out = n.grid))
 
-    fit <- do.call(gbm::gbm.fit, c(list(x = covs,
-                                        y = treat,
-                                        distribution = distribution,
-                                        w = s.weights,
-                                        verbose = FALSE),
-                                   A))
-    n.trees <- fit[["n.trees"]]
-    iters <- 1:n.trees
-    iters.grid <- round(seq(1, n.trees, length.out = n.grid))
-    # iters.grid <- iters
+  if (anyNA(iters.grid) || is_null(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
 
-    if (any(is.na(iters.grid)) || length(iters.grid) == 0 || any(iters.grid > n.trees)) stop("A problem has occurred")
+  ps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
 
-    ps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
+  w <- apply(ps, 2, get_cont_weights, treat = treat, s.weights = s.weights, dens.num = dens.num)
+  w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-    w <- apply(ps, 2, get_cont_weights, treat = treat, s.weights = s.weights)
-    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+  iter.grid.balance <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, s.weights, bin.vars)))
 
-    iter.grid.balance <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, s.weights, bin.vars)))
+  it <- which.min(iter.grid.balance) + c(-1, 1)
+  it[1] <- iters.grid[max(1, it[1])]
+  it[2] <- iters.grid[min(length(iters.grid), it[2])]
+  iters.to.check <- iters[between(iters, iters[it])]
 
-    it <- which.min(iter.grid.balance) + c(-1, 1)
-    it[1] <- iters.grid[max(1, it[1])]
-    it[2] <- iters.grid[min(length(iters.grid), it[2])]
-    # iters.to.check <- iters[iters >= iters[it[1]] & iters <= iters[it[2]]]
-    iters.to.check <- iters[between(iters, iters[it])]
+  if (anyNA(iters.to.check) || is_null(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
-    if (any(is.na(iters.to.check)) || length(iters.to.check) == 0 || any(iters.to.check > n.trees)) stop("A problem has occurred")
+  ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
+  w <- apply(ps, 2, get_cont_weights, treat = treat, s.weights = s.weights, dens.num = dens.num)
+  w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-    ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
-    w <- apply(ps, 2, get_cont_weights, treat = treat, s.weights = s.weights)
-    w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+  iter.grid.balance.fine <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, s.weights, bin.vars)))
 
-    iter.grid.balance.fine <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, s.weights, bin.vars)))
+  best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
 
-    best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
-
-    w <- w[,as.character(best.tree)]
-    # ps <- ps[,as.character(best.tree)]
-  }
+  w <- w[,as.character(best.tree)]
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -1638,17 +1686,43 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
     dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
   }
   else {
-    dens.denom <- dnorm(p.denom, 0, sd = sd(p.denom))
+    if (is_null(A[["density"]])) densfun <- dnorm
+    else if (is.function(A[["density"]])) densfun <- A[["density"]]
+    else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
+      splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
+      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+        if (length(splitdens) > 1 && anyNA(suppressWarnings(as.numeric(splitdens[-1])))) {
+          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                     word_list(splitdens[-1]), "cannot be coerced to numeric."), call. = FALSE)
+        }
+        densfun <- function(x) {
+          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(as.numeric(splitdens[-1])))),
+                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+        }
+      }
+      else {
+        stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                   splitdens[1], "is not an available function."), call. = FALSE)
+      }
+    }
+    else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+
+    dens.denom <- densfun(p.denom/sqrt(summary(fit)$dispersion))
+
+    if (is_null(dens.denom) || !is.atomic(dens.denom) || anyNA(dens.denom)) {
+      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+    }
+    else if (any(dens.denom <= 0)) {
+      warning("The input to density may not accept the full range of standardized residuals of the treatment model. Some weights may be NA or zero.", call. = FALSE)
+    }
   }
 
   if (stabilize) {
-    if (is_null(A$link)) A$link <- "identity"
-    num.fit <- do.call("glm", c(list(treat ~ 1,
-                                     data = data.frame(treat = treat),
+
+    num.fit <- do.call("glm", c(list(treat ~ 1, data = data.frame(treat = treat),
                                      weights = s.weights[subset],
                                      family = gaussian(link = A$link),
-                                     control = list()),
-                                A[names(A %nin% "family")]),
+                                     control = as.list(A$control))),
                        quote = TRUE)
 
     p.num <- treat - num.fit$fitted.values
@@ -1660,7 +1734,13 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
       dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
     }
     else {
-      dens.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
+      dens.num <- densfun(p.num/sqrt(summary(num.fit)$dispersion))
+      if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
+        stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      }
+      else if (any(dens.num <= 0) && !any(dens.denom <= 0)) {
+        warning("The input to density may not accept the full range of treatment values. Some weights may be NA or zero.", call. = FALSE)
+      }
     }
     w <- dens.num/dens.denom
   }
