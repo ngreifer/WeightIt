@@ -252,9 +252,9 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
     #Extract weights
     if (is_null(obj)) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
     if (is_null(obj$w) || all(is.na(obj$w))) warning("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
-    if (anyNA(obj$w)) {
+    if (any(!is.finite(obj$w))) {
       warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA weights will be set to 0.", call. = FALSE)
-      obj$w[is.na(obj$w)] <- 0
+      obj$w[!is.finite(obj$w)] <- 0
     }
     else if (any(!is.finite(obj$w))) probably.a.bug()
 
