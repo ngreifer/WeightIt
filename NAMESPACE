@@ -4,7 +4,7 @@ importFrom("utils", "data", "combn", "hasName")
 importFrom("graphics", "boxplot", "plot", "par", "hist")
 
 export(weightit, weightitMSM, trim, ps.cont, make_full_rank, get_w_from_ps, as.weightit, as.weightitMSM,
-       sbps)
+       sbps, ESS)
 S3method(print, weightit)
 S3method(summary, weightit)
 S3method(print, summary.weightit)
