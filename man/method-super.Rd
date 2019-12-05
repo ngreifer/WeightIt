@@ -36,19 +36,27 @@ All arguments to \code{SuperLearner} can be passed through \code{weightit} or \c
 
 \code{obsWeights} is ignored because sampling weights are passed using \code{s.weights}.
 
-The following additional arguments can be specified:
+For continuous treatments only, the following arguments may be supplied:
 \describe{
-\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through \code{\link{density}} to estimate the numerator and denominator densities for the weights with continuous treatments. If \code{FALSE}, assumes a normal distribution.
+\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 }
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE} with continuous treatments, the arguments to \code{\link{density}}. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
+\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link{density}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
+}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE} with continuous treatments, the arguments to the \code{\link{density}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
 }
 \item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
 }
 }
 }
 \references{
+- Binary treatments
 Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity Score Estimators’ Robustness to Model Misspecification Using Super Learner. American Journal of Epidemiology, 181(2), 108–119. \doi{10.1093/aje/kwu253}
 
+- Continuous treatments
+
+Kreif, N., Grieve, R., Díaz, I., & Harrison, D. (2015). Evaluation of the Effect of a Continuous Treatment: A Machine Learning Approach with an Application to Treatment for Traumatic Brain Injury. Health Economics, 24(9), 1213–1228. \doi{10.1002/hec.3189}
+
+See \code{\link{method_ps}} for additional references.
 }
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}

@@ -16,7 +16,7 @@ For binary treatments, this method estimates the propensity scores using \code{\
 For multinomial treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{\link[mlogit]{mlogit}} from the \pkg{mlogit} package is used; for the Bayesian probit (\code{"bayes.probit"}) link, \code{\link[MNP]{mnp}} from the \pkg{MNP} package is used; and for the biased-reduced multinomial logistic regression (\code{"br.logit"}), \code{\link[brglm2]{brmultinom}} from the \pkg{brglm2} package is used. If the treatment variable is an ordered factor, \code{\link[MASS]{polr}} from the \pkg{MASS} package is used to fit ordinal regression. Any of the methods allowed in the \code{method} argument of \code{polr} can be supplied to \code{link}. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. When \code{include.obj = TRUE}, the returned object is the fit object from the fitting function used. Weights can also be computed using marginal mean weight with subclassification for the ATE, ATT, and ATC.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, the generalized propensity score is estimated using linear regression. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights. When \code{include.obj = TRUE}, the returned object is the \code{glm} fit from denominator model.
+For continuous treatments, the generalized propensity score is estimated using linear regression. The conditional density can be specified as normal or another distribution. In addition, kernel density estimation can be used instead of assuming a specific density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights. When \code{include.obj = TRUE}, the returned object is the \code{glm} fit from denominator model.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
@@ -33,14 +33,19 @@ The following additional arguments can be specified:
 \describe{
 \item{\code{link}}{The link used in the generalized linear model for the propensity scores. For binary treatments, \code{link} can be any of those allowed by \code{binomial}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the \link[brglm2:brglmFit]{bias-corrected generalized linear models} implemented in the \pkg{brglm2} package. For multinomial treatments, \code{link} can be "logit", "probit", "bayes.probit", or "br.logit". For ordered treatments, \code{link} can be any of those allowed by the \code{method} argument of \code{\link[MASS]{polr}}. For continuous treatments, \code{link} can be any of those allowed by \code{gaussian}.
 }
-\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through \code{\link{density}} to estimate the numerator and denominator densities for the weights with continuous treatments. If \code{FALSE}, assumes a normal distribution.
 }
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE} with continuous treatments, the arguments to \code{\link{density}}. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
+For continuous treatments only, the following arguments may be supplied:
+\describe{
+\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+}
+\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link{density}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
+}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE} with continuous treatments, the arguments to the \code{\link{density}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
 }
 \item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
 }
 
-For binary treatments, additional arguments to \code{glm} can be specified as well. The \code{method} argument in \code{glm} is renamed to \code{glm.method}. This can be used to supply alternative fitting functions, such as those implemented in the \pkg{glm2} package. Other arguments to \code{weightit} are massed to \code{...} in \code{glm}.
+For binary treatments, additional arguments to \code{glm} can be specified as well. The \code{method} argument in \code{glm} is renamed to \code{glm.method}. This can be used to supply alternative fitting functions, such as those implemented in the \pkg{glm2} package. Other arguments to \code{weightit} are passed to \code{...} in \code{glm}.
 }
 }
 \references{
@@ -61,6 +66,10 @@ Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing t
  - Marginal mean weighting through subclassification
 
 Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. Journal of Educational and Behavioral Statistics, 35(5), 499–531. \doi{10.3102/1076998609359785}
+
+- Bias-reduced logistic regression
+
+See references for the \pkg{brglm2} \link[brglm2::`brglm2-package`]{package}.
 
 
 \strong{Multinomial Treatments}
@@ -87,6 +96,10 @@ Hong, G. (2012). Marginal mean weighting through stratification: A generalized m
 \code{method = "ps"}
 
 Robins, J. M., Hernán, M. Á., & Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. Epidemiology, 11(5), 550–560.
+
+- Using non-normal conditional densities
+
+Naimi, A. I., Moodie, E. E. M., Auger, N., & Kaufman, J. S. (2014). Constructing Inverse Probability Weights for Continuous Exposures: A Comparison of Methods. Epidemiology, 25(2), 292–299. \doi{10.1097/EDE.0000000000000053}
 
 }
 \seealso{
