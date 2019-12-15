@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.7.1
+Version: 0.7.1.9000
 Authors@R: c(
     person(c("Noah", "H."),"Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
