@@ -389,14 +389,12 @@ check.package <- function(package.name, alternative = FALSE) {
   else return(invisible(TRUE))
 }
 make.closer.to.1 <- function(x) {
-  if (is.factor(x) || is.character(x) || all_the_same(x)) return(x)
+  if (is.factor(x) || is.character(x) || all_the_same(x[!is.na(x)])) return(x)
   else if (is_binary(x)) {
     return(as.numeric(x == x[!is.na(x)][1]))
   }
   else {
-    ndigits <- round(mean(floor(log10(abs(x[!check_if_zero(x)]))), na.rm = TRUE))
-    if (abs(ndigits) > 2) return(x/(10^ndigits))
-    else return(x)
+    (x - mean(x, na.rm = TRUE))/sd(x, na.rm = TRUE)
   }
 }
 int.poly.f <- function(mat, ex = NULL, int = FALSE, poly = 1, center = FALSE, sep = " * ") {
