@@ -24,7 +24,7 @@ weightit(formula,
 
 }
 \description{
-\code{weightit} allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which \code{weightit} calls; these packages must be installed to use the desired method. Also included are \code{print} and \code{summary} methods for examining the output.
+\code{weightit} allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multi-category treatments. Many of these methods exist in other packages, which \code{weightit} calls; these packages must be installed to use the desired method. Also included are \code{print} and \code{summary} methods for examining the output.
 }
 \arguments{
   \item{formula}{
@@ -37,13 +37,13 @@ an optional data set in the form of a data frame that contains the variables in 
 a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is \code{"ps"}.
 }
   \item{estimand}{
-the desired estimand. For binary and multinomial treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO" or "ATM". The default for both is "ATE". This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.
+the desired estimand. For binary and multi-category treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO" or "ATM". The default for both is "ATE". This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.
 }
   \item{stabilize}{
 \code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim} to reduce the variance of the weights. Default is \code{FALSE}.
 }
   \item{focal}{
-when multinomial treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. If specified, \code{estimand} will automatically be set to \code{"ATT"}.
+when multi-category treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. If specified, \code{estimand} will automatically be set to \code{"ATT"}.
 }
   \item{by}{
 a string containg the name of the variable in \code{data} for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~ gender}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message. Only one \code{by} variable is allowed.
@@ -86,7 +86,7 @@ a \code{weightit} object; the output of a call to \code{weightit}.
   \item{method}{The weight estimation method specified.}
   \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"ps"}, \code{"gbm"}, \code{"cbps"}, or \code{"super"}.}
   \item{s.weights}{The provided sampling weights.}
-  \item{focal}{The focal variable if the ATT was requested with a multinomial treatment.}
+  \item{focal}{The focal variable if the ATT was requested with a multi-category treatment.}
   \item{by}{A data.frame containing the \code{by} variable when specified.}
   \item{obj}{When \code{include.obj = TRUE}, the fit object.}
 }
@@ -121,7 +121,7 @@ data("lalonde", package = "cobalt")
 summary(W1)
 bal.tab(W1)
 
-#Balancing covariates with respect to race (multinomial)
+#Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "ebal", estimand = "ATE"))

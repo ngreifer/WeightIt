@@ -35,7 +35,7 @@ When treatment is binary, the value of \code{treat} that is considered the "trea
 \code{numeric}; the number of subclasses to use when computing weights using marginal mean weighting with subclasses. If \code{NULL}, inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership.
 }
   \item{stabilize}{
-\code{logical}; whether to compute stabilized weights or not. This simply involve multiplying each unit's weight by the proportion of units in their treatment group. For saturated outcome models, this won't make a difference; otherwise, this can improve performance.
+\code{logical}; whether to compute stabilized weights or not. This simply involves multiplying each unit's weight by the proportion of units in their treatment group. For saturated outcome models, this won't make a difference; otherwise, this can improve performance.
 }
 }
 \details{
@@ -43,7 +43,7 @@ When treatment is binary, the value of \code{treat} that is considered the "trea
 
 \code{ps} can be entered a variety of ways. For binary treatments, when \code{ps} is entered as a vector or unnamed single-column matrix or data frame, \code{get_w_from_ps} has to know which value of \code{treat} corresponds to the "treated" group. For 0/1 variables, 1 will be considered treated. For other types of variables, \code{get_w_from_ps} will try to figure it out using heuristics, but it's safer to supply an argument to \code{treated}. When \code{estimand} is "ATT" or "ATC", supplying a value to \code{focal} is sufficient (for ATT, \code{focal} is the treated group, and for ATC, \code{focal} is the control group). When entered as a matrix or data frame, the columns must be named with the levels of the treatment, and it is assumed that each column corresponds to the probability of being in that treatment group. This is the safest way to supply \code{ps} unless \code{treat} is a 0/1 variable.
 
-For multinomial treatments, \code{ps} can be entered as a vector or a matrix or data frame. When entered as a vector, it is assumed the value corresponds to the probability of being in the treatment actually received; this is only possible when the estimand is "ATE". Otherwise, \code{ps} must be entered as a named matrix or data frame as described above for binary treatments. When the estimand is "ATT" or "ATC", a value for \code{focal} must be specified.
+For multi-category treatments, \code{ps} can be entered as a vector or a matrix or data frame. When entered as a vector, it is assumed the value corresponds to the probability of being in the treatment actually received; this is only possible when the estimand is "ATE". Otherwise, \code{ps} must be entered as a named matrix or data frame as described above for binary treatments. When the estimand is "ATT" or "ATC", a value for \code{focal} must be specified.
 
 \code{get_w_from_ps} is not compatible with continuous treatments.
 }
@@ -78,7 +78,7 @@ w3 <- get_w_from_ps(ps, treat = treatAB,
                     estimand = "ATT", treated = "A")
 all.equal(w1, w3)
 
-#A multinomial example using GBM predicted probabilities
+#A multi-category example using GBM predicted probabilities
 library(gbm)
 T3 <- factor(sample(c("A", "B", "C"), nrow(lalonde), replace = TRUE))
 
