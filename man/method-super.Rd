@@ -9,10 +9,10 @@ This page explains the details of estimating weights from SuperLearner-based pro
 In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, a regression algorithm is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link[SuperLearner]{SuperLearner}} in the \pkg{SuperLearner} package. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). When \code{include.obj = TRUE}, the returned object is the \code{SuperLearner} fit.
+For binary treatments, this method estimates the propensity scores using \code{\link[SuperLearner]{SuperLearner}} in the \pkg{SuperLearner} package. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). Weights can also be computed using marginal mean weighting with subclassification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details. When \code{include.obj = TRUE}, the returned object is the \code{SuperLearner} fit.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, the propensity scores are estimated using several calls to \code{\link[SuperLearner]{SuperLearner}}, one for each treatment group, and the treatment probabilities are normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. When \code{include.obj = TRUE}, the returned object is the list of fit object from the \code{SuperLearner} calls.
+For multinomial treatments, the propensity scores are estimated using several calls to \code{\link[SuperLearner]{SuperLearner}}, one for each treatment group, and the treatment probabilities are normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting with subclassification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details. When \code{include.obj = TRUE}, the returned object is the list of fit object from the \code{SuperLearner} calls.
 }
 \subsection{Continuous Treatments}{
 For continuous treatments, the generalized propensity score is estimated using \code{\link[SuperLearner]{SuperLearner}}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights. When \code{include.obj = TRUE}, the returned object is the \code{\link[SuperLearner]{SuperLearner}} fit from denominator model.
@@ -30,7 +30,7 @@ Missing data is not compatible with SuperLearner, so a few extra things happen w
 \section{Additional Arguments}{
 An argument to \code{SL.library} must be supplied. To see a list of available entries, use \code{\link[SuperLearner]{listWrappers}}.
 
-All arguments to \code{SuperLearner} can be passed through \code{weightit} or \code{weightitMSM}, with the following exceptions:
+All arguments to \code{\link[SuperLearner]{SuperLearner}} can be passed through \code{weightit} or \code{weightitMSM}, with the following exceptions:
 
 \code{method} in \code{SuperLearner} is replaced with the argument \code{SL.method} in \code{weightit}.
 
@@ -38,7 +38,7 @@ All arguments to \code{SuperLearner} can be passed through \code{weightit} or \c
 
 For continuous treatments only, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
 }
 \item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link{density}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
 }
@@ -50,6 +50,7 @@ For continuous treatments only, the following arguments may be supplied:
 }
 \references{
 - Binary treatments
+
 Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity Score Estimators’ Robustness to Model Misspecification Using Super Learner. American Journal of Epidemiology, 181(2), 108–119. \doi{10.1093/aje/kwu253}
 
 - Continuous treatments
@@ -59,10 +60,10 @@ Kreif, N., Grieve, R., Díaz, I., & Harrison, D. (2015). Evaluation of the Effec
 See \code{\link{method_ps}} for additional references.
 }
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}
+\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{get_w_from_ps}}
 }
 \note{
-Some methods formerly available in \pkg{SuperLearner} are now in SuperLearnerExtra, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
+Some methods formerly available in \pkg{SuperLearner} are now in \pkg{SuperLearnerExtra}, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
 }
 \examples{
 library("cobalt")

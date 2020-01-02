@@ -10,10 +10,10 @@ In general, this method relies on estimating propensity scores with a parametric
 
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link{glm}}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). When \code{include.obj = TRUE}, the returned object is the \code{glm} fit. Weights can also be computed using marginal mean weight with subclassification for the ATE, ATT, and ATC.
+For binary treatments, this method estimates the propensity scores using \code{\link{glm}}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link{family}}. The default link is "logit", but others, including "probit", are allowed. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida, et al. (2017). Weights can also be computed using marginal mean weighting with subclassification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details. When \code{include.obj = TRUE}, the returned object is the \code{glm} fit.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{\link[mlogit]{mlogit}} from the \pkg{mlogit} package is used; for the Bayesian probit (\code{"bayes.probit"}) link, \code{\link[MNP]{mnp}} from the \pkg{MNP} package is used; and for the biased-reduced multinomial logistic regression (\code{"br.logit"}), \code{\link[brglm2]{brmultinom}} from the \pkg{brglm2} package is used. If the treatment variable is an ordered factor, \code{\link[MASS]{polr}} from the \pkg{MASS} package is used to fit ordinal regression. Any of the methods allowed in the \code{method} argument of \code{polr} can be supplied to \code{link}. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. When \code{include.obj = TRUE}, the returned object is the fit object from the fitting function used. Weights can also be computed using marginal mean weight with subclassification for the ATE, ATT, and ATC.
+For multinomial treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \code{\link[mlogit]{mlogit}} from the \pkg{mlogit} package is used; for the Bayesian probit (\code{"bayes.probit"}) link, \code{\link[MNP]{mnp}} from the \pkg{MNP} package is used; and for the biased-reduced multinomial logistic regression (\code{"br.logit"}), \code{\link[brglm2]{brmultinom}} from the \pkg{brglm2} package is used. If the treatment variable is an ordered factor, \code{\link[MASS]{polr}} from the \pkg{MASS} package is used to fit ordinal regression. Any of the methods allowed in the \code{method} argument of \code{polr} can be supplied to \code{link}. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weight with subclassification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details. When \code{include.obj = TRUE}, the returned object is the fit object from the fitting function used.
 }
 \subsection{Continuous Treatments}{
 For continuous treatments, the generalized propensity score is estimated using linear regression. The conditional density can be specified as normal or another distribution. In addition, kernel density estimation can be used instead of assuming a specific density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights. When \code{include.obj = TRUE}, the returned object is the \code{glm} fit from denominator model.
@@ -31,16 +31,16 @@ Missing data is not directly compatible with estimating propensity scores, so a 
 \section{Additional Arguments}{
 The following additional arguments can be specified:
 \describe{
-\item{\code{link}}{The link used in the generalized linear model for the propensity scores. For binary treatments, \code{link} can be any of those allowed by \code{binomial}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the \link[brglm2:brglmFit]{bias-corrected generalized linear models} implemented in the \pkg{brglm2} package. For multinomial treatments, \code{link} can be "logit", "probit", "bayes.probit", or "br.logit". For ordered treatments, \code{link} can be any of those allowed by the \code{method} argument of \code{\link[MASS]{polr}}. For continuous treatments, \code{link} can be any of those allowed by \code{gaussian}.
+\item{\code{link}}{The link used in the generalized linear model for the propensity scores. For binary treatments, \code{link} can be any of those allowed by \code{binomial}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the \link[brglm2:brglmFit]{bias-corrected generalized linear models} implemented in the \pkg{brglm2} package. For multinomial treatments, \code{link} can be "logit", "probit", "bayes.probit", or "br.logit". For ordered treatments, \code{link} can be any of those allowed by the \code{method} argument of \code{\link[MASS]{polr}}. For continuous treatments, \code{link} can be any of those allowed by \code{\link{gaussian}}.
 }
 }
 For continuous treatments only, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
 }
 \item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link{density}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
 }
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE} with continuous treatments, the arguments to the \code{\link{density}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to the \code{\link{density}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
 }
 \item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
 }
@@ -69,15 +69,14 @@ Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for 
 
 - Bias-reduced logistic regression
 
-See references for the \pkg{brglm2} \link[brglm2::`brglm2-package`]{package}.
+See references for the \pkg{brglm2} \link[brglm2:`brglm2-package`]{package}.
 
 
 \strong{Multinomial Treatments}
 
  - \code{estimand = "ATO"}
 
-Li, F., & Li, F. (2018). Propensity Score Weighting for Causal Inference with Multi-valued Treatments. ArXiv:1808.05339 [Stat]. Retrieved from http://arxiv.org/abs/1808.05339
-
+Li, F., & Li, F. (2019). Propensity score weighting for causal inference with multiple treatments. The Annals of Applied Statistics, 13(4), 2389–2415. \doi{10.1214/19-AOAS1282}
 
  - \code{estimand = "ATM"}
 
@@ -103,7 +102,7 @@ Naimi, A. I., Moodie, E. E. M., Auger, N., & Kaufman, J. S. (2014). Constructing
 
 }
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}
+\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{get_w_from_ps}}
 }
 \examples{
 library("cobalt")
