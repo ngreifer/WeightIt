@@ -1,6 +1,5 @@
 \name{ESS}
 \alias{ESS}
-%- Also NEED an '\alias' for EACH other topic documented here.
 \title{
 Compute effective sampole size of weighted sample
 }
@@ -15,32 +14,25 @@ a vector of weights
 }
 }
 \details{
-%%  ~~ If necessary, more details than the description above ~~
+The ESS is calculated as \code{sum(w)^2/sum(w^2)}.
 }
 
 \references{
-%% ~put references to the literature/web site here ~
+McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. Psychological Methods, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 }
-\author{
-%%  ~~who you are~~
-}
-\note{
-%%  ~~further notes~~
-}
-
-%% ~Make other sections like Warning with \section{Warning }{....} ~
 
 \seealso{
-%% ~~objects to See Also as \code{\link{help}}, ~~~
+\code{\link{summary.weightit}}
 }
 \examples{
-##---- Should be DIRECTLY executable !! ----
-##-- ==>  Define data, use random,
-##--	or do  help(data=index)  for the standard data sets.
+library("cobalt")
+data("lalonde", package = "cobalt")
 
-## The function is currently defined as
-function (w)
-{
-    sum(w)^2/sum(w^2)
-  }
+#Balancing covariates between treatment groups (binary)
+(W1 <- weightit(treat ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "ps", estimand = "ATE"))
+summary(W1)
+ESS(W1$weights[W1$treat == 0])
+ESS(W1$weights[W1$treat == 1])
 }
