@@ -818,11 +818,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   if (is.na(s.m.matches) || s.m.matches == 0L) {stop(paste0("stop.method must be one of ", word_list(available.stop.methods, "or", quotes = TRUE), "."), call. = FALSE)}
   else stop.method <- available.stop.methods[s.m.matches]
 
-  if (startsWith(stop.method, "es.")) stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, bin.vars, subset = NULL, ...) {
+  if (startsWith(stop.method, "es.")) stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, bin.vars, subset = NULL) {
     cobalt::col_w_smd(mat, treat, weights, std = rep(TRUE, ncol(mat)), s.d.denom = s.d.denom, abs = TRUE,
                       s.weights = s.weights, bin.vars = bin.vars, subset = subset)
   }
-  else if (startsWith(stop.method, "ks.")) stop.fun <- function(mat, treat, weights, s.weights = NULL, bin.vars, subset = NULL, ...) {
+  else if (startsWith(stop.method, "ks.")) stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, bin.vars, subset = NULL) {
     cobalt::col_w_ks(mat, treat, weights, s.weights = s.weights, bin.vars = bin.vars, subset = subset)
   }
 
@@ -1643,8 +1643,6 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, momen
 weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, ...) {
   A <- list(...)
 
-
-
   check.package("SuperLearner")
 
   covs <- covs[subset, , drop = FALSE]
@@ -1791,7 +1789,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
     }
     else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
 
-    dens.denom <- densfun(p.denom/sqrt(summary(fit)$dispersion))
+    dens.denom <- densfun(p.denom/sd(p.denom))
 
     if (is_null(dens.denom) || !is.atomic(dens.denom) || anyNA(dens.denom)) {
       stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
@@ -1803,10 +1801,12 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
 
   if (stabilize) {
 
-    num.fit <- do.call("glm", c(list(treat ~ 1, data = data.frame(treat = treat),
+    if (is_null(A[["link"]])) A[["link"]] <- "identity"
+    num.fit <- do.call(glm, list(treat ~ 1,
+                                 data = data.frame(treat = treat),
                                      weights = s.weights[subset],
-                                     family = gaussian(link = A$link),
-                                     control = as.list(A$control))),
+                                     family = gaussian(link = A[["link"]]),
+                                     control = as.list(A[["control"]])),
                        quote = TRUE)
 
     p.num <- treat - num.fit$fitted.values
