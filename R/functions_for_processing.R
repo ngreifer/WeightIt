@@ -542,7 +542,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 
   return(s.d.denom)
 }
-ps_to_ps_mat <- function(ps, treat, assumed.treated, treat.type, treated, estimand) {
+ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
   if (is.vector(ps, mode = "numeric")) {
     ps.names <- names(ps)
     ps <- matrix(ps, ncol = 1)
@@ -618,7 +618,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated, treat.type, treated, estima
   }
   return(ps)
 }
-stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
+.stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
   if (!length(subclass) == 1 || !is.numeric(subclass)) {
     stop("subclass must be a single number.", call. = FALSE)
   }
@@ -638,7 +638,7 @@ stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal =
 
       sub.tab <- table(treat, sub)
       sub.totals <- colSums(sub.tab)
-      sub.weights <- setNames(sub.totals/sub.tab[as.character(i), ],
+      sub.weights <- setNames(sub.totals / sub.tab[as.character(i), ],
                               colnames(sub.tab))
       w[treat == i] <- sub.weights[sub[treat == i]]
     }
@@ -647,13 +647,14 @@ stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal =
         w[treat == i] <- 1
       }
       else {
+        ps_mat[, as.character(i)] <- 1 - ps_mat[, as.character(i)]
         sub <- as.integer(findInterval(ps_mat[, as.character(i)],
                                        quantile(ps_mat[treat == focal, as.character(i)],
                                                 seq(0, 1, length.out = subclass + 1)),
                                        all.inside = TRUE))
 
         sub.tab <- table(treat, sub)
-        sub.weights <- setNames(sub.tab[focal, ] / (sub.tab[as.character(i), ] * mean(treat == focal)),
+        sub.weights <- setNames(sub.tab[focal, ] / sub.tab[as.character(i), ],
                                 colnames(sub.tab))
 
         w[treat == i] <- sub.weights[sub[treat == i]]
@@ -677,6 +678,57 @@ stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal =
   }
 
   return(w)
+}
+subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
+  if (!length(subclass) == 1 || !is.numeric(subclass)) {
+    stop("subclass must be a single number.", call. = FALSE)
+  }
+  else if (round(subclass) < 1) {
+    stop("subclass must be greater than 1.", call. = FALSE)
+  }
+  subclass <- round(subclass)
+
+  if (is_not_null(focal)) ps_mat <- ps_mat[,c(focal, setdiff(colnames(ps_mat), focal))]
+
+  ps_sub <- ps_mat * 0
+
+  for (i in colnames(ps_mat)) {
+    if (toupper(estimand) == "ATE") {
+      sub <- as.integer(findInterval(ps_mat[, as.character(i)],
+                                     quantile(ps_mat[, as.character(i)],
+                                              seq(0, 1, length.out = subclass + 1)),
+                                     all.inside = TRUE))
+    }
+    else if (toupper(estimand) == "ATT") {
+      if (i != focal) ps_mat[, as.character(i)] <- 1 - ps_mat[, as.character(i)]
+      sub <- as.integer(findInterval(ps_mat[, as.character(i)],
+                                     quantile(ps_mat[treat == focal, as.character(i)],
+                                              seq(0, 1, length.out = subclass + 1)),
+                                     all.inside = TRUE))
+    }
+    else {
+      stop("Only the ATE, ATT, and ATC are compatible with stratification weights.")
+    }
+
+    sub.tab <- table(treat, sub)
+    sub.totals <- colSums(sub.tab)
+
+    if (any(sub.tab == 0)) {
+      stop("Too many subclasses were requested.", call. = FALSE)
+    }
+
+    sub.ps <- setNames(sub.tab[as.character(i), ] / sub.totals,
+                       colnames(sub.tab))
+
+    ps_sub[,i] <- sub.ps[sub]
+
+    if (ncol(ps_sub) == 2) {
+      ps_sub[,colnames(ps_sub) != i] <- 1 - ps_sub[,i]
+      break
+    }
+  }
+
+  return(ps_sub)
 }
 stabilize_w <- function(weights, treat) {
   if (is.factor(treat)) t.levels <- levels(treat)
