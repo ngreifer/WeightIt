@@ -3,7 +3,7 @@ Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
 Version: 0.7.1.9000
 Authors@R: c(
-    person(c("Noah", "H."),"Greifer", role=c("aut", "cre"), 
+    person(c("Noah"),"Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
 	       comment=c(ORCID="0000-0003-3067-7154"))
     )
@@ -13,7 +13,7 @@ Depends:
 Imports:
     ggplot2 (>= 3.0.0)
 Suggests:
-    cobalt (>= 3.9.0),
+    cobalt (>= 4.0.0),
     twang (>= 1.5),
     CBPS (>= 0.18),
     ebal (>= 0.1-6),
