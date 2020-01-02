@@ -73,8 +73,8 @@ data("lalonde", package = "cobalt")
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "super", estimand = "ATT",
-                SL.library = c("SL.glm", "SL.gam",
-                               "SL.knn")))
+                SL.library = c("SL.glm", "SL.stepAIC",
+                               "SL.glm.interaction")))
 summary(W1)
 bal.tab(W1)
 
@@ -82,8 +82,8 @@ bal.tab(W1)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "super", estimand = "ATE",
-                SL.library = c("SL.glm", "SL.gam",
-                               "SL.knn")))
+                SL.library = c("SL.glm", "SL.stepAIC",
+                               "SL.glm.interaction")))
 summary(W2)
 bal.tab(W2)
 
@@ -91,8 +91,8 @@ bal.tab(W2)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "super", use.kernel = TRUE,
-                SL.library = c("SL.glm", "SL.gam",
-                               "SL.ridge")))
+                SL.library = c("SL.glm", "SL.ridge",
+                               "SL.glm.interaction")))
 summary(W3)
 bal.tab(W3)
 }
