@@ -956,13 +956,17 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
         apply(w, 2, function(w_) {
           bal <- unlist(lapply(levels(treat), function(i) {
-            if (estimand != "ATE" && startsWith(stop.method, "es.")) {
-              s.d.denom <- cobalt::col_w_sd(covs, weights = w_,
-                                            s.weights = s.weights,
-                                            bin.vars = bin.vars)
+            if (estimand == "ATE") {
+              w_i <- c(rep(1, nrow(covs)), w_[treat == i])
             }
-
-            w_i <- c(rep(1, nrow(covs)), w_[treat == i])
+            else {
+              if (startsWith(stop.method, "es.")) {
+                s.d.denom <- cobalt::col_w_sd(covs, weights = w_,
+                                              s.weights = s.weights,
+                                              bin.vars = bin.vars)
+              }
+              w_i <- c(w_, w_[treat == i])
+            }
 
             stop.fun(covs_i_list[[i]], treat_i_list[[i]], weights = w_i,
                      s.d.denom = s.d.denom, s.weights = s.weights_i_list[[i]],
@@ -1016,13 +1020,17 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
         apply(w, 2, function(w_) {
           bal <- unlist(lapply(levels(treat), function(i) {
-            if (estimand != "ATE" && startsWith(stop.method, "es.")) {
+            if (estimand == "ATE") {
+              w_i <- c(rep(1, nrow(covs)), w_[treat == i])
+            }
+            else {
+              if (startsWith(stop.method, "es.")) {
               s.d.denom <- cobalt::col_w_sd(covs, weights = w_,
                                             s.weights = s.weights,
                                             bin.vars = bin.vars)
+              }
+              w_i <- c(w_, w_[treat == i])
             }
-
-            w_i <- c(rep(1, nrow(covs)), w_[treat == i])
 
             stop.fun(covs_i_list[[i]], treat_i_list[[i]], weights = w_i,
                      s.d.denom = s.d.denom, s.weights = s.weights_i_list[[i]],
