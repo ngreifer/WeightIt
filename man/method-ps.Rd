@@ -69,8 +69,7 @@ Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for 
 
 - Bias-reduced logistic regression
 
-See references for the \pkg{brglm2} \link[brglm2:`brglm2-package`]{package}.
-
+See references for the \pkg{brglm2} \link[brglm2:brglm2]{package}.
 
 \strong{Multinomial Treatments}
 
