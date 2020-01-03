@@ -618,7 +618,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
   }
   return(ps)
 }
-.stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
+stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
   if (!length(subclass) == 1 || !is.numeric(subclass)) {
     stop("subclass must be a single number.", call. = FALSE)
   }
@@ -690,7 +690,7 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
 
   if (is_not_null(focal)) ps_mat <- ps_mat[,c(focal, setdiff(colnames(ps_mat), focal))]
 
-  ps_sub <- ps_mat * 0
+  ps_sub <- sub_mat <- ps_mat * 0
 
   for (i in colnames(ps_mat)) {
     if (toupper(estimand) == "ATE") {
@@ -711,24 +711,97 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
     }
 
     sub.tab <- table(treat, sub)
-    sub.totals <- colSums(sub.tab)
 
     if (any(sub.tab == 0)) {
-      stop("Too many subclasses were requested.", call. = FALSE)
+      # stop("Too many subclasses were requested.", call. = FALSE)
+      sub <- subclass_scoot(sub, treat, ps_mat[,i])
+      sub.tab <- table(treat, sub)
     }
 
+    sub.totals <- colSums(sub.tab)
     sub.ps <- setNames(sub.tab[as.character(i), ] / sub.totals,
                        colnames(sub.tab))
 
     ps_sub[,i] <- sub.ps[sub]
+    sub_mat[,i] <- sub
 
     if (ncol(ps_sub) == 2) {
       ps_sub[,colnames(ps_sub) != i] <- 1 - ps_sub[,i]
+      sub_mat[,colnames(sub_mat) != i] <- sub
       break
     }
   }
 
+  attr(ps_sub, "sub_mat") <- sub_mat
   return(ps_sub)
+}
+subclass_scoot <- function(sub, treat, x) {
+
+  treat <- as.character(treat)
+  unique.treat <- unique(treat, nmax = 2)
+
+  names(x) <- seq_along(x)
+  names(sub) <- seq_along(sub)
+  original.order <- names(x)
+
+  nsub <- nunique(sub)
+
+  #Turn subs into a contiguous sequence
+  sub <- setNames(setNames(seq_len(nsub), sort(unique(sub)))[as.character(sub)],
+                  original.order)
+
+  if (any(table(treat) < nsub)) {
+    stop("Too many subclasses were requested.", call. = FALSE)
+  }
+
+  for (t in unique.treat) {
+    if (length(x[treat == t]) == nsub) {
+      sub[treat == t] <- seq_len(nsub)
+    }
+  }
+
+  if (any({sub_tab <- table(treat, sub)} == 0)) {
+
+    soft_thresh <- function(x, minus = 1) {
+      x <- x - minus
+      x[x < 0] <- 0
+      x
+    }
+
+    for (t in unique.treat) {
+      while (any(sub_tab[t,] == 0)) {
+        first_0 <- which(sub_tab[t,] == 0)[1]
+
+        if (first_0 == nsub ||
+            (first_0 != 1 &&
+            sum(soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
+            sum(soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
+          #If there are more and closer nonzero subs to the left...
+          first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
+
+          name_to_move <- names(sub)[which(x == max(x[treat == t & sub == first_non0_to_left]) & treat == t & sub == first_non0_to_left)[1]]
+
+          sub[name_to_move] <- first_0
+          sub_tab[t, first_0] <- 1L
+          sub_tab[t, first_non0_to_left] <- sub_tab[t, first_non0_to_left] - 1L
+
+        }
+        else {
+          #If there are more and closer nonzero subs to the right...
+          first_non0_to_right <- min(seq(first_0 + 1, nsub)[sub_tab[t, seq(first_0 + 1, nsub)] > 0])
+          name_to_move <- names(sub)[which(x == min(x[treat == t & sub == first_non0_to_right]) & treat == t & sub == first_non0_to_right)[1]]
+          sub[name_to_move] <- first_0
+          sub_tab[t, first_0] <- 1L
+          sub_tab[t, first_non0_to_right] <- sub_tab[t, first_non0_to_right] - 1L
+        }
+      }
+    }
+
+    #Unsort
+    sub <- sub[names(sub)]
+  }
+
+  return(sub)
 }
 stabilize_w <- function(weights, treat) {
   if (is.factor(treat)) t.levels <- levels(treat)
