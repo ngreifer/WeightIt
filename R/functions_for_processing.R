@@ -10,7 +10,6 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
   else if (method %in% c("super", "superlearner")) return("super")
   # else if (method %in% c("kbal")) return("kbal")
-  # else if (method %in% c("sbps", "subgroup")) return("sbps")
   else return(method)
 }
 check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
@@ -70,7 +69,6 @@ method.to.phrase <- function(method) {
     else if (method %in% c("optweight")) return("targeted stable balancing weights")
     else if (method %in% c("super")) return("propensity score weighting with SuperLearner")
     # else if (method %in% c("kbal")) return("kernel balancing")
-    # else if (method %in% c("sbps")) return("subgroup balancing propensity score weighting")
     else return("the chosen method of weighting")
   }
 }
@@ -335,7 +333,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 }
 process.moments.int <- function(moments, int, method) {
   if (!is.function(method)) {
-    if (method %in% c("ebal", "ebcw", "optweight")) {
+    if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
       if (length(int) != 1 || !is.logical(int)) {
         stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
       }
@@ -396,7 +394,7 @@ make.closer.to.1 <- function(x) {
     return(as.numeric(x == x[!is.na(x)][1]))
   }
   else {
-    (x - mean(x, na.rm = TRUE))/sd(x, na.rm = TRUE)
+    (x - mean_fast(x, TRUE))/sd(x, na.rm = TRUE)
   }
 }
 int.poly.f <- function(mat, ex = NULL, int = FALSE, poly = 1, center = FALSE, sep = " * ") {
@@ -809,7 +807,7 @@ stabilize_w <- function(weights, treat) {
   if (is.factor(treat)) t.levels <- levels(treat)
   else t.levels <- unique(treat)
   w.names <- names(weights)
-  tab <- vapply(t.levels, function(x) mean(treat == x), numeric(1L))
+  tab <- vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L))
   return(setNames(weights * tab[as.character(treat)], w.names))
 }
 

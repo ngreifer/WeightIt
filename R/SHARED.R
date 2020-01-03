@@ -1,7 +1,4 @@
-#This document is shared across cobalt, WeightIt, and optweight as a symbolic link.
-#Any edits will be automatically synced across all folders. Make sure functions work
-#in all packages!
-#The original file is in cobalt/R/.
+#This document is shared across cobalt, WeightIt, and optweight
 
 #Strings
 word_list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
@@ -379,17 +376,15 @@ col.w.r <- function(mat, y, w = NULL, s.weights = NULL, bin.vars = NULL, na.rm =
         return(cov/den)
     }
 }
-coef.of.var <- function(x, pop = TRUE, na.rm = TRUE) {
-    if (na.rm) x <- x[!is.na(x)]
-    if (pop) sqrt(mean((x-mean(x))^2))/mean(x)
-    else sd(x)/mean(x)
+coef.of.var <- function(x, pop = TRUE) {
+    if (pop) sqrt(mean_fast((x-mean_fast(x, TRUE))^2, TRUE))/mean_fast(x, TRUE)
+    else sd(x)/mean_fast(x, TRUE)
 }
-mean.abs.dev <- function(x, na.rm = TRUE) {
-    if (na.rm) x <- x[!is.na(x)]
-    mean(abs(x - mean(x)))
+mean.abs.dev <- function(x) {
+    mean_fast(abs(x - mean_fast(x, TRUE)), TRUE)
 }
-geom.mean <- function(y, na.rm = TRUE) {
-    exp(mean(log(y[is.finite(log(y))]), na.rm = na.rm))
+geom.mean <- function(y) {
+    exp(mean_fast(log(y[is.finite(log(y))]), TRUE))
 }
 mat_div <- function(mat, vec) {
     mat/vec[col(mat)]
@@ -397,6 +392,18 @@ mat_div <- function(mat, vec) {
 abs_ <- function(x, ratio = FALSE) {
     if (ratio) pmax(x, 1/x)
     else (abs(x))
+}
+mean_fast <- function(x, nas.possible = FALSE) {
+    #Equal to mean(x, na.rm = TRUE) but faster
+    #Set no.nas = FALSE if it's possible there are NAs
+    if (nas.possible && anyNA(x)) {
+        s <- sum(x, na.rm = TRUE)
+        n <- sum(!is.na(x))
+        return(s/n)
+    }
+    s <- sum(x)
+    n <- length(x)
+    return(s/n)
 }
 
 #Formulas
@@ -802,81 +809,4 @@ len <- function(x, recursive = TRUE) {
 na.rem <- function(x) {
     #A faster na.omit for vectors
     x[!is.na(x)]
-}
-
-#Defunct; delete if everything works without them
-.center <- function(x, na.rm = TRUE, at = NULL) {
-    dimx <- dim(x)
-    if (length(dimx) == 2L) x <- apply(x, 2, center, na.rm = na.rm, at = at)
-    else if (length(dimx) > 2L) stop("x must be a numeric or matrix-like (not array).")
-    else if (!is.numeric(x)) warning("x is not numeric and will not be centered.")
-    else {
-        if (is_null(at)) at <- mean(x, na.rm = na.rm)
-        else if (!is.numeric(at)) stop("at must be numeric.")
-        x <- x - at
-    }
-    return(x)
-}
-.w.v <- function(x, w = NULL, na.rm = TRUE) {
-    .w.cov(x, x, w = w, na.rm = na.rm)
-}
-.w.cov <- function(x, y, w = NULL, na.rm = TRUE, type = 3) {
-
-    if (length(x) != length(y)) stop("x and y must the same length")
-
-    if (is_null(w)) w <- rep(1, length(x))
-    else if (length(w) != length(x)) stop("weights must be same length as x and y")
-
-    w[is.na(x) | is.na(y)] <- NA_real_
-
-    wmx <- w.m(x, w, na.rm = na.rm)
-    wmy <- w.m(y, w, na.rm = na.rm)
-
-    wcov <- sum(w*(x - wmx)*(y - wmy), na.rm = na.rm) / .w.cov.scale(w, na.rm = na.rm, type = type)
-    return(wcov)
-}
-.w.cov.scale <- function(w, type = 3, na.rm = TRUE) {
-
-    sw <- sum(w, na.rm = na.rm)
-    n <- sum(!is.na(w))
-    vw1 <- sum((w - sw/n)^2, na.rm = na.rm)/n
-    # vw2 <- sum((w - sw/n)^2, na.rm = na.rm)/(n-1)
-
-    if (type == 1) sw
-    else if (type == 2) sw - 1
-    else if (type == 3) sw*(n-1)/n - vw1*n/sw
-    # else if (type == 4) sw*(n-1)/n - vw2*n/sw
-
-}
-.w.r <- function(x, y, w = NULL, s.weights = NULL) {
-    #Computes weighted correlation but using the unweighted (s.weighted) variances
-    #in the denominator.
-    if (is_null(s.weights)) s.weights <- rep(1, length(x))
-    else if (length(s.weights) != length(x)) stop("s.weights must be same length as x and y")
-
-    s.weights[is.na(x) | is.na(y)] <- NA_real_
-
-    w_ <- w*s.weights
-
-    r <- .w.cov(x, y, w_) / (sqrt(.w.v(x, s.weights) * .w.v(y, s.weights)))
-
-    return(r)
-}
-.col.w.v <- function(mat, w = NULL, na.rm = TRUE) {
-    if (is_null(w)) {
-        w <- rep(1, nrow(mat))
-    }
-    means <- col.w.m(mat, w, na.rm)
-    w.scale <- apply(mat, 2, function(x) .w.cov.scale(w[!is.na(x)]))
-    vars <- colSums(w*center(mat, at = means)^2, na.rm = na.rm)/w.scale
-
-    return(vars)
-}
-.col.w.v.bin <- function(mat, w = NULL, na.rm = TRUE) {
-    if (is_null(w)) {
-        w <- rep(1, nrow(mat))
-    }
-    means <- col.w.m(mat, w, na.rm)
-    vars <- means * (1 - means)
-    return(vars)
 }
