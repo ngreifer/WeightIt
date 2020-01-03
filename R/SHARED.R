@@ -640,7 +640,7 @@ process.s.weights <- function(s.weights, data = NULL) {
     #Process s.weights
     if (is_not_null(s.weights)) {
         if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
-            stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights.", call. = FALSE)
+            stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of the variable in data that contains sampling weights.", call. = FALSE)
         }
         if (is.character(s.weights) && length(s.weights)==1) {
             if (is_null(data)) {
@@ -652,6 +652,7 @@ process.s.weights <- function(s.weights, data = NULL) {
             else stop("The name supplied to s.weights is not the name of a variable in data.", call. = FALSE)
         }
     }
+    else s.weights <- NULL
     return(s.weights)
 }
 
