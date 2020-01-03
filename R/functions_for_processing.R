@@ -86,7 +86,6 @@ process.estimand <- function(estimand, method, treat.type) {
                            , optweight = c("ATT", "ATC", "ATE")
                            , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
                            # , kbal = c("ATT", "ATC", "ATE")
-                           # , sbps = c("ATT", "ATC", "ATE", "ATO", "ATM")
   ),
   multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
                      , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
@@ -100,15 +99,15 @@ process.estimand <- function(estimand, method, treat.type) {
                      # , kbal = c("ATT", "ATE")
   ))
 
-  if (treat.type != "continuous" && !is.function(method) &&
-      toupper(estimand) %nin% AE[[treat.type]][[method]]) {
-    stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
-                " with ", treat.type, " treatments. Only ", word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
-                " allowed."), call. = FALSE)
+  if (treat.type != "continuous" && !is.function(method)) {
+    if (is_null(estimand)) stop(paste0("estimand must be one of ", word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "or"), "."), call. = FALSE)
+    else if (toupper(estimand) %nin% AE[[treat.type]][[method]]) {
+      stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
+                  " with ", treat.type, " treatments. Only ", word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
+                  " allowed."), call. = FALSE)
+    }
   }
-  else {
-    return(toupper(estimand))
-  }
+  return(toupper(estimand))
 }
 check.subclass <- function(method, treat.type) {
   #Allowable estimands
@@ -377,14 +376,17 @@ process.MSM.method <- function(is.MSM.method, method) {
 
 }
 check.package <- function(package.name, alternative = FALSE) {
-  package.not.installed <- package.name[package.name %nin% .packages(all.available = TRUE)]
-  if (is_not_null(package.not.installed) && !alternative) {
-    plural <- length(package.not.installed) > 1
-    stop(paste0("Package", if (plural) "s " else " ",
-                word_list(package.not.installed, quotes = TRUE, is.are = TRUE),
-                " needed for this function to work. Please install ",
-                if (plural) "them" else "it","."),
-         call. = FALSE)
+  packages.not.installed <- package.name[package.name %nin% .packages(all.available = TRUE)]
+  if (is_not_null(packages.not.installed)) {
+    if (alternative) return(FALSE)
+    else {
+      plural <- length(packages.not.installed) > 1
+      stop(paste0("Package", if (plural) "s " else " ",
+                  word_list(packages.not.installed, quotes = TRUE, is.are = TRUE),
+                  " needed for this function to work. Please install ",
+                  if (plural) "them" else "it","."),
+           call. = FALSE)
+    }
   }
   else return(invisible(TRUE))
 }
