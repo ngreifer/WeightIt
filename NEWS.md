@@ -3,13 +3,19 @@ WeightIt News and Updates
 
 Version 0.8.0
 
-* Formula interfaces now accept `poly(x, .)` and other matrix-generating functions of variables, including the `rms`-class-generating functions from the `rms` package (e.g., `pol()`, `rcs()`, etc.) (the `rms` package must be loaded to use these latter ones) and the `basis`-class-generating functions from the `splines` package (i.e., `bs()` and `ns()`). A bug in an early version of ths was found by @ahinton-mmc.
+* Formula interfaces now accept `poly(x, .)` and other matrix-generating functions of variables, including the `rms`-class-generating functions from the `rms` package (e.g., `pol()`, `rcs()`, etc.) (the `rms` package must be loaded to use these latter ones) and the `basis`-class-generating functions from the `splines` package (i.e., `bs()` and `ns()`). A bug in an early version of this was found by @ahinton-mmc.
 
-* Added support for marginal mean weighting through subclassification (MMWS) as described by Hong (2010, 2012) for `weightit()` and `get_w_from_ps()` through the `subclass` argument (see References at `?get_w_from_ps`). With this method, subclasses are formed based on the propensity score and weights are computed based on the number of units in each subclass. This was already implemented in `MatchIt` for the ATT; other estimands are avalable here, and MMWS can be used with any method that produces a propensity score.
+* Added support for marginal mean weighting through stratification (MMWS) as described by Hong (2010, 2012) for `weightit()` and `get_w_from_ps()` through the `subclass` argument (see References at `?get_w_from_ps`). With this method, subclasses are formed based on the propensity score and weights are computed based on the number of units in each subclass. This was already implemented in `MatchIt` for the ATT; other estimands are avalable here, and MMWS can be used with any method that produces a propensity score.
 
 * Added `stabilize` option to `get_w_from_ps()`. 
 
 * When using `method = "gbm"` with multi-category treatments and estimands other than the `ATE`, `ATT`, or `ATC` are used with standardized mean differences as the stopping rule, the mean differences will be between the weighted overall sample and each treatment group. Otherwise, just some efficiency improvements.
+
+* When using `method = "ps"` with multi-category treatments, the use of `use.mlogit = FALSE` to request multiple binary regressions instead of multinomial regression is now documented and an associated error is now fixed, thanks to @ahinton-mmc.
+
+* `moments` and `int` can now be used with `method = "npcbps"`.
+
+* Performance enhancements.
 
 Version 0.7.1
 
