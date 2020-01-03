@@ -246,29 +246,29 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         fit.obj <- fit
       }
       else if (A$link %in% c("logit", "probit")) {
-        if (check.package("mlogit", alternative = TRUE) && (is_null(A$use.mlogit) || A$use.mlogit == TRUE)) {
-          # message(paste("Using multinomial", A$link, "regression."))
-          data <- data.frame(treat = treat_sub , s.weights = s.weights[subset], covs)
-          covnames <- names(data)[-c(1,2)]
-          mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
-          tryCatch({fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "),
-                                                            " | 1")), data = mult, estimate = TRUE,
-                                          probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
-                                          weights = s.weights, ...)},
-                   error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
-          )
-          ps <- fitted(fit, outcome = FALSE)
-          fit.obj <- fit
+        if (!isFALSE(A$use.mlogit)) {
+          if (check.package("mlogit")) {
+            data <- data.frame(treat = treat_sub , s.weights = s.weights[subset], covs)
+            covnames <- names(data)[-c(1,2)]
+            mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
+            tryCatch({fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "),
+                                                              " | 1")), data = mult, estimate = TRUE,
+                                            probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
+                                            weights = s.weights, ...)},
+                     error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
+            )
+            ps <- fitted(fit, outcome = FALSE)
+            fit.obj <- fit
+          }
         }
         else {
-          # message(paste("Using a series of", nunique(treat_sub), "binomial", A$link, "regressions."))
           ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat_sub), nrow = length(treat_sub))),
                          levels(treat_sub))
 
           control <- A[names(formals(glm.control))[pmatch(names(A), names(formals(glm.control)), 0)]]
           fit.list <- setNames(vector("list", nlevels(treat_sub)), levels(treat_sub))
           for (i in levels(treat_sub)) {
-            t_i <- rep(0, length(treat_sub)); t_i[treat_sub == i] <- 1
+            t_i <- as.numeric(treat_sub == i)
             data_i <- data.frame(t_i, covs)
             fit.list[[i]] <- do.call(glm, c(list(formula(data_i), data = data_i,
                                                  family = quasibinomial(link = A$link),
