@@ -88,9 +88,10 @@ summary(W2)
 bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
+#assuming t(8) conditional density for treatment
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "super", use.kernel = TRUE,
+                method = "super", density = "dt_8",
                 SL.library = c("SL.glm", "SL.ridge",
                                "SL.glm.interaction")))
 summary(W3)
