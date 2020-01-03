@@ -138,10 +138,10 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     w <- w*ps_mat[, as.character(focal)]
   }
   else if (toupper(estimand) == "ATO") {
-    w <- w/apply(ps_mat, 1, function(x) sum(1/x)) #Li & Li (2018)
+    w <- w*rowSums(1/ps_mat)^-1 #Li & Li (2019)
   }
   else if (toupper(estimand) == "ATM") {
-    w <- w*apply(ps_mat, 1, min)
+    w <- w*do.call(pmin, lapply(seq_len(ncol(ps_mat)), function(x) ps_mat[,x]))
   }
   else w <- NULL
 
