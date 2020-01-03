@@ -182,8 +182,14 @@ c.factor <- function(..., recursive=TRUE) {
 }
 can_str2num <- function(x) {
     nas <- is.na(x)
-    suppressWarnings(x_num <- as.numeric(x))
-    return(!anyNA(x_num[!nas]))
+    suppressWarnings(x_num <- as.numeric(as.character(x[!nas])))
+    return(!anyNA(x_num))
+}
+str2num <- function(x) {
+    nas <- is.na(x)
+    suppressWarnings(x_num <- as.numeric(as.character(x)))
+    x_num[nas] <- NA
+    return(x_num)
 }
 
 #Numbers

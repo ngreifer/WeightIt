@@ -423,12 +423,12 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, ps, ...)
       else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
         splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
         if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
-          if (length(splitdens) > 1 && anyNA(suppressWarnings(as.numeric(splitdens[-1])))) {
+          if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
               stop(paste(A[["density"]], "is not an appropriate argument to density because",
-                         word_list(splitdens[-1]), "cannot be coerced to numeric."), call. = FALSE)
+                         word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
           }
           densfun <- function(x) {
-            tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(as.numeric(splitdens[-1])))),
+            tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
                      error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
           }
         }
@@ -1136,12 +1136,12 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
     else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
       if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
-        if (length(splitdens) > 1 && anyNA(suppressWarnings(as.numeric(splitdens[-1])))) {
+        if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
           stop(paste(A[["density"]], "is not an appropriate argument to density because",
-                     word_list(splitdens[-1]), "cannot be coerced to numeric."), call. = FALSE)
+                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
         }
         densfun <- function(x) {
-          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(as.numeric(splitdens[-1])))),
+          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
                    error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
         }
       }
@@ -1240,8 +1240,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, ...) {
 #CBPS
 weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, ...) {
   A <- list(...)
-
-
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -1671,7 +1669,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   if (is_binary(treat)) {
 
-    fit.list <- do.call(SuperLearner::SuperLearner, list(Y = as.numeric(as.character(treat)),
+    fit.list <- do.call(SuperLearner::SuperLearner, list(Y = binarize(treat),
                                                          X = covs, newX = covs,
                                                          family = binomial(),
                                                          SL.library = A[["SL.library"]],
@@ -1773,12 +1771,12 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, ps, .
     else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
       if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
-        if (length(splitdens) > 1 && anyNA(suppressWarnings(as.numeric(splitdens[-1])))) {
+        if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
           stop(paste(A[["density"]], "is not an appropriate argument to density because",
-                     word_list(splitdens[-1]), "cannot be coerced to numeric."), call. = FALSE)
+                     word_list(splitdens[-1], quotes = TRUE, and.or = "or"), "cannot be coerced to numeric."), call. = FALSE)
         }
         densfun <- function(x) {
-          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(as.numeric(splitdens[-1])))),
+          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
                    error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
         }
       }

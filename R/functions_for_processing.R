@@ -558,8 +558,8 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
     if ((is.matrix(ps) && all(is.numeric(ps))) ||
         (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
       if (ncol(ps) == 1) {
-        if (suppressWarnings(!anyNA(as.numeric(as.character(treat)))) &&
-            all(check_if_zero(binarize(treat) - as.numeric(as.character(treat))))) treated.level <- 1
+        if (can_str2num(treat) &&
+            all(check_if_zero(binarize(treat) - str2num(treat)))) treated.level <- 1
         else if (is_not_null(treated)) {
           if (treated %in% treat) treated.level <- treated
           else stop("The argument to treated must be a value in treat.", call. = FALSE)
