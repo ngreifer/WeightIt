@@ -131,8 +131,6 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, ps, ...) {
   A <- list(...)
 
-
-
   fit.obj <- NULL
 
   if (is_null(ps)) {
@@ -1381,7 +1379,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, ...) {
 weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, ...) {
   stop("CBMSM doesn't work yet.")
 }
-weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
+weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, ...) {
   A <- list(...)
   if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
                                      call. = FALSE)
@@ -1394,6 +1392,8 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -1410,7 +1410,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, ...) {
 
   return(obj)
 }
-weightit2npcbps.cont <- function(covs, treat, s.weights, subset, estimand, ...) {
+weightit2npcbps.cont <- function(covs, treat, s.weights, subset, estimand, moments, int, ...) {
   A <- list(...)
 
   if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
@@ -1424,6 +1424,8 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, estimand, ...) 
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -1448,14 +1450,14 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
-  covs <- apply(covs, 2, make.closer.to.1)
-
   if (any(vars.w.missing <- apply(covs, 2, anyNA))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+  covs <- apply(covs, 2, make.closer.to.1)
 
   for (f in names(formals(ebal::ebalance))) {
     if (is_null(A[[f]])) A[[f]] <- formals(ebal::ebalance)[[f]]
@@ -1556,14 +1558,14 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, momen
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
-
   if (any(vars.w.missing <- apply(covs, 2, anyNA))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  covs <- apply(covs, 2, make.closer.to.1)
 
   for (f in names(formals(ATE::ATE))) {
     if (is_null(A[[f]])) A[[f]] <- formals(ATE::ATE)[[f]]

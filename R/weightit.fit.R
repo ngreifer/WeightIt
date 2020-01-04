@@ -54,7 +54,6 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                 treat = treat,
                                 s.weights = s.weights,
                                 subset = by.factor == i,
-                                stabilize = stabilize,
                                 ps = ps,
                                 ...)
       }
@@ -109,7 +108,6 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                  treat = treat,
                                  s.weights = s.weights,
                                  subset = by.factor == i,
-                                 stabilize = stabilize,
                                  ...)
       }
 
@@ -131,7 +129,6 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                  treat = treat,
                                  s.weights = s.weights,
                                  subset = by.factor == i,
-                                 stabilize = stabilize,
                                  ...)
       }
 
@@ -157,7 +154,6 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                     treat = treat,
                                     subset = by.factor == i,
                                     s.weights = s.weights,
-                                    #stabilize = stabilize,
                                     ...)
 
         }
@@ -170,6 +166,8 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                treat = treat,
                                subset = by.factor == i,
                                s.weights = s.weights,
+                               moments = moments,
+                               int = int,
                                ...)
       }
       else if (treat.type == "continuous") {
@@ -177,6 +175,8 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                     treat = treat,
                                     subset = by.factor == i,
                                     s.weights = s.weights,
+                                    moments = moments,
+                                    int = int,
                                     ...)
       }
 
