@@ -28,7 +28,7 @@ Missing data is not compatible with the nonparametric CBPS algorithm, so a few e
 }
 }
 \section{Additional Arguments}{
-All argument to \code{npCBPS} can be passed through \code{weightit} or \code{weightitMSM}.
+All arguments to \code{npCBPS} can be passed through \code{weightit} or \code{weightitMSM}.
 
 All arguments take on the defaults of those in \code{npCBPS}.
 
