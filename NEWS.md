@@ -11,7 +11,7 @@ Version 0.8.0
 
 * When using `method = "gbm"` with multi-category treatments and estimands other than the `ATE`, `ATT`, or `ATC` are used with standardized mean differences as the stopping rule, the mean differences will be between the weighted overall sample and each treatment group. Otherwise, just some efficiency improvements.
 
-* When using `method = "ps"` with multi-category treatments, the use of `use.mlogit = FALSE` to request multiple binary regressions instead of multinomial regression is now documented and an associated error is now fixed, thanks to @ahinton-mmc.
+* When using `method = "ps"` with multi-category treatments, the use of `use.mlogit = FALSE` to request multiple binary regressions instead of multinomial regression is now documented and an associated bug is now fixed, thanks to @ahinton-mmc.
 
 * `moments` and `int` can now be used with `method = "npcbps"`.
 
