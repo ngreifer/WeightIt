@@ -24,7 +24,12 @@ For longitudinal treatments, the weights are the product of the weights estimate
 Sampling weights are supported through \code{s.weights} in all scenarios.
 }
 \subsection{Missing Data}{
-Missing data is not compatible with the nonparametric CBPS algorithm, so a few extra things happen when \code{NA}s are present in the covariates. First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with 0s (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
+In the presence of missing data, the following value(s) for \code{missing} are allowed:
+\describe{
+\item{\code{"ind"} (default)}{
+First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with 0s (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
+}
+}
 }
 }
 \section{Additional Arguments}{

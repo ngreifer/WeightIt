@@ -8,6 +8,8 @@ This page explains the details of estimating weights from generalized boosted mo
 
 In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves choosing a balance criterion to optimize so that balance, rather than prediction, is prioritized. For binary and multinomial treatments, this method relies on \code{\link[twang]{ps}} from the \pkg{twang} package. For continuous treatments, this method relies on \code{\link{ps.cont}} from \pkg{WeightIt}.
 
+See the Note section at \code{\link{method_gbm}} for a discussion of how this method differs from \code{method = "gbm"}. In general, using \code{method = "gbm"} is preferred because it is faster and more flexible. \code{method = "twang"} will likely become defunct in future versions.
+
 \subsection{Binary Treatments}{
 For binary treatments, this method estimates the propensity scores using \code{\link[twang]{ps}}. The following estimands are allowed: ATE, ATT, and ATC. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., \code{levels(factor(treat))[2]}; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group. When \code{include.obj = TRUE}, the returned object is the \code{ps} fit.
 }
@@ -24,7 +26,15 @@ For longitudinal treatments, the weights are the product of the weights estimate
 Sampling weights are supported through \code{s.weights} in all scenarios.
 }
 \subsection{Missing Data}{
-Missing data is compatible with generalized boosted modeling. \code{NA} values are simply considered their own plausible value for the covariate. When balance statistics are computed to choose the optimal tree, they are computed using only the non-missing values for the variable in question. Note that multiple imputation performs better than using this method to account for missing covariates.
+In the presence of missing data, the following value(s) for \code{missing} are allowed:
+\describe{
+\item{\code{"ind"} (default)}{
+First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The weight estimation then proceeds with this new formula and set of covariates using surrogate splititng as described below. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
+}
+\item{\code{"surr"}}{
+Surrogate splitting is used to process \code{NA}s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.
+}
+}
 }
 }
 \section{Additional Arguments}{
@@ -53,9 +63,7 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{method_gbm}}
 }
-\note{
-See the Note section at \code{\link{method_gbm}} for a discussion how this method differs from \code{method = "gbm"}.
-}
+
 \examples{
 # Examples take a while to run
 \dontrun{
