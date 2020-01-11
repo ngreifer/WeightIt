@@ -1,12 +1,13 @@
 weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.factor = factor(rep(1, length(treat))),
                          estimand, focal = NULL, stabilize = FALSE, ps = NULL, moments = NULL, int = NULL,
-                         subclass = NULL, is.MSM.method = FALSE, include.obj = FALSE, ...){
+                         subclass = NULL, is.MSM.method = FALSE, missing = "ind", include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
   out <- setNames(vector("list", 3), c("w", "ps", "fit.obj"))
 
   treat.type <- match_arg(treat.type, c("binary", "multinomial", "continuous"))
   if (include.obj) fit.obj <- setNames(vector("list", nlevels(by.factor)), levels(by.factor))
+  info <- setNames(vector("list", nlevels(by.factor)), levels(by.factor))
 
   obj <- NULL
   for (i in levels(by.factor)) {
@@ -19,6 +20,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                 s.weights = s.weights,
                                 subset = by.factor == i,
                                 stabilize = stabilize,
+                                missing = missing,
                                 ...)
       }
       else {
@@ -32,6 +34,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                              stabilize = stabilize,
                              subclass = subclass,
                              ps = ps,
+                             missing = missing,
                              ...)
       }
 
@@ -47,6 +50,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                            stabilize = stabilize,
                            subclass = subclass,
                            ps = ps,
+                           missing = missing,
                            ...)
       }
       else if (treat.type == "continuous") {
@@ -55,6 +59,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                 s.weights = s.weights,
                                 subset = by.factor == i,
                                 ps = ps,
+                                missing = missing,
                                 ...)
       }
     }
@@ -66,6 +71,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                       subset = by.factor == i,
                                       moments = moments,
                                       int = int,
+                                      missing = missing,
                                       ...)
       }
       else {
@@ -77,7 +83,8 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                     estimand = estimand,
                                     focal = focal,
                                     moments = moments,
-                                    int = int, ...)
+                                    int = int,
+                                    missing = missing, ...)
         }
         else if (treat.type == "continuous") {
           obj <- weightit2optweight.cont(covs = covs,
@@ -86,6 +93,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                          s.weights = s.weights,
                                          moments = moments,
                                          int = int,
+                                         missing = missing,
                                          ...)
 
         }
@@ -101,6 +109,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                             subset = by.factor == i,
                             stabilize = stabilize,
                             subclass = subclass,
+                            missing = missing,
                             ...)
       }
       else {
@@ -108,6 +117,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                  treat = treat,
                                  s.weights = s.weights,
                                  subset = by.factor == i,
+                                 missing = missing,
                                  ...)
       }
 
@@ -122,6 +132,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                             subset = by.factor == i,
                             stabilize = stabilize,
                             subclass = subclass,
+                            missing = missing,
                             ...)
       }
       else {
@@ -129,6 +140,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                  treat = treat,
                                  s.weights = s.weights,
                                  subset = by.factor == i,
+                                 missing = missing,
                                  ...)
       }
 
@@ -147,6 +159,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                subclass = subclass,
                                estimand = estimand,
                                focal = focal,
+                               missing = missing,
                                ...)
         }
         else if (treat.type == "continuous") {
@@ -154,6 +167,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                     treat = treat,
                                     subset = by.factor == i,
                                     s.weights = s.weights,
+                                    missing = missing,
                                     ...)
 
         }
@@ -168,6 +182,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                s.weights = s.weights,
                                moments = moments,
                                int = int,
+                               missing = missing,
                                ...)
       }
       else if (treat.type == "continuous") {
@@ -177,6 +192,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                     s.weights = s.weights,
                                     moments = moments,
                                     int = int,
+                                    missing = missing,
                                     ...)
       }
 
@@ -192,6 +208,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                              stabilize = stabilize,
                              moments = moments,
                              int = int,
+                             missing = missing,
                              ...)
       }
       else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
@@ -207,6 +224,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                               stabilize = stabilize,
                               subclass = subclass,
                               ps = ps,
+                              missing = missing,
                               ...)
       }
       else if (treat.type == "continuous") {
@@ -216,6 +234,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                                    subset = by.factor == i,
                                    stabilize = stabilize,
                                    ps = ps,
+                                   missing = missing,
                                    ...)
       }
     }
@@ -230,6 +249,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                              #stabilize = stabilize,
                              moments = moments,
                              int = int,
+                             missing = missing,
                              ...)
       }
       else {
@@ -244,6 +264,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
     #                          subset = by.factor == i,
     #                          estimand = estimand,
     #                          focal = focal,
+    #                          missing = missing,
     #                          ...)
     #   }
     #   else stop("Kernel balancing is not compatible with continuous treatments.", call. = FALSE)
@@ -262,11 +283,17 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
     if (is_not_null(obj$ps)) out$ps[by.factor == i] <- obj$ps
 
     if (include.obj) fit.obj[[i]] <- obj$fit.obj
+    info[[i]] <- obj$info
+
   }
 
   if (include.obj) {
     if (nlevels(by.factor) == 1) fit.obj <- fit.obj[[1]]
     out$fit.obj <- fit.obj
   }
+
+  if (is_not_null(info) && nlevels(by.factor) == 1) info <- info[[1]]
+  out$info <- info
+
   return(out)
 }
