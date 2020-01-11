@@ -9,10 +9,10 @@ This page explains the details of estimating weights using empirical balancing c
 In general, this method relies on estimating weights by minimizing a function of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ATE]{ATE}} from the \pkg{ATE} package.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the weights using \code{\link[ATE]{ATE}} with \code{ATT = TRUE}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{ATE} fit object. When the ATE is requested, \code{ATE} is run twice, once for each treatment group. When \code{include.obj = TRUE}, the returned object is the \code{ebal} fit (or a list of the two fits when the estimand is the ATE).
+For binary treatments, this method estimates the weights using \code{\link[ATE]{ATE}} with \code{ATT = TRUE}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{ATE} fit object. When the ATE is requested, \code{ATE} is run twice, once for each treatment group.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the weights using \code{\link[ATE]{ATE}} with \code{ATT = TRUE}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the \code{ATE} fit objects. When the ATE is requested, \code{ATE} is run once for each treatment group. When the ATT is requested, \code{ATE} is run once for each non-focal (i.e., control) group. When \code{include.obj = TRUE}, the returned object is the list of \code{ATE} fits.
+For multinomial treatments, this method estimates the weights using \code{\link[ATE]{ATE}} with \code{ATT = TRUE}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the \code{ATE} fit objects. When the ATE is requested, \code{ATE} is run once for each treatment group. When the ATT is requested, \code{ATE} is run once for each non-focal (i.e., control) group.
 }
 \subsection{Continuous Treatments}{
 Continuous treatments are not supported.
@@ -39,6 +39,13 @@ All argument to \code{ATE} can be passed through \code{weightit}, with the follo
 
 All arguments take on the defaults of those in \code{ATE}.
 
+}
+\section{Additional Outputs}{
+\describe{
+\item{\code{obj}}{
+When \code{include.obj = TRUE}, the empirical balancing callibration model fit. For binary treatments with \code{estimand = "ATT"}, the output of the call to \code{\link[ATE:ATE]{ATE::ATE}}. For binary treatments with \code{estimand = "ATE"} and multinomial treatments, a list of outputs of calls to \code{\link[ATE:ATE]{ATE::ATE}}.
+}
+}
 }
 \references{
 

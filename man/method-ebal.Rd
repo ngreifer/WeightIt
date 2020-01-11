@@ -9,10 +9,10 @@ This page explains the details of estimating weights using entropy balancing by 
 In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ebal]{ebalance}} from the \pkg{ebal} package.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the weights using \code{\link[ebal]{ebalance}}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{ebalance} fit object. When the ATE is requested, \code{ebalance} is run twice, once for each treatment group. When \code{include.obj = TRUE}, the returned object is the \code{ebal} fit (or a list of the two fits when the estimand is the ATE).
+For binary treatments, this method estimates the weights using \code{\link[ebal]{ebalance}}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{ebalance} fit object. When the ATE is requested, \code{ebalance} is run twice, once for each treatment group.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the weights using \code{\link[ebal]{ebalance}}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the \code{ebalance} fit objects. When the ATE is requested, \code{ebalance} is run once for each treatment group. When the ATT is requested, \code{ebalance} is run once for each non-focal (i.e., control) group. When \code{include.obj = TRUE}, the returned object is the list of \code{ebalance} fits.
+For multinomial treatments, this method estimates the weights using \code{\link[ebal]{ebalance}}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the \code{ebalance} fit objects. When the ATE is requested, \code{ebalance} is run once for each treatment group. When the ATT is requested, \code{ebalance} is run once for each non-focal (i.e., control) group.
 }
 \subsection{Continuous Treatments}{
 Continuous treatments are not supported.
@@ -35,10 +35,17 @@ First, for each variable with missingness, a new missingness indicator variable 
 \section{Additional Arguments}{
 All arguments to \code{ebalance} can be passed through \code{weightit} or \code{weightitMSM} and take on the defaults of those in \code{ebalance}.
 
-For \code{base.weights}, a vector with length equal to the total number of units can be supplied, in contrast to \code{ebalance()}, which requires a vector wth length equal to the number of controls.
+For \code{base.weights}, a vector with length equal to the total number of units can be supplied, in contrast to \code{ebalance()}, which requires a vector with length equal to the number of controls.
 
 When \code{standardize = TRUE} in the call to \code{weightit}, \code{\link[ebal]{ebalance.trim}} is run on the resulting \code{ebalance} fit objects. Doing so can reduce the variability of the weights while maintaining covariate balance.
 
+}
+\section{Additional Outputs}{
+\describe{
+\item{\code{obj}}{
+When \code{include.obj = TRUE}, the entropy balancing model fit. For binary treatments with \code{estimand = "ATT"}, the output of the call to \code{\link[ebal:ebalance]{ebal::ebalance}} or \code{\link[ebal:ebalance.trim]{ebal::ebalance.trim}} when \code{stabilize = TRUE}. For binary treatments with \code{estimand = "ATE"} and multinomial treatments, a list of outputs of calls to \code{\link[ebal:ebalance]{ebal::ebalance}} or \code{\link[ebal:ebalance.trim]{ebal::ebalance.trim}}.
+}
+}
 }
 \references{
 

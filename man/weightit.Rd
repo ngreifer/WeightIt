@@ -34,34 +34,37 @@ a formula with a treatment variable on the left hand side and the covariates to 
 an optional data set in the form of a data frame that contains the variables in \code{formula}.
 }
   \item{method}{
-a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is \code{"ps"}.
+a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is \code{"ps"} for propensity score weighting.
 }
   \item{estimand}{
 the desired estimand. For binary and multi-category treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO" or "ATM". The default for both is "ATE". This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.
 }
   \item{stabilize}{
-\code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the sum of the weights in that unit's treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim} to reduce the variance of the weights. Default is \code{FALSE}.
+\code{logical}; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the proportion of units in their treatment group. For the \code{"ebal"} method, this involves using \code{ebalance.trim} to reduce the variance of the weights. Default is \code{FALSE}.
 }
   \item{focal}{
 when multi-category treatments are used and the "ATT" is requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. If specified, \code{estimand} will automatically be set to \code{"ATT"}.
 }
   \item{by}{
-a string containg the name of the variable in \code{data} for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~ gender}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message. Only one \code{by} variable is allowed.
+a string containg the name of the variable in \code{data} for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~ gender}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message. Only one \code{by} variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using \code{\link{interaction}}.
 }
   \item{s.weights}{
 A vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These can also be matching weights if weighting is to be used on matched data.
 }
   \item{ps}{
-A vector of propensity scores or the name of a variable in \code{data} containing propensity scores. If not \code{NULL}, \code{method} is ignored, and the propensity scores will be used to create weights. \code{formula} must include the treatment variable in \code{data}, but the listed covariates will play no role in the weight estimation.
+A vector of propensity scores or the name of a variable in \code{data} containing propensity scores. If not \code{NULL}, \code{method} is ignored, and the propensity scores will be used to create weights. \code{formula} must include the treatment variable in \code{data}, but the listed covariates will play no role in the weight estimation. Using \code{ps} is similar to calling \code{\link{get_w_from_ps}} directly, but produces a full \code{weightit} object rather than just producing weights.
 }
   \item{moments}{
-\code{numeric}; for entropy balancing, empirical balancing calibration weights, optimization-based weights, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}.
+\code{numeric}; for some methods, the greatest power of each covariate to be balanced. For example, if \code{moments = 3}, for each non-categorical covariate, the covariate, its square, and its cube will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{moments}.
 }
   \item{int}{
-\code{logical}; for entropy balancing, empirical balancing calibration weights, and optimization-based weights, whether first-order interactions of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}.
+\code{logical}; for some methods, whether first-order interactions of the covariates are to be balanced. This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{int}.
 }
   \item{subclass}{
-\code{numeric}; the number of subclasses to use when computing weights using marginal mean weighting with subclasses (MMWS). If \code{NULL}, inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Attempting to set a non-\code{NULL} value for methods that don't compute a propensity score will result in an error. See \code{\link{get_w_from_ps}} for details and references.
+\code{numeric}; the number of subclasses to use for computing weights using marginal mean weighting with subclasses (MMWS). If \code{NULL}, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Attempting to set a non-\code{NULL} value for methods that don't compute a propensity score will result in an error; see each method's help page for information on whether MMWS weights are compatible with the method. See \code{\link{get_w_from_ps}} for details and references.
+}
+  \item{missing}{
+\code{character}; how missing data should be handled. The options and defaults depend on the \code{method} used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in \pkg{weightit} and should probably be used instead. See the \pkg{MatchThem} package for the use of \code{weightit} with multiply imputed data.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.
@@ -104,6 +107,9 @@ The primary purpose of \code{weightit} is as a dispatcher to other functions in 
 \item{\code{\link[=method_user]{"user-defined"}} - Weighting using a user-defined weighting function.}
 
 }
+}
+\seealso{
+\code{\link{weightitMSM}} for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal strcutural models (MSMs).
 }
 
 \author{

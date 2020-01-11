@@ -11,13 +11,13 @@ In general, this method relies on estimating propensity scores using generalized
 See the Note section at \code{\link{method_gbm}} for a discussion of how this method differs from \code{method = "gbm"}. In general, using \code{method = "gbm"} is preferred because it is faster and more flexible. \code{method = "twang"} will likely become defunct in future versions.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link[twang]{ps}}. The following estimands are allowed: ATE, ATT, and ATC. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., \code{levels(factor(treat))[2]}; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group. When \code{include.obj = TRUE}, the returned object is the \code{ps} fit.
+For binary treatments, this method estimates the propensity scores using \code{\link[twang]{ps}}. The following estimands are allowed: ATE, ATT, and ATC. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., \code{levels(factor(treat))[2]}; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the propensity scores using multiple calls to \code{\link[twang]{ps}} (which is the same thing that \code{\link[twang]{mnps}} in \pkg{twang} does behind the scenes). The following estimands are allowed: ATE and ATT. The weights are computed from the estimated propensity scores using the standard formulas. When \code{include.obj = TRUE}, the returned object is a list of the \code{ps} fits.
+For multinomial treatments, this method estimates the propensity scores using multiple calls to \code{\link[twang]{ps}} (which is the same thing that \code{\link[twang]{mnps}} in \pkg{twang} does behind the scenes). The following estimands are allowed: ATE and ATT. The weights are computed from the estimated propensity scores using the standard formulas.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, the generalized propensity score is estimated using \code{\link{ps.cont}}. When \code{include.obj = TRUE}, the returned object is the \code{ps.cont} fit.
+For continuous treatments, the generalized propensity score is estimated using \code{\link{ps.cont}}.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point, which is what \code{\link[twang]{iptw}} in \pkg{twang} does behind the scenes.
@@ -45,7 +45,13 @@ Any argument to \code{ps} or \code{ps.cont} can be passed through \code{weightit
 All other arguments take on the defaults of those in \code{ps} and \code{ps.cont}. The main arguments of interest are \code{n.trees} and \code{interaction.depth}, and increasing them can improve performance.
 
 }
-
+\section{Additional Outputs}{
+\describe{
+\item{\code{obj}}{
+When \code{include.obj = TRUE}, the \code{twang} model fit. For binary treatments, the output of the call to \code{\link[twang:ps]{twang::ps}}. For multinomial treatments, a list of \code{ps} fit objects. For continuous treatments, the output of the call to \code{\link{ps.cont}}.
+}
+}
+}
 \references{
 \strong{Binary treatments}
 

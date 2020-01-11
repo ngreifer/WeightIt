@@ -9,13 +9,13 @@ This page explains the details of estimating weights from nonparametric covariat
 In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on \code{\link[CBPS]{npCBPS}} from the \pkg{CBPS} package.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object. When \code{include.obj = TRUE}, the returned object is the \code{npCBPS} fit.
+For binary treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object. When \code{include.obj = TRUE}, the returned object is the \code{npCBPS} fit.
+For multinomial treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The weights are taken from the output of the \code{npCBPS} fit object. When \code{include.obj = TRUE}, the returned object is the \code{npCBPS} fit.
+For continuous treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The weights are taken from the output of the \code{npCBPS} fit object.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how \code{\link[CBPS]{CBMSM}} in the \pkg{CBPS} package estimates weights for longitudinal treatments.
@@ -37,6 +37,13 @@ All arguments to \code{npCBPS} can be passed through \code{weightit} or \code{we
 
 All arguments take on the defaults of those in \code{npCBPS}.
 
+}
+\section{Additional Outputs}{
+\describe{
+\item{\code{obj}}{
+When \code{include.obj = TRUE}, the nonparametric CB(G)PS model fit. The output of the call to \code{\link[CBPS:npCBPS]{CBPS::npCBPS}}.
+}
+}
 }
 \references{
 

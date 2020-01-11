@@ -49,10 +49,10 @@ a string containg the name of the variable in \code{data} for which weighting is
 a vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These are ignored for some methods.
 }
   \item{moments}{
-\code{numeric}; for some methods, the greatest moment of the covariate distribution to be balanced. For example, if \code{moments = 3}, for all non-categorical covariates, the mean, second moment (variance), and third moments (skew) of the covariates will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{moments}.
+\code{numeric}; for some methods, the greatest power of each covariate to be balanced. For example, if \code{moments = 3}, for each non-categorical covariate, the covariate, its square, and its cube will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{moments}.
 }
   \item{int}{
-\code{logical}; for some methods, whether first-order interactions of the covariates are to be balanced (essentially balancing the covariances between covariates). This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{int}.
+\code{logical}; for some methods, whether first-order interactions of the covariates are to be balanced. This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{int}.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.
@@ -92,7 +92,7 @@ In general, \code{weightitMSM} works by separating the estimation of weights int
 
 Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in separate variables.
 
-The \code{"gbm"} method, which calls \code{ps} in \pkg{twang}, yields the same results to a call to \code{iptw} in \pkg{twang}. However, the \code{cbps} method, which calls \code{CBPS} in \pkg{CBPS}, will yield different results from \code{CBMSM} in \pkg{CBPS} because \code{CBMSM} takes a different approach to generating weights than simply estimating several time-specific models.
+The \code{"twang"} method, which calls \code{ps} in \pkg{twang}, yields the same results to a call to \code{iptw} in \pkg{twang}. However, the \code{cbps} method, which calls \code{CBPS} in \pkg{CBPS}, will yield different results from \code{CBMSM} in \pkg{CBPS} because \code{CBMSM} takes a different approach to generating weights than simply estimating several time-specific models.
 
 }
 
@@ -100,7 +100,7 @@ The \code{"gbm"} method, which calls \code{ps} in \pkg{twang}, yields the same r
 Noah Greifer
 }
 \seealso{
-\code{\link{weightit}} for information on the allowable methods
+\code{\link{weightit}} for information on the allowable methods.
 }
 \references{
 Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. \doi{10.1093/aje/kwn164}

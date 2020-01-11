@@ -9,13 +9,13 @@ This page explains the details of estimating weights from SuperLearner-based pro
 In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, a regression algorithm is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link[SuperLearner]{SuperLearner}} in the \pkg{SuperLearner} package. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). Weights can also be computed using marginal mean weighting through stratifiction for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details. When \code{include.obj = TRUE}, the returned object is the \code{SuperLearner} fit.
+For binary treatments, this method estimates the propensity scores using \code{\link[SuperLearner]{SuperLearner}} in the \pkg{SuperLearner} package. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). Weights can also be computed using marginal mean weighting through stratifiction for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, the propensity scores are estimated using several calls to \code{\link[SuperLearner]{SuperLearner}}, one for each treatment group, and the treatment probabilities are normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratifiction for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details. When \code{include.obj = TRUE}, the returned object is the list of fit object from the \code{SuperLearner} calls.
+For multinomial treatments, the propensity scores are estimated using several calls to \code{\link[SuperLearner]{SuperLearner}}, one for each treatment group, and the treatment probabilities are normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratifiction for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, the generalized propensity score is estimated using \code{\link[SuperLearner]{SuperLearner}}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights. When \code{include.obj = TRUE}, the returned object is the \code{\link[SuperLearner]{SuperLearner}} fit from denominator model.
+For continuous treatments, the generalized propensity score is estimated using \code{\link[SuperLearner]{SuperLearner}}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link{density}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
@@ -33,7 +33,11 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 }
 \section{Additional Arguments}{
-An argument to \code{SL.library} must be supplied. To see a list of available entries, use \code{\link[SuperLearner]{listWrappers}}.
+\describe{
+\item{\code{discrete}}{if \code{TRUE}, uses discrete SuperLearner, which simply selects the best performing method. Default \code{FALSE}, which finds the optimal combination of predictions for the libraries using \code{SL.method}.}
+}
+
+An argument to \code{SL.library} \strong{must} be supplied. To see a list of available entries, use \code{\link[SuperLearner]{listWrappers}}.
 
 All arguments to \code{\link[SuperLearner]{SuperLearner}} can be passed through \code{weightit} or \code{weightitMSM}, with the following exceptions:
 
@@ -50,6 +54,24 @@ For continuous treatments only, the following arguments may be supplied:
 \item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to the \code{\link{density}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
 }
 \item{\code{plot}}{If \code{use.kernel = TRUE}, whether to plot the estimated density.
+}
+}
+}
+\section{Additional Outputs}{
+\describe{
+\item{\code{info}}{
+For binary treatments, a list with two entries, \code{coef} and \code{cvRisk}. For multinomial treatments, a list of lists with these two entries, one for each treatment level:
+\describe{
+\item{\code{coef}}{
+The coefficients in the linear combination of the predictions from each method in \code{SL.library}. Higher values indicate that the corresponding method plays a larger role in determining the resulting predicted value, and values close to zero indicate that the method plays little role in determining the predicted value. When \code{discrete = TRUE}, these correspond to the coefficients that would have been estimated had \code{discrete} been \code{TRUE}.
+}
+\item{\code{cvRisk}}{
+The cross-validation risk for each method in \code{SL.library}. Higher values indicate that the method has worse cross-validation accuracy.
+}
+}
+}
+\item{\code{obj}}{
+When \code{include.obj = TRUE}, the SuperLearner fit(s) used to generate the predicted values. For binary and continuous treatments, the output of the call to \code{\link[SuperLearner:SuperLearner]{SuperLearner::SuperLearner}}. For multinomial treatments, a list of outputs to calls to \code{SuperLearner::SuperLearner}.
 }
 }
 }
