@@ -37,8 +37,8 @@ ATE:
 
 ``` r
 data("lalonde", package = "cobalt")
-W <- weightit(treat ~ age + educ + nodegree + married + race + re74 + re75, 
-    data = lalonde, method = "ps", estimand = "ATE")
+W <- weightit(treat ~ age + educ + nodegree + married + race + re74 + re75, data = lalonde, 
+    method = "ps", estimand = "ATE")
 print(W)
 ```
 
