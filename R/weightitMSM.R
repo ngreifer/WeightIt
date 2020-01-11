@@ -1,9 +1,8 @@
 weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FALSE, by = NULL, s.weights = NULL,
-                        num.formula = NULL, moments = 1L, int = FALSE,
+                        num.formula = NULL, moments = 1L, int = FALSE, missing = NULL,
                         verbose = FALSE, include.obj = FALSE, is.MSM.method, weightit.force = FALSE, ...) {
 
   A <- list(...)
-  by.name <- paste(deparse(substitute(by)), collapse = "")
 
   call <- match.call()
 
@@ -116,6 +115,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                treat.name = treat.name,
                                by.arg = by.arg)
 
+    #Process missing
+    if (anyNA(reported.covs.list[[i]]) || nrow(reported.covs.list[[i]]) != n) {
+      missing <- process.missing(missing, method, get.treat.type(treat.list[[i]]))
+    }
+    else if (i == length(formula.list)) missing <- ""
 
   }
 
@@ -136,6 +140,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                             moments = moments,
                                             int = int,
                                             ps = NULL,
+                                            missing = missing,
                                             is.MSM.method = TRUE,
                                             include.obj = include.obj), A))
     })
@@ -174,6 +179,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                               moments = moments,
                                               int = int,
                                               ps = NULL,
+                                              missing = missing,
                                               is.MSM.method = FALSE,
                                               include.obj = include.obj
                                               ), A_i))
@@ -215,7 +221,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                                    method = "ps",
                                                    moments = NULL,
                                                    int = FALSE,
-                                                   ps = NULL), A))
+                                                   ps = NULL,
+                                                   missing = missing), A))
         })
         sw.list[[i]] <- 1/sw_obj[["w"]]
         stabout[[i]] <- stab.f[-2]
