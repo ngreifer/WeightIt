@@ -94,7 +94,7 @@ Noah Greifer
 library("cobalt")
 data("lalonde", package = "cobalt")
 
-#Balancing covariates between treatment groups
+#Balancing covariates between treatment groups within races
 (W1 <- weightit(treat ~ age + educ + married +
                 nodegree + race + re74, data = lalonde,
                 method = "ps", estimand = "ATT"))
