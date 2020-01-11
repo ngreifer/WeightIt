@@ -227,57 +227,6 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
               reported.estimand = reported.estimand,
               treated = if (is.factor(treated)) as.character(treated) else treated))
 }
-.process.by <- function(by.name, data, treat, treat.name = NULL, by.arg = "by") {
-
-  ##Process by
-  bad.by <- FALSE
-  acceptable.bys <- names(data)
-  n <- length(treat)
-
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
-
-  if (missing(by.name) || !is.character(by.name)) {
-    stop("by.name must be a character with the name of the by variable to be evaluated. Use deparse(substitute()) to pass a vector.", call. = FALSE)
-  }
-  else {
-    .by <- try(eval(parse(text = by.name)))
-
-    if (is_null(.by)) {
-      by.components <- data.frame()
-      by.factor <- factor(rep(1, n))
-    }
-    else {
-      if (null_or_error(.by)) bad.by <- TRUE
-      else if (len(.by) == 1 && is.character(.by)) {
-        if (.by %in% names(data)) {
-          by.name <- .by
-          .by <- data[[.by]]
-        }
-        else bad.by <- TRUE
-      }
-      else if (len(.by) != n || (is_not_null(dim(.by)) && dim(.by)[2] > 1L)) bad.by <- TRUE
-
-      if (!bad.by) {
-        by.components <- data.frame(.by)
-        if (is_not_null(colnames(.by))) names(by.components) <- colnames(.by)
-        else names(by.components) <- by.name
-        by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
-                            labels = paste(names(by.components), "=", unique(by.components[[1]])))
-        # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
-      }
-      else {
-        stop(paste(by.arg, "must be the quoted name of a variable in data for which weighting is to occur within strata or the variable itself."), call. = FALSE)
-      }
-
-      if (treat.type != "continuous" && any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
-        stop(paste0("Not all the groups formed by ", by.arg, " contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening ", by.arg, "."), call. = FALSE)
-      }
-    }
-    attr(by.components, "by.factor") <- by.factor
-    return(by.components)
-  }
-}
 process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
   ##Process by
@@ -672,67 +621,6 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
     }
   }
   return(ps)
-}
-stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
-  if (!length(subclass) == 1 || !is.numeric(subclass)) {
-    stop("subclass must be a single number.", call. = FALSE)
-  }
-  else if (round(subclass) < 1) {
-    stop("subclass must be greater than 1.", call. = FALSE)
-  }
-  subclass <- round(subclass)
-
-  w <- setNames(rep(0, nrow(ps_mat)), rownames(ps_mat))
-
-  for (i in colnames(ps_mat)) {
-    if (toupper(estimand) == "ATE") {
-      sub <- as.integer(findInterval(ps_mat[, as.character(i)],
-                                     quantile(ps_mat[, as.character(i)],
-                                              seq(0, 1, length.out = subclass + 1)),
-                                     all.inside = TRUE))
-
-      sub.tab <- table(treat, sub)
-      sub.totals <- colSums(sub.tab)
-      sub.weights <- setNames(sub.totals / sub.tab[as.character(i), ],
-                              colnames(sub.tab))
-      w[treat == i] <- sub.weights[sub[treat == i]]
-    }
-    else if (toupper(estimand) == "ATT") {
-      if (i == focal) {
-        w[treat == i] <- 1
-      }
-      else {
-        ps_mat[, as.character(i)] <- 1 - ps_mat[, as.character(i)]
-        sub <- as.integer(findInterval(ps_mat[, as.character(i)],
-                                       quantile(ps_mat[treat == focal, as.character(i)],
-                                                seq(0, 1, length.out = subclass + 1)),
-                                       all.inside = TRUE))
-
-        sub.tab <- table(treat, sub)
-        sub.weights <- setNames(sub.tab[focal, ] / sub.tab[as.character(i), ],
-                                colnames(sub.tab))
-
-        w[treat == i] <- sub.weights[sub[treat == i]]
-      }
-    }
-    else {
-      stop("Only the ATE, ATT, and ATC are compatible with stratification weights.")
-    }
-  }
-
-  if (any(!is.finite(w))) {
-    stop("Too many subclasses were requested.", call. = FALSE)
-  }
-  else if (all(check_if_zero(w)) || all(!is.finite(w)))
-    stop("No units were stratified", call. = FALSE)
-  else {
-    for (i in colnames(ps_mat)) {
-      if (all(check_if_zero(w[treat == i])) || all(!is.finite(w[treat == i])))
-        stop(paste("No", i, "units were stratified."), call. = FALSE)
-    }
-  }
-
-  return(w)
 }
 subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
   if (!length(subclass) == 1 || !is.numeric(subclass)) {
