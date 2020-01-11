@@ -186,7 +186,6 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     if (bin.treat) {
 
-
       ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat_sub), nrow = length(treat_sub))),
                      levels(treat_sub))
 
@@ -814,7 +813,7 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   new.data <- data.frame(treat, covs)
 
   if (check.package("gbm")) {
-    fit <- do.call("ps.cont", c(list(formula(new.data),
+    fit <- do.call(ps.cont, c(list(formula(new.data),
                                      data = new.data,
                                      sampw = s.weights[subset],
                                      verbose = TRUE), A))
@@ -1783,6 +1782,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
         fit.list[[i]] <- ate.out
       }
     }
+    if (length(fit.list) == 1) fit.list <- fit.list[[1]]
     obj <- list(w = w, fit.obj = fit.list)
     return(obj)
   }
@@ -1815,6 +1815,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
+  discrete <- if_null_then(A[["discrete"]], FALSE)
+  if (length(discrete) != 1 || !is_(discrete, "logical")) stop("discrete must be TRUE or FALSE.", call. = FALSE)
+
   ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
                  levels(treat))
 
@@ -1831,7 +1834,11 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
                                                          control = A[["control"]],
                                                          cvControl = A[["cvControl"]],
                                                          env = A[["env"]]))
-    ps[[2]] <- p.score <- fit.list$SL.predict
+
+    if (discrete) p.score <- fit.list$library.predict[,which.min(fit.list$cvRisk)]
+    else p.score <- fit.list$SL.predict
+
+    ps[[2]] <- p.score
     ps[[1]] <- 1 - ps[[2]]
 
     info <- list(coef = fit.list$coef,
@@ -1855,10 +1862,11 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
                                                                 control = A[["control"]],
                                                                 cvControl = A[["cvControl"]],
                                                                 env = A[["env"]]))
-      ps[[i]] <- fit.list[[i]]$SL.predict
+      if (discrete) ps[[i]] <- fit.list[[i]]$library.predict[,which.min(fit.list[[i]]$cvRisk)]
+      else ps[[i]] <- fit.list[[i]]$SL.predict
 
-      info[[i]] <- list(coef = fit.list$coef,
-                        cvRisk = fit.list$cvRisk)
+      info[[i]] <- list(coef = fit.list[[i]]$coef,
+                        cvRisk = fit.list[[i]]$cvRisk)
     }
 
     p.score <- NULL
@@ -1898,6 +1906,9 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     else if (is_null(B[[f]])) B[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
+  discrete <- if_null_then(A[["discrete"]], FALSE)
+  if (length(discrete) != 1 || !is_(discrete, "logical")) stop("discrete must be TRUE or FALSE.", call. = FALSE)
+
   fit <- do.call(SuperLearner::SuperLearner, list(Y = treat,
                                                   X = covs, newX = covs,
                                                   family = gaussian(),
@@ -1909,7 +1920,11 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                                                   control = B[["control"]],
                                                   cvControl = B[["cvControl"]],
                                                   env = B[["env"]]))
-  p.denom <- treat - fit$SL.predict
+
+  if (discrete) gp.score <- fit$library.predict[,which.min(fit$cvRisk)]
+  else gp.score <- fit$SL.predict
+
+  p.denom <- treat - gp.score
 
   info <- list(coef = fit$coef,
                cvRisk = fit$cvRisk)
