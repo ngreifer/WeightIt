@@ -213,13 +213,13 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
 
     return(out)
 }
-max_ <- function(x, na.rm = TRUE) {
-    if (!any(is.finite(x))) NA_real_
-    else max(x, na.rm = na.rm)
+max_ <- function(..., na.rm = TRUE) {
+    if (!any(is.finite(unlist(list(...))))) NA_real_
+    else max(..., na.rm = na.rm)
 }
-min_ <- function(x, na.rm = TRUE) {
-    if (!any(is.finite(x))) NA_real_
-    else min(x, na.rm = na.rm)
+min_ <- function(..., na.rm = TRUE) {
+    if (!any(is.finite(unlist(list(...))))) NA_real_
+    else min(..., na.rm = na.rm)
 }
 
 #Statistics
