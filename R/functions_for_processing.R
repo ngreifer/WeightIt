@@ -303,10 +303,10 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     by <- drop(by[, 1])
   }
   else if (is.formula(by, 1)) {
-      t.c <- get.covs.and.treat.from.formula(by, data)
-      by <- t.c[["reported.covs"]]
-      if (NCOL(by) != 1) stop(paste0("Only one variable can be on the right-hand side of the formula for ", by.arg, "."), call. = FALSE)
-      else by.name <- colnames(by)
+    t.c <- get.covs.and.treat.from.formula(by, data)
+    by <- t.c[["reported.covs"]]
+    if (NCOL(by) != 1) stop(paste0("Only one variable can be on the right-hand side of the formula for ", by.arg, "."), call. = FALSE)
+    else by.name <- colnames(by)
   }
   else bad.by <- TRUE
 
@@ -318,7 +318,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
     if (is_null(by)) by.factor <- factor(rep(1, n))
     else by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
-                        labels = paste(names(by.components), "=", unique(by.components[[1]])))
+                             labels = paste(names(by.components), "=", unique(by.components[[1]])))
     # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
   }
   else {
@@ -372,6 +372,61 @@ process.MSM.method <- function(is.MSM.method, method) {
 
   return(is.MSM.method)
 
+}
+process.missing <- function(missing, method, treat.type) {
+  #Allowable estimands
+  AE <- list(binary = list(ps = c("ind", "saem")
+                           , gbm = c("ind", "surr")
+                           , twang = c("ind", "surr")
+                           , cbps = c("ind")
+                           , npcbps = c("ind")
+                           , ebal = c("ind")
+                           , ebcw = c("ind")
+                           , optweight = c("ind")
+                           , super = c("ind")
+                           # , kbal = c("ind")
+  ),
+  multinomial = list(ps = c("ind")
+                     , gbm = c("ind", "surr")
+                     , twang = c("ind", "surr")
+                     , cbps = c("ind")
+                     , npcbps = c("ind")
+                     , ebal = c("ind")
+                     , ebcw = c("ind")
+                     , optweight = c("ind")
+                     , super = c("ind")
+                     # , kbal = c("ind")
+  ),
+  continuous = list(ps = c("ind")
+                    , gbm = c("ind", "surr")
+                    , twang = c("ind", "surr")
+                    , cbps = c("ind")
+                    , npcbps = c("ind")
+                    , ebal = c("ind")
+                    , ebcw = c("ind")
+                    , optweight = c("ind")
+                    , super = c("ind")
+                    # , kbal = c("ind")
+  ))
+
+  if (!is.character(missing) || length(missing) != 1) stop("missing must be a string of length 1.", call. = FALSE)
+
+  allowable.missings <- AE[[treat.type]][[method]]
+  if (is_null(missing)) {
+    missing <- allowable.missings[1]
+    warning(paste0("Missing values are present in the covariates. See ?WeightIt::method_", method, " for information on how these are handled."), call. = FALSE)
+  }
+  else if (missing %pin% allowable.missings) {
+    missing <- allowable.missings[pmatch(missing, allowable.missings)]
+  }
+  else {
+    missing <- allowable.missings[1]
+    warning(paste0("Only ", word_list(allowable.missings, quotes = TRUE, is.are = TRUE), " allowed for missing with ",
+                   treat.type,
+                   " treatments. Using link = ", word_list(allowable.missings[1], quotes = TRUE), "."),
+            call. = FALSE, immediate. = TRUE)
+  }
+  return(missing)
 }
 check.package <- function(package.name, alternative = FALSE) {
   packages.not.installed <- package.name[package.name %nin% .packages(all.available = TRUE)]
@@ -632,9 +687,9 @@ stratify_ps_and_get_weights <- function(ps_mat, treat, estimand = "ATE", focal =
   for (i in colnames(ps_mat)) {
     if (toupper(estimand) == "ATE") {
       sub <- as.integer(findInterval(ps_mat[, as.character(i)],
-                   quantile(ps_mat[, as.character(i)],
-                            seq(0, 1, length.out = subclass + 1)),
-                   all.inside = TRUE))
+                                     quantile(ps_mat[, as.character(i)],
+                                              seq(0, 1, length.out = subclass + 1)),
+                                     all.inside = TRUE))
 
       sub.tab <- table(treat, sub)
       sub.totals <- colSums(sub.tab)
@@ -774,8 +829,8 @@ subclass_scoot <- function(sub, treat, x) {
 
         if (first_0 == nsub ||
             (first_0 != 1 &&
-            sum(soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
-            sum(soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
+             sum(soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
+             sum(soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
           #If there are more and closer nonzero subs to the left...
           first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
 
