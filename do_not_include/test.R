@@ -35,6 +35,9 @@ W <- weightit(f.build("re78", covs), data = lalonde, method = "ps", use.kernel =
 #method = "gbm"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
               stop.method = c("es.mean", "ks.mean"), estimand = "ATE")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
+              stop.method = c("es.mean"), estimand = "ATT",
+              subclass = 4)
 W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "twang", estimand = "ATT")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbr", estimand = "ATC", s.weights = s)
 
@@ -203,3 +206,48 @@ kbal.fun <- function(treat, covs, estimand, focal, ...) {
   w <- k.out$w
   return(list(w = w))
 }
+
+data("lalonde_mis")
+library(mice); library(survey)
+imp <- mice(lalonde_mis, 4)
+
+imp.data <- complete(imp, "long")
+w <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
+              data = imp.data, method = "ps", estimand = "ATE",
+              by = ".imp")
+
+fit.list <- lapply(unique(imp.data$.imp), function(i) {
+  svyglm(re78 ~ treat, design = svydesign(~1, weights = w$weights[imp.data$.imp == i],
+                                          data = imp.data[imp.data$.imp == i,]))
+})
+
+summary(pool(as.mira(fit.list)))
+
+library(MatchThem)
+w.imp <- weightthem(treat ~ age + educ + race + married + nodegree + re74 + re75,
+                   imp, method = "ps", estimand = "ATE")
+summary(pool(with(w.imp, glm(re78 ~ treat))))
+
+#testing get_w_from_ps
+data("lalonde", package = "cobalt")
+t01 <- lalonde$treat
+tf01 <- factor(lalonde$treat)
+tfab <- factor(ifelse(lalonde$treat == 1, "a", "b"))
+
+p <- glm(treat ~ age + educ + married + race, data = lalonde, family = binomial)$fitted
+
+wate <- t01/p + (1-t01)/(1-p)
+watt <- wate*p
+watc <- wate*(1-p)
+
+all.equal(wate, get_w_from_ps(p, t01, "ATE"))
+all.equal(wate, get_w_from_ps(p, tf01, "ATE"))
+all.equal(wate, get_w_from_ps(p, tfab, "ATE", treated = "a"))
+
+all.equal(watt, get_w_from_ps(p, t01, "ATT"))
+all.equal(watt, get_w_from_ps(p, tf01, "ATT", focal = 1))
+all.equal(watt, get_w_from_ps(p, tfab, "ATT", focal = "a", treated = "a"))
+
+all.equal(watc, get_w_from_ps(p, t01, "ATC"))
+all.equal(watc, get_w_from_ps(p, tf01, "ATC"))
+all.equal(watc, get_w_from_ps(p, tfab, "ATC"))
