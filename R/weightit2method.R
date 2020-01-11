@@ -959,10 +959,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       })
 
       best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
-      tree.bal <- setNames(data.frame(c(iters.grid, iters.to.check),
+      tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
                                       c(iter.grid.balance, iter.grid.balance.fine)),
                            c("tree", stop.method))
-      tree.bal <- unique(tree.bal[order(tree.bal$tree),])
+      tree.val <- unique(tree.val[order(tree.val$tree),])
       w <- w[,as.character(best.tree)]
       ps <- ps[,as.character(best.tree)]
     }
@@ -981,7 +981,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       cv.results <- do.call(gbm::gbmCrossVal,
                             A[names(A) %in% names(formals(gbm::gbmCrossVal))])
       best.tree <- which.min(cv.results$error)
-      tree.bal <- data.frame(tree = seq_along(cv.results$error),
+      tree.val <- data.frame(tree = seq_along(cv.results$error),
                              error = cv.results$error)
       ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
       w <- get_w_from_ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -1123,10 +1123,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       }
 
       best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
-      tree.bal <- setNames(data.frame(c(iters.grid, iters.to.check),
+      tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
                                       c(iter.grid.balance, iter.grid.balance.fine)),
                            c("tree", stop.method))
-      tree.bal <- unique(tree.bal[order(tree.bal$tree),])
+      tree.val <- unique(tree.val[order(tree.val$tree),])
 
       ps <- ps[, , as.character(best.tree)]
       w <- get_w_from_ps(ps, treat, estimand, focal, stabilize = stabilize, subclass = subclass)
@@ -1147,7 +1147,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       cv.results <- do.call(gbm::gbmCrossVal,
                             A[names(A) %in% names(formals(gbm::gbmCrossVal))])
       best.tree <- which.min(cv.results$error)
-      tree.bal <- data.frame(tree = seq_along(cv.results$error),
+      tree.val <- data.frame(tree = seq_along(cv.results$error),
                              error = cv.results$error)
       ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
       w <- get_w_from_ps(ps[, , 1], treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -1157,7 +1157,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   }
 
   obj <- list(w = w, ps = ps, info = list(best.tree = best.tree,
-                                          tree.bal = tree.bal), fit.obj = fit)
+                                          tree.val = tree.val), fit.obj = fit)
   return(obj)
 }
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ...) {
@@ -1354,10 +1354,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     iter.grid.balance.fine <- apply(w, 2, function(w_) stop.sum(stop.fun(covs, treat, weights = w_, s.weights, bin.vars)))
 
     best.tree <- iters.to.check[which.min(iter.grid.balance.fine)]
-    tree.bal <- setNames(data.frame(c(iters.grid, iters.to.check),
+    tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
                                     c(iter.grid.balance, iter.grid.balance.fine)),
                          c("tree", stop.method))
-    tree.bal <- unique(tree.bal[order(tree.bal$tree),])
+    tree.val <- unique(tree.val[order(tree.val$tree),])
     w <- w[,as.character(best.tree)]
   }
   else {
@@ -1373,14 +1373,14 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     cv.results <- do.call(gbm::gbmCrossVal,
                           A[names(A) %in% names(formals(gbm::gbmCrossVal))])
     best.tree <- which.min(cv.results$error)
-    tree.bal <- data.frame(tree = seq_along(cv.results$error),
+    tree.val <- data.frame(tree = seq_along(cv.results$error),
                            error = cv.results$error)
     ps <- gbm::predict.gbm(fit, n.trees = best.tree, newdata = covs)
     w <- get_cont_weights(ps, treat = treat, s.weights = s.weights, dens.num = dens.num)
     w <- suppressMessages(trim(w, at = trim.at, treat = treat))
   }
   obj <- list(w = w, info = list(best.tree = best.tree,
-                                 tree.bal = tree.bal), fit.obj = fit)
+                                 tree.val = tree.val), fit.obj = fit)
   return(obj)
 }
 
