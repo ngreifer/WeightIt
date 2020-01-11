@@ -116,6 +116,11 @@ w3 <- get_w_from_ps(ps, treat = treatAB,
                     estimand = "ATT", treated = "A")
 all.equal(w1, w3)
 
+#Using MMWS
+w4 <- get_w_from_ps(ps, treat = lalonde$treat,
+                    estimand = "ATE", subclass = 20,
+                    stabilize = TRUE)
+
 #A multi-category example using GBM predicted probabilities
 library(gbm)
 T3 <- factor(sample(c("A", "B", "C"), nrow(lalonde), replace = TRUE))
