@@ -5,13 +5,25 @@ Version 0.8.0
 
 * Formula interfaces now accept `poly(x, .)` and other matrix-generating functions of variables, including the `rms`-class-generating functions from the `rms` package (e.g., `pol()`, `rcs()`, etc.) (the `rms` package must be loaded to use these latter ones) and the `basis`-class-generating functions from the `splines` package (i.e., `bs()` and `ns()`). A bug in an early version of this was found by @ahinton-mmc.
 
-* Added support for marginal mean weighting through stratification (MMWS) as described by Hong (2010, 2012) for `weightit()` and `get_w_from_ps()` through the `subclass` argument (see References at `?get_w_from_ps`). With this method, subclasses are formed based on the propensity score and weights are computed based on the number of units in each subclass. This was already implemented in `MatchIt` for the ATT; other estimands are avalable here, and MMWS can be used with any method that produces a propensity score.
+* Added support for marginal mean weighting through stratification (MMWS) as described by Hong (2010, 2012) for `weightit()` and `get_w_from_ps()` through the `subclass` argument (see References at `?get_w_from_ps`). With this method, subclasses are formed based on the propensity score and weights are computed based on the number of units in each subclass. This was already implemented in `MatchIt` for the ATT; other estimands are avalable here, and MMWS can be used with any method that produces a propensity score. The implementation here ensures all subclasses have a least one member by filling in empty subclasses with neighboring units.
 
 * Added `stabilize` option to `get_w_from_ps()`. 
+
+* A new `missing` argument has been added to choose how missing data in the covariates is handled. For most methods, only `"ind"` (i.e., missing indicators with single-value imputation) is allowed, but for `"ps"`, `"gbm"`, and `"twang"`, other methods are possible. For `method = "ps"`, a stochastic approximation of the EM algorithm (SAEM) can be used through the `misaem` package by setting `missing = "saem"`. 
+
+* For continuous treatments with the `"ps"`, `"gbm"`, and `"super"` methods (i.e., where the conditional density of the treatment needs to be estimated), the user can now supply their own density as a string or function rather than using the normal density or kernel density estimation. For example, to use the density of the t-distribution with 3 degrees of freedom, one can set `density = "dt_3"`. T-distributions often work better than normal distributions for extreme values of the treatment.
+
+* Some methods now have an `info` component in the output object. This contains information that might be useful in diagnosing or reporting the method. For example, when `method = "gbm"`, `info` contains the tree that was used to compute the weights and the balance resulting from all the trees, which can be plotted using `plot()`. When `mehtod = "super"`, `info` contains the coefficients in the stacking model and the cross-validation risk of each of the component methods.
+
+* For `method = "gbm"`, the best tree can be chosen using cross validation rather than balance by setting `stop.method = "cv5"`, e.g., to do 5-fold cross-validation.
+
+* For `method = "gbm"`, a new optional argument `start.tree` can be set to seelct the tree at which balance begins to be computed. This can speed things up when you know that the best tree is not within the first 100 trees, for example.
 
 * When using `method = "gbm"` with multi-category treatments and estimands other than the `ATE`, `ATT`, or `ATC` are used with standardized mean differences as the stopping rule, the mean differences will be between the weighted overall sample and each treatment group. Otherwise, just some efficiency improvements.
 
 * When using `method = "ps"` with multi-category treatments, the use of `use.mlogit = FALSE` to request multiple binary regressions instead of multinomial regression is now documented and an associated bug is now fixed, thanks to @ahinton-mmc.
+
+* When use `method = "super"`, one can now set `discrete = TRUE` to use discrete SuperLearner instead of stacked SuperLearner, but you probably shouldn't.
 
 * `moments` and `int` can now be used with `method = "npcbps"`.
 

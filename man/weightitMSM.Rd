@@ -12,6 +12,7 @@ weightitMSM(formula.list,
             num.formula = NULL,
             moments = 1,
             int = FALSE,
+            missing = NULL,
             verbose = FALSE,
             include.obj = FALSE,
             is.MSM.method,
@@ -53,6 +54,9 @@ a vector of sampling weights or the name of a variable in \code{data} that conta
 }
   \item{int}{
 \code{logical}; for some methods, whether first-order interactions of the covariates are to be balanced. This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in \code{formula}. See the specific methods help pages for information on whether they accept \code{int}.
+}
+  \item{missing}{
+\code{character}; how missing data should be handled. The options and defaults depend on the \code{method} used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in \pkg{weightit} and should probably be used instead. See the \pkg{MatchThem} package for the use of \code{weightit} with multiply imputed data.
 }
   \item{verbose}{
 whether to print additional information output by the fitting function.

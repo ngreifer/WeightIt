@@ -16,6 +16,7 @@ weightit(formula,
          moments = 1,
          int = FALSE,
          subclass = NULL,
+         missing = NULL,
          verbose = FALSE,
          include.obj = FALSE,
          ...)
