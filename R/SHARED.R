@@ -766,7 +766,7 @@ probably.a.bug <- function() {
 }
 `%cin%` <- function(x, table) {
     #Partial in w/ charmatch. TRUE if x at all in table.
-    !is.na(pmatch(x, table))
+    !is.na(charmatch(x, table))
 }
 null_or_error <- function(x) {is_null(x) || class(x) == "try-error"}
 match_arg <- function(arg, choices, several.ok = FALSE) {
