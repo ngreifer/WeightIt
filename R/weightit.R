@@ -1,6 +1,6 @@
 weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
                      by = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE, subclass = NULL,
-                     verbose = FALSE, include.obj = FALSE, ...) {
+                     missing = NULL, verbose = FALSE, include.obj = FALSE, ...) {
 
   ## Checks and processing ----
 
@@ -50,10 +50,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   n <- length(treat)
 
-  if (anyNA(reported.covs) || nrow(reported.covs) != n) {
-    warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
-    #stop("No missing values are allowed in the covariates.", call. = FALSE)
-  }
+
   if (anyNA(treat)) {
     stop("No missing values are allowed in the treatment variable.", call. = FALSE)
   }
@@ -68,6 +65,12 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   focal <- f.e.r[["focal"]]
   estimand <- f.e.r[["estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
+
+  #Process missing
+  if (anyNA(reported.covs) || nrow(reported.covs) != n) {
+    missing <- process.missing(missing, method, treat.type)
+  }
+  else missing <- ""
 
   #Check subclass
   if(is_not_null(subclass)) check.subclass(method, treat.type)
@@ -115,6 +118,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                           int = int,
                           subclass = subclass,
                           ps = ps,
+                          missing = missing,
                           include.obj = include.obj,
                           ...)
   })
@@ -140,6 +144,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
               focal = if (reported.estimand == "ATT") focal else NULL,
               by = processed.by,
               call = call,
+              info = obj$info,
               obj = obj$fit.obj)
 
   out <- clear_null(out)
