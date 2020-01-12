@@ -1,7 +1,7 @@
 \name{ESS}
 \alias{ESS}
 \title{
-Compute effective sampole size of weighted sample
+Compute effective sample size of weighted sample
 }
 \description{
 Computes the effective sample size (ESS) of a weighted sample, which represents the size of an unweighted sample with approximately the same amount of precision as the weighted sample under consideration.}

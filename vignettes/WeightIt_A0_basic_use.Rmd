@@ -37,10 +37,10 @@ We have our outcome (`re78`), our treatment (`treat`), and the covariates for wh
 ```{r}
 library("cobalt")
 bal.tab(treat ~ age + educ + race + married + nodegree + re74 + re75,
-        data = lalonde, estimand = "ATT", m.threshold = .1)
+        data = lalonde, estimand = "ATT", m.threshold = .05)
 ```
 
-Based on this output, we can see that most variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .1 for most variables. In particular, `re74` and `re75` are quite imbalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using `weightit()` to try to attain balance on these covariates.
+Based on this output, we can see that all variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .05 for all variables. In particular, `re74` and `re75` are quite imbalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using `weightit()` to try to attain balance on these covariates.
 
 First, we'll start simple, and use inverse probability weights from propensity scores generated through logistic regression. We need to supply `weightit()` with the formula for the model, the data set, the estimand (ATT), and the method of estimation (`"ps"`) for propensity score weights).
 
@@ -48,7 +48,7 @@ First, we'll start simple, and use inverse probability weights from propensity s
 library("WeightIt")
 W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
         data = lalonde, estimand = "ATT", method = "ps")
-W.out #print the ooutput
+W.out #print the output
 ```
 
 Printing the output of `weightit()` displays a summary of how the weights were estimated. Let's examine the quality of the weights using `summary()`. Weights with low variability are desirable because they improve the precision of the estimator. This variability is presented in several ways: by the ratio of the largest weight to the smallest in each group, the coefficient of variation (standard deviation divided by the mean) of the weights in each group, and the effective sample size computed from the weights. We want a small ratio, a smaller coefficient of variation, and a large effective sample size (ESS). What constitutes these values is mostly relative, though, and must be balanced with other constraints, including covariate balance. These metrics are best used when comparing weighting methods, but the ESS can give a sense of how much information remains in the weighted sample on a familiar scale.
@@ -60,10 +60,10 @@ summary(W.out)
 These weights have quite high variability, and yield an ESS of close to 100 in the control group. Let's see if these weights managed to yield balance on our covariates.
 
 ```{r}
-bal.tab(W.out, m.threshold = .1, disp.v.ratio = TRUE)
+bal.tab(W.out, m.threshold = .05, disp.v.ratio = TRUE)
 ```
 
-For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .1 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing, which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.
+For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing, which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.
 
 ```{r}
 W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
@@ -74,7 +74,7 @@ summary(W.out)
 The variability of the weights has not changed much, but let's see if there are any gains in terms of balance:
 
 ```{r}
-bal.tab(W.out, m.threshold = .1, disp.v.ratio = TRUE)
+bal.tab(W.out, m.threshold = .05, disp.v.ratio = TRUE)
 ```
 
 Indeed, we have achieved perfect balance on the means of the covariates. However, the variance ratio of `age` is still quite high. We could continue to try to adjust for this imbalance, but if there is reason to believe it is unlikely to affect the outcome, it may be best to leave it as is. (You can try adding `I(age^2)` to the formula and see what changes this causes.)
@@ -117,7 +117,7 @@ boot.out <- boot(est.fun, data = lalonde, R = 999)
 boot.ci(boot.out, type = "bca") #type shouldn't matter so much
 ```
 
-In this case, our confidence intervals were similar. Bootstrapping can take some time, especially with weight estimation methods that take longer, such as generalized boosted modeling (`method = "gbm"`),  covariate balancing propensity score estimation (`method = "cbps"`), or entropy balancing with `stabilize = TRUE`. 
+In this case, our confidence intervals were similar. Bootstrapping can take some time, especially with weight estimation methods that take longer, such as SuperLearner (`method = "super"`),  covariate balancing propensity score estimation (`method = "cbps"`), or entropy balancing with `stabilize = TRUE`. 
 
 If we wanted to produce a "doubly-robust" treatment effect estimate, we could add baseline covariates to the `glm()` (or `svyglm()`) model (in both the original effect estimation and the confidence interval estimation).
 
@@ -138,7 +138,8 @@ library("cobalt") #if not already attached
 bal.tab(list(tx1 ~ age + gender + use0,
              tx2 ~ tx1 + use1 + age + gender + use0,
              tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-        data = iptwExWide, m.threshold = .1, disp.ks = TRUE)
+        data = iptwExWide, m.threshold = .05, disp.ks = TRUE,
+        which.time = .all)
 ```
 
 `bal.tab()` indicates significant imbalance on most covariates at most time points, so we need to do some work to eliminate that imbalance in our weighted data set. We'll use the `weightitMSM()` function to specify our weight models. The syntax is similar both to that of `weightit()` for point treatments and to that of `bal.tab()` for longitudinal treatments. We'll use `method = "ps"` for propensity score weights estimated using logistic regression.
@@ -160,7 +161,7 @@ summary(Wmsm.out)
 Displayed are summaries of how the weights perform at each time point with respect to variability. Next, we'll examine how well they perform with respect to covariate balance.
 
 ```{r}
-bal.tab(Wmsm.out, m.threshold = .1, disp.ks = TRUE, which.time = .none)
+bal.tab(Wmsm.out, m.threshold = .05, disp.ks = TRUE, which.time = .none)
 ```
 
 By setting `which.time = .none` in `bal.tab()`, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and variances. Now we can estimate our treatment effects. We'll sequentially simplify our model by checking whether interaction terms are needed (implying that specific patterns of treatment yield different outcomes), then by checking whether different coefficients are needed for the treatments (implying that outcomes depend on which treatments are received).
@@ -179,6 +180,7 @@ Based on the non-significant p-value, we don't have to assume specific treatment
 ```{r}
 cum.fit <- svyglm(outcome ~ I(tx1+tx2+tx3), design = d.w.msm)
 anova(main.effects.fit, cum.fit)
+anova(full.fit, cum.fit)
 ```
 
 Based on the non-significant p-value, we can assume the effects of each treatment are close enough to be treated as the same, indicating that the number of treatments received is the relevant predictor of the outcome. Now we can examine what that treatment effect is with `summ()` in `jtools` (or `summary()`).

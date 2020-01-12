@@ -29,7 +29,7 @@ Sampling weights are supported through \code{s.weights} in all scenarios.
 In the presence of missing data, the following value(s) for \code{missing} are allowed:
 \describe{
 \item{\code{"ind"} (default)}{
-First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The weight estimation then proceeds with this new formula and set of covariates using surrogate splititng as described below. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
+First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The weight estimation then proceeds with this new formula and set of covariates using surrogate splitting as described below. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
 }
 \item{\code{"surr"}}{
 Surrogate splitting is used to process \code{NA}s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.
