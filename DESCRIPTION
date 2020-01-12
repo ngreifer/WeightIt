@@ -3,7 +3,7 @@ Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
 Version: 0.8.0
 Authors@R: c(
-    person(c("Noah"),"Greifer", role=c("aut", "cre"), 
+    person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
 	       comment=c(ORCID="0000-0003-3067-7154"))
     )
