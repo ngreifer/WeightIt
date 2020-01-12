@@ -828,6 +828,9 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
 #Generalized boosted modeling with gbm and cobalt
 weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+
+  check.package(c("gbm", "cobalt"))
+
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -920,8 +923,6 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       match_arg(A[["distribution"]], available.distributions)}
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
-
-  check.package("gbm")
 
   if (treat.type == "binary") {
     fit <- do.call(gbm::gbm.fit, A[names(A) %in% names(formals(gbm::gbm.fit))])
@@ -1160,6 +1161,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   return(obj)
 }
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ...) {
+
+  check.package(c("gbm", "cobalt"))
+
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1247,8 +1251,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
       match_arg(A[["distribution"]], available.distributions)}
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
-
-  check.package("gbm")
 
   if (isTRUE(A[["use.kernel"]])) {
     if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
