@@ -144,7 +144,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                             is.MSM.method = TRUE,
                                             include.obj = include.obj), A))
     })
-    w <- obj[["w"]]
+    w <- obj[["weights"]]
     stabout <- NULL
     obj.list <- obj[["fit.obj"]]
   }
@@ -184,7 +184,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                               include.obj = include.obj
                                               ), A_i))
       })
-      w.list[[i]] <- obj[["w"]]
+      w.list[[i]] <- obj[["weights"]]
       ps.list[[i]] <- obj[["ps"]]
       obj.list[[i]] <- obj[["fit.obj"]]
 

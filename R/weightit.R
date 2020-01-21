@@ -132,7 +132,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   if (warn) warning("Some extreme weights were generated. Examine them with summary() and maybe trim them with trim().", call. = FALSE)
 
   ## Assemble output object----
-  out <- list(weights = obj$w,
+  out <- list(weights = obj$weights,
               treat = treat,
               covs = reported.covs,
               #data = o.data,

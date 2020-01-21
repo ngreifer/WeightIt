@@ -3,7 +3,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                          subclass = NULL, is.MSM.method = FALSE, missing = "ind", include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
-  out <- setNames(vector("list", 3), c("w", "ps", "fit.obj"))
+  out <- setNames(vector("list", 3), c("weights", "ps", "fit.obj"))
 
   treat.type <- match_arg(treat.type, c("binary", "multinomial", "continuous"))
   if (include.obj) fit.obj <- setNames(vector("list", nlevels(by.factor)), levels(by.factor))
@@ -279,7 +279,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
     }
     else if (any(!is.finite(obj$w))) probably.a.bug()
 
-    out$w[by.factor == i] <- obj$w
+    out$weights[by.factor == i] <- obj$w
     if (is_not_null(obj$ps)) out$ps[by.factor == i] <- obj$ps
 
     if (include.obj) fit.obj[[i]] <- obj$fit.obj
