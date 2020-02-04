@@ -44,8 +44,9 @@ for \code{print}, arguments passed to \code{\link{print}}. For \code{plot}, addi
 For point treatments (i.e., \code{weightit} objects), a \code{summary.weightit} object with the following elements:
 \item{weight.range}{The range (minimum and maximum) weight for each treatment group.}
 \item{weight.top}{The units with the greatest weights in each treatment group; how many are included is determined by \code{top}.}
-\item{weight.ratio}{The ratio of the largest weight to the smallest weight in each treatment group and overall.}
-\item{coef.of.var}{The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.}
+\item{coef.of.var (Coef of Var)}{The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.}
+\item{scaled.mad (MAD)}{The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
+\item{negative entropy (Entropy)}{The negative entropy (\eqn{\sum w log(w)}) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
 \item{effective.sample.size}{The effective sample size for each treatment group before and after weighting. See \code{\link{ESS}}.}
 
 For longitudinal treatments (i.e., \code{weightitMSM} objects), a list of the above elements for each treatment period.
