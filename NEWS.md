@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+Version 0.9.0
+
+* Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2012). Relies on hand-written code rather than another R package. Sampling weights and base weights are both supported.
+
 Version 0.8.0
 
 * Formula interfaces now accept `poly(x, .)` and other matrix-generating functions of variables, including the `rms`-class-generating functions from the `rms` package (e.g., `pol()`, `rcs()`, etc.) (the `rms` package must be loaded to use these latter ones) and the `basis`-class-generating functions from the `splines` package (i.e., `bs()` and `ns()`). A bug in an early version of this was found by @ahinton-mmc.

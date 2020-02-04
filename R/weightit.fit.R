@@ -211,7 +211,17 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.f
                              missing = missing,
                              ...)
       }
-      else stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
+      else {
+        # stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
+        obj <- weightit2ebal.cont(covs = covs,
+                                    treat = treat,
+                                    subset = by.factor == i,
+                                    s.weights = s.weights,
+                                    moments = moments,
+                                    int = int,
+                                    missing = missing,
+                                    ...)
+      }
     }
     else if (method == "super") {
       if (treat.type %in% c("binary", "multinomial")) {

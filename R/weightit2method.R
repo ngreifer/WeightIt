@@ -1700,6 +1700,55 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, fit.obj = fit.list)
   return(obj)
 }
+weightit2ebal.cont <- function(covs, treat, s.weights, subset, estimand, moments, int, missing, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  covs <- apply(covs, 2, make.closer.to.1)
+  # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+  # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+
+  treat_sc <- (treat - weighted.mean(treat, s.weights[subset])) / cobalt::col_w_sd(treat, s.weights[subset])
+  covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, s.weights[subset])),
+                    cobalt::col_w_sd(covs, s.weights[subset]))
+
+  if (is_null(A[["base.weight"]])) {
+    A[["base.weight"]] <- rep(1, length(treat))
+  }
+  else {
+    if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]] != length(treat))) {
+      stop("The argument to base.weight must be a numeric vector with length equal to the number of units.", call. = FALSE)
+    }
+  }
+
+  gTX <- cbind(treat_sc, covs_sc, treat_sc*covs_sc)
+  w_f <- function(lambda) {
+    drop(A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda)) / mean(A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda))))
+  }
+  #Objective described in Tubbicke (2020)
+  norm = 2
+  f <- function(lambda) sum(abs(t(as.matrix(s.weights[subset]*w_f(lambda))) %*% gTX)^norm)^(1/norm)
+
+  #Objective described in Hainmueller (2012)
+  # f <- function(lambda) log(mean(s.weights[subset]*A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda))))
+
+  out <- optim(rep(0, ncol(gTX)), f, method = "BFGS",
+               control = list(maxit = 2e5))
+  w <- w_f(out$par)
+
+  obj <- list(w = w, fit.obj = out)
+
+  return(obj)
+}
 
 #Empirical Balancing Calibration weights with ATE
 weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
