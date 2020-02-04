@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.8.0
+Version: 0.8.1
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -12,6 +12,8 @@ Depends:
     R (>= 3.3.0)
 Imports:
     ggplot2 (>= 3.0.0)
+    crayon,
+    backports
 Suggests:
     cobalt (>= 4.0.0),
     twang (>= 1.5),

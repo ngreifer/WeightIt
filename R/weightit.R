@@ -159,7 +159,7 @@ print.weightit <- function(x, ...) {
   treat.type <- get.treat.type(x[["treat"]])
   trim <- attr(x[["weights"]], "trim")
 
-  cat("A weightit object\n")
+  cat("A " %+% italic("weightit") %+% " object\n")
   if (is_not_null(x[["method"]])) cat(paste0(" - method: \"", attr(x[["method"]], "name"), "\" (", method.to.phrase(x[["method"]]), ")\n"))
   cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
   cat(paste0(" - sampling weights: ", if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present", "\n"))
@@ -182,8 +182,8 @@ print.weightit <- function(x, ...) {
   invisible(x)
 }
 summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
-  outnames <- c("weight.range", "weight.top","weight.ratio",
-                "coef.of.var",
+  outnames <- c("weight.range", "weight.top",
+                "coef.of.var", "scaled.mad", "negative.entropy",
                 "effective.sample.size")
   out <- setNames(vector("list", length(outnames)), outnames)
 
@@ -196,10 +196,11 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   if (treat.type == "continuous") {
     out$weight.range <- list(all = c(min(w[w > 0]),
                           max(w[w > 0])))
-    out$weight.ratio <- c(all = out$weight.range[["all"]][2]/out$weight.range[["all"]][1])
     top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
     out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
-    out$coef.of.var <- c(all = sd(w)/mean(w))
+    out$coef.of.var <- c(all = sd(w)/mean_fast(w))
+    out$scaled.mad <- c(all = mean.abs.dev(w)/mean_fast(w))
+    out$negative.entropy <- c(all = sum(w*log(w))/mean(w))
 
     nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
     nn[1, ] <- ESS(sw)
@@ -215,9 +216,6 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                                          max(w[w > 0 & t == 1])),
                              control = c(min(w[w > 0 & t == 0]),
                                          max(w[w > 0 & t == 0])))
-    out$weight.ratio <- c(treated = out$weight.range$treated[2]/out$weight.range$treated[1],
-                          control = out$weight.range$control[2]/out$weight.range$control[1],
-                          overall = max(unlist(out$weight.range)/min(unlist(out$weight.range))))
     top.weights <- list(treated = sort(w[t == 1], decreasing = TRUE)[seq_len(top0["treated"])],
                         control = sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])])
     out$weight.top <- setNames(lapply(names(top.weights), function(x) sort(setNames(top.weights[[x]], which(w %in% top.weights[[x]] & t == {if (x == "control") 0 else 1})[seq_len(top0[x])]))),
@@ -225,9 +223,15 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     top.weights <- list(treated = sort(w[t == 1], decreasing = TRUE)[seq_len(top0["treated"])],
                         control = sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])])
 
-    out$coef.of.var <- c(treated = sd(w[t==1])/mean(w[t==1]),
-                         control = sd(w[t==0])/mean(w[t==0]),
-                         overall = sd(w)/mean(w))
+    out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
+                         control = sd(w[t==0])/mean_fast(w[t==0]),
+                         overall = sd(w)/mean_fast(w))
+    out$scaled.mad <- c(treated = mean.abs.dev(w[t==1])/mean_fast(w[t==1]),
+                        control = mean.abs.dev(w[t==0])/mean_fast(w[t==0]),
+                        all = mean.abs.dev(w)/mean_fast(w))
+    out$negative.entropy <- c(treated = sum(w[t==1]*log(w[t==1]))/mean_fast(w[t==1]),
+                              control = sum(w[t==0]*log(w[t==0]))/mean_fast(w[t==0]),
+                              all = sum(w*log(w))/mean_fast(w))
 
     #dc <- weightit$discarded
 
@@ -245,15 +249,16 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
                                                         max(w[w > 0 & t == x]))),
                                  levels(t))
-    out$weight.ratio <- setNames(c(sapply(out$weight.range, function(x) x[2]/x[1]),
-                          max(unlist(out$weight.range)/min(unlist(out$weight.range)))),
-                          c(levels(t), "overall"))
     top.weights <- setNames(lapply(levels(t), function(x) sort(w[t == x], decreasing = TRUE)[seq_len(top)]),
                             levels(t))
     out$weight.top <- setNames(lapply(names(top.weights), function(x) sort(setNames(top.weights[[x]], which(w %in% top.weights[[x]] & t == x)[seq_len(top)]))),
                                names(top.weights))
-    out$coef.of.var <- c(sapply(levels(t), function(x) sd(w[t==x])/mean(w[t==x])),
-                         overall = sd(w)/mean(w))
+    out$coef.of.var <- c(sapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x])),
+                         overall = sd(w)/mean_fast(w))
+    out$scaled.mad <- c(sapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x])),
+                        overall = mean.abs.dev(w)/mean_fast(w))
+    out$negative.entropy <- c(sapply(levels(t), function(x) sum(w[t==x]*log(w[t==x]))/mean_fast(w[t==x])),
+                         overall = sum(w*log(w))/mean_fast(w))
 
     nn <- as.data.frame(matrix(0, nrow = 2, ncol = nunique(t)))
     for (i in seq_len(nunique(t))) {
@@ -280,20 +285,24 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 }
 print.summary.weightit <- function(x, ...) {
   top <- max(lengths(x$weight.top))
-  cat("Summary of weights:\n\n")
-  cat("- Weight ranges:\n")
-  print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
+  cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
+
+  tryCatch({
+    cat("- " %+% italic("Weight ranges") %+% ":\n\n")
+    print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
+  })
   df <- setNames(data.frame(do.call("c", lapply(names(x$weight.top), function(x) c(" ", x))),
                    matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), rep("", top - length(x)), round(x, 4), rep("", top - length(x))))),
                byrow = TRUE, nrow = 2*length(x$weight.top))),
                rep("", 1 + top))
-  cat(paste("\n- Units with", top, "greatest weights by group:\n"))
+  cat("\n- " %+% italic("Units with", top, "greatest weights by group") %+% ":\n")
   print.data.frame(df, row.names = FALSE)
-  cat("\n")
-  print.data.frame(round_df_char(as.data.frame(matrix(c(x$weight.ratio, x$coef.of.var), ncol = 2,
-                                        dimnames = list(names(x$weight.ratio),
-                                                        c("Ratio", "Coef of Var")))), 4))
-  cat("\n- Effective Sample Sizes:\n")
+  cat("\n- " %+% italic("Weight statistics") %+% ":\n\n")
+  print.data.frame(round_df_char(setNames(as.data.frame(cbind(x$coef.of.var,
+                                                              x$scaled.mad,
+                                                              x$negative.entropy)),
+                                        c("Coef of Var", "MAD", "Entropy")), 3))
+  cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
   print.data.frame(round_df_char(x$effective.sample.size, 3))
   invisible(x)
 }

@@ -753,6 +753,14 @@ stabilize_w <- function(weights, treat) {
   tab <- vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L))
   return(setNames(weights * tab[as.character(treat)], w.names))
 }
+`%+%` <- function(...) {
+  if (is_(..1, c("atomic", "factor")) && is_(..2, c("atomic", "factor"))) crayon::`%+%`(as.character(..1), as.character(..2))
+  else ggplot2::`%+%`(...)
+}
+
+.onLoad <- function(libname, pkgname) {
+  backports::import(pkgname)
+}
 
 #To pass CRAN checks:
 utils::globalVariables(c(".s.weights", "dens", "x", "y"))
