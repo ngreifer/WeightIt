@@ -1560,7 +1560,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
 
   return(obj)
 }
-weightit2npcbps.cont <- function(covs, treat, s.weights, subset, estimand, moments, int, missing, ...) {
+weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
   A <- list(...)
 
   if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
@@ -1700,7 +1700,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, fit.obj = fit.list)
   return(obj)
 }
-weightit2ebal.cont <- function(covs, treat, s.weights, subset, estimand, moments, int, missing, ...) {
+weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1734,18 +1734,18 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, estimand, moments
   w_f <- function(lambda) {
     drop(A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda)) / mean(A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda))))
   }
+
   #Objective described in Tubbicke (2020)
-  norm = 2
-  f <- function(lambda) sum(abs(t(as.matrix(s.weights[subset]*w_f(lambda))) %*% gTX)^norm)^(1/norm)
+  f <- function(lambda) sqrt(sum(abs(t(as.matrix(s.weights[subset]*w_f(lambda))) %*% gTX)^2))
 
   #Objective described in Hainmueller (2012)
   # f <- function(lambda) log(mean(s.weights[subset]*A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda))))
 
-  out <- optim(rep(0, ncol(gTX)), f, method = "BFGS",
+  opt.out <- optim(rep(0, ncol(gTX)), f, method = "BFGS",
                control = list(maxit = 2e5))
-  w <- w_f(out$par)
+  w <- w_f(opt.out$par)
 
-  obj <- list(w = w, fit.obj = out)
+  obj <- list(w = w, fit.obj = opt.out)
 
   return(obj)
 }

@@ -1,9 +1,9 @@
 WeightIt News and Updates
 ======
 
-Version 0.9.0
+Version 0.8.1
 
-* Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2012). Relies on hand-written code rather than another R package. Sampling weights and base weights are both supported.
+* Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code rather than another R package. Sampling weights and base weights are both supported.
 
 Version 0.8.0
 

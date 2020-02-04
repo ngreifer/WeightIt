@@ -146,6 +146,7 @@ packages.
 | \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `gbm.fit()`/`ps.cont()` | `gbm`/`WeightIt` |
 | \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
+| \-              | Entropy Balancing (`"ebal"`)                                       | `optim()`               | `base`           |
 | \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
 | \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
 
