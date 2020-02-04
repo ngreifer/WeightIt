@@ -107,6 +107,7 @@ The primary purpose of \code{weightit} is as a dispatcher to other functions in 
 \item{\code{\link[=method_super]{"super"}} - Propensity score weighting using SuperLearner.}
 \item{\code{\link[=method_user]{"user-defined"}} - Weighting using a user-defined weighting function.}
 
+When using \code{weightit}, please cite both the \pkg{WeightIt} package (using \code{citation("WeightIt")}) and the paper(s) in the references section of the method used.
 }
 }
 \seealso{

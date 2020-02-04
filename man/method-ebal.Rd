@@ -49,7 +49,13 @@ When \code{include.obj = TRUE}, the entropy balancing model fit. For binary trea
 }
 \references{
 
+- Binary Treatments
+
 Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25–46. \doi{10.1093/pan/mpr025}
+
+Zhao, Q., & Percival, D. (2017). Entropy balancing is doubly robust. Journal of Causal Inference, 5(1). \doi{10.1515/jci-2016-0010}
+
+- Continuous Treatments
 
 Tübbicke, S. (2020). Entropy Balancing for Continuous Treatments. ArXiv:2001.06281 [Econ, Stat]. \url{http://arxiv.org/abs/2001.06281}
 
