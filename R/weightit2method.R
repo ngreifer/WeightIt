@@ -1731,19 +1731,26 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   }
 
   gTX <- cbind(treat_sc, covs_sc, treat_sc*covs_sc)
-  w_f <- function(lambda) {
-    drop(A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda)) / mean(A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda))))
+
+  #----Code written by Stefan Tubbicke---#
+  #define ojective function (Lagrange dual)
+  objective.EBCT <- function(theta) {
+    f <- log(mean(exp(gTX  %*% theta)))*nrow(gTX)
+    return(f)
   }
 
-  #Objective described in Tubbicke (2020)
-  f <- function(lambda) sqrt(sum(abs(t(as.matrix(s.weights[subset]*w_f(lambda))) %*% gTX)^2))
+  #define gradient function (LHS of equations 8 in Tubbicke (2020))
+  gradient.EBCT<- function(theta) {
+    g <- t(gTX)%*%(exp(gTX  %*% theta)/(mean(exp(gTX  %*% theta))))
+    return(g)
+  }
 
-  #Objective described in Hainmueller (2012)
-  # f <- function(lambda) log(mean(s.weights[subset]*A[["base.weight"]]*exp(gTX %*% as.matrix(-lambda))))
+  opt.out <- optim(rep(0, ncol(gTX)), objective.EBCT, gr = gradient.EBCT,
+                   method = "BFGS",
+                   control = list(maxit = 2e5, reltol=1e-15))
 
-  opt.out <- optim(rep(0, ncol(gTX)), f, method = "BFGS",
-               control = list(maxit = 2e5))
-  w <- w_f(opt.out$par)
+  w <-  exp(gTX %*%  opt.out$par)/(mean(exp(gTX  %*% opt.out$par)))
+  #--------------------------------------#
 
   obj <- list(w = w, fit.obj = opt.out)
 
@@ -1873,6 +1880,34 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
                  levels(treat))
 
   if (is_binary(treat)) {
+    if ("method.balance" %in% class(A[["SL.method"]])) {
+      sneaky <- 0
+      attr(sneaky, "vals") <- list(estimand = estimand, covs = covs, treat = treat)
+      A[["control"]] <- list(trimLogit = sneaky)
+
+      m <- A[["SL.method"]]
+      stop.method <- attr(m, "stop.method")
+
+      if (is_null(stop.method)) {
+        warning("No stop.method was provided. Using \"es.mean\".",
+                call. = FALSE, immediate. = TRUE)
+        stop.method <- "es.mean"
+      }
+      else if (length(stop.method) > 1) {
+        warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
+                call. = FALSE, immediate. = TRUE)
+        stop.method <- stop.method[1]
+      }
+
+      available.stop.methods <- c("ks.mean", "es.mean", "ks.max", "es.max", "ks.rms", "es.rms")
+      s.m.matches <- charmatch(stop.method, available.stop.methods)
+      if (is.na(s.m.matches) || s.m.matches == 0L) {
+        stop(paste0("stop.method must be one of ", word_list(c(available.stop.methods), "or", quotes = TRUE), "."), call. = FALSE)
+      }
+      else stop.method <- available.stop.methods[s.m.matches]
+
+      A[["SL.method"]] <- method.balance(stop.method)
+    }
 
     fit.list <- do.call(SuperLearner::SuperLearner, list(Y = binarize(treat),
                                                          X = covs, newX = covs,
@@ -1885,6 +1920,11 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
                                                          control = A[["control"]],
                                                          cvControl = A[["cvControl"]],
                                                          env = A[["env"]]))
+
+    if ("method.balance" %in% class(A[["SL.method"]])) {
+      w <- fit.list$SL.predict
+      return(list(w = w, ps = NULL, info = NULL, fit.obj = fit.list))
+    }
 
     if (discrete) p.score <- fit.list$library.predict[,which.min(fit.list$cvRisk)]
     else p.score <- fit.list$SL.predict
