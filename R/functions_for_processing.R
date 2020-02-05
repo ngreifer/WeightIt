@@ -759,8 +759,23 @@ stabilize_w <- function(weights, treat) {
   else crayon::`%+%`(as.character(rhs), as.character(lhs))
 }
 
-method.balance <- function() {
-  list(
+method.balance <- function(stop.method) {
+
+  if (startsWith(stop.method, "es.")) {
+    stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, subset = NULL) {
+      cobalt::col_w_smd(mat, treat, weights, std = rep(TRUE, ncol(mat)), s.d.denom = s.d.denom, abs = TRUE,
+                        s.weights = s.weights, subset = subset)
+    }
+  }
+  else if (startsWith(stop.method, "ks.")) stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, subset = NULL) {
+    cobalt::col_w_ks(mat, treat, weights, s.weights = s.weights, subset = subset)
+  }
+
+  if (endsWith(stop.method, ".mean")) stop.sum <- mean
+  else if (endsWith(stop.method, ".max")) stop.sum <- max
+  else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
+
+  out <- list(
   # require allows you to pass a character vector with required packages
   # use NULL if no required packages
   require = "cobalt",
@@ -771,27 +786,25 @@ method.balance <- function() {
   computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
     covs <- attr(control$trimLogit, "vals")$covs
     estimand <- attr(control$trimLogit, "vals")$estimand
+    s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = Y)
     for (i in 1:ncol(Z)) {
       Z[Z[,i]<.001,i] <- .001
       Z[Z[,i]>1-.001,i] <- 1-.001
     }
     w_mat<- apply(Z, 2, get_w_from_ps, Y, estimand)
-    s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = Y)
-    cvRisk <- apply(w_mat, 2, function(w) max(cobalt::col_w_smd(covs, Y,
+    cvRisk <- apply(w_mat, 2, function(w) stop.sum(stop.fun(covs, Y,
                                                                 weights = w,
                                                                 s.weights = obsWeights,
-                                                                s.d.denom = s.d.denom,
-                                                                abs = TRUE)))
+                                                                s.d.denom = s.d.denom)))
     names(cvRisk) <- libraryNames
 
 
     loss <- function(coefs) {
       w <- crossprod(t(w_mat), coefs/sum(coefs))
-      out <- max(cobalt::col_w_smd(covs, Y,
+      out <- stop.sum(stop.fun(covs, Y,
                                    weights = w,
                                    s.weights = obsWeights,
-                                   s.d.denom = s.d.denom,
-                                   abs = TRUE))
+                                   s.d.denom = s.d.denom))
       out
     }
     fit <- optim(rep(1, ncol(Z)), loss, method = "L-BFGS-B", lower = 0)
@@ -810,7 +823,11 @@ method.balance <- function() {
     out <- crossprod(t(w_mat), coef)
     return(out)
   }
-)}
+  )
+  attr(out, "stop.method") <- stop.method
+  class(out) <- "method.balance"
+  return(out)
+}
 
 .onLoad <- function(libname, pkgname) {
   backports::import(pkgname)
