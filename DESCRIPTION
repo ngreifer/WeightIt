@@ -11,7 +11,7 @@ Description: Generates weights to form equivalent groups in observational studie
 Depends:
     R (>= 3.3.0)
 Imports:
-    ggplot2 (>= 3.0.0)
+    ggplot2 (>= 3.0.0),
     crayon,
     backports
 Suggests:
