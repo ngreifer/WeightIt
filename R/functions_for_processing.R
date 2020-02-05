@@ -3,8 +3,8 @@ method.to.proper.method <- function(method) {
   if      (method %in% c("ps")) return("ps")
   else if (method %in% c("gbm", "gbr")) return("gbm")
   else if (method %in% c("twang")) return("twang")
-  else if (method %in% c("cbps")) return("cbps")
-  else if (method %in% c("npcbps")) return("npcbps")
+  else if (method %in% c("cbps", "cbgps")) return("cbps")
+  else if (method %in% c("npcbps", "npcbgps")) return("npcbps")
   else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
   else if (method %in% c("ebcw", "ate")) return("ebcw")
   else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
@@ -17,15 +17,14 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   acceptable.methods <- c("ps"
                           , "gbm", "gbr"
                           , "twang"
-                          , "cbps"
-                          , "npcbps"
+                          , "cbps", "cbgps"
+                          , "npcbps", "npcbgps"
                           , "ebal", "entropy", "ebalance"
                           , "sbw"
                           , "ebcw", "ate"
-                          , "optweight", "opt"
+                          , "optweight", "opt", "sbw"
                           , "super", "superlearner"
                           # "kbal",
-                          # "sbps", "subgroup"
   )
 
   if (missing(method)) method <- "ps"
@@ -74,28 +73,29 @@ method.to.phrase <- function(method) {
 }
 process.estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
-  AE <- list(binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                           , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                           , twang = c("ATT", "ATC", "ATE")
-                           , cbps = c("ATT", "ATC", "ATE")
-                           , npcbps = c("ATE")
-                           , ebal = c("ATT", "ATC", "ATE")
-                           , ebcw = c("ATT", "ATC", "ATE")
-                           , optweight = c("ATT", "ATC", "ATE")
-                           , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                           # , kbal = c("ATT", "ATC", "ATE")
-  ),
-  multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                     , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                     , twang = c("ATT", "ATC", "ATE")
-                     , cbps = c("ATT", "ATC", "ATE")
-                     , npcbps = c("ATE")
-                     , ebal = c("ATT", "ATC", "ATE")
-                     , ebcw = c("ATT", "ATC", "ATE")
-                     , optweight = c("ATT", "ATC", "ATE")
-                     , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                     # , kbal = c("ATT", "ATE")
-  ))
+  AE <- list(
+    binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                  , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                  , twang = c("ATT", "ATC", "ATE")
+                  , cbps = c("ATT", "ATC", "ATE")
+                  , npcbps = c("ATE")
+                  , ebal = c("ATT", "ATC", "ATE")
+                  , ebcw = c("ATT", "ATC", "ATE")
+                  , optweight = c("ATT", "ATC", "ATE")
+                  , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                  # , kbal = c("ATT", "ATC", "ATE")
+    ),
+    multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                       , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                       , twang = c("ATT", "ATC", "ATE")
+                       , cbps = c("ATT", "ATC", "ATE")
+                       , npcbps = c("ATE")
+                       , ebal = c("ATT", "ATC", "ATE")
+                       , ebcw = c("ATT", "ATC", "ATE")
+                       , optweight = c("ATT", "ATC", "ATE")
+                       , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                       # , kbal = c("ATT", "ATE")
+    ))
 
   if (treat.type != "continuous" && !is.function(method)) {
     if (is_null(estimand)) stop(paste0("estimand must be one of ", word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "or"), "."), call. = FALSE)
@@ -109,27 +109,28 @@ process.estimand <- function(estimand, method, treat.type) {
 }
 check.subclass <- function(method, treat.type) {
   #Allowable estimands
-  AE <- list(binary = list(ps = TRUE
-                           , gbm = TRUE
-                           , twang = FALSE
-                           , cbps = TRUE
-                           , npcbps = FALSE
-                           , ebal = FALSE
-                           , ebcw = FALSE
-                           , optweight = FALSE
-                           , super = TRUE
-                           # , kbal = FALSE
-  ),
-  multinomial = list(ps = TRUE
-                     , gbm = TRUE
-                     , twang = FALSE
-                     , cbps = FALSE
-                     , npcbps = FALSE
-                     , ebal = FALSE
-                     , ebcw = FALSE
-                     , optweight = FALSE
-                     , super = TRUE
-  ))
+  AE <- list(
+    binary = list(ps = TRUE
+                  , gbm = TRUE
+                  , twang = FALSE
+                  , cbps = TRUE
+                  , npcbps = FALSE
+                  , ebal = FALSE
+                  , ebcw = FALSE
+                  , optweight = FALSE
+                  , super = TRUE
+                  # , kbal = FALSE
+    ),
+    multinomial = list(ps = TRUE
+                       , gbm = TRUE
+                       , twang = FALSE
+                       , cbps = FALSE
+                       , npcbps = FALSE
+                       , ebal = FALSE
+                       , ebcw = FALSE
+                       , optweight = FALSE
+                       , super = TRUE
+    ))
 
   if (treat.type != "continuous" && !is.function(method) &&
       !AE[[treat.type]][[method]]) {
@@ -753,10 +754,63 @@ stabilize_w <- function(weights, treat) {
   tab <- vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L))
   return(setNames(weights * tab[as.character(treat)], w.names))
 }
-`%+%` <- function(...) {
-  if (is_(..1, c("atomic", "factor")) && is_(..2, c("atomic", "factor"))) crayon::`%+%`(as.character(..1), as.character(..2))
-  else ggplot2::`%+%`(...)
+`%+%` <- function(rhs, lhs) {
+  if (is_(rhs, "gg") && is_(lhs, "gg")) ggplot2::`%+%`(rhs, lhs)
+  else crayon::`%+%`(as.character(rhs), as.character(lhs))
 }
+
+method.balance <- function() {
+  list(
+  # require allows you to pass a character vector with required packages
+  # use NULL if no required packages
+  require = "cobalt",
+
+  # computeCoef is a function that returns a list with two elements:
+  # 1) coef: the weights (coefficients) for each algorithm
+  # 2) cvRisk: the V-fold CV risk for each algorithm
+  computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
+    covs <- attr(control$trimLogit, "vals")$covs
+    estimand <- attr(control$trimLogit, "vals")$estimand
+    for (i in 1:ncol(Z)) {
+      Z[Z[,i]<.001,i] <- .001
+      Z[Z[,i]>1-.001,i] <- 1-.001
+    }
+    w_mat<- apply(Z, 2, get_w_from_ps, Y, estimand)
+    s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = Y)
+    cvRisk <- apply(w_mat, 2, function(w) max(cobalt::col_w_smd(covs, Y,
+                                                                weights = w,
+                                                                s.weights = obsWeights,
+                                                                s.d.denom = s.d.denom,
+                                                                abs = TRUE)))
+    names(cvRisk) <- libraryNames
+
+
+    loss <- function(coefs) {
+      w <- crossprod(t(w_mat), coefs/sum(coefs))
+      out <- max(cobalt::col_w_smd(covs, Y,
+                                   weights = w,
+                                   s.weights = obsWeights,
+                                   s.d.denom = s.d.denom,
+                                   abs = TRUE))
+      out
+    }
+    fit <- optim(rep(1, ncol(Z)), loss, method = "L-BFGS-B", lower = 0)
+    coef <- fit$par
+    out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
+    return(out)
+  },
+
+  # computePred is a function that takes the weights and the predicted values
+  # from each algorithm in the library and combines them based on the model to
+  # output the super learner predicted values
+  computePred = function(predY, coef, control, ...) {
+    treat <- attr(control$trimLogit, "vals")$treat
+    estimand <- attr(control$trimLogit, "vals")$estimand
+    w_mat<- apply(predY, 2, get_w_from_ps, treat, estimand)
+    out <- crossprod(t(w_mat), coef)
+    return(out)
+  }
+)}
 
 .onLoad <- function(libname, pkgname) {
   backports::import(pkgname)
