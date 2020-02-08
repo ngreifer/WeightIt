@@ -1717,6 +1717,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
+  if (is_not_null(A[["base.weights"]])) A[["base.weight"]] <- A[["base.weights"]]
   if (is_null(A[["base.weight"]])) {
     q <- rep(1, length(treat))
   }
