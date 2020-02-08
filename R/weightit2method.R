@@ -1717,39 +1717,43 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
-  treat_sc <- (treat - weighted.mean(treat, s.weights[subset])) / cobalt::col_w_sd(treat, s.weights[subset])
-  covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, s.weights[subset])),
-                    cobalt::col_w_sd(covs, s.weights[subset]))
-
   if (is_null(A[["base.weight"]])) {
-    A[["base.weight"]] <- rep(1, length(treat))
+    q <- rep(1, length(treat))
   }
   else {
-    if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]] != length(treat))) {
+    if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
       stop("The argument to base.weight must be a numeric vector with length equal to the number of units.", call. = FALSE)
     }
+    else q <- A[["base.weight"]]
   }
+
+  treat_sc <- (treat - weighted.mean(treat, (s.weights)[subset])) /
+    cobalt::col_w_sd(treat, (s.weights)[subset])
+  covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, (s.weights)[subset])),
+                    cobalt::col_w_sd(covs, (s.weights)[subset]))
 
   gTX <- cbind(treat_sc, covs_sc, treat_sc*covs_sc)
 
   #----Code written by Stefan Tubbicke---#
   #define ojective function (Lagrange dual)
   objective.EBCT <- function(theta) {
-    f <- log(mean(exp(gTX  %*% theta)))*nrow(gTX)
+    f <- log(mean(q*s.weights*exp(gTX %*% theta)))*nrow(gTX)
     return(f)
   }
 
   #define gradient function (LHS of equations 8 in Tubbicke (2020))
   gradient.EBCT<- function(theta) {
-    g <- t(gTX)%*%(exp(gTX  %*% theta)/(mean(exp(gTX  %*% theta))))
+    g <- t(gTX) %*% (q*s.weights*exp(gTX %*% theta)/(mean(q*s.weights*exp(gTX %*% theta))))
     return(g)
   }
 
-  opt.out <- optim(rep(0, ncol(gTX)), objective.EBCT, gr = gradient.EBCT,
+  opt.out <- optim(par = rep(0, ncol(gTX)),
+                   f = objective.EBCT,
+                   gr = gradient.EBCT,
                    method = "BFGS",
-                   control = list(maxit = 2e5, reltol=1e-15))
+                   control = list(maxit = if_null_then(A[["max.iterations"]], 200)))
 
-  w <-  exp(gTX %*%  opt.out$par)/(mean(exp(gTX  %*% opt.out$par)))
+  w <-  q*exp(gTX %*% opt.out$par)/(mean(q*exp(gTX %*% opt.out$par)))
   #--------------------------------------#
 
   obj <- list(w = w, fit.obj = opt.out)
