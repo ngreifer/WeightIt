@@ -35,7 +35,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 \section{Additional Arguments}{
 All arguments to \code{ebalance} can be passed through \code{weightit} or \code{weightitMSM} and take on the defaults of those in \code{ebalance}.
 
-For \code{base.weights}, a vector with length equal to the total number of units can be supplied, in contrast to \code{ebalance()}, which requires a vector with length equal to the number of controls. This works for continuous treatments as well.
+For \code{base.weights}, a vector with length equal to the total number of units can be supplied, in contrast to \code{ebalance()}, which requires a vector with length equal to the number of controls. This works for continuous treatments as well. These correspond to the base weights \emph{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{w*log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the proprties of the original weights while ensuring the balance constraints are met.
 
 When \code{standardize = TRUE} in the call to \code{weightit} for binary and multinomial treatments, \code{\link[ebal]{ebalance.trim}} is run on the resulting \code{ebalance} fit objects. Doing so can reduce the variability of the weights while maintaining covariate balance.
 
@@ -46,6 +46,9 @@ When \code{standardize = TRUE} in the call to \code{weightit} for binary and mul
 When \code{include.obj = TRUE}, the entropy balancing model fit. For binary treatments with \code{estimand = "ATT"}, the output of the call to \code{\link[ebal:ebalance]{ebal::ebalance}} or \code{\link[ebal:ebalance.trim]{ebal::ebalance.trim}} when \code{stabilize = TRUE}. For binary treatments with \code{estimand = "ATE"} and multinomial treatments, a list of outputs of calls to \code{\link[ebal:ebalance]{ebal::ebalance}} or \code{\link[ebal:ebalance.trim]{ebal::ebalance.trim}}. For continuous treatments, the output of the call to \code{optim}, which contains the dual variables and convergence information.
 }
 }
+}
+\author{
+The code for continuous treatments was kindly contributed by Stefan Tübbicke (\email{tuebbicke@empwifo.uni-potsdam.de}).
 }
 \references{
 
