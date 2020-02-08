@@ -3,7 +3,7 @@ WeightIt News and Updates
 
 Version 0.8.1
 
-* Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code rather than another R package. Sampling weights and base weights are both supported.
+* Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.
 
 * Changed some of the statistics displayed when using `summary()`: the weight ratio is gone (because weights can be 0, which is not problematic but would explode the ratio), and the mean absolute deviation and entropy of the weights are now present.
 
