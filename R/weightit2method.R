@@ -1749,7 +1749,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   }
 
   opt.out <- optim(par = rep(0, ncol(gTX)),
-                   f = objective.EBCT,
+                   fn = objective.EBCT,
                    gr = gradient.EBCT,
                    method = "BFGS",
                    control = list(maxit = if_null_then(A[["max.iterations"]], 200)))
