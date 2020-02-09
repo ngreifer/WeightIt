@@ -759,16 +759,46 @@ stabilize_w <- function(weights, treat) {
   else crayon::`%+%`(as.character(rhs), as.character(lhs))
 }
 
+get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, use.kernel = FALSE,
+                             densControl = list(bw = "nrd0", n = 10*length(treat),
+                                                adjust = 1, kernel = "gaussian")) {
+  p.denom <- treat - ps
+
+  if (isTRUE(densControl[["use.kernel"]])) {
+    d.d <- density(p.denom, n = densControl[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = densControl[["bw"]], adjust = densControl[["adjust"]],
+                   kernel = densControl[["kernel"]])
+    dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
+  }
+  else {
+    dens.denom <- densfun(p.denom/sd(p.denom))
+    if (is_null(dens.denom) || !is.atomic(dens.denom) || anyNA(dens.denom)) {
+      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+    }
+    else if (any(dens.denom <= 0)) {
+      stop("The input to density may not accept the full range of standardized residuals of the treatment model.", call. = FALSE)
+    }
+
+  }
+
+  w <- dens.num/dens.denom
+
+  return(w)
+}
+
 method.balance <- function(stop.method) {
 
   if (startsWith(stop.method, "es.")) {
-    stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, subset = NULL) {
+    stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, bin.vars, subset = NULL) {
       cobalt::col_w_smd(mat, treat, weights, std = rep(TRUE, ncol(mat)), s.d.denom = s.d.denom, abs = TRUE,
-                        s.weights = s.weights, subset = subset)
+                        s.weights = s.weights, subset = subset, bin.vars = bin.vars)
     }
   }
-  else if (startsWith(stop.method, "ks.")) stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, subset = NULL) {
-    cobalt::col_w_ks(mat, treat, weights, s.weights = s.weights, subset = subset)
+  else if (startsWith(stop.method, "ks.")) {
+    stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, bin.vars, subset = NULL) {
+      cobalt::col_w_ks(mat, treat, weights, s.weights = s.weights, subset = subset, bin.vars = bin.vars)
+    }
   }
 
   if (endsWith(stop.method, ".mean")) stop.sum <- mean
@@ -787,24 +817,28 @@ method.balance <- function(stop.method) {
     covs <- attr(control$trimLogit, "vals")$covs
     estimand <- attr(control$trimLogit, "vals")$estimand
     s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = Y)
+    bin.vars <- apply(covs, 2, is_binary)
+
     for (i in 1:ncol(Z)) {
       Z[Z[,i]<.001,i] <- .001
       Z[Z[,i]>1-.001,i] <- 1-.001
     }
     w_mat<- apply(Z, 2, get_w_from_ps, Y, estimand)
-    cvRisk <- apply(w_mat, 2, function(w) stop.sum(stop.fun(covs, Y,
-                                                                weights = w,
-                                                                s.weights = obsWeights,
-                                                                s.d.denom = s.d.denom)))
+    cvRisk <- apply(w_mat, 2, function(w) stop.sum(stop.fun(covs, treat = Y,
+                                                            weights = w,
+                                                            s.weights = obsWeights,
+                                                            s.d.denom = s.d.denom,
+                                                            bin.vars = bin.vars)))
     names(cvRisk) <- libraryNames
 
-
     loss <- function(coefs) {
-      w <- crossprod(t(w_mat), coefs/sum(coefs))
-      out <- stop.sum(stop.fun(covs, Y,
-                                   weights = w,
-                                   s.weights = obsWeights,
-                                   s.d.denom = s.d.denom))
+      ps <- crossprod(t(Z), coefs/sum(coefs))
+      w <- get_w_from_ps(ps, Y, estimand)
+      out <- stop.sum(stop.fun(covs, treat = Y,
+                               weights = w,
+                               s.weights = obsWeights,
+                               s.d.denom = s.d.denom,
+                               bin.vars = bin.vars))
       out
     }
     fit <- optim(rep(1, ncol(Z)), loss, method = "L-BFGS-B", lower = 0)
@@ -817,15 +851,88 @@ method.balance <- function(stop.method) {
   # from each algorithm in the library and combines them based on the model to
   # output the super learner predicted values
   computePred = function(predY, coef, control, ...) {
-    treat <- attr(control$trimLogit, "vals")$treat
-    estimand <- attr(control$trimLogit, "vals")$estimand
-    w_mat<- apply(predY, 2, get_w_from_ps, treat, estimand)
-    out <- crossprod(t(w_mat), coef)
+    out <- crossprod(t(predY), coef/sum(coef))
     return(out)
   }
   )
-  attr(out, "stop.method") <- stop.method
-  class(out) <- "method.balance"
+  # attr(out, "stop.method") <- stop.method
+  # class(out) <- "method.balance"
+  return(out)
+}
+
+method.balance.cont <- function(stop.method) {
+
+  if (startsWith(stop.method, "s.")) {
+    stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
+      cobalt::col_w_corr(mat, treat, weights, type = "spearman", abs = TRUE,
+                         s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+    }
+  }
+  else if (startsWith(stop.method, "p.")) {
+    stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
+      cobalt::col_w_corr(mat, treat, weights, type = "pearson", abs = TRUE,
+                         s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+    }
+  }
+
+  if (endsWith(stop.method, ".mean")) stop.sum <- mean
+  else if (endsWith(stop.method, ".max")) stop.sum <- max
+  else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
+
+  out <- list(
+    # require allows you to pass a character vector with required packages
+    # use NULL if no required packages
+    require = "cobalt",
+
+    # computeCoef is a function that returns a list with two elements:
+    # 1) coef: the weights (coefficients) for each algorithm
+    # 2) cvRisk: the V-fold CV risk for each algorithm
+    computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
+      covs <- attr(control$trimLogit, "vals")$covs
+      dens.num <- attr(control$trimLogit, "vals")$dens.num
+      densfun <- attr(control$trimLogit, "vals")$densfun
+      use.kernel <- attr(control$trimLogit, "vals")$use.kernel
+      densControl <- attr(control$trimLogit, "vals")$densControl
+
+      bin.vars <- apply(covs, 2, is_binary)
+
+      w_mat<- apply(Z, 2, get_cont_weights, treat = Y, s.weights = obsWeights,
+                    dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
+                    densControl = densControl)
+      cvRisk <- apply(w_mat, 2, function(w) stop.sum(stop.fun(covs, treat = Y,
+                                                              weights = w,
+                                                              s.weights = obsWeights,
+                                                              bin.vars = bin.vars)))
+      names(cvRisk) <- libraryNames
+
+      loss <- function(coefs) {
+        ps <- crossprod(t(Z), coefs/sum(coefs))
+        w <- get_cont_weights(ps, treat = Y, s.weights = obsWeights,
+                              dens.num = dens.num, densfun = densfun,
+                              use.kernel = use.kernel,
+                              densControl = densControl)
+        out <- stop.sum(stop.fun(covs, treat = Y,
+                                 weights = w,
+                                 s.weights = obsWeights,
+                                 bin.vars = bin.vars))
+        out
+      }
+      fit <- optim(rep(1, ncol(Z)), loss, method = "L-BFGS-B", lower = 0)
+      coef <- fit$par
+      out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
+      return(out)
+    },
+
+    # computePred is a function that takes the weights and the predicted values
+    # from each algorithm in the library and combines them based on the model to
+    # output the super learner predicted values
+    computePred = function(predY, coef, control, ...) {
+      out <- crossprod(t(predY), coef/sum(coef))
+      return(out)
+    }
+  )
+  # attr(out, "stop.method") <- stop.method
+  # class(out) <- "method.balance"
   return(out)
 }
 
