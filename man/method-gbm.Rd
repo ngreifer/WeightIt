@@ -71,6 +71,8 @@ For continuous treatments only, the following arguments may be supplied:
 }
 \item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to the \code{\link{density}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
 }
+\item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
+
 }
 }
 \section{Additional Outputs}{
