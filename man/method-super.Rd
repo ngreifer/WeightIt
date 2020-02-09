@@ -6,10 +6,10 @@
 \description{
 This page explains the details of estimating weights from SuperLearner-based propensity scores by setting \code{method = "super"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, a regression algorithm is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
+In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, regression algorithms are used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link[SuperLearner]{SuperLearner}} in the \pkg{SuperLearner} package. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al (2017). Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
+For binary treatments, this method estimates the propensity scores using \code{\link[SuperLearner]{SuperLearner}} in the \pkg{SuperLearner} package. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li & Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al. (2017). Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
 }
 \subsection{Multinomial Treatments}{
 For multinomial treatments, the propensity scores are estimated using several calls to \code{\link[SuperLearner]{SuperLearner}}, one for each treatment group, and the treatment probabilities are normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
@@ -40,10 +40,11 @@ First, for each variable with missingness, a new missingness indicator variable 
 An argument to \code{SL.library} \strong{must} be supplied. To see a list of available entries, use \code{\link[SuperLearner]{listWrappers}}.
 
 All arguments to \code{\link[SuperLearner]{SuperLearner}} can be passed through \code{weightit} or \code{weightitMSM}, with the following exceptions:
+\itemize{
+\item{\code{obsWeights} is ignored because sampling weights are passed using \code{s.weights}.}
 
-\code{method} in \code{SuperLearner} is replaced with the argument \code{SL.method} in \code{weightit}.
-
-\code{obsWeights} is ignored because sampling weights are passed using \code{s.weights}.
+\item{\code{method} in \code{SuperLearner} is replaced with the argument \code{SL.method} in \code{weightit}.}
+}
 
 For continuous treatments only, the following arguments may be supplied:
 \describe{
@@ -56,6 +57,15 @@ For continuous treatments only, the following arguments may be supplied:
 \item{\code{plot}}{If \code{use.kernel = TRUE}, whether to plot the estimated density.
 }
 }
+
+\subsection{Balance SuperLearner}
+In additon to the methods allowed by \code{SuperLearner}, one can specify \code{SL.method = "method.balance"} to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with \code{SL.library}. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimizes a balance criterion, which must be set with the \code{stop.method} argument, described below.
+\describe{
+\item{\code{stop.method}}{A string describing the criterion used to select the best weights. When optimizing for balance, this has two parts, a statistic to be computed and a summarizing function, which should be combined as \code{"{stat}.{summary}"}. For binary treatments, the available stats are \code{"es"} for absolute standardized mean differences and \code{"ks"} for Kolmogorov-Smirnov statistics; for continuous treatments, the available stats are \code{"p"} for Pearson correlations between each covariate and the treatment and \code{"s"} for Spearman correlations. The available summaries are \code{"mean"} for the mean of the statistics, \code{"max"} for the maximum of the statistics, and \code{"rms"} for the root mean square of the statistics (i.e., the L2 norm). The default for binary and multinomial treatments is \code{"es.mean"} and the default for continuous treatments is \code{"p.mean"}.
+}
+}
+Note that this implementation differs from that of Pirracchio and Carone (2018) in that here, balance is measured only on the terms included in the model formula (i.e., and not their interactions unless specifically included), and balance results from a sample weighted using the estimated predicted values as propensity scores, not a sample matched using propensity score matching on the predicted values. Binary and continuous treatments are supported, but currently multinomial treatments are not.
+
 }
 \section{Additional Outputs}{
 \describe{
@@ -66,7 +76,7 @@ For binary treatments, a list with two entries, \code{coef} and \code{cvRisk}. F
 The coefficients in the linear combination of the predictions from each method in \code{SL.library}. Higher values indicate that the corresponding method plays a larger role in determining the resulting predicted value, and values close to zero indicate that the method plays little role in determining the predicted value. When \code{discrete = TRUE}, these correspond to the coefficients that would have been estimated had \code{discrete} been \code{TRUE}.
 }
 \item{\code{cvRisk}}{
-The cross-validation risk for each method in \code{SL.library}. Higher values indicate that the method has worse cross-validation accuracy.
+The cross-validation risk for each method in \code{SL.library}. Higher values indicate that the method has worse cross-validation accuracy. When \code{SL.method = "method.balance"}, the sample weighted balance statistic requested with \code{stop.method}. Higher values indicate worse balance.
 }
 }
 }
@@ -83,6 +93,10 @@ Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity
 - Continuous treatments
 
 Kreif, N., Grieve, R., Díaz, I., & Harrison, D. (2015). Evaluation of the Effect of a Continuous Treatment: A Machine Learning Approach with an Application to Treatment for Traumatic Brain Injury. Health Economics, 24(9), 1213–1228. \doi{10.1002/hec.3189}
+
+ - Balance SuperLearner (\code{SL.method = "method.balance"})
+
+Pirracchio, R., & Carone, M. (2018). The Balance Super Learner: A robust adaptation of the Super Learner to improve estimation of the average treatment effect in the treated based on propensity score matching. Statistical Methods in Medical Research, 27(8), 2504–2518. \doi{10.1177/0962280216682055}
 
 See \code{\link{method_ps}} for additional references.
 }
@@ -123,4 +137,17 @@ bal.tab(W2)
                                "SL.glm.interaction")))
 summary(W3)
 bal.tab(W3)
+
+#Balancing covariates between treatment groups (binary)
+# using balance SuperLearner to minimize the average
+# KS statistic
+(W4 <- weightit(treat ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "super", estimand = "ATT",
+                SL.library = c("SL.glm", "SL.stepAIC",
+                               "SL.lda"),
+                SL.method = "method.balance",
+                stop.method = "ks.mean"))
+summary(W4)
+bal.tab(W4)
 }

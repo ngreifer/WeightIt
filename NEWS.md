@@ -1,9 +1,11 @@
 WeightIt News and Updates
 ======
 
-Version 0.8.1
+Version 0.9.0
 
 * Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.
+
+* Added support for Balance SuperLearner as described by Pirracchio and Carone (2018) with `method = "super"`. Rather than using NNLS to choose the optimal combination of predictions, you can now optimize balance. To do so, set `SL.method = "method.balance"`. You will need to set an argument to `stop.method`, which works identically to how it does for `method = "gbm"`. For example, for `stop.method = "es.max"`, the predicted values given will be the combination of predicted values that minimizes the largest absolute standardized mean difference of the covariates in the sample weighted using the predicted values as propensity scores.
 
 * Changed some of the statistics displayed when using `summary()`: the weight ratio is gone (because weights can be 0, which is not problematic but would explode the ratio), and the mean absolute deviation and entropy of the weights are now present.
 
