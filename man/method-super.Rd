@@ -58,14 +58,14 @@ For continuous treatments only, the following arguments may be supplied:
 }
 }
 
-\subsection{Balance SuperLearner}
+\subsection{Balance SuperLearner}{
 In additon to the methods allowed by \code{SuperLearner}, one can specify \code{SL.method = "method.balance"} to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with \code{SL.library}. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimizes a balance criterion, which must be set with the \code{stop.method} argument, described below.
 \describe{
 \item{\code{stop.method}}{A string describing the criterion used to select the best weights. When optimizing for balance, this has two parts, a statistic to be computed and a summarizing function, which should be combined as \code{"{stat}.{summary}"}. For binary treatments, the available stats are \code{"es"} for absolute standardized mean differences and \code{"ks"} for Kolmogorov-Smirnov statistics; for continuous treatments, the available stats are \code{"p"} for Pearson correlations between each covariate and the treatment and \code{"s"} for Spearman correlations. The available summaries are \code{"mean"} for the mean of the statistics, \code{"max"} for the maximum of the statistics, and \code{"rms"} for the root mean square of the statistics (i.e., the L2 norm). The default for binary and multinomial treatments is \code{"es.mean"} and the default for continuous treatments is \code{"p.mean"}.
 }
 }
 Note that this implementation differs from that of Pirracchio and Carone (2018) in that here, balance is measured only on the terms included in the model formula (i.e., and not their interactions unless specifically included), and balance results from a sample weighted using the estimated predicted values as propensity scores, not a sample matched using propensity score matching on the predicted values. Binary and continuous treatments are supported, but currently multinomial treatments are not.
-
+}
 }
 \section{Additional Outputs}{
 \describe{
