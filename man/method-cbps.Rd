@@ -34,12 +34,13 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 \section{Additional Arguments}{
 All arguments to \code{CBPS} can be passed through \code{weightit} or \code{weightitMSM}, with the following exceptions:
+\itemize{
+\item{\code{method} in \code{CBPS} is replaced with the argument \code{over} in \code{weightit}. Setting \code{over = FALSE} in \code{weightit} is the equivalent of setting \code{method = "exact"} in \code{CBPS}.}
 
-\code{method} in \code{CBPS} is replaced with the argument \code{over} in \code{weightit}. Setting \code{over = FALSE} in \code{weightit} is the equivalent of setting \code{method = "exact"} in \code{CBPS}.
+\item{\code{sample.weights} is ignored because sampling weights are passed using \code{s.weights}.}
 
-\code{sample.weights} is ignored because sampling weights are passed using \code{s.weights}.
-
-\code{standardize} is ignored.
+\item{\code{standardize} is ignored.}
+}
 
 All arguments take on the defaults of those in \code{CBPS}. It may be useful in many cases to set \code{over = FALSE}, especially with continuous treatments.
 
