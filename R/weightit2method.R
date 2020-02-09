@@ -1880,6 +1880,8 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   if (length(discrete) != 1 || !is_(discrete, "logical")) stop("discrete must be TRUE or FALSE.", call. = FALSE)
 
   if (identical(A[["SL.method"]], "method.balance")) {
+    if (!is_binary(treat)) stop("\"method.balance\" cannot be used with multi-category treatments.", call. = FALSE)
+
     stop.method <- A[["stop.method"]]
 
     if (is_null(stop.method)) {
