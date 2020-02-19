@@ -1,5 +1,5 @@
-weightit.fit <- function(covs, treat, method, treat.type, s.weights = NULL, by.factor = factor(rep(1, length(treat))),
-                         estimand, focal = NULL, stabilize = FALSE, ps = NULL, moments = NULL, int = NULL,
+weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, length(treat)), by.factor = factor(rep(1, length(treat))),
+                         estimand = "ATE", focal = NULL, stabilize = FALSE, ps = NULL, moments = 1, int = FALSE,
                          subclass = NULL, is.MSM.method = FALSE, missing = "ind", include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
