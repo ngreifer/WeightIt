@@ -1,6 +1,6 @@
 weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, length(treat)), by.factor = factor(rep(1, length(treat))),
                          estimand = "ATE", focal = NULL, stabilize = FALSE, ps = NULL, moments = 1, int = FALSE,
-                         subclass = NULL, is.MSM.method = FALSE, missing = "ind", include.obj = FALSE, ...){
+                         subclass = NULL, is.MSM.method = FALSE, missing = if (anyNA(covs)) "ind" else "", include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
   out <- setNames(vector("list", 3), c("weights", "ps", "fit.obj"))
