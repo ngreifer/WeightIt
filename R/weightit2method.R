@@ -269,7 +269,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                                  c(list(formula, data,
                                         weights = s.weights),
                                    control))},
-                 error = function(e) stop("There was a problem with the bias-reduced logit regression. Try a different link.", call. = FALSE))
+                 error = function(e) stop("There was a problem with the bias-reduced multinomial logit regression. Try a different link.", call. = FALSE))
 
         ps <- fit$fitted.values
         fit.obj <- fit
@@ -280,10 +280,13 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
             data <- data.frame(treat = treat_sub , s.weights = s.weights[subset], covs)
             covnames <- names(data)[-c(1,2)]
             mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
-            tryCatch({fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "),
-                                                              " | 1")), data = mult, estimate = TRUE,
-                                            probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
-                                            weights = s.weights, ...)},
+            if (A$link[1] == "logit" && check.package("mnlogit", alternative = TRUE)) mn.fun <- mnlogit::mnlogit
+            else mn.fun <- mlogit::mlogit
+            tryCatch({fit <- mn.fun(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
+                                    data = mult,
+                                    estimate = TRUE,
+                                    probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
+                                    weights = s.weights, ...)},
                      error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
             )
             ps <- fitted(fit, outcome = FALSE)
@@ -318,7 +321,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         fit.obj <- fit
       }
       else {
-        stop('link must be "logit", "probit", "bayes.probit", or "br.logit.', call. = FALSE)
+        stop('link must be "logit", "probit", "bayes.probit", or "br.logit".', call. = FALSE)
       }
       p.score <- NULL
     }
