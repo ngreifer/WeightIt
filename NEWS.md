@@ -1,6 +1,12 @@
 WeightIt News and Updates
 ======
 
+Version 0.9.1
+
+* With multinomial treatments with `link = "logit"` (the default), if the `mnlogit` package is installed, it will be used. If not, or if `link = "probit"`, `mlogit` will be used. You can figure out which was used by setting `include.obj = TRUE` in the call to `weightit()` and then running `class()` on `w.out$obj`.
+
+* Cleaning up of some error messages.
+
 Version 0.9.0
 
 * Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.
