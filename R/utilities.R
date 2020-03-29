@@ -1,5 +1,5 @@
 #For the user to use
-make_full_rank <- function(mat, with.intercept = TRUE) {
+.make_full_rank <- function(mat, with.intercept = TRUE) {
 
   if (is.data.frame(mat)) {
     is.mat <- FALSE
@@ -44,6 +44,40 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
   else return(as.data.frame(mat[, keep, drop = FALSE]))
 
 }
+make_full_rank <- function(mat, with.intercept = TRUE) {
+
+  if (is.data.frame(mat)) {
+    is.mat <- FALSE
+    if (!all(vapply(mat, is.numeric, logical(1L)))) stop("All columns in mat must be numeric.", call. = FALSE)
+    mat <- as.matrix(mat)
+  }
+  else if (is.matrix(mat)) {
+    is.mat <- TRUE
+    if (!is.numeric(mat)) stop("mat must be a numeric matrix.", call. = FALSE)
+  }
+  else {
+    stop("mat must be a numeric matrix or data.frame.", call. = FALSE)
+  }
+
+  if (anyNA(mat)) stop("Missing values are not allowed in mat.", call. = FALSE)
+
+  keep <- rep(TRUE, ncol(mat))
+
+  #If intercept is to be included in check, add column of 1s
+  if (with.intercept) {
+    q <- qr(cbind(rep(1, nrow(mat)), mat))
+    keep[q$pivot[-seq(q$rank)]-1] <- FALSE
+  }
+  else {
+    q <- qr(mat)
+    keep[q$pivot[-seq(q$rank)]] <- FALSE
+  }
+
+  if (is.mat) return(mat[, keep, drop = FALSE])
+  else return(as.data.frame(mat[, keep, drop = FALSE]))
+
+}
+
 get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL, subclass = NULL, stabilize = FALSE) {
   #ps must be a matrix/df with columns named after treat levels
 
