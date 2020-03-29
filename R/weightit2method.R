@@ -209,27 +209,39 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         ps[[1]] <- 1 - ps[[2]]
       }
       else {
-        data <- data.frame(binarize(treat_sub), covs)
-        formula <- formula(data)
-
         if (use.br) {
-          check.package("brglm2")
-          control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
-          fit <- do.call("glm", c(list(formula, data = data,
-                                       weights = s.weights[subset],
-                                       family = binomial(link = A[["link"]]),
-                                       method = brglm2::brglmFit),
-                                  control), quote = TRUE)
+          ctrl_fun <- brglm2::brglmControl
+          glm_method <- brglm2::brglmFit
         }
         else {
-          if (is_null(A[["glm.method"]])) A[["glm.method"]] <- "glm.fit"
-          control <- A[names(formals(glm.control))[pmatch(names(A), names(formals(glm.control)), 0)]]
-          fit <- do.call("glm", c(list(formula, data = data,
-                                       weights = s.weights[subset],
-                                       family = quasibinomial(link = A[["link"]]),
-                                       method = A[["glm.method"]]),
-                                  control), quote = TRUE)
+          ctrl_fun <- stats::glm.control
+          glm_method <- if_null_then(A[["glm.method"]], stats::glm.fit)
         }
+
+        control <- A[names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)]]
+
+        withCallingHandlers({
+          if (isTRUE(A[["quick"]])) {
+            fit <- do.call(glm_method, c(list(y = binarize(treat_sub),
+                                              x = cbind(1, covs),
+                                              weights = s.weights[subset],
+                                              family = binomial(link = A[["link"]])),
+                                         control), quote = TRUE)
+          }
+          else {
+            data <- data.frame(binarize(treat_sub), covs)
+            formula <- formula(data)
+            fit <- do.call(stats::glm, c(list(formula, data = data,
+                                              weights = s.weights[subset],
+                                              family = binomial(link = A[["link"]]),
+                                              method = glm_method),
+                                         control), quote = TRUE)
+          }
+        },
+        warning = function(w) {
+          if (conditionMessage(w) != "non-integer #successes in a binomial glm!") warning(w)
+          invokeRestart("muffleWarning")
+        })
 
         ps[[2]] <- p.score <- fit$fitted.values
         ps[[1]] <- 1 - ps[[2]]
