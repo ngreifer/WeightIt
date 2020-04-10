@@ -378,21 +378,6 @@ process.missing <- function(missing, method, treat.type) {
   }
   return(missing)
 }
-check.package <- function(package.name, alternative = FALSE) {
-  packages.not.installed <- package.name[package.name %nin% .packages(all.available = TRUE)]
-  if (is_not_null(packages.not.installed)) {
-    if (alternative) return(FALSE)
-    else {
-      plural <- length(packages.not.installed) > 1
-      stop(paste0("Package", if (plural) "s " else " ",
-                  word_list(packages.not.installed, quotes = TRUE, is.are = TRUE),
-                  " needed for this function to work. Please install ",
-                  if (plural) "them" else "it","."),
-           call. = FALSE)
-    }
-  }
-  else return(invisible(TRUE))
-}
 make.closer.to.1 <- function(x) {
   if (is.factor(x) || is.character(x) || all_the_same(x[!is.na(x)])) return(x)
   else if (is_binary(x)) {
