@@ -70,7 +70,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   })
   covs <- covs[, !same.as.moderator, drop = FALSE]
 
-  bin.vars <- apply(covs, 2, is_binary)
+  bin.vars <- is_binary_col(covs)
   s.d.denom <- get.s.d.denom.weightit(estimand = obj[["estimand"]], weights = obj[["weights"]],
                                       treat = treat)
 

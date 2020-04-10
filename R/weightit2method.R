@@ -853,7 +853,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     covs <- cbind(covs, missing.ind)
   }
 
-  bin.vars <- apply(covs, 2, is_binary)
+  bin.vars <- is_binary_col(covs)
 
   if (is_null(A[["stop.method"]])) {
     warning("No stop.method was provided. Using \"es.mean\".",
@@ -1183,7 +1183,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     covs <- cbind(covs, missing.ind)
   }
 
-  bin.vars <- apply(covs, 2, is_binary)
+  bin.vars <- is_binary_col(covs)
 
   if (is_null(A[["stop.method"]])) {
     warning("No stop.method was provided. Using \"p.mean\".",

@@ -397,7 +397,7 @@ int.poly.f <- function(mat, ex = NULL, int = FALSE, poly = 1, center = FALSE, se
 
   if (is_not_null(ex)) d <- mat[, colnames(mat) %nin% colnames(ex), drop = FALSE]
   else d <- mat
-  binary.vars <- apply(d, 2, is_binary)
+  binary.vars <- is_binary_col(d)
   if (center) {
     d[,!binary.vars] <- center(d[, !binary.vars, drop = FALSE])
   }
@@ -802,7 +802,7 @@ method.balance <- function(stop.method) {
     covs <- attr(control$trimLogit, "vals")$covs
     estimand <- attr(control$trimLogit, "vals")$estimand
     s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = Y)
-    bin.vars <- apply(covs, 2, is_binary)
+    bin.vars <- is_binary_col(covs)
 
     for (i in 1:ncol(Z)) {
       Z[Z[,i]<.001,i] <- .001
@@ -879,7 +879,7 @@ method.balance.cont <- function(stop.method) {
       use.kernel <- attr(control$trimLogit, "vals")$use.kernel
       densControl <- attr(control$trimLogit, "vals")$densControl
 
-      bin.vars <- apply(covs, 2, is_binary)
+      bin.vars <- is_binary_col(covs)
 
       w_mat<- apply(Z, 2, get_cont_weights, treat = Y, s.weights = obsWeights,
                     dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
