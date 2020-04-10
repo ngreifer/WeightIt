@@ -411,6 +411,10 @@ mean_fast <- function(x, nas.possible = FALSE) {
     n <- length(x)
     return(s/n)
 }
+bw.nrd <- function(x) {
+    #R's bw.nrd doesn't always work, but bw.nrd0 does
+    bw.nrd0(x)*1.06/.9
+}
 
 #Formulas
 is.formula <- function(f, sides = NULL) {
@@ -699,13 +703,51 @@ is_binary <- function(x, na.rm = TRUE) {
     if (na.rm && anyNA(x)) x <- x[!is.na(x)]
     !all_the_same(x) && all_the_same(x[x != x[1]])
 }
+is_binary_col <- function(dat, na.rm = TRUE) {
+    if (length(dim(dat)) != 2) stop("is_binary_col cannot be used with objects that don't have 2 dimensions.")
+    apply(dat, 2, is_binary)
+}
 
 #R Processing
+make_list <- function(n) {
+    if (length(n) == 1L && is.numeric(n)) {
+        vector("list", as.integer(n))
+    }
+    else if (is_(n, c("atomic", "factor"))) {
+        setNames(vector("list", length(n)), as.character(n))
+    }
+}
+ifelse_ <- function(...) {
+    if (...length() %% 2 == 0) stop("ifelse_ must have an odd number of arguments: pairs of test/yes, and one no.")
+    out <- ...elt(...length())
+    if (...length() > 1) {
+        if (!is_(out, c("atomic", "factor"))) stop("The last entry to ifelse_ must be atomic or factor.")
+        if (length(out) == 1) out <- rep(out, length(..1))
+        n <- length(out)
+        for (i in seq_len((...length() - 1)/2)) {
+            test <- ...elt(2*i - 1)
+            yes <- ...elt(2*i)
+            if (length(yes) == 1) yes <- rep(yes, n)
+            if (length(yes) != n || length(test) != n) stop("All entries must have the same length.")
+            if (!is.logical(test)) stop(paste("The", ordinal(2*i - 1), "entry to ifelse_ must be logical."))
+            if (!is_(yes, c("atomic", "factor"))) stop(paste("The", ordinal(2*i), "entry to ifelse_ must be atomic or factor."))
+            pos <- which(test)
+            out[pos] <- yes[pos]
+        }
+    }
+    else {
+        if (!is_(out, c("atomic", "factor"))) stop("The first entry to ifelse_ must be atomic or factor.")
+    }
+    return(out)
+}
 is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
     s1 <- deparse(substitute(x))
     if (is_not_null(x)) {
         for (i in types) {
             if (i == "list") it.is <- is.vector(clear_attr(x), "list")
+            else if (is_not_null(get0(paste0("is_", i)))) {
+                it.is <- get0(paste0("is_", i))(x)
+            }
             else if (is_not_null(get0(paste.("is", i)))) {
                 it.is <- get0(paste.("is", i))(x)
             }
@@ -723,22 +765,20 @@ is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
             stop(paste0(s0, s1, " must be a ", word_list(types, and.or = "or"), " ", s2, "."), call. = FALSE)
         }
     }
-    else {
-        return(it.is)
-    }
+    return(it.is)
 }
 is_null <- function(x) length(x) == 0L
 is_not_null <- function(x) !is_null(x)
 if_null_then <- function(x1 = NULL, x2 = NULL, ...) {
     if (is_not_null(x1)) x1
     else if (is_not_null(x2)) x2
-    else {
-        for (k in ...length()) {
+    else if (...length() > 0) {
+        for (k in seq_len(...length())) {
             if (is_not_null(...elt(k))) return(...elt(k))
         }
         return(..1)
     }
-
+    else return(x1)
 }
 clear_null <- function(x) {
     x[vapply(x, is_null, logical(1L))] <- NULL
@@ -785,27 +825,31 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
     if (is.null(arg))
         return(choices[1L])
     else if (!is.character(arg))
-        stop(paste0("'", arg.name, "' must be NULL or a character vector"), call. = FALSE)
+        stop(paste0("The argument to '", arg.name, "' must be NULL or a character vector"), call. = FALSE)
     if (!several.ok) {
         if (identical(arg, choices))
             return(arg[1L])
         if (length(arg) > 1L)
-            stop(paste0("'", arg.name, "' must be of length 1"), call. = FALSE)
+            stop(paste0("The argument to '", arg.name, "' must be of length 1"), call. = FALSE)
     }
     else if (is_null(arg))
-        stop(paste0("'", arg.name, "' must be of length >= 1"), call. = FALSE)
+        stop(paste0("The argument to '", arg.name, "' must be of length >= 1"), call. = FALSE)
 
     i <- pmatch(arg, choices, nomatch = 0L, duplicates.ok = TRUE)
     if (all(i == 0L))
-        stop(paste0("'", arg.name, "' should be one of ", word_list(choices, and.or = "or", quotes = TRUE), "."),
+        stop(paste0("The argument to '", arg.name, "' should be ", if (length(choices) > 1) {if (several.ok) "at least one of " else "one of "} else "",
+                    word_list(choices, and.or = "or", quotes = TRUE), "."),
              call. = FALSE)
     i <- i[i > 0L]
     if (!several.ok && length(i) > 1)
-        stop("there is more than one match in 'match_arg'")
+        stop("There is more than one match in 'match_arg'")
     choices[i]
 }
 last <- function(x) {
     x[[length(x)]]
+}
+`last<-` <- function(x, value) {
+    `[[<-`(x, length(x), value)
 }
 len <- function(x, recursive = TRUE) {
     if (is.vector(x, "list") && recursive) sapply(x, len)
@@ -815,4 +859,20 @@ len <- function(x, recursive = TRUE) {
 na.rem <- function(x) {
     #A faster na.omit for vectors
     x[!is.na(x)]
+}
+check.package <- function(package.name, alternative = FALSE) {
+    packages.not.installed <- package.name[!vapply(package.name, requireNamespace, logical(1L),
+                                                   quietly = TRUE)]
+    if (is_not_null(packages.not.installed)) {
+        if (alternative) return(FALSE)
+        else {
+            plural <- length(packages.not.installed) > 1
+            stop(paste0("Package", if (plural) "s " else " ",
+                        word_list(packages.not.installed, quotes = TRUE, is.are = TRUE),
+                        " needed for this function to work. Please install ",
+                        if (plural) "them" else "it","."),
+                 call. = FALSE)
+        }
+    }
+    else return(invisible(TRUE))
 }
