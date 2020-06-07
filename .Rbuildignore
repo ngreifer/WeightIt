@@ -5,3 +5,6 @@
 ^README-.*\.png$
 ^CRANlogs$
 ^do_not_include$
+^_pkgdown\.yml$
+^docs$
+^pkgdown$
