@@ -13,7 +13,7 @@ Depends:
 Imports:
     ggplot2 (>= 3.0.0),
     crayon,
-    backports
+    backports (>= 1.1.7)
 Suggests:
     cobalt (>= 4.0.0),
     twang (>= 1.5),
@@ -26,6 +26,7 @@ Suggests:
     mnlogit (>= 1.2.6),
     MNP (>= 3.1-0),
     brglm2 (>= 0.5.2),
+    osqp,
     survey,
     jtools,
     boot,
