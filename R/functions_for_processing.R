@@ -9,6 +9,7 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("ebcw", "ate")) return("ebcw")
   else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
   else if (method %in% c("super", "superlearner")) return("super")
+  else if (method %in% c("energy")) return("energy")
   # else if (method %in% c("kbal")) return("kbal")
   else return(method)
 }
@@ -24,6 +25,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
                           , "ebcw", "ate"
                           , "optweight", "opt", "sbw"
                           , "super", "superlearner"
+                          , "energy"
                           # "kbal",
   )
 
@@ -38,7 +40,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
 
   if (msm && !force && is.character(method)) {
     m <- method.to.proper.method(method)
-    if (m %in% c("nbcbps", "ebal", "ebcw", "optweight", "kbal")) {
+    if (m %in% c("nbcbps", "ebal", "ebcw", "optweight", "energy", "kbal")) {
       stop(paste0("The use of ", method.to.phrase(m), " with longitudinal treatments has not been validated. Set weightit.force = TRUE to bypass this error."), call. = FALSE)
     }
   }
@@ -67,6 +69,7 @@ method.to.phrase <- function(method) {
     else if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
     else if (method %in% c("optweight")) return("targeted stable balancing weights")
     else if (method %in% c("super")) return("propensity score weighting with SuperLearner")
+    else if (method %in% c("energy")) return("energy balancing")
     # else if (method %in% c("kbal")) return("kernel balancing")
     else return("the chosen method of weighting")
   }
@@ -83,6 +86,7 @@ process.estimand <- function(estimand, method, treat.type) {
                   , ebcw = c("ATT", "ATC", "ATE")
                   , optweight = c("ATT", "ATC", "ATE")
                   , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                  , energy = c("ATT", "ATC", "ATE")
                   # , kbal = c("ATT", "ATC", "ATE")
     ),
     multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
@@ -94,6 +98,7 @@ process.estimand <- function(estimand, method, treat.type) {
                        , ebcw = c("ATT", "ATC", "ATE")
                        , optweight = c("ATT", "ATC", "ATE")
                        , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                       , energy = c("ATT", "ATC", "ATE")
                        # , kbal = c("ATT", "ATE")
     ))
 
@@ -119,6 +124,7 @@ check.subclass <- function(method, treat.type) {
                   , ebcw = FALSE
                   , optweight = FALSE
                   , super = TRUE
+                  , energy = FALSE
                   # , kbal = FALSE
     ),
     multinomial = list(ps = TRUE
@@ -130,6 +136,7 @@ check.subclass <- function(method, treat.type) {
                        , ebcw = FALSE
                        , optweight = FALSE
                        , super = TRUE
+                       , energy = FALSE
     ))
 
   if (treat.type != "continuous" && !is.function(method) &&
@@ -283,24 +290,36 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 }
 process.moments.int <- function(moments, int, method) {
   if (!is.function(method)) {
-    if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
+    if (method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
       if (length(int) != 1 || !is.logical(int)) {
         stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
       }
-      if (length(moments) != 1 || !is.numeric(moments) ||
-          !check_if_zero(moments - round(moments)) ||
-          moments < 1) {
-        stop("moments must be a positive integer of length 1.", call. = FALSE)
+      if (is_not_null(moments)) {
+        if (length(moments) != 1 || !is.numeric(moments) ||
+            !check_if_zero(moments - round(moments))) {
+          if (method == "energy") {
+            if (moments < 0) stop("moments must be a nonnegative integer of length 1.", call. = FALSE)
+          }
+          else if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
+            if (moments < 1) stop("moments must be a positive integer of length 1.", call. = FALSE)
+          }
+          moments <- as.integer(moments)
+        }
+      }
+      else {
+        if (method == "energy") moments <- 0L
+        else moments <- 1L
       }
     }
-    else if (any(mi0 <- c(as.integer(moments) != 1L, int))) {
+    else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
       warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
                      " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
-      moments <- 1
+      moments <- NULL
       int <- FALSE
     }
+    moments <- as.integer(moments)
   }
-  return(c(moments = as.integer(moments), int = int))
+  return(list(moments = moments, int = int))
 }
 process.MSM.method <- function(is.MSM.method, method) {
   methods.with.MSM <- c("optweight")
@@ -334,6 +353,7 @@ process.missing <- function(missing, method, treat.type) {
                            , ebcw = c("ind")
                            , optweight = c("ind")
                            , super = c("ind")
+                           , energy = c("ind")
                            # , kbal = c("ind")
   ),
   multinomial = list(ps = c("ind")
@@ -345,6 +365,7 @@ process.missing <- function(missing, method, treat.type) {
                      , ebcw = c("ind")
                      , optweight = c("ind")
                      , super = c("ind")
+                     , energy = c("ind")
                      # , kbal = c("ind")
   ),
   continuous = list(ps = c("ind")
@@ -356,6 +377,7 @@ process.missing <- function(missing, method, treat.type) {
                     , ebcw = c("ind")
                     , optweight = c("ind")
                     , super = c("ind")
+                    , energy = c("ind")
                     # , kbal = c("ind")
   ))
 
@@ -379,7 +401,7 @@ process.missing <- function(missing, method, treat.type) {
   return(missing)
 }
 make.closer.to.1 <- function(x) {
-  if (is.factor(x) || is.character(x) || all_the_same(x[!is.na(x)])) return(x)
+  if (is.factor(x) || is.character(x) || all_the_same(x)) return(x)
   else if (is_binary(x)) {
     return(as.numeric(x == x[!is.na(x)][1]))
   }
@@ -387,42 +409,56 @@ make.closer.to.1 <- function(x) {
     (x - mean_fast(x, TRUE))/sd(x, na.rm = TRUE)
   }
 }
-int.poly.f <- function(mat, ex = NULL, int = FALSE, poly = 1, center = FALSE, sep = " * ") {
-  #Adds to data frame interactions and polynomial terms; interaction terms will be named "v1 * v2" and polynomials will be named "v1_2"
-  #mat=matrix input
-  #ex=matrix of variables to exclude in interactions and polynomials; a subset of df
+int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, orthogonal_poly = TRUE) {
+  #Adds to data frame interactions and polynomial terms
+  #d=matrix input
+  #ex=names of variables to exclude in interactions and polynomials; a subset of df
   #int=whether to include interactions or not; currently only 2-way are supported
   #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
-  #nunder=number of underscores between variables
 
-  if (is_not_null(ex)) d <- mat[, colnames(mat) %nin% colnames(ex), drop = FALSE]
-  else d <- mat
+  if (is_null(ex)) ex <- rep(FALSE, ncol(d))
+
   binary.vars <- is_binary_col(d)
+
   if (center) {
     d[,!binary.vars] <- center(d[, !binary.vars, drop = FALSE])
   }
-  nd <- ncol(d)
-  nrd <- nrow(d)
-  no.poly <- binary.vars
-  npol <- nd - sum(no.poly)
-  new <- matrix(0, ncol = (poly-1)*npol + int*(.5*(nd)*(nd-1)), nrow = nrd)
-  nc <- ncol(new)
-  new.names <- character(nc)
-  if (poly > 1 && npol != 0) {
-    for (i in 2:poly) {
-      new[, (1 + npol*(i - 2)):(npol*(i - 1))] <- apply(d[, !no.poly, drop = FALSE], 2, function(x) x^i)
-      new.names[(1 + npol*(i - 2)):(npol*(i - 1))] <- paste0(colnames(d)[!no.poly], num_to_superscript(i))
+  nd <- NCOL(d)
+
+  if (poly > 1) {
+    make.poly <- which(!binary.vars & !ex)
+    npol <- length(make.poly)
+    poly_terms <- poly_co.names <- make_list(npol)
+    if (npol > 0) {
+      for (i in seq_along(make.poly)) {
+        poly_terms[[i]] <- poly(d[, make.poly[i]], degree = poly, raw = !orthogonal_poly, simple = TRUE)[,-1, drop = FALSE]
+        poly_co.names[[i]] <- paste0(if (orthogonal_poly) "orth_", colnames(d)[make.poly[i]], num_to_superscript(2:poly))
+      }
     }
   }
+  else poly_terms <- poly_co.names <- list()
+
   if (int && nd > 1) {
-    new[,(nc - .5*nd*(nd-1) + 1):nc] <- matrix(t(apply(d, 1, combn, 2, prod)), nrow = nrd)
-    new.names[(nc - .5*nd*(nd-1) + 1):nc] <- combn(colnames(d), 2, paste, collapse = sep)
+    int_terms <- int_co.names <- make_list(1)
+    ints_to_make <- combn(colnames(d)[!ex], 2, simplify = FALSE)
+
+    int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]]*d[,i[2]]))
+
+    int_co.names[[1]] <- vapply(ints_to_make, paste, character(1L), collapse = " * ")
   }
+  else int_terms <- int_co.names <- list()
 
-  single.value <- apply(new, 2, all_the_same)
-  colnames(new) <- new.names
+  out <- do.call("cbind", c(poly_terms, int_terms))
+  out_co.names <- c(do.call("c", poly_co.names), do.call("c", int_co.names))
 
-  return(new[, !single.value, drop = FALSE])
+  colnames(out) <- unlist(out_co.names)
+
+  #Remove single values
+  if (is_not_null(out)) {
+    single_value <- apply(out, 2, all_the_same)
+    out <- out[, !single_value, drop = FALSE]
+  }
+  return(out)
 }
 get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
   check.estimand <- check.weights <- check.focal <- bad.s.d.denom <- bad.estimand <- FALSE
@@ -475,7 +511,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
     }
     else check.weights <- TRUE
   }
-  if (check.weights == TRUE) {
+  if (check.weights) {
     if (is_null(weights)) {
       s.d.denom <- "pooled"
       estimand <- "ate"
@@ -533,11 +569,11 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
   return(s.d.denom)
 }
 ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
-  if (is.vector(ps, mode = "numeric")) {
+  if (is_(ps, "numeric")) {
     ps.names <- names(ps)
     ps <- matrix(ps, ncol = 1)
   }
-  else if (is.matrix(ps) || is.data.frame(ps)) {
+  else if (is_(ps, c("matrix", "data.frame"))) {
     ps.names <- rownames(ps)
   }
 
@@ -545,7 +581,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
   else t.levels <- unique(treat, nmax = length(treat)/4)
 
   if (treat.type == "binary") {
-    if ((is.matrix(ps) && all(is.numeric(ps))) ||
+    if ((is.matrix(ps) && is.numeric(ps)) ||
         (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
       if (ncol(ps) == 1) {
         if (can_str2num(treat) &&
@@ -571,7 +607,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
         if (!all(as.character(t.levels) %in% colnames(ps))) {
           stop("If ps has two columns, they must be named with the treatment levels.", call. = FALSE)
         }
-        else ps <- ps
+        # else ps <- ps
       }
       else {
         stop("ps cannot have more than two columns if the treatment is binary.", call. = FALSE)
@@ -582,11 +618,11 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
     }
   }
   else if (treat.type == "multinomial") {
-    if ((is.matrix(ps) && all(is.numeric(ps))) ||
+    if ((is.matrix(ps) && is.numeric(ps)) ||
         (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
       if (ncol(ps) == 1) {
         if (toupper(estimand) == "ATE") {
-          ps <- matrix(rep(ps, nunique(treat)), ncol = nunique(treat), dimnames = list(ps.names, t.levels))
+          ps <- matrix(rep(ps, nunique(treat)), nrow = length(treat), dimnames = list(ps.names, t.levels))
         }
         else {
           stop("With multinomial treatments, ps can be a vector or have only one column only if the estimand is the ATE.", call. = FALSE)
@@ -609,7 +645,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
   return(ps)
 }
 subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
-  if (!length(subclass) == 1 || !is.numeric(subclass)) {
+  if (length(subclass) != 1 || !is.numeric(subclass)) {
     stop("subclass must be a single number.", call. = FALSE)
   }
   else if (round(subclass) < 1) {
@@ -739,9 +775,9 @@ stabilize_w <- function(weights, treat) {
   tab <- vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L))
   return(setNames(weights * tab[as.character(treat)], w.names))
 }
-`%+%` <- function(rhs, lhs) {
-  if (is_(rhs, "gg") && is_(lhs, "gg")) ggplot2::`%+%`(rhs, lhs)
-  else crayon::`%+%`(as.character(rhs), as.character(lhs))
+`%+%` <- function(...) {
+  if (is_(..1, "atomic") && is_(..2, "atomic")) crayon::`%+%`(as.character(..1), as.character(..2))
+  else ggplot2::`%+%`(...)
 }
 
 get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, use.kernel = FALSE,
@@ -772,6 +808,7 @@ get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, us
   return(w)
 }
 
+#For balance SuperLearner
 method.balance <- function(stop.method) {
 
   if (startsWith(stop.method, "es.")) {

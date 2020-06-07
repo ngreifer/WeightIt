@@ -5,20 +5,20 @@ weightit2XXX <- function(covs, treat...) {
   stop("method = \"XXX\" isn't ready to use yet.", call. = FALSE)
 }
 #------Template----
-weightit2XXX <- function(covs, treat, s.weights, subset, estimand, focal, moments, int, ...) {
+weightit2XXX <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
-
-  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
-    missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+  covs <- apply(covs, 2, make.closer.to.1)
 
   new.data <- data.frame(treat, covs)
   new.formula <- formula(new.data)
@@ -26,7 +26,7 @@ weightit2XXX <- function(covs, treat, s.weights, subset, estimand, focal, moment
   for (f in names(formals(PACKAGE::FUNCTION))) {
     if (is_null(A[[f]])) A[[f]] <- formals(PACKAGE::FUNCTION)[[f]]
   }
-  A[names(A) %in% names(formals(weightit2optweight))] <- NULL
+  A[names(A) %in% names(formals(weightit2XXX))] <- NULL
 
   A[["formula"]] <- new.formula
   A[["data"]] <- new.data
@@ -44,268 +44,6 @@ weightit2XXX <- function(covs, treat, s.weights, subset, estimand, focal, moment
 
 #------Under construction----
 
-#Subgroup Balancing PS
-weightit2sbps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, ...) {
-  A <- list(...)
-
-  fit.obj <- NULL
-
-  covs <- covs[subset, , drop = FALSE]
-  t <- factor(treat[subset])
-
-  if (!is_binary(t)) stop("Subgroup balancing propensity score weighting is not yet compatible with non-binary treatments.", call. = FALSE)
-
-  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
-    missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    covs[is.na(covs)] <- 0
-    covs <- cbind(covs, missing.ind)
-  }
-  covs <- apply(covs, 2, make.closer.to.1)
-
-  smd <- function(x, t, w, estimand, std = TRUE) {
-    m <- vapply(levels(t), function(t.lev) w.m(x[t==t.lev], w = w[t==t.lev]), numeric(1L))
-    mdiff <- abs(diff(m))
-
-    if (check_if_zero(mdiff)) return(0)
-    else {
-      if (!std) sd <- 1
-      else if (estimand == "ATT") sd <- sd(x[t==1])
-      else if (estimand == "ATC") sd <- sd(x[t==0])
-      else sd <- sqrt(.5 * (var(x[t==1]) + var(x[t==0])))
-      return(mdiff/sd)
-    }
-  }
-
-  loss <- A[["loss"]]
-  loss <- match_arg(loss, c("weighting", "matching"))
-
-  if (loss == "matching") {
-    F_ <- function(covs, sub, t, w) {
-      #Overall Balance of covs
-      Mk <- apply(covs, 2, function(x) smd(x, t, w, estimand))
-      #Subgroup Balance
-      Mkr <- unlist(lapply(levels(sub), function(s) {apply(covs, 2,
-                                                           function(x) smd(x[sub==s], t[sub==s], w[sub==s], estimand))}))
-      return(sum(c(Mk, Mkr) ^ 2))
-    }
-  }
-  else if (loss == "weighting") {
-    F_ <- function(covs, sub, t, w) {
-      #Overall Balance of covs
-      Mk <- apply(covs, 2, function(x) smd(x, t, w, estimand))
-      #Overall balance of subgroups
-      Mr <- vapply(levels(sub), function(s) {smd(as.numeric(sub == s), t, w, std = FALSE)}, numeric(1L))
-      #Subgroup Balance
-      Mkr <- unlist(lapply(levels(sub), function(s) {apply(covs, 2,
-                                                           function(x) smd(x[sub==s], t[sub==s], w[sub==s], estimand))}))
-      return(sum(c(Mk, Mr, Mkr) ^ 2))
-    }
-  }
-  else stop()
-
-  #Process subgroup
-  subgroup <- process.by(by = A[["subgroup"]], data = covs, treat = t, by.arg = "subgroup")$by.factor
-
-  overall.weights <- subgroup.weights <- NULL
-  if (is_not_null(A[["overall.ps"]])) {
-    if ((is.matrix(A[["overall.ps"]]) || is.data.frame(A[["overall.ps"]])) &&
-        ncol(A[["overall.ps"]]) == nlevels(t) && all(colnames(A[["overall.ps"]] %in% levels(t)))) {
-      ps.mat <- A[["overall.ps"]]
-    }
-    else if (is.numeric(A[["overall.ps"]])) {
-      ps.mat <- matrix(NA_real_, nrow = length(t), ncol = nlevels(t), dimnames = list(NULL, levels(t)))
-      ps.mat[, 2] <- A[["overall.ps"]]
-      ps.mat[, 1] <- 1 - A[["overall.ps"]]
-    }
-    else {
-      stop()
-    }
-    overall.weights <- get_w_from_ps(ps.mat, t, estimand, focal)
-  }
-  if (is_not_null(A[["subgroup.ps"]])) {
-    if ((is.matrix(A[["subgroup.ps"]]) || is.data.frame(A[["subgroup.ps"]])) &&
-        ncol(A[["subgroup.ps"]]) == nlevels(t) && all(colnames(A[["subgroup.ps"]] %in% levels(t)))) {
-      ps.mat <- A[["subgroup.ps"]]
-    }
-    else if (is.numeric(A[["subgroup.ps"]])) {
-      ps.mat <- matrix(NA_real_, nrow = length(t), ncol = nlevels(t), dimnames = list(NULL, levels(t)))
-      ps.mat[, 2] <- A[["subgroup.ps"]]
-      ps.mat[, 1] <- 1 - A[["subgroup.ps"]]
-    }
-    else {
-      stop()
-    }
-    subgroup.weights <- get_w_from_ps(ps.mat, t, estimand, focal)
-  }
-
-  if (is_not_null(A[["overall.weights"]])) {
-    if (!is.numeric(A[["overall.weights"]])) {
-      stop()
-    }
-    overall.weights <- A[["overall.weights"]]
-  }
-  if (is_not_null(A[["subgroup.weights"]])) {
-    if (!is.numeric(A[["subgroup.weights"]])) {
-      stop()
-    }
-    subgroup.weights <- A[["subgroup.weights"]]
-  }
-
-  if (is_null(overall.weights) || is_null(subgroup.weights)) {
-    #Process w.method
-    w.method <- A[["w.method"]]
-    check.acceptable.method(w.method, msm = FALSE, force = FALSE)
-
-    if (is.character(w.method)) {
-      w.method <- method.to.proper.method(w.method)
-      attr(w.method, "name") <- w.method
-    }
-    else if (is.function(w.method)) {
-      w.method.name <- paste(deparse(substitute(w.method)))
-      check.user.method(w.method)
-      attr(w.method, "name") <- w.method.name
-    }
-
-    if (loss == "matching") {
-      t.bin <- binarize(t)
-      overall.fit <- weightit.fit(covs = covs, treat = t, method = "ps",
-                                  treat.type = "binary", s.weights = s.weights,
-                                  by.factor = factor(rep(1, length(t))), estimand = estimand,
-                                  focal = focal, stabilize = stabilize,
-                                  ps = NULL, moments = 1, int = FALSE)
-      overall.ps <- overall.fit$ps
-      overall.match <- Matching::Match(Tr = t.bin, X = matrix(c(overall.ps, as.numeric(subgroup)), ncol = 2),
-                                       estimand = estimand, caliper = .25,
-                                       M = 1, replace = FALSE, exact = c(FALSE, TRUE), ties = TRUE)
-      overall.weights <- cobalt::get.w(overall.match)
-
-      subgroup.fit <- weightit.fit(covs = covs, treat = t, method = "ps",
-                                   treat.type = "binary", s.weights = s.weights,
-                                   by.factor = subgroup, estimand = estimand,
-                                   focal = focal, stabilize = stabilize,
-                                   ps = NULL, moments = 1, int = FALSE)
-      subgroup.ps <- subgroup.fit$ps
-      subgroup.match <- Matching::Match(Tr = t.bin, X = matrix(c(subgroup.ps, as.numeric(subgroup)), ncol = 2),
-                                        estimand = estimand, caliper = .25,
-                                        M = 1, replace = FALSE, exact = c(FALSE, TRUE), ties = TRUE)
-      subgroup.weights <- cobalt::get.w(subgroup.match)
-    }
-    if (loss == "weighting") {
-      #Estimate overall weights
-      overall.fit <- weightit.fit(covs = covs, treat = t, method = w.method,
-                                  treat.type = "binary", s.weights = s.weights,
-                                  by.factor = factor(rep(1, length(t))), estimand = estimand,
-                                  focal = focal, stabilize = stabilize,
-                                  ps = NULL, moments = 1, int = FALSE)
-      overall.weights <- overall.fit$w
-      #Estimate subgroup weights
-      subgroup.fit <- weightit.fit(covs = covs, treat = t, method = w.method,
-                                   treat.type = "binary", s.weights = s.weights,
-                                   by.factor = subgroup, estimand = estimand,
-                                   focal = focal, stabilize = stabilize,
-                                   ps = NULL, moments = 1, int = FALSE)
-      subgroup.weights <- subgroup.fit$w
-    }
-
-
-  }
-
-  #Find combinations that minimize loss
-  n.subgroups <- nunique(subgroup)
-  if (n.subgroups > 8) {
-    #Stochastic search
-    L1 <- 10
-    L2 <- 5
-    S_ <- setNames(rep("overall", nlevels(subgroup)),
-                   levels(subgroup))
-    rep <- 0
-    no.change.streak <- 0
-    current.loss <- Inf
-    while (rep <= L1 && no.change.streak <= L2) {
-      rep <- rep + 1
-      if (is_null(get0("last.loss"))) last.loss <- Inf
-      else last.loss <- current.loss
-
-      rand.subs <- sample(levels(subgroup))
-      S__ <- setNames(sample(c("overall", "subgroup"), length(S_), replace = TRUE), rand.subs)
-
-      for (i in 1:length(S__)) {
-        S__[i] <- "overall"
-        to.overall <- subgroup %in% rand.subs[S__[rand.subs] == "overall"]
-        w_ <- subgroup.weights
-        w_[to.overall] <- overall.weights[to.overall]
-        loss.o <- F_(covs, subgroup, t, w_)
-
-        S__[i] <- "subgroup"
-        to.overall <- subgroup %in% rand.subs[S__[rand.subs] == "overall"]
-        w_ <- subgroup.weights
-        w_[to.overall] <- overall.weights[to.overall]
-        loss.s <- F_(covs, subgroup, t, w_)
-
-        if (loss.o < loss.s) {
-          S__[i] <- "overall"
-          if (loss.o < current.loss) {
-            current.loss <- loss.o
-            attr(current.loss, "S") <- S__
-          }
-        }
-        else {
-          S__[i] <- "subgroup"
-          if (loss.s < current.loss) {
-            current.loss <- loss.s
-            attr(current.loss, "S") <- S__
-          }
-        }
-
-
-
-      }
-
-      to.overall <- subgroup %in% rand.subs[S__[rand.subs] == "overall"]
-      w_ <- subgroup.weights
-      w_[to.overall] <- overall.weights[to.overall]
-      current.loss <- F_(covs, subgroup, t, w_)
-      if (check_if_zero(current.loss - last.loss)) no.change.streak <- no.change.streak + 1
-      print(current.loss)
-      print(S__)
-    }
-
-    best.S <- attr(current.loss, "S")
-    to.overall <- subgroup %in% rand.subs[best.S[rand.subs] == "overall"]
-    w <- subgroup.weights
-    w[to.overall] <- overall.weights[to.overall]
-
-  }
-  else {
-    S <- setNames(do.call("expand.grid", lapply(integer(n.subgroups), function(x) (c("overall", "subgroup")))),
-                  levels(subgroup))
-    print(S)
-    w.list <<- lapply(seq_len(nrow(S)), function(i) {
-      to.overall <- subgroup %in% levels(subgroup)[S[i, levels(subgroup)] == "overall"]
-      w_ <- subgroup.weights
-      w_[to.overall] <- overall.weights[to.overall]
-      return(w_)
-    })
-
-    loss.val <- vapply(w.list, function(w_) F_(covs, subgroup, t, w_), numeric(1L))
-    best.loss <- which.min(loss.val)
-    w <- w.list[[best.loss]]
-
-    if (is_not_null(overall.fit$ps)) {
-      to.overall <- subgroup %in% levels(subgroup)[S[best.loss, levels(subgroup)] == "overall"]
-      p.score <- subgroup.fit$ps
-      p.score[to.overall] <- overall.fit$ps[to.overall]
-    }
-    else p.score <- NULL
-
-  }
-
-  obj <- list(w = w
-              , ps = p.score
-              #, fit.obj = fit.obj
-  )
-  return(obj)
-}
 
 #------Ready for use, but not ready for CRAN----
 #KBAL
@@ -383,4 +121,92 @@ weightit2kbal <- function(covs, treat, s.weights, subset, estimand, focal, ...) 
   obj <- list(w = w)
   return(obj)
 
+}
+
+#Energy balancing
+weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+  sw <- s.weights[subset]
+
+  sw <- sw/mean(sw)
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+  treat <- (treat - w.m(treat, sw)) / sqrt(col.w.v(treat, sw))
+  covs <- mat_div(center(covs, at = col.w.m(covs, sw)),
+                  sqrt(col.w.v(covs, sw)))
+  p <- ncol(covs)
+
+  if (check.package("osqp")) {
+
+    covs_dist <- as.matrix(dist(covs))
+    covs_means <- colMeans(covs_dist)
+    covs_grand_mean <- mean(covs_means)
+    covs_A <- covs_dist + covs_grand_mean - outer(covs_means, covs_means, "+")
+
+    treat_dist <- as.matrix(dist(treat))
+    treat_means <- colMeans(treat_dist)
+    treat_grand_mean <- mean(treat_means)
+    treat_A <- treat_dist + treat_grand_mean - outer(treat_means, treat_means, "+")
+
+    n <- length(treat)
+
+    min.w <- if_null_then(A[["min.w"]], 1e-8)
+    if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
+      warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE)
+      min.w <- 1e-8
+    }
+
+    Pmat <- (covs_A * treat_A) %*% diag((sw/n)^2)
+
+    Amat <- rbind(diag(n), sw, t(covs * sw)/n, treat * sw/n)
+    lvec <- c(rep(min.w, n), n, rep(0, p), 0)
+    uvec <- c(ifelse(check_if_zero(sw), min.w, Inf), n, rep(0, p), 0)
+
+    if ((is_not_null(moments) && moments != 0) || int) {
+      #Exactly balance correlations of moments and/or interactions
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+      covs <- center(covs, at = col.w.m(covs, sw))
+
+      Amat <- do.call("rbind", list(Amat,
+                                    t(covs * treat * sw / n),
+                                    if (moments > 1) t(covs[,-seq_len(p), drop = FALSE] * sw)/n))
+      lvec <- do.call("c", list(lvec,
+                                rep(0, ncol(covs)),
+                                if (moments > 1) rep(0, ncol(covs)-p)))
+      uvec <- do.call("c", list(uvec,
+                                rep(0, ncol(covs)),
+                                if (moments > 1) rep(0, ncol(covs)-p)))
+    }
+
+    if (is_not_null(A[["eps"]])) {
+      if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
+      if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+    }
+    A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+    if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E5L
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
+    A[["verbose"]] <- TRUE
+
+    options.list <- do.call(osqp::osqpSettings, A)
+
+    opt.out <- do.call(osqp::solve_osqp, list(2*Pmat, A = Amat, l = lvec, u = uvec,
+                                              pars = options.list),
+                       quote = TRUE)
+
+    w <- opt.out$x
+
+    w[w <= min.w] <- min.w
+
+    obj <- list(w = w, fit.obj = opt.out)
+    return(obj)
+  }
 }

@@ -160,11 +160,11 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     if (is_null(A$link)) A$link <- "logit"
     else {
-      if (bin.treat || isFALSE(A$use.mlogit)) {
+      if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit")
+      else if (bin.treat || isFALSE(A$use.mlogit)) {
         if (missing == "saem") acceptable.links <- "logit"
         else acceptable.links <- expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
       }
-      else if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit")
       else acceptable.links <- c("logit", "probit", "bayes.probit", "br.logit")
 
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
@@ -178,16 +178,12 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       else A$link <- which.link
     }
 
-    if (startsWith(A$link, "br.")) {
-      A$link <- substr(A$link, 4, nchar(A$link))
-      use.br <- TRUE
-    }
-    else use.br <- FALSE
+    use.br <- startsWith(A$link, "br.")
+    if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
 
     if (bin.treat) {
 
-      ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat_sub), nrow = length(treat_sub))),
-                     levels(treat_sub))
+      ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
 
       if (missing == "saem") {
         check.package("misaem")
@@ -263,7 +259,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                                       Hess = FALSE,
                                       model = FALSE,
                                       method = A[["link"]],
-                                      contrasts = NULL)))},
+                                      contrasts = NULL)), quote = TRUE)},
                error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment.",
                                                 "\n       Error message: ", conditionMessage(e)), call. = FALSE)})
 
@@ -280,7 +276,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         tryCatch({fit <- do.call(brglm2::brmultinom,
                                  c(list(formula, data,
                                         weights = s.weights),
-                                   control))},
+                                   control), quote = TRUE)},
                  error = function(e) stop("There was a problem with the bias-reduced multinomial logit regression. Try a different link.", call. = FALSE))
 
         ps <- fit$fitted.values
@@ -306,18 +302,18 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           }
         }
         else {
-          ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat_sub), nrow = length(treat_sub))),
-                         levels(treat_sub))
+          ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
 
-          control <- A[names(formals(glm.control))[pmatch(names(A), names(formals(glm.control)), 0)]]
-          fit.list <- setNames(vector("list", nlevels(treat_sub)), levels(treat_sub))
+          control <- A[names(formals(stats::glm.control))[pmatch(names(A), names(formals(stats::glm.control)), 0)]]
+          fit.list <- make_list(levels(treat_sub))
+
           for (i in levels(treat_sub)) {
             t_i <- as.numeric(treat_sub == i)
             data_i <- data.frame(t_i, covs)
-            fit.list[[i]] <- do.call(glm, c(list(formula(data_i), data = data_i,
+            fit.list[[i]] <- do.call(stats::glm, c(list(formula(data_i), data = data_i,
                                                  family = quasibinomial(link = A$link),
                                                  weights = s.weights[subset]),
-                                            control))
+                                            control), quote = TRUE)
             ps[[i]] <- fit.list[[i]]$fitted.values
           }
           fit.obj <- fit.list
@@ -347,13 +343,13 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     if (bin.treat) {
       bad.ps <- FALSE
-      if (is.matrix(ps) || is.data.frame(ps)) {
+      if (is_(ps, c("matrix", "data.frame"))) {
         if (dim(ps) == c(n, 2)) {
           ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
         }
         else if (dim(ps) == c(length(treat), 1)) {
-          ps <- setNames(as.data.frame(matrix(c(1-ps[,1], ps[,1]), ncol = 2)),
+          ps <- setNames(data.frame(1-ps[,1], ps[,1]),
                          levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
         }
@@ -363,7 +359,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else if (is.numeric(ps)) {
         if (length(ps) == n) {
-          ps <- setNames(as.data.frame(matrix(c(1-ps, ps), ncol = 2)),
+          ps <- setNames(data.frame(1-ps, ps),
                          levels(treat))[subset, , drop = FALSE]
           p.score <- ps[[2]]
         }
@@ -373,17 +369,17 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else bad.ps <- TRUE
 
-      if (bad.ps) stop("ps must be a numeric vector with a propensity score for each unit.", call. = FALSE)
+      if (bad.ps) stop("'ps' must be a numeric vector with a propensity score for each unit.", call. = FALSE)
 
     }
     else {
       bad.ps <- FALSE
-      if (is.matrix(ps) || is.data.frame(ps)) {
+      if (is_(ps, c("matrix", "data.frame"))) {
         if (dim(ps) == c(n, nunique(treat))) {
           ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
         }
         else if (dim(ps) == c(n, 1)) {
-          ps <- setNames(do.call("cbind", lapply(levels(treat), function(x) {
+          ps <- setNames(list2DF(lapply(levels(treat), function(x) {
             p_ <- rep(1, length(treat))
             p_[treat == x] <- ps[treat == x, 1]
             return(p_)
@@ -395,7 +391,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else if (is.numeric(ps)) {
         if (length(ps) == n) {
-          ps <- setNames(do.call("cbind", lapply(levels(treat), function(x) {
+          ps <- setNames(list2DF(lapply(levels(treat), function(x) {
             p_ <- rep(1, length(treat))
             p_[treat == x] <- ps[treat == x]
             return(p_)
@@ -572,7 +568,6 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
     A[["focal"]] <- focal
     A[["verbose"]] <- TRUE
 
-
     out <- do.call(optweight::optweight, A, quote = TRUE)
 
     obj <- list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
@@ -709,7 +704,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
     if (estimand == "ATT") {
 
       control.levels <- levels(treat)[levels(treat) != focal]
-      fit.list <- setNames(vector("list", length(control.levels)), control.levels)
+      fit.list <- make_list(control.levels)
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
@@ -744,7 +739,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
       }
     }
     else if (estimand == "ATE") {
-      fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
+      fit.list <- make_list(levels(treat))
 
       for (i in levels(treat)) {
         #Mimicking twang
@@ -936,7 +931,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       iters <- 1:n.trees
       iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
 
-      if (anyNA(iters.grid) || is_null(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
+      if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
 
       ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
       w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -953,7 +948,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       it[2] <- iters.grid[min(length(iters.grid), it[2])]
       iters.to.check <- iters[between(iters, iters[it])]
 
-      if (anyNA(iters.to.check) || is_null(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
+      if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
       ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
       w <- apply(ps, 2, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -1004,7 +999,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       iters <- 1:n.trees
       iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
 
-      if (anyNA(iters.grid) || is_null(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
+      if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
 
       ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
       w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -1068,7 +1063,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       it[2] <- iters.grid[min(length(iters.grid), it[2])]
       iters.to.check <- iters[between(iters, iters[it])]
 
-      if (anyNA(iters.to.check) || is_null(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
+      if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
       ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
       w <- apply(ps, 3, get_w_from_ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
@@ -1318,7 +1313,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     iters <- 1:n.trees
     iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
 
-    if (anyNA(iters.grid) || is_null(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
+    if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
 
     gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
 
@@ -1333,7 +1328,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     it[2] <- iters.grid[min(length(iters.grid), it[2])]
     iters.to.check <- iters[between(iters, iters[it])]
 
-    if (anyNA(iters.to.check) || is_null(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
+    if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
     gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
     w <- apply(gps, 2, get_cont_weights, treat = treat, s.weights = s.weights, dens.num = dens.num,
@@ -1416,7 +1411,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     if (estimand == "ATT") {
       w <- rep(1, length(treat))
       control.levels <- levels(treat)[levels(treat) != focal]
-      fit.list <- setNames(vector("list", length(control.levels)), control.levels)
+      fit.list <- make_list(control.levels)
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
@@ -1480,7 +1475,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
       }
       else {
         w <- rep(1, length(treat))
-        fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
+        fit.list <- make_list(levels(treat))
 
         for (i in levels(treat)) {
           new.data[[1]] <- ifelse(treat == i, 1, 0)
@@ -1634,7 +1629,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     if (estimand == "ATT") {
       w <- rep(1, length(treat))
       control.levels <- levels(treat)[levels(treat) != focal]
-      fit.list <- setNames(vector("list", length(control.levels)), control.levels)
+      fit.list <- make_list(control.levels)
 
       covs[treat == focal,] <- covs[treat == focal, , drop = FALSE] * s.weights[subset][treat == focal] * sum(treat == focal)/sum(s.weights[subset][treat == focal])
 
@@ -1671,7 +1666,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     }
     else if (estimand == "ATE") {
       w <- rep(1, length(treat))
-      fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
+      fit.list <- make_list(levels(treat))
 
       for (i in levels(treat)) {
         covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
@@ -1799,7 +1794,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
     if (estimand == "ATT") {
       w <- rep(1, length(treat))
       control.levels <- levels(treat)[levels(treat) != focal]
-      fit.list <- setNames(vector("list", length(control.levels)), control.levels)
+      fit.list <- make_list(control.levels)
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
@@ -1830,7 +1825,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
     }
     else if (estimand == "ATE") {
       w <- rep(1, length(treat))
-      fit.list <- setNames(vector("list", nlevels(treat)), levels(treat))
+      fit.list <- make_list(levels(treat))
 
       for (i in levels(treat)) {
         covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
@@ -1924,8 +1919,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     A[["SL.method"]] <- method.balance(stop.method)
   }
 
-  ps <- setNames(as.data.frame(matrix(NA_real_, ncol = nunique(treat), nrow = length(treat))),
-                 levels(treat))
+  ps <- make_df(levels(treat), nrow = length(treat))
 
   if (is_binary(treat)) {
 
@@ -1953,7 +1947,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   }
   else {
-    fit.list <- info <- setNames(vector("list", nlevels(treat)), levels(treat))
+    fit.list <- info <- make_list(levels(treat))
 
     for (i in levels(treat)) {
       treat_i <- as.numeric(treat == i)
@@ -2148,5 +2142,133 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   return(obj)
 }
 
+#Energy balancing
+weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+  A <- list(...)
 
+  n <- length(treat)
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  sw <- s.weights[subset]
 
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+  covs <- mat_div(center(covs, at = col.w.m(covs, sw)),
+                  sqrt(col.w.v(covs, sw)))
+
+  if (check.package("osqp")) {
+    if (is_not_null(A[["dist.mat"]])) {
+      if (!is.matrix(A[["dist.mat"]]) || !all(dim(A[["dist.mat"]]) == n) ||
+          !all(check_if_zero(diag(A[["dist.mat"]]))) || any(A[["dist.mat"]] < 0) ||
+          !isSymmetric(unname(A[["dist.mat"]]))) {
+        stop("'dist.mat' must be a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
+      }
+      else d <- unname(A[["dist.mat"]][subset, subset])
+    }
+    else d <- as.matrix(dist(covs))
+
+    n <- length(treat)
+    levels_treat <- levels(treat)
+    diagn <- diag(n)
+
+    min.w <- if_null_then(A[["min.w"]], 1e-8)
+    if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
+      warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE)
+      min.w <- 1e-8
+    }
+
+    for (t in levels_treat) sw[treat == t] <- sw[treat == t]/mean(sw[treat == t])
+
+    tmat <- vapply(levels_treat, function(t) treat == t, logical(n))
+    nt <- colSums(tmat)
+
+    J <- setNames(lapply(levels_treat, function(t) sw*tmat[,t]/nt[t]), levels_treat)
+
+    if (estimand == "ATE") {
+      J0 <- as.matrix(sw/n)
+
+      M2_array <- vapply(levels_treat, function(t) -2 * J[[t]] * t(t(d) * J[[t]]), diagn)
+      M1_array <- vapply(levels_treat, function(t) 2 * J[[t]] * d %*% J0, J0)
+
+      M2 <- rowSums(M2_array, dims = 2)
+      M1 <- rowSums(M1_array)
+
+      if (!isFALSE(A[["improved"]])) {
+        all_pairs <- combn(levels_treat, 2, simplify = FALSE)
+        M2_pairs_array <- vapply(all_pairs, function(p) (J[[p[1]]]-J[[p[2]]]) * t(t(d) * (J[[p[2]]]-J[[p[1]]])), diagn)
+        M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
+      }
+
+      #Constraints for positivity and sum of weights
+      Amat <- rbind(diagn, t(sw * tmat))
+      lvec <- c(rep(min.w, n), nt)
+      uvec <- c(ifelse(check_if_zero(sw), min.w, Inf), nt)
+    }
+    else {
+
+      J0_focal <- as.matrix(J[[focal]])
+      clevs <- levels_treat[levels_treat != focal]
+
+      M2_array <- vapply(clevs, function(t) -2 * J[[t]] * t(t(d) * J[[t]]), diagn)
+      M1_array <- vapply(clevs, function(t) 2 * J[[t]] * d %*% J0_focal, J0_focal)
+
+      M2 <- rowSums(M2_array, dims = 2)
+      M1 <- rowSums(M1_array)
+
+      #Constraints for positivity and sum of weights
+      Amat <- rbind(diagn, t(sw*tmat))
+      lvec <- c(ifelse_(check_if_zero(sw), min.w, treat == focal, 1, min.w), nt)
+      uvec <- c(ifelse_(check_if_zero(sw), min.w, treat == focal, 1, Inf), nt)
+    }
+
+    if (moments != 0 || int) {
+      #Exactly balance moments and/or interactions
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+      if (estimand == "ATE") targets <- col.w.m(covs, sw)
+      else targets <- col.w.m(covs[treat == focal, , drop = FALSE], sw[treat == focal])
+
+      Amat <- do.call("rbind", c(list(Amat),
+                                 lapply(levels_treat, function(t) {
+                                   if (is_null(focal) || t != focal) t(covs) %*% J[,,t]
+                                 })))
+      lvec <- do.call("c", c(list(lvec),
+                             lapply(levels_treat, function(t) {
+                               if (is_null(focal) || t != focal) targets
+                             })))
+      uvec <- do.call("c", c(list(uvec),
+                             lapply(levels_treat, function(t) {
+                               if (is_null(focal) || t != focal) targets
+                             })))
+    }
+
+    if (is_not_null(A[["eps"]])) {
+      if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
+      if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+    }
+    A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+    if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E5L
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
+    A[["verbose"]] <- TRUE
+
+    options.list <- do.call(osqp::osqpSettings, A)
+
+    opt.out <- do.call(osqp::solve_osqp, list(P = M2, q = M1, A = Amat, l = lvec, u = uvec,
+                                              pars = options.list),
+                       quote = TRUE)
+
+    w <- opt.out$x
+
+    if (estimand == "ATT") w[treat == focal] <- 1
+
+    w[w <= min.w] <- min.w
+
+    obj <- list(w = w, fit.obj = opt.out)
+    return(obj)
+  }
+}

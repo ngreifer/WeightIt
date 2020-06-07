@@ -1,5 +1,5 @@
 weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, length(treat)), by.factor = factor(rep(1, length(treat))),
-                         estimand = "ATE", focal = NULL, stabilize = FALSE, ps = NULL, moments = 1, int = FALSE,
+                         estimand = "ATE", focal = NULL, stabilize = FALSE, ps = NULL, moments = NULL, int = FALSE,
                          subclass = NULL, is.MSM.method = FALSE, missing = if (anyNA(covs)) "ind" else "", include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
@@ -35,6 +35,8 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
                              subclass = subclass,
                              ps = ps,
                              missing = missing,
+                             moments = moments,
+                             int = int,
                              ...)
       }
 
@@ -125,23 +127,23 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
     else if (method == "twang") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2twang(covs = covs,
-                            treat = treat,
-                            s.weights = s.weights,
-                            estimand = estimand,
-                            focal = focal,
-                            subset = by.factor == i,
-                            stabilize = stabilize,
-                            subclass = subclass,
-                            missing = missing,
-                            ...)
+                              treat = treat,
+                              s.weights = s.weights,
+                              estimand = estimand,
+                              focal = focal,
+                              subset = by.factor == i,
+                              stabilize = stabilize,
+                              subclass = subclass,
+                              missing = missing,
+                              ...)
       }
       else {
         obj <- weightit2twang.cont(covs = covs,
-                                 treat = treat,
-                                 s.weights = s.weights,
-                                 subset = by.factor == i,
-                                 missing = missing,
-                                 ...)
+                                   treat = treat,
+                                   s.weights = s.weights,
+                                   subset = by.factor == i,
+                                   missing = missing,
+                                   ...)
       }
 
     }
@@ -212,15 +214,14 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
                              ...)
       }
       else {
-        # stop("Entropy balancing is not compatible with continuous treatments.", call. = FALSE)
         obj <- weightit2ebal.cont(covs = covs,
-                                    treat = treat,
-                                    subset = by.factor == i,
-                                    s.weights = s.weights,
-                                    moments = moments,
-                                    int = int,
-                                    missing = missing,
-                                    ...)
+                                  treat = treat,
+                                  subset = by.factor == i,
+                                  s.weights = s.weights,
+                                  moments = moments,
+                                  int = int,
+                                  missing = missing,
+                                  ...)
       }
     }
     else if (method == "super") {
@@ -266,6 +267,31 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
         stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
       }
     }
+    else if (method == "energy") {
+      if (treat.type %in% c("binary", "multinomial")) {
+        obj <- weightit2energy(covs = covs,
+                               treat = treat,
+                               s.weights = s.weights,
+                               subset = by.factor == i,
+                               estimand = estimand,
+                               focal = focal,
+                               stabilize = stabilize,
+                               moments = moments,
+                               int = int,
+                               missing = missing,
+                               ...)
+      }
+      else {
+        obj <- weightit2energy.cont(covs = covs,
+                                    treat = treat,
+                                    subset = by.factor == i,
+                                    s.weights = s.weights,
+                                    moments = moments,
+                                    int = int,
+                                    missing = missing,
+                                    ...)
+      }
+    }
     # else if (method == "kbal") {
     #   if (treat.type %in% c("binary", "multinomial")) {
     #     obj <- weightit2kbal(covs = covs,
@@ -287,7 +313,7 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
       warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. NA weights will be set to 0.", call. = FALSE)
       obj$w[!is.finite(obj$w)] <- 0
     }
-    else if (any(!is.finite(obj$w))) probably.a.bug()
+    # else if (any(!is.finite(obj$w))) probably.a.bug()
 
     out$weights[by.factor == i] <- obj$w
     if (is_not_null(obj$ps)) out$ps[by.factor == i] <- obj$ps
