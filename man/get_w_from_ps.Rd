@@ -50,7 +50,7 @@ When \code{subclass} is not \code{NULL}, marginal mean weighting through stratif
 \code{get_w_from_ps} is not compatible with continuous treatments.
 }
 \value{
-A vector of weights.
+A vector of weights. When \code{subclass} is not \code{NULL}, the subclasses are return as the \code{"subclass"} attribute.
 }
 
 \author{
