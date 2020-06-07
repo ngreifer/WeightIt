@@ -1,5 +1,5 @@
 weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stabilize = FALSE, focal = NULL,
-                     by = NULL, s.weights = NULL, ps = NULL, moments = 1L, int = FALSE, subclass = NULL,
+                     by = NULL, s.weights = NULL, ps = NULL, moments = NULL, int = FALSE, subclass = NULL,
                      missing = NULL, verbose = FALSE, include.obj = FALSE, ...) {
 
   ## Checks and processing ----
@@ -93,7 +93,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   #Process moments and int
   moments.int <- process.moments.int(moments, int, method)
-  moments <- moments.int["moments"]; int <- moments.int["int"]
+  moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
 
   call <- match.call()
   # args <- list(...)
