@@ -1,6 +1,6 @@
 #Test
 for (i in dir("R/")) source(paste0("R/", i))
-library(ggplot2)
+library(ggplot2); library(crayon)
 stop("Done sourcing.", call. = FALSE)
 
 #Tests things quickly
@@ -81,6 +81,9 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebal", estimand
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebal", estimand = "ATT",
               focal = "A", s.weights = s)
 
+W <- weightit(f.build("re78", covs), data = lalonde, method = "ebal")
+
+
 #method = "ebcw"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATE")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATC")
@@ -102,6 +105,17 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "optweight", est
               focal = "A", s.weights = s)
 
 W <- weightit(f.build("re78", covs), data = lalonde, method = "optweight")
+
+#method = "energy"
+W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATE")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATE", improved = FALSE)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATT", moments = 1)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATC",
+              s.weights = s)
+
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "energy", estimand = "ATE")
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "energy", estimand = "ATT",
+              focal = "A", s.weights = s)
 
 #user defined
 
