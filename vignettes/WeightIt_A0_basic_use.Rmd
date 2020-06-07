@@ -138,7 +138,7 @@ library("cobalt") #if not already attached
 bal.tab(list(tx1 ~ age + gender + use0,
              tx2 ~ tx1 + use1 + age + gender + use0,
              tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-        data = iptwExWide, m.threshold = .05, disp.ks = TRUE,
+        data = iptwExWide, stats = c("m", "ks"), thresholds = c(m = .05),
         which.time = .all)
 ```
 
