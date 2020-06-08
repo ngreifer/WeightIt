@@ -569,12 +569,12 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
   return(s.d.denom)
 }
 ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
-  if (is_(ps, "numeric")) {
+  if (is_(ps, c("matrix", "data.frame"))) {
+    ps.names <- rownames(ps)
+  }
+  else if (is_(ps, "numeric")) {
     ps.names <- names(ps)
     ps <- matrix(ps, ncol = 1)
-  }
-  else if (is_(ps, c("matrix", "data.frame"))) {
-    ps.names <- rownames(ps)
   }
 
   if (is.factor(treat)) t.levels <- levels(treat)
