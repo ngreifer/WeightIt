@@ -2250,7 +2250,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
       Amat <- do.call("rbind", c(list(Amat),
                                  lapply(levels_treat, function(t) {
-                                   if (is_null(focal) || t != focal) t(covs) %*% J[,,t]
+                                   if (is_null(focal) || t != focal) t(covs * J[[t]])
                                  })))
       lvec <- do.call("c", c(list(lvec),
                              lapply(levels_treat, function(t) {
