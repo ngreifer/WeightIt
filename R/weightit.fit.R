@@ -282,14 +282,15 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
                                ...)
       }
       else {
-        obj <- weightit2energy.cont(covs = covs,
-                                    treat = treat,
-                                    subset = by.factor == i,
-                                    s.weights = s.weights,
-                                    moments = moments,
-                                    int = int,
-                                    missing = missing,
-                                    ...)
+        stop("Energy balancing weights are not compatible with continuous treatments.", call. = FALSE)
+        # obj <- weightit2energy.cont(covs = covs,
+        #                             treat = treat,
+        #                             subset = by.factor == i,
+        #                             s.weights = s.weights,
+        #                             moments = moments,
+        #                             int = int,
+        #                             missing = missing,
+        #                             ...)
       }
     }
     # else if (method == "kbal") {
