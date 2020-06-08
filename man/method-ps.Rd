@@ -56,9 +56,9 @@ For continuous treatments only, the following arguments may be supplied:
 
 For binary treatments, additional arguments to \code{glm} can be specified as well. The \code{method} argument in \code{glm} is renamed to \code{glm.method}. This can be used to supply alternative fitting functions, such as those implemented in the \pkg{glm2} package. Other arguments to \code{weightit} are passed to \code{...} in \code{glm}.
 
-In the presence of missing data with \code{link = "logit"} and \code{missing = "saem"}, additional arguments are passed to \code{\link[misaem]{miss.saem}} and \code{\link[misaem]{pred_saem}}, except the \code{method} argument in \code{\link[misaem]{pred_saem}} is replaced with \code{saem_method}.
+In the presence of missing data with \code{link = "logit"} and \code{missing = "saem"}, additional arguments are passed to \code{\link[misaem]{miss.saem}} and \code{\link[misaem]{pred_saem}}, except the \code{method} argument in \code{\link[misaem]{pred_saem}} is replaced with \code{saem.method}.
 
-For multi-category treatments with \code{link = "logit"} or \code{"probit"}, the default is to use multinomial logistic or probit regression using the \pkg{mlogit} package. To request that separate binary logistic or probit regressions are run instead, set \code{use.mlogit = FALSE}. This can be helpful when \code{mlogit} is slow or fails to converge.
+For multi-category treatments with \code{link = "logit"} or \code{"probit"}, the default is to use multinomial logistic or probit regression using the \pkg{mlogit} package. To request that separate binary logistic or probit regressions are run instead, set \code{use.mlogit = FALSE}. This can be helpful when \code{mlogit} is slow or fails to converge. With \code{link = "logit"}, the option \code{use.mnlogit = TRUE} can be specified to request that \code{\link[mnlogit]{mnlogit}} from the \pkg{mnlogit} package is used instead, which can be faster for large datasets.
 }
 \section{Additional Outputs}{
 \describe{
