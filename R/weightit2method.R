@@ -197,7 +197,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                                                  var_cal = FALSE),
                                             A[names(A) %in% names(formals(misaem::miss.saem))]))
 
-        if (is_null(A[["saem_method"]])) A[["saem_method"]] <- formals(misaem::pred_saem)[["method"]]
+        if (is_null(A[["saem.method"]])) A[["saem.method"]] <- formals(misaem::pred_saem)[["method"]]
 
         p.score <- misaem::pred_saem(covs, fit$beta, fit$mu, fit$sig2,
                                      seed = NULL, method = A[["saem_method"]])
@@ -285,18 +285,34 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       else if (A$link %in% c("logit", "probit")) {
         if (!isFALSE(A$use.mlogit)) {
           if (check.package("mlogit")) {
-            data <- data.frame(treat = treat_sub , s.weights = s.weights[subset], covs)
-            covnames <- names(data)[-c(1,2)]
-            mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
-            if (A$link[1] == "logit" && check.package("mnlogit", alternative = TRUE)) mn.fun <- mnlogit::mnlogit
-            else mn.fun <- mlogit::mlogit
-            tryCatch({fit <- mn.fun(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
-                                    data = mult,
-                                    estimate = TRUE,
-                                    probit = ifelse(A$link[1] == "probit", TRUE, FALSE),
-                                    weights = s.weights, ...)},
-                     error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
-            )
+            if (isTRUE(A$use.mnlogit) && A$link[1] == "logit" && check.package("mnlogit", alternative = TRUE)) {
+              data <- data.frame(treat = treat_sub, covs)
+              covnames <- names(data)[-1]
+              mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = names(data)[1])
+              mult[["alt"]] <- as.character(mult[["alt"]])
+              tryCatch({
+                fit <- mnlogit::mnlogit(as.formula(paste0(names(data)[1], " ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
+                                        data = mult,
+                                        choiceVar = "alt",
+                                        weights = s.weights[subset], ...)
+              },
+              error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mnlogit().\n       Try again with use.mnlogit = FALSE."), call. = FALSE)}
+              )
+            }
+            else {
+              data <- data.frame(treat = treat_sub, .s.weights = s.weights[subset], covs)
+              covnames <- names(data)[-c(1,2)]
+              mult <- dfidx::dfidx(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
+              tryCatch({
+                fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
+                                      data = mult,
+                                      estimate = TRUE,
+                                      probit = A$link[1] == "probit",
+                                      weights = .s.weights, ...)
+              },
+              error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
+              )
+            }
             ps <- fitted(fit, outcome = FALSE)
             fit.obj <- fit
           }
@@ -2191,7 +2207,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     if (estimand == "ATE") {
       J0 <- as.matrix(sw/n)
 
-      M2_array <- vapply(levels_treat, function(t) -2 * J[[t]] * t(t(d) * J[[t]]), diagn)
+      M2_array <- vapply(levels_treat, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
       M1_array <- vapply(levels_treat, function(t) 2 * J[[t]] * d %*% J0, J0)
 
       M2 <- rowSums(M2_array, dims = 2)
@@ -2199,7 +2215,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
       if (!isFALSE(A[["improved"]])) {
         all_pairs <- combn(levels_treat, 2, simplify = FALSE)
-        M2_pairs_array <- vapply(all_pairs, function(p) (J[[p[1]]]-J[[p[2]]]) * t(t(d) * (J[[p[2]]]-J[[p[1]]])), diagn)
+        M2_pairs_array <- vapply(all_pairs, function(p) -tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
         M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
       }
 
@@ -2213,7 +2229,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
       J0_focal <- as.matrix(J[[focal]])
       clevs <- levels_treat[levels_treat != focal]
 
-      M2_array <- vapply(clevs, function(t) -2 * J[[t]] * t(t(d) * J[[t]]), diagn)
+      M2_array <- vapply(clevs, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
       M1_array <- vapply(clevs, function(t) 2 * J[[t]] * d %*% J0_focal, J0_focal)
 
       M2 <- rowSums(M2_array, dims = 2)
