@@ -9,18 +9,18 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   #Checks
   if (is_null(ps)) {
     if (is_null(formula) || is_null(class(formula)) || !is.formula(formula, 2)) {
-      stop("formula must be a formula relating treatment to covariates.", call. = FALSE)
+      stop("'formula' must be a formula relating treatment to covariates.", call. = FALSE)
     }
   }
   else {
     if (!(is.character(ps) && length(ps) == 1) && !is.numeric(ps)) {
-      stop("The argument to ps must be a vector or data frame of propensity scores or the (quoted) names of variables in data that contain propensity scores.", call. = FALSE)
+      stop("The argument to 'ps' must be a vector or data frame of propensity scores or the (quoted) names of variables in 'data' that contain propensity scores.", call. = FALSE)
     }
     if (is.character(ps) && length(ps)==1) {
       if (ps %in% names(data)) {
         ps <- data[[ps]]
       }
-      else stop("The name supplied to ps is not the name of a variable in data.", call. = FALSE)
+      else stop("The name supplied to 'ps' is not the name of a variable in 'data'.", call. = FALSE)
     }
     method <- "ps"
   }

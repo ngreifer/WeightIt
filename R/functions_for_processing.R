@@ -36,7 +36,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   }
   else if (!is.function(method)) bad.method <- TRUE
 
-  if (bad.method) stop("method must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.", call. = FALSE)
+  if (bad.method) stop("'method' must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.", call. = FALSE)
 
   if (msm && !force && is.character(method)) {
     m <- method.to.proper.method(method)
@@ -52,7 +52,7 @@ check.user.method <- function(method) {
   # else if (all(c("covs.list", "treat.list") %in% names(formals(method)))) {
   # }
   else {
-    stop("The user-provided function to method must contain \"covs\" and \"treat\" as named parameters.", call. = FALSE)
+    stop("The user-provided function to 'method' must contain \"covs\" and \"treat\" as named parameters.", call. = FALSE)
   }
 }
 method.to.phrase <- function(method) {
@@ -155,21 +155,21 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
   if (treat.type == "multinomial") {
     unique.treat <- unique(treat, nmax = length(treat)/4)
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
+      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
       reported.estimand <- estimand <- "ATT"
     }
 
     if (estimand == "ATT") {
       if (is_null(focal)) {
         if (is_null(treated) || treated %nin% unique.treat) {
-          stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
+          stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to 'focal'.", call. = FALSE)
         }
         focal <- treated
       }
     }
     else if (estimand == "ATC") {
       if (is_null(focal)) {
-        stop("When estimand = \"ATC\" for multinomial treatments, an argument must be supplied to focal.", call. = FALSE)
+        stop("When estimand = \"ATC\" for multinomial treatments, an argument must be supplied to 'focal'.", call. = FALSE)
       }
     }
   }
@@ -177,7 +177,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
     unique.treat <- unique(treat, nmax = 2)
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      warning(paste(estimand, "is not compatible with focal. Setting estimand to \"ATT\"."), call. = FALSE)
+      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
       reported.estimand <- estimand <- "ATT"
     }
 
@@ -191,7 +191,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
           else {
             treated <- names(which.min(table(treat))) #Smaller group is treated
             message(paste0("Assuming ", word_list(treated, quotes = !is.numeric(treat), is.are = TRUE),
-                           " the treated level. If not, supply an argument to focal."))
+                           " the treated level. If not, supply an argument to 'focal'."))
           }
         }
         focal <- treated
@@ -212,7 +212,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
           else {
             treated <- names(which.min(table(treat))) #Smaller group is treated
             message(paste0("Assuming ", word_list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE),
-                           " the control level. If not, supply an argument to focal."))
+                           " the control level. If not, supply an argument to 'focal'."))
           }
         }
         focal <- unique.treat[unique.treat %nin% treated]
@@ -227,7 +227,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
   }
 
   if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
-    stop("The argument supplied to focal must be the name of a level of treat.", call. = FALSE)
+    stop("The argument supplied to 'focal' must be the name of a level of treatment.", call. = FALSE)
   }
 
   return(list(focal = as.character(focal),
@@ -262,7 +262,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
   else if (is.formula(by, 1)) {
     t.c <- get.covs.and.treat.from.formula(by, data)
     by <- t.c[["reported.covs"]]
-    if (NCOL(by) != 1) stop(paste0("Only one variable can be on the right-hand side of the formula for ", by.arg, "."), call. = FALSE)
+    if (NCOL(by) != 1) stop(paste0("Only one variable can be on the right-hand side of the formula for '", by.arg, "'."), call. = FALSE)
     else by.name <- colnames(by)
   }
   else bad.by <- TRUE
@@ -279,11 +279,11 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
   }
   else {
-    stop(paste(by.arg, "must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side."), call. = FALSE)
+    stop(paste0("'",by.arg, "' must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side."), call. = FALSE)
   }
 
   if (treat.type != "continuous" && any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
-    stop(paste0("Not all the groups formed by ", by.arg, " contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening ", by.arg, "."), call. = FALSE)
+    stop(paste0("Not all the groups formed by '", by.arg, "' contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening ", by.arg, "."), call. = FALSE)
   }
   attr(by.components, "by.factor") <- by.factor
   return(by.components)
@@ -298,10 +298,10 @@ process.moments.int <- function(moments, int, method) {
         if (length(moments) != 1 || !is.numeric(moments) ||
             !check_if_zero(moments - round(moments))) {
           if (method == "energy") {
-            if (moments < 0) stop("moments must be a nonnegative integer of length 1.", call. = FALSE)
+            if (moments < 0) stop("'moments' must be a nonnegative integer of length 1.", call. = FALSE)
           }
           else if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
-            if (moments < 1) stop("moments must be a positive integer of length 1.", call. = FALSE)
+            if (moments < 1) stop("'moments' must be a positive integer of length 1.", call. = FALSE)
           }
           moments <- as.integer(moments)
         }
@@ -312,8 +312,8 @@ process.moments.int <- function(moments, int, method) {
       }
     }
     else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
-      warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE),
-                     " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and"), "."), call. = FALSE)
+      warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = 1),
+                     " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and", quotes = 1), "."), call. = FALSE)
       moments <- NULL
       int <- FALSE
     }
@@ -330,7 +330,7 @@ process.MSM.method <- function(is.MSM.method, method) {
   else if (method %in% methods.with.MSM) {
     if (is_null(is.MSM.method)) is.MSM.method <- TRUE
     else if (!isTRUE(is.MSM.method)) {
-      message(paste0(method.to.phrase(method), " can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set is.MSM.method to TRUE."))
+      message(paste0(method.to.phrase(method), " can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set 'is.MSM.method' to TRUE."))
     }
   }
   else {
@@ -381,22 +381,24 @@ process.missing <- function(missing, method, treat.type) {
                     # , kbal = c("ind")
   ))
 
-  if (!is.character(missing) || length(missing) != 1) stop("missing must be a string of length 1.", call. = FALSE)
 
   allowable.missings <- AE[[treat.type]][[method]]
   if (is_null(missing)) {
     missing <- allowable.missings[1]
     warning(paste0("Missing values are present in the covariates. See ?WeightIt::method_", method, " for information on how these are handled."), call. = FALSE)
   }
-  else if (missing %pin% allowable.missings) {
-    missing <- allowable.missings[pmatch(missing, allowable.missings)]
-  }
   else {
-    missing <- allowable.missings[1]
-    warning(paste0("Only ", word_list(allowable.missings, quotes = TRUE, is.are = TRUE), " allowed for missing with ",
-                   treat.type,
-                   " treatments. Using link = ", word_list(allowable.missings[1], quotes = TRUE), "."),
-            call. = FALSE, immediate. = TRUE)
+    if (!is.character(missing) || length(missing) != 1) stop("'missing' must be a string of length 1.", call. = FALSE)
+    if (missing %pin% allowable.missings) {
+      missing <- allowable.missings[pmatch(missing, allowable.missings)]
+    }
+    else {
+      missing <- allowable.missings[1]
+      warning(paste0("Only ", word_list(allowable.missings, quotes = 2, is.are = TRUE), " allowed for 'missing' with ",
+                     treat.type,
+                     " treatments. Using link = ", word_list(allowable.missings[1], quotes = 2), "."),
+              call. = FALSE, immediate. = TRUE)
+    }
   }
   return(missing)
 }
@@ -476,7 +478,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
     }
     else {
       if (length(try.s.d.denom) > 1 && length(try.s.d.denom) != ncol(weights)) {
-        stop("s.d.denom must have length 1 or equal to the number of valid sets of weights.", call. = FALSE)
+        stop("'s.d.denom' must have length 1 or equal to the number of valid sets of weights.", call. = FALSE)
       }
       else s.d.denom <- try.s.d.denom
     }
@@ -495,7 +497,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
       }
       else {
         if (length(try.estimand) > 1 && length(try.estimand) != ncol(weights)) {
-          stop("estimand must have length 1 or equal to the number of valid sets of weights.", call. = FALSE)
+          stop("'estimand' must have length 1 or equal to the number of valid sets of weights.", call. = FALSE)
         }
         else s.d.denom <- vapply(try.estimand, switch, character(1L), att = "treated", atc = "control", ate = "pooled")
       }
@@ -588,7 +590,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
             all(check_if_zero(binarize(treat) - str2num(treat)))) treated.level <- 1
         else if (is_not_null(treated)) {
           if (treated %in% treat) treated.level <- treated
-          else stop("The argument to treated must be a value in treat.", call. = FALSE)
+          else stop("The argument to 'treated' must be a value in treat.", call. = FALSE)
         }
         else if (is_not_null(assumed.treated)) {
           treated.level <- assumed.treated
@@ -597,7 +599,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
           treated.level <- colnames(ps)
         }
         else {
-          stop("If the treatment has two non-0/1 levels and ps is a vector or has only one column, an argument to treated must be supplied.", call. = FALSE)
+          stop("If the treatment has two non-0/1 levels and 'ps' is a vector or has only one column, an argument to 'treated' must be supplied.", call. = FALSE)
         }
 
         t.levels <- c(treated.level, t.levels[t.levels != treated.level])
@@ -605,16 +607,16 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
       }
       else if (ncol(ps) == 2) {
         if (!all(as.character(t.levels) %in% colnames(ps))) {
-          stop("If ps has two columns, they must be named with the treatment levels.", call. = FALSE)
+          stop("If 'ps' has two columns, they must be named with the treatment levels.", call. = FALSE)
         }
         # else ps <- ps
       }
       else {
-        stop("ps cannot have more than two columns if the treatment is binary.", call. = FALSE)
+        stop("'ps' cannot have more than two columns if the treatment is binary.", call. = FALSE)
       }
     }
     else {
-      stop("ps must be a matrix, data.frame, or vector of propensity scores.", call. = FALSE)
+      stop("'ps' must be a matrix, data frame, or vector of propensity scores.", call. = FALSE)
     }
   }
   else if (treat.type == "multinomial") {
@@ -625,31 +627,31 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
           ps <- matrix(rep(ps, nunique(treat)), nrow = length(treat), dimnames = list(ps.names, t.levels))
         }
         else {
-          stop("With multinomial treatments, ps can be a vector or have only one column only if the estimand is the ATE.", call. = FALSE)
+          stop("With multinomial treatments, 'ps' can be a vector or have only one column only if the estimand is the ATE.", call. = FALSE)
         }
       }
       else if (ncol(ps) == nunique(treat)) {
         if (!all(t.levels %in% colnames(ps))) {
-          stop("The columns of ps must be named with the treatment levels.", call. = FALSE)
+          stop("The columns of 'ps' must be named with the treatment levels.", call. = FALSE)
         }
         else ps <- ps
       }
       else {
-        stop("ps must have as many columns as there are treatment levels.", call. = FALSE)
+        stop("'ps' must have as many columns as there are treatment levels.", call. = FALSE)
       }
     }
     else {
-      stop("ps must be a matrix or data.frame of propensity scores.", call. = FALSE)
+      stop("'ps' must be a matrix or data frame of propensity scores.", call. = FALSE)
     }
   }
   return(ps)
 }
 subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
   if (length(subclass) != 1 || !is.numeric(subclass)) {
-    stop("subclass must be a single number.", call. = FALSE)
+    stop("'subclass' must be a single number.", call. = FALSE)
   }
   else if (round(subclass) < 1) {
-    stop("subclass must be greater than 1.", call. = FALSE)
+    stop("'subclass' must be greater than 1.", call. = FALSE)
   }
   subclass <- round(subclass)
 
@@ -795,10 +797,10 @@ get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, us
   else {
     dens.denom <- densfun(p.denom/sd(p.denom))
     if (is_null(dens.denom) || !is.atomic(dens.denom) || anyNA(dens.denom)) {
-      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      stop("There was a problem with the output of 'density.' Try another density function or leave it blank to use the normal density.", call. = FALSE)
     }
     else if (any(dens.denom <= 0)) {
-      stop("The input to density may not accept the full range of standardized residuals of the treatment model.", call. = FALSE)
+      stop("The input to 'density' may not accept the full range of standardized residuals of the treatment model.", call. = FALSE)
     }
 
   }
