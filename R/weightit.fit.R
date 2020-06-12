@@ -3,11 +3,11 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
                          subclass = NULL, is.MSM.method = FALSE, missing = if (anyNA(covs)) "ind" else "", include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
-  out <- setNames(vector("list", 3), c("weights", "ps", "fit.obj"))
+  out <- make_list(c("weights", "ps", "fit.obj"))
 
   treat.type <- match_arg(treat.type, c("binary", "multinomial", "continuous"))
-  if (include.obj) fit.obj <- setNames(vector("list", nlevels(by.factor)), levels(by.factor))
-  info <- setNames(vector("list", nlevels(by.factor)), levels(by.factor))
+  if (include.obj) fit.obj <- make_list(levels(by.factor))
+  info <- make_list(levels(by.factor))
 
   obj <- NULL
   for (i in levels(by.factor)) {
