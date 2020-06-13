@@ -47,6 +47,9 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
   if (is_null(treat)) stop("No treatment variable was specified.", call. = FALSE)
+  if (length(treat) != nrow(covs)) {
+    stop("Treatment and covariates must have the same number of units.", call. = FALSE)
+  }
 
   n <- length(treat)
 
@@ -67,7 +70,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   reported.estimand <- f.e.r[["reported.estimand"]]
 
   #Process missing
-  if (anyNA(reported.covs) || nrow(reported.covs) != n) {
+  if (anyNA(reported.covs)) {
     missing <- process.missing(missing, method, treat.type)
   }
   else missing <- ""
@@ -100,7 +103,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   ## Running models ----
 
-  if (verbose) eval.verbose <- base::eval
+  if (verbose || debuggingState()) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
   eval.verbose({

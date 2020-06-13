@@ -92,22 +92,17 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
     n <- length(treat.list[[i]])
 
-    if (anyNA(reported.covs.list[[i]]) || nrow(reported.covs.list[[i]]) != n) {
-      warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
+    if (nrow(covs.list[[i]]) != n) {
+      stop("Treatment and covariates must have the same number of units.", call. = FALSE)
     }
     if (anyNA(treat.list[[i]])) {
       stop(paste0("No missing values are allowed in the treatment variable. Missing values found in ", treat.name, "."), call. = FALSE)
     }
+    if (anyNA(reported.covs.list[[i]])) {
+      warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
+    }
 
     treat.list[[i]] <- assign.treat.type(treat.list[[i]])
-
-    #Recreate data and formula
-    # w.data <- data.frame(treat.list[[i]], covs.list[[i]])
-    # w.formula <- formula(w.data)
-
-    # processed.by <- process.by(by.name, data = data,
-    #                                    treat = treat.list[[i]],
-    #                                    treat.name = treat.name)
 
     #By is processed each for each time, but only last time is used for by.factor.
     processed.by <- process.by(by, data = data,
@@ -116,7 +111,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
                                by.arg = by.arg)
 
     #Process missing
-    if (anyNA(reported.covs.list[[i]]) || nrow(reported.covs.list[[i]]) != n) {
+    if (anyNA(reported.covs.list[[i]])) {
       missing <- process.missing(missing, method, get.treat.type(treat.list[[i]]))
     }
     else if (i == length(formula.list)) missing <- ""
@@ -125,7 +120,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
   if (is_null(s.weights)) s.weights <- rep(1, n)
 
-  if (verbose) eval.verbose <- base::eval
+  if (verbose || debuggingState()) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
   if (is.MSM.method) {
