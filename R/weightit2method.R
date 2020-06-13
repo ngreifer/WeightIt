@@ -187,6 +187,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
       if (missing == "saem") {
         check.package("misaem")
+        if (all(apply(covs, 2, anyNA))) stop("missing = \"saem\" cannot be used when there is missingness in every covariate.", call. = FALSE)
         for (f in names(formals(misaem::miss.saem))) {
           if (f %in% c("X.obs", "y", "pos_var", "print_iter", "var_cal", "ll_obs_cal", "seed")) {A[[f]] <- NULL}
           else if (is_null(A[[f]])) A[[f]] <- formals(misaem::miss.saem)[[f]]
@@ -200,7 +201,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         if (is_null(A[["saem.method"]])) A[["saem.method"]] <- formals(misaem::pred_saem)[["method"]]
 
         p.score <- misaem::pred_saem(covs, fit$beta, fit$mu, fit$sig2,
-                                     seed = NULL, method = A[["saem_method"]])
+                                     seed = NULL, method = A[["saem.method"]])
         ps[[2]] <- p.score
         ps[[1]] <- 1 - ps[[2]]
       }
@@ -1496,7 +1497,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
         for (i in levels(treat)) {
           new.data[[1]] <- ifelse(treat == i, 1, 0)
           fit.list[[i]] <- CBPS::CBPS(formula(new.data), data = new.data,
-                                      method = if (is_null(A$over) || A$over == TRUE) "over" else "exact",
+                                      method = if (isFALSE(A$over)) "exact" else "over",
                                       standardize = FALSE,
                                       sample.weights = s.weights[subset],
                                       ATT = 0, ...)
@@ -1533,7 +1534,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
   if (check.package("CBPS")) {
     tryCatch({fit <- CBPS::CBPS(formula(new.data),
                                 data = new.data,
-                                method = ifelse(is_null(A$over) || A$over == TRUE, "over", "exact"),
+                                method = if (isFALSE(A$over)) "exact" else "over",
                                 standardize = FALSE,
                                 sample.weights = s.weights[subset],
                                 ...)},
