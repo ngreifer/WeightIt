@@ -402,8 +402,34 @@ process.missing <- function(missing, method, treat.type) {
   }
   return(missing)
 }
+process.bin.vars <- function(bin.vars, mat) {
+  if (missing(bin.vars)) bin.vars <- is_binary_col(mat)
+  else if (is_null(bin.vars)) bin.vars <- rep(FALSE, ncol(mat))
+  else {
+    if (is.logical(bin.vars)) {
+      bin.vars[is.na(bin.vars)] <- FALSE
+      if (length(bin.vars) != ncol(mat)) stop("If 'bin.vars' is logical, it must have length equal to the number of columns of 'mat'.")
+    }
+    else if (is.numeric(bin.vars)) {
+      bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != 0]
+      if (any(bin.vars < 0) && any(bin.vars > 0)) stop("Positive and negative indices cannot be mixed with 'bin.vars'.")
+      if (any(abs(bin.vars) > ncol(mat))) stop("If 'bin.vars' is numeric, none of its values can exceed the number of columns of 'mat'.")
+      logical.bin.vars <- rep(any(bin.vars < 0), ncol(mat))
+      logical.bin.vars[abs(bin.vars)] <- !logical.bin.vars[abs(bin.vars)]
+      bin.vars <- logical.bin.vars
+    }
+    else if (is.character(bin.vars)) {
+      bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != ""]
+      if (is_null(colnames(mat))) stop("If 'bin.vars' is character, 'mat' must have column names.")
+      if (any(bin.vars %nin% colnames(mat))) stop("If 'bin.vars' is character, all its values must be column names of 'mat'.")
+      bin.vars <- colnames(mat) %in% bin.vars
+    }
+    else stop("'bin.vars' must be a logical, numeric, or character vector.")
+  }
+  return(bin.vars)
+}
 make.closer.to.1 <- function(x) {
-  if (is.factor(x) || is.character(x) || all_the_same(x)) return(x)
+  if (is_(x, c("factor", "character")) || all_the_same(x)) return(x)
   else if (is_binary(x)) {
     return(as.numeric(x == x[!is.na(x)][1]))
   }
@@ -462,7 +488,7 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
   }
   return(out)
 }
-get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
+.get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
   check.estimand <- check.weights <- check.focal <- bad.s.d.denom <- bad.estimand <- FALSE
   s.d.denom.specified <- is_not_null(s.d.denom)
   estimand.specified <- is_not_null(estimand)
@@ -570,6 +596,94 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 
   return(s.d.denom)
 }
+get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
+  check.estimand <- check.weights <- check.focal <- FALSE
+  s.d.denom.specified <- is_not_null(s.d.denom)
+  estimand.specified <- is_not_null(estimand)
+  if (!is.factor(treat)) treat <- factor(treat)
+
+  if (s.d.denom.specified) {
+    allowable.s.d.denoms <- c("treated", "control", "pooled", "all", "weighted", "hedges")
+    try.s.d.denom <- tryCatch(match_arg(s.d.denom, allowable.s.d.denoms),
+                              error = function(cond) NA_character_)
+    if (anyNA(try.s.d.denom)) {
+      check.estimand <- TRUE
+    }
+    else {
+      s.d.denom <- try.s.d.denom
+    }
+  }
+  else {
+    check.estimand <- TRUE
+  }
+
+  if (check.estimand) {
+    if (estimand.specified) {
+      allowable.estimands <- c("ATT", "ATC", "ATE", "ATO", "ATM")
+      try.estimand <- tryCatch(match_arg(toupper(estimand), allowable.estimands),
+                               error = function(cond) NA_character_)
+      if (anyNA(try.estimand)) {
+        check.focal <- TRUE
+      }
+      else if (try.estimand %in% c("ATC", "ATT")) {
+        check.focal <- TRUE
+      }
+      else {
+        s.d.denom <- vapply(try.estimand, switch, FUN.VALUE = character(1L),
+                            ATO = "weighted", ATM = "weighted", "pooled")
+      }
+    }
+    else {
+      check.focal <- TRUE
+    }
+  }
+  if (check.focal) {
+    if (is_not_null(focal)) {
+      s.d.denom <- focal
+    }
+    else check.weights <- TRUE
+  }
+  if (check.weights) {
+    if (is_null(weights)) {
+      s.d.denom <- "pooled"
+    }
+    else {
+      for (tv in levels(treat)) {
+        if (all_the_same(weights[treat == tv]) &&
+            !all_the_same(weights[treat != tv])) {
+          s.d.denom <- tv
+        }
+        else if (tv == last(levels(treat))) {
+          s.d.denom <- "pooled"
+        }
+      }
+    }
+  }
+
+  return(s.d.denom)
+}
+get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
+  s.d.denom.specified <- is_not_null(s.d.denom)
+
+  if (s.d.denom.specified) {
+    allowable.s.d.denoms <- c("all", "weighted")
+
+    try.s.d.denom <- tryCatch(match_arg(s.d.denom, allowable.s.d.denoms),
+                              error = function(cond) NA_character_)
+    if (anyNA(try.s.d.denom)) {
+      s.d.denom <- "all"
+    }
+    else {
+      s.d.denom <- try.s.d.denom
+    }
+  }
+  else {
+    s.d.denom <- "all"
+  }
+
+  return(s.d.denom)
+}
+
 ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
   if (is_(ps, c("matrix", "data.frame"))) {
     ps.names <- rownames(ps)
@@ -703,7 +817,8 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
   return(ps_sub)
 }
 subclass_scoot <- function(sub, treat, x) {
-
+  #Reassigns subclasses so there are no empty subclasses
+  #for each treatment group.
   treat <- as.character(treat)
   unique.treat <- unique(treat, nmax = 2)
 
