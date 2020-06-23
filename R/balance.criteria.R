@@ -72,7 +72,7 @@ init_es <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NUL
         pairwise <- TRUE
     }
 
-    s.d.denom <- get.s.d.denom(estimand = estimand, treat = treat, focal = focal, quietly = TRUE)
+    s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = treat, focal = focal)
 
     denoms <- compute_s.d.denom(covs, treat = treat,
                                 s.d.denom = s.d.denom, s.weights = s.weights,
@@ -168,7 +168,7 @@ init_ks <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NUL
     class(out) <- "init_ks"
     out
 }
-init_mahalanobis <- function(covs, treat, s.weights = NULL, estimand = "ATE", ...) {
+init_mahalanobis <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = focal, ...) {
     needs.splitting <- FALSE
     if (!is.matrix(covs)) {
         if (is.data.frame(covs)) {
@@ -205,7 +205,7 @@ init_mahalanobis <- function(covs, treat, s.weights = NULL, estimand = "ATE", ..
 
     if (!is_binary(treat)) stop("treat must be a binary variable.")
 
-    s.d.denom <- get.s.d.denom(estimand = estimand, treat = treat, quietly = TRUE)
+    s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = treat, focal = focal)
 
     if (any(!bin.vars)) covs[,!bin.vars] <- scale(covs[,!bin.vars])
 
@@ -370,7 +370,7 @@ init_p <- function(covs, treat, s.weights = NULL, ...) {
 
     if (get.treat.type(assign.treat.type(treat)) != "continuous") stop("treat must be a numeric non-binary variable.")
 
-    s.d.denom <- get.s.d.denom.cont(quietly = TRUE)
+    s.d.denom <- get.s.d.denom.cont.weightit()
 
     denoms <- compute_s.d.denom(covs, treat = treat,
                                 s.d.denom = s.d.denom, s.weights = s.weights,
@@ -424,7 +424,7 @@ init_s <- function(covs, treat, s.weights = NULL, ...) {
     for (i in 1:ncol(covs)) if (!bin.vars[i]) covs[,i] <- rank(covs[,i], na.last = "keep")
     treat <- rank(treat, na.last = "keep")
 
-    s.d.denom <- get.s.d.denom.cont(quietly = TRUE)
+    s.d.denom <- get.s.d.denom.cont.weightit()
 
     denoms <- compute_s.d.denom(covs, treat = treat,
                                 s.d.denom = s.d.denom, s.weights = s.weights,
@@ -492,18 +492,18 @@ init_r2 <- function(covs, treat, s.weights = NULL, ...) {
 #Statistics
 es.binary <- function(init, weights = NULL) {
     check_init(init, "init_es")
-    col_w_smd(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
-              bin.vars = init$bin.vars, s.d.denom = init$s.d.denom, abs = TRUE)
+    cobalt::col_w_smd(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
+                      bin.vars = init$bin.vars, s.d.denom = init$s.d.denom, abs = TRUE)
 }
 ks.binary <- function(init, weights = NULL) {
     check_init(init, "init_ks")
-    col_w_ks(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
-             bin.vars = init$bin.vars)
+    cobalt::col_w_ks(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
+                     bin.vars = init$bin.vars)
 }
 mahalanobis.binary <- function(init, weights = NULL) {
     check_init(init, "init_mahalanobis")
-    mean.diffs <- col_w_smd(init$covs, init$treat, weights, s.weights = init$s.weights,
-                            bin.vars = init$bin.vars, std = FALSE)
+    mean.diffs <- cobalt::col_w_smd(init$covs, init$treat, weights, s.weights = init$s.weights,
+                                    bin.vars = init$bin.vars, std = FALSE)
     drop(sqrt(t(mean.diffs) %*% init$sigma_inv %*% mean.diffs))
 }
 energy.dist.binary <- function(init, weights = NULL) {
@@ -539,12 +539,12 @@ es.multinomial <- function(init, weights = NULL) {
     }
 
     unlist(lapply(init$treatment.pairs, function(x) {
-        col_w_smd(init$covs[init$treat %in% x,,drop = FALSE],
-                  treat = init$treat[init$treat %in% x],
-                  weights = weights[init$treat %in% x],
-                  s.weights = init$s.weights[init$treat %in% x],
-                  bin.vars = init$bin.vars,
-                  s.d.denom = init$s.d.denom, abs = TRUE)
+        cobalt::col_w_smd(init$covs[init$treat %in% x,,drop = FALSE],
+                          treat = init$treat[init$treat %in% x],
+                          weights = weights[init$treat %in% x],
+                          s.weights = init$s.weights[init$treat %in% x],
+                          bin.vars = init$bin.vars,
+                          s.d.denom = init$s.d.denom, abs = TRUE)
     }))
 }
 ks.multinomial <- function(init, weights = NULL) {
@@ -555,25 +555,25 @@ ks.multinomial <- function(init, weights = NULL) {
     }
 
     unlist(lapply(init$treatment.pairs, function(x) {
-        col_w_ks(init$covs[init$treat %in% x,,drop = FALSE],
-                 treat = init$treat[init$treat %in% x],
-                 weights = weights[init$treat %in% x],
-                 s.weights = init$s.weights[init$treat %in% x],
-                 bin.vars = init$bin.vars)
+        cobalt::col_w_ks(init$covs[init$treat %in% x,,drop = FALSE],
+                         treat = init$treat[init$treat %in% x],
+                         weights = weights[init$treat %in% x],
+                         s.weights = init$s.weights[init$treat %in% x],
+                         bin.vars = init$bin.vars)
     }))
 }
 energy.dist.multinomial <- energy.dist.binary
 pearson.corr.continuous <- function(init, weights = NULL) {
     check_init(init, "init_p")
-    col_w_cov(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
-              bin.vars = init$bin.vars, s.d.denom = init$s.d.denom, abs = TRUE,
-              std = TRUE)
+    cobalt::col_w_cov(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
+                      bin.vars = init$bin.vars, s.d.denom = init$s.d.denom, abs = TRUE,
+                      std = TRUE)
 }
 spearman.corr.continuous <- function(init, weights = NULL) {
     check_init(init, "init_s")
-    col_w_cov(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
-              bin.vars = init$bin.vars, s.d.denom = init$s.d.denom, abs = TRUE,
-              std = TRUE)
+    cobalt::col_w_cov(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
+                      bin.vars = init$bin.vars, s.d.denom = init$s.d.denom, abs = TRUE,
+                      std = TRUE)
 }
 r2.continuous <- function(init, weights = NULL) {
     check_init(init, "init_r2")
@@ -830,21 +830,22 @@ print.bal_criterion <- function(x, ...) {
 }
 bal_criterion.to.phrase <- function(criterion) {
 
-    switch(criterion,
-           "es.mean" = "average absolute standardized mean difference",
-           "es.max" = "maximum absolute standardized mean difference",
-           "es.rms" = "root-mean-square absolute standardized mean difference",
-           "ks.mean" = "average Kolmogorov–Smirnov statistic",
-           "ks.max" = "maximum Kolmogorov–Smirnov statistic",
-           "ks.rms" = "root-mean-square Kolmogorov-Smirnov statistic",
-           "mahalanobis" = "sample mahalanobis distance",
-           "energy.dist" = "energy distance",
-           stop(paste0("\"", criterion, "\" is not an allowed criterion."))
+    phrase <- switch(criterion,
+                     "es.mean" = "average absolute standardized mean difference",
+                     "es.max" = "maximum absolute standardized mean difference",
+                     "es.rms" = "root-mean-square absolute standardized mean difference",
+                     "ks.mean" = "average Kolmogorov–Smirnov statistic",
+                     "ks.max" = "maximum Kolmogorov–Smirnov statistic",
+                     "ks.rms" = "root-mean-square Kolmogorov-Smirnov statistic",
+                     "mahalanobis" = "sample Mahalanobis distance",
+                     "energy.dist" = "energy distance",
+                     "r2" = "post-weighting treatment R-squared",
+                     NA_character_
     )
-
+    if (anyNA(phrase)) stop(paste0("\"", criterion, "\" is not an allowed criterion."))
+    return(phrase)
 }
 
-#Balance criteria
 check_init <- function(init, init_class) {
     if (missing(init)) stop("'init' must be specified.")
     if (!inherits(init, init_class)) stop(paste0("'init' must be of class \"", init_class, "\"."))
