@@ -5,7 +5,9 @@ importFrom("graphics", "boxplot", "plot", "par", "hist")
 importFrom("crayon", "italic", "underline", "strikethrough")
 
 export(weightit, weightitMSM, trim, ps.cont, make_full_rank, get_w_from_ps, as.weightit, as.weightitMSM,
-       sbps, ESS)
+       sbps, ESS
+       #, bal_criterion
+       )
 S3method(print, weightit)
 S3method(summary, weightit)
 S3method(print, summary.weightit)
@@ -23,3 +25,4 @@ S3method(as.weightitMSM, default)
 S3method(print, weightit.sbps)
 S3method(summary, weightit.sbps)
 S3method(print, summary.weightit.sbps)
+#S3method(print, bal_criterion)
