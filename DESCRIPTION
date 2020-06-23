@@ -11,11 +11,11 @@ Description: Generates weights to form equivalent groups in observational studie
 Depends:
     R (>= 3.3.0)
 Imports:
+    cobalt (>= 4.0.0),
     ggplot2 (>= 3.0.0),
     crayon,
     backports (>= 1.1.7)
 Suggests:
-    cobalt (>= 4.0.0),
     twang (>= 1.5),
     CBPS (>= 0.18),
     ebal (>= 0.1-6),
