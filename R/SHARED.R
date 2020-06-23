@@ -407,6 +407,9 @@ coef.of.var <- function(x, pop = TRUE) {
 mean.abs.dev <- function(x) {
     mean_fast(abs(x - mean_fast(x, TRUE)), TRUE)
 }
+rms <- function(x) {
+    sqrt(mean_fast(x^2))
+}
 geom.mean <- function(y) {
     exp(mean_fast(log(y[is.finite(log(y))]), TRUE))
 }
@@ -667,6 +670,124 @@ get.treat.type <- function(treat) {
 has.treat.type <- function(treat) {
     is_not_null(get.treat.type(treat))
 }
+
+#Input processing
+process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treated = NULL) {
+    reported.estimand <- estimand
+
+    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+    treat.type <- get.treat.type(treat)
+
+    #Check focal
+    if (treat.type == "multinomial") {
+        unique.treat <- unique(treat, nmax = length(treat)/4)
+        if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
+            warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
+            reported.estimand <- estimand <- "ATT"
+        }
+
+        if (estimand == "ATT") {
+            if (is_null(focal)) {
+                if (is_null(treated) || treated %nin% unique.treat) {
+                    stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to 'focal'.", call. = FALSE)
+                }
+                focal <- treated
+            }
+        }
+        else if (estimand == "ATC") {
+            if (is_null(focal)) {
+                stop("When estimand = \"ATC\" for multinomial treatments, an argument must be supplied to 'focal'.", call. = FALSE)
+            }
+        }
+    }
+    else if (treat.type == "binary") {
+        unique.treat <- unique(treat, nmax = 2)
+        unique.treat.bin <- unique(binarize(treat), nmax = 2)
+        if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
+            warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
+            reported.estimand <- estimand <- "ATT"
+        }
+
+        if (estimand == "ATT") {
+            if (is_null(focal)) {
+                if (is_null(treated) || treated %nin% unique.treat) {
+                    if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
+                        #If is 0/1
+                        treated <- unique.treat[unique.treat.bin == 1]
+                    }
+                    else {
+                        treated <- names(which.min(table(treat))) #Smaller group is treated
+                        message(paste0("Assuming ", word_list(treated, quotes = !is.numeric(treat), is.are = TRUE),
+                                       " the treated level. If not, supply an argument to 'focal'."))
+                    }
+                }
+                focal <- treated
+            }
+            else {
+                if (is_null(treated) || treated %nin% unique.treat) {
+                    treated <- focal
+                }
+            }
+        }
+        else if (estimand == "ATC") {
+            if (is_null(focal)) {
+                if (is_null(treated) || treated %nin% unique.treat) {
+
+                    if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
+                        treated <- unique.treat[unique.treat.bin == 1]
+                    }
+                    else {
+                        treated <- names(which.min(table(treat))) #Smaller group is treated
+                        message(paste0("Assuming ", word_list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE),
+                                       " the control level. If not, supply an argument to 'focal'."))
+                    }
+                }
+                focal <- unique.treat[unique.treat %nin% treated]
+            }
+            else {
+                if (is_null(treated) || treated %nin% unique.treat) {
+                    treated <- unique.treat[unique.treat %nin% focal]
+                }
+            }
+            estimand <- "ATT"
+        }
+    }
+
+    if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
+        stop("The argument supplied to 'focal' must be the name of a level of treatment.", call. = FALSE)
+    }
+
+    return(list(focal = as.character(focal),
+                estimand = estimand,
+                reported.estimand = reported.estimand,
+                treated = if (is.factor(treated)) as.character(treated) else treated))
+}
+process.bin.vars <- function(bin.vars, mat) {
+    if (missing(bin.vars)) bin.vars <- is_binary_col(mat)
+    else if (is_null(bin.vars)) bin.vars <- rep(FALSE, ncol(mat))
+    else {
+        if (is.logical(bin.vars)) {
+            bin.vars[is.na(bin.vars)] <- FALSE
+            if (length(bin.vars) != ncol(mat)) stop("If 'bin.vars' is logical, it must have length equal to the number of columns of 'mat'.")
+        }
+        else if (is.numeric(bin.vars)) {
+            bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != 0]
+            if (any(bin.vars < 0) && any(bin.vars > 0)) stop("Positive and negative indices cannot be mixed with 'bin.vars'.")
+            if (any(abs(bin.vars) > ncol(mat))) stop("If 'bin.vars' is numeric, none of its values can exceed the number of columns of 'mat'.")
+            logical.bin.vars <- rep(any(bin.vars < 0), ncol(mat))
+            logical.bin.vars[abs(bin.vars)] <- !logical.bin.vars[abs(bin.vars)]
+            bin.vars <- logical.bin.vars
+        }
+        else if (is.character(bin.vars)) {
+            bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != ""]
+            if (is_null(colnames(mat))) stop("If 'bin.vars' is character, 'mat' must have column names.")
+            if (any(bin.vars %nin% colnames(mat))) stop("If 'bin.vars' is character, all its values must be column names of 'mat'.")
+            bin.vars <- colnames(mat) %in% bin.vars
+        }
+        else stop("'bin.vars' must be a logical, numeric, or character vector.")
+    }
+    return(bin.vars)
+}
 process.s.weights <- function(s.weights, data = NULL) {
     #Process s.weights
     if (is_not_null(s.weights)) {
@@ -686,6 +807,120 @@ process.s.weights <- function(s.weights, data = NULL) {
     else s.weights <- NULL
     return(s.weights)
 }
+compute_s.d.denom <- function(mat, treat, s.d.denom = "pooled", s.weights = NULL, bin.vars = NULL, subset = NULL, weighted.weights = NULL, to.sd = rep(TRUE, ncol(mat)), na.rm = TRUE) {
+    denoms <- setNames(rep(1, ncol(mat)), colnames(mat))
+    if (is.character(s.d.denom) && length(s.d.denom) == 1L) {
+        if (is_null(bin.vars)) {
+            bin.vars <- rep(FALSE, ncol(mat))
+            bin.vars[to.sd] <- is_binary_col(mat[subset, to.sd,drop = FALSE])
+        }
+        else if (!is.atomic(bin.vars) || length(bin.vars) != ncol(mat) ||
+                 anyNA(as.logical(bin.vars))) {
+            stop("'bin.vars' must be a logical vector with length equal to the number of columns of 'mat'.")
+        }
+
+        possibly.supplied <- c("mat", "treat", "weighted.weights", "s.weights", "subset")
+        lengths <- setNames(vapply(mget(possibly.supplied), len, integer(1L)),
+                            possibly.supplied)
+        supplied <- lengths > 0
+        if (!all_the_same(lengths[supplied])) {
+            stop(paste(word_list(possibly.supplied[supplied], quotes = 1), "must have the same number of units."))
+        }
+
+        if (lengths["weighted.weights"] == 0) weighted.weights <- rep(1, NROW(mat))
+        if (lengths["s.weights"] == 0) s.weights <- rep(1, NROW(mat))
+        if (lengths["subset"] == 0) subset <- rep(TRUE, NROW(mat))
+        else if (anyNA(as.logical(subset))) stop("'subset' must be a logical vector.")
+
+        if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+        cont.treat <- get.treat.type(treat) == "continuous"
+
+        if (cont.treat) {
+            unique.treats <- NULL
+            s.d.denom <- get.s.d.denom.cont(as.character(s.d.denom), weights = weighted.weights[subset])
+        }
+        else {
+            unique.treats <- if (is_(treat, "processed.treat") && all(subset)) as.character(treat_vals(treat)) else as.character(unique(treat[subset]))
+            s.d.denom <- get.s.d.denom(as.character(s.d.denom), weights = weighted.weights[subset], treat = treat[subset])
+            if (s.d.denom %in% c("treated", "control")) s.d.denom <- treat_vals(treat)[treat_names(treat)[s.d.denom]]
+            treat <- as.character(treat)
+        }
+
+        if (s.d.denom %in% unique.treats)
+            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                                  unique.treats, na.rm) {
+                sqrt(col.w.v(mat[treat == s.d.denom, , drop = FALSE],
+                             w = s.weights[treat == s.d.denom],
+                             bin.vars = bin.vars, na.rm = na.rm))
+            }
+
+        else if (s.d.denom == "pooled")
+            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                                  unique.treats, na.rm) {
+                sqrt(Reduce("+", lapply(unique.treats,
+                                        function(t) col.w.v(mat[treat == t, , drop = FALSE],
+                                                            w = s.weights[treat == t],
+                                                            bin.vars = bin.vars, na.rm = na.rm))) / length(unique.treats))
+            }
+        else if (s.d.denom == "all")
+            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                                  unique.treats, na.rm) {
+                sqrt(col.w.v(mat, w = s.weights, bin.vars = bin.vars, na.rm = na.rm))
+            }
+        else if (s.d.denom == "weighted")
+            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                                  unique.treats, na.rm) {
+                sqrt(col.w.v(mat, w = weighted.weights * s.weights, bin.vars = bin.vars, na.rm = na.rm))
+            }
+        else if (s.d.denom == "hedges")
+            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                                  unique.treats, na.rm) {
+                (1 - 3/(4*length(treat) - 9))^-1 * sqrt(Reduce("+", lapply(unique.treats,
+                                                                           function(t) (sum(treat == t) - 1) * col.w.v(mat[treat == t, , drop = FALSE],
+                                                                                                                       w = s.weights[treat == t],
+                                                                                                                       bin.vars = bin.vars, na.rm = na.rm))) / (length(treat) - 2))
+            }
+        else stop("s.d.denom is not an allowed value.")
+
+        denoms[to.sd] <- denom.fun(mat = mat[, to.sd, drop = FALSE], treat = treat, s.weights = s.weights,
+                                   weighted.weights = weighted.weights, bin.vars = bin.vars[to.sd],
+                                   unique.treats = unique.treats, na.rm = na.rm)
+
+        if (any(zero_sds <- check_if_zero(denoms[to.sd]))) {
+            denoms[to.sd][zero_sds] <- sqrt(col.w.v(mat[, to.sd, drop = FALSE][, zero_sds, drop = FALSE],
+                                                    w = s.weights,
+                                                    bin.vars = bin.vars[to.sd][zero_sds], na.rm = na.rm))
+        }
+
+        if (cont.treat) {
+            treat.sd <- denom.fun(mat = treat, s.weights = s.weights,
+                                  weighted.weights = weighted.weights, bin.vars = FALSE,
+                                  na.rm = na.rm)
+            denoms[to.sd] <- denoms[to.sd]*treat.sd
+        }
+    }
+    else {
+        if (is.numeric(s.d.denom)) {
+            if (is_not_null(names(s.d.denom)) && any(colnames(mat) %in% names(s.d.denom))) {
+                denoms[colnames(mat)[colnames(mat) %in% names(s.d.denom)]] <- s.d.denom[names(s.d.denom)[names(s.d.denom) %in% colnames(mat)]]
+            }
+            else if (length(s.d.denom) == sum(to.sd)) {
+                denoms[to.sd] <- s.d.denom
+            }
+            else if (length(s.d.denom) == ncol(mat)) {
+                denoms[] <- s.d.denom
+            }
+            else {
+                stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?col_w_smd for allowable values.")
+            }
+        }
+        else {
+            stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?col_w_smd for allowable values.")
+        }
+    }
+    return(denoms)
+}
+
 
 #Uniqueness
 nunique <- function(x, nmax = NA, na.rm = TRUE) {
@@ -732,6 +967,7 @@ make_list <- function(n) {
     else if (is_(n, "atomic")) {
         setNames(vector("list", length(n)), as.character(n))
     }
+    else stop("'n' must be an integer(ish) scalar or an atomic variable.")
 }
 make_df <- function(ncol, nrow = 0, types = "numeric") {
     if (length(ncol) == 1L && is.numeric(ncol)) {
@@ -768,7 +1004,7 @@ ifelse_ <- function(...) {
     if (dotlen %% 2 == 0) stop("ifelse_ must have an odd number of arguments: pairs of test/yes, and one no.")
     out <- ...elt(dotlen)
     if (dotlen > 1) {
-        if (!is_(out, "atomic")) stop("The last entry to ifelse_ must be atomic or factor.")
+        if (!is_(out, "atomic")) stop("The last entry to ifelse_ must be atomic.")
         if (length(out) == 1) out <- rep(out, length(..1))
         n <- length(out)
         for (i in seq_len((dotlen - 1)/2)) {
@@ -777,13 +1013,13 @@ ifelse_ <- function(...) {
             if (length(yes) == 1) yes <- rep(yes, n)
             if (length(yes) != n || length(test) != n) stop("All entries must have the same length.")
             if (!is.logical(test)) stop(paste("The", ordinal(2*i - 1), "entry to ifelse_ must be logical."))
-            if (!is_(yes, "atomic")) stop(paste("The", ordinal(2*i), "entry to ifelse_ must be atomic or factor."))
+            if (!is_(yes, "atomic")) stop(paste("The", ordinal(2*i), "entry to ifelse_ must be atomic."))
             pos <- which(test)
             out[pos] <- yes[pos]
         }
     }
     else {
-        if (!is_(out, "atomic")) stop("The first entry to ifelse_ must be atomic or factor.")
+        if (!is_(out, "atomic")) stop("The first entry to ifelse_ must be atomic.")
     }
     return(out)
 }
@@ -945,3 +1181,4 @@ is.formula <- function(f, sides = NULL) {
     }
     return(res)
 }
+if (getRversion() < 3.6) str2expression <- function(text) parse(text=text, keep.source=FALSE)
