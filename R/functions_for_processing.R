@@ -1124,7 +1124,7 @@ method.balance <- function(stop.method) {
       Z[Z[,i] < tol, i] <- tol
       Z[Z[,i] > 1-tol, i] <- 1-tol
     }
-    w_mat<- apply(Z, 2, get_w_from_ps, Y, estimand)
+    w_mat <- get.w.from.ps(Z, treat = Y, estimand = estimand)
     cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
 
     names(cvRisk) <- libraryNames
@@ -1156,23 +1156,6 @@ method.balance <- function(stop.method) {
 
 method.balance.cont <- function(stop.method) {
 
-  # if (startsWith(stop.method, "s.")) {
-  #   stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
-  #     cobalt::col_w_corr(mat, treat, weights, type = "spearman", abs = TRUE,
-  #                        s.weights = s.weights, bin.vars = bin.vars, subset = subset)
-  #   }
-  # }
-  # else if (startsWith(stop.method, "p.")) {
-  #   stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
-  #     cobalt::col_w_corr(mat, treat, weights, type = "pearson", abs = TRUE,
-  #                        s.weights = s.weights, bin.vars = bin.vars, subset = subset)
-  #   }
-  # }
-  #
-  # if (endsWith(stop.method, ".mean")) stop.sum <- mean
-  # else if (endsWith(stop.method, ".max")) stop.sum <- max
-  # else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
-
   out <- list(
     # require allows you to pass a character vector with required packages
     # use NULL if no required packages
@@ -1182,7 +1165,6 @@ method.balance.cont <- function(stop.method) {
     # 1) coef: the weights (coefficients) for each algorithm
     # 2) cvRisk: the V-fold CV risk for each algorithm
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      # covs <- attr(control$trimLogit, "vals")$covs
       dens.num <- attr(control$trimLogit, "vals")$dens.num
       densfun <- attr(control$trimLogit, "vals")$densfun
       use.kernel <- attr(control$trimLogit, "vals")$use.kernel
