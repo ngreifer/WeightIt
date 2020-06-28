@@ -71,7 +71,7 @@ num_to_superscript <- function(x) {
     return(supx)
 }
 ordinal <- function(x) {
-    if (!is.numeric(x) || !is.vector(x) || is_null(x)) stop("x must be a numeric vector.")
+    if (!is.numeric(x) || !is.vector(x) || is_null(x)) stop("'x' must be a numeric vector.")
     if (length(x) > 1) return(vapply(x, ordinal, character(1L)))
     else {
         x0 <- abs(x)
@@ -210,14 +210,14 @@ check_if_zero <- function(x) {
     abs(x) < tolerance
 }
 between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
-    if (!all(is.numeric(x))) stop("x must be a numeric vector.", call. = FALSE)
-    if (length(range) != 2) stop("range must be of length 2.", call. = FALSE)
-    if (anyNA(range) || !is.numeric(range)) stop("range must contain numeric entries only.", call. = FALSE)
+    if (!all(is.numeric(x))) stop("'x' must be a numeric vector.", call. = FALSE)
+    if (length(range) != 2) stop("'range' must be of length 2.", call. = FALSE)
+    if (anyNA(range) || !is.numeric(range)) stop("'range' must contain numeric entries only.", call. = FALSE)
 
     if (range[2] < range[1]) range <- c(range[2], range[1])
 
     if (anyNA(x)) {
-        if (length(na.action) != 1 || !is.atomic(na.action)) stop("na.action must be an atomic vector of length 1.", call. = FALSE)
+        if (length(na.action) != 1 || !is.atomic(na.action)) stop("'na.action' must be an atomic vector of length 1.", call. = FALSE)
     }
     if (inclusive) out <- ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
     else out <- ifelse(is.na(x), na.action, x > range[1] & x < range[2])
@@ -254,18 +254,17 @@ binarize <- function(variable, zero = NULL, one = NULL) {
         if (is_null(one)) {
             if (0 %in% variable.numeric) zero <- 0
             else zero <- min(variable.numeric, na.rm = TRUE)
+            return(setNames(as.integer(variable.numeric != zero), names(variable)))
         }
         else {
-            if (one %in% unique.vals) return(setNames(as.integer(variable.numeric == one), names(variable)))
-            else stop("The argument to \"one\" is not the name of a level of variable.", call. = FALSE)
+            if (one %in% unique.vals) return(setNames(as.integer(variable == one), names(variable)))
+            else stop("The argument to 'one' is not the name of a level of variable.", call. = FALSE)
         }
     }
     else {
-        if (zero %nin% unique.vals) stop("The argument to \"zero\" is not the name of a level of variable.", call. = FALSE)
+        if (zero %nin% unique.vals) stop("The argument to 'zero' is not the name of a level of variable.", call. = FALSE)
+        return(setNames(as.integer(variable != zero), names(variable)))
     }
-
-    newvar <- setNames(as.integer(variable.numeric != zero), names(variable))
-    return(newvar)
 }
 ESS <- function(w) {
     sum(w)^2/sum(w^2)
@@ -275,15 +274,15 @@ center <- function(x, at = NULL, na.rm = TRUE) {
         x <- as.matrix.data.frame(x)
         type <- "df"
     }
-    if (!is.numeric(x)) stop("x must be numeric.")
-    else if (is.array(x) && length(dim(x)) > 2) stop("x must be a numeric or matrix-like (not array).")
+    if (!is.numeric(x)) stop("'x' must be numeric.")
+    else if (is.array(x) && length(dim(x)) > 2) stop("'x' must be a numeric or matrix-like (not array).")
     else if (!is.matrix(x)) {
         x <- matrix(x, ncol = 1)
         type <- "vec"
     }
     else type <- "matrix"
     if (is_null(at)) at <- colMeans(x, na.rm = na.rm)
-    else if (length(at) %nin% c(1, ncol(x))) stop("at is not the right length.")
+    else if (length(at) %nin% c(1, ncol(x))) stop("'at' is not the right length.")
     out <- x - matrix(at, byrow = TRUE, ncol = ncol(x), nrow = nrow(x))
     if (type == "df") out <- as.data.frame.matrix(out)
     else if (type == "vec") out <- drop(out)
@@ -303,19 +302,19 @@ col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
     if (!is.matrix(mat)) {
         if (is.data.frame(mat)) {
             if (any(vapply(mat, is_, logical(1L), types = c("factor", "character")))) {
-                stop("mat must be a numeric matrix.")
+                stop("'mat' must be a numeric matrix.")
             }
             else mat <- data.matrix(mat)
         }
         else if (is.numeric(mat)) {
             mat <- matrix(mat, ncol = 1)
         }
-        else stop("mat must be a numeric matrix.")
+        else stop("'mat' must be a numeric matrix.")
     }
 
     if (is_null(bin.vars)) bin.vars <- rep(FALSE, ncol(mat))
     else if (length(bin.vars) != ncol(mat) || anyNA(as.logical(bin.vars))) {
-        stop("bin.vars must be a logical vector with length equal to the number of columns of mat.", call. = FALSE)
+        stop("'bin.vars' must be a logical vector with length equal to the number of columns of 'mat'.", call. = FALSE)
     }
     bin.var.present <- any(bin.vars)
     non.bin.vars.present <- any(!bin.vars)
@@ -475,7 +474,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
     env <- environment(f)
 
-    if (!is.formula(f)) stop("f must be a formula.")
+    if (!is.formula(f)) stop("'f' must be a formula.")
 
     eval.model.matrx <- identical(f, f <- subbars(f))
 
@@ -532,7 +531,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     }, logical(1L))
 
     if (any(rhs.vars.failed)) {
-        stop(paste0(c("All variables in formula must be variables in data or objects in the global environment.\nMissing variables: ",
+        stop(paste0(c("All variables in 'formula' must be variables in 'data' or objects in the global environment.\nMissing variables: ",
                       paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), call. = FALSE)
 
     }
@@ -609,7 +608,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
     if (eval.model.matrx) {
         if (s <- !identical(sep, "")) {
-            if (!is.character(sep) || length(sep) > 1) stop("sep must be a string of length 1.", call. = FALSE)
+            if (!is.character(sep) || length(sep) > 1) stop("'sep' must be a string of length 1.", call. = FALSE)
             original.covs.levels <- make_list(names(covs))
             for (i in names(covs)) {
                 if (is.character(covs[[i]])) covs[[i]] <- factor(covs[[i]])
@@ -702,135 +701,21 @@ process.s.weights <- function(s.weights, data = NULL) {
     #Process s.weights
     if (is_not_null(s.weights)) {
         if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
-            stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of the variable in data that contains sampling weights.", call. = FALSE)
+            stop("The argument to 's.weights' must be a vector or data frame of sampling weights or the (quoted) names of the variable in 'data' that contains sampling weights.", call. = FALSE)
         }
         if (is.character(s.weights) && length(s.weights)==1) {
             if (is_null(data)) {
-                stop("s.weights was specified as a string but there was no argument to data.", call. = FALSE)
+                stop("'s.weights' was specified as a string but there was no argument to 'data'.", call. = FALSE)
             }
             else if (s.weights %in% names(data)) {
                 s.weights <- data[[s.weights]]
             }
-            else stop("The name supplied to s.weights is not the name of a variable in data.", call. = FALSE)
+            else stop("The name supplied to 's.weights' is not the name of a variable in 'data'.", call. = FALSE)
         }
     }
     else s.weights <- NULL
     return(s.weights)
 }
-compute_s.d.denom <- function(mat, treat, s.d.denom = "pooled", s.weights = NULL, bin.vars = NULL, subset = NULL, weighted.weights = NULL, to.sd = rep(TRUE, ncol(mat)), na.rm = TRUE) {
-    denoms <- setNames(rep(1, ncol(mat)), colnames(mat))
-    if (is.character(s.d.denom) && length(s.d.denom) == 1L) {
-        if (is_null(bin.vars)) {
-            bin.vars <- rep(FALSE, ncol(mat))
-            bin.vars[to.sd] <- is_binary_col(mat[subset, to.sd,drop = FALSE])
-        }
-        else if (!is.atomic(bin.vars) || length(bin.vars) != ncol(mat) ||
-                 anyNA(as.logical(bin.vars))) {
-            stop("'bin.vars' must be a logical vector with length equal to the number of columns of 'mat'.")
-        }
-
-        possibly.supplied <- c("mat", "treat", "weighted.weights", "s.weights", "subset")
-        lengths <- setNames(vapply(mget(possibly.supplied), len, integer(1L)),
-                            possibly.supplied)
-        supplied <- lengths > 0
-        if (!all_the_same(lengths[supplied])) {
-            stop(paste(word_list(possibly.supplied[supplied], quotes = 1), "must have the same number of units."))
-        }
-
-        if (lengths["weighted.weights"] == 0) weighted.weights <- rep(1, NROW(mat))
-        if (lengths["s.weights"] == 0) s.weights <- rep(1, NROW(mat))
-        if (lengths["subset"] == 0) subset <- rep(TRUE, NROW(mat))
-        else if (anyNA(as.logical(subset))) stop("'subset' must be a logical vector.")
-
-        if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-        cont.treat <- get.treat.type(treat) == "continuous"
-
-        if (cont.treat) {
-            unique.treats <- NULL
-            s.d.denom <- get.s.d.denom.cont(as.character(s.d.denom), weights = weighted.weights[subset])
-        }
-        else {
-            unique.treats <- if (is_(treat, "processed.treat") && all(subset)) as.character(treat_vals(treat)) else as.character(unique(treat[subset]))
-            s.d.denom <- get.s.d.denom(as.character(s.d.denom), weights = weighted.weights[subset], treat = treat[subset])
-            if (s.d.denom %in% c("treated", "control")) s.d.denom <- treat_vals(treat)[treat_names(treat)[s.d.denom]]
-            treat <- as.character(treat)
-        }
-
-        if (s.d.denom %in% unique.treats)
-            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                                  unique.treats, na.rm) {
-                sqrt(col.w.v(mat[treat == s.d.denom, , drop = FALSE],
-                             w = s.weights[treat == s.d.denom],
-                             bin.vars = bin.vars, na.rm = na.rm))
-            }
-
-        else if (s.d.denom == "pooled")
-            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                                  unique.treats, na.rm) {
-                sqrt(Reduce("+", lapply(unique.treats,
-                                        function(t) col.w.v(mat[treat == t, , drop = FALSE],
-                                                            w = s.weights[treat == t],
-                                                            bin.vars = bin.vars, na.rm = na.rm))) / length(unique.treats))
-            }
-        else if (s.d.denom == "all")
-            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                                  unique.treats, na.rm) {
-                sqrt(col.w.v(mat, w = s.weights, bin.vars = bin.vars, na.rm = na.rm))
-            }
-        else if (s.d.denom == "weighted")
-            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                                  unique.treats, na.rm) {
-                sqrt(col.w.v(mat, w = weighted.weights * s.weights, bin.vars = bin.vars, na.rm = na.rm))
-            }
-        else if (s.d.denom == "hedges")
-            denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                                  unique.treats, na.rm) {
-                (1 - 3/(4*length(treat) - 9))^-1 * sqrt(Reduce("+", lapply(unique.treats,
-                                                                           function(t) (sum(treat == t) - 1) * col.w.v(mat[treat == t, , drop = FALSE],
-                                                                                                                       w = s.weights[treat == t],
-                                                                                                                       bin.vars = bin.vars, na.rm = na.rm))) / (length(treat) - 2))
-            }
-        else stop("s.d.denom is not an allowed value.")
-
-        denoms[to.sd] <- denom.fun(mat = mat[, to.sd, drop = FALSE], treat = treat, s.weights = s.weights,
-                                   weighted.weights = weighted.weights, bin.vars = bin.vars[to.sd],
-                                   unique.treats = unique.treats, na.rm = na.rm)
-
-        if (any(zero_sds <- check_if_zero(denoms[to.sd]))) {
-            denoms[to.sd][zero_sds] <- sqrt(col.w.v(mat[, to.sd, drop = FALSE][, zero_sds, drop = FALSE],
-                                                    w = s.weights,
-                                                    bin.vars = bin.vars[to.sd][zero_sds], na.rm = na.rm))
-        }
-
-        if (cont.treat) {
-            treat.sd <- denom.fun(mat = treat, s.weights = s.weights,
-                                  weighted.weights = weighted.weights, bin.vars = FALSE,
-                                  na.rm = na.rm)
-            denoms[to.sd] <- denoms[to.sd]*treat.sd
-        }
-    }
-    else {
-        if (is.numeric(s.d.denom)) {
-            if (is_not_null(names(s.d.denom)) && any(colnames(mat) %in% names(s.d.denom))) {
-                denoms[colnames(mat)[colnames(mat) %in% names(s.d.denom)]] <- s.d.denom[names(s.d.denom)[names(s.d.denom) %in% colnames(mat)]]
-            }
-            else if (length(s.d.denom) == sum(to.sd)) {
-                denoms[to.sd] <- s.d.denom
-            }
-            else if (length(s.d.denom) == ncol(mat)) {
-                denoms[] <- s.d.denom
-            }
-            else {
-                stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?col_w_smd for allowable values.")
-            }
-        }
-        else {
-            stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?col_w_smd for allowable values.")
-        }
-    }
-    return(denoms)
-}
-
 
 #Uniqueness
 nunique <- function(x, nmax = NA, na.rm = TRUE) {
@@ -843,8 +728,8 @@ nunique <- function(x, nmax = NA, na.rm = TRUE) {
 
 }
 nunique.gt <- function(x, n, na.rm = TRUE) {
-    if (missing(n)) stop("n must be supplied.")
-    if (n < 0) stop("n must be non-negative.")
+    if (missing(n)) stop("'n' must be supplied.")
+    if (n < 0) stop("'n' must be non-negative.")
     if (is_null(x)) FALSE
     else {
         if (n == 1) !all_the_same(x, na.rm)
@@ -900,9 +785,9 @@ make_df <- function(ncol, nrow = 0, types = "numeric") {
     colnames(df) <- col_names
     rownames(df) <- row_names
     if (is_not_null(types)) {
-        if (length(types) %nin% c(1, ncol)) stop("types must be equal to the number of columns.")
+        if (length(types) %nin% c(1, ncol)) stop("'types' must be equal to the number of columns.")
         if (any(types %nin% c("numeric", "integer", "logical", "character", NA))) {
-            stop("types must be an acceptable type. For factors, use NA.")
+            stop("'types' must be an acceptable type. For factors, use NA.")
         }
         if (length(types) == 1) types <- rep(types, ncol)
         for (i in seq_len(ncol)) if (!is.na(types)[i] && types[i] != "numeric") df[[i]] <- get(types[i])(nrow)
