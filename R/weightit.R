@@ -103,7 +103,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   ## Running models ----
 
-  if (verbose || debuggingState()) eval.verbose <- base::eval
+  if (verbose) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
   eval.verbose({
