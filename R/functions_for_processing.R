@@ -683,6 +683,114 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   return(s.d.denom)
 }
+compute_s.d.denom <- function(mat, treat, s.d.denom = "pooled", s.weights = NULL, bin.vars = NULL, subset = NULL, weighted.weights = NULL, to.sd = rep(TRUE, ncol(mat)), na.rm = TRUE) {
+  denoms <- setNames(rep(1, ncol(mat)), colnames(mat))
+  if (is.character(s.d.denom) && length(s.d.denom) == 1L) {
+    if (is_null(bin.vars)) {
+      bin.vars <- rep(FALSE, ncol(mat))
+      bin.vars[to.sd] <- is_binary_col(mat[subset, to.sd,drop = FALSE])
+    }
+    else if (!is.atomic(bin.vars) || length(bin.vars) != ncol(mat) ||
+             anyNA(as.logical(bin.vars))) {
+      stop("'bin.vars' must be a logical vector with length equal to the number of columns of 'mat'.")
+    }
+
+    possibly.supplied <- c("mat", "treat", "weighted.weights", "s.weights", "subset")
+    lengths <- setNames(vapply(mget(possibly.supplied), len, integer(1L)),
+                        possibly.supplied)
+    supplied <- lengths > 0
+    if (!all_the_same(lengths[supplied])) {
+      stop(paste(word_list(possibly.supplied[supplied], quotes = 1), "must have the same number of units."))
+    }
+
+    if (lengths["weighted.weights"] == 0) weighted.weights <- rep(1, NROW(mat))
+    if (lengths["s.weights"] == 0) s.weights <- rep(1, NROW(mat))
+    if (lengths["subset"] == 0) subset <- rep(TRUE, NROW(mat))
+    else if (anyNA(as.logical(subset))) stop("'subset' must be a logical vector.")
+
+    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+    cont.treat <- get.treat.type(treat) == "continuous"
+
+    if (!cont.treat) {
+      treat <- as.character(treat)
+      unique.treats <- unique(treat)
+    }
+    else unique.treats <- NULL
+
+    if (s.d.denom %in% unique.treats)
+      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                            unique.treats, na.rm) {
+        sqrt(col.w.v(mat[treat == s.d.denom, , drop = FALSE],
+                     w = s.weights[treat == s.d.denom],
+                     bin.vars = bin.vars, na.rm = na.rm))
+      }
+
+    else if (s.d.denom == "pooled")
+      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                            unique.treats, na.rm) {
+        sqrt(Reduce("+", lapply(unique.treats,
+                                function(t) col.w.v(mat[treat == t, , drop = FALSE],
+                                                    w = s.weights[treat == t],
+                                                    bin.vars = bin.vars, na.rm = na.rm))) / length(unique.treats))
+      }
+    else if (s.d.denom == "all")
+      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                            unique.treats, na.rm) {
+        sqrt(col.w.v(mat, w = s.weights, bin.vars = bin.vars, na.rm = na.rm))
+      }
+    else if (s.d.denom == "weighted")
+      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                            unique.treats, na.rm) {
+        sqrt(col.w.v(mat, w = weighted.weights * s.weights, bin.vars = bin.vars, na.rm = na.rm))
+      }
+    else if (s.d.denom == "hedges")
+      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
+                            unique.treats, na.rm) {
+        (1 - 3/(4*length(treat) - 9))^-1 * sqrt(Reduce("+", lapply(unique.treats,
+                                                                   function(t) (sum(treat == t) - 1) * col.w.v(mat[treat == t, , drop = FALSE],
+                                                                                                               w = s.weights[treat == t],
+                                                                                                               bin.vars = bin.vars, na.rm = na.rm))) / (length(treat) - 2))
+      }
+    else stop("s.d.denom is not an allowed value.")
+
+    denoms[to.sd] <- denom.fun(mat = mat[, to.sd, drop = FALSE], treat = treat, s.weights = s.weights,
+                               weighted.weights = weighted.weights, bin.vars = bin.vars[to.sd],
+                               unique.treats = unique.treats, na.rm = na.rm)
+
+    if (any(zero_sds <- check_if_zero(denoms[to.sd]))) {
+      denoms[to.sd][zero_sds] <- sqrt(col.w.v(mat[, to.sd, drop = FALSE][, zero_sds, drop = FALSE],
+                                              w = s.weights,
+                                              bin.vars = bin.vars[to.sd][zero_sds], na.rm = na.rm))
+    }
+
+    if (cont.treat) {
+      treat.sd <- denom.fun(mat = treat, s.weights = s.weights,
+                            weighted.weights = weighted.weights, bin.vars = FALSE,
+                            na.rm = na.rm)
+      denoms[to.sd] <- denoms[to.sd]*treat.sd
+    }
+  }
+  else {
+    if (is.numeric(s.d.denom)) {
+      if (is_not_null(names(s.d.denom)) && any(colnames(mat) %in% names(s.d.denom))) {
+        denoms[colnames(mat)[colnames(mat) %in% names(s.d.denom)]] <- s.d.denom[names(s.d.denom)[names(s.d.denom) %in% colnames(mat)]]
+      }
+      else if (length(s.d.denom) == sum(to.sd)) {
+        denoms[to.sd] <- s.d.denom
+      }
+      else if (length(s.d.denom) == ncol(mat)) {
+        denoms[] <- s.d.denom
+      }
+      else {
+        stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?cobalt::col_w_smd for allowable values.")
+      }
+    }
+    else {
+      stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?cobalt::col_w_smd for allowable values.")
+    }
+  }
+  return(denoms)
+}
 
 ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
   if (is_(ps, c("matrix", "data.frame"))) {
@@ -925,24 +1033,78 @@ get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, us
   return(w)
 }
 
+get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = NULL, stabilize = FALSE) {
+  #Batch turn PS into weights; primarily for output of predict.gbm
+  # Assumes a (0,1) treatment if binary, with ATT already processed
+
+  if (length(dim(ps)) == 2) {
+
+    if (is_not_null(subclass)) {
+      #Get MMW subclass propensity scores
+      for (p in seq_len(ncol(ps)))
+        ps[,p] <- subclass_ps(ps[,p], treat, estimand, focal, subclass)
+    }
+
+    if (toupper(estimand) == "ATE") {
+      w <- treat/ps + (1-treat)/(1-ps)
+    }
+    else if (toupper(estimand) == "ATT") {
+      w <- treat + (1-treat)*ps/(1-ps)
+    }
+    else if (toupper(estimand) == "ATO") {
+      w <- ps * (1-ps)
+    }
+    else if (toupper(estimand) == "ATM") {
+      w <- (treat/ps + (1-treat)/(1-ps))
+      w[ps < .5] <- ps * w
+      w[ps >= .5] <- (1-ps) * w
+    }
+
+    if (stabilize) {
+      for (i in 0:1) {
+        w[treat == i] <- mean_fast(treat == i)*w[treat == i]
+      }
+    }
+  }
+  else if (length(dim(ps)) == 3) {
+
+    if (is_not_null(subclass)) {
+      #Get MMW subclass propensity scores
+      for (p in seq_len(last(dim(ps))))
+        ps[,,p] <- subclass_ps(ps[,,p], treat, estimand, focal, subclass)
+    }
+
+    w <- matrix(0, ncol = dim(ps)[3], nrow = dim(ps)[1])
+    t.levs <- unique(treat)
+    for (i in t.levs) w[treat == i,] <- 1/ps[treat == i, as.character(i),]
+
+    if (toupper(estimand) == "ATE") {
+    }
+    else if (toupper(estimand) == "ATT") {
+      w <- w * ps[, as.character(focal),]
+    }
+    else if (toupper(estimand) == "ATO") {
+      w <- w / colSums(aperm(1/ps, c(2,1,3)))
+    }
+    else if (toupper(estimand) == "ATM") {
+      for (p in seq_len(dim(ps)[3])) {
+        w[,p] <- w[,p] * do.call("pmin", lapply(seq_len(dim(ps)[2]), function(i) ps[,i,p]))
+      }
+    }
+
+    if (stabilize) {
+      for (i in t.levs) {
+        w[treat == i,] <- mean_fast(treat == i)*w[treat == i,]
+      }
+    }
+  }
+  else stop("Don't know how to process more than 3 dims.")
+
+  return(w)
+}
+
 #For balance SuperLearner
 method.balance <- function(stop.method) {
-
-  if (startsWith(stop.method, "es.")) {
-    stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, bin.vars, subset = NULL) {
-      cobalt::col_w_smd(mat, treat, weights, std = rep(TRUE, ncol(mat)), s.d.denom = s.d.denom, abs = TRUE,
-                        s.weights = s.weights, subset = subset, bin.vars = bin.vars)
-    }
-  }
-  else if (startsWith(stop.method, "ks.")) {
-    stop.fun <- function(mat, treat, weights, s.d.denom, s.weights = NULL, bin.vars, subset = NULL) {
-      cobalt::col_w_ks(mat, treat, weights, s.weights = s.weights, subset = subset, bin.vars = bin.vars)
-    }
-  }
-
-  if (endsWith(stop.method, ".mean")) stop.sum <- mean
-  else if (endsWith(stop.method, ".max")) stop.sum <- max
-  else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
 
   out <- list(
   # require allows you to pass a character vector with required packages
@@ -953,34 +1115,27 @@ method.balance <- function(stop.method) {
   # 1) coef: the weights (coefficients) for each algorithm
   # 2) cvRisk: the V-fold CV risk for each algorithm
   computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-    covs <- attr(control$trimLogit, "vals")$covs
     estimand <- attr(control$trimLogit, "vals")$estimand
-    s.d.denom <- get.s.d.denom.weightit(estimand = estimand, treat = Y)
-    bin.vars <- is_binary_col(covs)
+    init <- attr(control$trimLogit, "vals")$init
+    bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
+    tol <- .001
     for (i in 1:ncol(Z)) {
-      Z[Z[,i]<.001,i] <- .001
-      Z[Z[,i]>1-.001,i] <- 1-.001
+      Z[Z[,i] < tol, i] <- tol
+      Z[Z[,i] > 1-tol, i] <- 1-tol
     }
     w_mat<- apply(Z, 2, get_w_from_ps, Y, estimand)
-    cvRisk <- apply(w_mat, 2, function(w) stop.sum(stop.fun(covs, treat = Y,
-                                                            weights = w,
-                                                            s.weights = obsWeights,
-                                                            s.d.denom = s.d.denom,
-                                                            bin.vars = bin.vars)))
+    cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
+
     names(cvRisk) <- libraryNames
 
     loss <- function(coefs) {
       ps <- crossprod(t(Z), coefs/sum(coefs))
       w <- get_w_from_ps(ps, Y, estimand)
-      out <- stop.sum(stop.fun(covs, treat = Y,
-                               weights = w,
-                               s.weights = obsWeights,
-                               s.d.denom = s.d.denom,
-                               bin.vars = bin.vars))
+      out <- bal_fun(init = init, weights = w)
       out
     }
-    fit <- optim(rep(1, ncol(Z)), loss, method = "L-BFGS-B", lower = 0)
+    fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
     coef <- fit$par
     out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
     return(out)
@@ -1001,22 +1156,22 @@ method.balance <- function(stop.method) {
 
 method.balance.cont <- function(stop.method) {
 
-  if (startsWith(stop.method, "s.")) {
-    stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
-      cobalt::col_w_corr(mat, treat, weights, type = "spearman", abs = TRUE,
-                         s.weights = s.weights, bin.vars = bin.vars, subset = subset)
-    }
-  }
-  else if (startsWith(stop.method, "p.")) {
-    stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
-      cobalt::col_w_corr(mat, treat, weights, type = "pearson", abs = TRUE,
-                         s.weights = s.weights, bin.vars = bin.vars, subset = subset)
-    }
-  }
-
-  if (endsWith(stop.method, ".mean")) stop.sum <- mean
-  else if (endsWith(stop.method, ".max")) stop.sum <- max
-  else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
+  # if (startsWith(stop.method, "s.")) {
+  #   stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
+  #     cobalt::col_w_corr(mat, treat, weights, type = "spearman", abs = TRUE,
+  #                        s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+  #   }
+  # }
+  # else if (startsWith(stop.method, "p.")) {
+  #   stop.fun <- function(mat, treat, weights, s.weights, bin.vars, subset = NULL) {
+  #     cobalt::col_w_corr(mat, treat, weights, type = "pearson", abs = TRUE,
+  #                        s.weights = s.weights, bin.vars = bin.vars, subset = subset)
+  #   }
+  # }
+  #
+  # if (endsWith(stop.method, ".mean")) stop.sum <- mean
+  # else if (endsWith(stop.method, ".max")) stop.sum <- max
+  # else if (endsWith(stop.method, ".rms")) stop.sum <- function(x, ...) sqrt(mean(x^2, ...))
 
   out <- list(
     # require allows you to pass a character vector with required packages
@@ -1027,21 +1182,18 @@ method.balance.cont <- function(stop.method) {
     # 1) coef: the weights (coefficients) for each algorithm
     # 2) cvRisk: the V-fold CV risk for each algorithm
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      covs <- attr(control$trimLogit, "vals")$covs
+      # covs <- attr(control$trimLogit, "vals")$covs
       dens.num <- attr(control$trimLogit, "vals")$dens.num
       densfun <- attr(control$trimLogit, "vals")$densfun
       use.kernel <- attr(control$trimLogit, "vals")$use.kernel
       densControl <- attr(control$trimLogit, "vals")$densControl
-
-      bin.vars <- is_binary_col(covs)
+      init <- attr(control$trimLogit, "vals")$init
+      bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
       w_mat<- apply(Z, 2, get_cont_weights, treat = Y, s.weights = obsWeights,
                     dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
                     densControl = densControl)
-      cvRisk <- apply(w_mat, 2, function(w) stop.sum(stop.fun(covs, treat = Y,
-                                                              weights = w,
-                                                              s.weights = obsWeights,
-                                                              bin.vars = bin.vars)))
+      cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
       names(cvRisk) <- libraryNames
 
       loss <- function(coefs) {
@@ -1050,13 +1202,10 @@ method.balance.cont <- function(stop.method) {
                               dens.num = dens.num, densfun = densfun,
                               use.kernel = use.kernel,
                               densControl = densControl)
-        out <- stop.sum(stop.fun(covs, treat = Y,
-                                 weights = w,
-                                 s.weights = obsWeights,
-                                 bin.vars = bin.vars))
+        out <- bal_fun(init = init, weights = w)
         out
       }
-      fit <- optim(rep(1, ncol(Z)), loss, method = "L-BFGS-B", lower = 0)
+      fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
       coef <- fit$par
       out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
       return(out)
