@@ -48,7 +48,7 @@ All arguments to \code{\link[SuperLearner]{SuperLearner}} can be passed through 
 
 For continuous treatments only, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
+\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
 }
 \item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link{density}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
 }
@@ -59,9 +59,9 @@ For continuous treatments only, the following arguments may be supplied:
 }
 
 \subsection{Balance SuperLearner}{
-In addition to the methods allowed by \code{SuperLearner}, one can specify \code{SL.method = "method.balance"} to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with \code{SL.library}. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimizes a balance criterion, which must be set with the \code{stop.method} argument, described below.
+In addition to the methods allowed by \code{SuperLearner}, one can specify \code{SL.method = "method.balance"} to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with \code{SL.library}. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the \code{stop.method} argument, described below.
 \describe{
-\item{\code{stop.method}}{A string describing the criterion used to select the best weights. When optimizing for balance, this has two parts, a statistic to be computed and a summarizing function, which should be combined as \code{"{stat}.{summary}"}. For binary treatments, the available stats are \code{"es"} for absolute standardized mean differences and \code{"ks"} for Kolmogorov-Smirnov statistics; for continuous treatments, the available stats are \code{"p"} for Pearson correlations between each covariate and the treatment and \code{"s"} for Spearman correlations. The available summaries are \code{"mean"} for the mean of the statistics, \code{"max"} for the maximum of the statistics, and \code{"rms"} for the root mean square of the statistics (i.e., the L2 norm). The default for binary and multinomial treatments is \code{"es.mean"} and the default for continuous treatments is \code{"p.mean"}.
+\item{\code{stop.method}}{A string describing the balance criterion used to select the best weights. See \code{\link{stop.method}} for allowable options for each treatment type. For binary and multinomial treatments, the default is \code{"es.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
 }
 Note that this implementation differs from that of Pirracchio and Carone (2018) in that here, balance is measured only on the terms included in the model formula (i.e., and not their interactions unless specifically included), and balance results from a sample weighted using the estimated predicted values as propensity scores, not a sample matched using propensity score matching on the predicted values. Binary and continuous treatments are supported, but currently multinomial treatments are not.
@@ -70,10 +70,10 @@ Note that this implementation differs from that of Pirracchio and Carone (2018) 
 \section{Additional Outputs}{
 \describe{
 \item{\code{info}}{
-For binary treatments, a list with two entries, \code{coef} and \code{cvRisk}. For multinomial treatments, a list of lists with these two entries, one for each treatment level.
+For binary and continuous treatments, a list with two entries, \code{coef} and \code{cvRisk}. For multinomial treatments, a list of lists with these two entries, one for each treatment level.
 \describe{
 \item{\code{coef}}{
-The coefficients in the linear combination of the predictions from each method in \code{SL.library}. Higher values indicate that the corresponding method plays a larger role in determining the resulting predicted value, and values close to zero indicate that the method plays little role in determining the predicted value. When \code{discrete = TRUE}, these correspond to the coefficients that would have been estimated had \code{discrete} been \code{TRUE}.
+The coefficients in the linear combination of the predictions from each method in \code{SL.library}. Higher values indicate that the corresponding method plays a larger role in determining the resulting predicted value, and values close to zero indicate that the method plays little role in determining the predicted value. When \code{discrete = TRUE}, these correspond to the coefficients that would have been estimated had \code{discrete} been \code{FALSE}.
 }
 \item{\code{cvRisk}}{
 The cross-validation risk for each method in \code{SL.library}. Higher values indicate that the method has worse cross-validation accuracy. When \code{SL.method = "method.balance"}, the sample weighted balance statistic requested with \code{stop.method}. Higher values indicate worse balance.
@@ -102,6 +102,7 @@ See \code{\link{method_ps}} for additional references.
 }
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{get_w_from_ps}}
+\code{\link{stop.method}} for allowable arguments to \code{stop.method} when using \code{SL.method = "method.balance"}
 }
 \note{
 Some methods formerly available in \pkg{SuperLearner} are now in \pkg{SuperLearnerExtra}, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
