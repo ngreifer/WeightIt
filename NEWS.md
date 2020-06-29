@@ -7,8 +7,6 @@ Version 0.10.0
 
 * Improvements to `method = "gbm"` and to `method = "super"` with `SL.method = "method.balance"`. A new suite of `stop.method`s are allowed. For binary treatments, these include the energy distance, sample Mahalanobis distance, and pseudo-R2 of the weighted treatment model, among others. See `?stop.method` for allowable options. In addition, performance for both is quite a bit faster.
 
-* Improvements to `method = "super"` . A new suite of `stop.method`s are allowed. For binary treatments, these include the energy distance, sample Mahalanobis distance, and pseudo-R2 of the weighted treatment model, among others. See `?stop.method` for allowable options. In addition, performance is quite a bit faster.
-
 * With multinomial treatments with `link = "logit"` (the default), if the `mnlogit` package is installed, it can be requested for estimating the propensity score by setting the option `use.mnlogit = TRUE`. It should give the same results as the default, which uses `mlogit`, but can be faster for large datasets.
 
 * `make_full_rank()` is now faster.

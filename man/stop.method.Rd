@@ -48,5 +48,5 @@ Griffin, B. A., McCaffrey, D. F., Almirall, D., Burgette, L. F., & Setodji, C. M
 }
 \seealso{
 \code{\link{method_gbm}}, \code{\link{method_super}}
-\code{\link[=cobalt:balance.summary]{balance summary}} in \pkg{cobalt} for details of some calculations.
+\code{\link[cobalt:balance.summary]{balance summary}} in \pkg{cobalt} for details of some calculations.
 }
