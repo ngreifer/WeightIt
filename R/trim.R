@@ -1,66 +1,48 @@
-trim <- function(x, ...) {
+trim <- function(w, ...) {
   UseMethod("trim")
 }
 
-trim.weightit <- function(x, at = .99, lower = FALSE, ...) {
-  x[["weights"]] <- trim_weights(x[["weights"]],
+trim.weightit <- function(w, at = 0, lower = FALSE, ...) {
+  w[["weights"]] <- trim_weights(w[["weights"]],
                                  at = at,
-                                 treat = x[["treat"]],
-                                 estimand = x[["estimand"]],
-                                 focal = x[["focal"]],
-                                 treat.type = get.treat.type(x[["treat"]]),
+                                 treat = w[["treat"]],
+                                 groups.not.to.trim = w[["focal"]],
+                                 treat.type = get.treat.type(w[["treat"]]),
                                  lower = lower)
-  return(x)
+  return(w)
 }
-trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
+trim.numeric <- function(w, at = 0, lower = FALSE, treat = NULL, ...) {
   if (is_not_null(treat)) {
     if (!has.treat.type(treat)) {
       treat <- assign.treat.type(treat)
     }
     treat.type <- get.treat.type(treat)
   }
-  else treat.type <- "continuous"
 
-  if (treat.type != "continuous" && is_not_null(treat)) {
-    w_all_same <- tapply(x, treat, all_the_same)
-    if (!any(w_all_same)) {
-      estimand <- "ATE"
-      focal <- NULL
+  groups.not.to.trim <- NULL
+  if (is_not_null(treat) && treat.type != "continuous") {
+    w_all_same <- tapply(w, treat, all_the_same)
+    if (all(w_all_same)) {
+      warning("Weights are all the same in each treatment group and will not be trimmed.", call. = FALSE)
+      at <- NULL
     }
-    else if (sum(w_all_same) == 1) {
-      estimand <- "ATT"
-      focal <- names(w_all_same)[w_all_same]
-    }
-    else {
-      stop("It appears there is more than one focal group, which is a no-no.", call. = FALSE)
+    else if (any(w_all_same)) {
+      groups.not.to.trim <- names(w_all_same)[w_all_same]
     }
   }
-  else {
-    estimand <- "ATE"
-    focal <- NULL
+  else if (all_the_same(w)) {
+    warning("Weights are all the same and will not be trimmed.", call. = FALSE)
+    at <- NULL
   }
 
-  w <- trim_weights(x, at = at,
+  w <- trim_weights(w, at = at,
                     treat = treat,
-                    estimand = estimand,
-                    focal = focal,
-                    treat.type = treat.type,
+                    groups.not.to.trim = groups.not.to.trim,
                     lower = lower)
   return(w)
 }
 
-trim_weights <- function(weights, at, treat, estimand, focal, treat.type = NULL, lower) {
-  estimand <- toupper(estimand)
-  if (treat.type != "continuous") {
-    if (length(estimand) != 1 ||
-        !is.character(estimand) ||
-        !estimand %in% c("ATT", "ATC", "ATE", "ATO", "ATM")) {
-      stop("'estimand' must be a character vector of length 1 with an acceptable estimand value (e.g., ATT, ATC, ATE).", call. = FALSE)
-    }
-    f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
-    focal <- f.e.r[["focal"]]
-    estimand <- f.e.r[["estimand"]]
-  }
+trim_weights <- function(weights, at = 0, treat = NULL, groups.not.to.trim = NULL, lower = FALSE) {
 
   if (is_null(at) || isTRUE(at == 0)) {
     at <- NULL
@@ -76,43 +58,48 @@ trim_weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
       if (lower) trim.q <- c(1 - at, at)
       else trim.q <- c(0, at)
 
-      if (treat.type != "continuous" && toupper(estimand) == "ATT") {
-        trim.w <- quantile(weights[treat != focal], probs = trim.q, type = 3)
-        weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
-        weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
-        message(paste0("Trimming weights where treat is not ", focal, " to ", word_list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
+      if (is_not_null(groups.not.to.trim)) {
+        to.be.trimmed <- treat %nin% groups.not.to.trim
+        trim.w <- quantile(weights[to.be.trimmed], probs = trim.q, type = 3)
+        weights[to.be.trimmed & weights < trim.w[1]] <- trim.w[1]
+        weights[to.be.trimmed & weights > trim.w[2]] <- trim.w[2]
+        message(paste0("Trimming weights where treat is not ", word_list(groups.not.to.trim, and.or = "or"), " to ",
+                       word_list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
       }
       else {
         trim.w <- quantile(weights, probs = trim.q, type = 3)
         weights[weights < trim.w[1]] <- trim.w[1]
         weights[weights > trim.w[2]] <- trim.w[2]
-        if (sum(check_if_zero(weights - 1)) > 10) {
-          warning("Several weights are equal to 1. You should enter the treatment variable as an argument to 'treat' in trim().", call. = FALSE)
-        }
+        # if (sum(check_if_zero(weights - 1)) > 10) {
+        #   warning("Several weights are equal to 1. You should enter the treatment variable as an argument to 'treat' in trim().", call. = FALSE)
+        # }
         message(paste0("Trimming weights to ", word_list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
       }
     }
     else {
-      if (treat.type != "continuous" && toupper(estimand) == "ATT") {
-        if (at >= sum(treat != focal)) {
-          warning(paste0("'at' must be less than ", sum(treat != focal), ", the number of units not in the focal treatment. Weights will not be trimmed."), call. = FALSE)
+      if (is_not_null(groups.not.to.trim)) {
+        to.be.trimmed <- treat %nin% groups.not.to.trim
+        if (at >= sum(to.be.trimmed)) {
+          warning(paste0("'at' must be less than ", sum(to.be.trimmed), ", the number of units for which treat is not ",
+                         word_list(groups.not.to.trim, and.or = "or"), ". Weights will not be trimmed."), call. = FALSE)
           at <- NULL
         }
         else {
-          at <- as.integer(min(at, sum(treat != focal) - at))
+          at <- as.integer(min(at, sum(to.be.trimmed) - at))
 
-          if (lower) trim.top <- c(at + 1, sum(treat != focal) - at)
-          else trim.top <- c(1, sum(treat != focal) - at)
+          if (lower) trim.top <- c(at + 1, sum(to.be.trimmed) - at)
+          else trim.top <- c(1, sum(to.be.trimmed) - at)
 
-          trim.w <- sort(weights[treat != focal], partial = trim.top)[trim.top]
-          weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
-          weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
+          trim.w <- sort(weights[to.be.trimmed], partial = trim.top)[trim.top]
+          weights[to.be.trimmed & weights < trim.w[1]] <- trim.w[1]
+          weights[to.be.trimmed & weights > trim.w[2]] <- trim.w[2]
           if (at == 1) {
             if (lower) weights.text <- "weights"
             else weights.text <- "weight"
           }
           else weights.text <- paste(at, "weights")
-          message(paste0("Trimming the ", word_list(c("top", "bottom")[c(TRUE, lower)]), " ", weights.text, " where treat \u2260 ", focal, "."))
+          message(paste0("Trimming the ", word_list(c("top", "bottom")[c(TRUE, lower)]), " ", weights.text,
+                         " where treat is not ", word_list(groups.not.to.trim, and.or = "or"), "."))
         }
       }
       else {
