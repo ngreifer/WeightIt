@@ -203,7 +203,8 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
     out$coef.of.var <- c(all = sd(w)/mean_fast(w))
     out$scaled.mad <- c(all = mean.abs.dev(w)/mean_fast(w))
-    out$negative.entropy <- c(all = sum(w*log(w))/mean(w))
+    out$negative.entropy <- c(all = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+    out$num.zeros <- c(overall = sum(check_if_zero(w)))
 
     nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
     nn[1, ] <- ESS(sw)
@@ -231,10 +232,13 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                          overall = sd(w)/mean_fast(w))
     out$scaled.mad <- c(treated = mean.abs.dev(w[t==1])/mean_fast(w[t==1]),
                         control = mean.abs.dev(w[t==0])/mean_fast(w[t==0]),
-                        all = mean.abs.dev(w)/mean_fast(w))
-    out$negative.entropy <- c(treated = sum(w[t==1]*log(w[t==1]))/mean_fast(w[t==1]),
-                              control = sum(w[t==0]*log(w[t==0]))/mean_fast(w[t==0]),
-                              all = sum(w*log(w))/mean_fast(w))
+                        overall = mean.abs.dev(w)/mean_fast(w))
+    out$negative.entropy <- c(treated = sum(w[t==1 & w>0]*log(w[t==1 & w>0]))/sum(w[t==1 & w>0]),
+                              control = sum(w[t==0 & w>0]*log(w[t==0 & w>0]))/sum(w[t==0 & w>0]),
+                              overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+    out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
+                       control = sum(check_if_zero(w[t==0])),
+                       overall = sum(check_if_zero(w)))
 
     #dc <- weightit$discarded
 
@@ -260,8 +264,10 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                          overall = sd(w)/mean_fast(w))
     out$scaled.mad <- c(sapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x])),
                         overall = mean.abs.dev(w)/mean_fast(w))
-    out$negative.entropy <- c(sapply(levels(t), function(x) sum(w[t==x]*log(w[t==x]))/mean_fast(w[t==x])),
-                         overall = sum(w*log(w))/mean_fast(w))
+    out$negative.entropy <- c(sapply(levels(t), function(x) sum(w[t==x & w>0]*log(w[t==x & w>0]))/sum(w[t==x & w>0])),
+                         overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+    out$num.zeros <- c(sapply(levels(t), function(x) sum(check_if_zero(w[t==x])),
+                       overall = sum(check_if_zero(w))))
 
     nn <- as.data.frame(matrix(0, nrow = 2, ncol = nunique(t)))
     for (i in seq_len(nunique(t))) {
@@ -303,8 +309,9 @@ print.summary.weightit <- function(x, ...) {
   cat("\n- " %+% italic("Weight statistics") %+% ":\n\n")
   print.data.frame(round_df_char(setNames(as.data.frame(cbind(x$coef.of.var,
                                                               x$scaled.mad,
-                                                              x$negative.entropy)),
-                                        c("Coef of Var", "MAD", "Entropy")), 3))
+                                                              x$negative.entropy,
+                                                              x$num.zeros)),
+                                        c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
   cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
   print.data.frame(round_df_char(x$effective.sample.size, 3))
   invisible(x)
