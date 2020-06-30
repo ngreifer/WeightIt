@@ -51,22 +51,22 @@ trim.numeric <- function(x, at = .99, lower = FALSE, treat = NULL, ...) {
 
 trim_weights <- function(weights, at, treat, estimand, focal, treat.type = NULL, lower) {
   estimand <- toupper(estimand)
-  if (treat.type != "continuous" && (length(estimand) != 1 ||
-      !is.character(estimand) ||
-      !estimand %in% c("ATT", "ATC", "ATE", "ATO", "ATM"))) {
-    stop("estimand must be a character vector of length 1 with an acceptable estimand value (e.g., ATT, ATC, ATE).", call. = FALSE)
+  if (treat.type != "continuous") {
+    if (length(estimand) != 1 ||
+        !is.character(estimand) ||
+        !estimand %in% c("ATT", "ATC", "ATE", "ATO", "ATM")) {
+      stop("'estimand' must be a character vector of length 1 with an acceptable estimand value (e.g., ATT, ATC, ATE).", call. = FALSE)
+    }
+    f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+    focal <- f.e.r[["focal"]]
+    estimand <- f.e.r[["estimand"]]
   }
-
-  f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
-  focal <- f.e.r[["focal"]]
-  estimand <- f.e.r[["estimand"]]
-  #reported.estimand <- f.e.r[["reported.estimand"]]
 
   if (is_null(at) || isTRUE(at == 0)) {
     at <- NULL
   }
-  else if (length(at) > 1 || !is.numeric(at) || at < 0) {
-    warning("\"at\" must be a single positive number. Weights will not be trimmed.", call. = FALSE)
+  else if (length(at) > 1 || !is.numeric(at) || is.na(at) || at < 0) {
+    warning("'at' must be a single positive number. Weights will not be trimmed.", call. = FALSE)
     at <- NULL
   }
   else {
@@ -87,7 +87,7 @@ trim_weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
         weights[weights < trim.w[1]] <- trim.w[1]
         weights[weights > trim.w[2]] <- trim.w[2]
         if (sum(check_if_zero(weights - 1)) > 10) {
-          warning("Several weights are equal to 1. You should enter the treatment variable as an argument to treat in trim().", call. = FALSE)
+          warning("Several weights are equal to 1. You should enter the treatment variable as an argument to 'treat' in trim().", call. = FALSE)
         }
         message(paste0("Trimming weights to ", word_list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")), "."))
       }
@@ -104,7 +104,7 @@ trim_weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
           if (lower) trim.top <- c(at + 1, sum(treat != focal) - at)
           else trim.top <- c(1, sum(treat != focal) - at)
 
-          trim.w <- sort(weights[treat != focal])[trim.top]
+          trim.w <- sort(weights[treat != focal], partial = trim.top)[trim.top]
           weights[treat != focal & weights < trim.w[1]] <- trim.w[1]
           weights[treat != focal & weights > trim.w[2]] <- trim.w[2]
           if (at == 1) {
@@ -116,15 +116,15 @@ trim_weights <- function(weights, at, treat, estimand, focal, treat.type = NULL,
         }
       }
       else {
-        if (at >= length(treat)) {
-          warning(paste0("'at' must be less than ", length(treat), ", the number of units. Weights will not be trimmed."), call. = FALSE)
+        if (at >= length(weights)) {
+          warning(paste0("'at' must be less than ", length(weights), ", the number of units. Weights will not be trimmed."), call. = FALSE)
           at <- NULL
         }
         else {
-          at <- as.integer(min(at, length(treat) - at))
+          at <- as.integer(min(at, length(weights) - at))
 
-          if (lower) trim.top <- c(at + 1, length(treat) - at)
-          else trim.top <- c(1, length(treat) - at)
+          if (lower) trim.top <- c(at + 1, length(weights) - at)
+          else trim.top <- c(1, length(weights) - at)
 
           trim.w <- sort(weights)[trim.top]
           weights[weights < trim.w[1]] <- trim.w[1]
