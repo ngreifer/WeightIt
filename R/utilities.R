@@ -82,7 +82,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   }
   else if (toupper(estimand) == "ATOS") {
     #Crump et al. (2009)
-    ps.sorted <- sort(ps_mat[,2])
+    ps.sorted <- sort(c(ps_mat[,2], 1 - ps_mat[,2]))
     q <- ps_mat[,2]*(1-ps_mat[,2])
     alpha.opt <- 0
     for (i in 1:sum(ps_mat[,2] < .5)) {
