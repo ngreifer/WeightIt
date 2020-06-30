@@ -40,14 +40,16 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 
   treat.type <- get.treat.type(treat)
 
+  if (treat.type == "continuous") {
+    stop("get_w_from_ps can only be used with binary or multinomial treatments.", call. = FALSE)
+  }
+
+  estimand <- process.estimand(estimand, method = "ps", treat.type = treat.type)
+
   processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treat.type, treated)
   estimand <- processed.estimand$estimand
   focal <- processed.estimand$focal
   assumed.treated <- processed.estimand$treated
-
-  if (treat.type == "continuous") {
-    stop("get_w_from_ps can only be used with binary or multinomial treatments.", call. = FALSE)
-  }
 
   ps_mat <- ps_to_ps_mat(ps, treat, assumed.treated, treat.type, treated, estimand)
 
@@ -84,16 +86,18 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     q <- ps_mat[,2]*(1-ps_mat[,2])
     alpha.opt <- 0
     for (i in 1:sum(ps_mat[,2] < .5)) {
-      alpha <- ps.sorted[i]
-      a <- alpha*(1-alpha)
-      if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
-        alpha.opt <- alpha
-        break
+      if (i == 1 || !check_if_zero(ps.sorted[i] - ps.sorted[i-1])) {
+        alpha <- ps.sorted[i]
+        a <- alpha*(1-alpha)
+        if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
+          alpha.opt <- alpha
+          break
+        }
       }
     }
     w[!between(ps_mat[,2], c(alpha.opt, 1 - alpha.opt))] <- 0
   }
-  else w <- NULL
+  else return(numeric(0))
 
   if (stabilize) w <- stabilize_w(w, treat)
 
