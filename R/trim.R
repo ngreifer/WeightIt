@@ -7,7 +7,6 @@ trim.weightit <- function(w, at = 0, lower = FALSE, ...) {
                                  at = at,
                                  treat = w[["treat"]],
                                  groups.not.to.trim = w[["focal"]],
-                                 treat.type = get.treat.type(w[["treat"]]),
                                  lower = lower)
   return(w)
 }
