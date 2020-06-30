@@ -23,7 +23,7 @@ A vector, matrix, or data frame of propensity scores. See Details.
 A vector of treatment statuses for each individual. See Details.
 }
   \item{estimand}{
-The desired estimand that the weights should target. Current options include "ATE" (average treatment effect), "ATT" (average treatment effect on the treated), "ATC" (average treatment effect on the control), "ATO" (average treatment effect in the overlap), and "ATM" (average treatment effect in the matched sample). See \code{\link{method_ps}} for additional information and references.
+The desired estimand that the weights should target. Current options include "ATE" (average treatment effect), "ATT" (average treatment effect on the treated), "ATC" (average treatment effect on the control), "ATO" (average treatment effect in the overlap), "ATM" (average treatment effect in the matched sample), and "ATOS" (average treatment effect in the optimal subset). See \code{\link{method_ps}} for additional information and references.
 }
   \item{focal}{
 When the estimand is the ATT or ATC, which group should be consider the (focal) "treated" or "control" group, respectively. If not \code{NULL} and \code{estimand} is not "ATT" or "ATC", \code{estimand} will automatically be set to "ATT".
@@ -66,6 +66,10 @@ Li, F., Morgan, K. L., & Zaslavsky, A. M. (2018). Balancing covariates via prope
  - \code{estimand = "ATM"}
 
 Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. The International Journal of Biostatistics, 9(2). \doi{10.1515/ijb-2012-0030}
+
+ - \code{estimand = "ATOS"}
+
+Crump, R. K., Hotz, V. J., Imbens, G. W., & Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. Biometrika, 96(1), 187–199. \doi{10.1093/biomet/asn055}
 
  - Other estimands
 
