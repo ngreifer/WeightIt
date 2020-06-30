@@ -77,7 +77,7 @@ method.to.phrase <- function(method) {
 process.estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
   AE <- list(
-    binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
+    binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM", "ATOS")
                   , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
                   , twang = c("ATT", "ATC", "ATE")
                   , cbps = c("ATT", "ATC", "ATE")
@@ -470,22 +470,28 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
     int_terms <- int_co.names <- make_list(1)
     ints_to_make <- combn(colnames(d)[!ex], 2, simplify = FALSE)
 
-    int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]]*d[,i[2]]))
+    if (is_not_null(ints_to_make)) {
+      int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]]*d[,i[2]]))
 
-    int_co.names[[1]] <- vapply(ints_to_make, paste, character(1L), collapse = " * ")
+      int_co.names[[1]] <- vapply(ints_to_make, paste, character(1L), collapse = " * ")
+    }
   }
   else int_terms <- int_co.names <- list()
 
-  out <- do.call("cbind", c(poly_terms, int_terms))
-  out_co.names <- c(do.call("c", poly_co.names), do.call("c", int_co.names))
+  if (is_not_null(poly_terms) && is_not_null(int_terms)) {
+    out <- do.call("cbind", c(poly_terms, int_terms))
+    out_co.names <- c(do.call("c", poly_co.names), do.call("c", int_co.names))
 
-  colnames(out) <- unlist(out_co.names)
+    colnames(out) <- unlist(out_co.names)
 
-  #Remove single values
-  if (is_not_null(out)) {
-    single_value <- apply(out, 2, all_the_same)
-    out <- out[, !single_value, drop = FALSE]
+    #Remove single values
+    if (is_not_null(out)) {
+      single_value <- apply(out, 2, all_the_same)
+      out <- out[, !single_value, drop = FALSE]
+    }
   }
+  else out <- NULL
+
   return(out)
 }
 .get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
@@ -1107,47 +1113,47 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
 method.balance <- function(stop.method) {
 
   out <- list(
-  # require allows you to pass a character vector with required packages
-  # use NULL if no required packages
-  require = "cobalt",
+    # require allows you to pass a character vector with required packages
+    # use NULL if no required packages
+    require = "cobalt",
 
-  # computeCoef is a function that returns a list with two elements:
-  # 1) coef: the weights (coefficients) for each algorithm
-  # 2) cvRisk: the V-fold CV risk for each algorithm
-  computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-    estimand <- attr(control$trimLogit, "vals")$estimand
-    init <- attr(control$trimLogit, "vals")$init
-    bal_fun <- attr(control$trimLogit, "vals")$bal_fun
+    # computeCoef is a function that returns a list with two elements:
+    # 1) coef: the weights (coefficients) for each algorithm
+    # 2) cvRisk: the V-fold CV risk for each algorithm
+    computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
+      estimand <- attr(control$trimLogit, "vals")$estimand
+      init <- attr(control$trimLogit, "vals")$init
+      bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
-    tol <- .001
-    for (i in 1:ncol(Z)) {
-      Z[Z[,i] < tol, i] <- tol
-      Z[Z[,i] > 1-tol, i] <- 1-tol
+      tol <- .001
+      for (i in 1:ncol(Z)) {
+        Z[Z[,i] < tol, i] <- tol
+        Z[Z[,i] > 1-tol, i] <- 1-tol
+      }
+      w_mat <- get.w.from.ps(Z, treat = Y, estimand = estimand)
+      cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
+
+      names(cvRisk) <- libraryNames
+
+      loss <- function(coefs) {
+        ps <- crossprod(t(Z), coefs/sum(coefs))
+        w <- get_w_from_ps(ps, Y, estimand)
+        out <- bal_fun(init = init, weights = w)
+        out
+      }
+      fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
+      coef <- fit$par
+      out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
+      return(out)
+    },
+
+    # computePred is a function that takes the weights and the predicted values
+    # from each algorithm in the library and combines them based on the model to
+    # output the super learner predicted values
+    computePred = function(predY, coef, control, ...) {
+      out <- crossprod(t(predY), coef/sum(coef))
+      return(out)
     }
-    w_mat <- get.w.from.ps(Z, treat = Y, estimand = estimand)
-    cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
-
-    names(cvRisk) <- libraryNames
-
-    loss <- function(coefs) {
-      ps <- crossprod(t(Z), coefs/sum(coefs))
-      w <- get_w_from_ps(ps, Y, estimand)
-      out <- bal_fun(init = init, weights = w)
-      out
-    }
-    fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
-    coef <- fit$par
-    out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
-    return(out)
-  },
-
-  # computePred is a function that takes the weights and the predicted values
-  # from each algorithm in the library and combines them based on the model to
-  # output the super learner predicted values
-  computePred = function(predY, coef, control, ...) {
-    out <- crossprod(t(predY), coef/sum(coef))
-    return(out)
-  }
   )
   # attr(out, "stop.method") <- stop.method
   # class(out) <- "method.balance"

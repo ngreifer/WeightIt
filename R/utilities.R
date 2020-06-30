@@ -78,6 +78,21 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   else if (toupper(estimand) == "ATM") {
     w <- w*do.call("pmin", lapply(seq_len(ncol(ps_mat)), function(x) ps_mat[,x]), quote = TRUE)
   }
+  else if (toupper(estimand) == "ATOS") {
+    #Crump et al. (2009)
+    ps.sorted <- sort(ps_mat[,2])
+    q <- ps_mat[,2]*(1-ps_mat[,2])
+    alpha.opt <- 0
+    for (i in 1:sum(ps_mat[,2] < .5)) {
+      alpha <- ps.sorted[i]
+      a <- alpha*(1-alpha)
+      if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
+        alpha.opt <- alpha
+        break
+      }
+    }
+    w[!between(ps_mat[,2], c(alpha.opt, 1 - alpha.opt))] <- 0
+  }
   else w <- NULL
 
   if (stabilize) w <- stabilize_w(w, treat)
