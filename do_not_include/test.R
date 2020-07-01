@@ -37,15 +37,15 @@ W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
               stop.method = c("es.mean", "ks.mean"), estimand = "ATE")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
               stop.method = c("es.mean"), estimand = "ATT",
-              subclass = 4)
-W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "twang", estimand = "ATT")
+              subclass = 40)
+W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "gbm", estimand = "ATT")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbr", estimand = "ATC", s.weights = s)
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATE")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATT",
               focal = "A", s.weights = s, stop.method = "es.blarg")
 
-W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max", use.optimize = 2)
+W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max")
 W <- weightit(f.build("re78", covs), data = lalonde_mis, method = "gbm", stop.method = "p.max", use.kernel = TRUE)
 
 
@@ -58,7 +58,7 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "cbps", estimand
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "cbps", estimand = "ATT")
 W <- weightit(f.build("treat5", covs), data = lalonde, method = "cbps", estimand = "ATE")
 
-W <- weightit(f.build("re78", covs), data = lalonde, method = "cbps", over = FALSE)
+W <- weightit(f.build("re78", covs), data = lalonde, method = "cbps", over = FALSE, s.weights = s)
 
 #method = "npcbps"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "npcbps", estimand = "ATE")
@@ -105,6 +105,26 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "optweight", est
               focal = "A", s.weights = s)
 
 W <- weightit(f.build("re78", covs), data = lalonde, method = "optweight")
+
+#method = "super"
+W <- weightit(f.build("treat", covs), data = lalonde, method = "super", estimand = "ATE",
+              SL.library = c("SL.glm", "SL.lda"))
+W <- weightit(f.build("treat", covs), data = lalonde, method = "super", estimand = "ATC",
+              SL.library = c("SL.glm", "SL.lda"), SL.method = "method.balance",
+              stop.method = "ks.max")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "super", estimand = "ATO",
+              s.weights = s, SL.library = c("SL.glm", "SL.lda"))
+
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "super", estimand = "ATE",
+              SL.library = c("SL.glm", "SL.lda"))
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "super", estimand = "ATT",
+              focal = "A", s.weights = s, SL.library = c("SL.glm", "SL.lda"))
+
+W <- weightit(f.build("re78", covs), data = lalonde, method = "super",
+              SL.library = c("SL.glm", "SL.stepAIC"), use.kernel = TRUE)
+W <- weightit(f.build("re78", covs), data = lalonde, method = "super",
+              SL.library = c("SL.glm", "SL.stepAIC"), SL.method = "method.balance",
+              stop.method = "p.max", density = "dt_3", s.weights = s)
 
 #method = "energy"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATE")
@@ -208,7 +228,7 @@ kbal.fun <- function(treat, covs, estimand, focal, ...) {
   args <- list(...)
 
   if (is_not_null(focal)) treat <- as.numeric(treat == focal)
-  else if (estimand != "ATT") stop("estimand must be 'ATT' or 'ATC'.", call. = FALSE)
+  else stop("estimand must be 'ATT' or 'ATC'.", call. = FALSE)
 
   if ("kbal.method" %in% names(args)) {
     names(args)[names(args) == "kbal.method"] <- "method"
@@ -220,6 +240,7 @@ kbal.fun <- function(treat, covs, estimand, focal, ...) {
   w <- k.out$w
   return(list(w = w))
 }
+W <- weightit(f.build("treat", covs), data = lalonde, method = kbal.fun, estimand = "ATT")
 
 data("lalonde_mis")
 library(mice); library(survey)
