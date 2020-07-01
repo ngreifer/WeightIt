@@ -913,6 +913,8 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
       sub.tab <- table(treat, sub)
     }
 
+    sub <- as.character(sub)
+
     sub.totals <- colSums(sub.tab)
     sub.ps <- setNames(sub.tab[as.character(i), ] / sub.totals,
                        colnames(sub.tab))
@@ -1044,11 +1046,13 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
   # Assumes a (0,1) treatment if binary, with ATT already processed
 
   if (length(dim(ps)) == 2) {
-
+    if (is_not_null(focal)) focal <- "1"
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
-      for (p in seq_len(ncol(ps)))
-        ps[,p] <- subclass_ps(ps[,p], treat, estimand, focal, subclass)
+      for (p in seq_len(ncol(ps))) {
+        ps_mat <- matrix(c(1 - ps[,p], ps[,p]), ncol = 2, dimnames = list(rownames(ps), c("0", "1")))
+        ps[,p] <- subclass_ps(ps_mat, treat, estimand, focal, subclass)[, 2]
+      }
     }
 
     if (toupper(estimand) == "ATE") {
