@@ -966,6 +966,8 @@ check_if_call_from_fun <- function(fun) {
     FALSE
 }
 
+if (getRversion() < 3.6) str2expression <- function(text) parse(text=text, keep.source=FALSE)
+
 #Not used cobalt; replaced with rlang
 is.formula <- function(f, sides = NULL) {
     #Replaced by rlang::is_formula
@@ -976,4 +978,3 @@ is.formula <- function(f, sides = NULL) {
     }
     return(res)
 }
-if (getRversion() < 3.6) str2expression <- function(text) parse(text=text, keep.source=FALSE)
