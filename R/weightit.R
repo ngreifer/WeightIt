@@ -260,14 +260,14 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                             levels(t))
     out$weight.top <- setNames(lapply(names(top.weights), function(x) sort(setNames(top.weights[[x]], which(w %in% top.weights[[x]] & t == x)[seq_len(top)]))),
                                names(top.weights))
-    out$coef.of.var <- c(sapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x])),
+    out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
                          overall = sd(w)/mean_fast(w))
-    out$scaled.mad <- c(sapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x])),
+    out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
                         overall = mean.abs.dev(w)/mean_fast(w))
-    out$negative.entropy <- c(sapply(levels(t), function(x) sum(w[t==x & w>0]*log(w[t==x & w>0]))/sum(w[t==x & w>0])),
+    out$negative.entropy <- c(vapply(levels(t), function(x) sum(w[t==x & w>0]*log(w[t==x & w>0]))/sum(w[t==x & w>0]), numeric(1L)),
                          overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
-    out$num.zeros <- c(sapply(levels(t), function(x) sum(check_if_zero(w[t==x])),
-                       overall = sum(check_if_zero(w))))
+    out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
+                       overall = sum(check_if_zero(w)))
 
     nn <- as.data.frame(matrix(0, nrow = 2, ncol = nunique(t)))
     for (i in seq_len(nunique(t))) {
