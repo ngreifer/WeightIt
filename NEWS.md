@@ -23,6 +23,10 @@ Version 0.10.0
 
 * Added error message when using `missing = "saem"` and there is missingness in every variable (this is not allowed).
 
+* Changed default value of `at` in `trim()` from .99 to 0.
+
+* Added output for the number of weights equal to zero in `summary.weightit`. This can be especially helpful when using `"optweight"` or `"energy"` methods or when using `estimand = "ATOS"`.
+
 Version 0.9.0
 
 * Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.
