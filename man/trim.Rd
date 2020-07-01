@@ -10,16 +10,16 @@ Trim Large Weights
 Trims (i.e., truncates) large weights by setting all weights higher than that at a given quantile to the weight at the quantile. This can be useful in controlling extreme weights, which can reduce effective sample size by enlarging the variability of the weights.
 }
 \usage{
-\method{trim}{weightit}(w, at = .99, lower = FALSE, ...)
+\method{trim}{weightit}(w, at = 0, lower = FALSE, ...)
 
-\method{trim}{numeric}(w, at = .99, lower = FALSE, treat = NULL, ...)
+\method{trim}{numeric}(w, at = 0, lower = FALSE, treat = NULL, ...)
 }
 \arguments{
   \item{w}{
 A \code{weightit} object or a vector of weights.
 }
   \item{at}{
-\code{numeric}; either the quantile of the weights above which weights are to be trimmed. A single number between .5 and 1, or the number of weights to be trimmed (e.g., \code{at = 3} for the top 3 weights to be set to the 4th largest weight)
+\code{numeric}; either the quantile of the weights above which weights are to be trimmed. A single number between .5 and 1, or the number of weights to be trimmed (e.g., \code{at = 3} for the top 3 weights to be set to the 4th largest weight).
 }
   \item{lower}{
 \code{logical}; whether also to trim at the lower quantile (e.g., for \code{at = .9}, trimming at both .1 and .9, or for \code{at = 3}, trimming the top and bottom 3 weights).
