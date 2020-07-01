@@ -926,6 +926,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   if (treat.type == "binary")  {
     available.distributions <- c("bernoulli", "adaboost")
     treat <- binarize(treat, one = focal)
+    if (is_not_null(focal)) focal <- "1"
   }
   else available.distributions <- "multinomial"
 
