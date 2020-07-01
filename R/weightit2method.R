@@ -762,7 +762,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
 
         s <- fit.list[[i]]$stopMethods[1]
 
-        w[treat == i] <- get.w.ps(fit.list[[i]], stop.method = s)[treat_ == 0]
+        w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat_ == 0]
 
         if (nunique(treat) == 2) {
           ps <- fit.list[[i]][["ps"]][[1]]
@@ -799,13 +799,13 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
         s <- fit.list[[i]]$stopMethods[1]
 
         if (nunique(treat) == 2) {
-          w <- get.w.ps(fit.list[[i]], stop.method = s)
+          w <- cobalt::get.w(fit.list[[i]], stop.method = s)
           ps <- fit.list[[i]][["ps"]][[1]]
           fit.list <- fit.list[[i]]
           break
         }
         else {
-          w[treat == i] <- get.w.ps(fit.list[[i]], stop.method = s)[treat == i]
+          w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat == i]
         }
       }
     }
@@ -852,10 +852,8 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                                    data = new.data,
                                    sampw = s.weights[subset],
                                    verbose = TRUE), A))
-    w <- get.w.ps.cont(fit, stop.method = A[["stop.method"]])
+    w <- cobalt::get.w(fit, stop.method = A[["stop.method"]])
   }
-
-  #ps <- fit[["ps"]][[A[["stop.method"]]]]
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -1373,7 +1371,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                              treated = 1, subclass = subclass, stabilize = stabilize)
         }
         else {
-          w[treat == i] <- get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
+          w[treat == i] <- cobalt::get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
         }
       }
     }
@@ -1400,7 +1398,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                              subclass = subclass, stabilize = stabilize)
         }
         else {
-          w <- get.w(fit.list, estimand = "ATE") / s.weights[subset]
+          w <- cobalt::get.w(fit.list) / s.weights[subset]
         }
       }
       else {
@@ -1415,7 +1413,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                                       sample.weights = s.weights[subset],
                                       ATT = 0, ...)
 
-          w[treat==i] <- get.w(fit.list[[i]], estimand = "ATE")[treat==i] / s.weights[subset][treat==i]
+          w[treat==i] <- cobalt::get.w(fit.list[[i]])[treat==i] / s.weights[subset][treat==i]
         }
       }
     }
@@ -1460,7 +1458,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
              }
     )
   }
-  w <- get.w(fit) #/ s.weights[subset]
+  w <- cobalt::get.w(fit) / s.weights[subset]
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -1495,7 +1493,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
     fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
                    quote = TRUE)
   }
-  w <- get.w(fit)
+  w <- cobalt::get.w(fit)
 
   obj <- list(w = w, fit.obj = fit)
 
@@ -1529,7 +1527,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
     fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
                    quote = TRUE)
   }
-  w <- get.w(fit)
+  w <- cobalt::get.w(fit)
 
   obj <- list(w = w, fit.obj = fit)
 
