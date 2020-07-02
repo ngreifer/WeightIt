@@ -45,6 +45,9 @@ When \code{include.obj = TRUE}, the nonparametric CB(G)PS model fit. The output 
 }
 }
 }
+\details{
+Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical liklihood of the data given the weights. npCBPS is similar to entropy balancing and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the \code{cor.prior} argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.
+}
 \references{
 
 Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. The Annals of Applied Statistics, 12(1), 156–177. \doi{10.1214/17-AOAS1101}

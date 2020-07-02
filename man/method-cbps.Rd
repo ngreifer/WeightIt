@@ -52,6 +52,11 @@ When \code{include.obj = TRUE}, the CB(G)PS model fit. For binary treatments, mu
 }
 }
 }
+\details{
+CBPS estimates the coefficients of a logistic (for binary treatments), multinomial logistic (form multinomial treatments), or linear (for continuous treatments) regression model that is used to compute (generalized) propensity scores, from which the weights are computed. It involves augmenting the standard regression score equations with the balance constraints in an over-identified generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with \code{exact = FALSE}) does away with the score equations for the coefficients so that only the balance constraints (and the score equation for the variance of the error with a continuous treatment) are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multinomial treatments and linear terms for continuous treatments than will the over-identified version.
+
+Note that \pkg{WeightIt} provides less functionality than does the \pkg{CBPS} package in terms of the version of CBPS available; for extension to CBPS, the \pkg{CBPS} package may be preferred.
+}
 \references{
 \strong{Binary treatments}
 

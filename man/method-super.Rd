@@ -85,6 +85,9 @@ When \code{include.obj = TRUE}, the SuperLearner fit(s) used to generate the pre
 }
 }
 }
+\details{
+SuperLearner works by fitting several machine learning models to the treatment and covariates and then taking a weighted combination of the generated predicted values to use as the propensity scores, which are then used to construct weights. The machine learning models used are supplied using the \code{SL.library} argument; the more models are supplied, the higher the chance of correctly modeling the propensity score. The predicted values are combined using the method supplied in the \code{SL.method} argument (which is nonnegative least squares by default). A benefit of SuperLearner is that, asymptotically, it is guaranteed to perform as well as or better than the best-performing method included in the library. Using Balance SuperLearner by setting \code{SL.method = "method.balance"} works by selecting the combination of predicted values that minimizes an imbalance measure.
+}
 \references{
 - Binary treatments
 
