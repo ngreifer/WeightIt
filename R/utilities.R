@@ -104,6 +104,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   names(w) <- rownames(ps_mat)
 
   attr(w, "subclass") <- attr(ps_mat, "sub_mat")
+  if (toupper(estimand) == "ATOS") attr(w, "alpha") <- alpha.opt
 
   return(w)
 }
