@@ -9,7 +9,7 @@
 Subgroup Balancing Propensity Score
 }
 \description{
-Implements the subgroup balancing propensity score (SBPS), which is an algorithm that attempts to achieve balance in subgroups by sharing information from the overall sample and subgroups. (Dong, Zhang, Zeng, & Li, 2019; DZZL). Each subgroup can use either weights estimated using the whole sample, weights estimated using just that subgroup, or a combination of the two. The optimal combination is chosen as that which minimizes an imbalance criterion that includes subgroup as well as overall balance.
+Implements the subgroup balancing propensity score (SBPS), which is an algorithm that attempts to achieve balance in subgroups by sharing information from the overall sample and subgroups. (Dong, Zhang, Zeng, & Li, 2020; DZZL). Each subgroup can use either weights estimated using the whole sample, weights estimated using just that subgroup, or a combination of the two. The optimal combination is chosen as that which minimizes an imbalance criterion that includes subgroup as well as overall balance.
 }
 \usage{
 sbps(obj, obj2 = NULL,
@@ -81,7 +81,8 @@ A \code{weightit.sbps} object, which inherits from \code{weightit}. This contain
 This object has its own summary methods and is compatible with \pkg{cobalt} functions. The \code{cluster} argument should be used with \pkg{cobalt} functions to accurately reflect the performance of the weights in balancing the subgroups.
 }
 \references{
-Dong, J., Zhang, J. L., Zeng, S., & Li, F. (2019). Subgroup Balancing Propensity Score.
+Dong, J., Zhang, J. L., Zeng, S., & Li, F. (2020). Subgroup balancing propensity score. Statistical Methods in Medical Research, 29(3), 659–676. \doi{10.1177/0962280219870836}
+
 }
 \author{
 Noah Greifer

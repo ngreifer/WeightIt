@@ -9,7 +9,7 @@ Version 0.10.0
 
 * With multinomial treatments with `link = "logit"` (the default), if the `mnlogit` package is installed, it can be requested for estimating the propensity score by setting the option `use.mnlogit = TRUE`. It should give the same results as the default, which uses `mlogit`, but can be faster for large datasets.
 
-* Added option `estimand = "ATOS"` for the "optimal subset" treatent effect as described by Crump et al. (2009). This estimand finds the subset of units who, with ATE weights applied, yields a treatment effect with the lowest variance, assuming homoscedasticity (and other assumptions). It is only available for binary treatments with `method = "ps"`. In general it makes more sense to use `estimand = "ATO"` if you want a low-variance estimate and don't care about the target population, but I added this here for completeness. It is available in `get_w_from_ps()` as well.
+* Added option `estimand = "ATOS"` for the "optimal subset" treatment effect as described by Crump et al. (2009). This estimand finds the subset of units who, with ATE weights applied, yields a treatment effect with the lowest variance, assuming homoscedasticity (and other assumptions). It is only available for binary treatments with `method = "ps"`. In general it makes more sense to use `estimand = "ATO"` if you want a low-variance estimate and don't care about the target population, but I added this here for completeness. It is available in `get_w_from_ps()` as well.
 
 * `make_full_rank()` is now faster.
 

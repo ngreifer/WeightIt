@@ -1,6 +1,5 @@
 \name{ps.cont}
 \alias{ps.cont}
-\alias{gbm.cont}
 \alias{summary.ps.cont}
 \alias{plot.ps.cont}
 \alias{boxplot.ps.cont}
@@ -10,7 +9,7 @@ Generalized Propensity Score Estimation using GBM
 \description{
 \code{ps.cont} calculates generalized propensity scores and corresponding weights using boosted linear regression as implemented in \code{\link[gbm]{gbm}}. This function extends \code{\link[twang]{ps}} in \pkg{twang} to continuous treatments. The syntax and output are largely the same. The GBM parameter defaults are those found in Zhu, Coffman, & Ghosh (2015).
 
-Note: \code{ps.cont} will phased out when \pkg{twang} adds functionality for continuous treatments.
+Note: \code{ps.cont} will phased out when \pkg{twang} adds functionality for continuous treatments. All functionality and more is already present in \code{\link{weightit}} with \code{method = "gbm"}.
 }
 \usage{
 ps.cont(formula, data,
@@ -133,8 +132,10 @@ Noah Greifer
 }
 
 \seealso{
-\code{\link{weightit}} for its implementation using \code{weightit} syntax.
+\code{\link{weightit}} and \code{\link{method_gbm}} for its implementation using \code{weightit} syntax.
+
 \code{\link[twang]{ps}} and \code{\link[twang]{mnps}} for GBM with binary and multinomial treatments.
+
 \code{\link[gbm]{gbm}} for the underlying machinery and explanation of the parameters.
 }
 \examples{

@@ -47,6 +47,7 @@ For point treatments (i.e., \code{weightit} objects), a \code{summary.weightit} 
 \item{coef.of.var (Coef of Var)}{The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.}
 \item{scaled.mad (MAD)}{The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
 \item{negative entropy (Entropy)}{The negative entropy (\eqn{\sum w log(w)}) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
+\item{num.zeros}{The number of weights equal to zero.}
 \item{effective.sample.size}{The effective sample size for each treatment group before and after weighting. See \code{\link{ESS}}.}
 
 For longitudinal treatments (i.e., \code{weightitMSM} objects), a list of the above elements for each treatment period.

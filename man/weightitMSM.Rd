@@ -1,7 +1,7 @@
 \name{weightitMSM}
 \alias{weightitMSM}
 \alias{print.weightitMSM}
-\title{Generate Balancing Weights}
+\title{Generate Balancing Weights for Longitudinal Treatments}
 \usage{
 weightitMSM(formula.list,
             data = NULL,
@@ -10,7 +10,7 @@ weightitMSM(formula.list,
             by = NULL,
             s.weights = NULL,
             num.formula = NULL,
-            moments = 1,
+            moments = NULL,
             int = FALSE,
             missing = NULL,
             verbose = FALSE,
