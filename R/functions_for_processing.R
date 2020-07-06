@@ -368,7 +368,7 @@ process.missing <- function(missing, method, treat.type) {
                      , energy = c("ind")
                      # , kbal = c("ind")
   ),
-  continuous = list(ps = c("ind")
+  continuous = list(ps = c("ind", "saem")
                     , gbm = c("ind", "surr")
                     , twang = c("ind", "surr")
                     , cbps = c("ind")

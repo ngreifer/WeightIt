@@ -16,15 +16,15 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
 
   #Get a list of function args for the user-defined function Fun
   Fun_formal <- as.list(formals(Fun))
-  if (has_dots <- any(names(Fun_formal) == "...")) {
+  if (has_dots <- ("..." %in% names(Fun_formal))) {
     Fun_formal[["..."]] <- NULL
   }
 
   fun_args <- Fun_formal
   for (i in names(fun_args)) {
-    if (is_not_null(get0(i))) fun_args[[i]] <- get0(i)
-    else if (is_not_null(A[[i]])) {
-      fun_args[[i]] <- A[[i]]
+    if (exists(i)) fun_args[i] <- list(get0(i))
+    else if (i %in% names(A)) {
+      fun_args[i] <- A[i]
       A[[i]] <- NULL
     }
     #else just use Fun default
@@ -191,21 +191,13 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
       if (missing == "saem") {
         check.package("misaem")
-        if (all(apply(covs, 2, anyNA))) stop("missing = \"saem\" cannot be used when there is missingness in every covariate.", call. = FALSE)
-        for (f in names(formals(misaem::miss.saem))) {
-          if (f %in% c("X.obs", "y", "pos_var", "print_iter", "var_cal", "ll_obs_cal", "seed")) {A[[f]] <- NULL}
-          else if (is_null(A[[f]])) A[[f]] <- formals(misaem::miss.saem)[[f]]
-        }
-        fit <- do.call(misaem::miss.saem, c(list(X.obs = covs,
-                                                 y = binarize(treat_sub),
-                                                 seed = NULL,
-                                                 var_cal = FALSE),
-                                            A[names(A) %in% names(formals(misaem::miss.saem))]))
 
-        if (is_null(A[["saem.method"]])) A[["saem.method"]] <- formals(misaem::pred_saem)[["method"]]
+        newdata <- data.frame(treat, covs)
+        fit <- misaem::miss.glm(formula(newdata), newdata)
 
-        p.score <- misaem::pred_saem(covs, fit$beta, fit$mu, fit$sig2,
-                                     seed = NULL, method = A[["saem.method"]])
+        if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+
+        p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
         ps[[2]] <- p.score
         ps[[1]] <- 1 - ps[[2]]
       }
@@ -455,6 +447,17 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
     }
   }
   covs <- apply(covs, 2, make.closer.to.1)
+
+  if (ncol(covs) > 1) {
+    if (missing == "saem") {
+      covs0 <- covs
+      for (i in colnames(covs)[apply(covs, 2, anyNA)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
+      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
+    }
+    else colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  }
+
   data <- data.frame(treat, covs)
   formula <- formula(data)
 
@@ -513,13 +516,31 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   #Estimate GPS
   if (is_null(ps)) {
 
-    if (is_null(A$link)) A$link <- "identity"
-    fit <- do.call("glm", c(list(formula, data = data,
-                                 weights = s.weights[subset],
-                                 family = gaussian(link = A$link),
-                                 control = as.list(A$control))),
-                   quote = TRUE)
-    gp.score <- fit$fitted.values
+    if (missing == "saem") {
+      check.package("misaem")
+
+      tryCatch({fit <- misaem::miss.lm(formula, data)},
+               error = function(e) {
+                 if (trimws(conditionMessage(e)) == "object 'p' not found") {
+                   stop("missing = \"saem\" cannot be used with continuous treatments due to a bug in the misaem package.", call. = FALSE)
+                 }
+               })
+
+      if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+
+      gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
+
+    }
+    else {
+      if (is_null(A$link)) A$link <- "identity"
+      fit <- do.call("glm", c(list(formula, data = data,
+                                   weights = s.weights[subset],
+                                   family = gaussian(link = A$link),
+                                   control = as.list(A$control))),
+                     quote = TRUE)
+
+      gp.score <- fit$fitted.values
+    }
 
     fit.obj <- fit
   }
@@ -883,8 +904,6 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     }
   }
 
-  bin.vars <- is_binary_col(covs)
-
   if (is_null(A[["stop.method"]])) {
     warning("No stop.method was provided. Using \"es.mean\".",
             call. = FALSE, immediate. = TRUE)
@@ -1113,8 +1132,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
       covs <- cbind(covs, missing.ind)
     }
   }
-
-  bin.vars <- is_binary_col(covs)
 
   if (is_null(A[["stop.method"]])) {
     warning("No stop.method was provided. Using \"p.mean\".",
