@@ -21,8 +21,6 @@ Version 0.10.0
 
 * Improved processing of non-0/1 binary treatments, including for `method = "gbm"`. A guess will be made as to which treatment is considered "treated"; this only affects produced propensity scores but not weights.
 
-* Added error message when using `missing = "saem"` and there is missingness in every variable (this is not allowed).
-
 * Changed default value of `at` in `trim()` from .99 to 0.
 
 * Added output for the number of weights equal to zero in `summary.weightit`. This can be especially helpful when using `"optweight"` or `"energy"` methods or when using `estimand = "ATOS"`.
