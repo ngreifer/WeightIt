@@ -54,6 +54,9 @@ When \code{include.obj = TRUE}, the output of the call to \code{\link[osqp]{solv
 }
 }
 }
+\notes{
+Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything. If the method repeatedly fails, you should try another method (though this is uncommon).
+}
 \author{
 Noah Greifer
 }

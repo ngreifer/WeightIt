@@ -2124,6 +2124,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   treat <- factor(treat[subset])
   sw <- s.weights[subset]
 
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
@@ -2226,7 +2229,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
       if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
     }
     A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
-    if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E5L
+    if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E3L
     if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
     A[["verbose"]] <- TRUE
@@ -2236,6 +2239,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     opt.out <- do.call(osqp::solve_osqp, list(P = M2, q = M1, A = Amat, l = lvec, u = uvec,
                                               pars = options.list),
                        quote = TRUE)
+
+    if (opt.out$info$status == "maximum iterations reached") {
+      warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
+    }
 
     w <- opt.out$x
 
