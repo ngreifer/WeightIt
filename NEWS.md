@@ -1,7 +1,9 @@
 WeightIt News and Updates
 ======
 
-Version 0.10.0
+# WeightIt (development version)
+
+# WeightIt 0.10.0
 
 * Added support for energy balancing with `method = "energy"`. This method minimizes the energy distance between samples, which is a multivariate distance measure. This method uses code written specifically for `WeightIt` (i.e., it does not call a package specifically designed for energy balancing) using the `osqp` package for the optimization (same as `optweight`). See Huling & Mak (2020) for details on this method. Also included is an option to require exact balance on moments of the covariates while minimizing the energy distance. The method works for binary and multinomial treatments with the ATE, ATT, or ATC. Sampling weights are supported. Because the method requires the calculation and manipulation of a distance matrix for all units, it can be slow and/or memory intensive for large datasets.
 
@@ -25,7 +27,7 @@ Version 0.10.0
 
 * Added output for the number of weights equal to zero in `summary.weightit`. This can be especially helpful when using `"optweight"` or `"energy"` methods or when using `estimand = "ATOS"`.
 
-Version 0.9.0
+# WeightIt 0.9.0
 
 * Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.
 
@@ -35,7 +37,7 @@ Version 0.9.0
 
 * Added `crayon` for prettier printing of `summary()` output.
 
-Version 0.8.0
+# WeightIt 0.8.0
 
 * Formula interfaces now accept `poly(x, .)` and other matrix-generating functions of variables, including the `rms`-class-generating functions from the `rms` package (e.g., `pol()`, `rcs()`, etc.) (the `rms` package must be loaded to use these latter ones) and the `basis`-class-generating functions from the `splines` package (i.e., `bs()` and `ns()`). A bug in an early version of this was found by @ahinton-mmc.
 
@@ -63,13 +65,13 @@ Version 0.8.0
 
 * Performance enhancements.
 
-Version 0.7.1
+# WeightIt 0.7.1
 
 * Fixed bug when using `weightit()` inside another function that passed a `by` argument explicitly. Also changed the syntax for `by`; it must now either be a string (which was always possible) or a one-sided formula with the stratifying variable on the right-hand side. To use a variable that is not in `data`, you must use the formula interface. 
 
 * Fixed bug when trying to use `ps` with `by` in `weightit()`.
 
-Version 0.7.0
+# WeightIt 0.7.0
 
 * Added new `sbps()` function for estimating subgroup balancing propensity score weights, including both the standard method and a new smooth version.
 
@@ -85,7 +87,7 @@ Version 0.7.0
 
 * Added support for using bias-reduced fitting functions when `method = "ps"` as provided by the `brglm2` package. These can be accessed by changing the `link` to, for example, `"br.logit"` or `"br.probit"`. For multinomial treatments, setting `link = "br.logit"` fits a bias-reduced multinomial regression model using `brglm2::brmultinom()`. This can be helpful when regular maximum likelihood models fail to converge, though this may also be a sign of lack of overlap.
 
-Version 0.6.0
+# WeightIt 0.6.0
 
 * Bug fixes. Functions now work better when used inside other functions (e.g., `lapply`).
 
@@ -109,7 +111,7 @@ Version 0.6.0
 
 * Added `ggplot2` to Imports.
 
-Version 0.5.1
+# WeightIt 0.5.1
 
 * Fixed a bug when using the `ps` argument in `weightit()`.
 
@@ -117,7 +119,7 @@ Version 0.5.1
 
 * Added warnings for using certain methods with longitudinal treatments as they are not validated and may lead to incorrect inferences.
 
-Version 0.5.0
+WeightIt 0.5.0
 
 * Added `super` method to estimate propensity scores using the `SuperLearner` package.
 
@@ -133,7 +135,7 @@ Version 0.5.0
 
 * Other bug fixes and minor changes.
 
-Version 0.4.0
+# WeightIt 0.4.0
 
 * Added `trim()` function to trim weights.
 
@@ -145,7 +147,7 @@ Version 0.4.0
 
 * Fixed a bug where variables would be thrown out when `method = "ebal"`.
 
-Version 0.3.2
+# WeightIt 0.3.2
 
 * Added new `moments` and `int` options for some `weightit()` methods to easily specify moments and interactions of covariates.
 
@@ -155,7 +157,7 @@ Version 0.3.2
 
 * Added a vignette.
 
-Version 0.3.1
+# WeightIt 0.3.1
 
 * Edits to code and help files to protect against missing `CBPS` package.
 
@@ -163,13 +165,13 @@ Version 0.3.1
 
 * Minor bug fixes and spelling corrections.
 
-Version 0.3.0
+# WeightIt 0.3.0
 
 * Added `weightitMSM()` function (and supporting `print()` and `summary()` functions) to estimate weights for marginal structural models with time-varying treatments and covariates.
 
 * Fixed some bugs, including when using CBPS with continuous treatments, and when using `focal` incorrectly.
 
-Version 0.2.0
+# WeightIt 0.2.0
 
 * Added `method = "sbw"` for stable balancing weights (now removed and replaced with `method = "optweight"`)
 
@@ -179,6 +181,6 @@ Version 0.2.0
 
 * Added README and NEWS
 
-Version 0.1.0
+# WeightIt 0.1.0
 
 * First version!

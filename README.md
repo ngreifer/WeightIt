@@ -24,8 +24,12 @@ page](https://CRAN.R-project.org/package=WeightIt) for `WeightIt`.
 To install and load `WeightIt`, use the code below:
 
 ``` r
-install.packages("WeightIt")  #CRAN version
-devtools::install_github("ngreifer/WeightIt")  #Development version
+#CRAN version
+install.packages("WeightIt")
+
+#Development version
+devtools::install_github("ngreifer/WeightIt")
+
 library("WeightIt")
 ```
 
@@ -37,9 +41,12 @@ ATE:
 
 ``` r
 data("lalonde", package = "cobalt")
-W <- weightit(treat ~ age + educ + nodegree + married + race + re74 + re75, data = lalonde, 
-    method = "ps", estimand = "ATE")
-print(W)
+
+W <- weightit(treat ~ age + educ + nodegree + 
+                married + race + re74 + re75, 
+              data = lalonde, method = "ps", 
+              estimand = "ATE")
+W
 ```
 
     A weightit object
@@ -58,12 +65,12 @@ goal, functions in the `cobalt` package, which are fully compatible with
 
 ``` r
 library("cobalt")
+
 bal.tab(W, un = TRUE)
 ```
 
     Call
-     weightit(formula = treat ~ age + educ + nodegree + married + 
-        race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
+     weightit(formula = treat ~ age + educ + nodegree + married + race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
     
     Balance Measures
                     Type Diff.Un Diff.Adj
@@ -90,65 +97,70 @@ assessed using `summary()`, as demonstrated below.
 summary(W)
 ```
 
-    Summary of weights:
-    
-    - Weight ranges:
-               Min                                   Max
-    treated 1.1721 |---------------------------| 40.0773
-    control 1.0092 |-|                            4.7432
-    
-    - Units with 5 greatest weights by group:
-                                                    
-                 137     124     116      68      10
-     treated 13.5451 15.9884 23.2967 23.3891 40.0773
-                 597     573     411     381     303
-     control  4.0301  4.0592  4.2397  4.5231  4.7432
-    
-              Ratio Coef of Var
-    treated 34.1921      1.4777
-    control  4.7002      0.5519
-    overall 39.7134      1.3709
-    
-    - Effective Sample Sizes:
-               Control Treated
-    Unweighted 429.000 185.000
-    Weighted   329.008  58.327
+``` 
+                 Summary of weights
 
-Desirable qualities include ratios close to 1, coefficients of variation
-close to 0, and large effective sample sizes.
+- Weight ranges:
+
+           Min                                   Max
+treated 1.1721 |---------------------------| 40.0773
+control 1.0092 |-|                            4.7432
+
+- Units with 5 greatest weights by group:
+                                                
+             137     124     116      68      10
+ treated 13.5451 15.9884 23.2967 23.3891 40.0773
+             597     573     411     381     303
+ control  4.0301  4.0592  4.2397  4.5231  4.7432
+
+- Weight statistics:
+
+        Coef of Var   MAD Entropy # Zeros
+treated       1.478 0.807   1.630       0
+control       0.552 0.391   0.480       0
+overall       1.371 0.591   1.024       0
+
+- Effective Sample Sizes:
+
+           Control Treated
+Unweighted 429.000 185.000
+Weighted   329.008  58.327
+```
+
+Desirable qualities include small coefficients of variation close to 0
+and large effective sample sizes.
 
 The table below contains the available methods in `WeightIt` for
 estimating weights for binary, multinomial, and continuous treatments
-using various methods and functions from various
-packages.
+using various methods and functions from various packages.
 
-| Treatment type  | Method (`method =`)                                                | Function                | Package          |
-| --------------- | ------------------------------------------------------------------ | ----------------------- | ---------------- |
-| **Binary**      | Binary regression PS (`"ps"`)                                      | `glm()`                 | `base`           |
-| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `gbm.fit()`/`ps()`      | `gbm`/`twang`    |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`            | `ebal`           |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`                 | `ATE`            |
-| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
-| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
-| **Multinomial** | Multiple binary regression PS (`"ps"`)                             | `glm()`                 | `base`           |
-| \-              | Multinomial regression PS (`"ps"`)                                 | `mlogit()`              | `mlogit`         |
-| \-              | Bayesian multinomial regression PS (`"ps", link = "bayes.probit"`) | `MNP()`                 | `MNP`            |
-| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `gbm.fit()`/`mnps()`    | `gbm`/`twang`    |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `ebalance()`            | `ebal`           |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)                 | `ATE()`                 | `ATE`            |
-| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
-| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
-| **Continuous**  | Generalized linear model PS (`"ps"`)                               | `glm()`                 | `base`           |
-| \-              | Generalized boosted modeling PS (`"gbm"`/`"twang"`)                | `gbm.fit()`/`ps.cont()` | `gbm`/`WeightIt` |
-| \-              | Covariate Balancing PS (`"cbps"`)                                  | `CBPS()`                | `CBPS`           |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)                 | `npCBPS()`              | `CBPS`           |
-| \-              | Entropy Balancing (`"ebal"`)                                       | `optim()`               | `base`           |
-| \-              | Optimization-Based Weights (`"optweight"`)                         | `optweight()`           | `optweight`      |
-| \-              | SuperLearner PS (`"super"`)                                        | `SuperLearner()`        | `SuperLearner`   |
+| Treatment type  | Method (`method =`)                                | Function                       |
+| --------------- | -------------------------------------------------- | ------------------------------ |
+| **Binary**      | Binary regression PS (`"ps"`)                      | various                        |
+| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
+| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS::CBPS()`                 |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS::npCBPS()`               |
+| \-              | Entropy Balancing (`"ebal"`)                       | `ebal::ebalance()`             |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`                   |
+| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
+| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
+| \-              | Energy Balancing (`"energy"`)                      | \-                             |
+| **Multinomial** | Multinomial regression PS (`"ps"`)                 | various                        |
+| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
+| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS::CBPS()`                 |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS::npCBPS()`               |
+| \-              | Entropy Balancing (`"ebal"`)                       | `ebal::ebalance()`             |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`                   |
+| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
+| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
+| \-              | Energy Balancing (`"energy"`)                      | \-                             |
+| **Continuous**  | Generalized linear model PS (`"ps"`)               | `glm()`                        |
+| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
+| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS::CBPS()`                 |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS::npCBPS()`               |
+| \-              | Entropy Balancing (`"ebal"`)                       | \-                             |
+| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
+| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are
