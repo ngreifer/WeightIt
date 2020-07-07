@@ -1,0 +1,19 @@
+reference:
+- title: Estimate weights
+- contents:
+  - weightit
+  - weightitMSM
+  - summary.weightit
+- title: Specific estimation methods
+- contents:
+  - starts_with("method_")
+- title: Other functions
+- contents:
+  - trim
+  - get_w_from_ps
+  - sbps
+  - stop.method
+  - ps.cont
+  - ESS
+  - as.weightit
+  - make_full_rank

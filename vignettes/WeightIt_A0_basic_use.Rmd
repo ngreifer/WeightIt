@@ -1,5 +1,5 @@
 ---
-title: "A Guide to Using WeightIt for Estimating Balancing Weights"
+title: "Using WeightIt to Estimate Balancing Weights"
 author: "Noah Greifer"
 date: "`r Sys.Date()`"
 output: 
@@ -7,7 +7,7 @@ output:
         df_print: kable
 
 vignette: >
-  %\VignetteIndexEntry{A Guide to Using WeightIt for Estimating Balancing Weights}
+  %\VignetteIndexEntry{Using WeightIt to Estimate Balancing Weights}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 

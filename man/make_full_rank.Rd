@@ -2,7 +2,7 @@
 \alias{make_full_rank}
 
 \title{
-Make a matrix full rank
+Make a design matrix full rank
 }
 \description{
 When writing \link[=method_user]{user-defined methods} for use with \code{weightit}, it may be necessary to take the potentially non-full rank \code{covs} data frame and make it full rank for use in a downstream function. This function performs that operation.
