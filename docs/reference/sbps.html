@@ -95,7 +95,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/WeightIt_A0_basic_use.html">A Guide to Using WeightIt for Estimating Balancing Weights</a>
+      <a href="../articles/WeightIt_A0_basic_use.html">Using WeightIt to Estimate Balancing Weights</a>
     </li>
   </ul>
 </li>
@@ -204,7 +204,7 @@
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>The SBPS relies on two sets of weights: one estimated in the overall sample and one estimated within each subgroup. The algorithm decides whether each subgroup should use the weights estimated in the overall sample or those estimated in the subgroup. There are 2^R permutations of overall and subgroup weights, where R is the number of subgroups. The optimal permutation is chosen as that which minimizes a balance criterion as described in DZZL. The balance criterion used here is, for binary and multinomial treatments, the sum of the squared standardized mean differences within subgroups and overall, which are computed using <code>col_w_smd</code> in <span class="pkg">cobalt</span>, and for continuous treatments, the sum of the squared correlations between each covariate and treatment within subgroups and overall, which are computed using <code>col_w_corr</code> in <span class="pkg">cobalt</span>.</p>
+    <p>The SBPS relies on two sets of weights: one estimated in the overall sample and one estimated within each subgroup. The algorithm decides whether each subgroup should use the weights estimated in the overall sample or those estimated in the subgroup. There are 2^R permutations of overall and subgroup weights, where R is the number of subgroups. The optimal permutation is chosen as that which minimizes a balance criterion as described in DZZL. The balance criterion used here is, for binary and multinomial treatments, the sum of the squared standardized mean differences within subgroups and overall, which are computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>, and for continuous treatments, the sum of the squared correlations between each covariate and treatment within subgroups and overall, which are computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_corr()</a></code> in <span class="pkg">cobalt</span>.</p>
 <p>The smooth version estimates weights that determine the relative contribution of the overall and subgroup propensity scores to a weighted average propensity score for each subgroup. If P_O are the propensity scores estimated in the overall sample and P_S are the propensity scores estimated in each subgroup, the smooth SBPS finds R coefficients C so that for each subgroup, the ultimate propensity score is \(C*P_S + (1-C)*P_O\), and weights are computed from this propensity score. The coefficients are estimated using <code><a href='https://rdrr.io/r/stats/optim.html'>optim</a></code> with <code>method = "L-BFGS-B"</code>. When C is estimated to be 1 or 0 for each subgroup, the smooth SBPS coincides with the standard SBPS.</p>
 <p>If <code>obj2</code> is not specified and <code>moderator</code> is, <code>sbps()</code> will attempt to refit the model specified in <code>obj</code> with the <code>moderator</code> in the <code>by</code> argument. This relies on the environment in which <code>obj</code> was created to be intact and can take some time if <code>obj</code> was hard to fit. It's safer to estimate <code>obj</code> and <code>obj2</code> (the latter simply by including the moderator in the <code>by</code> argument) and supply these to <code>SBPS</code>.</p>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -219,8 +219,7 @@
     <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='summary.weightit.html'>summary.weightit</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)</div><div class='output co'>#&gt; <span class='message'> cobalt (Version 4.2.2, Build Date: 2020-06-26 15:50:03 UTC)</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups within races</span>
 (<span class='no'>W1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>treat</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +

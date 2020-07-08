@@ -16,4 +16,4 @@ reference:
   - ps.cont
   - ESS
   - as.weightit
- - make_full_rank
+  - make_full_rank
