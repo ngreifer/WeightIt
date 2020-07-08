@@ -119,7 +119,7 @@ WeightIt News and Updates
 
 * Added warnings for using certain methods with longitudinal treatments as they are not validated and may lead to incorrect inferences.
 
-WeightIt 0.5.0
+# WeightIt 0.5.0
 
 * Added `super` method to estimate propensity scores using the `SuperLearner` package.
 
