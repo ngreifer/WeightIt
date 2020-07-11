@@ -927,6 +927,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   }
   else stop.method <- available.stop.methods[s.m.matches]
 
+  tunable <- c("interaction.depth", "shrinkage", "distribution")
+
   trim.at <- if_null_then(A[["trim.at"]], 0)
 
   for (f in names(formals(gbm::gbm.fit))) {
@@ -947,7 +949,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     treat <- binarize(treat, one = focal)
     if (is_not_null(focal)) focal <- "1"
   }
-  else available.distributions <- "multinomial"
+  else {
+    available.distributions <- "multinomial"
+    treat <- factor(treat)
+  }
 
   if (cv == 0) {
     start.tree <- if_null_then(A[["start.tree"]], 1)
@@ -963,15 +968,20 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   A[["y"]] <- treat
   A[["distribution"]] <- if (is_null(distribution <- A[["distribution"]])) {
     available.distributions[1]} else {
-      match_arg(distribution, available.distributions)}
+      match_arg(distribution, available.distributions, several.ok = TRUE)}
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
 
-  if (treat.type == "binary") {
-    fit <- do.call(gbm::gbm.fit, A[names(A) %in% names(formals(gbm::gbm.fit))])
-    if (cv == 0) {
+  tune <- do.call("expand.grid", c(A[names(A) %in% tunable], list(stringsAsFactors = FALSE)))
 
-      crit <- bal_criterion("binary", stop.method)
+  current.best.loss <- Inf
+
+  for (i in seq_len(nrow(tune))) {
+
+    fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)], tune[i, tunable]), quote = TRUE)
+
+    if (cv == 0) {
+      crit <- bal_criterion(treat.type, stop.method)
       init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
 
       n.trees <- fit[["n.trees"]]
@@ -988,29 +998,53 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
         crit$fun(init = init, weights = w_)
       })
 
-      it <- which.min(iter.grid.balance) + c(-1, 1)
-      it[1] <- iters.grid[max(1, it[1])]
-      it[2] <- iters.grid[min(length(iters.grid), it[2])]
-      iters.to.check <- iters[between(iters, iters[it])]
+      if (n.grid == n.trees) {
+        best.tree.index <- which.min(iter.grid.balance)
+        best.loss <- iter.grid.balance[best.tree.index]
+        best.tree <- iters.grid[best.tree.index]
+        tree.val <- setNames(data.frame(iters.grid,
+                                        iter.grid.balance),
+                             c("tree", stop.method))
+      }
+      else {
+        it <- which.min(iter.grid.balance) + c(-1, 1)
+        it[1] <- iters.grid[max(1, it[1])]
+        it[2] <- iters.grid[min(length(iters.grid), it[2])]
+        iters.to.check <- iters[between(iters, iters[it])]
 
-      if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
+        if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
 
-      ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
-      w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
-      if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+        ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
+        w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
+        if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-      iter.grid.balance.fine <- apply(w, 2, function(w_) {
-        crit$fun(init = init, weights = w_)
-      })
+        iter.grid.balance.fine <- apply(w, 2, function(w_) {
+          crit$fun(init = init, weights = w_)
+        })
 
-      best.tree.index <- which.min(iter.grid.balance.fine)
-      best.tree <- iters.to.check[best.tree.index]
-      tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
-                                      c(iter.grid.balance, iter.grid.balance.fine)),
-                           c("tree", stop.method))
+        best.tree.index <- which.min(iter.grid.balance.fine)
+        best.loss <- iter.grid.balance.fine[best.tree.index]
+        best.tree <- iters.to.check[best.tree.index]
+        tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
+                                        c(iter.grid.balance, iter.grid.balance.fine)),
+                             c("tree", stop.method))
+      }
+
       tree.val <- unique(tree.val[order(tree.val$tree),])
       w <- w[,best.tree.index]
-      ps <- ps[,best.tree.index]
+      ps <- if (treat.type == "binary") ps[,best.tree.index] else NULL
+
+      tune[[paste.("best", stop.method)]][i] <- best.loss
+
+      if (best.loss < current.best.loss) {
+        best.fit <- fit
+        best.w <- w
+        best.ps <- ps
+        current.best.loss <- best.loss
+
+        info <- list(best.tree = best.tree,
+                     tree.val = tree.val)
+      }
     }
     else {
       A["data"] <- list(data.frame(treat, covs))
@@ -1026,91 +1060,40 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       A[["w"]] <- s.weights
       cv.results <- do.call(gbm::gbmCrossVal,
                             A[names(A) %in% names(formals(gbm::gbmCrossVal))])
-      best.tree <- which.min(cv.results$error)
-      tree.val <- data.frame(tree = seq_along(cv.results$error),
-                             error = cv.results$error)
-      ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
-      w <- get_w_from_ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
-      w <- suppressMessages(trim(w, at = trim.at, treat = treat))
+      best.tree.index <- which.min(cv.results$error)
+      best.loss <- cv.results$error[best.tree.index]
+      best.tree <- best.tree.index
+
+      tune[[paste.("best", names(fit$name))]][i] <- best.loss
+
+      if (best.loss < current.best.loss) {
+        best.fit <- fit
+        best.ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
+        best.w <- drop(get.w.from.ps(best.ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass))
+        # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
+        current.best.loss <- best.loss
+
+        tree.val <- data.frame(tree = seq_along(cv.results$error),
+                               error = cv.results$error)
+
+        info <- list(best.tree = best.tree,
+                     tree.val = tree.val)
+
+        if (treat.type == "multinomial") best.ps <- NULL
+      }
     }
-  }
-  else if (treat.type == "multinomial") {
 
-    treat <- factor(treat)
-
-    fit <- do.call(gbm::gbm.fit, A[names(A) %in% names(formals(gbm::gbm.fit))])
-
-    if (cv == 0) {
-
-      crit <- bal_criterion("multinomial", stop.method)
-      init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal,
-                        pairwise = nlevels(treat) <= 4)
-
-      n.trees <- fit[["n.trees"]]
-      iters <- 1:n.trees
-      iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
-
-      if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
-
-      ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
-      w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
-      if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
-
-      iter.grid.balance <- apply(w, 2, function(w_) {
-        crit$fun(init = init, weights = w_)
-      })
-
-      it <- which.min(iter.grid.balance) + c(-1, 1)
-      it[1] <- iters.grid[max(1, it[1])]
-      it[2] <- iters.grid[min(length(iters.grid), it[2])]
-      iters.to.check <- iters[between(iters, iters[it])]
-
-      if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
-
-      ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
-      w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
-      if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
-
-      iter.grid.balance.fine <- apply(w, 2, function(w_) {
-        crit$fun(init = init, weights = w_)
-      })
-
-      best.tree.index <- which.min(iter.grid.balance.fine)
-      best.tree <- iters.to.check[best.tree.index]
-      tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
-                                      c(iter.grid.balance, iter.grid.balance.fine)),
-                           c("tree", stop.method))
-      tree.val <- unique(tree.val[order(tree.val$tree),])
-
-      w <- w[,best.tree.index]
-      ps <- NULL
-    }
-    else {
-      A["data"] <- list(data.frame(treat, covs))
-      A[["cv.folds"]] <- cv
-      A["n.cores"] <- list(A[["n.cores"]])
-      A["var.names"] <- list(A[["var.names"]])
-      A["offset"] <- list(NULL)
-      A[["nTrain"]] <- floor(nrow(covs))
-      A[["class.stratify.cv"]] <- FALSE
-      A[["y"]] <- treat
-      A[["x"]] <- covs
-      A[["distribution"]] <- list(name = A[["distribution"]])
-      A[["w"]] <- s.weights
-      cv.results <- do.call(gbm::gbmCrossVal,
-                            A[names(A) %in% names(formals(gbm::gbmCrossVal))])
-      best.tree <- which.min(cv.results$error)
-      tree.val <- data.frame(tree = seq_along(cv.results$error),
-                             error = cv.results$error)
-      ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
-      w <- get_w_from_ps(ps[, , 1], treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
-      if (trim.at != 0) w <- suppressMessages(trim(w, at = trim.at, treat = treat))
-      ps <- NULL
-    }
+    if (treat.type == "multinomial") ps <- NULL
   }
 
-  obj <- list(w = w, ps = ps, info = list(best.tree = best.tree,
-                                          tree.val = tree.val), fit.obj = fit)
+  tune[vapply(names(tune), function(x) x != last(names(tune)) && length(A[[x]]) == 1, logical(1L))] <- NULL
+
+  if (ncol(tune) > 1) {
+    info[["tune"]] <- tune
+    info[["best.tune"]] <- tune[which.min(last(tune)),]
+  }
+
+  obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
   return(obj)
 }
 weightit2gbm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ...) {
