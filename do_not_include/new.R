@@ -44,6 +44,237 @@ weightit2XXX <- function(covs, treat, s.weights, subset, estimand, focal, missin
 
 #------Under construction----
 
+weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, moments, int, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
+
+  if (anyNA(covs) && missing == "ind") {
+    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+  covs <- apply(covs, 2, make.closer.to.1)
+  model.covs <- cbind(covs, int.poly.f(covs, int = int, poly = moments))
+  model.covs <- apply(model.covs, 2, make.closer.to.1)
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  if (is_null(A[["stop.method"]])) {
+    warning("No stop.method was provided. Using \"es.mean\".",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- "es.mean"
+  }
+  else if (length(A[["stop.method"]]) > 1) {
+    warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- A[["stop.method"]][1]
+  }
+
+  cv <- 0
+  available.stop.methods <- bal_criterion(treat.type, list = TRUE)
+  s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
+  if (is.na(s.m.matches) || s.m.matches == 0L) {
+    if (startsWith(A[["stop.method"]], "cv") && can_str2num(numcv <- substr(A[["stop.method"]], 3, nchar(A[["stop.method"]])))) {
+      cv <- round(str2num(numcv))
+      if (cv < 3) stop("At least 3 CV-folds must be specified in stop.method.", call. = FALSE)
+    }
+    else stop(paste0("'stop.method' must be one of ", word_list(c(available.stop.methods, "cv{#}"), "or", quotes = TRUE), "."), call. = FALSE)
+  }
+  else stop.method <- available.stop.methods[s.m.matches]
+
+  tunable <- c("alpha", "relax", "type.multinomial", "reg.covs")
+
+  trim.at <- if_null_then(A[["trim.at"]], 0)
+  if (is_null(A[["alpha"]])) A[["alpha"]] <- 1 - .0001
+  if (is_null(A[["thresh"]])) A[["thresh"]] <- 1e-7
+  if (is_null(A[["maxit"]])) A[["maxit"]] <- 10^5
+  if (is_null(A[["relax"]])) A[["relax"]] <- FALSE
+  if (is_null(A[["reg.covs"]])) A[["reg.covs"]] <- TRUE
+  gamma <- if (isTRUE(is_null(A[["relax"]]))) 0 else 1
+  nlambda <- if_null_then(A[["nlambda"]], 5000)
+
+  if (moments == 1 && !int && any(!A[["reg.covs"]])) {
+    stop("If moments = 1 and int = FALSE (the default), 'reg.covs' cannot be FALSE.", call. = FALSE)
+  }
+
+  if (is_null(A[["lambda"]])) {
+    lambda <- c(exp(seq(log(1/ncol(model.covs)), log(1/ncol(model.covs)/nlambda), length.out = nlambda - 1)), 0)
+  }
+  else {
+    if (is.numeric(A[["lambda"]])) {
+      lambda <- sort.int(A[["lambda"]], decreasing = TRUE)
+      nlambda <- length(lambda)
+    }
+    else {
+      stop("'lambda' must be a numeric vector.")
+    }
+  }
+
+  if (treat.type == "binary")  {
+    family <- "binomial"
+    treat <- binarize(treat, one = focal)
+    if (is_not_null(focal)) focal <- "1"
+    A[["type.multinomial"]] <- NULL
+  }
+  else {
+    family <- "multinomial"
+    A[["type.multinomial"]] <- if_null_then(A[["type.multinomial"]], "ungrouped")
+  }
+
+  tune <- do.call("expand.grid", c(A[names(A) %in% tunable], list(stringsAsFactors = FALSE)))
+
+  if (cv == 0) {
+    start.lambda <- if_null_then(A[["start.lambda"]], 1)
+    if (is_null(A[["n.grid"]])) {
+      n.grid <- round(1 + sqrt(2*(nlambda-start.lambda+1)))
+    }
+    else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
+             !between(A[["n.grid"]], c(2, nlambda))) {
+      stop(paste0("'n.grid' must be a numeric value between 2 and ", nlambda, "."), call. = FALSE)
+    }
+    else n.grid <- round(A[["n.grid"]])
+
+    if (n.grid >= nlambda/3) n.grid <- nlambda
+  }
+  else {
+    foldid <- sample(rep(seq_len(cv), length = length(treat)))
+    type.measure <- if_null_then(A[["type.measure"]], "default")
+    A[["type.measure"]] <-  match_arg(type.measure, formals(glmnet::cv.glmnet)[["type.measure"]])
+  }
+  # [lengths(A[names(A) %in% tunable]) >= 2]
+
+  current.best.loss <- Inf
+
+  for (i in seq_len(nrow(tune))) {
+
+    A[["penalty.factor"]] <- rep(1, ncol(model.covs))
+    if (!tune[["reg.covs"]][i]) A[["penalty.factor"]][seq_len(ncol(covs))] <- 0
+
+    if (cv == 0) {
+      fit <- do.call(glmnet::glmnet, list(model.covs, treat, family = family, standardize = FALSE,
+                                          lambda = lambda, alpha = tune[["alpha"]][i], thresh = A[["thresh"]],
+                                          maxit = A[["maxit"]], relax = tune[["relax"]][i], weights = s.weights,
+                                          penalty.factor = A[["penalty.factor"]],
+                                          type.multinomial = tune[["type.multinomial"]][i]))
+
+      if (treat.type == "binary") {
+        treat <- binarize(treat, one = focal)
+        if (is_not_null(focal)) focal <- "1"
+      }
+
+      crit <- bal_criterion(treat.type, stop.method)
+      init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
+
+      iters <- seq_along(fit$lambda)
+      iters.grid <- round(seq(1, length(fit$lambda), length.out = n.grid))
+
+      ps <- predict(fit, newx = model.covs, type = "response", s = fit$lambda[iters.grid], gamma = gamma)
+      w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
+      if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+      iter.grid.balance <- apply(w, 2, function(w_) {
+        crit$fun(init = init, weights = w_)
+      })
+
+      if (n.grid == nlambda) {
+        best.lambda.index <- which.min(iter.grid.balance)
+        best.loss <- iter.grid.balance[best.lambda.index]
+        best.lambda <- lambda[best.lambda.index]
+        lambda.val <- setNames(data.frame(fit$lambda,
+                                          iter.grid.balance),
+                               c("lambda", stop.method))
+      }
+      else {
+        it <- which.min(iter.grid.balance) + c(-1, 1)
+        it[1] <- iters.grid[max(1, it[1])]
+        it[2] <- iters.grid[min(length(iters.grid), it[2])]
+        iters.to.check <- iters[between(iters, iters[it])]
+
+        if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > nlambda)) stop("A problem has occurred")
+
+        ps <- predict(fit, newx = model.covs, type = "response", s = fit$lambda[iters.to.check], gamma = gamma)
+        w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
+        if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+        iter.grid.balance.fine <- apply(w, 2, function(w_) {
+          crit$fun(init = init, weights = w_)
+        })
+
+        best.lambda.index <- which.min(iter.grid.balance.fine)
+        best.loss <- iter.grid.balance.fine[best.lambda.index]
+        best.lambda <- lambda[iters.to.check[best.lambda.index]]
+        lambda.val <- setNames(data.frame(c(fit$lambda[iters.grid], fit$lambda[iters.to.check]),
+                                          c(iter.grid.balance, iter.grid.balance.fine)),
+                               c("lambda", stop.method))
+      }
+
+      lambda.val <- unique(lambda.val[order(lambda.val$lambda),])
+      w <- w[,best.lambda.index]
+      ps <- if (treat.type == "binary") ps[,best.lambda.index] else NULL
+
+      tune[[paste.("best", stop.method)]][i] <- best.loss
+
+      if (best.loss < current.best.loss) {
+        best.fit <- fit
+        best.w <- w
+        best.ps <- ps
+        current.best.loss <- best.loss
+
+        info <- list(best.lambda = best.lambda,
+                     lambda.val = lambda.val,
+                     coef = predict(fit, type = "coef", s = best.lambda))
+      }
+
+    }
+    else {
+      fit <- do.call(glmnet::cv.glmnet, list(model.covs, treat, family = family, standardize = FALSE,
+                                             lambda = lambda, alpha = tune[["alpha"]][i], thresh = A[["thresh"]],
+                                             maxit = A[["maxit"]], relax = tune[["relax"]][i], weights = s.weights,
+                                             penalty.factor = A[["penalty.factor"]],
+                                             type.multinomial = tune[["type.multinomial"]][i],
+                                             foldid = foldid))
+
+      best.lambda.index <- which.min(fit$cvm)
+      best.lambda <- fit$lambda[best.lambda.index]
+      best.loss <- fit$cvm[best.lambda.index]
+
+      tune[[paste.("best", names(fit$name))]][i] <- best.loss
+
+      if (best.loss < current.best.loss) {
+        best.fit <- fit
+        best.ps <- predict(fit, newx = model.covs, type = "response", s = best.lambda, gamma = gamma)
+        best.w <- drop(get.w.from.ps(best.ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass))
+        current.best.loss <- best.loss
+
+        lambda.val <- setNames(data.frame(fit$lambda,
+                                          fit$cvm),
+                               c("lambda", names(fit$name)))
+
+        info <- list(best.lambda = best.lambda,
+                     lambda.val = lambda.val,
+                     coef = predict(fit, type = "coef", s = best.lambda))
+
+        if (treat.type == "multinomial") best.ps <- NULL
+      }
+    }
+  }
+
+  tune[vapply(names(tune), function(x) x != last(names(tune)) && length(A[[x]]) == 1, logical(1L))] <- NULL
+
+  if (ncol(tune) > 1) {
+    info[["tune"]] <- tune
+    info[["best.tune"]] <- tune[which.min(last(tune)),]
+  }
+
+  obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
+  return(obj)
+
+}
 
 #------Ready for use, but not ready for CRAN----
 #KBAL
