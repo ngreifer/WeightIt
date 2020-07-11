@@ -1018,18 +1018,24 @@ stabilize_w <- function(weights, treat) {
 get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, use.kernel = FALSE,
                              densControl = list(bw = "nrd0", n = 10*length(treat),
                                                 adjust = 1, kernel = "gaussian")) {
+
+  if (!is.matrix(ps)) ps <- matrix(ps, ncol = 1)
+
   p.denom <- treat - ps
 
-  if (isTRUE(densControl[["use.kernel"]])) {
-    d.d <- density(p.denom, n = densControl[["n"]],
-                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
-                   bw = densControl[["bw"]], adjust = densControl[["adjust"]],
-                   kernel = densControl[["kernel"]])
-    dens.denom <- with(d.d, approxfun(x = x, y = y))(p.denom)
+  if (use.kernel) {
+    s.weights <- s.weights/sum(s.weights)
+    dens.denom <- apply(p.denom, 2, function(p) {
+      d.d <- density(p, n = densControl[["n"]],
+                     weights = s.weights, give.Rkern = FALSE,
+                     bw = densControl[["bw"]], adjust = densControl[["adjust"]],
+                     kernel = densControl[["kernel"]])
+      with(d.d, approxfun(x = x, y = y))(p)
+    })
   }
   else {
-    dens.denom <- densfun(p.denom/sd(p.denom))
-    if (is_null(dens.denom) || !is.atomic(dens.denom) || anyNA(dens.denom)) {
+    dens.denom <- densfun(mat_div(p.denom, sqrt(col.w.v(p.denom))))
+    if (is_null(dens.denom) || !is.numeric(dens.denom) || anyNA(dens.denom)) {
       stop("There was a problem with the output of 'density.' Try another density function or leave it blank to use the normal density.", call. = FALSE)
     }
     else if (any(dens.denom <= 0)) {
@@ -1038,7 +1044,7 @@ get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, us
 
   }
 
-  w <- dens.num/dens.denom
+  w <- drop(dens.num/dens.denom)
 
   return(w)
 }
@@ -1118,6 +1124,23 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
   return(w)
 }
 
+plot_density <- function(d.n, d.d) {
+  d.d_ <- cbind(as.data.frame(d.d[c("x", "y")]), dens = "Denominator Density", stringsAsfactors = FALSE)
+  d.n_ <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
+  d.all <- rbind(d.d_, d.n_)
+  d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
+  pl <- ggplot(d.all, aes(x = x, y = y)) + geom_line() +
+    labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
+    facet_grid(rows = vars(dens)) + theme(panel.background = element_rect(fill = "white"),
+                                          panel.border = element_rect(fill = NA, color = "black"),
+                                          axis.text.x = element_text(color = "black"),
+                                          axis.text.y = element_text(color = "black"),
+                                          panel.grid.major = element_blank(),
+                                          panel.grid.minor = element_blank()
+    )
+  print(pl)
+}
+
 #For balance SuperLearner
 method.balance <- function(stop.method) {
 
@@ -1187,7 +1210,7 @@ method.balance.cont <- function(stop.method) {
       init <- attr(control$trimLogit, "vals")$init
       bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
-      w_mat<- apply(Z, 2, get_cont_weights, treat = Y, s.weights = obsWeights,
+      w_mat<- get_cont_weights(Z, treat = Y, s.weights = obsWeights,
                     dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
                     densControl = densControl)
       cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
