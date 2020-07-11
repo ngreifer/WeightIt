@@ -1046,6 +1046,9 @@ get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, us
 get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = NULL, stabilize = FALSE) {
   #Batch turn PS into weights; primarily for output of predict.gbm
   # Assumes a (0,1) treatment if binary, with ATT already processed
+  if (is_null(dim(ps))) {
+    ps <- matrix(ps, ncol = 1)
+  }
 
   if (length(dim(ps)) == 2) {
     if (is_not_null(focal)) focal <- "1"
