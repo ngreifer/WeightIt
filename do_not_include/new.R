@@ -126,8 +126,8 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     A[["type.multinomial"]] <- if_null_then(A[["type.multinomial"]], "ungrouped")
   }
 
-  tune <- do.call("expand.grid", c(A[names(A) %in% tunable], list(stringsAsFactors = FALSE)))
-
+  tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
+                                   list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
   if (cv == 0) {
     start.lambda <- if_null_then(A[["start.lambda"]], 1)
     if (is_null(A[["n.grid"]])) {
@@ -146,7 +146,6 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     type.measure <- if_null_then(A[["type.measure"]], "default")
     A[["type.measure"]] <-  match_arg(type.measure, formals(glmnet::cv.glmnet)[["type.measure"]])
   }
-  # [lengths(A[names(A) %in% tunable]) >= 2]
 
   current.best.loss <- Inf
 
@@ -218,12 +217,14 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
       ps <- if (treat.type == "binary") ps[,best.lambda.index] else NULL
 
       tune[[paste.("best", stop.method)]][i] <- best.loss
+      tune[["best.lambda"]][i] <- best.lambda
 
       if (best.loss < current.best.loss) {
         best.fit <- fit
         best.w <- w
         best.ps <- ps
         current.best.loss <- best.loss
+        best.tune.index <- i
 
         info <- list(best.lambda = best.lambda,
                      lambda.val = lambda.val,
@@ -244,12 +245,14 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
       best.loss <- fit$cvm[best.lambda.index]
 
       tune[[paste.("best", names(fit$name))]][i] <- best.loss
+      tune[["best.lambda"]][i] <- best.lambda
 
       if (best.loss < current.best.loss) {
         best.fit <- fit
         best.ps <- predict(fit, newx = model.covs, type = "response", s = best.lambda, gamma = gamma)
         best.w <- drop(get.w.from.ps(best.ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass))
         current.best.loss <- best.loss
+        best.tune.index <- i
 
         lambda.val <- setNames(data.frame(fit$lambda,
                                           fit$cvm),
@@ -264,11 +267,11 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     }
   }
 
-  tune[vapply(names(tune), function(x) x != last(names(tune)) && length(A[[x]]) == 1, logical(1L))] <- NULL
+  tune[tunable[vapply(tunable, function(x) length(A[[x]]) == 1, logical(1L))]] <- NULL
 
   if (ncol(tune) > 1) {
     info[["tune"]] <- tune
-    info[["best.tune"]] <- tune[which.min(last(tune)),]
+    info[["best.tune"]] <- tune[best.tune.index,]
   }
 
   obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
