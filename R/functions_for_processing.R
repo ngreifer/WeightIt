@@ -289,8 +289,8 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
   return(by.components)
 }
 process.moments.int <- function(moments, int, method) {
-  if (!is.function(method)) {
-    if (method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
+  # if (!is.function(method)) {
+    if (is.function(method) || method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
       if (length(int) != 1 || !is.logical(int)) {
         stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
       }
@@ -307,7 +307,7 @@ process.moments.int <- function(moments, int, method) {
         }
       }
       else {
-        if (method == "energy") moments <- 0L
+        if (!is.function(method) && method == "energy") moments <- 0L
         else moments <- 1L
       }
     }
@@ -318,7 +318,9 @@ process.moments.int <- function(moments, int, method) {
       int <- FALSE
     }
     moments <- as.integer(moments)
-  }
+  # }
+  # else {
+  # }
   return(list(moments = moments, int = int))
 }
 process.MSM.method <- function(is.MSM.method, method) {
@@ -478,7 +480,7 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
   }
   else int_terms <- int_co.names <- list()
 
-  if (is_not_null(poly_terms) && is_not_null(int_terms)) {
+  if (is_not_null(poly_terms) || is_not_null(int_terms)) {
     out <- do.call("cbind", c(poly_terms, int_terms))
     out_co.names <- c(do.call("c", poly_co.names), do.call("c", int_co.names))
 
