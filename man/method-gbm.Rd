@@ -43,15 +43,15 @@ The following additional arguments can be specified:
 }
 \item{\code{trim.at}}{A number supplied to \code{at} in \code{\link{trim}} which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
 }
-\item{\code{distribution}}{A string with the distribution used in the loss function of the boosted model. This is supplied to the \code{distribution} argument in \code{\link[gbm]{gbm.fit}}. For binary treatments, \code{"bernoulli"} and \code{"adaboost"} are available, with \code{"bernoulli"} the default. For multinomial treatments, only \code{"multinomial"} is allowed. For continuous treatments \code{"gaussian"}, \code{"laplace"}, and \code{"tdist"} are available, with \code{"gaussian"} the default.
+\item{\code{distribution}}{A string with the distribution used in the loss function of the boosted model. This is supplied to the \code{distribution} argument in \code{\link[gbm]{gbm.fit}}. For binary treatments, \code{"bernoulli"} and \code{"adaboost"} are available, with \code{"bernoulli"} the default. For multinomial treatments, only \code{"multinomial"} is allowed. For continuous treatments \code{"gaussian"}, \code{"laplace"}, and \code{"tdist"} are available, with \code{"gaussian"} the default. This argument is tunable.
 }
 \item{\code{n.trees}}{The maximum number of trees used. This is passed onto the \code{n.trees} argument in \code{gbm.fit}. The default is 10000 for binary and multinomial treatments and 20000 for continuous treatments.
 }
 \item{\code{start.tree}}{The tree at which to start balance checking. If you know the best balance isn't in the first 100 trees, for example, you can set \code{start.tree = 101} so that balance statistics are not computed on the first 100 trees. This can save some time since balance checking takes up the bulk of the run time for some balance-based stopping methods, and is especially useful when running the same model adding more and more trees. The default is 1, i.e., to start from the very first tree in assessing balance.
 }
-\item{\code{interaction.depth}}{The depth of the trees. This is passed onto the \code{interaction.depth} argument in \code{gbm.fit}. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multinomial treatments and 4 for continuous treatments.
+\item{\code{interaction.depth}}{The depth of the trees. This is passed onto the \code{interaction.depth} argument in \code{gbm.fit}. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multinomial treatments and 4 for continuous treatments. This argument is tunable.
 }
-\item{\code{shrinkage}}{The shrinkage parameter applied to the trees. This is passed onto the \code{shrinkage} argument in \code{gbm.fit}. The default is .01 for binary and multinomial treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum.
+\item{\code{shrinkage}}{The shrinkage parameter applied to the trees. This is passed onto the \code{shrinkage} argument in \code{gbm.fit}. The default is .01 for binary and multinomial treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
 }
 \item{\code{bag.fraction}}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the \code{bag.fraction} argument in \code{gbm.fit}. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using \code{\link{set.seed}} to ensure replicability of results.
 }
@@ -72,17 +72,28 @@ For continuous treatments only, the following arguments may be supplied:
 \item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
 }
 }
+
+For tunable arguments, multiple entries may be supplied, and \code{weightit} will choose the best value by optimizing the criterion specified in \code{stop.method}. See below for additional outputs that are included when arguments are supplied to be tuned.
 }
 \section{Additional Outputs}{
 \describe{
 \item{\code{info}}{
-A list with two entries:
+A list with the following entries:
 \describe{
 \item{\code{best.tree}}{
 The number of trees at the optimum. If this is close to \code{n.trees}, \code{weightit} should be rerun with a larger value for \code{n.trees}, and \code{start.tree} can be set to just below \code{best.tree}. See example.
 }
 \item{\code{tree.val}}{
-A data.frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \code{\link{plot}} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. See example.
+A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \code{\link{plot}} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. See example.
+}
+}
+If any arguments are to be tuned (i.e., they have been supplied more than one value), the following two additional components are included in \code{info}:
+\describe{
+\item{\code{tune}}{
+A data frame with a column for each argument being tuned, the best value of the balance criterion for the given combination of parameters, and the number of trees at which the best value was reached.
+}
+\item{\code{best.tune}}{
+A one-row data frame containing the values of the arguments being tuned that were ultimately selected to estimate the returned weights.
 }
 }
 }
@@ -94,7 +105,7 @@ When \code{include.obj = TRUE}, the \code{gbm} fit used to generate the predicte
 \details{
 Generalzied boosted modeling (GBM, also known as gradient boosting machines) is a machine learning method that generates predicted values from a flexible regression of the treatment on the covariates, which are treated as propensity scores and used to compute weights. It does this by building a series of regression trees, each fit to the residuals of the last, minimizing a loss function that depends on the distribution chosen. The optimal number of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004) were innovative in using covariate balance to select this value rather than traditional machine learning performance metrics such as cross-validation accuracy. GBM is particularly effective for fitting nonlinear treatment models characterized by curves and interactions, but performs worse for simpler treatment models. It is unclear which balance measure should be used to select the number of trees, though research has indicated that balance measures tend to perform better than cross-validation accuracy for estimating effective propensity score weights.
 
-\pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multinomial treatments different from hiw \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multinomial treatments.
+\pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multinomial treatments different from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multinomial treatments.
 }
 \references{
 \strong{Binary treatments}
@@ -168,6 +179,19 @@ W4b$info$best.tree #13417; optimum has been found
 plot(W4b$info$tree.val) #increasing at right edge
 
 bal.tab(W4b)
-
 }
+
+#Tuning hyperparameters
+(W5 <- weightit(treat ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "gbm", estimand = "ATT",
+                stop.method = "ks.max",
+                interaction.depth = 2:4,
+                distribution = c("bernoulli", "adaboost")))
+
+W5$info$tune
+
+W5$info$best.tune #Best values of tuned parameters
+
+bal.tab(W5, stats = "k")
 }
