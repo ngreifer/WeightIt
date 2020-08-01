@@ -108,7 +108,7 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
 
     for (i in which(nums)) {
         df[[i]] <- format(df[[i]], scientific = FALSE, justify = "none", trim = TRUE,
-                          drop0trailing = !identical(as.character(pad), "0"), digits = digits)
+                          drop0trailing = !identical(as.character(pad), "0"))
 
         if (!identical(as.character(pad), "0") && any(grepl(".", df[[i]], fixed = TRUE))) {
             s <- strsplit(df[[i]], ".", fixed = TRUE)
