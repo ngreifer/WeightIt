@@ -949,6 +949,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       stop("'n.grid' must be a numeric value between 2 and n.trees.", call. = FALSE)
     }
     else n.grid <- round(A[["n.grid"]])
+
+    crit <- bal_criterion(treat.type, stop.method)
+    init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
   }
 
   A[["x"]] <- covs
@@ -969,8 +972,6 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)], tune[i, tunable]), quote = TRUE)
 
     if (cv == 0) {
-      crit <- bal_criterion(treat.type, stop.method)
-      init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
 
       n.trees <- fit[["n.trees"]]
       iters <- 1:n.trees
@@ -1081,7 +1082,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
   tune[tunable[vapply(tunable, function(x) length(A[[x]]) == 1, logical(1L))]] <- NULL
 
-  if (ncol(tune) > 1) {
+  if (ncol(tune) > 2) {
     info[["tune"]] <- tune
     info[["best.tune"]] <- tune[best.tune.index,]
   }
@@ -1158,6 +1159,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
       stop("'n.grid' must be a numeric value between 2 and n.trees.", call. = FALSE)
     }
     else n.grid <- round(A[["n.grid"]])
+
+    crit <- bal_criterion("continuous", stop.method)
+    init <- crit$init(covs, treat, s.weights = s.weights)
   }
 
   A[["x"]] <- covs
@@ -1231,8 +1235,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
                                    tune[i, tunable[tunable %in% names(formals(gbm::gbm.fit))]]), quote = TRUE)
 
     if (cv == 0) {
-      crit <- bal_criterion("continuous", stop.method)
-      init <- crit$init(covs, treat, s.weights = s.weights)
 
       n.trees <- fit[["n.trees"]]
       iters <- 1:n.trees
@@ -1352,7 +1354,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 
   tune[tunable[vapply(tunable, function(x) length(A[[x]]) == 1, logical(1L))]] <- NULL
 
-  if (ncol(tune) > 1) {
+  if (ncol(tune) > 2) {
     info[["tune"]] <- tune
     info[["best.tune"]] <- tune[best.tune.index,]
   }

@@ -95,7 +95,6 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   if (is_null(A[["maxit"]])) A[["maxit"]] <- 10^5
   if (is_null(A[["relax"]])) A[["relax"]] <- FALSE
   if (is_null(A[["reg.covs"]])) A[["reg.covs"]] <- TRUE
-  gamma <- if (isTRUE(is_null(A[["relax"]]))) 0 else 1
   nlambda <- if_null_then(A[["nlambda"]], 5000)
 
   if (moments == 1 && !int && any(!A[["reg.covs"]])) {
@@ -140,6 +139,10 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     else n.grid <- round(A[["n.grid"]])
 
     if (n.grid >= nlambda/3) n.grid <- nlambda
+
+    balance.covs <- if_null_then(A[["balance.covs"]], covs)
+    crit <- bal_criterion(treat.type, stop.method)
+    init <- crit$init(balance.covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
   }
   else {
     foldid <- sample(rep(seq_len(cv), length = length(treat)))
@@ -153,6 +156,7 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
     A[["penalty.factor"]] <- rep(1, ncol(model.covs))
     if (!tune[["reg.covs"]][i]) A[["penalty.factor"]][seq_len(ncol(covs))] <- 0
+    gamma <- ifelse(tune[["relax"]][i], 0,  1)
 
     if (cv == 0) {
       fit <- do.call(glmnet::glmnet, list(model.covs, treat, family = family, standardize = FALSE,
@@ -165,9 +169,6 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
         treat <- binarize(treat, one = focal)
         if (is_not_null(focal)) focal <- "1"
       }
-
-      crit <- bal_criterion(treat.type, stop.method)
-      init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
 
       iters <- seq_along(fit$lambda)
       iters.grid <- round(seq(1, length(fit$lambda), length.out = n.grid))
@@ -269,12 +270,292 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   tune[tunable[vapply(tunable, function(x) length(A[[x]]) == 1, logical(1L))]] <- NULL
 
-  if (ncol(tune) > 1) {
+  if (ncol(tune) > 2) {
     info[["tune"]] <- tune
     info[["best.tune"]] <- tune[best.tune.index,]
   }
 
   obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
+  return(obj)
+
+}
+weightit2enet.cont <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, moments, int, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+  s.weights <- s.weights[subset]
+
+  if (anyNA(covs) && missing == "ind") {
+    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    covs[is.na(covs)] <- 0
+    covs <- cbind(covs, missing.ind)
+  }
+
+  covs <- apply(covs, 2, make.closer.to.1)
+  model.covs <- cbind(covs, int.poly.f(covs, int = int, poly = moments))
+  model.covs <- apply(model.covs, 2, make.closer.to.1)
+
+  treat <- make.closer.to.1(treat)
+
+  if (is_null(A[["stop.method"]])) {
+    warning("No stop.method was provided. Using \"p.mean\".",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- "p.mean"
+  }
+  else if (length(A[["stop.method"]]) > 1) {
+    warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
+            call. = FALSE, immediate. = TRUE)
+    A[["stop.method"]] <- A[["stop.method"]][1]
+  }
+
+  cv <- 0
+  available.stop.methods <- bal_criterion("continuous", list = TRUE)
+  s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
+  if (is.na(s.m.matches) || s.m.matches == 0L) {
+    if (startsWith(A[["stop.method"]], "cv") && can_str2num(numcv <- substr(A[["stop.method"]], 3, nchar(A[["stop.method"]])))) {
+      cv <- round(str2num(numcv))
+      if (cv < 3) stop("At least 3 CV-folds must be specified in stop.method.", call. = FALSE)
+    }
+    else stop(paste0("'stop.method' must be one of ", word_list(c(available.stop.methods, "cv{#}"), "or", quotes = TRUE), "."), call. = FALSE)
+  }
+  else stop.method <- available.stop.methods[s.m.matches]
+
+  tunable <- c("alpha", "relax", "reg.covs")
+
+  trim.at <- if_null_then(A[["trim.at"]], 0)
+  if (is_null(A[["alpha"]])) A[["alpha"]] <- 1 - .0001
+  if (is_null(A[["thresh"]])) A[["thresh"]] <- 1e-14
+  if (is_null(A[["maxit"]])) A[["maxit"]] <- 10^5
+  if (is_null(A[["relax"]])) A[["relax"]] <- FALSE
+  if (is_null(A[["reg.covs"]])) A[["reg.covs"]] <- TRUE
+  gamma <- if (isTRUE(is_null(A[["relax"]]))) 0 else 1
+  nlambda <- if_null_then(A[["nlambda"]], 5000)
+
+  if (moments == 1 && !int && any(!A[["reg.covs"]])) {
+    stop("If moments = 1 and int = FALSE (the default), 'reg.covs' cannot be FALSE.", call. = FALSE)
+  }
+
+  if (is_null(A[["lambda"]])) {
+    lambda <- c(exp(seq(log(1/ncol(model.covs)), log(1/ncol(model.covs)/nlambda), length.out = nlambda - 1)), 0)
+  }
+  else {
+    if (is.numeric(A[["lambda"]])) {
+      lambda <- sort.int(A[["lambda"]], decreasing = TRUE)
+      nlambda <- length(lambda)
+    }
+    else {
+      stop("'lambda' must be a numeric vector.")
+    }
+  }
+
+  family <- "gaussian"
+
+  if (cv == 0) {
+    start.lambda <- if_null_then(A[["start.lambda"]], 1)
+    if (is_null(A[["n.grid"]])) {
+      n.grid <- round(1 + sqrt(2*(nlambda-start.lambda+1)))
+    }
+    else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
+             !between(A[["n.grid"]], c(2, nlambda))) {
+      stop(paste0("'n.grid' must be a numeric value between 2 and ", nlambda, "."), call. = FALSE)
+    }
+    else n.grid <- round(A[["n.grid"]])
+
+    if (n.grid >= nlambda/3) n.grid <- nlambda
+
+    crit <- bal_criterion("continuous", stop.method)
+    init <- crit$init(covs, treat, s.weights = s.weights)
+  }
+  else {
+    foldid <- sample(rep(seq_len(cv), length = length(treat)))
+    type.measure <- if_null_then(A[["type.measure"]], "default")
+    A[["type.measure"]] <-  match_arg(type.measure, formals(glmnet::cv.glmnet)[["type.measure"]])
+  }
+
+  tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
+                                   list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
+
+  #Process density params
+  if (isTRUE(A[["use.kernel"]])) {
+    if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
+    if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
+    if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
+    if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
+    use.kernel <- TRUE
+    densfun <- NULL
+  }
+  else {
+    if (is_null(A[["density"]])) densfun <- dnorm
+    else if (is.function(A[["density"]])) densfun <- A[["density"]]
+    else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
+      splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
+      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+        if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
+          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
+                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
+        }
+        densfun <- function(x) {
+          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
+                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+        }
+      }
+      else {
+        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
+                   splitdens[1], "is not an available function."), call. = FALSE)
+      }
+    }
+    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
+    use.kernel <- FALSE
+  }
+
+  #Stabilization - get dens.num
+  p.num <- treat - mean(treat)
+
+  if (use.kernel) {
+    d.n <- density(p.num, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+    dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
+  }
+  else {
+    dens.num <- densfun(p.num/sd(treat))
+    if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
+      stop("There was a problem with the output of 'density'. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+    }
+    else if (any(dens.num <= 0)) {
+      stop("The input to 'density' may not accept the full range of treatment values.", call. = FALSE)
+    }
+  }
+
+  current.best.loss <- Inf
+
+  for (i in seq_len(nrow(tune))) {
+
+    A[["penalty.factor"]] <- rep(1, ncol(model.covs))
+    if (!tune[["reg.covs"]][i]) A[["penalty.factor"]][seq_len(ncol(covs))] <- 0
+
+    if (cv == 0) {
+      fit <- do.call(glmnet::glmnet, list(model.covs, treat, family = family, standardize = FALSE,
+                                          lambda = lambda, alpha = tune[["alpha"]][i], thresh = A[["thresh"]],
+                                          maxit = A[["maxit"]], relax = tune[["relax"]][i], weights = s.weights,
+                                          penalty.factor = A[["penalty.factor"]]))
+
+
+      iters <- seq_along(fit$lambda)
+      iters.grid <- round(seq(1, length(fit$lambda), length.out = n.grid))
+
+      gps <- predict(fit, newx = model.covs, s = fit$lambda[iters.grid], gamma = gamma)
+      w <- get_cont_weights(gps, treat = treat, s.weights = s.weights, dens.num = dens.num,
+                            densfun = densfun, use.kernel = use.kernel, densControl = A)
+      if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+      iter.grid.balance <- apply(w, 2, function(w_) {
+        crit$fun(init = init, weights = w_)
+      })
+
+      if (n.grid == nlambda) {
+        best.lambda.index <- which.min(iter.grid.balance)
+        best.loss <- iter.grid.balance[best.lambda.index]
+        best.lambda <- lambda[best.lambda.index]
+        lambda.val <- setNames(data.frame(fit$lambda,
+                                          iter.grid.balance),
+                               c("lambda", stop.method))
+      }
+      else {
+        it <- which.min(iter.grid.balance) + c(-1, 1)
+        it[1] <- iters.grid[max(1, it[1])]
+        it[2] <- iters.grid[min(length(iters.grid), it[2])]
+        iters.to.check <- iters[between(iters, iters[it])]
+
+        if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > nlambda)) stop("A problem has occurred")
+
+        gps <- predict(fit, newx = model.covs, s = fit$lambda[iters.to.check], gamma = gamma)
+        w <- get_cont_weights(gps, treat = treat, s.weights = s.weights, dens.num = dens.num,
+                              densfun = densfun, use.kernel = use.kernel, densControl = A)
+        if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+
+        iter.grid.balance.fine <- apply(w, 2, function(w_) {
+          crit$fun(init = init, weights = w_)
+        })
+
+        best.lambda.index <- which.min(iter.grid.balance.fine)
+        best.loss <- iter.grid.balance.fine[best.lambda.index]
+        best.lambda <- lambda[iters.to.check[best.lambda.index]]
+        lambda.val <- setNames(data.frame(c(fit$lambda[iters.grid], fit$lambda[iters.to.check]),
+                                          c(iter.grid.balance, iter.grid.balance.fine)),
+                               c("lambda", stop.method))
+      }
+
+      lambda.val <- unique(lambda.val[order(lambda.val$lambda),])
+      w <- w[,best.lambda.index]
+      gps <- gps[,best.lambda.index]
+
+      tune[[paste.("best", stop.method)]][i] <- best.loss
+      tune[["best.lambda"]][i] <- best.lambda
+
+      if (best.loss < current.best.loss) {
+        best.fit <- fit
+        best.w <- w
+        best.gps <- gps
+        current.best.loss <- best.loss
+        best.tune.index <- i
+
+        info <- list(best.lambda = best.lambda,
+                     lambda.val = lambda.val,
+                     coef = predict(fit, type = "coef", s = best.lambda))
+      }
+
+    }
+    else {
+      fit <- do.call(glmnet::cv.glmnet, list(model.covs, treat, family = family, standardize = FALSE,
+                                             lambda = lambda, alpha = tune[["alpha"]][i], thresh = A[["thresh"]],
+                                             maxit = A[["maxit"]], relax = tune[["relax"]][i], weights = s.weights,
+                                             penalty.factor = A[["penalty.factor"]],
+                                             foldid = foldid))
+
+      best.lambda.index <- which.min(fit$cvm)
+      best.lambda <- fit$lambda[best.lambda.index]
+      best.loss <- fit$cvm[best.lambda.index]
+
+      tune[[paste.("best", names(fit$name))]][i] <- best.loss
+      tune[["best.lambda"]][i] <- best.lambda
+
+      if (best.loss < current.best.loss) {
+        best.fit <- fit
+        best.gps <- predict(fit, newx = model.covs, s = best.lambda, gamma = gamma)
+        best.w <- get_cont_weights(best.gps, treat = treat, s.weights = s.weights, dens.num = dens.num,
+                                   densfun = densfun, use.kernel = use.kernel, densControl = A)
+        current.best.loss <- best.loss
+        best.tune.index <- i
+
+        lambda.val <- setNames(data.frame(fit$lambda,
+                                          fit$cvm),
+                               c("lambda", names(fit$name)))
+
+        info <- list(best.lambda = best.lambda,
+                     lambda.val = lambda.val,
+                     coef = predict(fit, type = "coef", s = best.lambda))
+      }
+    }
+  }
+
+  if (use.kernel && isTRUE(A[["plot"]])) {
+    d.d <- density(treat - best.gps, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]],
+                   kernel = A[["kernel"]])
+    plot_density(d.n, d.d)
+  }
+
+  tune[tunable[vapply(tunable, function(x) length(A[[x]]) == 1, logical(1L))]] <- NULL
+
+  if (ncol(tune) > 2) {
+    info[["tune"]] <- tune
+    info[["best.tune"]] <- tune[best.tune.index,]
+  }
+
+  obj <- list(w = best.w, info = info, fit.obj = best.fit)
   return(obj)
 
 }
