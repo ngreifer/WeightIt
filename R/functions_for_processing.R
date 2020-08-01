@@ -880,7 +880,7 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
   if (length(subclass) != 1 || !is.numeric(subclass)) {
     stop("'subclass' must be a single number.", call. = FALSE)
   }
-  else if (round(subclass) < 1) {
+  else if (round(subclass) <= 1) {
     stop("'subclass' must be greater than 1.", call. = FALSE)
   }
   subclass <- round(subclass)
@@ -934,9 +934,10 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
   attr(ps_sub, "sub_mat") <- sub_mat
   return(ps_sub)
 }
-subclass_scoot <- function(sub, treat, x) {
+subclass_scoot <- function(sub, treat, x, min.n = 1) {
   #Reassigns subclasses so there are no empty subclasses
-  #for each treatment group.
+  #for each treatment group. min.n is the smallest a
+  #subclass is allowed to be.
   treat <- as.character(treat)
   unique.treat <- unique(treat, nmax = 2)
 
@@ -950,7 +951,7 @@ subclass_scoot <- function(sub, treat, x) {
   sub <- setNames(setNames(seq_len(nsub), sort(unique(sub)))[as.character(sub)],
                   original.order)
 
-  if (any(table(treat) < nsub)) {
+  if (any(table(treat) < nsub * min.n)) {
     stop("Too many subclasses were requested.", call. = FALSE)
   }
 
@@ -969,31 +970,35 @@ subclass_scoot <- function(sub, treat, x) {
     }
 
     for (t in unique.treat) {
-      while (any(sub_tab[t,] == 0)) {
-        first_0 <- which(sub_tab[t,] == 0)[1]
+      for (n in seq_len(min.n)) {
+        while (any(sub_tab[t,] == 0)) {
+          first_0 <- which(sub_tab[t,] == 0)[1]
 
-        if (first_0 == nsub ||
-            (first_0 != 1 &&
-             sum(soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
-             sum(soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
-          #If there are more and closer nonzero subs to the left...
-          first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
+          if (first_0 == nsub ||
+              (first_0 != 1 &&
+               sum(soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
+               sum(soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
+            #If there are more and closer nonzero subs to the left...
+            first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
 
-          name_to_move <- names(sub)[which(x == max(x[treat == t & sub == first_non0_to_left]) & treat == t & sub == first_non0_to_left)[1]]
+            name_to_move <- names(sub)[which(x == max(x[treat == t & sub == first_non0_to_left]) & treat == t & sub == first_non0_to_left)[1]]
 
-          sub[name_to_move] <- first_0
-          sub_tab[t, first_0] <- 1L
-          sub_tab[t, first_non0_to_left] <- sub_tab[t, first_non0_to_left] - 1L
+            sub[name_to_move] <- first_0
+            sub_tab[t, first_0] <- 1L
+            sub_tab[t, first_non0_to_left] <- sub_tab[t, first_non0_to_left] - 1L
 
+          }
+          else {
+            #If there are more and closer nonzero subs to the right...
+            first_non0_to_right <- min(seq(first_0 + 1, nsub)[sub_tab[t, seq(first_0 + 1, nsub)] > 0])
+            name_to_move <- names(sub)[which(x == min(x[treat == t & sub == first_non0_to_right]) & treat == t & sub == first_non0_to_right)[1]]
+            sub[name_to_move] <- first_0
+            sub_tab[t, first_0] <- 1L
+            sub_tab[t, first_non0_to_right] <- sub_tab[t, first_non0_to_right] - 1L
+          }
         }
-        else {
-          #If there are more and closer nonzero subs to the right...
-          first_non0_to_right <- min(seq(first_0 + 1, nsub)[sub_tab[t, seq(first_0 + 1, nsub)] > 0])
-          name_to_move <- names(sub)[which(x == min(x[treat == t & sub == first_non0_to_right]) & treat == t & sub == first_non0_to_right)[1]]
-          sub[name_to_move] <- first_0
-          sub_tab[t, first_0] <- 1L
-          sub_tab[t, first_non0_to_right] <- sub_tab[t, first_non0_to_right] - 1L
-        }
+
+        sub_tab[t,] <- sub_tab[t,] - 1
       }
     }
 
