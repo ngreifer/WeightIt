@@ -313,7 +313,7 @@ print.summary.weightit <- function(x, ...) {
                                                               x$num.zeros)),
                                         c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
   cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
-  print.data.frame(round_df_char(x$effective.sample.size, 3))
+  print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
   invisible(x)
 }
 plot.summary.weightit <- function(x, ...) {

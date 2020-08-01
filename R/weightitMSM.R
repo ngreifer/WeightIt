@@ -478,7 +478,7 @@ print.summary.weightitMSM <- function(x, ...) {
     if (is_not_null(x[[ti]][["weight.mean"]])) cat("\n- " %+% italic("Mean of Weights") %+% " = " %+% round(x[[ti]][["weight.mean"]], 4) %+% "\n")
 
     cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
-    print.data.frame(round_df_char(x[[ti]]$effective.sample.size, 3))
+    print.data.frame(round_df_char(x[[ti]]$effective.sample.size, 2, pad = " "))
     cat("\n")
     if (only.one) break
   }
