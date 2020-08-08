@@ -137,6 +137,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
     covs <- covs[subset, , drop = FALSE]
     treat_sub <- factor(treat[subset])
+    s.weights <- s.weights[subset]
     bin.treat <- is_binary(treat_sub)
     ord.treat <- is.ordered(treat_sub)
 
@@ -220,7 +221,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
             fit <- do.call(glm_method, c(list(y = treat,
                                               x = cbind(1, covs),
                                               start = c(family$linkfun(mean(treat)), rep(0, ncol(covs))),
-                                              weights = s.weights[subset],
+                                              weights = s.weights,
                                               family = family),
                                          control), quote = TRUE)
           }
@@ -228,7 +229,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
             data <- data.frame(treat, covs)
             formula <- formula(data)
             fit <- do.call(stats::glm, c(list(formula, data = data,
-                                              weights = s.weights[subset],
+                                              weights = s.weights,
                                               start = c(family$linkfun(mean(treat)), rep(0, ncol(covs))),
                                               family = family,
                                               method = glm_method),
@@ -295,13 +296,13 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                 fit <- mnlogit::mnlogit(as.formula(paste0(names(data)[1], " ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
                                         data = mult,
                                         choiceVar = "alt",
-                                        weights = s.weights[subset], ...)
+                                        weights = s.weights, ...)
               },
               error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mnlogit().\n       Try again with use.mnlogit = FALSE."), call. = FALSE)}
               )
             }
             else {
-              data <- data.frame(treat = treat_sub, .s.weights = s.weights[subset], covs)
+              data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
               covnames <- names(data)[-c(1,2)]
               mult <- dfidx::dfidx(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
               tryCatch({
@@ -329,7 +330,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
             data_i <- data.frame(t_i, covs)
             fit.list[[i]] <- do.call(stats::glm, c(list(formula(data_i), data = data_i,
                                                         family = quasibinomial(link = A$link),
-                                                        weights = s.weights[subset]),
+                                                        weights = s.weights),
                                                    control), quote = TRUE)
             ps[[i]] <- fit.list[[i]]$fitted.values
           }
@@ -438,6 +439,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
+  s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -534,7 +536,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
     else {
       if (is_null(A$link)) A$link <- "identity"
       fit <- do.call("glm", c(list(formula, data = data,
-                                   weights = s.weights[subset],
+                                   weights = s.weights,
                                    family = gaussian(link = A$link),
                                    control = as.list(A$control))),
                      quote = TRUE)
@@ -568,6 +570,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
@@ -599,7 +602,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
     A[["formula"]] <- new.formula
     A[["data"]] <- new.data
     A[["estimand"]] <- estimand
-    A[["s.weights"]] <- s.weights[subset]
+    A[["s.weights"]] <- s.weights
     A[["focal"]] <- focal
     A[["verbose"]] <- TRUE
 
@@ -615,6 +618,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
+  s.weights <- s.weights[subset]
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   covs <- apply(covs, 2, make.closer.to.1)
@@ -643,7 +647,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 
   A[["formula"]] <- new.formula
   A[["data"]] <- new.data
-  A[["s.weights"]] <- s.weights[subset]
+  A[["s.weights"]] <- s.weights
   A[["verbose"]] <- TRUE
 
   out <- do.call(optweight::optweight, A, quote = TRUE)
@@ -1369,6 +1373,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1396,7 +1401,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                                               data = new.data,
                                               method = if (is_not_null(A$over) && A$over == FALSE) "exact" else "over",
                                               standardize = FALSE,
-                                              sample.weights = s.weights[subset][treat.in.i.focal],
+                                              sample.weights = s.weights[treat.in.i.focal],
                                               ATT = 1,
                                               ...)},
                  error = function(e) {
@@ -1414,7 +1419,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                              treated = 1, subclass = subclass, stabilize = stabilize)
         }
         else {
-          w[treat == i] <- cobalt::get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[subset][treat.in.i.focal][treat_ == 0]
+          w[treat == i] <- cobalt::get.w(fit.list[[i]], estimand = "ATT")[treat_ == 0] / s.weights[treat.in.i.focal][treat_ == 0]
         }
       }
     }
@@ -1425,7 +1430,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                                          data = new.data,
                                          method = if (isFALSE(A$over)) "exact" else "over",
                                          standardize = FALSE,
-                                         sample.weights = s.weights[subset],
+                                         sample.weights = s.weights,
                                          ATT = 0,
                                          ...)},
                  error = function(e) {
@@ -1441,7 +1446,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                              subclass = subclass, stabilize = stabilize)
         }
         else {
-          w <- cobalt::get.w(fit.list) / s.weights[subset]
+          w <- cobalt::get.w(fit.list) / s.weights
         }
       }
       else {
@@ -1453,10 +1458,10 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
           fit.list[[i]] <- CBPS::CBPS(formula(new.data), data = new.data,
                                       method = if (isFALSE(A$over)) "exact" else "over",
                                       standardize = FALSE,
-                                      sample.weights = s.weights[subset],
+                                      sample.weights = s.weights,
                                       ATT = 0, ...)
 
-          w[treat==i] <- cobalt::get.w(fit.list[[i]])[treat==i] / s.weights[subset][treat==i]
+          w[treat==i] <- cobalt::get.w(fit.list[[i]])[treat==i] / s.weights[treat==i]
         }
       }
     }
@@ -1475,6 +1480,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
+  s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1492,7 +1498,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
                                 data = new.data,
                                 method = if (isFALSE(A$over)) "exact" else "over",
                                 standardize = FALSE,
-                                sample.weights = s.weights[subset],
+                                sample.weights = s.weights,
                                 ...)},
              error = function(e) {
                e. <- conditionMessage(e)
@@ -1501,7 +1507,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
              }
     )
   }
-  w <- cobalt::get.w(fit) / s.weights[subset]
+  w <- cobalt::get.w(fit) / s.weights
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -1583,6 +1589,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1610,7 +1617,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
       control.levels <- levels(treat)[levels(treat) != focal]
       fit.list <- make_list(control.levels)
 
-      covs[treat == focal,] <- covs[treat == focal, , drop = FALSE] * s.weights[subset][treat == focal] * sum(treat == focal)/sum(s.weights[subset][treat == focal])
+      covs[treat == focal,] <- covs[treat == focal, , drop = FALSE] * s.weights[treat == focal] * sum(treat == focal)/sum(s.weights[treat == focal])
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
@@ -1639,7 +1646,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
                                                        max.weight.increment = A[["max.weight.increment"]],
                                                        min.weight.increment = A[["min.weight.increment"]],
                                                        print.level = 3)
-        w[treat == i] <- ebal.out$w / s.weights[subset][treat.in.i.focal][treat_ == 0]
+        w[treat == i] <- ebal.out$w / s.weights[treat.in.i.focal][treat_ == 0]
         fit.list[[i]] <- ebal.out
       }
     }
@@ -1655,7 +1662,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
         covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove, drop = FALSE]
 
-        covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights[subset] * sum(treat_i == 1) / sum(s.weights[subset])
+        covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights * sum(treat_i == 1) / sum(s.weights)
 
         if (is_not_null(A[["base.weight"]])) {
           A[["base.weight"]] <- A[["base.weight"]][treat == i]
@@ -1677,7 +1684,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
                                                          min.weight.increment = A[["min.weight.increment"]],
                                                          print.level = 3)
 
-        w[treat == i] <- ebal.out_i$w / s.weights[subset][treat == i]
+        w[treat == i] <- ebal.out_i$w / s.weights[treat == i]
         fit.list[[i]] <- ebal.out_i
       }
     }
@@ -1691,6 +1698,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
+  s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1716,10 +1724,10 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
     else q <- A[["base.weight"]]
   }
 
-  treat_sc <- (treat - weighted.mean(treat, (s.weights)[subset])) /
-    cobalt::col_w_sd(treat, (s.weights)[subset])
-  covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, (s.weights)[subset])),
-                     cobalt::col_w_sd(covs, (s.weights)[subset]))
+  treat_sc <- (treat - weighted.mean(treat, s.weights)) /
+    cobalt::col_w_sd(treat, s.weights)
+  covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, s.weights)),
+                     cobalt::col_w_sd(covs, s.weights))
 
   gTX <- cbind(treat_sc, covs_sc, treat_sc*covs_sc)
 
@@ -1757,6 +1765,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1788,7 +1797,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
 
         covs_ <- covs_[, colnames(covs_) %nin% colinear.covs.to.remove, drop = FALSE]
 
-        covs_[treat_ == 1,] <- covs_[treat_ == 1,] * s.weights[subset][treat == focal] * sum(treat == focal)/ sum(s.weights[subset][treat == focal])
+        covs_[treat_ == 1,] <- covs_[treat_ == 1,] * s.weights[treat == focal] * sum(treat == focal)/ sum(s.weights[treat == focal])
 
         Y <- rep(0, length(treat_))
 
@@ -1802,7 +1811,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
                             backtrack = A[["backtrack"]],
                             backtrack.alpha = A[["backtrack.alpha"]],
                             backtrack.beta = A[["backtrack.beta"]])
-        w[treat == i] <- ate.out$weights.q[treat_ == 0] / s.weights[subset][treat == i]
+        w[treat == i] <- ate.out$weights.q[treat_ == 0] / s.weights[treat == i]
         fit.list[[i]] <- ate.out
       }
     }
@@ -1818,7 +1827,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
 
         covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove, drop = FALSE]
 
-        covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights[subset] * sum(treat_i == 1) / sum(s.weights[subset])
+        covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights * sum(treat_i == 1) / sum(s.weights)
 
         Y <- rep(0, length(treat_i))
 
@@ -1832,7 +1841,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
                             backtrack = A[["backtrack"]],
                             backtrack.alpha = A[["backtrack.alpha"]],
                             backtrack.beta = A[["backtrack.beta"]])
-        w[treat == i] <- ate.out$weights.q[treat_i == 0] / s.weights[subset][treat == i]
+        w[treat == i] <- ate.out$weights.q[treat_i == 0] / s.weights[treat == i]
         fit.list[[i]] <- ate.out
       }
     }
@@ -1923,7 +1932,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
                                                          verbose = FALSE,
                                                          method = A[["SL.method"]],
                                                          id = NULL,
-                                                         obsWeights = s.weights[subset],
+                                                         obsWeights = s.weights,
                                                          control = A[["control"]],
                                                          cvControl = A[["cvControl"]],
                                                          env = A[["env"]]))
@@ -1952,7 +1961,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
                                                                 verbose = FALSE,
                                                                 method = A[["SL.method"]],
                                                                 id = NULL,
-                                                                obsWeights = s.weights[subset],
+                                                                obsWeights = s.weights,
                                                                 control = A[["control"]],
                                                                 cvControl = A[["cvControl"]],
                                                                 env = A[["env"]]))
@@ -1978,6 +1987,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
+  s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -2099,7 +2109,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                                                   verbose = FALSE,
                                                   method = B[["SL.method"]],
                                                   id = NULL,
-                                                  obsWeights = s.weights[subset],
+                                                  obsWeights = s.weights,
                                                   control = B[["control"]],
                                                   cvControl = B[["cvControl"]],
                                                   env = B[["env"]]))
@@ -2134,7 +2144,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   n <- length(treat)
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
-  sw <- s.weights[subset]
+  s.weights <- s.weights[subset]
 
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
   treat.type <- get.treat.type(treat)
@@ -2147,8 +2157,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     }
   }
 
-  covs <- mat_div(center(covs, at = col.w.m(covs, sw)),
-                  sqrt(col.w.v(covs, sw)))
+  covs <- mat_div(center(covs, at = col.w.m(covs, s.weights)),
+                  sqrt(col.w.v(covs, s.weights)))
 
   if (check.package("osqp")) {
     if (is_not_null(A[["dist.mat"]])) {
@@ -2171,15 +2181,15 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
       min.w <- 1e-8
     }
 
-    for (t in levels_treat) sw[treat == t] <- sw[treat == t]/mean(sw[treat == t])
+    for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean(s.weights[treat == t])
 
     tmat <- vapply(levels_treat, function(t) treat == t, logical(n))
     nt <- colSums(tmat)
 
-    J <- setNames(lapply(levels_treat, function(t) sw*tmat[,t]/nt[t]), levels_treat)
+    J <- setNames(lapply(levels_treat, function(t) s.weights*tmat[,t]/nt[t]), levels_treat)
 
     if (estimand == "ATE") {
-      J0 <- as.matrix(sw/n)
+      J0 <- as.matrix(s.weights/n)
 
       M2_array <- vapply(levels_treat, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
       M1_array <- vapply(levels_treat, function(t) 2 * J[[t]] * d %*% J0, J0)
@@ -2194,9 +2204,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
       }
 
       #Constraints for positivity and sum of weights
-      Amat <- rbind(diagn, t(sw * tmat))
+      Amat <- rbind(diagn, t(s.weights * tmat))
       lvec <- c(rep(min.w, n), nt)
-      uvec <- c(ifelse(check_if_zero(sw), min.w, Inf), nt)
+      uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), nt)
     }
     else {
 
@@ -2210,17 +2220,17 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
       M1 <- rowSums(M1_array)
 
       #Constraints for positivity and sum of weights
-      Amat <- rbind(diagn, t(sw*tmat))
-      lvec <- c(ifelse_(check_if_zero(sw), min.w, treat == focal, 1, min.w), nt)
-      uvec <- c(ifelse_(check_if_zero(sw), min.w, treat == focal, 1, Inf), nt)
+      Amat <- rbind(diagn, t(s.weights*tmat))
+      lvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, min.w), nt)
+      uvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, Inf), nt)
     }
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
       covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
 
-      if (estimand == "ATE") targets <- col.w.m(covs, sw)
-      else targets <- col.w.m(covs[treat == focal, , drop = FALSE], sw[treat == focal])
+      if (estimand == "ATE") targets <- col.w.m(covs, s.weights)
+      else targets <- col.w.m(covs[treat == focal, , drop = FALSE], s.weights[treat == focal])
 
       Amat <- do.call("rbind", c(list(Amat),
                                  lapply(levels_treat, function(t) {
