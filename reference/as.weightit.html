@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a <code>weightit</code> object manually — as.weightit • WeightIt</title>
+<title>Create a weightit object manually — as.weightit • WeightIt</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="Create a <code>weightit</code> object manually — as.weightit" />
+<meta property="og:title" content="Create a weightit object manually — as.weightit" />
 <meta property="og:description" content="This function allows users to get the benefits of a weightit object when using weights not estimated with weightit() or weightitMSM(). These benefits include diagnostics, plots, and direct compatibility with cobalt for assessing balance." />
 
 
@@ -129,13 +129,13 @@
     </div>
 
     <div class="ref-description">
-    <p>This function allows users to get the benefits of a <code>weightit</code> object when using weights not estimated with <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit()</a></code> or <code><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM()</a></code>. These benefits include diagnostics, plots, and direct compatibility with <span class="pkg">cobalt</span> for assessing balance.</p>
+    <p>This function allows users to get the benefits of a <code>weightit</code> object when using weights not estimated with <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. These benefits include diagnostics, plots, and direct compatibility with <span class="pkg">cobalt</span> for assessing balance.</p>
     </div>
 
-    <pre class="usage"><span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/as.weightit.html'>as.weightit</a></span>(<span class='kw'>...</span>)
+    <pre class="usage"><span class='fu'>as.weightit</span>(<span class='kw'>...</span>)
 
 <span class='co'># S3 method for default</span>
-<span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/as.weightit.html'>as.weightit</a></span>(<span class='kw'>weights</span>,
+<span class='fu'>as.weightit</span>(<span class='kw'>weights</span>,
             <span class='kw'>treat</span>,
             covs = <span class='kw'>NULL</span>,
             estimand = <span class='kw'>NULL</span>,
@@ -143,10 +143,10 @@
             ps = <span class='kw'>NULL</span>,
             <span class='kw'>...</span>)
 
-<span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/as.weightit.html'>as.weightitMSM</a></span>(<span class='kw'>...</span>)
+<span class='fu'>as.weightitMSM</span>(<span class='kw'>...</span>)
 
 <span class='co'># S3 method for default</span>
-<span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/as.weightit.html'>as.weightitMSM</a></span>(<span class='kw'>weights</span>,
+<span class='fu'>as.weightitMSM</span>(<span class='kw'>weights</span>,
                <span class='kw'>treat.list</span>,
                covs.list = <span class='kw'>NULL</span>,
                estimand = <span class='kw'>NULL</span>,
@@ -209,7 +209,7 @@
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'>treat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span>(<span class='fl'>500</span>, <span class='fl'>1</span>, <span class='fl'>.3</span>)
 <span class='kw'>weights</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Chisquare.html'>rchisq</a></span>(<span class='fl'>500</span>, df = <span class='fl'>2</span>)
-<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/as.weightit.html'>as.weightit</a></span>(weights= <span class='kw'>weights</span>, treat = <span class='kw'>treat</span>,
+<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'>as.weightit</span>(weights= <span class='kw'>weights</span>, treat = <span class='kw'>treat</span>,
                  estimand = <span class='st'>"ATE"</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W</span>)</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
@@ -236,8 +236,8 @@
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 335.000 165.000
-#&gt; Weighted   170.406  80.909</div></span></pre>
+#&gt; Unweighted  335.    165.  
+#&gt; Weighted    170.41   80.91</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

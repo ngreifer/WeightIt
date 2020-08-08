@@ -147,7 +147,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights using empirical balancing calibration weighting (EBCW) by setting <code>method = "ebcw"</code> in the call to <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code>. This method can be used with binary and multinomial treatments.</p>
+    <p>This page explains the details of estimating weights using empirical balancing calibration weighting (EBCW) by setting <code>method = "ebcw"</code> in the call to <code><a href='weightit.html'>weightit</a></code>. This method can be used with binary and multinomial treatments.</p>
 <p>In general, this method relies on estimating weights by minimizing a function of the weights subject to exact moment balancing constraints. This method relies on <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE</a></code> from the <span class="pkg">ATE</span> package.</p>
 <h3>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE</a></code> with <code>ATT = TRUE</code>. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the <code>ATE</code> fit object. When the ATE is requested, <code>ATE</code> is run twice, once for each treatment group.</p>
@@ -190,14 +190,14 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <p>Chan, K. C. G., Yam, S. C. P., &amp; Zhang, Z. (2016). Globally efficient non-parametric inference of average treatment effects by empirical balancing calibration weighting. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 78(3), 673–700. doi: <a href='https://doi.org/10.1111/rssb.12129'>10.1111/rssb.12129</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
-(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"ebcw"</span>, estimand = <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ebcw" (empirical balancing calibration weighting)
@@ -230,8 +230,8 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 429.000     185
-#&gt; Weighted   252.121     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Unweighted  429.       185
+#&gt; Weighted    252.12     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "ebcw", estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
@@ -247,7 +247,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; Unadjusted 429.000     185
 #&gt; Adjusted   252.121     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"ebcw"</span>, estimand = <span class='st'>"ATE"</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ebcw" (empirical balancing calibration weighting)
@@ -283,9 +283,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
-#&gt;              black hispan   white
-#&gt; Unweighted 243.000 72.000 299.000
-#&gt; Weighted   180.469 52.706 262.929</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;             black hispan  white
+#&gt; Unweighted 243.    72.   299.  
+#&gt; Weighted   180.47  52.71 262.93</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, data = lalonde, method = "ebcw", estimand = "ATE")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>

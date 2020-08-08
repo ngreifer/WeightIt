@@ -130,11 +130,11 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     </div>
 
     <div class="ref-description">
-    <p><code>weightitMSM</code> allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code> calls; these packages must be installed to use the desired method. Also included are <code>print</code> and <code>summary</code> methods for examining the output.</p>
+    <p><code>weightitMSM</code> allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which <code><a href='weightit.html'>weightit</a></code> calls; these packages must be installed to use the desired method. Also included are <code>print</code> and <code>summary</code> methods for examining the output.</p>
 <p>Currently only "wide" data sets, where each row corresponds to a unit's entire variable history, are supported. You can use <code><a href='https://rdrr.io/r/stats/reshape.html'>reshape</a></code> or other functions to transform your data into this format; see example below.</p>
     </div>
 
-    <pre class="usage"><span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></span>(<span class='kw'>formula.list</span>,
+    <pre class="usage"><span class='fu'>weightitMSM</span>(<span class='kw'>formula.list</span>,
             data = <span class='kw'>NULL</span>,
             method = <span class='st'>"ps"</span>,
             stabilize = <span class='fl'>FALSE</span>,
@@ -166,7 +166,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     </tr>
     <tr>
       <th>method</th>
-      <td><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code> for allowable options. The default is <code>"ps"</code>, which estimates the weights using generalized linear models.</p></td>
+      <td><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href='weightit.html'>weightit</a></code> for allowable options. The default is <code>"ps"</code>, which estimates the weights using generalized linear models.</p></td>
     </tr>
     <tr>
       <th>stabilize</th>
@@ -214,7 +214,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     </tr>
     <tr>
       <th>...</th>
-      <td><p>other arguments for functions called by <code>weightit</code> that control aspects of fitting that are not covered by the above arguments. See Details at <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code>.</p></td>
+      <td><p>other arguments for functions called by <code>weightit</code> that control aspects of fitting that are not covered by the above arguments. See Details at <code><a href='weightit.html'>weightit</a></code>.</p></td>
     </tr>
     <tr>
       <th>x</th>
@@ -246,7 +246,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     <p>Noah Greifer</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code> for information on the allowable methods.</p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code> for information on the allowable methods.</p></div>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p>Cole, S. R., &amp; Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. doi: <a href='https://doi.org/10.1093/aje/kwn164'>10.1093/aje/kwn164</a></p>
@@ -256,7 +256,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class='co'># library("cobalt")</span>
 
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"iptwExWide"</span>, package = <span class='st'>"twang"</span>)
-(<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
+(<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'>weightitMSM</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
                       <span class='kw'>tx2</span> <span class='op'>~</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use1</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
                       <span class='kw'>tx3</span> <span class='op'>~</span> <span class='kw'>tx2</span> <span class='op'>+</span> <span class='kw'>use2</span> <span class='op'>+</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use1</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>),
                  data = <span class='kw'>iptwExWide</span>,
@@ -298,8 +298,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted  294.00 706.000
-#&gt; Weighted    185.18 573.598
+#&gt; Unweighted  294.     706. 
+#&gt; Weighted    185.18   573.6
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 2 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -325,8 +325,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 492.000 508.000
-#&gt; Weighted   318.903 264.487
+#&gt; Unweighted   492.   508.  
+#&gt; Weighted     318.9  264.49
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 3 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -352,8 +352,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 415.000 585.000
-#&gt; Weighted   235.672 366.399
+#&gt; Unweighted  415.     585. 
+#&gt; Weighted    235.67   366.4
 #&gt; </div><div class='input'><span class='co'># bal.tab(W)</span>
 
 <span class='co'>##Going from long to wide data</span>
@@ -365,7 +365,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
                      direction = <span class='st'>"wide"</span>,
                      sep = <span class='st'>""</span>)
 
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use1</span>,
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'>weightitMSM</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use1</span>,
                       <span class='kw'>tx2</span> <span class='op'>~</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use2</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use1</span>,
                       <span class='kw'>tx3</span> <span class='op'>~</span> <span class='kw'>tx2</span> <span class='op'>+</span> <span class='kw'>use3</span> <span class='op'>+</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use2</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span>
                           <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use1</span>),
@@ -408,8 +408,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted  294.00 706.000
-#&gt; Weighted    185.18 573.598
+#&gt; Unweighted  294.     706. 
+#&gt; Weighted    185.18   573.6
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 2 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -435,8 +435,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 492.000 508.000
-#&gt; Weighted   318.903 264.487
+#&gt; Unweighted   492.   508.  
+#&gt; Weighted     318.9  264.49
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 3 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -462,8 +462,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 415.000 585.000
-#&gt; Weighted   235.672 366.399
+#&gt; Unweighted  415.     585. 
+#&gt; Weighted    235.67   366.4
 #&gt; </div><div class='input'>
 <span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='kw'>W</span><span class='op'>$</span><span class='kw'>weights</span>, <span class='kw'>W2</span><span class='op'>$</span><span class='kw'>weights</span>)</div><div class='output co'>#&gt; [1] TRUE</div></span></pre>
   </div>

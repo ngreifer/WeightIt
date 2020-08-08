@@ -149,15 +149,15 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting <code>method = "twang"</code> in the call to <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code> or <code><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
-<p>In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves choosing a balance criterion to optimize so that balance, rather than prediction, is prioritized. For binary and multinomial treatments, this method relies on <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> from the <span class="pkg">twang</span> package. For continuous treatments, this method relies on <code><a href='https://rdrr.io/pkg/WeightIt/man/ps.cont.html'>ps.cont</a></code> from <span class="pkg">WeightIt</span>.</p>
-<p>See the Details section at <code><a href='https://rdrr.io/pkg/WeightIt/man/method-gbm.html'>method_gbm</a></code> for a discussion of how this method differs from <code>method = "gbm"</code>. In general, using <code>method = "gbm"</code> is preferred because it is faster and more flexible. <code>method = "twang"</code> is longer beign developed and will likely become defunct in future versions.</p>
+    <p>This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting <code>method = "twang"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
+<p>In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves choosing a balance criterion to optimize so that balance, rather than prediction, is prioritized. For binary and multinomial treatments, this method relies on <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> from the <span class="pkg">twang</span> package. For continuous treatments, this method relies on <code><a href='ps.cont.html'>ps.cont</a></code> from <span class="pkg">WeightIt</span>.</p>
+<p>See the Details section at <code><a href='method_gbm.html'>method_gbm</a></code> for a discussion of how this method differs from <code>method = "gbm"</code>. In general, using <code>method = "gbm"</code> is preferred because it is faster and more flexible. <code>method = "twang"</code> is longer beign developed and will likely become defunct in future versions.</p>
 <h3>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code>. The following estimands are allowed: ATE, ATT, and ATC. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., <code>levels(factor(treat))[2]</code>; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.</p>
 <h3>Multinomial Treatments</h3>
 <p>For multinomial treatments, this method estimates the propensity scores using multiple calls to <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> (which is the same thing that <code><a href='https://rdrr.io/pkg/twang/man/mnps.html'>mnps</a></code> in <span class="pkg">twang</span> does behind the scenes). The following estimands are allowed: ATE and ATT. The weights are computed from the estimated propensity scores using the standard formulas.</p>
 <h3>Continuous Treatments</h3>
-<p>For continuous treatments, the generalized propensity score is estimated using <code><a href='https://rdrr.io/pkg/WeightIt/man/ps.cont.html'>ps.cont</a></code>.</p>
+<p>For continuous treatments, the generalized propensity score is estimated using <code><a href='ps.cont.html'>ps.cont</a></code>.</p>
 <h3>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, the weights are the product of the weights estimated at each time point, which is what <code><a href='https://rdrr.io/pkg/twang/man/iptw.html'>iptw</a></code> in <span class="pkg">twang</span> does behind the scenes.</p>
 <h3>Sampling Weights</h3>
@@ -183,7 +183,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     
 <dl>
-<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the <code>twang</code> model fit. For binary treatments, the output of the call to <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>twang::ps</a></code>. For multinomial treatments, a list of <code>ps</code> fit objects. For continuous treatments, the output of the call to <code><a href='https://rdrr.io/pkg/WeightIt/man/ps.cont.html'>ps.cont</a></code>.</p></dd>
+<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the <code>twang</code> model fit. For binary treatments, the output of the call to <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>twang::ps</a></code>. For multinomial treatments, a list of <code>ps</code> fit objects. For continuous treatments, the output of the call to <code><a href='ps.cont.html'>ps.cont</a></code>.</p></dd>
 
 </dl>
 
@@ -197,7 +197,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <p>Zhu, Y., Coffman, D. L., &amp; Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1).</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code>, <code><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></code>, <code><a href='https://rdrr.io/pkg/WeightIt/man/method-gbm.html'>method_gbm</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code>, <code><a href='method_gbm.html'>method_gbm</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Examples take a while to run</span>
@@ -206,7 +206,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
-(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"twang"</span>, estimand = <span class='st'>"ATT"</span>,
                 stop.method = <span class='st'>"es.max"</span>))
@@ -214,7 +214,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)
 
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"twang"</span>, estimand = <span class='st'>"ATE"</span>,
                 stop.method = <span class='st'>"ks.mean"</span>))
@@ -222,7 +222,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)
 
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
-(<span class='kw'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"twang"</span>, use.kernel = <span class='fl'>TRUE</span>,
                 stop.method = <span class='st'>"p.max"</span>))

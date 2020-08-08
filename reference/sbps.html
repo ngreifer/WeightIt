@@ -132,7 +132,7 @@
     <p>Implements the subgroup balancing propensity score (SBPS), which is an algorithm that attempts to achieve balance in subgroups by sharing information from the overall sample and subgroups. (Dong, Zhang, Zeng, &amp; Li, 2020; DZZL). Each subgroup can use either weights estimated using the whole sample, weights estimated using just that subgroup, or a combination of the two. The optimal combination is chosen as that which minimizes an imbalance criterion that includes subgroup as well as overall balance.</p>
     </div>
 
-    <pre class="usage"><span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/sbps.html'>sbps</a></span>(<span class='kw'>obj</span>, obj2 = <span class='kw'>NULL</span>,
+    <pre class="usage"><span class='fu'>sbps</span>(<span class='kw'>obj</span>, obj2 = <span class='kw'>NULL</span>,
      moderator = <span class='kw'>NULL</span>,
      formula = <span class='kw'>NULL</span>,
      data = <span class='kw'>NULL</span>,
@@ -158,11 +158,11 @@
     </tr>
     <tr>
       <th>obj2</th>
-      <td><p>a <code>weightit</code> object containing weights estimated in the subgroups. Typically this has been estimated by including <code>by</code> in the call to <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit()</a></code>. Either <code>obj2</code> or <code>moderator</code> must be specified.</p></td>
+      <td><p>a <code>weightit</code> object containing weights estimated in the subgroups. Typically this has been estimated by including <code>by</code> in the call to <code><a href='weightit.html'>weightit()</a></code>. Either <code>obj2</code> or <code>moderator</code> must be specified.</p></td>
     </tr>
     <tr>
       <th>moderator</th>
-      <td><p>optional; a string containing the name of the variable in <code>data</code> for which weighting is to be done within subgroups or a one-sided formula with the subgrouping variable on the right-hand side. This argument is analogous to the <code>by</code> argument in <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit()</a></code>, and in fact it is passed on to <code>by</code>. Either <code>obj2</code> or <code>moderator</code> must be specified.</p></td>
+      <td><p>optional; a string containing the name of the variable in <code>data</code> for which weighting is to be done within subgroups or a one-sided formula with the subgrouping variable on the right-hand side. This argument is analogous to the <code>by</code> argument in <code><a href='weightit.html'>weightit()</a></code>, and in fact it is passed on to <code>by</code>. Either <code>obj2</code> or <code>moderator</code> must be specified.</p></td>
     </tr>
     <tr>
       <th>formula</th>
@@ -206,10 +206,10 @@
 
     <p>The SBPS relies on two sets of weights: one estimated in the overall sample and one estimated within each subgroup. The algorithm decides whether each subgroup should use the weights estimated in the overall sample or those estimated in the subgroup. There are 2^R permutations of overall and subgroup weights, where R is the number of subgroups. The optimal permutation is chosen as that which minimizes a balance criterion as described in DZZL. The balance criterion used here is, for binary and multinomial treatments, the sum of the squared standardized mean differences within subgroups and overall, which are computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>, and for continuous treatments, the sum of the squared correlations between each covariate and treatment within subgroups and overall, which are computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_corr()</a></code> in <span class="pkg">cobalt</span>.</p>
 <p>The smooth version estimates weights that determine the relative contribution of the overall and subgroup propensity scores to a weighted average propensity score for each subgroup. If P_O are the propensity scores estimated in the overall sample and P_S are the propensity scores estimated in each subgroup, the smooth SBPS finds R coefficients C so that for each subgroup, the ultimate propensity score is \(C*P_S + (1-C)*P_O\), and weights are computed from this propensity score. The coefficients are estimated using <code><a href='https://rdrr.io/r/stats/optim.html'>optim</a></code> with <code>method = "L-BFGS-B"</code>. When C is estimated to be 1 or 0 for each subgroup, the smooth SBPS coincides with the standard SBPS.</p>
-<p>If <code>obj2</code> is not specified and <code>moderator</code> is, <code><a href='https://rdrr.io/pkg/WeightIt/man/sbps.html'>sbps()</a></code> will attempt to refit the model specified in <code>obj</code> with the <code>moderator</code> in the <code>by</code> argument. This relies on the environment in which <code>obj</code> was created to be intact and can take some time if <code>obj</code> was hard to fit. It's safer to estimate <code>obj</code> and <code>obj2</code> (the latter simply by including the moderator in the <code>by</code> argument) and supply these to <code>SBPS</code>.</p>
+<p>If <code>obj2</code> is not specified and <code>moderator</code> is, <code>sbps()</code> will attempt to refit the model specified in <code>obj</code> with the <code>moderator</code> in the <code>by</code> argument. This relies on the environment in which <code>obj</code> was created to be intact and can take some time if <code>obj</code> was hard to fit. It's safer to estimate <code>obj</code> and <code>obj2</code> (the latter simply by including the moderator in the <code>by</code> argument) and supply these to <code>SBPS</code>.</p>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
-    <p>A <code>weightit.sbps</code> object, which inherits from <code>weightit</code>. This contains all the information in <code>obj</code> with the weights, propensity scores, call, and possibly covariates updated from <code><a href='https://rdrr.io/pkg/WeightIt/man/sbps.html'>sbps()</a></code>. In addition, the <code>prop.subgroup</code> component contains the values of the coefficients C for the subgroups (which are either 0 or 1 for the standard SBPS), and the <code>moderator</code> component contains a data.frame with the moderator.</p>
+    <p>A <code>weightit.sbps</code> object, which inherits from <code>weightit</code>. This contains all the information in <code>obj</code> with the weights, propensity scores, call, and possibly covariates updated from <code>sbps()</code>. In addition, the <code>prop.subgroup</code> component contains the values of the coefficients C for the subgroups (which are either 0 or 1 for the standard SBPS), and the <code>moderator</code> component contains a data.frame with the moderator.</p>
 <p>This object has its own summary methods and is compatible with <span class="pkg">cobalt</span> functions. The <code>cluster</code> argument should be used with <span class="pkg">cobalt</span> functions to accurately reflect the performance of the weights in balancing the subgroups.</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
@@ -219,14 +219,14 @@
     <p>Noah Greifer</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code>, <code><a href='https://rdrr.io/pkg/WeightIt/man/summary.weightit.html'>summary.weightit</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='summary.weightit.html'>summary.weightit</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups within races</span>
-(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                 <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
@@ -235,7 +235,7 @@
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74</div><div class='input'>
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                 <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>,
                 by = <span class='st'>"race"</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
@@ -245,7 +245,7 @@
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74
-#&gt;  - by: race</div><div class='input'><span class='kw'>S</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/sbps.html'>sbps</a></span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>)
+#&gt;  - by: race</div><div class='input'><span class='kw'>S</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>S</span>)</div><div class='output co'>#&gt; A weightit.sbps object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
@@ -257,77 +257,77 @@
 #&gt; 
 #&gt;  - Overall vs. subgroup proportion contribution:
 #&gt;          race = black race = hispan race = white
-#&gt; Overall             0             0            0
-#&gt; Subgroup            1             1            1
+#&gt; Overall             0             1            1
+#&gt; Subgroup            1             0            0
 #&gt; 
 #&gt;  - - - - - - - Subgroup race = black - - - - - - -
 #&gt; - Weight ranges:
-#&gt;           Min                                  Max
-#&gt; treated 1.000      ||                       1.0000
-#&gt; control 0.466 |---------------------------| 3.5903
+#&gt;            Min                                  Max
+#&gt; treated 1.0000             ||                1.0000
+#&gt; control 0.2785 |---------------------------| 2.1459
 #&gt; 
 #&gt; - Units with 5 greatest weights by group:
-#&gt;                                           
-#&gt;               1      2     4      5      6
-#&gt;  treated      1      1     1      1      1
-#&gt;             221    228   188    185    174
-#&gt;  control 2.9494 2.9494 3.006 3.0637 3.5903
+#&gt;                                          
+#&gt;              1      3      4     5      7
+#&gt;  treated     1      1      1     1      1
+#&gt;            241    215    203   164    163
+#&gt;  control 1.487 1.5385 1.5906 1.645 2.1459
 #&gt; 
 #&gt;          Ratio Coef of Var
 #&gt; treated 1.0000      0.0000
-#&gt; control 7.7042      0.4250
-#&gt; overall 7.7042      0.4616
+#&gt; control 7.7042      0.5447
+#&gt; overall 7.7042      0.3015
 #&gt; 
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted  87.000     156
-#&gt; Weighted    73.818     156
+#&gt; Weighted    67.273     156
 #&gt; 
 #&gt;  - - - - - - - Subgroup race = hispan - - - - - - -
 #&gt; - Weight ranges:
-#&gt;            Min                                    Max
-#&gt; treated 1.0000                              || 1.0000
-#&gt; control 0.0209   |------------|                0.5046
+#&gt;            Min                                   Max
+#&gt; treated 1.0000 ||                             1.0000
+#&gt; control 1.9579  |--------------------------| 26.1478
 #&gt; 
 #&gt; - Units with 5 greatest weights by group:
-#&gt;                                            
-#&gt;               1      2      3      4      5
-#&gt;  treated      1      1      1      1      1
-#&gt;              56     54     49     48     47
-#&gt;  control 0.4117 0.4767 0.4835 0.4968 0.5046
+#&gt;                                                 
+#&gt;                1       2       3       5       6
+#&gt;  treated       1       1       1       1       1
+#&gt;               72      44      26      22      13
+#&gt;  control 21.7043 22.0485 22.7832 24.9926 26.1478
 #&gt; 
 #&gt;           Ratio Coef of Var
 #&gt; treated  1.0000      0.0000
-#&gt; control 24.1741      0.7143
-#&gt; overall 47.9120      1.0352
+#&gt; control 13.3553      0.7465
+#&gt; overall 26.1478      0.8770
 #&gt; 
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted  61.000      11
-#&gt; Weighted    40.616      11
+#&gt; Weighted    39.404      11
 #&gt; 
 #&gt;  - - - - - - - Subgroup race = white - - - - - - -
 #&gt; - Weight ranges:
 #&gt;            Min                                   Max
-#&gt; treated 1.0000                              || 1.000
-#&gt; control 0.0002   |---------|                   0.385
+#&gt; treated 1.0000 ||                             1.0000
+#&gt; control 4.2599  |--------------------------| 94.9526
 #&gt; 
 #&gt; - Units with 5 greatest weights by group:
-#&gt;                                           
-#&gt;               1      3      4      5     6
-#&gt;  treated      1      1      1      1     1
-#&gt;             289    287    285    280   267
-#&gt;  control 0.2393 0.2699 0.2937 0.2956 0.385
+#&gt;                                               
+#&gt;                2       3      5      6       7
+#&gt;  treated       1       1      1      1       1
+#&gt;              103      85     57     32      20
+#&gt;  control 73.9815 76.0436 78.072 92.148 94.9526
 #&gt; 
-#&gt;            Ratio Coef of Var
-#&gt; treated    1.000      0.0000
-#&gt; control 1825.569      1.1538
-#&gt; overall 4742.159      1.9499
+#&gt;           Ratio Coef of Var
+#&gt; treated  1.0000      0.0000
+#&gt; control 22.2899      0.6785
+#&gt; overall 94.9526      0.7389
 #&gt; 
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
-#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S</span>, cluster = <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   192.631      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S</span>, cluster = <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  sbps(obj = W1, obj2 = W2)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
@@ -335,53 +335,53 @@
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: black</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.0016
-#&gt; age         Contin.   0.0126
-#&gt; educ        Contin.  -0.0332
-#&gt; married      Binary   0.0030
-#&gt; nodegree     Binary   0.0062
-#&gt; re74        Contin.  -0.0826
+#&gt; prop.score Distance  -1.1239
+#&gt; age         Contin.  -0.0728
+#&gt; educ        Contin.   0.3000
+#&gt; married      Binary  -0.2581
+#&gt; nodegree     Binary   0.1586
+#&gt; re74        Contin.  -0.3304
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted  87.000     156
-#&gt; Adjusted    73.818     156
+#&gt; Adjusted    67.273     156
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: hispan</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance  -0.2678
-#&gt; age         Contin.   0.1196
-#&gt; educ        Contin.  -0.0756
-#&gt; married      Binary   0.0217
-#&gt; nodegree     Binary   0.0018
-#&gt; re74        Contin.   0.0114
+#&gt; prop.score Distance  -1.2898
+#&gt; age         Contin.  -1.5500
+#&gt; educ        Contin.   1.6786
+#&gt; married      Binary  -0.4940
+#&gt; nodegree     Binary   0.0323
+#&gt; re74        Contin.  -0.9592
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted  61.000      11
-#&gt; Adjusted    40.616      11
+#&gt; Adjusted    39.404      11
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: white</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.0652
-#&gt; age         Contin.   0.0191
-#&gt; educ        Contin.  -0.0185
-#&gt; married      Binary  -0.0015
-#&gt; nodegree     Binary   0.0039
-#&gt; re74        Contin.  -0.0117
+#&gt; prop.score Distance  -1.5224
+#&gt; age         Contin.  -0.6946
+#&gt; educ        Contin.   0.4179
+#&gt; married      Binary  -0.6446
+#&gt; nodegree     Binary   0.0037
+#&gt; re74        Contin.  -3.2527
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted 281.000      18
-#&gt; Adjusted   120.777      18
+#&gt; Adjusted   192.631      18
 #&gt;  - - - - - - - - - - - - - - 
 #&gt; </div><div class='input'>
 <span class='co'>#Could also have run</span>
 <span class='co'>#  sbps(W1, moderator = "race")</span>
 
-<span class='kw'>S_</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/sbps.html'>sbps</a></span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>, smooth = <span class='fl'>TRUE</span>)
+<span class='kw'>S_</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>, smooth = <span class='fl'>TRUE</span>)
 <span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>S_</span>)</div><div class='output co'>#&gt; A weightit.sbps object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
@@ -393,77 +393,77 @@
 #&gt; 
 #&gt;  - Overall vs. subgroup proportion contribution:
 #&gt;          race = black race = hispan race = white
-#&gt; Overall          0.17          0.25            0
-#&gt; Subgroup         0.83          0.75            1
+#&gt; Overall             0             1            1
+#&gt; Subgroup            1             0            0
 #&gt; 
 #&gt;  - - - - - - - Subgroup race = black - - - - - - -
 #&gt; - Weight ranges:
 #&gt;            Min                                  Max
-#&gt; treated 1.0000      ||                       1.0000
-#&gt; control 0.4654 |---------------------------| 3.5703
+#&gt; treated 1.0000             ||                1.0000
+#&gt; control 0.2785 |---------------------------| 2.1459
 #&gt; 
 #&gt; - Units with 5 greatest weights by group:
-#&gt;                                            
-#&gt;               2      4      5      6      7
-#&gt;  treated      1      1      1      1      1
-#&gt;             221    228    188    185    174
-#&gt;  control 2.9787 2.9787 3.0338 3.0899 3.5703
+#&gt;                                          
+#&gt;              1      3      4     5      7
+#&gt;  treated     1      1      1     1      1
+#&gt;            241    215    203   164    163
+#&gt;  control 1.487 1.5385 1.5906 1.645 2.1459
 #&gt; 
 #&gt;          Ratio Coef of Var
 #&gt; treated 1.0000      0.0000
-#&gt; control 7.6708      0.4264
-#&gt; overall 7.6708      0.4625
+#&gt; control 7.7042      0.5447
+#&gt; overall 7.7042      0.3015
 #&gt; 
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted  87.000     156
-#&gt; Weighted    73.744     156
+#&gt; Weighted    67.273     156
 #&gt; 
 #&gt;  - - - - - - - Subgroup race = hispan - - - - - - -
 #&gt; - Weight ranges:
-#&gt;            Min                                    Max
-#&gt; treated 1.0000                              || 1.0000
-#&gt; control 0.0254   |-----------|                 0.4743
+#&gt;            Min                                   Max
+#&gt; treated 1.0000 ||                             1.0000
+#&gt; control 1.9579  |--------------------------| 26.1478
 #&gt; 
 #&gt; - Units with 5 greatest weights by group:
-#&gt;                                            
-#&gt;               1      2      4      5      7
-#&gt;  treated      1      1      1      1      1
-#&gt;              56     54     48     47     28
-#&gt;  control 0.3908 0.4496 0.4557 0.4704 0.4743
+#&gt;                                                 
+#&gt;                1       2       3       5       6
+#&gt;  treated       1       1       1       1       1
+#&gt;               72      44      26      22      13
+#&gt;  control 21.7043 22.0485 22.7832 24.9926 26.1478
 #&gt; 
 #&gt;           Ratio Coef of Var
 #&gt; treated  1.0000      0.0000
-#&gt; control 18.6516      0.6795
-#&gt; overall 39.3245      1.0314
+#&gt; control 13.3553      0.7465
+#&gt; overall 26.1478      0.8770
 #&gt; 
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
-#&gt; Unweighted   61.00      11
-#&gt; Weighted     41.95      11
+#&gt; Unweighted  61.000      11
+#&gt; Weighted    39.404      11
 #&gt; 
 #&gt;  - - - - - - - Subgroup race = white - - - - - - -
 #&gt; - Weight ranges:
 #&gt;            Min                                   Max
-#&gt; treated 1.0000                              || 1.000
-#&gt; control 0.0002   |---------|                   0.385
+#&gt; treated 1.0000 ||                             1.0000
+#&gt; control 4.2599  |--------------------------| 94.9526
 #&gt; 
 #&gt; - Units with 5 greatest weights by group:
-#&gt;                                           
-#&gt;               1      3      4      5     6
-#&gt;  treated      1      1      1      1     1
-#&gt;             289    287    285    280   267
-#&gt;  control 0.2393 0.2699 0.2937 0.2956 0.385
+#&gt;                                               
+#&gt;                2       3      5      6       7
+#&gt;  treated       1       1      1      1       1
+#&gt;              103      85     57     32      20
+#&gt;  control 73.9815 76.0436 78.072 92.148 94.9526
 #&gt; 
-#&gt;            Ratio Coef of Var
-#&gt; treated    1.000      0.0000
-#&gt; control 1825.569      1.1538
-#&gt; overall 4742.159      1.9499
+#&gt;           Ratio Coef of Var
+#&gt; treated  1.0000      0.0000
+#&gt; control 22.2899      0.6785
+#&gt; overall 94.9526      0.7389
 #&gt; 
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
-#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S_</span>, cluster = <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   192.631      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S_</span>, cluster = <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  sbps(obj = W1, obj2 = W2, smooth = TRUE)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
@@ -471,47 +471,47 @@
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: black</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.0019
-#&gt; age         Contin.   0.0388
-#&gt; educ        Contin.  -0.0305
-#&gt; married      Binary   0.0096
-#&gt; nodegree     Binary   0.0086
-#&gt; re74        Contin.  -0.0561
+#&gt; prop.score Distance  -1.1239
+#&gt; age         Contin.  -0.0728
+#&gt; educ        Contin.   0.3000
+#&gt; married      Binary  -0.2581
+#&gt; nodegree     Binary   0.1586
+#&gt; re74        Contin.  -0.3304
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted  87.000     156
-#&gt; Adjusted    73.744     156
+#&gt; Adjusted    67.273     156
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: hispan</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance  -0.1909
-#&gt; age         Contin.   0.0167
-#&gt; educ        Contin.  -0.0654
-#&gt; married      Binary   0.0314
-#&gt; nodegree     Binary   0.0084
-#&gt; re74        Contin.  -0.0175
+#&gt; prop.score Distance  -1.2898
+#&gt; age         Contin.  -1.5500
+#&gt; educ        Contin.   1.6786
+#&gt; married      Binary  -0.4940
+#&gt; nodegree     Binary   0.0323
+#&gt; re74        Contin.  -0.9592
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted   61.00      11
-#&gt; Adjusted     41.95      11
+#&gt; Unadjusted  61.000      11
+#&gt; Adjusted    39.404      11
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: white</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.0652
-#&gt; age         Contin.   0.0191
-#&gt; educ        Contin.  -0.0185
-#&gt; married      Binary  -0.0015
-#&gt; nodegree     Binary   0.0039
-#&gt; re74        Contin.  -0.0117
+#&gt; prop.score Distance  -1.5224
+#&gt; age         Contin.  -0.6946
+#&gt; educ        Contin.   0.4179
+#&gt; married      Binary  -0.6446
+#&gt; nodegree     Binary   0.0037
+#&gt; re74        Contin.  -3.2527
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted 281.000      18
-#&gt; Adjusted   120.777      18
+#&gt; Adjusted   192.631      18
 #&gt;  - - - - - - - - - - - - - - 
 #&gt; </div><div class='input'></div></span></pre>
   </div>

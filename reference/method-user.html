@@ -153,7 +153,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <h3>Point Treatments</h3>
 <p>The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:</p><ul>
 <li><p><code>treat</code>: a vector of treatment status for each unit. This comes directly from the left hand side of the formula passed to <code>weightit</code> and so will have it's type (e.g., numeric, factor, etc.), which may need to be converted.</p></li>
-<li><p><code>covs</code>: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to <code>weightit</code>. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use <code><a href='https://rdrr.io/pkg/WeightIt/man/make_full_rank.html'>make_full_rank</a></code>, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.</p></li>
+<li><p><code>covs</code>: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to <code>weightit</code>. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use <code><a href='make_full_rank.html'>make_full_rank</a></code>, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.</p></li>
 <li><p><code>s.weights</code>: a numeric vector of sampling weights, one for each unit.</p></li>
 <li><p><code>ps</code>: a numeric vector of propensity scores.</p></li>
 <li><p><code>subset</code>: a logical vector the same length as <code>treat</code> that is <code>TRUE</code> for units to be included in the estimation and <code>FALSE</code> otherwise. This is used to subset the input objects when <code>exact</code> is used. <code>treat</code>, <code>covs</code>, <code>s.weights</code>, and <code>ps</code>, if supplied, will already have been subsetted by <code>subset</code>.</p></li>
@@ -174,7 +174,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code>, <code><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
@@ -183,18 +183,18 @@ Longitudinal treatments can be handled either by running the fitting function fo
 
 <span class='co'>#A user-defined version of method = "ps"</span>
 <span class='kw'>my.ps</span> <span class='op'>&lt;-</span> <span class='fu'>function</span>(<span class='kw'>treat</span>, <span class='kw'>covs</span>, <span class='kw'>estimand</span>, <span class='kw'>focal</span> = <span class='kw'>NULL</span>) {
-  <span class='kw'>covs</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/make_full_rank.html'>make_full_rank</a></span>(<span class='kw'>covs</span>)
+  <span class='kw'>covs</span> <span class='op'>&lt;-</span> <span class='fu'><a href='make_full_rank.html'>make_full_rank</a></span>(<span class='kw'>covs</span>)
   <span class='kw'>d</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>treat</span>, <span class='kw'>covs</span>)
   <span class='kw'>f</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/formula.html'>formula</a></span>(<span class='kw'>d</span>)
   <span class='kw'>ps</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/glm.html'>glm</a></span>(<span class='kw'>f</span>, data = <span class='kw'>d</span>, family = <span class='st'>"binomial"</span>)<span class='op'>$</span><span class='kw'>fitted</span>
-  <span class='kw'>w</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/get_w_from_ps.html'>get_w_from_ps</a></span>(<span class='kw'>ps</span>, treat = <span class='kw'>treat</span>, estimand = <span class='kw'>estimand</span>,
+  <span class='kw'>w</span> <span class='op'>&lt;-</span> <span class='fu'><a href='get_w_from_ps.html'>get_w_from_ps</a></span>(<span class='kw'>ps</span>, treat = <span class='kw'>treat</span>, estimand = <span class='kw'>estimand</span>,
                      focal = <span class='kw'>focal</span>)
 
   <span class='fu'><a href='https://rdrr.io/r/base/function.html'>return</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(w = <span class='kw'>w</span>, ps = <span class='kw'>ps</span>))
 }
 
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
-(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='kw'>my.ps</span>, estimand = <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "my.ps" (a user-defined method)
@@ -220,15 +220,15 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000   0.000       0
+#&gt; treated       0.000 0.000  -0.000       0
 #&gt; control       0.823 0.701  -0.515       0
 #&gt; overall       0.657 0.604  -0.257       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 429.000     185
-#&gt; Weighted   255.989     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Unweighted  429.       185
+#&gt; Weighted    255.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = my.ps, estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
@@ -250,7 +250,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; <span class='message'>Attaching package: ‘survey’</span></div><div class='output co'>#&gt; <span class='message'>The following object is masked from ‘package:graphics’:</span>
 #&gt; <span class='message'></span>
 #&gt; <span class='message'>    dotchart</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: xtable</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: lattice</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: latticeExtra</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"iptwExWide"</span>, package = <span class='st'>"twang"</span>)
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightitMSM.html'>weightitMSM</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
                         <span class='kw'>tx2</span> <span class='op'>~</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use1</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
                         <span class='kw'>tx3</span> <span class='op'>~</span> <span class='kw'>tx2</span> <span class='op'>+</span> <span class='kw'>use2</span> <span class='op'>+</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use1</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>),
                    data = <span class='kw'>iptwExWide</span>,
@@ -292,8 +292,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted  294.00 706.000
-#&gt; Weighted    185.18 573.598
+#&gt; Unweighted  294.     706. 
+#&gt; Weighted    185.18   573.6
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 2 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -319,8 +319,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 492.000 508.000
-#&gt; Weighted   318.903 264.487
+#&gt; Unweighted   492.   508.  
+#&gt; Weighted     318.9  264.49
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 3 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -346,8 +346,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 415.000 585.000
-#&gt; Weighted   235.672 366.399
+#&gt; Unweighted  415.     585. 
+#&gt; Weighted    235.67   366.4
 #&gt; </div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0), data = iptwExWide, method = my.ps)
 #&gt; 
@@ -399,7 +399,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
     <span class='fu'><a href='https://rdrr.io/r/base/function.html'>return</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(w = <span class='kw'>w</span>))
 }
 
-(<span class='kw'>Wk</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>Wk</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                 <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='kw'>kbal.fun</span>, estimand = <span class='st'>"ATT"</span>,
                 kbal.method = <span class='st'>"ebal"</span>))

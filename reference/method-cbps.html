@@ -147,7 +147,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights from covariate balancing propensity scores by setting <code>method = "cbps"</code> in the call to <code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code> or <code><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
+    <p>This page explains the details of estimating weights from covariate balancing propensity scores by setting <code>method = "cbps"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
 <p>In general, this method relies on estimating propensity scores using generalized method of moments and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS</a></code> from the <span class="pkg">CBPS</span> package.</p>
 <h3>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the propensity scores and weights using <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS</a></code>. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the <code>CBPS</code> fit object. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., <code>levels(factor(treat))[2]</code>; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.</p>
@@ -204,7 +204,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></code>, <code><a href='https://rdrr.io/pkg/WeightIt/man/weightitMSM.html'>weightitMSM</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p>When sampling weights are used with <code>CBPS</code>, the estimated weights already incorporate the sampling weights. When <code>weightit</code> is used with <code>method = "cbps"</code>, the estimated weights are separated from the sampling weights, as they are with all other methods.</p>
@@ -214,7 +214,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
-(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"cbps"</span>, estimand = <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "cbps" (covariate balancing propensity score weighting)
@@ -240,15 +240,15 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000    0.00       0
+#&gt; treated       0.000 0.000   -0.00       0
 #&gt; control       0.839 0.707   -0.50       0
 #&gt; overall       0.663 0.606   -0.25       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 429.000     185
-#&gt; Weighted   251.985     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Unweighted  429.       185
+#&gt; Weighted    251.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "cbps", estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
@@ -266,7 +266,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; Adjusted   251.985     185</div><div class='input'>
 <span class='co'>if</span> (<span class='fl'>FALSE</span>) {
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"cbps"</span>, estimand = <span class='st'>"ATE"</span>))
 <span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W2</span>)
@@ -274,7 +274,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 }
 
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
-(<span class='kw'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/WeightIt/man/weightit.html'>weightit</a></span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+(<span class='kw'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
                 method = <span class='st'>"cbps"</span>, over = <span class='fl'>FALSE</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "cbps" (covariate balancing propensity score weighting)
@@ -301,7 +301,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             Total
-#&gt; Unweighted 614.00
+#&gt; Unweighted 614.  
 #&gt; Weighted   264.09</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W3</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, data = lalonde, method = "cbps", over = FALSE)
 #&gt; 
