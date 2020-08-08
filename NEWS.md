@@ -9,6 +9,8 @@ WeightIt News and Updates
 
 * Effective sample sizes now print only up to two digits (believe me, you don't need three) and print more cleanly with whole numbers.
 
+* Fixed a bug when using `by`, thanks to @frankpopham. (#11)
+
 # WeightIt 0.10.0
 
 * Added support for energy balancing with `method = "energy"`. This method minimizes the energy distance between samples, which is a multivariate distance measure. This method uses code written specifically for `WeightIt` (i.e., it does not call a package specifically designed for energy balancing) using the `osqp` package for the optimization (same as `optweight`). See Huling & Mak (2020) for details on this method. Also included is an option to require exact balance on moments of the covariates while minimizing the energy distance. The method works for binary and multinomial treatments with the ATE, ATT, or ATC. Sampling weights are supported. Because the method requires the calculation and manipulation of a distance matrix for all units, it can be slow and/or memory intensive for large datasets.
