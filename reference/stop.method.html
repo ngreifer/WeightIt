@@ -49,7 +49,7 @@ Binary Treatments
 &quot;ks.mean&quot;, &quot;ks.max&quot;, &quot;ks.rms&quot;The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic among the covariates, respectively. The KS statistic is computed using col_w_ks() in cobalt.
 &quot;mahalanobis&quot;The sample Mahalanobis distace in the weighted sample. This is similar to &quot;es.rms&quot; except that variables that are redundant with each other will be downweighted. The sample Mahalanobis distance is computed using the (generalized) inverse of the unweighted covariance matrix computed in the focal group when the estimand is the ATT or ATC and using the (generalized) inverse of the average of the unweighted covariance matrices computed within each treatment group (analogous the the ASMD, which uses the average of the group variances in its denominator).
 &quot;energy.dist&quot;The energy distance between the weighted samples, as described by Huling &amp;amp; Mak (2020). The &quot;improved&quot; energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using method = &quot;energy&quot;.)
-&quot;r2&quot;The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Fraklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseduo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp;amp; Zavoina pseudo-R2.
+&quot;r2&quot;The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseduo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp;amp; Zavoina pseudo-R2.
 
 
 
@@ -169,7 +169,7 @@ Continuous Treatments
 <dt><code>"ks.mean"</code>, <code>"ks.max"</code>, <code>"ks.rms"</code></dt><dd><p>The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic among the covariates, respectively. The KS statistic is computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_ks()</a></code> in <span class="pkg">cobalt</span>.</p></dd>
 <dt><code>"mahalanobis"</code></dt><dd><p>The sample Mahalanobis distace in the weighted sample. This is similar to <code>"es.rms"</code> except that variables that are redundant with each other will be downweighted. The sample Mahalanobis distance is computed using the (generalized) inverse of the unweighted covariance matrix computed in the focal group when the estimand is the ATT or ATC and using the (generalized) inverse of the average of the unweighted covariance matrices computed within each treatment group (analogous the the ASMD, which uses the average of the group variances in its denominator).</p></dd>
 <dt><code>"energy.dist"</code></dt><dd><p>The energy distance between the weighted samples, as described by Huling &amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using <code><a href='method_energy.html'>method = "energy"</a></code>.)</p></dd>
-<dt><code>"r2"</code></dt><dd><p>The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Fraklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseduo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp; Zavoina pseudo-R2.</p></dd>
+<dt><code>"r2"</code></dt><dd><p>The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseduo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp; Zavoina pseudo-R2.</p></dd>
 
 </dl>
 
@@ -201,12 +201,12 @@ Continuous Treatments
     <p>Ali, M. S., Groenwold, R. H. H., Pestman, W. R., Belitser, S. V., Roes, K. C. B., Hoes, A. W., de Boer, A., &amp; Klungel, O. H. (2014). Propensity score balance measures in pharmacoepidemiology: A simulation study. Pharmacoepidemiology and Drug Safety, 23(8), 802–811. doi: <a href='https://doi.org/10.1002/pds.3574'>10.1002/pds.3574</a></p>
 <p>Belitser, S. V., Martens, E. P., Pestman, W. R., Groenwold, R. H. H., de Boer, A., &amp; Klungel, O. H. (2011). Measuring balance and model selection in propensity score methods. Pharmacoepidemiology and Drug Safety, 20(11), 1115–1129. doi: <a href='https://doi.org/10.1002/pds.2188'>10.1002/pds.2188</a></p>
 <p>Franklin, J. M., Rassen, J. A., Ackermann, D., Bartels, D. B., &amp; Schneeweiss, S. (2014). Metrics for covariate balance in cohort studies of causal effects. Statistics in Medicine, 33(10), 1685–1699. doi: <a href='https://doi.org/10.1002/sim.6058'>10.1002/sim.6058</a></p>
-<p>Huling, J. D., &amp; Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. http://arxiv.org/abs/2004.13962</p>
+<p>Huling, J. D., &amp; Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. <a href='http://arxiv.org/abs/2004.13962'>http://arxiv.org/abs/2004.13962</a></p>
 <p>Griffin, B. A., McCaffrey, D. F., Almirall, D., Burgette, L. F., &amp; Setodji, C. M. (2017). Chasing Balance and Other Recommendations for Improving Nonparametric Propensity Score Models. Journal of Causal Inference, 5(2). doi: <a href='https://doi.org/10.1515/jci-2015-0026'>10.1515/jci-2015-0026</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='method_gbm.html'>method_gbm</a></code>, <code><a href='method_super.html'>method_super</a></code>
-<code>balance summary</code> in <span class="pkg">cobalt</span> for details of some calculations.</p></div>
+    <div class='dont-index'><p><code><a href='method_gbm.html'>method_gbm</a></code>, <code><a href='method_super.html'>method_super</a></code>, which use these balance criteria.</p>
+<p><code>balance summary</code> in <span class="pkg">cobalt</span> for details of some calculations.</p></div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

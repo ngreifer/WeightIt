@@ -41,13 +41,13 @@
 
 <meta property="og:title" content="Propensity Score Weighting Using Generalized Boosted Models — method_gbm" />
 <meta property="og:description" content="This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting method = &quot;gbm&quot; in the call to weightit or weightitMSM. This method can be used with binary, multinomial, and continuous treatments.
-In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of a tuning parameter (the number of trees). This method mimics the functionality of functions in the twang package, but has improved performance and more flexible options. See Note for more details.
+In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). This method mimics the functionality of functions in the twang package, but has improved performance and more flexible options. See Note for more details.
 Binary Treatments
-For binary treatments, this method estimates the propensity scores using gbm.fit and then selects the optimal tree using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps for details.
+For binary treatments, this method estimates the propensity scores using gbm.fit and then selects the optimal tuning parameter values using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps for details.
 Multinomial Treatments
-For multinomial treatments, this method estimates the propensity scores using gbm.fit with distribution = &quot;multinomial&quot; and then selects the optimal tree using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps for details.
+For multinomial treatments, this method estimates the propensity scores using gbm.fit with distribution = &quot;multinomial&quot; and then selects the optimal tuning parameter values using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps for details.
 Continuous Treatments
-For continuous treatments, this method estimates the generalized propensity score using gbm.fit and then selects the optimal tree using the method specified in the stop.method argument.
+For continuous treatments, this method estimates the generalized propensity score using gbm.fit and then selects the optimal tuning parameter values using the method specified in the stop.method argument.
 Longitudinal Treatments
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
 Sampling Weights
@@ -149,13 +149,13 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <div class="ref-description">
     <p>This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting <code>method = "gbm"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
-<p>In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of a tuning parameter (the number of trees). This method mimics the functionality of functions in the <span class="pkg">twang</span> package, but has improved performance and more flexible options. See Note for more details.</p>
+<p>In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). This method mimics the functionality of functions in the <span class="pkg">twang</span> package, but has improved performance and more flexible options. See Note for more details.</p>
 <h3>Binary Treatments</h3>
-<p>For binary treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/gbm/man/gbm.fit.html'>gbm.fit</a></code> and then selects the optimal tree using the method specified in the <code>stop.method</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> for details.</p>
+<p>For binary treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/gbm/man/gbm.fit.html'>gbm.fit</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>stop.method</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> for details.</p>
 <h3>Multinomial Treatments</h3>
-<p>For multinomial treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/gbm/man/gbm.fit.html'>gbm.fit</a></code> with <code>distribution = "multinomial"</code> and then selects the optimal tree using the method specified in the <code>stop.method</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> for details.</p>
+<p>For multinomial treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/gbm/man/gbm.fit.html'>gbm.fit</a></code> with <code>distribution = "multinomial"</code> and then selects the optimal tuning parameter values using the method specified in the <code>stop.method</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> for details.</p>
 <h3>Continuous Treatments</h3>
-<p>For continuous treatments, this method estimates the generalized propensity score using <code><a href='https://rdrr.io/pkg/gbm/man/gbm.fit.html'>gbm.fit</a></code> and then selects the optimal tree using the method specified in the <code>stop.method</code> argument.</p>
+<p>For continuous treatments, this method estimates the generalized propensity score using <code><a href='https://rdrr.io/pkg/gbm/man/gbm.fit.html'>gbm.fit</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>stop.method</code> argument.</p>
 <h3>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, the weights are the product of the weights estimated at each time point.</p>
 <h3>Sampling Weights</h3>
@@ -198,15 +198,15 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
 </dl>
 
-<p>For tunable arguments, multiple entries may be supplied, and <code>weightit</code> will choose the best value by optimizing the criterion specified in <code>stop.method</code>. See below for additional outputs that are included when arguments are supplied to be tuned.</p>
+<p>For tunable arguments, multiple entries may be supplied, and <code>weightit</code> will choose the best value by optimizing the criterion specified in <code>stop.method</code>. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.</p>
     <h2 class="hasAnchor" id="additional-outputs"><a class="anchor" href="#additional-outputs"></a>Additional Outputs</h2>
 
     
 <dl>
 <dt><code>info</code></dt><dd><p>A list with the following entries:
 <dl>
-<dt><code>best.tree</code></dt><dd><p>The number of trees at the optimum. If this is close to <code>n.trees</code>, <code>weightit</code> should be rerun with a larger value for <code>n.trees</code>, and <code>start.tree</code> can be set to just below <code>best.tree</code>. See example.</p></dd>
-<dt><code>tree.val</code></dt><dd><p>A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running <code><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></code> on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. See example.</p></dd></dl>
+<dt><code>best.tree</code></dt><dd><p>The number of trees at the optimum. If this is close to <code>n.trees</code>, <code>weightit</code> should be rerun with a larger value for <code>n.trees</code>, and <code>start.tree</code> can be set to just below <code>best.tree</code>. When other parameters are tuned, this is the best tree value in the best cimbination of tuned parameters. See example.</p></dd>
+<dt><code>tree.val</code></dt><dd><p>A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running <code><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></code> on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.</p></dd></dl>
 If any arguments are to be tuned (i.e., they have been supplied more than one value), the following two additional components are included in <code>info</code>:
 <dl>
 <dt><code>tune</code></dt><dd><p>A data frame with a column for each argument being tuned, the best value of the balance criterion for the given combination of parameters, and the number of trees at which the best value was reached.</p></dd>
@@ -229,8 +229,9 @@ If any arguments are to be tuned (i.e., they have been supplied more than one va
 <p>Zhu, Y., Coffman, D. L., &amp; Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1). doi: <a href='https://doi.org/10.1515/jci-2014-0022'>10.1515/jci-2014-0022</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code>, <code><a href='method_twang.html'>method_twang</a></code></p>
-<p><code><a href='stop.method.html'>stop.method</a></code> for allowable arguments to <code>stop.method</code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code>, <code><a href='method_twang.html'>method_twang</a></code> for an older version that calls functions in <span class="pkg">twang</span></p>
+<p><code><a href='stop.method.html'>stop.method</a></code> for allowable arguments to <code>stop.method</code></p>
+<p><code><a href='https://rdrr.io/pkg/gbm/man/gbm.fit.html'>gbm::gbm.fit</a></code> for the fitting function</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
@@ -328,7 +329,6 @@ If any arguments are to be tuned (i.e., they have been supplied more than one va
 <span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span>(<span class='kw'>W4b</span><span class='op'>$</span><span class='kw'>info</span><span class='op'>$</span><span class='kw'>tree.val</span>) <span class='co'>#increasing at right edge</span>
 
 <span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W4b</span>)
-}
 
 <span class='co'>#Tuning hyperparameters</span>
 (<span class='kw'>W5</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
@@ -336,38 +336,14 @@ If any arguments are to be tuned (i.e., they have been supplied more than one va
                 method = <span class='st'>"gbm"</span>, estimand = <span class='st'>"ATT"</span>,
                 stop.method = <span class='st'>"ks.max"</span>,
                 interaction.depth = <span class='fl'>2</span><span class='op'>:</span><span class='fl'>4</span>,
-                distribution = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"bernoulli"</span>, <span class='st'>"adaboost"</span>)))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
-#&gt;  - method: "gbm" (generalized boosted modeling)
-#&gt;  - number of obs.: 614
-#&gt;  - sampling weights: none
-#&gt;  - treatment: 2-category
-#&gt;  - estimand: ATT (focal: 1)
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'>
-<span class='kw'>W5</span><span class='op'>$</span><span class='kw'>info</span><span class='op'>$</span><span class='kw'>tune</span></div><div class='output co'>#&gt;   interaction.depth distribution best.ks.max best.tree
-#&gt; 1                 2    bernoulli  0.06632343      3403
-#&gt; 2                 3    bernoulli  0.06438980      1757
-#&gt; 3                 4    bernoulli  0.06961873      1226
-#&gt; 4                 2     adaboost  0.05912106      2100
-#&gt; 5                 3     adaboost  0.06358619      1242
-#&gt; 6                 4     adaboost  0.06060929       841</div><div class='input'>
-<span class='kw'>W5</span><span class='op'>$</span><span class='kw'>info</span><span class='op'>$</span><span class='kw'>best.tune</span> <span class='co'>#Best values of tuned parameters</span></div><div class='output co'>#&gt;   interaction.depth distribution best.ks.max best.tree
-#&gt; 4                 2     adaboost  0.05912106      2100</div><div class='input'>
-<span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W5</span>, stats = <span class='st'>"k"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "gbm", estimand = "ATT", stop.method = "ks.max", interaction.depth = 2:4, distribution = c("bernoulli", "adaboost"))
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
-#&gt;                Type KS.Adj
-#&gt; prop.score Distance 0.1686
-#&gt; age         Contin. 0.0588
-#&gt; educ        Contin. 0.0591
-#&gt; married      Binary 0.0167
-#&gt; nodegree     Binary 0.0537
-#&gt; re74        Contin. 0.0311
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;            Control Treated
-#&gt; Unadjusted 429.000     185
-#&gt; Adjusted    45.702     185</div></span></pre>
+                distribution = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"bernoulli"</span>, <span class='st'>"adaboost"</span>)))
+
+<span class='kw'>W5</span><span class='op'>$</span><span class='kw'>info</span><span class='op'>$</span><span class='kw'>tune</span>
+
+<span class='kw'>W5</span><span class='op'>$</span><span class='kw'>info</span><span class='op'>$</span><span class='kw'>best.tune</span> <span class='co'>#Best values of tuned parameters</span>
+
+<span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W5</span>, stats = <span class='st'>"k"</span>)
+}</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

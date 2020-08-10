@@ -215,9 +215,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
     <p>SuperLearner works by fitting several machine learning models to the treatment and covariates and then taking a weighted combination of the generated predicted values to use as the propensity scores, which are then used to construct weights. The machine learning models used are supplied using the <code>SL.library</code> argument; the more models are supplied, the higher the chance of correctly modeling the propensity score. The predicted values are combined using the method supplied in the <code>SL.method</code> argument (which is nonnegative least squares by default). A benefit of SuperLearner is that, asymptotically, it is guaranteed to perform as well as or better than the best-performing method included in the library. Using Balance SuperLearner by setting <code>SL.method = "method.balance"</code> works by selecting the combination of predicted values that minimizes an imbalance measure.</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
-    <p>- Binary treatments</p>
+    <p><strong>Binary treatments</strong></p>
 <p>Pirracchio, R., Petersen, M. L., &amp; van der Laan, M. (2015). Improving Propensity Score Estimators’ Robustness to Model Misspecification Using Super Learner. American Journal of Epidemiology, 181(2), 108–119. doi: <a href='https://doi.org/10.1093/aje/kwu253'>10.1093/aje/kwu253</a></p>
-<p>- Continuous treatments</p>
+<p><strong>Continuous treatments</strong></p>
 <p>Kreif, N., Grieve, R., Díaz, I., &amp; Harrison, D. (2015). Evaluation of the Effect of a Continuous Treatment: A Machine Learning Approach with an Application to Treatment for Traumatic Brain Injury. Health Economics, 24(9), 1213–1228. doi: <a href='https://doi.org/10.1002/hec.3189'>10.1002/hec.3189</a></p>
 <p>- Balance SuperLearner (<code>SL.method = "method.balance"</code>)</p>
 <p>Pirracchio, R., &amp; Carone, M. (2018). The Balance Super Learner: A robust adaptation of the Super Learner to improve estimation of the average treatment effect in the treated based on propensity score matching. Statistical Methods in Medical Research, 27(8), 2504–2518. doi: <a href='https://doi.org/10.1177/0962280216682055'>10.1177/0962280216682055</a></p>
@@ -250,43 +250,43 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;            Min                                  Max
-#&gt; treated 1.0000        ||                     1.0000
-#&gt; control 0.0092 |---------------------------| 4.0971
+#&gt; treated 1.0000      ||                       1.0000
+#&gt; control 0.0059 |---------------------------| 5.8129
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                            
-#&gt;               1      2      3      4      5
-#&gt;  treated      1      1      1      1      1
-#&gt;             589    411    409    296    269
-#&gt;  control 2.0844 2.1679 2.3173 2.7472 4.0971
+#&gt;                                           
+#&gt;               1     2      3      4      5
+#&gt;  treated      1     1      1      1      1
+#&gt;             589   411    409    296    269
+#&gt;  control 2.4388 2.528 2.7673 3.3921 5.8129
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
-#&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       0.974 0.720  -0.481       0
-#&gt; overall       0.729 0.599  -0.237       0
+#&gt;         Coef of Var  MAD Entropy # Zeros
+#&gt; treated       0.000 0.00  -0.000       0
+#&gt; control       1.130 0.74  -0.408       0
+#&gt; overall       0.803 0.61  -0.203       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
-#&gt; Weighted    220.33     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted    188.67     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "super", estimand = "ATT", SL.library = c("SL.glm", "SL.stepAIC", "SL.glm.interaction"))
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.1286
-#&gt; age         Contin.  -0.0647
-#&gt; educ        Contin.   0.0235
-#&gt; married      Binary  -0.0050
-#&gt; nodegree     Binary   0.0210
-#&gt; re74        Contin.  -0.0292
+#&gt; prop.score Distance   0.0535
+#&gt; age         Contin.  -0.1475
+#&gt; educ        Contin.   0.0161
+#&gt; married      Binary  -0.0049
+#&gt; nodegree     Binary   0.0115
+#&gt; re74        Contin.  -0.0247
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted 429.000     185
-#&gt; Adjusted   220.329     185</div><div class='input'>
+#&gt; Adjusted   188.673     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 (<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
@@ -303,46 +303,46 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;           Min                                   Max
-#&gt; black  1.4829 |-----------------|           13.4615
-#&gt; hispan 1.7211  |--------------------------| 19.3254
-#&gt; white  1.0821 |---|                          4.5160
+#&gt; black  1.3125 |-------------------|         14.0815
+#&gt; hispan 1.7509  |--------------------------| 19.0788
+#&gt; white  1.0815 |----|                         4.9344
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                                
-#&gt;             485     190     184     182     181
-#&gt;   black  7.2444  7.6113  9.3986 11.9632 13.4615
+#&gt;             485     244     184     182     181
+#&gt;   black  7.5917  7.7461 10.1133 11.6337 14.0815
 #&gt;             392     371     346     345     269
-#&gt;  hispan 15.6785 16.5508 16.9646 17.1058 19.3254
-#&gt;             589     531     457     296      23
-#&gt;   white   4.006  4.0169  4.1109  4.2335   4.516
+#&gt;  hispan 16.6957 17.1862 17.2636 17.8517 19.0788
+#&gt;             589     457     409     296      23
+#&gt;   white  4.0945  4.1846  4.3505  4.6072  4.9344
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; black         0.620 0.387   1.035       0
-#&gt; hispan        0.468 0.365   2.202       0
-#&gt; white         0.386 0.318   0.780       0
-#&gt; overall       0.876 0.553   1.329       0
+#&gt; black         0.640 0.391   1.041       0
+#&gt; hispan        0.476 0.372   2.213       0
+#&gt; white         0.388 0.317   0.780       0
+#&gt; overall       0.889 0.558   1.337       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             black hispan  white
 #&gt; Unweighted 243.    72.   299.  
-#&gt; Weighted   175.71  59.23 260.39</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   172.57  58.85 260.06</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, data = lalonde, method = "super", estimand = "ATE", SL.library = c("SL.glm", "SL.stepAIC", "SL.glm.interaction"))
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
 #&gt;             Type Max.Diff.Adj
-#&gt; age      Contin.       0.1032
-#&gt; educ     Contin.       0.0708
-#&gt; married   Binary       0.0451
-#&gt; nodegree  Binary       0.0180
-#&gt; re74     Contin.       0.0449
+#&gt; age      Contin.       0.0968
+#&gt; educ     Contin.       0.0794
+#&gt; married   Binary       0.0450
+#&gt; nodegree  Binary       0.0246
+#&gt; re74     Contin.       0.0328
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;              black hispan   white
 #&gt; Unadjusted 243.000 72.000 299.000
-#&gt; Adjusted   175.714 59.226 260.388</div><div class='input'>
+#&gt; Adjusted   172.566 58.846 260.058</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
 <span class='co'>#assuming t(8) conditional density for treatment</span>
 (<span class='kw'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
@@ -359,37 +359,37 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;        Min                                   Max
-#&gt; all 0.0446 |---------------------------| 24.7995
+#&gt; all 0.0439 |---------------------------| 21.0528
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                            
-#&gt;         485     484     483     431     354
-#&gt;  all 9.8102 15.8095 18.9405 22.0638 24.7995
+#&gt;                                           
+#&gt;         485    484     483     431     354
+#&gt;  all 9.4162 16.527 18.1028 19.0692 21.0528
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
-#&gt; all       1.434 0.518   0.599       0
+#&gt; all       1.334 0.504   0.561       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             Total
 #&gt; Unweighted 614.  
-#&gt; Weighted   201.08</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W3</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   221.04</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W3</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, data = lalonde, method = "super", density = "dt_8", SL.library = c("SL.glm", "SL.ridge", "SL.glm.interaction"))
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Corr.Adj
-#&gt; age      Contin.   0.0380
-#&gt; educ     Contin.   0.0403
-#&gt; married   Binary   0.0592
-#&gt; nodegree  Binary  -0.0662
-#&gt; re74     Contin.   0.0400
+#&gt; age      Contin.   0.0311
+#&gt; educ     Contin.   0.0348
+#&gt; married   Binary   0.0613
+#&gt; nodegree  Binary  -0.0599
+#&gt; re74     Contin.   0.0405
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;              Total
-#&gt; Unadjusted 614.000
-#&gt; Adjusted   201.082</div><div class='input'>
+#&gt;             Total
+#&gt; Unadjusted 614.00
+#&gt; Adjusted   221.04</div><div class='input'>
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
 <span class='co'># using balance SuperLearner to minimize the average</span>
 <span class='co'># KS statistic</span>
@@ -410,43 +410,43 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;            Min                                  Max
-#&gt; treated 1.0000               ||              1.0000
-#&gt; control 0.0222 |---------------------------| 2.0438
+#&gt; treated 1.0000                ||             1.0000
+#&gt; control 0.0286 |---------------------------| 1.9927
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                            
-#&gt;               1      3      4      8     10
+#&gt;               2      4      6      7      8
 #&gt;  treated      1      1      1      1      1
 #&gt;             595    411    409    296    269
-#&gt;  control 1.3303 1.4365 1.5005 1.6369 2.0438
+#&gt;  control 1.3131 1.3991 1.4805 1.6043 1.9927
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
 #&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       0.823 0.701  -0.515       0
-#&gt; overall       0.657 0.604  -0.257       0
+#&gt; control       0.802 0.683  -0.527       0
+#&gt; overall       0.646 0.595  -0.264       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
-#&gt; Weighted    255.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W4</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted    261.28     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W4</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "super", estimand = "ATT", SL.library = c("SL.glm", "SL.stepAIC", "SL.lda"), SL.method = "method.balance", stop.method = "ks.mean")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.0199
-#&gt; age         Contin.   0.0459
-#&gt; educ        Contin.  -0.0360
-#&gt; married      Binary   0.0044
-#&gt; nodegree     Binary   0.0080
-#&gt; re74        Contin.  -0.0275
+#&gt; prop.score Distance   0.0380
+#&gt; age         Contin.   0.0361
+#&gt; educ        Contin.  -0.0398
+#&gt; married      Binary  -0.0007
+#&gt; nodegree     Binary   0.0096
+#&gt; re74        Contin.  -0.0608
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted 429.000     185
-#&gt; Adjusted   255.989     185</div></span></pre>
+#&gt; Adjusted   261.281     185</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

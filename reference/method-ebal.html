@@ -172,9 +172,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="additional-arguments"><a class="anchor" href="#additional-arguments"></a>Additional Arguments</h2>
 
-    <p>All arguments to <code>ebalance</code> can be passed through <code>weightit</code> or <code>weightitMSM</code> and take on the defaults of those in <code>ebalance</code>.</p>
-<p>For <code>base.weights</code>, a vector with length equal to the total number of units can be supplied, in contrast to <code>ebalance()</code>, which requires a vector with length equal to the number of controls. This works for continuous treatments as well. These correspond to the base weights <em>q</em> in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \(w*log(w/q)\), subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the proprties of the original weights while ensuring the balance constraints are met.</p>
-<p>When <code>standardize = TRUE</code> in the call to <code>weightit</code> for binary and multinomial treatments, <code><a href='https://rdrr.io/pkg/ebal/man/ebalance.trim.html'>ebalance.trim</a></code> is run on the resulting <code>ebalance</code> fit objects. Doing so can reduce the variability of the weights while maintaining covariate balance.</p>
+    <p>All arguments to <code><a href='https://rdrr.io/pkg/ebal/man/ebalance.html'>ebal::ebalance</a></code> can be passed through <code>weightit</code> or <code>weightitMSM</code> and take on the defaults of those in <code><a href='https://rdrr.io/pkg/ebal/man/ebalance.html'>ebal::ebalance</a></code>.</p>
+<p>For <code>base.weights</code>, a vector with length equal to the total number of units can be supplied, in contrast to <code><a href='https://rdrr.io/pkg/ebal/man/ebalance.html'>ebal::ebalance</a></code>, which requires a vector with length equal to the number of controls. This works for continuous treatments as well. These correspond to the base weights <em>q</em> in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \(w*log(w/q)\), subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the proprties of the original weights while ensuring the balance constraints are met.</p>
+<p>When <code>standardize = TRUE</code> in the call to <code>weightit</code> for binary and multinomial treatments, <code><a href='https://rdrr.io/pkg/ebal/man/ebalance.trim.html'>ebal::ebalance.trim</a></code> is run on the resulting <code>ebalance</code> fit objects. Doing so can reduce the variability of the weights while maintaining covariate balance.</p>
     <h2 class="hasAnchor" id="additional-outputs"><a class="anchor" href="#additional-outputs"></a>Additional Outputs</h2>
 
     
@@ -185,7 +185,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Entropy balancing involves the specification of an optimization problem, the solution to which is then used to compute the weights. The constraints of the primal optimization problem correspond to covariate balance on the means (for binary and multinomial tretaments) or treatment-covariate covariances (for continuous treatments), positivity of the weights, and that the weights sum to a certain value. It turns out that the dual optimization problem is much easier to solve because it is over only as many variables as there are balance constraints rather than over the weights for each unit and it is unconstrained. Zhao and Percival (2017) found that entropy balancing for the ATT of a binary treatment actually involves the estimation of the coeffcients of a logistic regression propensity score model but using a specialized loss function different from that optimized with maximum likelihood. Entropy balancing is doubly robust (for the ATT) in the sense that it is consistent either when the true propensity score model is a logistic regression of the treatment on the covariates or when the trueoutcome model for the control units is a linear regression of the outcome on the covariates, and it attains a semi-parametric efficiency bound when both are true. Entropy balancing will always yield exact balance on the included terms.</p>
+    <p>Entropy balancing involves the specification of an optimization problem, the solution to which is then used to compute the weights. The constraints of the primal optimization problem correspond to covariate balance on the means (for binary and multinomial tretaments) or treatment-covariate covariances (for continuous treatments), positivity of the weights, and that the weights sum to a certain value. It turns out that the dual optimization problem is much easier to solve because it is over only as many variables as there are balance constraints rather than over the weights for each unit and it is unconstrained. Zhao and Percival (2017) found that entropy balancing for the ATT of a binary treatment actually involves the estimation of the coeffcients of a logistic regression propensity score model but using a specialized loss function different from that optimized with maximum likelihood. Entropy balancing is doubly robust (for the ATT) in the sense that it is consistent either when the true propensity score model is a logistic regression of the treatment on the covariates or when the true outcome model for the control units is a linear regression of the outcome on the covariates, and it attains a semi-parametric efficiency bound when both are true. Entropy balancing will always yield exact balance on the included terms.</p>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>The code for continuous treatments was kindly contributed by Stefan Tübbicke (<a href='mailto:tuebbicke@empwifo.uni-potsdam.de'>tuebbicke@empwifo.uni-potsdam.de</a>).</p>
@@ -193,14 +193,16 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     
 
-<p>- Binary Treatments</p>
+<p><strong>Binary Treatments</strong></p>
 <p>Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25–46. doi: <a href='https://doi.org/10.1093/pan/mpr025'>10.1093/pan/mpr025</a></p>
 <p>Zhao, Q., &amp; Percival, D. (2017). Entropy balancing is doubly robust. Journal of Causal Inference, 5(1). doi: <a href='https://doi.org/10.1515/jci-2016-0010'>10.1515/jci-2016-0010</a></p>
-<p>- Continuous Treatments</p>
+<p><strong>Continuous Treatments</strong></p>
 <p>Tübbicke, S. (2020). Entropy Balancing for Continuous Treatments. ArXiv:2001.06281 [Econ, Stat]. <a href='http://arxiv.org/abs/2001.06281'>http://arxiv.org/abs/2001.06281</a></p>
+<p>Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., &amp; McCaffrey, D. F. (2020). Nonparametric Estimation of Population Average Dose-Response Curves using Entropy Balancing Weights for Continuous Exposures. ArXiv:2003.02938 [Stat]. <a href='http://arxiv.org/abs/2003.02938'>http://arxiv.org/abs/2003.02938</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p>
+<p><code><a href='https://rdrr.io/pkg/ebal/man/ebalance.html'>ebal::ebalance</a></code> for the fitting function.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)

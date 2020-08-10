@@ -40,7 +40,7 @@
 
 
 <meta property="og:title" content="Optimization-Based Weighting — method_optweight" />
-<meta property="og:description" content="This page explains the details of estimating optimization-based weights by setting method = &quot;optweight&quot; in the call to weightit or weightitMSM. This method can be used with binary, multinomial, and continuous treatments.
+<meta property="og:description" content="This page explains the details of estimating optimization-based weights 9also known as stable balancing weights) by setting method = &quot;optweight&quot; in the call to weightit or weightitMSM. This method can be used with binary, multinomial, and continuous treatments.
 In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on optweight from the optweight package.
 Because optweight offers finer control and uses the same syntax as weightit, it is recommended that optweight be used instead of weightit with method = &quot;optweight&quot;.
 Binary Treatments
@@ -148,7 +148,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating optimization-based weights by setting <code>method = "optweight"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
+    <p>This page explains the details of estimating optimization-based weights 9also known as stable balancing weights) by setting <code>method = "optweight"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
 <p>In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on <code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight</a></code> from the <span class="pkg">optweight</span> package.</p>
 <p>Because <code>optweight</code> offers finer control and uses the same syntax as <code>weightit</code>, it is recommended that <code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight</a></code> be used instead of <code>weightit</code> with <code>method = "optweight"</code>.</p>
 <h3>Binary Treatments</h3>
@@ -199,11 +199,15 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     
 
+<p><strong>Binary Treatments</strong></p>
 <p>Wang, Y., &amp; Zubizarreta, J. R. (2020). Minimal dispersion approximately balancing weights: Asymptotic properties and practical considerations. Biometrika, 107(1), 93–105. doi: <a href='https://doi.org/10.1093/biomet/asz050'>10.1093/biomet/asz050</a></p>
 <p>Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. Journal of the American Statistical Association, 110(511), 910–922. doi: <a href='https://doi.org/10.1080/01621459.2015.1023805'>10.1080/01621459.2015.1023805</a></p>
+<p><strong>Multinomial Treatments</strong></p>
+<p>de los Angeles Resa, M., &amp; Zubizarreta, J. R. (2020). Direct and stable weight adjustment in non-experimental studies with multivalued treatments: Analysis of the effect of an earthquake on post-traumatic stress. Journal of the Royal Statistical Society: Series A (Statistics in Society), n/a(n/a). doi: <a href='https://doi.org/10.1111/rssa.12561'>10.1111/rssa.12561</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p>
+<p><code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight::optweight</a></code> for the fitting function</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)
