@@ -113,7 +113,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/WeightIt_A0_basic_use.html">A Guide to Using WeightIt for Estimating Balancing Weights</a>
+      <a href="../articles/WeightIt_A0_basic_use.html">Using WeightIt to Estimate Balancing Weights</a>
     </li>
   </ul>
 </li>
@@ -189,8 +189,8 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>CBPS estimates the coefficients of a logistic (for binary treatments), multinomial logistic (form multinomial treatments), or linear (for continuous treatments) regression model that is used to compute (generalized) propensity scores, from which the weights are computed. It involves augmenting the standard regression score equations with the balance constraints in an over-identified generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with <code>exact = FALSE</code>) does away with the score equations for the coefficients so that only the balance constraints (and the score equation for the variance of the error with a continuous treatment) are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multinomial treatments and linear terms for continuous treatments than will the over-identified version.</p>
-<p>Note that <span class="pkg">WeightIt</span> provides less functionality than does the <span class="pkg">CBPS</span> package in terms of the version of CBPS available; for extension to CBPS, the <span class="pkg">CBPS</span> package may be preferred.</p>
+    <p>CBPS estimates the coefficients of a logistic regression model (for binary treatments), multinomial logistic regression model (form multinomial treatments), or linear regression model (for continuous treatments) that is used to compute (generalized) propensity scores, from which the weights are computed. It involves augmenting the standard regression score equations with the balance constraints in an over-identified generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with <code>exact = FALSE</code>) does away with the score equations for the coefficients so that only the balance constraints (and the score equation for the variance of the error with a continuous treatment) are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multinomial treatments and linear terms for continuous treatments than will the over-identified version.</p>
+<p>Note that <span class="pkg">WeightIt</span> provides less functionality than does the <span class="pkg">CBPS</span> package in terms of the versions of CBPS available; for extensions to CBPS, the <span class="pkg">CBPS</span> package may be preferred.</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p><strong>Binary treatments</strong></p>
@@ -204,10 +204,11 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p>
+<p><code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS::CBPS</a></code> for the fitting function</p></div>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
-    <p>When sampling weights are used with <code>CBPS</code>, the estimated weights already incorporate the sampling weights. When <code>weightit</code> is used with <code>method = "cbps"</code>, the estimated weights are separated from the sampling weights, as they are with all other methods.</p>
+    <p>When sampling weights are used with <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS::CBPS</a></code>, the estimated weights already incorporate the sampling weights. When <code>weightit</code> is used with <code>method = "cbps"</code>, the estimated weights are separated from the sampling weights, as they are with all other methods.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
@@ -240,16 +241,17 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000    0.00       0
+#&gt; treated       0.000 0.000   -0.00       0
 #&gt; control       0.839 0.707   -0.50       0
 #&gt; overall       0.663 0.606   -0.25       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 429.000     185
-#&gt; Weighted   251.985     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "cbps", estimand = "ATT")
+#&gt; Unweighted  429.       185
+#&gt; Weighted    251.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
+#&gt;     re74, data = lalonde, method = "cbps", estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
@@ -301,9 +303,10 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             Total
-#&gt; Unweighted 614.00
+#&gt; Unweighted 614.  
 #&gt; Weighted   264.09</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W3</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, data = lalonde, method = "cbps", over = FALSE)
+#&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, 
+#&gt;     data = lalonde, method = "cbps", over = FALSE)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Corr.Adj

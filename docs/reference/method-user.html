@@ -114,7 +114,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/WeightIt_A0_basic_use.html">A Guide to Using WeightIt for Estimating Balancing Weights</a>
+      <a href="../articles/WeightIt_A0_basic_use.html">Using WeightIt to Estimate Balancing Weights</a>
     </li>
   </ul>
 </li>
@@ -220,16 +220,17 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000   0.000       0
+#&gt; treated       0.000 0.000  -0.000       0
 #&gt; control       0.823 0.701  -0.515       0
 #&gt; overall       0.657 0.604  -0.257       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 429.000     185
-#&gt; Weighted   255.989     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = my.ps, estimand = "ATT")
+#&gt; Unweighted  429.       185
+#&gt; Weighted    255.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
+#&gt;     re74, data = lalonde, method = my.ps, estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
@@ -292,8 +293,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted  294.00 706.000
-#&gt; Weighted    185.18 573.598
+#&gt; Unweighted  294.     706. 
+#&gt; Weighted    185.18   573.6
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 2 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -319,8 +320,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 492.000 508.000
-#&gt; Weighted   318.903 264.487
+#&gt; Unweighted   492.   508.  
+#&gt; Weighted     318.9  264.49
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 3 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -346,10 +347,12 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 415.000 585.000
-#&gt; Weighted   235.672 366.399
+#&gt; Unweighted  415.     585. 
+#&gt; Weighted    235.67   366.4
 #&gt; </div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0), data = iptwExWide, method = my.ps)
+#&gt;  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ 
+#&gt;     tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + 
+#&gt;     use1 + age + gender + use0), data = iptwExWide, method = my.ps)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance summary across all time points</span><span>
 #&gt;              Times     Type Max.Diff.Adj

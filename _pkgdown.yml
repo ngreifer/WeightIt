@@ -9,10 +9,10 @@ reference:
   - starts_with("method_")
 - title: Other functions
 - contents:
-  - trim
-  - get_w_from_ps
-  - sbps
   - stop.method
+  - get_w_from_ps
+  - trim
+  - sbps
   - ps.cont
   - ESS
   - as.weightit

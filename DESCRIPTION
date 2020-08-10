@@ -39,6 +39,6 @@ Suggests:
 License: GPL (>=2)
 Encoding: UTF-8
 LazyData: true
-URL: https://github.com/ngreifer/WeightIt
+URL: https://ngreifer.github.io/WeightIt/, https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr

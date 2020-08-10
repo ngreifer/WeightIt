@@ -113,7 +113,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/WeightIt_A0_basic_use.html">A Guide to Using WeightIt for Estimating Balancing Weights</a>
+      <a href="../articles/WeightIt_A0_basic_use.html">Using WeightIt to Estimate Balancing Weights</a>
     </li>
   </ul>
 </li>
@@ -230,9 +230,10 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted 429.000     185
-#&gt; Weighted   252.121     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "ebcw", estimand = "ATT")
+#&gt; Unweighted  429.       185
+#&gt; Weighted    252.12     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
+#&gt;     re74, data = lalonde, method = "ebcw", estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Diff.Adj
@@ -283,10 +284,11 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
-#&gt;              black hispan   white
-#&gt; Unweighted 243.000 72.000 299.000
-#&gt; Weighted   180.469 52.706 262.929</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, data = lalonde, method = "ebcw", estimand = "ATE")
+#&gt;             black hispan  white
+#&gt; Unweighted 243.    72.   299.  
+#&gt; Weighted   180.47  52.71 262.93</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, 
+#&gt;     data = lalonde, method = "ebcw", estimand = "ATE")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
 #&gt;             Type Max.Diff.Adj

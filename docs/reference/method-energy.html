@@ -116,7 +116,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
   </a>
   <ul class="dropdown-menu" role="menu">
     <li>
-      <a href="../articles/WeightIt_A0_basic_use.html">A Guide to Using WeightIt for Estimating Balancing Weights</a>
+      <a href="../articles/WeightIt_A0_basic_use.html">Using WeightIt to Estimate Balancing Weights</a>
     </li>
   </ul>
 </li>
@@ -199,9 +199,9 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
 
     
 
-<p>- Binary and Multinomial treatments</p>
+<p><!-- %\strong{Binary and Multinomial treatments} --></p>
 <p>Huling, J. D., &amp; Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. <a href='http://arxiv.org/abs/2004.13962'>http://arxiv.org/abs/2004.13962</a></p>
-<p><!-- %- Continuous treatments --></p>
+<p><!-- %\strong{Continuous treatments} --></p>
 <p><!-- %This method has not been described in the literature yet. Zhu, Coffman, and Ghosh (2015) considered the distance covariance as an objective function and omnibus measure of balance but used a weighted boostrap to calculate it rather than using a formula for the weighted distance covariance. Andrei and McCarthy (2019) proposed the (unweighted) distance covariance as a way to measure balance in matched samples for binary treatments, but didn't propose a weighted version or consider its use with continuous treatments. --></p>
 <p><!-- %Andrei, A.-C., &amp; McCarthy, P. M. (2019). An omnibus approach to assess covariate balance in observational studies using the distance covariance. Statistical Methods in Medical Research, 096228021987821. \doi{10.1177/0962280219878215} --></p>
 <p><!-- %Zhu, Y., Coffman, D. L., &amp; Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1). \doi{10.1515/jci-2014-0022} --></p>
@@ -210,116 +210,27 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
     <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
 <span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
 
+<span class='co'>#Examples may not converge, but may after several runs</span>
+<span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
 (<span class='no'>W1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>treat</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
                   <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"energy"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
-#&gt;  - method: "energy" (energy balancing)
-#&gt;  - number of obs.: 614
-#&gt;  - sampling weights: none
-#&gt;  - treatment: 2-category
-#&gt;  - estimand: ATE
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
-#&gt; 
-#&gt;            Min                                   Max
-#&gt; treated 0.0000 |---------------|              7.4328
-#&gt; control 0.0577 |---------------------------| 12.7238
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                             
-#&gt;             184    181    172    124      59
-#&gt;  treated 3.6515 4.0082 4.5942 5.9859  7.4328
-#&gt;             608    567    374    303     192
-#&gt;  control 3.7561 4.7863 5.0775 6.5515 12.7238
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
-#&gt; 
-#&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       1.131 0.835   0.519       2
-#&gt; control       1.015 0.636   0.332       0
-#&gt; overall       1.050 0.696   0.388       2
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
-#&gt; 
-#&gt;            Control Treated
-#&gt; Unweighted 429.000 185.000
-#&gt; Weighted   211.624  81.437</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "energy", estimand = "ATE")
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
-#&gt;             Type Diff.Adj
-#&gt; age      Contin.  -0.0286
-#&gt; educ     Contin.   0.0070
-#&gt; married   Binary  -0.0068
-#&gt; nodegree  Binary   0.0008
-#&gt; re74     Contin.  -0.0099
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;            Control Treated
-#&gt; Unadjusted 429.000 185.000
-#&gt; Adjusted   211.624  81.437</div><div class='input'>
+                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"energy"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>))
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W1</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)
+
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 (<span class='no'>W2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>race</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
                   <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
                 <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"energy"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATT"</span>,
-                <span class='kw'>focal</span> <span class='kw'>=</span> <span class='st'>"black"</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
-#&gt;  - method: "energy" (energy balancing)
-#&gt;  - number of obs.: 614
-#&gt;  - sampling weights: none
-#&gt;  - treatment: 3-category (black, hispan, white)
-#&gt;  - estimand: ATT (focal: black)
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
-#&gt; 
-#&gt;        Min                                   Max
-#&gt; black    1   ||                           1.0000
-#&gt; hispan   0 |---------|                    4.6858
-#&gt; white    0 |---------------------------| 12.6749
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                             
-#&gt;              1      3      4       5       6
-#&gt;   black      1      1      1       1       1
-#&gt;            570    424    373     269      28
-#&gt;  hispan 3.6372 3.9319 4.1098  4.5448  4.6858
-#&gt;            422    140     96      76      42
-#&gt;   white  7.642 7.6594 9.3912 11.1666 12.6749
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
-#&gt; 
-#&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; black         0.000 0.000   0.000       0
-#&gt; hispan        1.165 0.879   0.618       6
-#&gt; white         1.733 1.073   0.967      84
-#&gt; overall       1.272 0.626   0.543      90
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
-#&gt; 
-#&gt;            black hispan   white
-#&gt; Unweighted   243 72.000 299.000
-#&gt; Weighted     243 30.796  74.861</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, data = lalonde, method = "energy", estimand = "ATT", focal = "black")
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
-#&gt;             Type Max.Diff.Adj
-#&gt; age      Contin.       0.0360
-#&gt; educ     Contin.       0.0432
-#&gt; married   Binary       0.0094
-#&gt; nodegree  Binary       0.0020
-#&gt; re74     Contin.       0.0229
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;            hispan   white black
-#&gt; Unadjusted 72.000 299.000   243
-#&gt; Adjusted   30.796  74.861   243</div><div class='input'>
-
-</div></span></pre>
+                <span class='kw'>focal</span> <span class='kw'>=</span> <span class='st'>"black"</span>))
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W2</span>)
+<span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W2</span>)
+}</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

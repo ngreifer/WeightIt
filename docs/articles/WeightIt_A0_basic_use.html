@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>A Guide to Using WeightIt for Estimating Balancing Weights • WeightIt</title>
+<title>Using WeightIt to Estimate Balancing Weights • WeightIt</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="A Guide to Using WeightIt for Estimating Balancing Weights">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Using WeightIt to Estimate Balancing Weights">
 <meta property="og:description" content="WeightIt">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -54,7 +54,7 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/WeightIt_A0_basic_use.html">A Guide to Using WeightIt for Estimating Balancing Weights</a>
+      <a href="../articles/WeightIt_A0_basic_use.html">Using WeightIt to Estimate Balancing Weights</a>
     </li>
   </ul>
 </li>
@@ -82,10 +82,10 @@
       </header><script src="WeightIt_A0_basic_use_files/accessible-code-block-0.0.1/empty-anchor.js"></script><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>A Guide to Using WeightIt for Estimating Balancing Weights</h1>
+      <h1 data-toc-skip>Using WeightIt to Estimate Balancing Weights</h1>
                         <h4 class="author">Noah Greifer</h4>
             
-            <h4 class="date">2020-07-07</h4>
+            <h4 class="date">2020-08-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt_A0_basic_use.Rmd"><code>vignettes/WeightIt_A0_basic_use.Rmd</code></a></small>
       <div class="hidden name"><code>WeightIt_A0_basic_use.Rmd</code></div>
@@ -115,7 +115,7 @@
 ## 6     1  22    9  black       0        1    0    0  4056.4940</code></pre>
 <p>We have our outcome (<code>re78</code>), our treatment (<code>treat</code>), and the covariates for which balance is desired (<code>age</code>, <code>educ</code>, <code>race</code>, <code>married</code>, <code>nodegree</code>, <code>re74</code>, and <code>re75</code>). Using <code>cobalt</code>, we can examine the initial imbalance on the covariates:</p>
 <div class="sourceCode" id="cb3"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"cobalt"</span>)</pre></body></html></div>
-<pre><code>##  cobalt (Version 4.2.2, Build Date: )</code></pre>
+<pre><code>##  cobalt (Version 4.2.2.9000, Build Date: )</code></pre>
 <div class="sourceCode" id="cb5"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/cobalt/man/bal.tab.html">bal.tab</a></span>(<span class="no">treat</span> ~ <span class="no">age</span> + <span class="no">educ</span> + <span class="no">race</span> + <span class="no">married</span> + <span class="no">nodegree</span> + <span class="no">re74</span> + <span class="no">re75</span>,
         <span class="kw">data</span> <span class="kw">=</span> <span class="no">lalonde</span>, <span class="kw">estimand</span> <span class="kw">=</span> <span class="st">"ATT"</span>, <span class="kw">m.threshold</span> <span class="kw">=</span> <span class="fl">.05</span>)</pre></body></html></div>
 <pre><code>## Balance Measures
@@ -161,60 +161,61 @@
 ## 
 ## - Weight ranges:
 ## 
-##            Min                                  Max
-## treated 1.0000         ||                    1.0000
-## control 0.0092 |---------------------------| 3.7432
+##            Min                                    Max
+## treated 1.0000 ||                              1.0000
+## control 0.2671 |---------------------------| 109.1298
 ## 
 ## - Units with 5 greatest weights by group:
-##                                            
-##               1      2      3      5      6
-##  treated      1      1      1      1      1
-##             597    573    411    381    303
-##  control 3.0301 3.0592 3.2397 3.5231 3.7432
+##                                                  
+##                3       4       5       6        7
+##  treated       1       1       1       1        1
+##              483     481     354     308      286
+##  control 91.5141 96.4111 97.8711 98.4627 109.1298
 ## 
 ## - Weight statistics:
 ## 
 ##         Coef of Var   MAD Entropy # Zeros
-## treated       0.000 0.000   0.000       0
-## control       1.818 1.289   0.268       0
-## overall       1.174 0.962   0.135       0
+## treated       0.000 0.000  -0.000       0
+## control       1.055 0.783   3.410       0
+## overall       1.375 0.999   3.333       0
 ## 
 ## - Effective Sample Sizes:
 ## 
 ##            Control Treated
-## Unweighted 429.000     185
-## Weighted    99.815     185</code></pre>
+## Unweighted  429.       185
+## Weighted    203.23     185</code></pre>
 <p>These weights have quite high variability, and yield an ESS of close to 100 in the control group. Let’s see if these weights managed to yield balance on our covariates.</p>
 <div class="sourceCode" id="cb11"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/cobalt/man/bal.tab.html">bal.tab</a></span>(<span class="no">W.out</span>, <span class="kw">m.threshold</span> <span class="kw">=</span> <span class="fl">.05</span>, <span class="kw">disp.v.ratio</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
 <pre><code>## Call
-##  weightit(formula = treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, method = "ps", estimand = "ATT")
+##  weightit(formula = treat ~ age + educ + race + married + nodegree + 
+##     re74 + re75, data = lalonde, method = "ps", estimand = "ATT")
 ## 
 ## Balance Measures
 ##                 Type Diff.Adj         M.Threshold V.Ratio.Adj
-## prop.score  Distance  -0.0205     Balanced, &lt;0.05      1.0324
-## age          Contin.   0.1188 Not Balanced, &gt;0.05      0.4578
-## educ         Contin.  -0.0284     Balanced, &lt;0.05      0.6636
-## race_black    Binary  -0.0022     Balanced, &lt;0.05            
-## race_hispan   Binary   0.0002     Balanced, &lt;0.05            
-## race_white    Binary   0.0021     Balanced, &lt;0.05            
-## married       Binary   0.0186     Balanced, &lt;0.05            
-## nodegree      Binary   0.0184     Balanced, &lt;0.05            
-## re74         Contin.  -0.0021     Balanced, &lt;0.05      1.3206
-## re75         Contin.   0.0110     Balanced, &lt;0.05      1.3938
+## prop.score  Distance  -2.4213                         14.8313
+## age          Contin.  -0.8017 Not Balanced, &gt;0.05      0.4426
+## educ         Contin.   0.1235 Not Balanced, &gt;0.05      0.4244
+## race_black    Binary   0.8351 Not Balanced, &gt;0.05            
+## race_hispan   Binary  -0.0112     Balanced, &lt;0.05            
+## race_white    Binary  -0.8238 Not Balanced, &gt;0.05            
+## married       Binary  -0.6274 Not Balanced, &gt;0.05            
+## nodegree      Binary   0.1931 Not Balanced, &gt;0.05            
+## re74         Contin.  -1.7305 Not Balanced, &gt;0.05      0.3557
+## re75         Contin.  -0.5097 Not Balanced, &gt;0.05      0.7826
 ## 
 ## Balance tally for mean differences
 ##                     count
-## Balanced, &lt;0.05         9
-## Not Balanced, &gt;0.05     1
+## Balanced, &lt;0.05         1
+## Not Balanced, &gt;0.05     8
 ## 
 ## Variable with the greatest mean difference
 ##  Variable Diff.Adj         M.Threshold
-##       age   0.1188 Not Balanced, &gt;0.05
+##      re74  -1.7305 Not Balanced, &gt;0.05
 ## 
 ## Effective sample sizes
 ##            Control Treated
 ## Unadjusted 429.000     185
-## Adjusted    99.815     185</code></pre>
+## Adjusted   203.231     185</code></pre>
 <p>For nearly all the covariates, these weights yielded very good balance. Only <code>age</code> remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let’s see if we can do better. We’ll choose a different method: entropy balancing, which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.</p>
 <div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">W.out</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span>(<span class="no">treat</span> ~ <span class="no">age</span> + <span class="no">educ</span> + <span class="no">race</span> + <span class="no">married</span> + <span class="no">nodegree</span> + <span class="no">re74</span> + <span class="no">re75</span>,
         <span class="kw">data</span> <span class="kw">=</span> <span class="no">lalonde</span>, <span class="kw">estimand</span> <span class="kw">=</span> <span class="st">"ATT"</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"ebal"</span>)
@@ -244,12 +245,13 @@
 ## - Effective Sample Sizes:
 ## 
 ##            Control Treated
-## Unweighted 429.000     185
-## Weighted    98.493     185</code></pre>
+## Unweighted  429.       185
+## Weighted     98.49     185</code></pre>
 <p>The variability of the weights has not changed much, but let’s see if there are any gains in terms of balance:</p>
 <div class="sourceCode" id="cb15"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/cobalt/man/bal.tab.html">bal.tab</a></span>(<span class="no">W.out</span>, <span class="kw">m.threshold</span> <span class="kw">=</span> <span class="fl">.05</span>, <span class="kw">disp.v.ratio</span> <span class="kw">=</span> <span class="fl">TRUE</span>)</pre></body></html></div>
 <pre><code>## Call
-##  weightit(formula = treat ~ age + educ + race + married + nodegree + re74 + re75, data = lalonde, method = "ebal", estimand = "ATT")
+##  weightit(formula = treat ~ age + educ + race + married + nodegree + 
+##     re74 + re75, data = lalonde, method = "ebal", estimand = "ATT")
 ## 
 ## Balance Measures
 ##                Type Diff.Adj     M.Threshold V.Ratio.Adj
@@ -320,7 +322,7 @@
 ## 
 ## Intervals : 
 ## Level       BCa          
-## 95%   (-256, 2872 )  
+## 95%   (-247, 2851 )  
 ## Calculations and Intervals on Original Scale</code></pre>
 <p>In this case, our confidence intervals were similar. Bootstrapping can take some time, especially with weight estimation methods that take longer, such as SuperLearner (<code>method = "super"</code>), covariate balancing propensity score estimation (<code>method = "cbps"</code>), or entropy balancing with <code>stabilize = TRUE</code>.</p>
 <p>If we wanted to produce a “doubly-robust” treatment effect estimate, we could add baseline covariates to the <code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code> (or <code><a href="https://rdrr.io/pkg/survey/man/svyglm.html">svyglm()</a></code>) model (in both the original effect estimation and the confidence interval estimation).</p>
@@ -351,7 +353,7 @@
 ##  - - - Time: 1 - - - 
 ## Balance Measures
 ##           Type Diff.Un      M.Threshold.Un  KS.Un
-## age    Contin.  0.3799 Not Balanced, &gt;0.05 0.2127
+## age    Contin.  0.3799 Not Balanced, &gt;0.05 0.2099
 ## gender  Binary  0.2945 Not Balanced, &gt;0.05 0.2945
 ## use0   Contin.  0.2668 Not Balanced, &gt;0.05 0.1681
 ## 
@@ -373,7 +375,7 @@
 ##           Type Diff.Un      M.Threshold.Un  KS.Un
 ## tx1     Binary  0.1695 Not Balanced, &gt;0.05 0.1695
 ## use1   Contin.  0.0848 Not Balanced, &gt;0.05 0.0763
-## age    Contin.  0.2240 Not Balanced, &gt;0.05 0.1311
+## age    Contin.  0.2240 Not Balanced, &gt;0.05 0.1331
 ## gender  Binary  0.1927 Not Balanced, &gt;0.05 0.1927
 ## use0   Contin.  0.1169 Not Balanced, &gt;0.05 0.0913
 ## 
@@ -397,7 +399,7 @@
 ## use2   Contin.  0.1087 Not Balanced, &gt;0.05 0.1161
 ## tx1     Binary  0.1071 Not Balanced, &gt;0.05 0.1071
 ## use1   Contin.  0.1662 Not Balanced, &gt;0.05 0.1397
-## age    Contin.  0.3431 Not Balanced, &gt;0.05 0.1846
+## age    Contin.  0.3431 Not Balanced, &gt;0.05 0.1863
 ## gender  Binary  0.1532 Not Balanced, &gt;0.05 0.1532
 ## use0   Contin.  0.1859 Not Balanced, &gt;0.05 0.1350
 ## 
@@ -461,8 +463,8 @@
 ## - Effective Sample Sizes:
 ## 
 ##            Control Treated
-## Unweighted  294.00 706.000
-## Weighted    185.18 573.598
+## Unweighted  294.     706. 
+## Weighted    185.18   573.6
 ## 
 ##                        Time 2                       
 ## - Weight ranges:
@@ -488,8 +490,8 @@
 ## - Effective Sample Sizes:
 ## 
 ##            Control Treated
-## Unweighted 492.000 508.000
-## Weighted   318.903 264.487
+## Unweighted   492.   508.  
+## Weighted     318.9  264.49
 ## 
 ##                        Time 3                       
 ## - Weight ranges:
@@ -515,17 +517,19 @@
 ## - Effective Sample Sizes:
 ## 
 ##            Control Treated
-## Unweighted 415.000 585.000
-## Weighted   235.672 366.399</code></pre>
+## Unweighted  415.     585. 
+## Weighted    235.67   366.4</code></pre>
 <p>Displayed are summaries of how the weights perform at each time point with respect to variability. Next, we’ll examine how well they perform with respect to covariate balance.</p>
 <div class="sourceCode" id="cb31"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/pkg/cobalt/man/bal.tab.html">bal.tab</a></span>(<span class="no">Wmsm.out</span>, <span class="kw">m.threshold</span> <span class="kw">=</span> <span class="fl">.05</span>, <span class="kw">disp.ks</span> <span class="kw">=</span> <span class="fl">TRUE</span>, <span class="kw">which.time</span> <span class="kw">=</span> <span class="no">.none</span>)</pre></body></html></div>
 <pre><code>## Call
-##  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0), data = iptwExWide, method = "ps")
+##  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ 
+##     tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + 
+##     use1 + age + gender + use0), data = iptwExWide, method = "ps")
 ## 
 ## Balance summary across all time points
 ##              Times     Type Max.Diff.Adj         M.Threshold Max.KS.Adj
 ## prop.score 1, 2, 3 Distance       0.0251     Balanced, &lt;0.05     0.0935
-## age        1, 2, 3  Contin.       0.0703 Not Balanced, &gt;0.05     0.0819
+## age        1, 2, 3  Contin.       0.0703 Not Balanced, &gt;0.05     0.0796
 ## gender     1, 2, 3   Binary       0.0263     Balanced, &lt;0.05     0.0263
 ## use0       1, 2, 3  Contin.       0.0558 Not Balanced, &gt;0.05     0.0938
 ## tx1           2, 3   Binary       0.0171     Balanced, &lt;0.05     0.0171
