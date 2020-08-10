@@ -1,7 +1,7 @@
 \name{method_energy}
 \alias{method_energy}
 
-\title{Entropy Balancing}
+\title{Energy Balancing}
 
 \description{
 This page explains the details of estimating weights using energy balancing by setting \code{method = "energy"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary and multinomial treatments. %This method can be used with binary, multinomial, and continuous treatments.
