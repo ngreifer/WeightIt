@@ -1544,6 +1544,8 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
   }
   w <- cobalt::get.w(fit)
 
+  for (i in levels(treat)) w[treat == i] <- w[treat == i]/mean(w[treat == i])
+
   obj <- list(w = w, fit.obj = fit)
 
   return(obj)
@@ -1577,6 +1579,8 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
                    quote = TRUE)
   }
   w <- cobalt::get.w(fit)
+
+  w <- w/mean(w)
 
   obj <- list(w = w, fit.obj = fit)
 
