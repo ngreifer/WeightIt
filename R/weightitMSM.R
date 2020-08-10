@@ -29,7 +29,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
   #Process moments and int
   moments.int <- process.moments.int(moments, int, method)
-  moments <- moments.int["moments"]; int <- moments.int["int"]
+  moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
 
   s.weights <- process.s.weights(s.weights, data)
 
@@ -120,7 +120,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
   if (is_null(s.weights)) s.weights <- rep(1, n)
 
-  if (verbose || debuggingState()) eval.verbose <- base::eval
+  if (verbose) eval.verbose <- base::eval
   else eval.verbose <- utils::capture.output
 
   if (is.MSM.method) {
