@@ -6,7 +6,9 @@
 \description{
 This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting \code{method = "gbm"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). This method mimics the functionality of functions in the \pkg{twang} package, but has improved performance and more flexible options. See Note for more details.
+In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). The method relies on the \CRANpkg{gbm} package.
+
+This method mimics the functionality of functions in the \CRANpkg{twang} package, but has improved performance and more flexible options. See Details section for more details.
 
 \subsection{Binary Treatments}{
 For binary treatments, this method estimates the propensity scores using \code{\link[gbm]{gbm.fit}} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link{get_w_from_ps}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.

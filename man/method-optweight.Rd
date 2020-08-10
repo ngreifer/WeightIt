@@ -6,7 +6,7 @@
 \description{
 This page explains the details of estimating optimization-based weights 9also known as stable balancing weights) by setting \code{method = "optweight"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \code{\link[optweight:optweight]{optweight}} from the \pkg{optweight} package.
+In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \code{\link[optweight:optweight]{optweight}} from the \CRANpkg{optweight} package.
 
 Because \code{optweight} offers finer control and uses the same syntax as \code{weightit}, it is recommended that \code{\link[optweight:optweight]{optweight}} be used instead of \code{weightit} with \code{method = "optweight"}.
 

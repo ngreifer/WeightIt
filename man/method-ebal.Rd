@@ -6,7 +6,7 @@
 \description{
 This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ebal]{ebalance}} from the \pkg{ebal} package for binary and multinomial treatments and on code written for \pkg{WeightIt} using \code{\link{optim}} for continuous treatments.
+In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ebal]{ebalance}} from the \CRANpkg{ebal} package for binary and multinomial treatments and on code written for \pkg{WeightIt} using \code{\link{optim}} for continuous treatments.
 
 \subsection{Binary Treatments}{
 For binary treatments, this method estimates the weights using \code{\link[ebal]{ebalance}}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{ebalance} fit object. When the ATE is requested, \code{ebalance} is run twice, once for each treatment group.

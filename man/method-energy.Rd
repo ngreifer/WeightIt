@@ -8,7 +8,7 @@ This page explains the details of estimating weights using energy balancing by s
 
 In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multinomial treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups.
 %For continuous treatments, this is the energy covariance between the treatment variable and the covariates.
-This method relies on code written for \pkg{WeightIt} using \code{\link[osqp]{osqp}} from the \pkg{osqp} package to perform the optimization. This method may be slow or memory-intensive for large datasets.
+This method relies on code written for \pkg{WeightIt} using \code{\link[osqp]{osqp}} from the \CRANpkg{osqp} package to perform the optimization. This method may be slow or memory-intensive for large datasets.
 
 \subsection{Binary Treatments}{
 For binary treatments, this method estimates the weights using \code{osqp} using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE, ATT, and ATC.

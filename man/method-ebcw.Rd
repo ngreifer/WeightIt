@@ -6,7 +6,7 @@
 \description{
 This page explains the details of estimating weights using empirical balancing calibration weighting (EBCW) by setting \code{method = "ebcw"} in the call to \code{\link{weightit}}. This method can be used with binary and multinomial treatments.
 
-In general, this method relies on estimating weights by minimizing a function of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ATE]{ATE}} from the \pkg{ATE} package.
+In general, this method relies on estimating weights by minimizing a function of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ATE]{ATE}} from the \CRANpkg{ATE} package.
 
 \subsection{Binary Treatments}{
 For binary treatments, this method estimates the weights using \code{\link[ATE]{ATE}} with \code{ATT = TRUE}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{ATE} fit object. When the ATE is requested, \code{ATE} is run twice, once for each treatment group.
