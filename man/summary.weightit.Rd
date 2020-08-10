@@ -4,6 +4,7 @@
 \alias{summary.weightit}
 \alias{print.summary.weightitMSM}
 \alias{summary.weightitMSM}
+
 \title{Print and Summarize Output}
 \usage{
 

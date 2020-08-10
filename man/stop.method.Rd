@@ -15,7 +15,7 @@ Each treatment type has its own balance criteria available.
 \item{\code{"ks.mean"}, \code{"ks.max"}, \code{"ks.rms"}}{The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic among the covariates, respectively. The KS statistic is computed using \code{\link[cobalt:balance.summary]{col_w_ks()}} in \pkg{cobalt}.}
 \item{\code{"mahalanobis"}}{The sample Mahalanobis distace in the weighted sample. This is similar to \code{"es.rms"} except that variables that are redundant with each other will be downweighted. The sample Mahalanobis distance is computed using the (generalized) inverse of the unweighted covariance matrix computed in the focal group when the estimand is the ATT or ATC and using the (generalized) inverse of the average of the unweighted covariance matrices computed within each treatment group (analogous the the ASMD, which uses the average of the group variances in its denominator).}
 \item{\code{"energy.dist"}}{The energy distance between the weighted samples, as described by Huling & Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using \code{\link[=method_energy]{method = "energy"}}.)}
-\item{\code{"r2"}}{The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Fraklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseduo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy & Zavoina pseudo-R2.}
+\item{\code{"r2"}}{The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseduo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy & Zavoina pseudo-R2.}
 }
 }
 \subsection{Multinomial Treatments}{
@@ -41,12 +41,13 @@ Belitser, S. V., Martens, E. P., Pestman, W. R., Groenwold, R. H. H., de Boer, A
 
 Franklin, J. M., Rassen, J. A., Ackermann, D., Bartels, D. B., & Schneeweiss, S. (2014). Metrics for covariate balance in cohort studies of causal effects. Statistics in Medicine, 33(10), 1685–1699. \doi{10.1002/sim.6058}
 
-Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. http://arxiv.org/abs/2004.13962
+Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. \url{http://arxiv.org/abs/2004.13962}
 
 Griffin, B. A., McCaffrey, D. F., Almirall, D., Burgette, L. F., & Setodji, C. M. (2017). Chasing Balance and Other Recommendations for Improving Nonparametric Propensity Score Models. Journal of Causal Inference, 5(2). \doi{10.1515/jci-2015-0026}
 
 }
 \seealso{
-\code{\link{method_gbm}}, \code{\link{method_super}}
+\code{\link{method_gbm}}, \code{\link{method_super}}, which use these balance criteria.
+
 \code{\link[cobalt:balance.summary]{balance summary}} in \pkg{cobalt} for details of some calculations.
 }

@@ -3,13 +3,17 @@ WeightIt News and Updates
 
 # WeightIt (development version)
 
-* With `method = "gbm"`, added the ability to tune hyperparameters like `interaction.depth` and `distribution` using the same critera as is used to select the optimal tree. A summary of the tuning results is included in `info` in the `weightit` output object. [NEED TO UPDATE DOCUMENTATION]
+* With `method = "gbm"`, added the ability to tune hyperparameters like `interaction.depth` and `distribution` using the same critera as is used to select the optimal tree. A summary of the tuning results is included in `info` in the `weightit` output object.
 
 * Fixed a bug where `moments` and `int` were ignored unless both were specified.
 
 * Effective sample sizes now print only up to two digits (believe me, you don't need three) and print more cleanly with whole numbers.
 
 * Fixed a bug when using `by`, thanks to @frankpopham. (#11)
+
+* Fixed a bug when using `weightitMSM` with methods that process `int` and `moments` (though you probably shouldn't use them anyway). Thanks to Sven Reiger.
+
+* Fixed a bug when using `method = "npcbps"` where weights could be excessively small and mistaken for all being them. The weights now sum to the number of units.
 
 # WeightIt 0.10.0
 

@@ -6,16 +6,16 @@
 \description{
 This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting \code{method = "gbm"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of a tuning parameter (the number of trees). This method mimics the functionality of functions in the \pkg{twang} package, but has improved performance and more flexible options. See Note for more details.
+In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). This method mimics the functionality of functions in the \pkg{twang} package, but has improved performance and more flexible options. See Note for more details.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link[gbm]{gbm.fit}} and then selects the optimal tree using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link{get_w_from_ps}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
+For binary treatments, this method estimates the propensity scores using \code{\link[gbm]{gbm.fit}} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link{get_w_from_ps}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the propensity scores using \code{\link[gbm]{gbm.fit}} with \code{distribution = "multinomial"} and then selects the optimal tree using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link{get_w_from_ps}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
+For multinomial treatments, this method estimates the propensity scores using \code{\link[gbm]{gbm.fit}} with \code{distribution = "multinomial"} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link{get_w_from_ps}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the generalized propensity score using \code{\link[gbm]{gbm.fit}} and then selects the optimal tree using the method specified in the \code{stop.method} argument.
+For continuous treatments, this method estimates the generalized propensity score using \code{\link[gbm]{gbm.fit}} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
@@ -73,7 +73,7 @@ For continuous treatments only, the following arguments may be supplied:
 }
 }
 
-For tunable arguments, multiple entries may be supplied, and \code{weightit} will choose the best value by optimizing the criterion specified in \code{stop.method}. See below for additional outputs that are included when arguments are supplied to be tuned.
+For tunable arguments, multiple entries may be supplied, and \code{weightit} will choose the best value by optimizing the criterion specified in \code{stop.method}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.
 }
 \section{Additional Outputs}{
 \describe{
@@ -81,10 +81,10 @@ For tunable arguments, multiple entries may be supplied, and \code{weightit} wil
 A list with the following entries:
 \describe{
 \item{\code{best.tree}}{
-The number of trees at the optimum. If this is close to \code{n.trees}, \code{weightit} should be rerun with a larger value for \code{n.trees}, and \code{start.tree} can be set to just below \code{best.tree}. See example.
+The number of trees at the optimum. If this is close to \code{n.trees}, \code{weightit} should be rerun with a larger value for \code{n.trees}, and \code{start.tree} can be set to just below \code{best.tree}. When other parameters are tuned, this is the best tree value in the best cimbination of tuned parameters. See example.
 }
 \item{\code{tree.val}}{
-A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \code{\link{plot}} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. See example.
+A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \code{\link{plot}} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.
 }
 }
 If any arguments are to be tuned (i.e., they have been supplied more than one value), the following two additional components are included in \code{info}:
@@ -123,9 +123,11 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 }
 
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{method_twang}}
+\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{method_twang}} for an older version that calls functions in \pkg{twang}
 
 \code{\link{stop.method}} for allowable arguments to \code{stop.method}
+
+\code{\link[gbm:gbm.fit]{gbm::gbm.fit}} for the fitting function
 }
 \examples{
 
@@ -179,7 +181,6 @@ W4b$info$best.tree #13417; optimum has been found
 plot(W4b$info$tree.val) #increasing at right edge
 
 bal.tab(W4b)
-}
 
 #Tuning hyperparameters
 (W5 <- weightit(treat ~ age + educ + married +
@@ -194,4 +195,5 @@ W5$info$tune
 W5$info$best.tune #Best values of tuned parameters
 
 bal.tab(W5, stats = "k")
+}
 }

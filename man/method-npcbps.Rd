@@ -21,7 +21,7 @@ For continuous treatments, this method estimates the weights using \code{\link[C
 For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how \code{\link[CBPS]{CBMSM}} in the \pkg{CBPS} package estimates weights for longitudinal treatments.
 }
 \subsection{Sampling Weights}{
-Sampling weights are supported through \code{s.weights} in all scenarios.
+Sampling weights are \bold{not} supported with \code{method = "npcbps"}.
 }
 \subsection{Missing Data}{
 In the presence of missing data, the following value(s) for \code{missing} are allowed:
@@ -46,7 +46,7 @@ When \code{include.obj = TRUE}, the nonparametric CB(G)PS model fit. The output 
 }
 }
 \details{
-Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical liklihood of the data given the weights. npCBPS is similar to entropy balancing and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the \code{cor.prior} argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.
+Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical likelihood of the data given the weights. npCBPS is similar to entropy balancing and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the \code{cor.prior} argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.
 }
 \references{
 
@@ -55,6 +55,8 @@ Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score f
 }
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
+
+\code{\link[CBPS:npCBPS]{CBPS::npCBPS}} for the fitting function
 }
 
 \examples{

@@ -4,7 +4,7 @@
 \title{Optimization-Based Weighting}
 
 \description{
-This page explains the details of estimating optimization-based weights by setting \code{method = "optweight"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
+This page explains the details of estimating optimization-based weights 9also known as stable balancing weights) by setting \code{method = "optweight"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
 In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \code{\link[optweight:optweight]{optweight}} from the \pkg{optweight} package.
 
@@ -69,13 +69,21 @@ Stable balancing weights are weights that solve a constrained optimization probl
 
 \references{
 
+\strong{Binary Treatments}
+
 Wang, Y., & Zubizarreta, J. R. (2020). Minimal dispersion approximately balancing weights: Asymptotic properties and practical considerations. Biometrika, 107(1), 93–105. \doi{10.1093/biomet/asz050}
 
 Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. Journal of the American Statistical Association, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
 
+\strong{Multinomial Treatments}
+
+de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight adjustment in non-experimental studies with multivalued treatments: Analysis of the effect of an earthquake on post-traumatic stress. Journal of the Royal Statistical Society: Series A (Statistics in Society), n/a(n/a). \doi{10.1111/rssa.12561}
+
 }
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
+
+\code{\link[optweight:optweight]{optweight::optweight}} for the fitting function
 }
 \examples{
 library("cobalt")

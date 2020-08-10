@@ -62,11 +62,11 @@ Noah Greifer
 }
 \references{
 
-- Binary and Multinomial treatments
+%\strong{Binary and Multinomial treatments}
 
 Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. \url{http://arxiv.org/abs/2004.13962}
 
-%- Continuous treatments
+%\strong{Continuous treatments}
 
 %This method has not been described in the literature yet. Zhu, Coffman, and Ghosh (2015) considered the distance covariance as an objective function and omnibus measure of balance but used a weighted boostrap to calculate it rather than using a formula for the weighted distance covariance. Andrei and McCarthy (2019) proposed the (unweighted) distance covariance as a way to measure balance in matched samples for binary treatments, but didn't propose a weighted version or consider its use with continuous treatments.
 
@@ -80,9 +80,12 @@ Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. Ar
 }
 
 \examples{
+
 library("cobalt")
 data("lalonde", package = "cobalt")
 
+#Examples may not converge, but may after several runs
+\dontrun{
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
@@ -97,7 +100,7 @@ bal.tab(W1)
                 focal = "black"))
 summary(W2)
 bal.tab(W2)
-
+}
 
 }
 
