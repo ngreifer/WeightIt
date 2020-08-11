@@ -188,7 +188,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   outnames <- c("weight.range", "weight.top",
                 "coef.of.var", "scaled.mad", "negative.entropy",
                 "effective.sample.size")
-  out <- setNames(vector("list", length(outnames)), outnames)
+  out <- make_list(outnames)
 
   if (ignore.s.weights  || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
@@ -206,11 +206,9 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$negative.entropy <- c(all = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
     out$num.zeros <- c(overall = sum(check_if_zero(w)))
 
-    nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
-    nn[1, ] <- ESS(sw)
-    nn[2, ] <- ESS(w)
-    dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                         c("Total"))
+    nn <- make_df("Total", c("Unweighted", "Weighted"))
+    nn["Unweighted", ] <- ESS(sw)
+    nn["Weighted", ] <- ESS(w)
 
   }
   else if (treat.type == "binary") {
@@ -242,15 +240,11 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 
     #dc <- weightit$discarded
 
-    nn <- as.data.frame(matrix(0, nrow = 2, ncol = 2))
-    nn[1, ] <- c(ESS(sw[t==0]),
-                 ESS(sw[t==1]))
-    nn[2, ] <- c(ESS(w[t==0]),
-                 ESS(w[t==1]))
-    # nn[3, ] <- c(sum(t==0 & dc==1), #Discarded
-    #              sum(t==1 & dc==1))
-    dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                         c("Control", "Treated"))
+    nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
+    nn["Unweighted", ] <- c(ESS(sw[t==0]),
+                            ESS(sw[t==1]))
+    nn["Weighted", ] <- c(ESS(w[t==0]),
+                          ESS(w[t==1]))
   }
   else if (treat.type == "multinomial") {
     out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
@@ -269,14 +263,11 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
                        overall = sum(check_if_zero(w)))
 
-    nn <- as.data.frame(matrix(0, nrow = 2, ncol = nunique(t)))
-    for (i in seq_len(nunique(t))) {
-      nn[1, i] <- ESS(sw[t==levels(t)[i]])
-      nn[2, i] <- ESS(w[t==levels(t)[i]])
-      # nn[3, i] <- sum(t==levels(t)[i] & dc==1) #Discarded
+    nn <- make_df(levels(t), c("Unweighted", "Weighted"))
+    for (i in levels(t)) {
+      nn["Unweighted", i] <- ESS(sw[t==i])
+      nn["Weighted", i] <- ESS(w[t==i])
     }
-    dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                         levels(t))
   }
   else if (treat.type == "ordinal") {
     stop("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)

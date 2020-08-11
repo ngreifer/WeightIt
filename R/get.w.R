@@ -41,7 +41,7 @@ get.w.ps <- function(x, stop.method = NULL, estimand = NULL, s.weights = FALSE, 
     else stop("estimand must be the same length as the number of sets of weights requested.", call. = FALSE)
   }
 
-  w <- setNames(as.data.frame(matrix(1, nrow = nrow(ps$ps), ncol = length(s))), s)
+  w <- make_df(s, nrow(ps$ps))
   for (p in s) {
     if (estimand[p] == "ATT") w[[p]] <- ps$treat + (1-ps$treat)*ps$ps[,p]/(1-ps$ps[,p])
     else if (estimand[p] == "ATE") w[[p]] <- ps$treat/ps$ps[,p] + (1-ps$treat)/(1-ps$ps[,p])
@@ -87,8 +87,7 @@ get.w.mnps <- function(x, stop.method = NULL, s.weights = FALSE, ...) {
   estimand <- mnps$estimand
   criterion <- mnps$stopMethods[match(tolower(rule1), tolower(mnps$stopMethods))]
 
-  w <- setNames(as.data.frame(matrix(1, nrow = length(mnps$treatVar), ncol = length(s))),
-                criterion)
+  w <- make_df(criterion, length(mnps$treatVar))
 
   if (estimand == "ATT") {
     for (i in mnps$levExceptTreatATT) {
@@ -150,8 +149,7 @@ get.w.ps.cont <- function(x, stop.method = NULL, s.weights = FALSE, ...) {
 
   s <- names(ps.cont$w)[match(tolower(rule1), tolower(names(ps.cont$w)))]
 
-  w <- setNames(as.data.frame(matrix(1, nrow = nrow(ps.cont$w), ncol = length(s))),
-                s)
+  w <- make_df(s, nrow(ps.cont$w))
 
   for (p in s) {
     w[[p]] <- ps.cont$w[[p]]
@@ -188,9 +186,8 @@ get.w.iptw <- function(x, stop.method = NULL, s.weights = FALSE, ...) {
     rule1 <- names(iptw$psList[[1]]$ps)
   }
 
-  w <- setNames(as.data.frame(matrix(NA, nrow = nrow(iptw$psList[[1]]$ps),
-                                     ncol = length(rule1))),
-                rule1)
+  w <- make_df(rule1, nrow(iptw$psList[[1]]$ps))
+
   for (i in rule1) {
     w[i] <- Reduce("*", lapply(iptw$psList, function(x) get.w.ps(x, stop.method = i)))
   }

@@ -391,7 +391,8 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
     outnames <- c("weight.range", "weight.top","weight.ratio",
                   "coef.of.var",
                   "effective.sample.size")
-    out <- setNames(vector("list", length(outnames)), outnames)
+    out <- make_list(outnames)
+
     in.subgroup <- mod_factor == i
     w <- w_[in.subgroup]
     sw <- sw_[in.subgroup]
@@ -404,11 +405,9 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
       out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
       out$coef.of.var <- c(all = sd(w)/mean(w))
 
-      nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
-      nn[1, ] <- ESS(sw)
-      nn[2, ] <- ESS(w)
-      dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                           c("Total"))
+      nn <- make_df("Total", c("Unweighted", "Weighted"))
+      nn["Unweighted", ] <- ESS(sw)
+      nn["Weighted", ] <- ESS(w)
 
     }
     else if (treat.type == "binary") {
@@ -432,15 +431,11 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
 
       #dc <- weightit$discarded
 
-      nn <- as.data.frame(matrix(0, nrow = 2, ncol = 2))
-      nn[1, ] <- c(ESS(sw[t==0]),
-                   ESS(sw[t==1]))
-      nn[2, ] <- c(ESS(w[t==0]),
-                   ESS(w[t==1]))
-      # nn[3, ] <- c(sum(t==0 & dc==1), #Discarded
-      #              sum(t==1 & dc==1))
-      dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                           c("Control", "Treated"))
+      nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
+      nn["Unweighted", ] <- c(ESS(sw[t==0]),
+                              ESS(sw[t==1]))
+      nn["Weighted", ] <- c(ESS(w[t==0]),
+                            ESS(w[t==1]))
     }
     else if (treat.type == "multinomial") {
       out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
@@ -456,14 +451,11 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
       out$coef.of.var <- c(sapply(levels(t), function(x) sd(w[t==x])/mean(w[t==x])),
                            overall = sd(w)/mean(w))
 
-      nn <- as.data.frame(matrix(0, nrow = 2, ncol = nunique(t)))
-      for (i in seq_len(nunique(t))) {
-        nn[1, i] <- ESS(sw[t==levels(t)[i]])
-        nn[2, i] <- ESS(w[t==levels(t)[i]])
-        # nn[3, i] <- sum(t==levels(t)[i] & dc==1) #Discarded
+      nn <- make_df(levels(t), c("Unweighted", "Weighted"))
+      for (i in levels(t)) {
+        nn["Unweighted", i] <- ESS(sw[t==i])
+        nn["Weighted", i] <- ESS(w[t==i])
       }
-      dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                           levels(t))
     }
     else if (treat.type == "ordinal") {
       stop("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)

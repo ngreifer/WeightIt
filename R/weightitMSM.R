@@ -74,7 +74,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
   else by.arg <- "by"
 
   reported.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
-    stabout <- sw.list <- vector("list", length(formula.list))
+    stabout <- sw.list <- make_list(length(formula.list))
+
+  if (is_null(formula.list) || !is_(formula.list, "list") || !all(vapply(formula.list, is.formula, logical(1L), sides = 2))) {
+    stop("'formula.list' must be a list of formulas.", call. = FALSE)
+  }
 
   for (i in seq_along(formula.list)) {
 
@@ -152,7 +156,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
     # if (length(A[["family"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
     # if (length(A[["family"]]) == 1) A[["family"]] <- rep(A[["family"]], length(formula.list))
 
-    obj.list <- vector("list", length(formula.list))
+    obj.list <- make_list(length(formula.list))
 
     for (i in seq_along(formula.list)) {
       A_i <- A
@@ -330,8 +334,8 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                 "coef.of.var", "scaled.mad", "negative.entropy",
                 "weight.mean",
                 "effective.sample.size")
-  out.list <- setNames(vector("list", length(object$treat.list)),
-                       names(object$treat.list))
+
+  out.list <- make_list(names(object$treat.list))
 
   if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
@@ -340,8 +344,8 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   stabilized <- is_not_null(object[["stabilization"]])
 
   for (ti in seq_along(object$treat.list)) {
+    out <- make_list(outnames)
     if (treat.types[ti] == "continuous") {
-      out <- setNames(vector("list", length(outnames)), outnames)
       out$weight.range <- list(all = c(min(w[w > 0]),
                                        max(w[w > 0])))
       top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
@@ -352,18 +356,16 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       out$num.zeros <- c(overall = sum(check_if_zero(w)))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
-      nn <- as.data.frame(matrix(0, ncol = 1, nrow = 2))
-      nn[1, ] <- ESS(sw)
-      nn[2, ] <- ESS(w)
-      dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                           c("Total"))
+      nn <- make_df("Total", c("Unweighted", "Weighted"))
+      nn["Unweighted", ] <- ESS(sw)
+      nn["Weighted", ] <- ESS(w)
+
       out$effective.sample.size <- nn
 
       out.list[[ti]] <- out
 
     }
     else if (treat.types[ti] == "binary") {
-      out <- setNames(vector("list", length(outnames)), outnames)
       t <- object$treat.list[[ti]]
       top0 <- c(treated = min(top, sum(t == 1)),
                 control = min(top, sum(t == 0)))
@@ -392,24 +394,17 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                          overall = sum(check_if_zero(w)))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
-      #dc <- weightit$discarded
+      nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
+      nn["Unweighted", ] <- c(ESS(sw[t==0]),
+                              ESS(sw[t==1]))
+      nn["Weighted", ] <- c(ESS(w[t==0]),
+                            ESS(w[t==1]))
 
-      nn <- as.data.frame(matrix(0, nrow = 2, ncol = 2))
-      nn[1, ] <- c(ESS(sw[t==0]),
-                   ESS(sw[t==1]))
-      nn[2, ] <- c(ESS(w[t==0]),
-                   ESS(w[t==1]))
-      # nn[3, ] <- c(sum(t==0 & dc==1), #Discarded
-      #              sum(t==1 & dc==1))
-      dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                           c("Control", "Treated"))
       out$effective.sample.size <- nn
       out.list[[ti]] <- out
 
     }
     else if (treat.types[ti] == "multinomial") {
-
-      out <- setNames(vector("list", length(outnames)), outnames)
       t <- object$treat.list[[ti]]
       out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
                                                                    max(w[w > 0 & t == x]))),
@@ -428,14 +423,12 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                          overall = sum(check_if_zero(w)))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
-      nn <- as.data.frame(matrix(0, nrow = 2, ncol = nunique(t)))
-      for (i in seq_len(nunique(t))) {
-        nn[1, i] <- ESS(sw[t==levels(t)[i]])
-        nn[2, i] <- ESS(w[t==levels(t)[i]])
-        # nn[3, i] <- sum(t==levels(t)[i] & dc==1) #Discarded
+      nn <- make_df(levels(t), c("Unweighted", "Weighted"))
+      for (i in levels(t)) {
+        nn["Unweighted", i] <- ESS(sw[t==i])
+        nn["Weighted", i] <- ESS(w[t==i])
       }
-      dimnames(nn) <- list(c("Unweighted", "Weighted"),
-                           levels(t))
+
       out$effective.sample.size <- nn
       out.list[[ti]] <- out
     }
