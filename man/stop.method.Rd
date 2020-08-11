@@ -41,7 +41,7 @@ Belitser, S. V., Martens, E. P., Pestman, W. R., Groenwold, R. H. H., de Boer, A
 
 Franklin, J. M., Rassen, J. A., Ackermann, D., Bartels, D. B., & Schneeweiss, S. (2014). Metrics for covariate balance in cohort studies of causal effects. Statistics in Medicine, 33(10), 1685–1699. \doi{10.1002/sim.6058}
 
-Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. \url{http://arxiv.org/abs/2004.13962}
+Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. \url{https://arxiv.org/abs/2004.13962}
 
 Griffin, B. A., McCaffrey, D. F., Almirall, D., Burgette, L. F., & Setodji, C. M. (2017). Chasing Balance and Other Recommendations for Improving Nonparametric Propensity Score Models. Journal of Causal Inference, 5(2). \doi{10.1515/jci-2015-0026}
 

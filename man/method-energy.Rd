@@ -64,7 +64,7 @@ Noah Greifer
 
 %\strong{Binary and Multinomial treatments}
 
-Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. \url{http://arxiv.org/abs/2004.13962}
+Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. \url{https://arxiv.org/abs/2004.13962}
 
 %\strong{Continuous treatments}
 

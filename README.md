@@ -3,8 +3,8 @@
 
 # WeightIt
 
-[![CRAN\_Status\_Badge](http://r-pkg.org/badges/version-last-release/WeightIt?color=0047ab)](https://cran.r-project.org/package=WeightIt)
-[![CRAN\_Downloads\_Badge](http://cranlogs.r-pkg.org/badges/WeightIt?color=0047ab)](https://cran.r-project.org/package=WeightIt)
+[![CRAN\_Status\_Badge](https://r-pkg.org/badges/version-last-release/WeightIt?color=0047ab)](https://cran.r-project.org/package=WeightIt)
+[![CRAN\_Downloads\_Badge](https://cranlogs.r-pkg.org/badges/WeightIt?color=0047ab)](https://cran.r-project.org/package=WeightIt)
 
 `WeightIt` is a one-stop package to generate balancing weights for point
 and longitudinal treatments in observational studies. Contained within
@@ -70,7 +70,8 @@ bal.tab(W, un = TRUE)
 ```
 
     Call
-     weightit(formula = treat ~ age + educ + nodegree + married + race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
+     weightit(formula = treat ~ age + educ + nodegree + married + 
+        race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
     
     Balance Measures
                     Type Diff.Un Diff.Adj
@@ -123,8 +124,8 @@ overall       1.371 0.591   1.024       0
 - Effective Sample Sizes:
 
            Control Treated
-Unweighted 429.000 185.000
-Weighted   329.008  58.327
+Unweighted  429.    185.  
+Weighted    329.01   58.33
 ```
 
 Desirable qualities include small coefficients of variation close to 0
