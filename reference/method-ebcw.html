@@ -148,7 +148,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <div class="ref-description">
     <p>This page explains the details of estimating weights using empirical balancing calibration weighting (EBCW) by setting <code>method = "ebcw"</code> in the call to <code><a href='weightit.html'>weightit</a></code>. This method can be used with binary and multinomial treatments.</p>
-<p>In general, this method relies on estimating weights by minimizing a function of the weights subject to exact moment balancing constraints. This method relies on <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE</a></code> from the <span class="pkg">ATE</span> package.</p>
+<p>In general, this method relies on estimating weights by minimizing a function of the weights subject to exact moment balancing constraints. This method relies on <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE</a></code> from the <a href='https://CRAN.R-project.org/package=ATE'><span class="pkg">ATE</span></a> package.</p>
 <h3>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE</a></code> with <code>ATT = TRUE</code>. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the <code>ATE</code> fit object. When the ATE is requested, <code>ATE</code> is run twice, once for each treatment group.</p>
 <h3>Multinomial Treatments</h3>

@@ -85,7 +85,7 @@
       <h1 data-toc-skip>Using WeightIt to Estimate Balancing Weights</h1>
                         <h4 class="author">Noah Greifer</h4>
             
-            <h4 class="date">2020-08-10</h4>
+            <h4 class="date">2020-08-11</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt_A0_basic_use.Rmd"><code>vignettes/WeightIt_A0_basic_use.Rmd</code></a></small>
       <div class="hidden name"><code>WeightIt_A0_basic_use.Rmd</code></div>
@@ -151,7 +151,7 @@
 <p>Based on this output, we can see that all variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .05 for all variables. In particular, <code>re74</code> and <code>re75</code> are quite imbalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using <code><a href="../reference/weightit.html">weightit()</a></code> to try to attain balance on these covariates.</p>
 <p>First, we’ll start simple, and use inverse probability weights from propensity scores generated through logistic regression. We need to supply <code><a href="../reference/weightit.html">weightit()</a></code> with the formula for the model, the data set, the estimand (ATT), and the method of estimation (<code>"ps"</code>) for propensity score weights).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit">
-<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st"><a href="https://github.com/ngreifer/WeightIt">"WeightIt"</a></span>)
+<span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st"><a href="https://ngreifer.github.io/WeightIt">"WeightIt"</a></span>)
 <span class="kw">W.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span>(<span class="kw">treat</span> <span class="op">~</span> <span class="kw">age</span> <span class="op">+</span> <span class="kw">educ</span> <span class="op">+</span> <span class="kw">race</span> <span class="op">+</span> <span class="kw">married</span> <span class="op">+</span> <span class="kw">nodegree</span> <span class="op">+</span> <span class="kw">re74</span> <span class="op">+</span> <span class="kw">re75</span>,
         data = <span class="kw">lalonde</span>, estimand = <span class="st">"ATT"</span>, method = <span class="st">"ps"</span>)
 <span class="kw">W.out</span> <span class="co">#print the output</span>
@@ -342,7 +342,7 @@
 ## 
 ## Intervals : 
 ## Level       BCa          
-## 95%   (-239, 2952 )  
+## 95%   (-325, 2833 )  
 ## Calculations and Intervals on Original Scale</code></pre>
 <p>In this case, our confidence intervals were similar. Bootstrapping can take some time, especially with weight estimation methods that take longer, such as SuperLearner (<code>method = "super"</code>), covariate balancing propensity score estimation (<code>method = "cbps"</code>), or entropy balancing with <code>stabilize = TRUE</code>.</p>
 <p>If we wanted to produce a “doubly-robust” treatment effect estimate, we could add baseline covariates to the <code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code> (or <code><a href="https://rdrr.io/pkg/survey/man/svyglm.html">svyglm()</a></code>) model (in both the original effect estimation and the confidence interval estimation).</p>

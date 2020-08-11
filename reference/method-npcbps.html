@@ -148,7 +148,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <div class="ref-description">
     <p>This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting <code>method = "npcbps"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
-<p>In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>npCBPS</a></code> from the <span class="pkg">CBPS</span> package.</p>
+<p>In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>npCBPS</a></code> from the <a href='https://CRAN.R-project.org/package=CBPS'><span class="pkg">CBPS</span></a> package.</p>
 <h3>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>npCBPS</a></code>. The ATE is the only estimand allowed. The weights are taken from the output of the <code>npCBPS</code> fit object.</p>
 <h3>Multinomial Treatments</h3>

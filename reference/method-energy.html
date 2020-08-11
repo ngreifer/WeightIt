@@ -153,7 +153,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
     <p>This page explains the details of estimating weights using energy balancing by setting <code>method = "energy"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary and multinomial treatments. <!-- %This method can be used with binary, multinomial, and continuous treatments. --></p>
 <p>In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multinomial treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups.
 <!-- %For continuous treatments, this is the energy covariance between the treatment variable and the covariates. -->
-This method relies on code written for <span class="pkg">WeightIt</span> using <code><a href='https://rdrr.io/pkg/osqp/man/osqp.html'>osqp</a></code> from the <span class="pkg">osqp</span> package to perform the optimization. This method may be slow or memory-intensive for large datasets.</p>
+This method relies on code written for <span class="pkg">WeightIt</span> using <code><a href='https://rdrr.io/pkg/osqp/man/osqp.html'>osqp</a></code> from the <a href='https://CRAN.R-project.org/package=osqp'><span class="pkg">osqp</span></a> package to perform the optimization. This method may be slow or memory-intensive for large datasets.</p>
 <h3>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the weights using <code>osqp</code> using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE, ATT, and ATC.</p>
 <h3>Multinomial Treatments</h3>
