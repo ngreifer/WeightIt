@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# WeightIt 0.10.1
 
 * With `method = "gbm"`, added the ability to tune hyperparameters like `interaction.depth` and `distribution` using the same critera as is used to select the optimal tree. A summary of the tuning results is included in `info` in the `weightit` output object.
 
