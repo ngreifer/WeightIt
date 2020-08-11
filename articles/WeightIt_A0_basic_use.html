@@ -342,7 +342,7 @@
 ## 
 ## Intervals : 
 ## Level       BCa          
-## 95%   (-325, 2833 )  
+## 95%   (-285, 2927 )  
 ## Calculations and Intervals on Original Scale</code></pre>
 <p>In this case, our confidence intervals were similar. Bootstrapping can take some time, especially with weight estimation methods that take longer, such as SuperLearner (<code>method = "super"</code>), covariate balancing propensity score estimation (<code>method = "cbps"</code>), or entropy balancing with <code>stabilize = TRUE</code>.</p>
 <p>If we wanted to produce a “doubly-robust” treatment effect estimate, we could add baseline covariates to the <code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code> (or <code><a href="https://rdrr.io/pkg/survey/man/svyglm.html">svyglm()</a></code>) model (in both the original effect estimation and the confidence interval estimation).</p>
