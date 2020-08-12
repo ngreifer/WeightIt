@@ -298,10 +298,11 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                                         choiceVar = "alt",
                                         weights = s.weights, ...)
               },
-              error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mnlogit().\n       Try again with use.mnlogit = FALSE."), call. = FALSE)}
+              error = function(e) {stop(paste0("There was a problem fitting the multinomial logistic regression with mnlogit().\n       Try again with use.mnlogit = FALSE."), call. = FALSE)}
               )
             }
             else {
+              check.package("dfidx")
               data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
               covnames <- names(data)[-c(1,2)]
               mult <- dfidx::dfidx(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
@@ -312,7 +313,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                                       probit = A$link[1] == "probit",
                                       weights = .s.weights, ...)
               },
-              error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regressions with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
+              error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
               )
             }
             ps <- fitted(fit, outcome = FALSE)

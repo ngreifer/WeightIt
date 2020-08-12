@@ -22,7 +22,7 @@ Suggests:
     ATE (>= 0.2.0),
     optweight (>= 0.2.4),
     SuperLearner (>= 2.0-25),
-    mlogit (>= 1.0-3.1),
+    mlogit (>= 1.1.0),
     mnlogit (>= 1.2.6),
     dfidx,
     MNP (>= 3.1-0),
