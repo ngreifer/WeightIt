@@ -247,15 +247,15 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Diff.Adj
 #&gt; age      Contin.  -0.0001
-#&gt; educ     Contin.   0.0000
-#&gt; married   Binary   0.0000
+#&gt; educ     Contin.  -0.0000
+#&gt; married   Binary  -0.0000
 #&gt; nodegree  Binary   0.0000
 #&gt; re74     Contin.  -0.0002
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted 429.000     185
-#&gt; Adjusted   252.163     185</div><div class='input'>
+#&gt; Unadjusted  429.       185
+#&gt; Adjusted    252.16     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 (<span class='no'>W2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>race</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
                   <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
@@ -309,9 +309,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; re74     Contin.       0.0001
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;              black hispan   white
-#&gt; Unadjusted 243.000  72.00 299.000
-#&gt; Adjusted   180.477  52.74 262.932</div><div class='input'>
+#&gt;             black hispan  white
+#&gt; Unadjusted 243.    72.   299.  
+#&gt; Adjusted   180.48  52.74 262.93</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
 (<span class='no'>W3</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>re75</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
                   <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
@@ -354,9 +354,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; re74     Contin.       -0
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;              Total
-#&gt; Unadjusted 614.000
-#&gt; Adjusted   387.412</div><div class='input'>
+#&gt;             Total
+#&gt; Unadjusted 614.  
+#&gt; Adjusted   387.41</div><div class='input'>
 </div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">

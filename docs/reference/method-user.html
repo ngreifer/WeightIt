@@ -243,8 +243,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted 429.000     185
-#&gt; Adjusted   255.989     185</div><div class='input'>
+#&gt; Unadjusted  429.       185
+#&gt; Adjusted    255.99     185</div><div class='input'>
 <span class='co'>#Balancing covariates for longitudinal treatments</span>
 <span class='co'># my.ps is used at each time point.</span>
 <span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"twang"</span>)</div><div class='output co'>#&gt; <span class='message'>Loading required package: survey</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: grid</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: Matrix</span></div><div class='output co'>#&gt; <span class='message'>Loading required package: survival</span></div><div class='output co'>#&gt; <span class='message'></span>
@@ -368,16 +368,16 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;  - </span><span style='font-style: italic;'>Time 1</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted  294.00 706.000
-#&gt; Adjusted    185.18 573.598
+#&gt; Unadjusted  294.     706. 
+#&gt; Adjusted    185.18   573.6
 #&gt;  - </span><span style='font-style: italic;'>Time 2</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted 492.000 508.000
-#&gt; Adjusted   318.903 264.487
+#&gt; Unadjusted   492.   508.  
+#&gt; Adjusted     318.9  264.49
 #&gt;  - </span><span style='font-style: italic;'>Time 3</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted 415.000 585.000
-#&gt; Adjusted   235.672 366.399</div><div class='input'>
+#&gt; Unadjusted  415.     585. 
+#&gt; Adjusted    235.67   366.4</div><div class='input'>
 <span class='co'># Kernel balancing using the KBAL package, available</span>
 <span class='co'># using devtools::install_github("chadhazlett/KBAL").</span>
 <span class='co'># Only the ATT and ATC are available. Use 'kbal.method'</span>

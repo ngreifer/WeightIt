@@ -85,7 +85,7 @@
       <h1 data-toc-skip>Using WeightIt to Estimate Balancing Weights</h1>
                         <h4 class="author">Noah Greifer</h4>
             
-            <h4 class="date">2020-08-10</h4>
+            <h4 class="date">2020-08-15</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt_A0_basic_use.Rmd"><code>vignettes/WeightIt_A0_basic_use.Rmd</code></a></small>
       <div class="hidden name"><code>WeightIt_A0_basic_use.Rmd</code></div>
@@ -214,8 +214,8 @@
 ## 
 ## Effective sample sizes
 ##            Control Treated
-## Unadjusted 429.000     185
-## Adjusted   203.231     185</code></pre>
+## Unadjusted  429.       185
+## Adjusted    203.23     185</code></pre>
 <p>For nearly all the covariates, these weights yielded very good balance. Only <code>age</code> remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let’s see if we can do better. We’ll choose a different method: entropy balancing, which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.</p>
 <div class="sourceCode" id="cb13"><html><body><pre class="r"><span class="no">W.out</span> <span class="kw">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span>(<span class="no">treat</span> ~ <span class="no">age</span> + <span class="no">educ</span> + <span class="no">race</span> + <span class="no">married</span> + <span class="no">nodegree</span> + <span class="no">re74</span> + <span class="no">re75</span>,
         <span class="kw">data</span> <span class="kw">=</span> <span class="no">lalonde</span>, <span class="kw">estimand</span> <span class="kw">=</span> <span class="st">"ATT"</span>, <span class="kw">method</span> <span class="kw">=</span> <span class="st">"ebal"</span>)
@@ -256,7 +256,7 @@
 ## Balance Measures
 ##                Type Diff.Adj     M.Threshold V.Ratio.Adj
 ## age         Contin.  -0.0001 Balanced, &lt;0.05      0.4096
-## educ        Contin.   0.0000 Balanced, &lt;0.05      0.6635
+## educ        Contin.  -0.0000 Balanced, &lt;0.05      0.6635
 ## race_black   Binary   0.0001 Balanced, &lt;0.05            
 ## race_hispan  Binary   0.0000 Balanced, &lt;0.05            
 ## race_white   Binary  -0.0001 Balanced, &lt;0.05            
@@ -276,8 +276,8 @@
 ## 
 ## Effective sample sizes
 ##            Control Treated
-## Unadjusted 429.000     185
-## Adjusted    98.493     185</code></pre>
+## Unadjusted  429.       185
+## Adjusted     98.49     185</code></pre>
 <p>Indeed, we have achieved perfect balance on the means of the covariates. However, the variance ratio of <code>age</code> is still quite high. We could continue to try to adjust for this imbalance, but if there is reason to believe it is unlikely to affect the outcome, it may be best to leave it as is. (You can try adding <code><a href="https://rdrr.io/r/base/AsIs.html">I(age^2)</a></code> to the formula and see what changes this causes.)</p>
 <p>Now that we have our weights stored in <code>W.out</code>, let’s extract them and estimate our treatment effect. We’ll use the <code>survey</code> package to incorporate the weights into our analysis.</p>
 <div class="sourceCode" id="cb17"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"survey"</span>)
@@ -540,16 +540,16 @@
 ## Effective sample sizes
 ##  - Time 1
 ##            Control Treated
-## Unadjusted  294.00 706.000
-## Adjusted    185.18 573.598
+## Unadjusted  294.     706. 
+## Adjusted    185.18   573.6
 ##  - Time 2
 ##            Control Treated
-## Unadjusted 492.000 508.000
-## Adjusted   318.903 264.487
+## Unadjusted   492.   508.  
+## Adjusted     318.9  264.49
 ##  - Time 3
 ##            Control Treated
-## Unadjusted 415.000 585.000
-## Adjusted   235.672 366.399</code></pre>
+## Unadjusted  415.     585. 
+## Adjusted    235.67   366.4</code></pre>
 <p>By setting <code>which.time = .none</code> in <code><a href="https://rdrr.io/pkg/cobalt/man/bal.tab.html">bal.tab()</a></code>, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and variances. Now we can estimate our treatment effects. We’ll sequentially simplify our model by checking whether interaction terms are needed (implying that specific patterns of treatment yield different outcomes), then by checking whether different coefficients are needed for the treatments (implying that outcomes depend on which treatments are received).</p>
 <div class="sourceCode" id="cb33"><html><body><pre class="r"><span class="fu"><a href="https://rdrr.io/r/base/library.html">library</a></span>(<span class="st">"survey"</span>)
 <span class="no">d.w.msm</span> <span class="kw">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svydesign.html">svydesign</a></span>(<span class="kw">ids</span> <span class="kw">=</span> ~<span class="fl">1</span>, <span class="kw">weights</span> <span class="kw">=</span> <span class="no">Wmsm.out</span>$<span class="no">weights</span>,

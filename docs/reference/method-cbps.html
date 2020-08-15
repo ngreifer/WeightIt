@@ -264,8 +264,8 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted 429.000     185
-#&gt; Adjusted   251.985     185</div><div class='input'>
+#&gt; Unadjusted  429.       185
+#&gt; Adjusted    251.99     185</div><div class='input'>
 <span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 (<span class='no'>W2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>race</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
@@ -311,14 +311,14 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Corr.Adj
 #&gt; age      Contin.  -0.0002
-#&gt; educ     Contin.   0.0000
+#&gt; educ     Contin.  -0.0000
 #&gt; married   Binary  -0.0002
 #&gt; nodegree  Binary   0.0000
 #&gt; re74     Contin.  -0.0003
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;             Total
-#&gt; Unadjusted 614.00
+#&gt; Unadjusted 614.  
 #&gt; Adjusted   264.09</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
