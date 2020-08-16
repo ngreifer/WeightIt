@@ -12,7 +12,7 @@ weightit2XXX <- function(covs, treat, s.weights, subset, estimand, focal, missin
   treat <- factor(treat[subset])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
@@ -52,7 +52,7 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   s.weights <- s.weights[subset]
 
   if (anyNA(covs) && missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
@@ -287,7 +287,7 @@ weightit2enet.cont <- function(covs, treat, s.weights, subset, estimand, focal, 
   s.weights <- s.weights[subset]
 
   if (anyNA(covs) && missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }
@@ -570,7 +570,7 @@ weightit2kbal <- function(covs, treat, s.weights, subset, estimand, focal, ...) 
 
   covs <- apply(covs, 2, make.closer.to.1)
 
-  if (any(vars.w.missing <- apply(covs, 2, function(x) anyNA(x)))) {
+  if (any(vars.w.missing <- anyNA_col(covs))) {
     missing.ind <- apply(covs[, vars.w.missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
@@ -649,7 +649,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   sw <- sw/mean(sw)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     covs[is.na(covs)] <- 0
     covs <- cbind(covs, missing.ind)
   }

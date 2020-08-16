@@ -142,19 +142,19 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     ord.treat <- is.ordered(treat_sub)
 
     if (missing == "ind") {
-      missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+      missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
       if (is_not_null(missing.ind)) {
         covs[is.na(covs)] <- 0
         covs <- cbind(covs, missing.ind)
       }
     }
 
-    covs <- apply(covs, 2, make.closer.to.1)
+    for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
     if (ncol(covs) > 1) {
       if (missing == "saem") {
         covs0 <- covs
-        for (i in colnames(covs)[apply(covs, 2, anyNA)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
+        for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
         colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
       }
       else colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
@@ -443,18 +443,18 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
     }
   }
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (ncol(covs) > 1) {
     if (missing == "saem") {
       covs0 <- covs
-      for (i in colnames(covs)[apply(covs, 2, anyNA)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
+      for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
       colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
     }
     else colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
@@ -574,10 +574,10 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   s.weights <- s.weights[subset]
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -622,10 +622,10 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   s.weights <- s.weights[subset]
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -664,10 +664,10 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
     covs.list <- lapply(covs.list, function(c) {
       covs <- c[subset, , drop = FALSE]
       covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-      covs <- apply(covs, 2, make.closer.to.1)
+      for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
       if (missing == "ind") {
-        missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+        missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
         if (is_not_null(missing.ind)) {
           covs[is.na(covs)] <- 0
           covs <- cbind(covs, missing.ind)
@@ -732,10 +732,10 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       colnames(missing.ind) <- paste0(colnames(missing.ind), ":<NA>")
       # covs[is.na(covs)] <- 0
@@ -847,10 +847,10 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       colnames(missing.ind) <- paste0(colnames(missing.ind), ":<NA>")
       # covs[is.na(covs)] <- 0
@@ -886,10 +886,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
   treat.type <- get.treat.type(treat)
 
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       colnames(missing.ind) <- paste0(colnames(missing.ind), ":<NA>")
       covs <- cbind(covs, missing.ind)
@@ -1105,10 +1105,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       colnames(missing.ind) <- paste0(colnames(missing.ind), ":<NA>")
       covs <- cbind(covs, missing.ind)
@@ -1377,13 +1377,13 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
     }
   }
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
   ps <- NULL
 
   if (check.package("CBPS")) {
@@ -1484,13 +1484,13 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
     }
   }
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   new.data <- data.frame(treat = treat, covs)
 
@@ -1525,7 +1525,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
   treat <- factor(treat[subset])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -1533,7 +1533,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1561,7 +1561,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
   treat <- treat[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -1569,7 +1569,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1597,7 +1597,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -1605,7 +1605,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   for (f in names(formals(ebal::ebalance))) {
     if (is_null(A[[f]])) A[[f]] <- formals(ebal::ebalance)[[f]]
@@ -1706,7 +1706,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -1714,7 +1714,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
   # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1773,7 +1773,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -1781,7 +1781,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  covs <- apply(covs, 2, make.closer.to.1)
+  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
 
   for (f in names(formals(ATE::ATE))) {
     if (is_null(A[[f]])) A[[f]] <- formals(ATE::ATE)[[f]]
@@ -1870,7 +1870,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   treat.type <- get.treat.type(treat)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -1995,7 +1995,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
@@ -2155,7 +2155,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   treat.type <- get.treat.type(treat)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, apply(covs, 2, anyNA), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)

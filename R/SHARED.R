@@ -960,6 +960,9 @@ na.rem <- function(x) {
     #A faster na.omit for vectors
     x[!is.na(x)]
 }
+anyNA_col <- function(x) {
+    colSums(is.na(x)) > 0
+}
 check.package <- function(package.name, alternative = FALSE) {
     packages.not.installed <- package.name[!vapply(package.name, requireNamespace, logical(1L),
                                                    quietly = TRUE)]
