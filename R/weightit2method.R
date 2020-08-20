@@ -234,6 +234,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                                               family = family,
                                               method = glm_method),
                                          control), quote = TRUE)
+
           }
         },
         warning = function(w) {
@@ -245,6 +246,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         ps[[1]] <- 1 - ps[[2]]
       }
 
+      fit[["call"]] <- NULL
       fit.obj <- fit
     }
     else if (ord.treat) {
