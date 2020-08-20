@@ -262,30 +262,37 @@ check_if_int <- function(x) {
 #Statistics
 binarize <- function(variable, zero = NULL, one = NULL) {
     if (!is_binary(variable)) stop(paste0("Cannot binarize ", deparse1(substitute(variable)), ": more than two levels."))
-    if (is.character(variable)) {
+    if (is.character(variable) || is.factor(variable)) {
         variable <- factor(variable, nmax = 2)
         unique.vals <- levels(variable)
     }
-    else unique.vals <- unique(variable, nmax = 2)
-
-    variable.numeric <- as.numeric(variable)
+    else {
+        unique.vals <- unique(variable, nmax = 2)
+    }
 
     if (is_null(zero)) {
         if (is_null(one)) {
+            if (can_str2num(unique.vals)) {
+                variable.numeric <- str2num(variable)
+            }
+            else {
+                variable.numeric <- as.numeric(variable)
+            }
+
             if (0 %in% variable.numeric) zero <- 0
             else zero <- min(variable.numeric, na.rm = TRUE)
+
+            return(setNames(as.integer(variable.numeric != zero), names(variable)))
         }
         else {
-            if (one %in% unique.vals) return(setNames(as.integer(variable.numeric == one), names(variable)))
+            if (one %in% unique.vals) return(setNames(as.integer(variable == one), names(variable)))
             else stop("The argument to 'one' is not the name of a level of variable.", call. = FALSE)
         }
     }
     else {
-        if (zero %nin% unique.vals) stop("The argument to 'zero' is not the name of a level of variable.", call. = FALSE)
+        if (zero %in% unique.vals) return(setNames(as.integer(variable != zero), names(variable)))
+        else stop("The argument to 'zero' is not the name of a level of variable.", call. = FALSE)
     }
-
-    newvar <- setNames(as.integer(variable.numeric != zero), names(variable))
-    return(newvar)
 }
 ESS <- function(w) {
     sum(w)^2/sum(w^2)
