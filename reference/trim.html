@@ -199,29 +199,29 @@
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
-#&gt;            Min                                   Max
-#&gt; treated 1.0000  ||                            1.0000
-#&gt; control 0.4893 |---------------------------| 44.9497
+#&gt;            Min                                  Max
+#&gt; treated 1.0000               ||              1.0000
+#&gt; control 0.0222 |---------------------------| 2.0438
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                                 
-#&gt;                1       2       3       4       5
-#&gt;  treated       1       1       1       1       1
-#&gt;              481     308     243     208     187
-#&gt;  control 28.6049 32.2022 34.2646 36.2696 44.9497
+#&gt;                                            
+#&gt;               1      3      4      5      7
+#&gt;  treated      1      1      1      1      1
+#&gt;             595    411    409    296    269
+#&gt;  control 1.3303 1.4365 1.5005 1.6369 2.0438
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
 #&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       1.085 0.790   2.207       0
-#&gt; overall       1.309 0.911   2.053       0
+#&gt; control       0.823 0.701  -0.515       0
+#&gt; overall       0.657 0.604  -0.257       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
-#&gt; Weighted    197.29     185</div><div class='input'>
+#&gt; Weighted    255.99     185</div><div class='input'>
 <span class='co'>#Trimming the top and bottom 5 weights</span>
 <span class='fu'>trim</span>(<span class='kw'>W</span>, at = <span class='fl'>5</span>, lower = <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; <span class='message'>Trimming the top and bottom 5 weights where treat is not 1.</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
@@ -244,29 +244,29 @@
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
-#&gt;            Min                                   Max
-#&gt; treated 1.0000  ||                            1.0000
-#&gt; control 0.4893 |---------------------------| 13.9313
+#&gt;            Min                                    Max
+#&gt; treated 1.0000                              || 1.0000
+#&gt; control 0.0222   |-------------------------|   0.9407
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                                 
-#&gt;                1       2       3       4       5
-#&gt;  treated       1       1       1       1       1
-#&gt;              186     187     188     192     197
-#&gt;  control 13.9313 13.9313 13.9313 13.9313 13.9313
+#&gt;                                            
+#&gt;               1      3      4      5      7
+#&gt;  treated      1      1      1      1      1
+#&gt;             264    269    285    296    303
+#&gt;  control 0.9407 0.9407 0.9407 0.9407 0.9407
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
 #&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       0.864 0.727   1.981       0
-#&gt; overall       1.070 0.856   1.827       0
+#&gt; control       0.766 0.682  -0.583       0
+#&gt; overall       0.641 0.597  -0.285       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted   429.      185
-#&gt; Weighted     245.9     185</div><div class='input'><span class='co'>#Note that only the control weights were trimmed</span>
+#&gt; Unweighted  429.       185
+#&gt; Weighted    270.58     185</div><div class='input'><span class='co'>#Note that only the control weights were trimmed</span>
 
 <span class='co'>#Trimming a numeric vector of weights</span>
 <span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='fu'>trim</span>(<span class='kw'>W</span><span class='op'>$</span><span class='kw'>weights</span>, at = <span class='fl'>.9</span>, treat = <span class='kw'>lalonde</span><span class='op'>$</span><span class='kw'>treat</span>),

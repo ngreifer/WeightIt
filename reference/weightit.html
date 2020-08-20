@@ -279,44 +279,44 @@
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
-#&gt;            Min                                   Max
-#&gt; treated 1.0000  ||                            1.0000
-#&gt; control 0.4893 |---------------------------| 44.9497
+#&gt;            Min                                  Max
+#&gt; treated 1.0000               ||              1.0000
+#&gt; control 0.0222 |---------------------------| 2.0438
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                                 
-#&gt;                1       2       3       4       5
-#&gt;  treated       1       1       1       1       1
-#&gt;              481     308     243     208     187
-#&gt;  control 28.6049 32.2022 34.2646 36.2696 44.9497
+#&gt;                                            
+#&gt;               1      3      4      5      7
+#&gt;  treated      1      1      1      1      1
+#&gt;             595    411    409    296    269
+#&gt;  control 1.3303 1.4365 1.5005 1.6369 2.0438
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
 #&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       1.085 0.790   2.207       0
-#&gt; overall       1.309 0.911   2.053       0
+#&gt; control       0.823 0.701  -0.515       0
+#&gt; overall       0.657 0.604  -0.257       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
-#&gt; Weighted    197.29     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted    255.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + re74, data = lalonde, method = "ps", estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance  -1.9024
-#&gt; age         Contin.  -0.7456
-#&gt; educ        Contin.   0.0024
-#&gt; married      Binary  -0.6679
-#&gt; nodegree     Binary   0.2489
-#&gt; re74        Contin.  -1.9280
+#&gt; prop.score Distance   0.0199
+#&gt; age         Contin.   0.0459
+#&gt; educ        Contin.  -0.0360
+#&gt; married      Binary   0.0044
+#&gt; nodegree     Binary   0.0080
+#&gt; re74        Contin.  -0.0275
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted 429.000     185
-#&gt; Adjusted   197.287     185</div><div class='input'>
+#&gt; Adjusted   255.989     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multi-category)</span>
 (<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'>weightit</span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
                   <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,

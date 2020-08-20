@@ -85,7 +85,7 @@
       <h1 data-toc-skip>Using WeightIt to Estimate Balancing Weights</h1>
                         <h4 class="author">Noah Greifer</h4>
             
-            <h4 class="date">2020-08-15</h4>
+            <h4 class="date">2020-08-20</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt_A0_basic_use.Rmd"><code>vignettes/WeightIt_A0_basic_use.Rmd</code></a></small>
       <div class="hidden name"><code>WeightIt_A0_basic_use.Rmd</code></div>
@@ -171,29 +171,29 @@
 ## 
 ## - Weight ranges:
 ## 
-##            Min                                    Max
-## treated 1.0000 ||                              1.0000
-## control 0.2671 |---------------------------| 109.1298
+##            Min                                  Max
+## treated 1.0000         ||                    1.0000
+## control 0.0092 |---------------------------| 3.7432
 ## 
 ## - Units with 5 greatest weights by group:
-##                                                  
-##                3       4       5       6        7
-##  treated       1       1       1       1        1
-##              483     481     354     308      286
-##  control 91.5141 96.4111 97.8711 98.4627 109.1298
+##                                            
+##               1      2      3      5      6
+##  treated      1      1      1      1      1
+##             597    573    411    381    303
+##  control 3.0301 3.0592 3.2397 3.5231 3.7432
 ## 
 ## - Weight statistics:
 ## 
 ##         Coef of Var   MAD Entropy # Zeros
 ## treated       0.000 0.000  -0.000       0
-## control       1.055 0.783   3.410       0
-## overall       1.375 0.999   3.333       0
+## control       1.818 1.289   0.268       0
+## overall       1.174 0.962   0.135       0
 ## 
 ## - Effective Sample Sizes:
 ## 
 ##            Control Treated
 ## Unweighted  429.       185
-## Weighted    203.23     185</code></pre>
+## Weighted     99.82     185</code></pre>
 <p>These weights have quite high variability, and yield an ESS of close to 100 in the control group. Let’s see if these weights managed to yield balance on our covariates.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit">
 <span class="fu"><a href="https://rdrr.io/pkg/cobalt/man/bal.tab.html">bal.tab</a></span>(<span class="kw">W.out</span>, m.threshold = <span class="fl">.05</span>, disp.v.ratio = <span class="fl">TRUE</span>)
@@ -203,30 +203,30 @@
 ## 
 ## Balance Measures
 ##                 Type Diff.Adj         M.Threshold V.Ratio.Adj
-## prop.score  Distance  -2.4213                         14.8313
-## age          Contin.  -0.8017 Not Balanced, &gt;0.05      0.4426
-## educ         Contin.   0.1235 Not Balanced, &gt;0.05      0.4244
-## race_black    Binary   0.8351 Not Balanced, &gt;0.05            
-## race_hispan   Binary  -0.0112     Balanced, &lt;0.05            
-## race_white    Binary  -0.8238 Not Balanced, &gt;0.05            
-## married       Binary  -0.6274 Not Balanced, &gt;0.05            
-## nodegree      Binary   0.1931 Not Balanced, &gt;0.05            
-## re74         Contin.  -1.7305 Not Balanced, &gt;0.05      0.3557
-## re75         Contin.  -0.5097 Not Balanced, &gt;0.05      0.7826
+## prop.score  Distance  -0.0205     Balanced, &lt;0.05      1.0324
+## age          Contin.   0.1188 Not Balanced, &gt;0.05      0.4578
+## educ         Contin.  -0.0284     Balanced, &lt;0.05      0.6636
+## race_black    Binary  -0.0022     Balanced, &lt;0.05            
+## race_hispan   Binary   0.0002     Balanced, &lt;0.05            
+## race_white    Binary   0.0021     Balanced, &lt;0.05            
+## married       Binary   0.0186     Balanced, &lt;0.05            
+## nodegree      Binary   0.0184     Balanced, &lt;0.05            
+## re74         Contin.  -0.0021     Balanced, &lt;0.05      1.3206
+## re75         Contin.   0.0110     Balanced, &lt;0.05      1.3938
 ## 
 ## Balance tally for mean differences
 ##                     count
-## Balanced, &lt;0.05         1
-## Not Balanced, &gt;0.05     8
+## Balanced, &lt;0.05         9
+## Not Balanced, &gt;0.05     1
 ## 
 ## Variable with the greatest mean difference
 ##  Variable Diff.Adj         M.Threshold
-##      re74  -1.7305 Not Balanced, &gt;0.05
+##       age   0.1188 Not Balanced, &gt;0.05
 ## 
 ## Effective sample sizes
 ##            Control Treated
 ## Unadjusted 429.000     185
-## Adjusted   203.231     185</code></pre>
+## Adjusted    99.815     185</code></pre>
 <p>For nearly all the covariates, these weights yielded very good balance. Only <code>age</code> remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let’s see if we can do better. We’ll choose a different method: entropy balancing, which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit">
 <span class="kw">W.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span>(<span class="kw">treat</span> <span class="op">~</span> <span class="kw">age</span> <span class="op">+</span> <span class="kw">educ</span> <span class="op">+</span> <span class="kw">race</span> <span class="op">+</span> <span class="kw">married</span> <span class="op">+</span> <span class="kw">nodegree</span> <span class="op">+</span> <span class="kw">re74</span> <span class="op">+</span> <span class="kw">re75</span>,
