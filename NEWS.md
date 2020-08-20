@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# WeightIt 0.10.2
+
+* Fixed a bug where treatment values were accidentally switched for some methods.
+
 # WeightIt 0.10.1
 
 * With `method = "gbm"`, added the ability to tune hyperparameters like `interaction.depth` and `distribution` using the same critera as is used to select the optimal tree. A summary of the tuning results is included in `info` in the `weightit` output object.
