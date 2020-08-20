@@ -91,7 +91,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.10.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.10.2</span>
       </span>
     </div>
 
@@ -104,19 +104,10 @@ In the presence of missing data, the following value(s) for missing are allowed:
   </a>
 </li>
 <li>
-  <a href="../reference/index.html">Reference</a>
+  <a href="../articles/WeightIt.html">Get started</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
-    <li>
-      <a href="../articles/WeightIt_A0_basic_use.html">Using WeightIt to Estimate Balancing Weights</a>
-    </li>
-  </ul>
+<li>
+  <a href="../reference/index.html">Reference</a>
 </li>
 <li>
   <a href="../news/index.html">Changelog</a>
@@ -248,45 +239,45 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
-#&gt;            Min                                   Max
-#&gt; treated 1.0000  ||                            1.0000
-#&gt; control 0.5453 |---------------------------| 56.9535
+#&gt;            Min                                  Max
+#&gt; treated 1.0000                 ||            1.0000
+#&gt; control 0.0176 |---------------------------| 1.8339
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                                 
-#&gt;                1       2       3       5       6
-#&gt;  treated       1       1       1       1       1
-#&gt;              481     308     243     208     187
-#&gt;  control 32.0064 37.5196 40.3286 43.1263 56.9535
+#&gt;                                         
+#&gt;               1     2     3     4      5
+#&gt;  treated      1     1     1     1      1
+#&gt;             612   595   409   296    269
+#&gt;  control 1.2781 1.351 1.412 1.518 1.8339
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
 #&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       1.163 0.813   2.264       0
-#&gt; overall       1.393 0.929   2.110       0
+#&gt; control       0.804 0.691  -0.523       0
+#&gt; overall       0.648 0.597  -0.261       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
-#&gt; Weighted    182.53     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted    260.83     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
 #&gt;     re74, data = lalonde, method = "ps", estimand = "ATT", link = "probit")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance  -1.9900
-#&gt; age         Contin.  -0.7570
-#&gt; educ        Contin.   0.0382
-#&gt; married      Binary  -0.6765
-#&gt; nodegree     Binary   0.2568
-#&gt; re74        Contin.  -1.9417
+#&gt; prop.score Distance   0.0252
+#&gt; age         Contin.   0.0716
+#&gt; educ        Contin.  -0.0565
+#&gt; married      Binary   0.0058
+#&gt; nodegree     Binary   0.0128
+#&gt; re74        Contin.  -0.0507
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted  429.       185
-#&gt; Adjusted    182.53     185</div><div class='input'>
+#&gt; Adjusted    260.83     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 (<span class='no'>W2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>race</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
                   <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
