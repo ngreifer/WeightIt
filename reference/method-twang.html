@@ -99,12 +99,6 @@ In the presence of missing data, the following value(s) for missing are allowed:
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -143,17 +137,17 @@ In the presence of missing data, the following value(s) for missing are allowed:
     <p>This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting <code>method = "twang"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
 <p>In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves choosing a balance criterion to optimize so that balance, rather than prediction, is prioritized. For binary and multinomial treatments, this method relies on <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> from the <a href='https://CRAN.R-project.org/package=twang'><span class="pkg">twang</span></a> package. For continuous treatments, this method relies on <code><a href='ps.cont.html'>ps.cont</a></code> from <span class="pkg">WeightIt</span>.</p>
 <p>See the Details section at <code><a href='method_gbm.html'>method_gbm</a></code> for a discussion of how this method differs from <code>method = "gbm"</code>. In general, using <code>method = "gbm"</code> is preferred because it is faster and more flexible. <code>method = "twang"</code> is no longer being developed and will likely become defunct in future versions.</p>
-<h3>Binary Treatments</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code>. The following estimands are allowed: ATE, ATT, and ATC. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., <code>levels(factor(treat))[2]</code>; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.</p>
-<h3>Multinomial Treatments</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
 <p>For multinomial treatments, this method estimates the propensity scores using multiple calls to <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> (which is the same thing that <code><a href='https://rdrr.io/pkg/twang/man/mnps.html'>mnps</a></code> in <span class="pkg">twang</span> does behind the scenes). The following estimands are allowed: ATE and ATT. The weights are computed from the estimated propensity scores using the standard formulas.</p>
-<h3>Continuous Treatments</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
 <p>For continuous treatments, the generalized propensity score is estimated using <code><a href='ps.cont.html'>ps.cont</a></code>.</p>
-<h3>Longitudinal Treatments</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, the weights are the product of the weights estimated at each time point, which is what <code><a href='https://rdrr.io/pkg/twang/man/iptw.html'>iptw</a></code> in <span class="pkg">twang</span> does behind the scenes.</p>
-<h3>Sampling Weights</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Sampling Weights</h3>
 <p>Sampling weights are supported through <code>s.weights</code> in all scenarios.</p>
-<h3>Missing Data</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Missing Data</h3>
 <p>In the presence of missing data, the following value(s) for <code>missing</code> are allowed:</p><dl>
 <dt><code>"ind"</code> (default)</dt><dd><p>First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is <code>NA</code> and 0 otherwise. The missingness indicators are added to the model formula as main effects. The weight estimation then proceeds with this new formula and set of covariates using surrogate splitting as described below. The covariates output in the resulting <code>weightit</code> object will be the original covariates with the <code>NA</code>s.</p></dd>
 <dt><code>"surr"</code></dt><dd><p>Surrogate splitting is used to process <code>NA</code>s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.</p></dd>
@@ -192,34 +186,35 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Examples take a while to run</span>
-<span class='co'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
+<span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://ngreifer.github.io/cobalt/'>"cobalt"</a></span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"lalonde"</span>, package <span class='op'>=</span> <span class='st'>"cobalt"</span><span class='op'>)</span>
 
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
-(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
-                  <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
-                method = <span class='st'>"twang"</span>, estimand = <span class='st'>"ATT"</span>,
-                stop.method = <span class='st'>"es.max"</span>))
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W1</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)
+<span class='op'>(</span><span class='va'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
+                  <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
+                method <span class='op'>=</span> <span class='st'>"twang"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span>,
+                stop.method <span class='op'>=</span> <span class='st'>"es.max"</span><span class='op'>)</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
+<span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
 
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
-                  <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
-                method = <span class='st'>"twang"</span>, estimand = <span class='st'>"ATE"</span>,
-                stop.method = <span class='st'>"ks.mean"</span>))
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W2</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)
+<span class='op'>(</span><span class='va'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>race</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
+                  <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
+                method <span class='op'>=</span> <span class='st'>"twang"</span>, estimand <span class='op'>=</span> <span class='st'>"ATE"</span>,
+                stop.method <span class='op'>=</span> <span class='st'>"ks.mean"</span><span class='op'>)</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
+<span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
 
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
-(<span class='kw'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
-                  <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
-                method = <span class='st'>"twang"</span>, use.kernel = <span class='fl'>TRUE</span>,
-                stop.method = <span class='st'>"p.max"</span>))
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W3</span>)
-<span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W3</span>)
-}</div></pre>
+<span class='op'>(</span><span class='va'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>re75</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
+                  <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
+                method <span class='op'>=</span> <span class='st'>"twang"</span>, use.kernel <span class='op'>=</span> <span class='cn'>TRUE</span>,
+                stop.method <span class='op'>=</span> <span class='st'>"p.max"</span><span class='op'>)</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
+<span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -235,7 +230,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>

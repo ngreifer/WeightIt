@@ -79,12 +79,6 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -123,27 +117,27 @@
     <p>This function allows users to get the benefits of a <code>weightit</code> object when using weights not estimated with <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. These benefits include diagnostics, plots, and direct compatibility with <span class="pkg">cobalt</span> for assessing balance.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>as.weightit</span>(<span class='kw'>...</span>)
+    <pre class="usage"><span class='fu'>as.weightit</span><span class='op'>(</span><span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for default</span>
-<span class='fu'>as.weightit</span>(<span class='kw'>weights</span>,
-            <span class='kw'>treat</span>,
-            covs = <span class='kw'>NULL</span>,
-            estimand = <span class='kw'>NULL</span>,
-            s.weights = <span class='kw'>NULL</span>,
-            ps = <span class='kw'>NULL</span>,
-            <span class='kw'>...</span>)
+<span class='fu'>as.weightit</span><span class='op'>(</span><span class='va'>weights</span>,
+            <span class='va'>treat</span>,
+            covs <span class='op'>=</span> <span class='cn'>NULL</span>,
+            estimand <span class='op'>=</span> <span class='cn'>NULL</span>,
+            s.weights <span class='op'>=</span> <span class='cn'>NULL</span>,
+            ps <span class='op'>=</span> <span class='cn'>NULL</span>,
+            <span class='va'>...</span><span class='op'>)</span>
 
-<span class='fu'>as.weightitMSM</span>(<span class='kw'>...</span>)
+<span class='fu'>as.weightitMSM</span><span class='op'>(</span><span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for default</span>
-<span class='fu'>as.weightitMSM</span>(<span class='kw'>weights</span>,
-               <span class='kw'>treat.list</span>,
-               covs.list = <span class='kw'>NULL</span>,
-               estimand = <span class='kw'>NULL</span>,
-               s.weights = <span class='kw'>NULL</span>,
-               ps.list = <span class='kw'>NULL</span>,
-               <span class='kw'>...</span>)</pre>
+<span class='fu'>as.weightitMSM</span><span class='op'>(</span><span class='va'>weights</span>,
+               <span class='va'>treat.list</span>,
+               covs.list <span class='op'>=</span> <span class='cn'>NULL</span>,
+               estimand <span class='op'>=</span> <span class='cn'>NULL</span>,
+               s.weights <span class='op'>=</span> <span class='cn'>NULL</span>,
+               ps.list <span class='op'>=</span> <span class='cn'>NULL</span>,
+               <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -198,11 +192,12 @@
     <p>Noah Greifer</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='kw'>treat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span>(<span class='fl'>500</span>, <span class='fl'>1</span>, <span class='fl'>.3</span>)
-<span class='kw'>weights</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Chisquare.html'>rchisq</a></span>(<span class='fl'>500</span>, df = <span class='fl'>2</span>)
-<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'>as.weightit</span>(weights= <span class='kw'>weights</span>, treat = <span class='kw'>treat</span>,
-                 estimand = <span class='st'>"ATE"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W</span>)</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span><span>
+    <pre class="examples"><div class='input'><span class='va'>treat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span><span class='op'>(</span><span class='fl'>500</span>, <span class='fl'>1</span>, <span class='fl'>.3</span><span class='op'>)</span>
+<span class='va'>weights</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Chisquare.html'>rchisq</a></span><span class='op'>(</span><span class='fl'>500</span>, df <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span>
+<span class='va'>W</span> <span class='op'>&lt;-</span> <span class='fu'>as.weightit</span><span class='op'>(</span>weights<span class='op'>=</span> <span class='va'>weights</span>, treat <span class='op'>=</span> <span class='va'>treat</span>,
+                 estimand <span class='op'>=</span> <span class='st'>"ATE"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -244,7 +239,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>

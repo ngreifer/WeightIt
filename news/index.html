@@ -78,12 +78,6 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -117,9 +111,17 @@
       <small>Source: <a href='https://github.com/ngreifer/WeightIt/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="weightit-development-version" class="section level1">
+<h1 class="page-header" data-toc-text="development version">
+<a href="#weightit-development-version" class="anchor"></a>WeightIt (development version)<small> Unreleased </small>
+</h1>
+<ul>
+<li>Added support for estimating propensity scores using Bayesian additive rgeression trees (BART) with <code>methodd = "bart"</code>. This method fits a BART model for the treatment using functions in the <code>BART</code> package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions. Very simple and straightforward support for parallel processing is available, which makes fitting the models much faster.</li>
+</ul>
+</div>
     <div id="weightit-0102" class="section level1">
 <h1 class="page-header" data-toc-text="0.10.2">
-<a href="#weightit-0102" class="anchor"></a>WeightIt 0.10.2<small> Unreleased </small>
+<a href="#weightit-0102" class="anchor"></a>WeightIt 0.10.2<small> 2020-08-27 </small>
 </h1>
 <ul>
 <li>Fixed a bug where treatment values were accidentally switched for some methods.</li>
@@ -330,7 +332,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>

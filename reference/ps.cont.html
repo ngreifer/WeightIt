@@ -80,12 +80,6 @@ Note: ps.cont will phased out when twang adds functionality for continuous treat
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -125,24 +119,24 @@ Note: ps.cont will phased out when twang adds functionality for continuous treat
 <p>Note: <code>ps.cont</code> will phased out when <span class="pkg">twang</span> adds functionality for continuous treatments. All functionality and more is already present in <code><a href='weightit.html'>weightit</a></code> with <code><a href='method_gbm.html'>method_gbm</a>[method = "gbm"]</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ps.cont</span>(<span class='kw'>formula</span>, <span class='kw'>data</span>,
-        n.trees = <span class='fl'>20000</span>,
-        interaction.depth = <span class='fl'>4</span>,
-        shrinkage = <span class='fl'>0.0005</span>,
-        bag.fraction = <span class='fl'>1</span>,
-        print.level = <span class='fl'>0</span>,
-        verbose = <span class='fl'>FALSE</span>,
-        <span class='kw'>stop.method</span>,
-        sampw = <span class='kw'>NULL</span>,
-        optimize = <span class='fl'>1</span>,
-        use.kernel = <span class='fl'>FALSE</span>,
-        <span class='kw'>...</span>)
+    <pre class="usage"><span class='fu'>ps.cont</span><span class='op'>(</span><span class='va'>formula</span>, <span class='va'>data</span>,
+        n.trees <span class='op'>=</span> <span class='fl'>20000</span>,
+        interaction.depth <span class='op'>=</span> <span class='fl'>4</span>,
+        shrinkage <span class='op'>=</span> <span class='fl'>0.0005</span>,
+        bag.fraction <span class='op'>=</span> <span class='fl'>1</span>,
+        print.level <span class='op'>=</span> <span class='fl'>0</span>,
+        verbose <span class='op'>=</span> <span class='cn'>FALSE</span>,
+        <span class='va'>stop.method</span>,
+        sampw <span class='op'>=</span> <span class='cn'>NULL</span>,
+        optimize <span class='op'>=</span> <span class='fl'>1</span>,
+        use.kernel <span class='op'>=</span> <span class='cn'>FALSE</span>,
+        <span class='va'>...</span><span class='op'>)</span>
 <span class='co'># S3 method for ps.cont</span>
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>object</span>, <span class='kw'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>object</span>, <span class='va'>...</span><span class='op'>)</span>
 <span class='co'># S3 method for ps.cont</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
 <span class='co'># S3 method for ps.cont</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/boxplot.html'>boxplot</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/r/graphics/boxplot.html'>boxplot</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -262,18 +256,19 @@ The NULL entries exist so the output object is similar to that of ps in twang.
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Examples take a long time</span>
-<span class='co'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
+<span class='kw'>if</span> <span class='op'>(</span><span class='cn'>FALSE</span><span class='op'>)</span> <span class='op'>{</span>
+<span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://ngreifer.github.io/cobalt/'>"cobalt"</a></span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"lalonde"</span>, package <span class='op'>=</span> <span class='st'>"cobalt"</span><span class='op'>)</span>
 
 <span class='co'>#Balancing covariates with respect to re75</span>
-<span class='kw'>psc.out</span> <span class='op'>&lt;-</span> <span class='fu'>ps.cont</span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
-                <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
-                stop.method = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"p.mean"</span>, <span class='st'>"p.max"</span>),
-                use.optimize = <span class='fl'>2</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>psc.out</span>)
-<span class='kw'>twang</span>::<span class='fu'><a href='https://rdrr.io/pkg/twang/man/bal.table.html'>bal.table</a></span>(<span class='kw'>psc.out</span>) <span class='co'>#twang's bal.table</span>
-}</div></pre>
+<span class='va'>psc.out</span> <span class='op'>&lt;-</span> <span class='fu'>ps.cont</span><span class='op'>(</span><span class='va'>re75</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
+                <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>race</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
+                stop.method <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"p.mean"</span>, <span class='st'>"p.max"</span><span class='op'>)</span>,
+                use.optimize <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>psc.out</span><span class='op'>)</span>
+<span class='fu'>twang</span><span class='fu'>::</span><span class='fu'><a href='https://rdrr.io/pkg/twang/man/bal.table.html'>bal.table</a></span><span class='op'>(</span><span class='va'>psc.out</span><span class='op'>)</span> <span class='co'>#twang's bal.table</span>
+<span class='op'>}</span>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -289,7 +284,7 @@ The NULL entries exist so the output object is similar to that of ps in twang.
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>

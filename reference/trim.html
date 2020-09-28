@@ -79,12 +79,6 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -124,10 +118,10 @@
     </div>
 
     <pre class="usage"><span class='co'># S3 method for weightit</span>
-<span class='fu'>trim</span>(<span class='kw'>w</span>, at = <span class='fl'>0</span>, lower = <span class='fl'>FALSE</span>, <span class='kw'>...</span>)
+<span class='fu'>trim</span><span class='op'>(</span><span class='va'>w</span>, at <span class='op'>=</span> <span class='fl'>0</span>, lower <span class='op'>=</span> <span class='cn'>FALSE</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for numeric</span>
-<span class='fu'>trim</span>(<span class='kw'>w</span>, at = <span class='fl'>0</span>, lower = <span class='fl'>FALSE</span>, treat = <span class='kw'>NULL</span>, <span class='kw'>...</span>)</pre>
+<span class='fu'>trim</span><span class='op'>(</span><span class='va'>w</span>, at <span class='op'>=</span> <span class='fl'>0</span>, lower <span class='op'>=</span> <span class='cn'>FALSE</span>, treat <span class='op'>=</span> <span class='cn'>NULL</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -175,18 +169,20 @@
     <div class='dont-index'><p><code>link{weightit}</code>, <code>link{weightitMSM}</code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://ngreifer.github.io/cobalt/'>"cobalt"</a></span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"lalonde"</span>, package <span class='op'>=</span> <span class='st'>"cobalt"</span><span class='op'>)</span>
 
-(<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
-                 <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
-               method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+<span class='op'>(</span><span class='va'>W</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
+                 <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
+               method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -214,7 +210,8 @@
 #&gt; Unweighted  429.       185
 #&gt; Weighted    255.99     185</div><div class='input'>
 <span class='co'>#Trimming the top and bottom 5 weights</span>
-<span class='fu'>trim</span>(<span class='kw'>W</span>, at = <span class='fl'>5</span>, lower = <span class='fl'>TRUE</span>)</div><div class='output co'>#&gt; <span class='message'>Trimming the top and bottom 5 weights where treat is not 1.</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+<span class='fu'>trim</span><span class='op'>(</span><span class='va'>W</span>, at <span class='op'>=</span> <span class='fl'>5</span>, lower <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Trimming the top and bottom 5 weights where treat is not 1.</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -223,7 +220,8 @@
 #&gt;  - covariates: age, educ, married, nodegree, re74
 #&gt;  - weights trimmed at the top and bottom 5 </div><div class='input'>
 <span class='co'>#Trimming at 90th percentile</span>
-(<span class='kw'>W.trim</span> <span class='op'>&lt;-</span> <span class='fu'>trim</span>(<span class='kw'>W</span>, at = <span class='fl'>.9</span>))</div><div class='output co'>#&gt; <span class='message'>Trimming weights where treat is not 1 to 90%.</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+<span class='op'>(</span><span class='va'>W.trim</span> <span class='op'>&lt;-</span> <span class='fu'>trim</span><span class='op'>(</span><span class='va'>W</span>, at <span class='op'>=</span> <span class='fl'>.9</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Trimming weights where treat is not 1 to 90%.</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -231,7 +229,8 @@
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, re74
 #&gt;  - weights trimmed at 90% </div><div class='input'>
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W.trim</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W.trim</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -260,66 +259,69 @@
 #&gt; Weighted    270.58     185</div><div class='input'><span class='co'>#Note that only the control weights were trimmed</span>
 
 <span class='co'>#Trimming a numeric vector of weights</span>
-<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='fu'>trim</span>(<span class='kw'>W</span><span class='op'>$</span><span class='kw'>weights</span>, at = <span class='fl'>.9</span>, treat = <span class='kw'>lalonde</span><span class='op'>$</span><span class='kw'>treat</span>),
-          <span class='kw'>W.trim</span><span class='op'>$</span><span class='kw'>weights</span>)</div><div class='output co'>#&gt; <span class='message'>Trimming weights where treat is not 1 to 90%.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span><span class='op'>(</span><span class='fu'>trim</span><span class='op'>(</span><span class='va'>W</span><span class='op'>$</span><span class='va'>weights</span>, at <span class='op'>=</span> <span class='fl'>.9</span>, treat <span class='op'>=</span> <span class='va'>lalonde</span><span class='op'>$</span><span class='va'>treat</span><span class='op'>)</span>,
+          <span class='va'>W.trim</span><span class='op'>$</span><span class='va'>weights</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Trimming weights where treat is not 1 to 90%.</span></div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='co'>#Using made up data and as.weightit()</span>
-<span class='kw'>treat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span>(<span class='fl'>500</span>, <span class='fl'>1</span>, <span class='fl'>.3</span>)
-<span class='kw'>weights</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Chisquare.html'>rchisq</a></span>(<span class='fl'>500</span>, df = <span class='fl'>2</span>)
-<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'><a href='as.weightit.html'>as.weightit</a></span>(weights = <span class='kw'>weights</span>, treat = <span class='kw'>treat</span>,
-                 estimand = <span class='st'>"ATE"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+<span class='va'>treat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span><span class='op'>(</span><span class='fl'>500</span>, <span class='fl'>1</span>, <span class='fl'>.3</span><span class='op'>)</span>
+<span class='va'>weights</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Chisquare.html'>rchisq</a></span><span class='op'>(</span><span class='fl'>500</span>, df <span class='op'>=</span> <span class='fl'>2</span><span class='op'>)</span>
+<span class='va'>W</span> <span class='op'>&lt;-</span> <span class='fu'><a href='as.weightit.html'>as.weightit</a></span><span class='op'>(</span>weights <span class='op'>=</span> <span class='va'>weights</span>, treat <span class='op'>=</span> <span class='va'>treat</span>,
+                 estimand <span class='op'>=</span> <span class='st'>"ATE"</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;            Min                                   Max
-#&gt; treated 0.0782 |-----------------|            7.3680
-#&gt; control 0.0030 |---------------------------| 11.3178
+#&gt; treated 0.0070 |----------------|            10.4217
+#&gt; control 0.0003 |---------------------------| 16.3493
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                             
-#&gt;             436    335    333    203     103
-#&gt;  treated 5.5532 6.1825 6.2122 7.1462   7.368
-#&gt;             408    337    201    196      45
-#&gt;  control 8.8746 8.9234 9.7306 9.8349 11.3178
+#&gt;                                                 
+#&gt;              329     160     138      71      68
+#&gt;  treated  5.6218  6.0001  6.5392  8.7383 10.4217
+#&gt;              440     418     411     349     330
+#&gt;  control 10.2337 10.5141 14.0882 14.8792 16.3493
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.808 0.640   1.015       0
-#&gt; control       0.929 0.714   1.162       0
-#&gt; overall       0.902 0.696   1.126       0
+#&gt; treated       0.921 0.684   0.968       0
+#&gt; control       1.094 0.766   1.237       0
+#&gt; overall       1.062 0.744   1.168       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted  370.    130.  
-#&gt; Weighted    198.76   78.93</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='fu'>trim</span>(<span class='kw'>W</span>, at = <span class='fl'>.95</span>))</div><div class='output co'>#&gt; <span class='message'>Trimming weights to 95%.</span></div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt; Unweighted  355.    145.  
+#&gt; Weighted    161.86   78.67</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='fu'>trim</span><span class='op'>(</span><span class='va'>W</span>, at <span class='op'>=</span> <span class='fl'>.95</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='message'>Trimming weights to 95%.</span></div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;            Min                                  Max
-#&gt; treated 0.0782 |---------------------------| 6.1935
-#&gt; control 0.0030 |---------------------------| 6.1935
+#&gt; treated 0.0070 |---------------------------| 6.0001
+#&gt; control 0.0003 |---------------------------| 6.0001
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                            
-#&gt;             436    335    103    203    333
-#&gt;  treated 5.5532 6.1825 6.1935 6.1935 6.1935
-#&gt;              45    114    115    131    152
-#&gt;  control 6.1935 6.1935 6.1935 6.1935 6.1935
+#&gt;             329     68     71    138    160
+#&gt;  treated 5.6218 6.0001 6.0001 6.0001 6.0001
+#&gt;              13     43     46     67     94
+#&gt;  control 6.0001 6.0001 6.0001 6.0001 6.0001
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.790 0.635   1.000       0
-#&gt; control       0.848 0.692   1.084       0
-#&gt; overall       0.834 0.678   1.063       0
+#&gt; treated       0.835 0.668   0.906       0
+#&gt; control       0.891 0.723   1.062       0
+#&gt; overall       0.879 0.709   1.020       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
-#&gt; Unweighted  370.    130.  
-#&gt; Weighted    215.45   80.28</div></span></pre>
+#&gt; Unweighted  355.    145.  
+#&gt; Weighted    198.21   85.71</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -335,7 +337,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>

@@ -79,12 +79,6 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -123,22 +117,22 @@
     <p>Implements the subgroup balancing propensity score (SBPS), which is an algorithm that attempts to achieve balance in subgroups by sharing information from the overall sample and subgroups. (Dong, Zhang, Zeng, &amp; Li, 2020; DZZL). Each subgroup can use either weights estimated using the whole sample, weights estimated using just that subgroup, or a combination of the two. The optimal combination is chosen as that which minimizes an imbalance criterion that includes subgroup as well as overall balance.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>sbps</span>(<span class='kw'>obj</span>, obj2 = <span class='kw'>NULL</span>,
-     moderator = <span class='kw'>NULL</span>,
-     formula = <span class='kw'>NULL</span>,
-     data = <span class='kw'>NULL</span>,
-     smooth = <span class='fl'>FALSE</span>,
-     <span class='kw'>full.search</span>)
+    <pre class="usage"><span class='fu'>sbps</span><span class='op'>(</span><span class='va'>obj</span>, obj2 <span class='op'>=</span> <span class='cn'>NULL</span>,
+     moderator <span class='op'>=</span> <span class='cn'>NULL</span>,
+     formula <span class='op'>=</span> <span class='cn'>NULL</span>,
+     data <span class='op'>=</span> <span class='cn'>NULL</span>,
+     smooth <span class='op'>=</span> <span class='cn'>FALSE</span>,
+     <span class='va'>full.search</span><span class='op'>)</span>
 
 <span class='co'># S3 method for weightit.sbps</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for weightit.sbps</span>
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>object</span>, top = <span class='fl'>5</span>,
-        ignore.s.weights = <span class='fl'>FALSE</span>, <span class='kw'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>object</span>, top <span class='op'>=</span> <span class='fl'>5</span>,
+        ignore.s.weights <span class='op'>=</span> <span class='cn'>FALSE</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for summary.weightit.sbps</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -195,7 +189,7 @@
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>The SBPS relies on two sets of weights: one estimated in the overall sample and one estimated within each subgroup. The algorithm decides whether each subgroup should use the weights estimated in the overall sample or those estimated in the subgroup. There are 2^R permutations of overall and subgroup weights, where R is the number of subgroups. The optimal permutation is chosen as that which minimizes a balance criterion as described in DZZL. The balance criterion used here is, for binary and multinomial treatments, the sum of the squared standardized mean differences within subgroups and overall, which are computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>, and for continuous treatments, the sum of the squared correlations between each covariate and treatment within subgroups and overall, which are computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_corr()</a></code> in <span class="pkg">cobalt</span>.</p>
+    <p>The SBPS relies on two sets of weights: one estimated in the overall sample and one estimated within each subgroup. The algorithm decides whether each subgroup should use the weights estimated in the overall sample or those estimated in the subgroup. There are 2^R permutations of overall and subgroup weights, where R is the number of subgroups. The optimal permutation is chosen as that which minimizes a balance criterion as described in DZZL. The balance criterion used here is, for binary and multinomial treatments, the sum of the squared standardized mean differences within subgroups and overall, which are computed using <code><a href='https://ngreifer.github.io/cobalt/reference/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>, and for continuous treatments, the sum of the squared correlations between each covariate and treatment within subgroups and overall, which are computed using <code><a href='https://ngreifer.github.io/cobalt/reference/balance.summary.html'>col_w_corr()</a></code> in <span class="pkg">cobalt</span>.</p>
 <p>The smooth version estimates weights that determine the relative contribution of the overall and subgroup propensity scores to a weighted average propensity score for each subgroup. If P_O are the propensity scores estimated in the overall sample and P_S are the propensity scores estimated in each subgroup, the smooth SBPS finds R coefficients C so that for each subgroup, the ultimate propensity score is \(C*P_S + (1-C)*P_O\), and weights are computed from this propensity score. The coefficients are estimated using <code><a href='https://rdrr.io/r/stats/optim.html'>optim</a></code> with <code>method = "L-BFGS-B"</code>. When C is estimated to be 1 or 0 for each subgroup, the smooth SBPS coincides with the standard SBPS.</p>
 <p>If <code>obj2</code> is not specified and <code>moderator</code> is, <code>sbps()</code> will attempt to refit the model specified in <code>obj</code> with the <code>moderator</code> in the <code>by</code> argument. This relies on the environment in which <code>obj</code> was created to be intact and can take some time if <code>obj</code> was hard to fit. It's safer to estimate <code>obj</code> and <code>obj2</code> (the latter simply by including the moderator in the <code>by</code> argument) and supply these to <code>SBPS</code>.</p>
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
@@ -213,38 +207,42 @@
     <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='summary.weightit.html'>summary.weightit</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://github.com/ngreifer/cobalt'>"cobalt"</a></span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://ngreifer.github.io/cobalt/'>"cobalt"</a></span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span><span class='op'>(</span><span class='st'>"lalonde"</span>, package <span class='op'>=</span> <span class='st'>"cobalt"</span><span class='op'>)</span>
 
 <span class='co'>#Balancing covariates between treatment groups within races</span>
-(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
-                <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
-                method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+<span class='op'>(</span><span class='va'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
+                <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>race</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
+                method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74</div><div class='input'>
-(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
-                <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
-                method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>,
-                by = <span class='st'>"race"</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+<span class='op'>(</span><span class='va'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
+                <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>race</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
+                method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span>,
+                by <span class='op'>=</span> <span class='st'>"race"</span><span class='op'>)</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74
-#&gt;  - by: race</div><div class='input'><span class='kw'>S</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>S</span>)</div><div class='output co'>#&gt; A weightit.sbps object
+#&gt;  - by: race</div><div class='input'><span class='va'>S</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span><span class='op'>(</span><span class='va'>W1</span>, <span class='va'>W2</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>S</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; A weightit.sbps object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74
-#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>S</span>)</div><div class='output co'>#&gt; Summary of weights:
+#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>S</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; Summary of weights:
 #&gt; 
 #&gt;  - Overall vs. subgroup proportion contribution:
 #&gt;          race = black race = hispan race = white
@@ -318,7 +316,8 @@
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
-#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S</span>, cluster = <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>S</span>, cluster <span class='op'>=</span> <span class='st'>"race"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  sbps(obj = W1, obj2 = W2)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
@@ -335,8 +334,8 @@
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted  87.000     156
-#&gt; Adjusted    73.818     156
+#&gt; Unadjusted   87.       156
+#&gt; Adjusted     73.82     156
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: hispan</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
@@ -350,8 +349,8 @@
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted  61.000      11
-#&gt; Adjusted    40.616      11
+#&gt; Unadjusted   61.        11
+#&gt; Adjusted     40.62      11
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: white</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
@@ -365,22 +364,24 @@
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted 281.000      18
-#&gt; Adjusted   120.777      18
+#&gt; Unadjusted  281.        18
+#&gt; Adjusted    120.78      18
 #&gt;  - - - - - - - - - - - - - - 
 #&gt; </div><div class='input'>
 <span class='co'>#Could also have run</span>
 <span class='co'>#  sbps(W1, moderator = "race")</span>
 
-<span class='kw'>S_</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>, smooth = <span class='fl'>TRUE</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>S_</span>)</div><div class='output co'>#&gt; A weightit.sbps object
+<span class='va'>S_</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span><span class='op'>(</span><span class='va'>W1</span>, <span class='va'>W2</span>, smooth <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>S_</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; A weightit.sbps object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74
-#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>S_</span>)</div><div class='output co'>#&gt; Summary of weights:
+#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>S_</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; Summary of weights:
 #&gt; 
 #&gt;  - Overall vs. subgroup proportion contribution:
 #&gt;          race = black race = hispan race = white
@@ -454,7 +455,8 @@
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
-#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S_</span>, cluster = <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>S_</span>, cluster <span class='op'>=</span> <span class='st'>"race"</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  sbps(obj = W1, obj2 = W2, smooth = TRUE)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
@@ -471,8 +473,8 @@
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted  87.000     156
-#&gt; Adjusted    73.744     156
+#&gt; Unadjusted   87.       156
+#&gt; Adjusted     73.74     156
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: hispan</span><span> - - - 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
@@ -486,7 +488,7 @@
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted   61.00      11
+#&gt; Unadjusted   61.        11
 #&gt; Adjusted     41.95      11
 #&gt; 
 #&gt;  - - - </span><span style='font-style: italic;'>Cluster: white</span><span> - - - 
@@ -501,10 +503,11 @@
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
-#&gt; Unadjusted 281.000      18
-#&gt; Adjusted   120.777      18
+#&gt; Unadjusted  281.        18
+#&gt; Adjusted    120.78      18
 #&gt;  - - - - - - - - - - - - - - 
-#&gt; </div><div class='input'></div></span></pre>
+#&gt; </div><div class='input'>
+</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -520,7 +523,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>

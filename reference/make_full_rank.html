@@ -79,12 +79,6 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="../index.html">
-    <span class="fas fa fas fa-home fa-lg"></span>
-     
-  </a>
-</li>
-<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -123,8 +117,8 @@
     <p>When writing <a href='method_user.html'>user-defined methods</a> for use with <code>weightit</code>, it may be necessary to take the potentially non-full rank <code>covs</code> data frame and make it full rank for use in a downstream function. This function performs that operation.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>make_full_rank</span>(<span class='kw'>mat</span>,
-               with.intercept = <span class='fl'>TRUE</span>)</pre>
+    <pre class="usage"><span class='fu'>make_full_rank</span><span class='op'>(</span><span class='va'>mat</span>,
+               with.intercept <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span></pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -157,14 +151,15 @@
     <div class='dont-index'><p><code><a href='method_user.html'>method_user</a></code>, <code><a href='https://rdrr.io/r/stats/model.matrix.html'>model.matrix</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span>(<span class='fl'>1000</span>)
-<span class='kw'>c1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span>(<span class='fl'>10</span>, <span class='fl'>1</span>, <span class='fl'>.4</span>)
-<span class='kw'>c2</span> <span class='op'>&lt;-</span> <span class='fl'>1</span><span class='op'>-</span><span class='kw'>c1</span>
-<span class='kw'>c3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span>(<span class='fl'>10</span>)
-<span class='kw'>c4</span> <span class='op'>&lt;-</span> <span class='fl'>10</span><span class='op'>*</span><span class='kw'>c3</span>
-<span class='kw'>mat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span>(<span class='kw'>c1</span>, <span class='kw'>c2</span>, <span class='kw'>c3</span>, <span class='kw'>c4</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/Random.html'>set.seed</a></span><span class='op'>(</span><span class='fl'>1000</span><span class='op'>)</span>
+<span class='va'>c1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span><span class='op'>(</span><span class='fl'>10</span>, <span class='fl'>1</span>, <span class='fl'>.4</span><span class='op'>)</span>
+<span class='va'>c2</span> <span class='op'>&lt;-</span> <span class='fl'>1</span><span class='op'>-</span><span class='va'>c1</span>
+<span class='va'>c3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Normal.html'>rnorm</a></span><span class='op'>(</span><span class='fl'>10</span><span class='op'>)</span>
+<span class='va'>c4</span> <span class='op'>&lt;-</span> <span class='fl'>10</span><span class='op'>*</span><span class='va'>c3</span>
+<span class='va'>mat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/data.frame.html'>data.frame</a></span><span class='op'>(</span><span class='va'>c1</span>, <span class='va'>c2</span>, <span class='va'>c3</span>, <span class='va'>c4</span><span class='op'>)</span>
 
-<span class='fu'>make_full_rank</span>(<span class='kw'>mat</span>) <span class='co'>#leaves c2 and c4</span></div><div class='output co'>#&gt;    c1          c3
+<span class='fu'>make_full_rank</span><span class='op'>(</span><span class='va'>mat</span><span class='op'>)</span> <span class='co'>#leaves c2 and c4</span>
+</div><div class='output co'>#&gt;    c1          c3
 #&gt; 1   0 -0.38548930
 #&gt; 2   1 -0.47586788
 #&gt; 3   0  0.71975069
@@ -175,7 +170,8 @@
 #&gt; 8   0  0.12138119
 #&gt; 9   0 -0.12087232
 #&gt; 10  0 -1.33604105</div><div class='input'>
-<span class='fu'>make_full_rank</span>(<span class='kw'>mat</span>, with.intercept = <span class='fl'>FALSE</span>) <span class='co'>#leaves c1, c2, and c4</span></div><div class='output co'>#&gt;    c1 c2          c3
+<span class='fu'>make_full_rank</span><span class='op'>(</span><span class='va'>mat</span>, with.intercept <span class='op'>=</span> <span class='cn'>FALSE</span><span class='op'>)</span> <span class='co'>#leaves c1, c2, and c4</span>
+</div><div class='output co'>#&gt;    c1 c2          c3
 #&gt; 1   0  1 -0.38548930
 #&gt; 2   1  0 -0.47586788
 #&gt; 3   0  1  0.71975069
@@ -201,7 +197,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.9000.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
 </div>
 
       </footer>
