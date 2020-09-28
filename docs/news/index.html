@@ -117,9 +117,17 @@
       <small>Source: <a href='https://github.com/ngreifer/WeightIt/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="weightit-development-version" class="section level1">
+<h1 class="page-header" data-toc-text="development version">
+<a href="#weightit-development-version" class="anchor"></a>WeightIt (development version)<small> Unreleased </small>
+</h1>
+<ul>
+<li>Added support for estimating propensity scores using Bayesian additive rgeression trees (BART) with <code>methodd = "bart"</code>. This method fits a BART model for the treatment using functions in the <code>BART</code> package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions. Very simple and straightforward support for parallel processing is available, which makes fitting the models much faster.</li>
+</ul>
+</div>
     <div id="weightit-0102" class="section level1">
 <h1 class="page-header" data-toc-text="0.10.2">
-<a href="#weightit-0102" class="anchor"></a>WeightIt 0.10.2<small> Unreleased </small>
+<a href="#weightit-0102" class="anchor"></a>WeightIt 0.10.2<small> 2020-08-27 </small>
 </h1>
 <ul>
 <li>Fixed a bug where treatment values were accidentally switched for some methods.</li>
@@ -177,7 +185,7 @@
 <li><p>Added <code>stabilize</code> option to <code><a href="../reference/get_w_from_ps.html">get_w_from_ps()</a></code>.</p></li>
 <li><p>A new <code>missing</code> argument has been added to <code><a href="../reference/weightit.html">weightit()</a></code> to choose how missing data in the covariates is handled. For most methods, only <code>"ind"</code> (i.e., missing indicators with single-value imputation) is allowed, but for <code>"ps"</code>, <code>"gbm"</code>, and <code>"twang"</code>, other methods are possible. For <code>method = "ps"</code>, a stochastic approximation of the EM algorithm (SAEM) can be used through the <code>misaem</code> package by setting <code>missing = "saem"</code>.</p></li>
 <li><p>For continuous treatments with the <code>"ps"</code>, <code>"gbm"</code>, and <code>"super"</code> methods (i.e., where the conditional density of the treatment needs to be estimated), the user can now supply their own density as a string or function rather than using the normal density or kernel density estimation. For example, to use the density of the t-distribution with 3 degrees of freedom, one can set <code>density = "dt_3"</code>. T-distributions often work better than normal distributions for extreme values of the treatment.</p></li>
-<li><p>Some methods now have an <code>info</code> component in the output object. This contains information that might be useful in diagnosing or reporting the method. For example, when <code>method = "gbm"</code>, <code>info</code> contains the tree that was used to compute the weights and the balance resulting from all the trees, which can be plotted using <code><a href="https://rdrr.io/r/base/plot.html">plot()</a></code>. When <code>method = "super"</code>, <code>info</code> contains the coefficients in the stacking model and the cross-validation risk of each of the component methods.</p></li>
+<li><p>Some methods now have an <code>info</code> component in the output object. This contains information that might be useful in diagnosing or reporting the method. For example, when <code>method = "gbm"</code>, <code>info</code> contains the tree that was used to compute the weights and the balance resulting from all the trees, which can be plotted using <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>. When <code>method = "super"</code>, <code>info</code> contains the coefficients in the stacking model and the cross-validation risk of each of the component methods.</p></li>
 <li><p>For <code>method = "gbm"</code>, the best tree can be chosen using cross validation rather than balance by setting <code>stop.method = "cv5"</code>, e.g., to do 5-fold cross-validation.</p></li>
 <li><p>For <code>method = "gbm"</code>, a new optional argument <code>start.tree</code> can be set to select the tree at which balance begins to be computed. This can speed things up when you know that the best tree is not within the first 100 trees, for example.</p></li>
 <li><p>When using <code>method = "gbm"</code> with multi-category treatments and estimands other than the <code>ATE</code>, <code>ATT</code>, or <code>ATC</code> are used with standardized mean differences as the stopping rule, the mean differences will be between the weighted overall sample and each treatment group. Otherwise, some efficiency improvements.</p></li>
@@ -258,7 +266,7 @@
 </h1>
 <ul>
 <li><p>Added <code><a href="../reference/trim.html">trim()</a></code> function to trim weights.</p></li>
-<li><p>Added <code><a href="../reference/ps.cont.html">ps.cont()</a></code> function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in <code>twang</code>. This function uses the same syntax as <code>ps()</code> in <code>twang</code>, and can also be accessed using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code>. Support functions were added to make it compatible with <code>twang</code> functions for assessing balance (e.g., <code>summary</code>, <code>bal.table</code>, <code>plot</code>). Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.</p></li>
+<li><p>Added <code><a href="../reference/ps.cont.html">ps.cont()</a></code> function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in <code>twang</code>. This function uses the same syntax as <code><a href="https://rdrr.io/pkg/twang/man/ps.html">ps()</a></code> in <code>twang</code>, and can also be accessed using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code>. Support functions were added to make it compatible with <code>twang</code> functions for assessing balance (e.g., <code>summary</code>, <code>bal.table</code>, <code>plot</code>). Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.</p></li>
 <li><p>The input formula is now much more forgiving, allowing objects in the environment to be included. The <code>data</code> argument to <code><a href="../reference/weightit.html">weightit()</a></code> is now optional. To simplify things, the output object no longer contains a <code>data</code> field.</p></li>
 <li><p>Under-the-hood changes to facilitate adding new features and debugging. Some aspects of the output objects have been slightly changed, but it shouldn’t affect use for most users.</p></li>
 <li><p>Fixed a bug where variables would be thrown out when <code>method = "ebal"</code>.</p></li>
@@ -330,7 +338,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

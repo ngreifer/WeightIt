@@ -123,22 +123,22 @@
     <p>Implements the subgroup balancing propensity score (SBPS), which is an algorithm that attempts to achieve balance in subgroups by sharing information from the overall sample and subgroups. (Dong, Zhang, Zeng, &amp; Li, 2020; DZZL). Each subgroup can use either weights estimated using the whole sample, weights estimated using just that subgroup, or a combination of the two. The optimal combination is chosen as that which minimizes an imbalance criterion that includes subgroup as well as overall balance.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>sbps</span>(<span class='no'>obj</span>, <span class='kw'>obj2</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-     <span class='kw'>moderator</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-     <span class='kw'>formula</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-     <span class='kw'>data</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-     <span class='kw'>smooth</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-     <span class='no'>full.search</span>)
+    <pre class="usage"><span class='fu'>sbps</span>(<span class='kw'>obj</span>, obj2 = <span class='kw'>NULL</span>,
+     moderator = <span class='kw'>NULL</span>,
+     formula = <span class='kw'>NULL</span>,
+     data = <span class='kw'>NULL</span>,
+     smooth = <span class='fl'>FALSE</span>,
+     <span class='kw'>full.search</span>)
 
 <span class='co'># S3 method for weightit.sbps</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)
 
 <span class='co'># S3 method for weightit.sbps</span>
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>object</span>, <span class='kw'>top</span> <span class='kw'>=</span> <span class='fl'>5</span>,
-        <span class='kw'>ignore.s.weights</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>, <span class='no'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>object</span>, top = <span class='fl'>5</span>,
+        ignore.s.weights = <span class='fl'>FALSE</span>, <span class='kw'>...</span>)
 
 <span class='co'># S3 method for summary.weightit.sbps</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -205,43 +205,50 @@
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p>Dong, J., Zhang, J. L., Zeng, S., &amp; Li, F. (2020). Subgroup balancing propensity score. Statistical Methods in Medical Research, 29(3), 659–676. doi: <a href='https://doi.org/10.1177/0962280219870836'>10.1177/0962280219870836</a></p>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Noah Greifer</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='summary.weightit.html'>summary.weightit</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://ngreifer.github.io/cobalt'>"cobalt"</a></span>)
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups within races</span>
-(<span class='no'>W1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>treat</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
-                <span class='no'>nodegree</span> + <span class='no'>race</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
+                method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>))
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74</div><div class='input'>
-(<span class='no'>W2</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>treat</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
-                <span class='no'>nodegree</span> + <span class='no'>race</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATT"</span>,
-                <span class='kw'>by</span> <span class='kw'>=</span> <span class='st'>"race"</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
+                method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>,
+                by = <span class='st'>"race"</span>))
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74
-#&gt;  - by: race</div><div class='input'><span class='no'>S</span> <span class='kw'>&lt;-</span> <span class='fu'>sbps</span>(<span class='no'>W1</span>, <span class='no'>W2</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>S</span>)</div><div class='output co'>#&gt; A weightit.sbps object
+#&gt;  - by: race</div><div class='input'><span class='kw'>S</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>S</span>)
+</div><div class='output co'>#&gt; A weightit.sbps object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74
-#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>S</span>)</div><div class='output co'>#&gt; Summary of weights:
+#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>S</span>)
+</div><div class='output co'>#&gt; Summary of weights:
 #&gt; 
 #&gt;  - Overall vs. subgroup proportion contribution:
 #&gt;          race = black race = hispan race = white
@@ -315,7 +322,8 @@
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
-#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>S</span>, <span class='kw'>cluster</span> <span class='kw'>=</span> <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S</span>, cluster = <span class='st'>"race"</span>)
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  sbps(obj = W1, obj2 = W2)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
@@ -369,15 +377,17 @@
 <span class='co'>#Could also have run</span>
 <span class='co'>#  sbps(W1, moderator = "race")</span>
 
-<span class='no'>S_</span> <span class='kw'>&lt;-</span> <span class='fu'>sbps</span>(<span class='no'>W1</span>, <span class='no'>W2</span>, <span class='kw'>smooth</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>S_</span>)</div><div class='output co'>#&gt; A weightit.sbps object
+<span class='kw'>S_</span> <span class='op'>&lt;-</span> <span class='fu'>sbps</span>(<span class='kw'>W1</span>, <span class='kw'>W2</span>, smooth = <span class='fl'>TRUE</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>S_</span>)
+</div><div class='output co'>#&gt; A weightit.sbps object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, race, re74
-#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>S_</span>)</div><div class='output co'>#&gt; Summary of weights:
+#&gt;  - moderator: race (3 subgroups)</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>S_</span>)
+</div><div class='output co'>#&gt; Summary of weights:
 #&gt; 
 #&gt;  - Overall vs. subgroup proportion contribution:
 #&gt;          race = black race = hispan race = white
@@ -451,7 +461,8 @@
 #&gt; - Effective Sample Sizes:
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
-#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>S_</span>, <span class='kw'>cluster</span> <span class='kw'>=</span> <span class='st'>"race"</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>S_</span>, cluster = <span class='st'>"race"</span>)
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  sbps(obj = W1, obj2 = W2, smooth = TRUE)
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
@@ -518,7 +529,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

@@ -123,25 +123,25 @@
     <p><code>weightit</code> allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multi-category treatments. Many of these methods exist in other packages, which <code>weightit</code> calls; these packages must be installed to use the desired method. Also included are <code>print</code> and <code>summary</code> methods for examining the output.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>weightit</span>(<span class='no'>formula</span>,
-         <span class='kw'>data</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>,
-         <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>,
-         <span class='kw'>stabilize</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-         <span class='kw'>focal</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>s.weights</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>ps</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>moments</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>int</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-         <span class='kw'>subclass</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>missing</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-         <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-         <span class='kw'>include.obj</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-         <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>weightit</span>(<span class='kw'>formula</span>,
+         data = <span class='kw'>NULL</span>,
+         method = <span class='st'>"ps"</span>,
+         estimand = <span class='st'>"ATE"</span>,
+         stabilize = <span class='fl'>FALSE</span>,
+         focal = <span class='kw'>NULL</span>,
+         by = <span class='kw'>NULL</span>,
+         s.weights = <span class='kw'>NULL</span>,
+         ps = <span class='kw'>NULL</span>,
+         moments = <span class='kw'>NULL</span>,
+         int = <span class='fl'>FALSE</span>,
+         subclass = <span class='kw'>NULL</span>,
+         missing = <span class='kw'>NULL</span>,
+         verbose = <span class='fl'>FALSE</span>,
+         include.obj = <span class='fl'>FALSE</span>,
+         <span class='kw'>...</span>)
 
 <span class='co'># S3 method for weightit</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -233,37 +233,43 @@
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
     <p>The primary purpose of <code>weightit</code> is as a dispatcher to functions that perform the estimation of balancing weights using the requested <code>method</code>. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when <code>include.obj = TRUE</code>), how missing values are treated, which estimands are allowed, and whether sampling weights are allowed.</p><ul>
-<li><p><code><a href='method-ps.html'>"ps"</a></code> - Propensity score weighting using generalized linear models.</p></li>
-<li><p><code><a href='method-gbm.html'>"gbm"</a></code> - Propensity score weighting using generalized boosted modeling.</p></li>
-<li><p><code><a href='method-cbps.html'>"cbps"</a></code> - Covariate Balancing Propensity Score weighting.</p></li>
-<li><p><code><a href='method-npcbps.html'>"npcbps"</a></code> - Non-parametric Covariate Balancing Propensity Score weighting.</p></li>
-<li><p><code><a href='method-ebal.html'>"ebal"</a></code> - Entropy balancing.</p></li>
-<li><p><code><a href='method-ebcw.html'>"ebcw"</a></code> - Empirical balancing calibration weighting.</p></li>
-<li><p><code><a href='method-optweight.html'>"optweight"</a></code> - Optimization-based weighting.</p></li>
-<li><p><code><a href='method-super.html'>"super"</a></code> - Propensity score weighting using SuperLearner.</p></li>
-<li><p><code><a href='method-energy.html'>"energy"</a></code> - Energy balancing.</p></li>
+<li><p><code><a href='method_ps.html'>"ps"</a></code> - Propensity score weighting using generalized linear models.</p></li>
+<li><p><code><a href='method_gbm.html'>"gbm"</a></code> - Propensity score weighting using generalized boosted modeling.</p></li>
+<li><p><code><a href='method_cbps.html'>"cbps"</a></code> - Covariate Balancing Propensity Score weighting.</p></li>
+<li><p><code><a href='method_npcbps.html'>"npcbps"</a></code> - Non-parametric Covariate Balancing Propensity Score weighting.</p></li>
+<li><p><code><a href='method_ebal.html'>"ebal"</a></code> - Entropy balancing.</p></li>
+<li><p><code><a href='method_ebcw.html'>"ebcw"</a></code> - Empirical balancing calibration weighting.</p></li>
+<li><p><code><a href='method_optweight.html'>"optweight"</a></code> - Optimization-based weighting.</p></li>
+<li><p><code><a href='method_super.html'>"super"</a></code> - Propensity score weighting using SuperLearner.</p></li>
+<li><p><code><a href='method_bart.html'>"bart"</a></code> - Propensity score weighting using Bayesian additive regression trees (BART).</p></li>
+<li><p><code><a href='method_energy.html'>"energy"</a></code> - Energy balancing.</p></li>
 </ul>
 
-<p><code>method</code> can also be supplied as a user-defined function; see <code><a href='method-user.html'>method_user</a></code> for instructions and examples.</p>
+<p><code>method</code> can also be supplied as a user-defined function; see <code><a href='method_user.html'>method_user</a></code> for instructions and examples.</p>
 <p>When using <code>weightit</code>, please cite both the <span class="pkg">WeightIt</span> package (using <code><a href='https://rdrr.io/r/utils/citation.html'>citation("WeightIt")</a></code>) and the paper(s) in the references section of the method used.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='weightitMSM.html'>weightitMSM</a></code> for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal strcutural models (MSMs).</p></div>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Noah Greifer</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://ngreifer.github.io/cobalt'>"cobalt"</a></span>)
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
-(<span class='no'>W1</span> <span class='kw'>&lt;-</span> <span class='fu'>weightit</span>(<span class='no'>treat</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
-                  <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATT"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'>weightit</span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                  <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
+                method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATT"</span>))
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W1</span>)
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -289,7 +295,8 @@
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
-#&gt; Weighted    255.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted    255.99     185</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W1</span>)
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
 #&gt;     re74, data = lalonde, method = "ps", estimand = "ATT")
 #&gt; 
@@ -307,15 +314,17 @@
 #&gt; Unadjusted  429.       185
 #&gt; Adjusted    255.99     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multi-category)</span>
-(<span class='no'>W2</span> <span class='kw'>&lt;-</span> <span class='fu'>weightit</span>(<span class='no'>race</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
-                  <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ebal"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'>weightit</span>(<span class='kw'>race</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                  <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
+                method = <span class='st'>"ebal"</span>, estimand = <span class='st'>"ATE"</span>))
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ebal" (entropy balancing)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 3-category (black, hispan, white)
 #&gt;  - estimand: ATE
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W2</span>)
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -345,7 +354,8 @@
 #&gt; 
 #&gt;             black hispan  white
 #&gt; Unweighted 243.    72.   299.  
-#&gt; Weighted   180.48  52.74 262.93</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   180.48  52.74 262.93</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W2</span>)
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "ebal", estimand = "ATE")
 #&gt; 
@@ -362,14 +372,16 @@
 #&gt; Unadjusted 243.    72.   299.  
 #&gt; Adjusted   180.48  52.74 262.93</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
-(<span class='no'>W3</span> <span class='kw'>&lt;-</span> <span class='fu'>weightit</span>(<span class='no'>re75</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
-                  <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"cbps"</span>, <span class='kw'>over</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+(<span class='kw'>W3</span> <span class='op'>&lt;-</span> <span class='fu'>weightit</span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                  <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
+                method = <span class='st'>"cbps"</span>, over = <span class='fl'>FALSE</span>))
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "cbps" (covariate balancing propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: continuous
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W3</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W3</span>)
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -390,7 +402,8 @@
 #&gt; 
 #&gt;             Total
 #&gt; Unweighted 614.  
-#&gt; Weighted   264.09</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='no'>W3</span>)</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt; Weighted   264.09</div><div class='input'><span class='fu'><a href='https://rdrr.io/pkg/cobalt/man/bal.tab.html'>bal.tab</a></span>(<span class='kw'>W3</span>)
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "cbps", over = FALSE)
 #&gt; 
@@ -421,7 +434,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

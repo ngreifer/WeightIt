@@ -101,14 +101,14 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   }
   else s.weights <- sampw
 
-  if(verbose) cat("Estimating marginal density of the treatment ")
+  if (verbose) cat("Estimating marginal density of the treatment ")
   num.fit <- glm(t ~ 1,
                  data = new.data,
                  weights = s.weights)
   p.num <- t - num.fit$fitted.values
 
   if (isTRUE(use.kernel)) {
-    if(verbose) cat("using kernel density estimation\n")
+    if (verbose) cat("using kernel density estimation\n")
     if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
     if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
     if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
@@ -135,11 +135,11 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     }
   }
   else {
-    if(verbose) cat("using a normal approximation\n")
+    if (verbose) cat("using a normal approximation\n")
     ps.num <- dnorm(p.num, 0, sqrt(summary(num.fit)$dispersion))
   }
 
-  if(verbose) cat("Fitting gbm model\n")
+  if (verbose) cat("Fitting gbm model\n")
   model.den <- gbm::gbm(formula(new.data),
                         data = new.data,
                         shrinkage = shrinkage,
@@ -156,7 +156,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
   desc <- setNames(vector("list", 1 + length(stop.method)),
                    c("unw", stop.method))
 
-  if(verbose) cat("Diagnosis of unweighted analysis\n")
+  if (verbose) cat("Diagnosis of unweighted analysis\n")
   desc[["unw"]] <- desc.wts.cont(t, covs, s.weights, NA)
 
   if (optimize == 1) {
@@ -172,7 +172,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
 
       sm <- stop.method[s]
 
-      if(verbose) cat("Optimizing with", sm,"stopping rule\n")
+      if (verbose) cat("Optimizing with", sm,"stopping rule\n")
 
       # get optimal number of iterations
       # Step #1: evaluate at (round(1+sqrt(2*n.trees))) equally spaced points
@@ -211,7 +211,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
     best.tree <- setNames(numeric(length(stop.method)), stop.method)
     for (s in seq_along(stop.method)) {
-      if(verbose) cat("Optimizing with", stop.method[s],"stopping rule\n")
+      if (verbose) cat("Optimizing with", stop.method[s],"stopping rule\n")
 
       opt <- optimize(F.aac.w, interval = c(1, n.trees), data = new.data, t = t, covs = covs,
                       ps.model = model.den,
@@ -280,7 +280,7 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
     w <- ps <- setNames(as.data.frame(matrix(0, nrow = nrow(covs), ncol = length(stop.method))), stop.method)
     best.tree <- setNames(numeric(length(stop.method)), stop.method)
     for (s in seq_along(stop.method)) {
-      if(verbose) cat("Optimizing with", stop.method[s],"stopping rule\n")
+      if (verbose) cat("Optimizing with", stop.method[s],"stopping rule\n")
       best.tree[s] <- floor(which.min(balance[,s]))
 
       ps[[s]] <- ps.den[[best.tree[s]]]
@@ -289,10 +289,10 @@ ps.cont <- function(formula, data, n.trees = 20000, interaction.depth = 4, shrin
 
   }
 
-  if(any(n.trees - best.tree < 100)) warning("Optimal number of iterations is close to the specified n.trees. n.trees is likely set too small and better balance might be obtainable by setting n.trees to be larger.", call. = FALSE)
+  if (any(n.trees - best.tree < 100)) warning("Optimal number of iterations is close to the specified n.trees. n.trees is likely set too small and better balance might be obtainable by setting n.trees to be larger.", call. = FALSE)
 
   for (sm in stop.method) {
-    if(verbose) cat("Diagnosis of",sm,"weights\n")
+    if (verbose) cat("Diagnosis of",sm,"weights\n")
 
     w[[sm]] <- w[[sm]]*s.weights
     desc[[sm]] <- desc.wts.cont(t, covs, w[[sm]], best.tree[sm])

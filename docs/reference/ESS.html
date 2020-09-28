@@ -123,7 +123,7 @@
     <p>Computes the effective sample size (ESS) of a weighted sample, which represents the size of an unweighted sample with approximately the same amount of precision as the weighted sample under consideration.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ESS</span>(<span class='no'>w</span>)</pre>
+    <pre class="usage"><span class='fu'>ESS</span>(<span class='kw'>w</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -146,18 +146,21 @@
     <div class='dont-index'><p><code><a href='summary.weightit.html'>summary.weightit</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)</div><div class='output co'>#&gt; <span class='message'> cobalt (Version 4.2.2.9000, Build Date: )</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://ngreifer.github.io/cobalt'>"cobalt"</a></span>)
+</div><div class='output co'>#&gt; <span class='message'> cobalt (Version 4.2.3.9000, Build Date: )</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
-(<span class='no'>W1</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='no'>treat</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
-                  <span class='no'>nodegree</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+(<span class='kw'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                  <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
+                method = <span class='st'>"ps"</span>, estimand = <span class='st'>"ATE"</span>))
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATE
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W1</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W1</span>)
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -183,7 +186,9 @@
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.    185.  
-#&gt; Weighted    404.35   51.73</div><div class='input'><span class='fu'>ESS</span>(<span class='no'>W1</span>$<span class='no'>weights</span>[<span class='no'>W1</span>$<span class='no'>treat</span> <span class='kw'>==</span> <span class='fl'>0</span>])</div><div class='output co'>#&gt; [1] 404.3484</div><div class='input'><span class='fu'>ESS</span>(<span class='no'>W1</span>$<span class='no'>weights</span>[<span class='no'>W1</span>$<span class='no'>treat</span> <span class='kw'>==</span> <span class='fl'>1</span>])</div><div class='output co'>#&gt; [1] 51.73462</div></span></pre>
+#&gt; Weighted    404.35   51.73</div><div class='input'><span class='fu'>ESS</span>(<span class='kw'>W1</span><span class='op'>$</span><span class='kw'>weights</span>[<span class='kw'>W1</span><span class='op'>$</span><span class='kw'>treat</span> <span class='op'>==</span> <span class='fl'>0</span>])
+</div><div class='output co'>#&gt; [1] 404.3484</div><div class='input'><span class='fu'>ESS</span>(<span class='kw'>W1</span><span class='op'>$</span><span class='kw'>weights</span>[<span class='kw'>W1</span><span class='op'>$</span><span class='kw'>treat</span> <span class='op'>==</span> <span class='fl'>1</span>])
+</div><div class='output co'>#&gt; [1] 51.73462</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -199,7 +204,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

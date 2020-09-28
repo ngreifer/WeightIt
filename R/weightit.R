@@ -76,7 +76,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   else missing <- ""
 
   #Check subclass
-  if(is_not_null(subclass)) check.subclass(method, treat.type)
+  if (is_not_null(subclass)) check.subclass(method, treat.type)
 
   #Process s.weights
   s.weights <- process.s.weights(s.weights, data)

@@ -123,13 +123,13 @@
     <p>Given a vector or matrix of propensity scores, outputs a vector of weights that target the provided estimand.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>get_w_from_ps</span>(<span class='no'>ps</span>,
-              <span class='no'>treat</span>,
-              <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>,
-              <span class='kw'>focal</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-              <span class='kw'>treated</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-              <span class='kw'>subclass</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-              <span class='kw'>stabilize</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>)</pre>
+    <pre class="usage"><span class='fu'>get_w_from_ps</span>(<span class='kw'>ps</span>,
+              <span class='kw'>treat</span>,
+              estimand = <span class='st'>"ATE"</span>,
+              focal = <span class='kw'>NULL</span>,
+              treated = <span class='kw'>NULL</span>,
+              subclass = <span class='kw'>NULL</span>,
+              stabilize = <span class='fl'>FALSE</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -174,6 +174,9 @@
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>A vector of weights. When <code>subclass</code> is not <code>NULL</code>, the subclasses are returned as the <code>"subclass"</code> attribute. When <code>estimand = "ATOS"</code>, the chosen value of <code>alpha</code> (the smallest propensity score allowed to remain in the sample) is returned in the <code>"alpha"</code> attribute.</p>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Noah Greifer</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p><strong>Binary treatments</strong></p>
@@ -199,40 +202,46 @@
 <p>Hong, G. (2012). Marginal mean weighting through stratification: A generalized method for evaluating multivalued and multiple treatments with nonexperimental data. Psychological Methods, 17(1), 44–60. doi: <a href='https://doi.org/10.1037/a0024918'>10.1037/a0024918</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='method-ps.html'>method_ps</a></code></p></div>
+    <div class='dont-index'><p><code><a href='method_ps.html'>method_ps</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
+    <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://ngreifer.github.io/cobalt'>"cobalt"</a></span>)
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
-<span class='no'>ps.fit</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/glm.html'>glm</a></span>(<span class='no'>treat</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>race</span> + <span class='no'>married</span> +
-                <span class='no'>nodegree</span> + <span class='no'>re74</span> + <span class='no'>re75</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-              <span class='kw'>family</span> <span class='kw'>=</span> <span class='no'>binomial</span>)
-<span class='no'>ps</span> <span class='kw'>&lt;-</span> <span class='no'>ps.fit</span>$<span class='no'>fitted.values</span>
+<span class='kw'>ps.fit</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/glm.html'>glm</a></span>(<span class='kw'>treat</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span> <span class='op'>+</span> <span class='kw'>re75</span>, data = <span class='kw'>lalonde</span>,
+              family = <span class='kw'>binomial</span>)
+<span class='kw'>ps</span> <span class='op'>&lt;-</span> <span class='kw'>ps.fit</span><span class='op'>$</span><span class='kw'>fitted.values</span>
 
-<span class='no'>w1</span> <span class='kw'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='no'>ps</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='no'>lalonde</span>$<span class='no'>treat</span>,
-                    <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATT"</span>)
+<span class='kw'>w1</span> <span class='op'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='kw'>ps</span>, treat = <span class='kw'>lalonde</span><span class='op'>$</span><span class='kw'>treat</span>,
+                    estimand = <span class='st'>"ATT"</span>)
 
-<span class='no'>treatAB</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/factor.html'>factor</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/ifelse.html'>ifelse</a></span>(<span class='no'>lalonde</span>$<span class='no'>treat</span> <span class='kw'>==</span> <span class='fl'>1</span>, <span class='st'>"A"</span>, <span class='st'>"B"</span>))
-<span class='no'>w2</span> <span class='kw'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='no'>ps</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='no'>treatAB</span>,
-                    <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATT"</span>, <span class='kw'>focal</span> <span class='kw'>=</span> <span class='st'>"A"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>w1</span>, <span class='no'>w2</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='no'>w3</span> <span class='kw'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='no'>ps</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='no'>treatAB</span>,
-                    <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATT"</span>, <span class='kw'>treated</span> <span class='kw'>=</span> <span class='st'>"A"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>w1</span>, <span class='no'>w3</span>)</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
+<span class='kw'>treatAB</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/factor.html'>factor</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/ifelse.html'>ifelse</a></span>(<span class='kw'>lalonde</span><span class='op'>$</span><span class='kw'>treat</span> <span class='op'>==</span> <span class='fl'>1</span>, <span class='st'>"A"</span>, <span class='st'>"B"</span>))
+<span class='kw'>w2</span> <span class='op'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='kw'>ps</span>, treat = <span class='kw'>treatAB</span>,
+                    estimand = <span class='st'>"ATT"</span>, focal = <span class='st'>"A"</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='kw'>w1</span>, <span class='kw'>w2</span>)
+</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'><span class='kw'>w3</span> <span class='op'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='kw'>ps</span>, treat = <span class='kw'>treatAB</span>,
+                    estimand = <span class='st'>"ATT"</span>, treated = <span class='st'>"A"</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='kw'>w1</span>, <span class='kw'>w3</span>)
+</div><div class='output co'>#&gt; [1] TRUE</div><div class='input'>
 <span class='co'>#Using MMWS</span>
-<span class='no'>w4</span> <span class='kw'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='no'>ps</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='no'>lalonde</span>$<span class='no'>treat</span>,
-                    <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>, <span class='kw'>subclass</span> <span class='kw'>=</span> <span class='fl'>20</span>,
-                    <span class='kw'>stabilize</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>)
+<span class='kw'>w4</span> <span class='op'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='kw'>ps</span>, treat = <span class='kw'>lalonde</span><span class='op'>$</span><span class='kw'>treat</span>,
+                    estimand = <span class='st'>"ATE"</span>, subclass = <span class='fl'>20</span>,
+                    stabilize = <span class='fl'>TRUE</span>)
 
 <span class='co'>#A multi-category example using GBM predicted probabilities</span>
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='no'>gbm</span>)</div><div class='output co'>#&gt; <span class='message'>Loaded gbm 2.1.8</span></div><div class='input'><span class='no'>T3</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/factor.html'>factor</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"A"</span>, <span class='st'>"B"</span>, <span class='st'>"C"</span>), <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span>(<span class='no'>lalonde</span>), <span class='kw'>replace</span> <span class='kw'>=</span> <span class='fl'>TRUE</span>))
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='kw'><a href='https://github.com/gbm-developers/gbm'>gbm</a></span>)
+</div><div class='output co'>#&gt; <span class='message'>Loaded gbm 2.1.8</span></div><div class='input'><span class='kw'>T3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/factor.html'>factor</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/sample.html'>sample</a></span>(<span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"A"</span>, <span class='st'>"B"</span>, <span class='st'>"C"</span>), <span class='fu'><a href='https://rdrr.io/r/base/nrow.html'>nrow</a></span>(<span class='kw'>lalonde</span>), replace = <span class='fl'>TRUE</span>))
 
-<span class='no'>gbm.fit</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/gbm/man/gbm.html'>gbm</a></span>(<span class='no'>T3</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>race</span> + <span class='no'>married</span> +
-                 <span class='no'>nodegree</span> + <span class='no'>re74</span> + <span class='no'>re75</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-               <span class='kw'>distribution</span> <span class='kw'>=</span> <span class='st'>"multinomial"</span>, <span class='kw'>n.trees</span> <span class='kw'>=</span> <span class='fl'>200</span>,
-               <span class='kw'>interaction.depth</span> <span class='kw'>=</span> <span class='fl'>3</span>)</div><div class='output co'>#&gt; <span class='warning'>Warning: Setting `distribution = "multinomial"` is ill-advised as it is currently broken. It exists only for backwards compatibility. Use at your own risk.</span></div><div class='input'><span class='no'>ps.multi</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/drop.html'>drop</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/predict.html'>predict</a></span>(<span class='no'>gbm.fit</span>, <span class='kw'>type</span> <span class='kw'>=</span> <span class='st'>"response"</span>,
-                         <span class='kw'>n.trees</span> <span class='kw'>=</span> <span class='fl'>200</span>))
-<span class='no'>w</span> <span class='kw'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='no'>ps.multi</span>, <span class='no'>T3</span>, <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>)</div></pre>
+<span class='kw'>gbm.fit</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/pkg/gbm/man/gbm.html'>gbm</a></span>(<span class='kw'>T3</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                 <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>re74</span> <span class='op'>+</span> <span class='kw'>re75</span>, data = <span class='kw'>lalonde</span>,
+               distribution = <span class='st'>"multinomial"</span>, n.trees = <span class='fl'>200</span>,
+               interaction.depth = <span class='fl'>3</span>)
+</div><div class='output co'>#&gt; <span class='warning'>Warning: Setting `distribution = "multinomial"` is ill-advised as it is currently broken. It exists only for backwards compatibility. Use at your own risk.</span></div><div class='input'><span class='kw'>ps.multi</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/base/drop.html'>drop</a></span>(<span class='fu'><a href='https://rdrr.io/r/stats/predict.html'>predict</a></span>(<span class='kw'>gbm.fit</span>, type = <span class='st'>"response"</span>,
+                         n.trees = <span class='fl'>200</span>))
+<span class='kw'>w</span> <span class='op'>&lt;-</span> <span class='fu'>get_w_from_ps</span>(<span class='kw'>ps.multi</span>, <span class='kw'>T3</span>, estimand = <span class='st'>"ATE"</span>)
+
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -248,7 +257,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

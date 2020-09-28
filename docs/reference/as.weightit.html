@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Create a <code>weightit</code> object manually — as.weightit • WeightIt</title>
+<title>Create a weightit object manually — as.weightit • WeightIt</title>
 
 
 <!-- jquery -->
@@ -39,7 +39,7 @@
 
 
 
-<meta property="og:title" content="Create a <code>weightit</code> object manually — as.weightit" />
+<meta property="og:title" content="Create a weightit object manually — as.weightit" />
 <meta property="og:description" content="This function allows users to get the benefits of a weightit object when using weights not estimated with weightit() or weightitMSM(). These benefits include diagnostics, plots, and direct compatibility with cobalt for assessing balance." />
 
 
@@ -123,27 +123,27 @@
     <p>This function allows users to get the benefits of a <code>weightit</code> object when using weights not estimated with <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. These benefits include diagnostics, plots, and direct compatibility with <span class="pkg">cobalt</span> for assessing balance.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>as.weightit</span>(<span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>as.weightit</span>(<span class='kw'>...</span>)
 
 <span class='co'># S3 method for default</span>
-<span class='fu'>as.weightit</span>(<span class='no'>weights</span>,
-            <span class='no'>treat</span>,
-            <span class='kw'>covs</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>s.weights</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>ps</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='no'>...</span>)
+<span class='fu'>as.weightit</span>(<span class='kw'>weights</span>,
+            <span class='kw'>treat</span>,
+            covs = <span class='kw'>NULL</span>,
+            estimand = <span class='kw'>NULL</span>,
+            s.weights = <span class='kw'>NULL</span>,
+            ps = <span class='kw'>NULL</span>,
+            <span class='kw'>...</span>)
 
-<span class='fu'>as.weightitMSM</span>(<span class='no'>...</span>)
+<span class='fu'>as.weightitMSM</span>(<span class='kw'>...</span>)
 
 <span class='co'># S3 method for default</span>
-<span class='fu'>as.weightitMSM</span>(<span class='no'>weights</span>,
-               <span class='no'>treat.list</span>,
-               <span class='kw'>covs.list</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-               <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-               <span class='kw'>s.weights</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-               <span class='kw'>ps.list</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-               <span class='no'>...</span>)</pre>
+<span class='fu'>as.weightitMSM</span>(<span class='kw'>weights</span>,
+               <span class='kw'>treat.list</span>,
+               covs.list = <span class='kw'>NULL</span>,
+               estimand = <span class='kw'>NULL</span>,
+               s.weights = <span class='kw'>NULL</span>,
+               ps.list = <span class='kw'>NULL</span>,
+               <span class='kw'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -193,13 +193,17 @@
     <h2 class="hasAnchor" id="value"><a class="anchor" href="#value"></a>Value</h2>
 
     <p>An object of class <code>weightit</code> (for <code>as.weightit</code>) or <code>weightitMSM</code> (for <code>as.weightitMSM</code>).</p>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Noah Greifer</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
-    <pre class="examples"><div class='input'><span class='no'>treat</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span>(<span class='fl'>500</span>, <span class='fl'>1</span>, <span class='fl'>.3</span>)
-<span class='no'>weights</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Chisquare.html'>rchisq</a></span>(<span class='fl'>500</span>, <span class='kw'>df</span> <span class='kw'>=</span> <span class='fl'>2</span>)
-<span class='no'>W</span> <span class='kw'>&lt;-</span> <span class='fu'>as.weightit</span>(<span class='kw'>weights</span><span class='kw'>=</span> <span class='no'>weights</span>, <span class='kw'>treat</span> <span class='kw'>=</span> <span class='no'>treat</span>,
-                 <span class='kw'>estimand</span> <span class='kw'>=</span> <span class='st'>"ATE"</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W</span>)</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span><span>
+    <pre class="examples"><div class='input'><span class='kw'>treat</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Binomial.html'>rbinom</a></span>(<span class='fl'>500</span>, <span class='fl'>1</span>, <span class='fl'>.3</span>)
+<span class='kw'>weights</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/Chisquare.html'>rchisq</a></span>(<span class='fl'>500</span>, df = <span class='fl'>2</span>)
+<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'>as.weightit</span>(weights= <span class='kw'>weights</span>, treat = <span class='kw'>treat</span>,
+                 estimand = <span class='st'>"ATE"</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W</span>)
+</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
@@ -241,7 +245,7 @@
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

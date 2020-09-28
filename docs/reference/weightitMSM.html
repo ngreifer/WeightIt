@@ -125,24 +125,24 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <p>Currently only "wide" data sets, where each row corresponds to a unit's entire variable history, are supported. You can use <code><a href='https://rdrr.io/r/stats/reshape.html'>reshape</a></code> or other functions to transform your data into this format; see example below.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>weightitMSM</span>(<span class='no'>formula.list</span>,
-            <span class='kw'>data</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>,
-            <span class='kw'>stabilize</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-            <span class='kw'>by</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>s.weights</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>num.formula</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>moments</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>int</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-            <span class='kw'>missing</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-            <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-            <span class='kw'>include.obj</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-            <span class='no'>is.MSM.method</span>,
-            <span class='kw'>weightit.force</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-            <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>weightitMSM</span>(<span class='kw'>formula.list</span>,
+            data = <span class='kw'>NULL</span>,
+            method = <span class='st'>"ps"</span>,
+            stabilize = <span class='fl'>FALSE</span>,
+            by = <span class='kw'>NULL</span>,
+            s.weights = <span class='kw'>NULL</span>,
+            num.formula = <span class='kw'>NULL</span>,
+            moments = <span class='kw'>NULL</span>,
+            int = <span class='fl'>FALSE</span>,
+            missing = <span class='kw'>NULL</span>,
+            verbose = <span class='fl'>FALSE</span>,
+            include.obj = <span class='fl'>FALSE</span>,
+            <span class='kw'>is.MSM.method</span>,
+            weightit.force = <span class='fl'>FALSE</span>,
+            <span class='kw'>...</span>)
 
 <span class='co'># S3 method for weightitMSM</span>
-<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -232,6 +232,9 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     <p>In general, <code>weightitMSM</code> works by separating the estimation of weights into separate procedures for each time period based on the formulas provided. For each formula, <code>weightitMSM</code> simply calls <code>weightit</code> to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing weights.</p>
 <p>Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in separate variables.</p>
 <p>The <code>"twang"</code> method, which calls <code>ps</code> in <span class="pkg">twang</span>, yields the same results to a call to <code>iptw</code> in <span class="pkg">twang</span>. However, the <code>cbps</code> method, which calls <code>CBPS</code> in <span class="pkg">CBPS</span>, will yield different results from <code>CBMSM</code> in <span class="pkg">CBPS</span> because <code>CBMSM</code> takes a different approach to generating weights than simply estimating several time-specific models.</p>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Noah Greifer</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
     <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code> for information on the allowable methods.</p></div>
@@ -243,12 +246,13 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     <pre class="examples"><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"twang"</span>)
 <span class='co'># library("cobalt")</span>
 
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"iptwExWide"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"twang"</span>)
-(<span class='no'>W</span> <span class='kw'>&lt;-</span> <span class='fu'>weightitMSM</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>tx1</span> ~ <span class='no'>age</span> + <span class='no'>gender</span> + <span class='no'>use0</span>,
-                      <span class='no'>tx2</span> ~ <span class='no'>tx1</span> + <span class='no'>use1</span> + <span class='no'>age</span> + <span class='no'>gender</span> + <span class='no'>use0</span>,
-                      <span class='no'>tx3</span> ~ <span class='no'>tx2</span> + <span class='no'>use2</span> + <span class='no'>tx1</span> + <span class='no'>use1</span> + <span class='no'>age</span> + <span class='no'>gender</span> + <span class='no'>use0</span>),
-                 <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>iptwExWide</span>,
-                 <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>))</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightitMSM</span><span> object
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"iptwExWide"</span>, package = <span class='st'>"twang"</span>)
+(<span class='kw'>W</span> <span class='op'>&lt;-</span> <span class='fu'>weightitMSM</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
+                      <span class='kw'>tx2</span> <span class='op'>~</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use1</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>,
+                      <span class='kw'>tx3</span> <span class='op'>~</span> <span class='kw'>tx2</span> <span class='op'>+</span> <span class='kw'>use2</span> <span class='op'>+</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use1</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use0</span>),
+                 data = <span class='kw'>iptwExWide</span>,
+                 method = <span class='st'>"ps"</span>))
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightitMSM</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 1000
 #&gt;  - sampling weights: none
@@ -260,7 +264,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt;  - covariates: 
 #&gt;     + baseline: age, gender, use0
 #&gt;     + after time 1: tx1, use1, age, gender, use0
-#&gt;     + after time 2: tx2, use2, tx1, use1, age, gender, use0</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt;     + after time 2: tx2, use2, tx1, use1, age, gender, use0</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W</span>)
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 1 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -345,20 +350,21 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; </div><div class='input'><span class='co'># bal.tab(W)</span>
 
 <span class='co'>##Going from long to wide data</span>
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"iptwExLong"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"twang"</span>)
-<span class='no'>wide_data</span> <span class='kw'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/reshape.html'>reshape</a></span>(<span class='no'>iptwExLong</span>$<span class='no'>covariates</span>,    <span class='co'>#long data</span>
-                     <span class='kw'>timevar</span> <span class='kw'>=</span> <span class='st'>"time"</span>,         <span class='co'>#time variable</span>
-                     <span class='kw'>v.names</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"use"</span>, <span class='st'>"tx"</span>), <span class='co'>#time-varying</span>
-                     <span class='kw'>idvar</span> <span class='kw'>=</span> <span class='st'>"ID"</span>,             <span class='co'>#time-stable</span>
-                     <span class='kw'>direction</span> <span class='kw'>=</span> <span class='st'>"wide"</span>,
-                     <span class='kw'>sep</span> <span class='kw'>=</span> <span class='st'>""</span>)
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"iptwExLong"</span>, package = <span class='st'>"twang"</span>)
+<span class='kw'>wide_data</span> <span class='op'>&lt;-</span> <span class='fu'><a href='https://rdrr.io/r/stats/reshape.html'>reshape</a></span>(<span class='kw'>iptwExLong</span><span class='op'>$</span><span class='kw'>covariates</span>,    <span class='co'>#long data</span>
+                     timevar = <span class='st'>"time"</span>,         <span class='co'>#time variable</span>
+                     v.names = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"use"</span>, <span class='st'>"tx"</span>), <span class='co'>#time-varying</span>
+                     idvar = <span class='st'>"ID"</span>,             <span class='co'>#time-stable</span>
+                     direction = <span class='st'>"wide"</span>,
+                     sep = <span class='st'>""</span>)
 
-(<span class='no'>W2</span> <span class='kw'>&lt;-</span> <span class='fu'>weightitMSM</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='no'>tx1</span> ~ <span class='no'>age</span> + <span class='no'>gender</span> + <span class='no'>use1</span>,
-                      <span class='no'>tx2</span> ~ <span class='no'>tx1</span> + <span class='no'>use2</span> + <span class='no'>age</span> + <span class='no'>gender</span> + <span class='no'>use1</span>,
-                      <span class='no'>tx3</span> ~ <span class='no'>tx2</span> + <span class='no'>use3</span> + <span class='no'>tx1</span> + <span class='no'>use2</span> + <span class='no'>age</span> +
-                          <span class='no'>gender</span> + <span class='no'>use1</span>),
-                 <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>wide_data</span>,
-                 <span class='kw'>method</span> <span class='kw'>=</span> <span class='st'>"ps"</span>))</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightitMSM</span><span> object
+(<span class='kw'>W2</span> <span class='op'>&lt;-</span> <span class='fu'>weightitMSM</span>(<span class='fu'><a href='https://rdrr.io/r/base/list.html'>list</a></span>(<span class='kw'>tx1</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use1</span>,
+                      <span class='kw'>tx2</span> <span class='op'>~</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use2</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use1</span>,
+                      <span class='kw'>tx3</span> <span class='op'>~</span> <span class='kw'>tx2</span> <span class='op'>+</span> <span class='kw'>use3</span> <span class='op'>+</span> <span class='kw'>tx1</span> <span class='op'>+</span> <span class='kw'>use2</span> <span class='op'>+</span> <span class='kw'>age</span> <span class='op'>+</span>
+                          <span class='kw'>gender</span> <span class='op'>+</span> <span class='kw'>use1</span>),
+                 data = <span class='kw'>wide_data</span>,
+                 method = <span class='st'>"ps"</span>))
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightitMSM</span><span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 1000
 #&gt;  - sampling weights: none
@@ -370,7 +376,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt;  - covariates: 
 #&gt;     + baseline: age, gender, use1
 #&gt;     + after time 1: tx1, use2, age, gender, use1
-#&gt;     + after time 2: tx2, use3, tx1, use2, age, gender, use1</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>W2</span>)</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt;     + after time 2: tx2, use3, tx1, use2, age, gender, use1</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>W2</span>)
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 1 </span><span style='text-decoration: line-through;'>                      </span><span>
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
@@ -453,7 +460,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; Unweighted  415.     585. 
 #&gt; Weighted    235.67   366.4
 #&gt; </div><div class='input'>
-<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='no'>W</span>$<span class='no'>weights</span>, <span class='no'>W2</span>$<span class='no'>weights</span>)</div><div class='output co'>#&gt; [1] TRUE</div></span></pre>
+<span class='fu'><a href='https://rdrr.io/r/base/all.equal.html'>all.equal</a></span>(<span class='kw'>W</span><span class='op'>$</span><span class='kw'>weights</span>, <span class='kw'>W2</span><span class='op'>$</span><span class='kw'>weights</span>)
+</div><div class='output co'>#&gt; [1] TRUE</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -469,7 +477,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

@@ -151,33 +151,33 @@ Continuous Treatments
     </div>
 
     <div class="ref-description">
-    <p>Some methods involve tuning of parameters and use some measure of covariate balance as the crierion to select the optimal parameter values. For example with <code><a href='method-gbm.html'>method = "gbm"</a></code>, a balance criterion can be used to select the optimal number of trees to use. In <span class="pkg">WeightIt</span>, the argument <code>stop.method</code> controls which criterion is optimized, using the naming conventions originally used in <span class="pkg">twang</span>. This page documents the available arguments to <code>stop.method</code>. There has been some research on which balance criteria perform better than others; see the References section for some articles. Of course, how each method fares in any given dataset depends on a variety of factors, and multiple methods should be tried and compared before moving forward with a set of weights.</p>
+    <p>Some methods involve tuning of parameters and use some measure of covariate balance as the crierion to select the optimal parameter values. For example with <code><a href='method_gbm.html'>method = "gbm"</a></code>, a balance criterion can be used to select the optimal number of trees to use. In <span class="pkg">WeightIt</span>, the argument <code>stop.method</code> controls which criterion is optimized, using the naming conventions originally used in <span class="pkg">twang</span>. This page documents the available arguments to <code>stop.method</code>. There has been some research on which balance criteria perform better than others; see the References section for some articles. Of course, how each method fares in any given dataset depends on a variety of factors, and multiple methods should be tried and compared before moving forward with a set of weights.</p>
 <p>Each treatment type has its own balance criteria available.</p>
-<h3>Binary Treatments</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
 
-<dl'>
-<dt><code>"es.mean"</code>, <code>"es.max"</code>, <code>"es.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute standardized mean difference (ASMD) among the covariates, respectively. The ASMD is computed using <code>col_w_smd()</code> in <span class="pkg">cobalt</span>. All covariates are standardized, including binary covariates (note that in <span class="pkg">cobalt</span>, raw mean differences are used for binary variables by default). The standardization factor (i.e., <code>s.d.denom</code>) depends on the estimand requested and follows the conventions used in <span class="pkg">cobalt</span>.</p></dd>
-<dt><code>"ks.mean"</code>, <code>"ks.max"</code>, <code>"ks.rms"</code></dt><dd><p>The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic among the covariates, respectively. The KS statistic is computed using <code>col_w_ks()</code> in <span class="pkg">cobalt</span>.</p></dd>
+<dl>
+<dt><code>"es.mean"</code>, <code>"es.max"</code>, <code>"es.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute standardized mean difference (ASMD) among the covariates, respectively. The ASMD is computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>. All covariates are standardized, including binary covariates (note that in <span class="pkg">cobalt</span>, raw mean differences are used for binary variables by default). The standardization factor (i.e., <code>s.d.denom</code>) depends on the estimand requested and follows the conventions used in <span class="pkg">cobalt</span>.</p></dd>
+<dt><code>"ks.mean"</code>, <code>"ks.max"</code>, <code>"ks.rms"</code></dt><dd><p>The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic among the covariates, respectively. The KS statistic is computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_ks()</a></code> in <span class="pkg">cobalt</span>.</p></dd>
 <dt><code>"mahalanobis"</code></dt><dd><p>The sample Mahalanobis distace in the weighted sample. This is similar to <code>"es.rms"</code> except that variables that are redundant with each other will be downweighted. The sample Mahalanobis distance is computed using the (generalized) inverse of the unweighted covariance matrix computed in the focal group when the estimand is the ATT or ATC and using the (generalized) inverse of the average of the unweighted covariance matrices computed within each treatment group (analogous the the ASMD, which uses the average of the group variances in its denominator).</p></dd>
-<dt><code>"energy.dist"</code></dt><dd><p>The energy distance between the weighted samples, as described by Huling &amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using <code><a href='method-energy.html'>method = "energy"</a></code>.)</p></dd>
+<dt><code>"energy.dist"</code></dt><dd><p>The energy distance between the weighted samples, as described by Huling &amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using <code><a href='method_energy.html'>method = "energy"</a></code>.)</p></dd>
 <dt><code>"r2"</code></dt><dd><p>The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseduo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp; Zavoina pseudo-R2.</p></dd>
 
 </dl>
 
-<h3>Multinomial Treatments</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
 
-<dl'>
-<dt><code>"es.mean"</code>, <code>"es.max"</code>, <code>"es.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute standardized mean difference (ASMD) among the covariates, respectively, across all pairs of treatments. The ASMD is computed using <code>col_w_smd()</code> in <span class="pkg">cobalt</span>. All covariates are standardized, including binary covariates (note that in <span class="pkg">cobalt</span>, raw mean differences are used for binary variables by default). The standardization factor (i.e., <code>s.d.denom</code>) depends on the estimand requested and follows the conventions used in <span class="pkg">cobalt</span>. The same standardization factor is used across treatment pairs for each covariate. When the estimand is the ATT, only differences between the focal group and each other group are computed.</p></dd>
-<dt><code>"ks.mean"</code>, <code>"ks.max"</code>, <code>"ks.rms"</code></dt><dd><p>The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic among the covariates, respectively, across all pairs of treatments. The KS statistic is computed using <code>col_w_ks()</code> in <span class="pkg">cobalt</span>. When the estimand is the ATT, only differences between the focal group and each other group are computed.</p></dd>
-<dt><code>"energy.dist"</code></dt><dd><p>The total energy distance among the weighted samples, as described by Huling &amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using <code><a href='method-energy.html'>method = "energy"</a></code>.)</p></dd>
+<dl>
+<dt><code>"es.mean"</code>, <code>"es.max"</code>, <code>"es.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute standardized mean difference (ASMD) among the covariates, respectively, across all pairs of treatments. The ASMD is computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>. All covariates are standardized, including binary covariates (note that in <span class="pkg">cobalt</span>, raw mean differences are used for binary variables by default). The standardization factor (i.e., <code>s.d.denom</code>) depends on the estimand requested and follows the conventions used in <span class="pkg">cobalt</span>. The same standardization factor is used across treatment pairs for each covariate. When the estimand is the ATT, only differences between the focal group and each other group are computed.</p></dd>
+<dt><code>"ks.mean"</code>, <code>"ks.max"</code>, <code>"ks.rms"</code></dt><dd><p>The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic among the covariates, respectively, across all pairs of treatments. The KS statistic is computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_ks()</a></code> in <span class="pkg">cobalt</span>. When the estimand is the ATT, only differences between the focal group and each other group are computed.</p></dd>
+<dt><code>"energy.dist"</code></dt><dd><p>The total energy distance among the weighted samples, as described by Huling &amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using <code><a href='method_energy.html'>method = "energy"</a></code>.)</p></dd>
 
 </dl>
 
-<h3>Continuous Treatments</h3>
+<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
 
-<dl'>
-<dt><code>"p.mean"</code>, <code>"p.max"</code>, <code>"p.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute Pearson correlation between the treatment and covariates, respectively. The Pearson correlation is computed using <code>col_w_cov()</code> in <span class="pkg">cobalt</span>. The correlation uses the unweighted standard deviations of the treatment and covariates in the denominator.</p></dd>
-<dt><code>"s.mean"</code>, <code>"s.max"</code>, <code>"s.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute Spearman correlation between the treatment and covariates, respectively. The Spearman correlation is computed using <code>col_w_cov()</code> in <span class="pkg">cobalt</span>. The correlation uses the unweighted standard deviations of the rank-transformed treatment and covariates in the denominator.</p></dd>
+<dl>
+<dt><code>"p.mean"</code>, <code>"p.max"</code>, <code>"p.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute Pearson correlation between the treatment and covariates, respectively. The Pearson correlation is computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_cov()</a></code> in <span class="pkg">cobalt</span>. The correlation uses the unweighted standard deviations of the treatment and covariates in the denominator.</p></dd>
+<dt><code>"s.mean"</code>, <code>"s.max"</code>, <code>"s.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute Spearman correlation between the treatment and covariates, respectively. The Spearman correlation is computed using <code><a href='https://rdrr.io/pkg/cobalt/man/balance.summary.html'>col_w_cov()</a></code> in <span class="pkg">cobalt</span>. The correlation uses the unweighted standard deviations of the rank-transformed treatment and covariates in the denominator.</p></dd>
 <dt><code>"r2"</code></dt><dd><p>The model R2 of a linear regression of the treatment on the covariates with the weights applied. The standard R2 is used.</p></dd>
 
 </dl>
@@ -196,7 +196,7 @@ Continuous Treatments
 <p>Griffin, B. A., McCaffrey, D. F., Almirall, D., Burgette, L. F., &amp; Setodji, C. M. (2017). Chasing Balance and Other Recommendations for Improving Nonparametric Propensity Score Models. Journal of Causal Inference, 5(2). doi: <a href='https://doi.org/10.1515/jci-2015-0026'>10.1515/jci-2015-0026</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='method-gbm.html'>method_gbm</a></code>, <code><a href='method-super.html'>method_super</a></code>, which use these balance criteria.</p>
+    <div class='dont-index'><p><code><a href='method_gbm.html'>method_gbm</a></code>, <code><a href='method_super.html'>method_super</a></code>, which use these balance criteria.</p>
 <p><code>balance summary</code> in <span class="pkg">cobalt</span> for details of some calculations.</p></div>
 
   </div>
@@ -214,7 +214,7 @@ Continuous Treatments
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

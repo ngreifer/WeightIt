@@ -122,27 +122,27 @@ Note: ps.cont will phased out when twang adds functionality for continuous treat
 
     <div class="ref-description">
     <p><code>ps.cont</code> calculates generalized propensity scores and corresponding weights using boosted linear regression as implemented in <code><a href='https://rdrr.io/pkg/gbm/man/gbm.html'>gbm</a></code>. This function extends <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> in <span class="pkg">twang</span> to continuous treatments. The syntax and output are largely the same. The GBM parameter defaults are those found in Zhu, Coffman, &amp; Ghosh (2015).</p>
-<p>Note: <code>ps.cont</code> will phased out when <span class="pkg">twang</span> adds functionality for continuous treatments. All functionality and more is already present in <code><a href='weightit.html'>weightit</a></code> with <code><a href='method-gbm.html'>method_gbm</a>[method = "gbm"]</code>.</p>
+<p>Note: <code>ps.cont</code> will phased out when <span class="pkg">twang</span> adds functionality for continuous treatments. All functionality and more is already present in <code><a href='weightit.html'>weightit</a></code> with <code><a href='method_gbm.html'>method_gbm</a>[method = "gbm"]</code>.</p>
     </div>
 
-    <pre class="usage"><span class='fu'>ps.cont</span>(<span class='no'>formula</span>, <span class='no'>data</span>,
-        <span class='kw'>n.trees</span> <span class='kw'>=</span> <span class='fl'>20000</span>,
-        <span class='kw'>interaction.depth</span> <span class='kw'>=</span> <span class='fl'>4</span>,
-        <span class='kw'>shrinkage</span> <span class='kw'>=</span> <span class='fl'>0.0005</span>,
-        <span class='kw'>bag.fraction</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-        <span class='kw'>print.level</span> <span class='kw'>=</span> <span class='fl'>0</span>,
-        <span class='kw'>verbose</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-        <span class='no'>stop.method</span>,
-        <span class='kw'>sampw</span> <span class='kw'>=</span> <span class='kw'>NULL</span>,
-        <span class='kw'>optimize</span> <span class='kw'>=</span> <span class='fl'>1</span>,
-        <span class='kw'>use.kernel</span> <span class='kw'>=</span> <span class='fl'>FALSE</span>,
-        <span class='no'>...</span>)
+    <pre class="usage"><span class='fu'>ps.cont</span>(<span class='kw'>formula</span>, <span class='kw'>data</span>,
+        n.trees = <span class='fl'>20000</span>,
+        interaction.depth = <span class='fl'>4</span>,
+        shrinkage = <span class='fl'>0.0005</span>,
+        bag.fraction = <span class='fl'>1</span>,
+        print.level = <span class='fl'>0</span>,
+        verbose = <span class='fl'>FALSE</span>,
+        <span class='kw'>stop.method</span>,
+        sampw = <span class='kw'>NULL</span>,
+        optimize = <span class='fl'>1</span>,
+        use.kernel = <span class='fl'>FALSE</span>,
+        <span class='kw'>...</span>)
 <span class='co'># S3 method for ps.cont</span>
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>object</span>, <span class='no'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>object</span>, <span class='kw'>...</span>)
 <span class='co'># S3 method for ps.cont</span>
-<span class='fu'><a href='https://rdrr.io/r/base/plot.html'>plot</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)
+<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)
 <span class='co'># S3 method for ps.cont</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/boxplot.html'>boxplot</a></span>(<span class='no'>x</span>, <span class='no'>...</span>)</pre>
+<span class='fu'><a href='https://rdrr.io/r/graphics/boxplot.html'>boxplot</a></span>(<span class='kw'>x</span>, <span class='kw'>...</span>)</pre>
 
     <h2 class="hasAnchor" id="arguments"><a class="anchor" href="#arguments"></a>Arguments</h2>
     <table class="ref-arguments">
@@ -223,7 +223,7 @@ Note: ps.cont will phased out when twang adds functionality for continuous treat
               <code>stop.method</code>. Includes a component for the unweighted
               analysis names &#8220;unw&#8221;. Each <code>desc</code> component includes
               a list with the following components:
-  <dl'>
+  <dl>
      <dt>ess</dt><dd><p>The effective sample size</p></dd>
      <dt>n</dt><dd><p>The number of subjects</p></dd>
      <dt>max.p.cor</dt><dd><p>The largest absolute Pearson correlation across the covariates</p></dd>
@@ -250,26 +250,31 @@ The NULL entries exist so the output object is similar to that of ps in twang.
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p>Zhu, Y., Coffman, D. L., &amp; Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1). doi: <a href='https://doi.org/10.1515/jci-2014-0022'>10.1515/jci-2014-0022</a></p>
+    <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
+
+    <p>Noah Greifer</p>
+<p><code>ps.cont</code> is heavily adapted from the R code in Zhu, Coffman, &amp; Ghosh (2015). In contrast with their code, <code>ps.cont</code> uses weighted Pearson and Spearman correlations rather than probability weighted bootstrapped correlations, allows for different degrees of optimization in searching for the best solution, and allows for the use of kernel density estimation for the generalized propensity score. <code>ps.cont</code> also takes inspiration from <code>ps</code> in <span class="pkg">twang</span>.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code> and <code><a href='method-gbm.html'>method_gbm</a></code> for its implementation using <code>weightit</code> syntax.</p>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code> and <code><a href='method_gbm.html'>method_gbm</a></code> for its implementation using <code>weightit</code> syntax.</p>
 <p><code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> and <code><a href='https://rdrr.io/pkg/twang/man/mnps.html'>mnps</a></code> for GBM with binary and multinomial treatments.</p>
 <p><code><a href='https://rdrr.io/pkg/gbm/man/gbm.html'>gbm</a></code> for the underlying machinery and explanation of the parameters.</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Examples take a long time</span>
-<span class='kw'>if</span> (<span class='fl'>FALSE</span>) {
-<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'>"cobalt"</span>)
-<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, <span class='kw'>package</span> <span class='kw'>=</span> <span class='st'>"cobalt"</span>)
+<span class='co'>if</span> (<span class='fl'>FALSE</span>) {
+<span class='fu'><a href='https://rdrr.io/r/base/library.html'>library</a></span>(<span class='st'><a href='https://ngreifer.github.io/cobalt'>"cobalt"</a></span>)
+<span class='fu'><a href='https://rdrr.io/r/utils/data.html'>data</a></span>(<span class='st'>"lalonde"</span>, package = <span class='st'>"cobalt"</span>)
 
 <span class='co'>#Balancing covariates with respect to re75</span>
-<span class='no'>psc.out</span> <span class='kw'>&lt;-</span> <span class='fu'>ps.cont</span>(<span class='no'>re75</span> ~ <span class='no'>age</span> + <span class='no'>educ</span> + <span class='no'>married</span> +
-                <span class='no'>nodegree</span> + <span class='no'>race</span> + <span class='no'>re74</span>, <span class='kw'>data</span> <span class='kw'>=</span> <span class='no'>lalonde</span>,
-                <span class='kw'>stop.method</span> <span class='kw'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"p.mean"</span>, <span class='st'>"p.max"</span>),
-                <span class='kw'>use.optimize</span> <span class='kw'>=</span> <span class='fl'>2</span>)
-<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='no'>psc.out</span>)
-<span class='kw pkg'>twang</span><span class='kw ns'>::</span><span class='fu'><a href='https://rdrr.io/pkg/twang/man/bal.table.html'>bal.table</a></span>(<span class='no'>psc.out</span>) <span class='co'>#twang's bal.table</span>
-}</div></pre>
+<span class='kw'>psc.out</span> <span class='op'>&lt;-</span> <span class='fu'>ps.cont</span>(<span class='kw'>re75</span> <span class='op'>~</span> <span class='kw'>age</span> <span class='op'>+</span> <span class='kw'>educ</span> <span class='op'>+</span> <span class='kw'>married</span> <span class='op'>+</span>
+                <span class='kw'>nodegree</span> <span class='op'>+</span> <span class='kw'>race</span> <span class='op'>+</span> <span class='kw'>re74</span>, data = <span class='kw'>lalonde</span>,
+                stop.method = <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span>(<span class='st'>"p.mean"</span>, <span class='st'>"p.max"</span>),
+                use.optimize = <span class='fl'>2</span>)
+<span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span>(<span class='kw'>psc.out</span>)
+<span class='kw'>twang</span>::<span class='fu'><a href='https://rdrr.io/pkg/twang/man/bal.table.html'>bal.table</a></span>(<span class='kw'>psc.out</span>) <span class='co'>#twang's bal.table</span>
+}
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
@@ -285,7 +290,7 @@ The NULL entries exist so the output object is similar to that of ps in twang.
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.5.1.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>

@@ -130,7 +130,7 @@ check.subclass <- function(method, treat.type) {
                   , optweight = FALSE
                   , super = TRUE
                   , energy = FALSE
-                  , bart = TRUE,
+                  , bart = TRUE
                   # , kbal = FALSE
     ),
     multinomial = list(ps = TRUE
