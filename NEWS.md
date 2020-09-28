@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# WeightIt (development version)
+
+* Added support for estimating propensity scores using Bayesian additive rgeression trees (BART) with `methodd = "bart"`. This method fits a BART model for the treatment using functions in the `BART` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions. Very simple and straightforward support for parallel processing is available, which makes fitting the models much faster.
+
 # WeightIt 0.10.2
 
 * Fixed a bug where treatment values were accidentally switched for some methods.

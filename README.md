@@ -24,10 +24,10 @@ page](https://CRAN.R-project.org/package=WeightIt) for `WeightIt`.
 To install and load `WeightIt`, use the code below:
 
 ``` r
-#CRAN version
+# CRAN version
 install.packages("WeightIt")
 
-#Development version
+# Development version
 devtools::install_github("ngreifer/WeightIt")
 
 library("WeightIt")
@@ -42,10 +42,8 @@ ATE:
 ``` r
 data("lalonde", package = "cobalt")
 
-W <- weightit(treat ~ age + educ + nodegree + 
-                married + race + re74 + re75, 
-              data = lalonde, method = "ps", 
-              estimand = "ATE")
+W <- weightit(treat ~ age + educ + nodegree + married + race + re74 + re75, data = lalonde, 
+    method = "ps", estimand = "ATE")
 W
 ```
 
@@ -88,8 +86,8 @@ bal.tab(W, un = TRUE)
     
     Effective sample sizes
                Control Treated
-    Unadjusted 429.000 185.000
-    Adjusted   329.008  58.327
+    Unadjusted  429.    185.  
+    Adjusted    329.01   58.33
 
 For the second goal, qualities of the distributions of weights can be
 assessed using `summary()`, as demonstrated below.
@@ -145,6 +143,7 @@ using various methods and functions from various packages.
 | \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`                   |
 | \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
 | \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
+| \-              | Bayesian additive regression trees PS (`"bart"`)   | `BART::gbart()`                |
 | \-              | Energy Balancing (`"energy"`)                      | \-                             |
 | **Multinomial** | Multinomial regression PS (`"ps"`)                 | various                        |
 | \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
@@ -154,6 +153,7 @@ using various methods and functions from various packages.
 | \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`                   |
 | \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
 | \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
+| \-              | Bayesian additive regression trees PS (`"bart"`)   | `BART::mbart()`                |
 | \-              | Energy Balancing (`"energy"`)                      | \-                             |
 | **Continuous**  | Generalized linear model PS (`"ps"`)               | `glm()`                        |
 | \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
@@ -162,6 +162,7 @@ using various methods and functions from various packages.
 | \-              | Entropy Balancing (`"ebal"`)                       | \-                             |
 | \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
 | \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
+| \-              | Bayesian additive regression trees PS (`"bart"`)   | `BART::gbart()`                |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are

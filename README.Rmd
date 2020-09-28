@@ -81,6 +81,7 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`
  - | Optimization-Based Weights (`"optweight"`) | `optweight::optweight()`
  - | SuperLearner PS (`"super"`) | `SuperLearner::SuperLearner()`
+ - | Bayesian additive regression trees PS (`"bart"`) | `BART::gbart()`
  - | Energy Balancing (`"energy"`) | -
  **Multinomial** | Multinomial regression PS (`"ps"`) | various
  - | Generalized boosted modeling PS (`"gbm"`) | `gbm::gbm.fit()`
@@ -90,6 +91,7 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`
  - | Optimization-Based Weights (`"optweight"`) | `optweight::optweight()`
  - | SuperLearner PS (`"super"`) | `SuperLearner::SuperLearner()`
+ - | Bayesian additive regression trees PS (`"bart"`) | `BART::mbart()`
  - | Energy Balancing (`"energy"`) | -
  **Continuous** | Generalized linear model PS (`"ps"`) | `glm()`
  - | Generalized boosted modeling PS (`"gbm"`) | `gbm::gbm.fit()`
@@ -98,6 +100,7 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | Entropy Balancing (`"ebal"`) | -
  - | Optimization-Based Weights (`"optweight"`) | `optweight::optweight()`
  - | SuperLearner PS (`"super"`) | `SuperLearner::SuperLearner()`
+ - | Bayesian additive regression trees PS (`"bart"`) | `BART::gbart()`
 
 In addition, `WeightIt` implements the subgroup balancing propensity score using the function `sbps()`. Several other tools and utilities are available.
 

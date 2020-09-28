@@ -9,6 +9,7 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("ebcw", "ate")) return("ebcw")
   else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
   else if (method %in% c("super", "superlearner")) return("super")
+  else if (method %in% c("bart")) return("bart")
   else if (method %in% c("energy")) return("energy")
   # else if (method %in% c("kbal")) return("kbal")
   else return(method)
@@ -26,6 +27,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
                           , "optweight", "opt", "sbw"
                           , "super", "superlearner"
                           , "energy"
+                          , "bart"
                           # "kbal",
   )
 
@@ -61,7 +63,7 @@ method.to.phrase <- function(method) {
   else {
     method <- method.to.proper.method(method)
     if (method %in% c("ps")) return("propensity score weighting")
-    else if (method %in% c("gbm")) return("generalized boosted modeling")
+    else if (method %in% c("gbm")) return("propensity score weighting with GBM")
     else if (method %in% c("twang")) return("generalized boosted modeling with TWANG")
     else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
     else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
@@ -69,6 +71,7 @@ method.to.phrase <- function(method) {
     else if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
     else if (method %in% c("optweight")) return("targeted stable balancing weights")
     else if (method %in% c("super")) return("propensity score weighting with SuperLearner")
+    else if (method %in% c("bart")) return("propensity score weighting with BART")
     else if (method %in% c("energy")) return("energy balancing")
     # else if (method %in% c("kbal")) return("kernel balancing")
     else return("the chosen method of weighting")
@@ -87,6 +90,7 @@ process.estimand <- function(estimand, method, treat.type) {
                   , optweight = c("ATT", "ATC", "ATE")
                   , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
                   , energy = c("ATT", "ATC", "ATE")
+                  , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
                   # , kbal = c("ATT", "ATC", "ATE")
     ),
     multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
@@ -99,6 +103,7 @@ process.estimand <- function(estimand, method, treat.type) {
                        , optweight = c("ATT", "ATC", "ATE")
                        , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
                        , energy = c("ATT", "ATC", "ATE")
+                       , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
                        # , kbal = c("ATT", "ATE")
     ))
 
@@ -125,6 +130,7 @@ check.subclass <- function(method, treat.type) {
                   , optweight = FALSE
                   , super = TRUE
                   , energy = FALSE
+                  , bart = TRUE,
                   # , kbal = FALSE
     ),
     multinomial = list(ps = TRUE
@@ -137,6 +143,7 @@ check.subclass <- function(method, treat.type) {
                        , optweight = FALSE
                        , super = TRUE
                        , energy = FALSE
+                       , bart = TRUE
     ))
 
   if (treat.type != "continuous" && !is.function(method) &&
@@ -355,6 +362,7 @@ process.missing <- function(missing, method, treat.type) {
                            , ebcw = c("ind")
                            , optweight = c("ind")
                            , super = c("ind")
+                           , bart = c("ind", "hot")
                            , energy = c("ind")
                            # , kbal = c("ind")
   ),
@@ -367,6 +375,7 @@ process.missing <- function(missing, method, treat.type) {
                      , ebcw = c("ind")
                      , optweight = c("ind")
                      , super = c("ind")
+                     , bart = c("ind", "hot")
                      , energy = c("ind")
                      # , kbal = c("ind")
   ),
@@ -379,10 +388,10 @@ process.missing <- function(missing, method, treat.type) {
                     , ebcw = c("ind")
                     , optweight = c("ind")
                     , super = c("ind")
+                    , bart = c("ind", "hot")
                     , energy = c("ind")
                     # , kbal = c("ind")
   ))
-
 
   allowable.missings <- AE[[treat.type]][[method]]
   if (is_null(missing)) {

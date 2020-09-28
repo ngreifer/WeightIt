@@ -104,6 +104,7 @@ The primary purpose of \code{weightit} is as a dispatcher to functions that perf
 \item{\code{\link[=method_ebcw]{"ebcw"}} - Empirical balancing calibration weighting.}
 \item{\code{\link[=method_optweight]{"optweight"}} - Optimization-based weighting.}
 \item{\code{\link[=method_super]{"super"}} - Propensity score weighting using SuperLearner.}
+\item{\code{\link[=method_bart]{"bart"}} - Propensity score weighting using Bayesian additive regression trees (BART).}
 \item{\code{\link[=method_energy]{"energy"}} - Energy balancing.}
 }
 

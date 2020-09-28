@@ -234,7 +234,6 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
                               focal = focal,
                               stabilize = stabilize,
                               subclass = subclass,
-                              ps = ps,
                               missing = missing,
                               ...)
       }
@@ -244,7 +243,6 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
                                    s.weights = s.weights,
                                    subset = by.factor == i,
                                    stabilize = stabilize,
-                                   ps = ps,
                                    missing = missing,
                                    ...)
       }
@@ -291,6 +289,29 @@ weightit.fit <- function(covs, treat, method, treat.type, s.weights = rep(1, len
         #                             int = int,
         #                             missing = missing,
         #                             ...)
+      }
+    }
+    else if (method == "bart") {
+      if (treat.type %in% c("binary", "multinomial")) {
+        obj <- weightit2bart(covs = covs,
+                             treat = treat,
+                             s.weights = s.weights,
+                             subset = by.factor == i,
+                             estimand = estimand,
+                             focal = focal,
+                             stabilize = stabilize,
+                             subclass = subclass,
+                             missing = missing,
+                             ...)
+      }
+      else if (treat.type == "continuous") {
+        obj <- weightit2bart.cont(covs = covs,
+                                  treat = treat,
+                                  s.weights = s.weights,
+                                  subset = by.factor == i,
+                                  stabilize = stabilize,
+                                  missing = missing,
+                                  ...)
       }
     }
     # else if (method == "kbal") {
