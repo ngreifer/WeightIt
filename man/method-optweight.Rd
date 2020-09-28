@@ -79,6 +79,11 @@ Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation
 
 de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight adjustment in non-experimental studies with multivalued treatments: Analysis of the effect of an earthquake on post-traumatic stress. Journal of the Royal Statistical Society: Series A (Statistics in Society), n/a(n/a). \doi{10.1111/rssa.12561}
 
+\strong{Continuous Treatments}
+
+Greifer, N. (2020). Estimating Balancing Weights for Continuous Treatments Using Constrained Optimization. \doi{10.17615/DYSS-B342}
+
+
 }
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
