@@ -81,7 +81,8 @@ See \code{\link{method_ps}} for additional references.
 }
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{get_w_from_ps}}
-\code{\link{method_super}} for stacking predictions fro several machine learnign methods, including BART.
+
+\code{\link{method_super}} for stacking predictions from several machine learning methods, including BART.
 }
 \examples{
 library("cobalt")
