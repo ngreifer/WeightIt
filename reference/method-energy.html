@@ -93,7 +93,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.10.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.10.2.9000</span>
       </span>
     </div>
 
@@ -165,7 +165,7 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
 
     <p>For binary and multinomial treatments, the following additional arguments can be specified:</p><dl>
 <dt><code>improved</code></dt><dd><p><code>logical</code>; whether to use the improved energy balancing weights as described by Huling and Mak (2020) when <code>estimand = "ATE"</code>. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2020) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is <code>TRUE</code>; set to <code>FALSE</code> to use the standard energy balancing weights instead (not recommended).</p></dd>
-<dt><code>dist.mat</code></dt><dd><p>a numeric distance matrix to be used instead of the default distance matrix computed by <code>weightit</code>, which uses <code><a href='https://rdrr.io/r/stats/dist.html'>dist</a></code> with default arguments. Note that some distance matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagnonal and a row and column for each unit.</p></dd>
+<dt><code>dist.mat</code></dt><dd><p>a numeric distance matrix to be used instead of the default distance matrix computed by <code>weightit</code>, which uses <code><a href='https://rdrr.io/r/stats/dist.html'>dist</a></code> with default arguments. Note that some distance matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit.</p></dd>
 
 </dl><p>The <code>moments</code> argument functions differently for <code>method = "energy"</code> from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2020). When <code>moments</code> is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multinomial treatments, this involves exact balance on the means of the entered covariates.
 <!-- %For binary and multinomial treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates. --></p>
