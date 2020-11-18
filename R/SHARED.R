@@ -145,7 +145,7 @@ text_box_plot <- function(range.list, width = 12) {
                  "character")
     d[["Min"]] <- vapply(range.list, function(x) x[1], numeric(1L))
     d[["Max"]] <- vapply(range.list, function(x) x[2], numeric(1L))
-    for (i in seq_len(nrow(d))) {
+    for (i in seq_row(d)) {
         spaces1 <- rescaled.range.list[[i]][1] - rescaled.full.range[1]
         #|
         dashes <- max(c(0, diff(rescaled.range.list[[i]]) - 2))
@@ -962,6 +962,14 @@ len <- function(x, recursive = TRUE) {
     else if (length(dim(x)) > 1) NROW(x)
     else if (is.list(x) && recursive) vapply(x, len, numeric(1L), recursive = FALSE)
     else length(x)
+}
+seq_row <- function(x) {
+    if (length(dim(x)) != 2) stop("dim(x) must be 2")
+    seq_len(NROW(x))
+}
+seq_col <- function(x) {
+    if (length(dim(x)) != 2) stop("dim(x) must be 2")
+    seq_len(NCOL(x))
 }
 na.rem <- function(x) {
     #A faster na.omit for vectors
