@@ -563,7 +563,7 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
     }
     else {
       s.d.denom <- estimand <- character(ncol(weights))
-      for (i in seq_len(ncol(weights))) {
+      for (i in seq_col(weights)) {
         if (is_binary(treat)) {
           if (all_the_same(weights[[i]][treat==1 & !check_if_zero(weights[[i]])]) &&
               !all_the_same(weights[[i]][treat==0 & !check_if_zero(weights[[i]])])
@@ -1074,7 +1074,7 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
     if (is_not_null(focal)) focal <- "1"
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
-      for (p in seq_len(ncol(ps))) {
+      for (p in seq_col(ps)) {
         ps_mat <- matrix(c(1 - ps[,p], ps[,p]), ncol = 2, dimnames = list(rownames(ps), c("0", "1")))
         ps[,p] <- subclass_ps(ps_mat, treat, estimand, focal, subclass)[, 2]
       }

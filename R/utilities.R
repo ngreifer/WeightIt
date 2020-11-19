@@ -78,7 +78,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     w <- w*rowSums(1/ps_mat)^-1 #Li & Li (2019)
   }
   else if (toupper(estimand) == "ATM") {
-    w <- w*do.call("pmin", lapply(seq_len(ncol(ps_mat)), function(x) ps_mat[,x]), quote = TRUE)
+    w <- w*do.call("pmin", lapply(seq_col(ps_mat), function(x) ps_mat[,x]), quote = TRUE)
   }
   else if (toupper(estimand) == "ATOS") {
     #Crump et al. (2009)
