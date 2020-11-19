@@ -87,11 +87,12 @@ a \code{weightit} object; the output of a call to \code{weightit}.
   \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
   \item{estimand}{The estimand requested.}
   \item{method}{The weight estimation method specified.}
-  \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"ps"}, \code{"gbm"}, \code{"cbps"}, or \code{"super"}.}
+  \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"ps"}, \code{"gbm"}, \code{"cbps"}, \code{"super"}, or \code{"bart"}.}
   \item{s.weights}{The provided sampling weights.}
   \item{focal}{The focal variable if the ATT was requested with a multi-category treatment.}
   \item{by}{A data.frame containing the \code{by} variable when specified.}
   \item{obj}{When \code{include.obj = TRUE}, the fit object.}
+  \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 }
 \details{
 The primary purpose of \code{weightit} is as a dispatcher to functions that perform the estimation of balancing weights using the requested \code{method}. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when \code{include.obj = TRUE}), how missing values are treated, which estimands are allowed, and whether sampling weights are allowed.
@@ -114,7 +115,9 @@ When using \code{weightit}, please cite both the \pkg{WeightIt} package (using \
 
 }
 \seealso{
-\code{\link{weightitMSM}} for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal strcutural models (MSMs).
+\code{\link{weightitMSM}} for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal structural models (MSMs).
+
+\code{\link{weightit.fit}}, which is a lower-level dispatcher function that accepts a matrix of covariates and a vector of treatment statuses rather than a formula and data frame and performs minimal argument checking and processing. It may be useful for speeding up simulation studies for which the correct arguments are known. In general \code{weightit} should be used.
 }
 
 \author{
