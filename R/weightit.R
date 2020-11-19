@@ -6,22 +6,40 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   A <- list(...)
 
+
   #Checks
-  if (is_null(ps)) {
-    if (is_null(formula) || is_null(class(formula)) || !is.formula(formula, 2)) {
-      stop("'formula' must be a formula relating treatment to covariates.", call. = FALSE)
-    }
+  if (is_null(formula) || is_null(class(formula)) || !is.formula(formula, 2)) {
+    stop("'formula' must be a formula relating treatment to covariates.", call. = FALSE)
   }
-  else {
-    if (!(is.character(ps) && length(ps) == 1) && !is.numeric(ps)) {
-      stop("The argument to 'ps' must be a vector or data frame of propensity scores or the (quoted) names of variables in 'data' that contain propensity scores.", call. = FALSE)
-    }
-    if (is.character(ps) && length(ps)==1) {
-      if (ps %in% names(data)) {
-        ps <- data[[ps]]
-      }
-      else stop("The name supplied to 'ps' is not the name of a variable in 'data'.", call. = FALSE)
-    }
+
+
+
+  #Process treat and covs from formula and data
+  t.c <- get.covs.and.treat.from.formula(formula, data)
+  reported.covs <- t.c[["reported.covs"]]
+  covs <- t.c[["model.covs"]]
+  treat <- t.c[["treat"]]
+  # treat.name <- t.c[["treat.name"]]
+
+  if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
+  if (is_null(treat)) stop("No treatment variable was specified.", call. = FALSE)
+  if (length(treat) != nrow(covs)) {
+    stop("The treatment and covariates must have the same number of units.", call. = FALSE)
+  }
+
+  n <- length(treat)
+
+  if (anyNA(treat)) {
+    stop("No missing values are allowed in the treatment variable.", call. = FALSE)
+  }
+
+  #Get treat type
+  treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  #Process ps
+  ps <- process.ps(ps, data, treat)
+  if (is_not_null(ps)) {
     method <- "ps"
   }
 
@@ -37,30 +55,6 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
     check.user.method(method)
     attr(method, "name") <- method.name
   }
-
-  #Process treat and covs from formula and data
-  t.c <- get.covs.and.treat.from.formula(formula, data)
-  reported.covs <- t.c[["reported.covs"]]
-  covs <- t.c[["model.covs"]]
-  treat <- t.c[["treat"]]
-  # treat.name <- t.c[["treat.name"]]
-
-  if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
-  if (is_null(treat)) stop("No treatment variable was specified.", call. = FALSE)
-  if (length(treat) != nrow(covs)) {
-    stop("Treatment and covariates must have the same number of units.", call. = FALSE)
-  }
-
-  n <- length(treat)
-
-
-  if (anyNA(treat)) {
-    stop("No missing values are allowed in the treatment variable.", call. = FALSE)
-  }
-
-  #Get treat type
-  treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
 
   #Process estimand and focal
   estimand <- process.estimand(estimand, method, treat.type)

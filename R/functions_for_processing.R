@@ -152,6 +152,30 @@ check.subclass <- function(method, treat.type) {
                 " with ", treat.type, " treatments."), call. = FALSE)
   }
 }
+process.ps <- function(ps, data = NULL, treat) {
+  #Process s.weights
+  if (is_not_null(ps)) {
+    if (is.character(ps) && length(ps)==1) {
+      if (is_null(data)) {
+        stop("'ps' was specified as a string but there was no argument to 'data'.", call. = FALSE)
+      }
+      else if (ps %in% names(data)) {
+        ps <- data[[ps]]
+      }
+      else stop("The name supplied to 'ps' is not the name of a variable in 'ps'.", call. = FALSE)
+    }
+    else if (is.numeric(ps)) {
+      if (length(ps) != length(treat)) {
+        stop("'ps' must have teh same number of units as the treatment.", call. = FALSE)
+      }
+    }
+    else {
+      stop("The argument to 'ps' must be a vector of propensity scores or the (quoted) names of the variable in 'data' that contains sampling weights.", call. = FALSE)
+    }
+  }
+  else ps <- NULL
+  return(ps)
+}
 process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treated = NULL) {
   reported.estimand <- estimand
 
