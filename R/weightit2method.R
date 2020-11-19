@@ -149,7 +149,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
     }
 
-    for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+    for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
     if (ncol(covs) > 1) {
       if (missing == "saem") {
@@ -329,6 +329,12 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           fit.list <- make_list(levels(treat_sub))
 
           for (i in levels(treat_sub)) {
+            if (isTRUE(A[["test1"]])) {
+              if (i == last(levels(treat_sub))) {
+                ps[[i]] <- 1 - rowSums(ps[names(ps) != i])
+                next
+              }
+            }
             t_i <- as.numeric(treat_sub == i)
             data_i <- data.frame(t_i, covs)
             fit.list[[i]] <- do.call(stats::glm, c(list(formula(data_i), data = data_i,
@@ -337,6 +343,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
                                                    control), quote = TRUE)
             ps[[i]] <- fit.list[[i]]$fitted.values
           }
+          if (isTRUE(A[["test2"]])) ps <- ps/rowSums(ps)
           fit.obj <- fit.list
         }
       }
@@ -451,7 +458,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
       covs <- cbind(covs, missing.ind)
     }
   }
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (ncol(covs) > 1) {
     if (missing == "saem") {
@@ -576,7 +583,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   s.weights <- s.weights[subset]
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -624,7 +631,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   s.weights <- s.weights[subset]
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -666,7 +673,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
     covs.list <- lapply(covs.list, function(c) {
       covs <- c[subset, , drop = FALSE]
       covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-      for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+      for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
       if (missing == "ind") {
         missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -734,7 +741,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -756,7 +763,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
-        treat_ <- ifelse(treat[treat.in.i.focal] == i, 0, 1)
+        treat_ <- as.integer(treat[treat.in.i.focal] != i)
         covs_ <- covs[treat.in.i.focal, , drop = FALSE]
         new.data <- data.frame(treat_, covs_)
 
@@ -849,7 +856,7 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -888,7 +895,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
   treat.type <- get.treat.type(treat)
 
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -974,9 +981,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
   current.best.loss <- Inf
 
-  for (i in seq_len(nrow(tune))) {
+  for (i in seq_row(tune)) {
 
-    fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)], tune[i, tunable]), quote = TRUE)
+    A[["distribution"]] <- list(name = tune[["distribution"]][i])
+    tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
+
+    fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))], tune_args), quote = TRUE)
 
     if (cv == 0) {
 
@@ -1054,11 +1064,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       A[["class.stratify.cv"]] <- FALSE
       A[["y"]] <- treat
       A[["x"]] <- covs
-      A[["distribution"]] <- list(name = A[["distribution"]])
+      A[["distribution"]] <- list(name = tune[["distribution"]][i])
       A[["w"]] <- s.weights
+
+      tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
       cv.results <- do.call(gbm::gbmCrossVal,
-                            c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), tunable)],
-                              tune[i, tunable]), quote = TRUE)
+                            c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
+                              tune_args), quote = TRUE)
       best.tree.index <- which.min(cv.results$error)
       best.loss <- cv.results$error[best.tree.index]
       best.tree <- best.tree.index
@@ -1087,7 +1099,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (treat.type == "multinomial") ps <- NULL
   }
 
-  tune[tunable[vapply(tunable, function(x) length(A[[x]]) == 1, logical(1L))]] <- NULL
+  tune[tunable[vapply(tune[tunable], all_the_same, logical(1L))]] <- NULL
 
   if (ncol(tune) > 2) {
     info[["tune"]] <- tune
@@ -1107,7 +1119,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1240,7 +1252,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 
   current.best.loss <- Inf
 
-  for (i in seq_len(nrow(tune))) {
+  for (i in seq_row(tune)) {
 
     fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)],
                                    tune[i, tunable[tunable %in% names(formals(gbm::gbm.fit))]]), quote = TRUE)
@@ -1382,6 +1394,9 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
@@ -1389,7 +1404,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
       covs <- cbind(covs, missing.ind)
     }
   }
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
   ps <- NULL
 
   if (check.package("CBPS")) {
@@ -1400,7 +1415,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
-        treat_ <- ifelse(treat[treat.in.i.focal] == i, 0, 1)
+        treat_ <- as.integer(treat[treat.in.i.focal] != i)
         covs_ <- covs[treat.in.i.focal, , drop = FALSE]
         new.data <- data.frame(treat_, covs_)
 
@@ -1432,7 +1447,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     }
     else {
       new.data <- data.frame(treat, covs)
-      if (!nunique.gt(treat, 4)) {
+      if (treat.type == "binary" || !nunique.gt(treat, 4)) {
         tryCatch({fit.list <- CBPS::CBPS(formula(new.data),
                                          data = new.data,
                                          method = if (isFALSE(A$over)) "exact" else "over",
@@ -1447,7 +1462,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                  }
         )
 
-        if (is_binary(treat)) {
+        if (treat.type == "binary") {
           ps <- fit.list[["fitted.values"]]
           w <- get_w_from_ps(ps, fit.list[["y"]], estimand = "ATE",
                              subclass = subclass, stabilize = stabilize)
@@ -1461,7 +1476,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
         fit.list <- make_list(levels(treat))
 
         for (i in levels(treat)) {
-          new.data[[1]] <- ifelse(treat == i, 1, 0)
+          new.data[[1]] <- as.integer(treat == i)
           fit.list[[i]] <- CBPS::CBPS(formula(new.data), data = new.data,
                                       method = if (isFALSE(A$over)) "exact" else "over",
                                       standardize = FALSE,
@@ -1475,7 +1490,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
 
   }
 
-  if (stabilize && !is_binary(treat)) {
+  if (stabilize && treat.type != "binary") {
     w <- stabilize_w(w, treat)
   }
 
@@ -1496,7 +1511,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
       covs <- cbind(covs, missing.ind)
     }
   }
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   new.data <- data.frame(treat = treat, covs)
 
@@ -1539,7 +1554,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1575,7 +1590,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1611,7 +1626,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   for (f in names(formals(ebal::ebalance))) {
     if (is_null(A[[f]])) A[[f]] <- formals(ebal::ebalance)[[f]]
@@ -1632,7 +1647,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
-        treat_ <- ifelse(treat[treat.in.i.focal] == i, 0, 1)
+        treat_ <- as.integer(treat[treat.in.i.focal] != i)
         covs_ <- covs[treat.in.i.focal, , drop = FALSE]
 
         colinear.covs.to.remove <- colnames(covs_)[colnames(covs_) %nin% colnames(make_full_rank(covs_[treat_ == 0, , drop = FALSE]))]
@@ -1720,7 +1735,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
   # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1787,7 +1802,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  for (i in seq_len(ncol(covs))) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   for (f in names(formals(ATE::ATE))) {
     if (is_null(A[[f]])) A[[f]] <- formals(ATE::ATE)[[f]]
@@ -1801,7 +1816,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
 
       for (i in control.levels) {
         treat.in.i.focal <- treat %in% c(focal, i)
-        treat_ <- ifelse(treat[treat.in.i.focal] == i, 0, 1)
+        treat_ <- as.integer(treat[treat.in.i.focal] != i)
         covs_ <- covs[treat.in.i.focal, , drop = FALSE]
 
         colinear.covs.to.remove <- colnames(covs_)[colnames(covs_) %nin% colnames(make_full_rank(covs_[treat_ == 0, , drop = FALSE]))]
@@ -1882,7 +1897,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
       covs <- cbind(covs, missing.ind)
     }
   }
-  covs <- data.frame(apply(covs, 2, make.closer.to.1))
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (ncol(covs) > 1) {
     colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
@@ -2008,7 +2023,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     }
   }
 
-  covs <- data.frame(apply(covs, 2, make.closer.to.1))
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (ncol(covs) > 1) {
     colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
@@ -2149,7 +2164,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 }
 
 #PS weights using BART
-weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
+.weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
   A <- list(...)
 
   check.package("BART")
@@ -2171,7 +2186,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
       covs <- cbind(covs, missing.ind)
     }
   }
-  covs <- data.frame(apply(covs, 2, make.closer.to.1))
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (is_null(A$link)) A$link <- "probit"
   else {
@@ -2242,7 +2257,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
 }
-weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+.weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- list(...)
 
   check.package("BART")
@@ -2262,7 +2277,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     }
   }
 
-  covs <- data.frame(apply(covs, 2, make.closer.to.1))
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   #Process density params
   if (isTRUE(A[["use.kernel"]])) {
@@ -2330,6 +2345,182 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
                                                       c("x.train", "y.train", "x.test", "type", "ntype")))]))
 
   gp.score <- fit$yhat.train.mean
+
+  #Get weights
+  w <- get_cont_weights(gp.score, treat = treat, s.weights = s.weights,
+                        dens.num = dens.num, densfun = densfun,
+                        use.kernel = use.kernel, densControl = A)
+
+  if (use.kernel && isTRUE(A[["plot"]])) {
+    d.d <- density(treat - gp.score, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]],
+                   kernel = A[["kernel"]])
+    plot_density(d.n, d.d)
+  }
+
+  info <- list()
+
+  obj <- list(w = w, info = info, fit.obj = fit)
+  return(obj)
+}
+
+weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
+  A <- list(...)
+
+  check.package("dbarts")
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
+
+  if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
+                                     call. = FALSE)
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    if (is_not_null(missing.ind)) {
+      covs[is.na(covs)] <- 0
+      covs <- cbind(covs, missing.ind)
+    }
+  }
+
+  if (ncol(covs) > 1) {
+    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  }
+
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  ps <- make_df(levels(treat), nrow = length(treat))
+
+  A[["formula"]] <- covs
+  A[["keepCall"]] <- FALSE
+  A[["combineChains"]] <- TRUE
+  A[["verbose"]] <- FALSE #necessary to prevent crash
+
+  fit.list <- make_list(levels(treat))
+  p.score <- NULL
+
+  for (i in levels(treat)) {
+
+    if (treat.type == "binary" && i == last(levels(treat))) {
+      ps[[i]] <- 1 - ps[[1]]
+      p.score <- ps[[i]]
+      fit.list <- fit.list[[1]]
+      next
+    }
+
+    A[["data"]] <- as.integer(treat == i)
+    fit.list[[i]] <- do.call(dbarts::bart2, A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
+                                                                      names(formals(dbarts::dbartsControl))),
+                                                                    c("offset.test", "weights", "subset", "test"))],
+                             quote = TRUE)
+
+    ps[[i]] <- fitted(fit.list[[i]])
+
+  }
+
+  info <- list()
+
+  #ps should be matrix of probs for each treat
+  #Computing weights
+  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
+
+  obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
+  return(obj)
+}
+weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+  A <- list(...)
+
+  check.package("dbarts")
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+  s.weights <- s.weights[subset]
+
+  if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
+                                     call. = FALSE)
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    if (is_not_null(missing.ind)) {
+      covs[is.na(covs)] <- 0
+      covs <- cbind(covs, missing.ind)
+    }
+  }
+
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  #Process density params
+  if (isTRUE(A[["use.kernel"]])) {
+    if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
+    if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
+    if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
+    if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
+    use.kernel <- TRUE
+    densfun <- NULL
+  }
+  else {
+    if (is_null(A[["density"]])) densfun <- dnorm
+    else if (is.function(A[["density"]])) densfun <- A[["density"]]
+    else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
+      splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
+      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+        if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
+          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
+        }
+        densfun <- function(x) {
+          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
+                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+        }
+      }
+      else {
+        stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                   splitdens[1], "is not an available function."), call. = FALSE)
+      }
+    }
+    else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+    use.kernel <- FALSE
+  }
+
+  #Stabilization - get dens.num
+  p.num <- treat - mean(treat)
+
+  if (use.kernel) {
+    d.n <- density(p.num, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+    dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
+  }
+  else {
+    dens.num <- densfun(p.num/sd(treat))
+    if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
+      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+    }
+    else if (any(dens.num <= 0)) {
+      stop("The input to density may not accept the full range of treatment values.", call. = FALSE)
+    }
+  }
+
+  A[["formula"]] <- covs
+  A[["data"]] <- treat
+  A[["keepCall"]] <- FALSE
+  A[["combineChains"]] <- TRUE
+  A[["verbose"]] <- FALSE #necessary to prevent crash
+
+  #Estimate GPS
+
+  fit <- do.call(dbarts::bart2, A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
+                                                                    names(formals(dbarts::dbartsControl))),
+                                                                  c("offset.test", "weights", "subset", "test"))],
+                           quote = TRUE)
+
+  gp.score <- fitted(fit)
 
   #Get weights
   w <- get_cont_weights(gp.score, treat = treat, s.weights = s.weights,
