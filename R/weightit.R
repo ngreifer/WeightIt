@@ -97,28 +97,24 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   ## Running models ----
 
-  if (verbose) eval.verbose <- base::eval
-  else eval.verbose <- utils::capture.output
-
-  eval.verbose({
-    #Returns weights (w) and propensty score (ps)
-      obj <- weightit.fit(treat = treat,
-                          covs = covs,
-                          treat.type = treat.type,
-                          s.weights = s.weights,
-                          by.factor = attr(processed.by, "by.factor"),
-                          estimand = estimand,
-                          focal = focal,
-                          stabilize = stabilize,
-                          method = method,
-                          moments = moments,
-                          int = int,
-                          subclass = subclass,
-                          ps = ps,
-                          missing = missing,
-                          include.obj = include.obj,
-                          ...)
-  })
+  #Returns weights (w) and propensty score (ps)
+  obj <- weightit.fit(treat = treat,
+                      covs = covs,
+                      treat.type = treat.type,
+                      s.weights = s.weights,
+                      by.factor = attr(processed.by, "by.factor"),
+                      estimand = estimand,
+                      focal = focal,
+                      stabilize = stabilize,
+                      method = method,
+                      moments = moments,
+                      int = int,
+                      subclass = subclass,
+                      ps = ps,
+                      missing = missing,
+                      verbose = verbose,
+                      include.obj = include.obj,
+                      ...)
 
   if (all_the_same(obj$w)) stop(paste0("All weights are ", obj$w[1], "."), call. = FALSE)
 
@@ -192,7 +188,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 
   if (treat.type == "continuous") {
     out$weight.range <- list(all = c(min(w[w > 0]),
-                          max(w[w > 0])))
+                                     max(w[w > 0])))
     top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
     out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
     out$coef.of.var <- c(all = sd(w)/mean_fast(w))
@@ -242,7 +238,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   }
   else if (treat.type == "multinomial") {
     out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
-                                                        max(w[w > 0 & t == x]))),
+                                                                 max(w[w > 0 & t == x]))),
                                  levels(t))
     top.weights <- setNames(lapply(levels(t), function(x) sort(w[t == x], decreasing = TRUE)[seq_len(top)]),
                             levels(t))
@@ -253,7 +249,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
                         overall = mean.abs.dev(w)/mean_fast(w))
     out$negative.entropy <- c(vapply(levels(t), function(x) sum(w[t==x & w>0]*log(w[t==x & w>0]))/sum(w[t==x & w>0]), numeric(1L)),
-                         overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+                              overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
     out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
                        overall = sum(check_if_zero(w)))
 
@@ -286,9 +282,9 @@ print.summary.weightit <- function(x, ...) {
     print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
   })
   df <- setNames(data.frame(do.call("c", lapply(names(x$weight.top), function(x) c(" ", x))),
-                   matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), rep("", top - length(x)), round(x, 4), rep("", top - length(x))))),
-               byrow = TRUE, nrow = 2*length(x$weight.top))),
-               rep("", 1 + top))
+                            matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), rep("", top - length(x)), round(x, 4), rep("", top - length(x))))),
+                                   byrow = TRUE, nrow = 2*length(x$weight.top))),
+                 rep("", 1 + top))
   cat("\n- " %+% italic("Units with", top, "greatest weights by group") %+% ":\n")
   print.data.frame(df, row.names = FALSE)
   cat("\n- " %+% italic("Weight statistics") %+% ":\n\n")
@@ -296,7 +292,7 @@ print.summary.weightit <- function(x, ...) {
                                                               x$scaled.mad,
                                                               x$negative.entropy,
                                                               x$num.zeros)),
-                                        c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
+                                          c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
   cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
   print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
   invisible(x)

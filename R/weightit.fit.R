@@ -1,6 +1,6 @@
 weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor = NULL,
                          estimand = "ATE", focal = NULL, stabilize = FALSE, ps = NULL, moments = NULL, int = FALSE,
-                         subclass = NULL, is.MSM.method = FALSE, missing = NULL, include.obj = FALSE, ...){
+                         subclass = NULL, is.MSM.method = FALSE, missing = NULL, verbose = FALSE, include.obj = FALSE, ...){
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
 
@@ -88,6 +88,11 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
   info <- make_list(levels(by.factor))
 
   obj <- NULL
+
+  if (verbose) eval.verbose <- base::eval
+  else eval.verbose <- utils::capture.output
+
+  eval.verbose({
   for (i in levels(by.factor)) {
     #Run method
     if (is.function(method)) {
@@ -425,6 +430,7 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
     info[[i]] <- obj$info
 
   }
+  })
 
   if (include.obj) {
     if (nlevels(by.factor) == 1) fit.obj <- fit.obj[[1]]
