@@ -1546,7 +1546,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
            }
   )
 
-  w <- cobalt::get.w(fit) / s.weights
+  w <- fit$weights / s.weights
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -1791,12 +1791,14 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
                      gr = gradient.EB,
                      method = "BFGS",
                      control = list(trace = 0,
-                                    maxit = if_null_then(A[["max.iterations"]], 200)))
+                                    reltol = if_null_then(A[["reltol"]], sqrt(.Machine$double.eps)),
+                                    maxit = if_null_then(A[["maxit"]], 200)))
 
     w <- W(opt.out$par)
 
     list(Z = setNames(opt.out$par, colnames(C)),
-         w = w/(mean(w) * s.weights_t)
+         w = w/(mean(w) * s.weights_t,
+                opt.out = opt.out)
     )
   }
 
@@ -1820,7 +1822,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     w[treat == i] <- fit.list[[i]]$w
   }
 
-  obj <- list(w = w, fit.obj = fit.list)
+  obj <- list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]])
   return(obj)
 }
 
@@ -1880,7 +1882,8 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
                    gr = gradient.EBCT,
                    method = "BFGS",
                    control = list(trace = TRUE,
-                                  maxit = if_null_then(A[["max.iterations"]], 200)))
+                                  reltol = if_null_then(A[["reltol"]], sqrt(.Machine$double.eps)),
+                                  maxit = if_null_then(A[["maxit"]], 200)))
 
   w <-  q*exp(gTX %*% opt.out$par)/(mean(q*exp(gTX %*% opt.out$par)))
   #--------------------------------------#
