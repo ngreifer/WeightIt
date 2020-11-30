@@ -8,6 +8,13 @@
 
 <title>Changelog • WeightIt</title>
 
+<!-- favicons -->
+<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
@@ -40,6 +47,7 @@
 
 
 <meta property="og:title" content="Changelog" />
+<meta property="og:image" content="/logo.png" />
 
 
 
@@ -116,7 +124,11 @@
 <a href="#weightit-development-version" class="anchor"></a>WeightIt (development version)<small> Unreleased </small>
 </h1>
 <ul>
-<li>Added support for estimating propensity scores using Bayesian additive rgeression trees (BART) with <code>methodd = "bart"</code>. This method fits a BART model for the treatment using functions in the <code>BART</code> package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions. Very simple and straightforward support for parallel processing is available, which makes fitting the models much faster.</li>
+<li><p>Added support for estimating propensity scores using Bayesian additive regression trees (BART) with <code>method = "bart"</code>. This method fits a BART model for the treatment using functions in the <code>dbarts</code> package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.</p></li>
+<li><p>Fixed a bug when using <code>method = "gbm"</code> with <code>stop.method = "cv{#}"</code>.</p></li>
+<li><p>Fixed a bug when setting <code>estimand = "ATC"</code> for methods that produce a propensity score. In the past, the output propensity score was the probability of being in the control group; now, it is the probability of being in the treated group, as it is for all other estimands. This does not affect the weights.</p></li>
+<li><p>Setting <code>method = "twang"</code> is now deprecated. Use <code>method = "gbm"</code> for improved performance and increased functionality. <code>method = "twang"</code> relies on the <code>twang</code> package; <code>method = "gbm"</code> calls <code>gbm</code> directly.</p></li>
+<li><p>Using <code>method = "ebal"</code> no longer requires the <code>ebal</code> package. Instead, <code><a href="https://rdrr.io/r/stats/optim.html">optim()</a></code> is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed.</p></li>
 </ul>
 </div>
     <div id="weightit-0102" class="section level1">
@@ -132,7 +144,7 @@
 <a href="#weightit-0101" class="anchor"></a>WeightIt 0.10.1<small> 2020-08-12 </small>
 </h1>
 <ul>
-<li><p>With <code>method = "gbm"</code>, added the ability to tune hyperparameters like <code>interaction.depth</code> and <code>distribution</code> using the same critera as is used to select the optimal tree. A summary of the tuning results is included in <code>info</code> in the <code>weightit</code> output object.</p></li>
+<li><p>With <code>method = "gbm"</code>, added the ability to tune hyperparameters like <code>interaction.depth</code> and <code>distribution</code> using the same criteria as is used to select the optimal tree. A summary of the tuning results is included in <code>info</code> in the <code>weightit</code> output object.</p></li>
 <li><p>Fixed a bug where <code>moments</code> and <code>int</code> were ignored unless both were specified.</p></li>
 <li><p>Effective sample sizes now print only up to two digits (believe me, you don’t need three) and print more cleanly with whole numbers.</p></li>
 <li><p>Fixed a bug when using <code>by</code>, thanks to <a href='https://github.com/frankpopham'>@frankpopham</a>. (<a href='https://github.com/ngreifer/WeightIt/issues/11'>#11</a>)</p></li>

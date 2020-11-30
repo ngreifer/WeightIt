@@ -6,6 +6,12 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Weighting for Covariate Balance in Observational Studies • WeightIt</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
 <script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
@@ -13,6 +19,7 @@
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
 <script src="pkgdown.js"></script><meta property="og:title" content="Weighting for Covariate Balance in Observational Studies">
 <meta property="og:description" content="Generates weights to form equivalent groups in observational studies with point or longitudinal treatments by easing and extending the functionality of the R packages twang for generalized boosted modeling (McCaffrey, Ridgeway &amp; Morral, 2004) &lt;doi:10.1037/1082-989X.9.4.403&gt;, CBPS for covariate balancing propensity score weighting (Imai &amp; Ratkovic, 2014) &lt;doi:10.1111/rssb.12027&gt;, ebal for entropy balancing (Hainmueller, 2012) &lt;doi:10.1093/pan/mpr025&gt;, optweight for optimization-based weights (Zubizarreta, 2015) &lt;doi:10.1080/01621459.2015.1023805&gt;, ATE for empirical balancing calibration weighting (Chan, Yam, &amp; Zhang, 2016) &lt;doi:10.1111/rssb.12129&gt;, SuperLearner for stacked machine learning-based propensity scores (Pirracchio, Petersen, &amp; van der Laan, 2015) &lt;doi:10.1093/aje/kwu253&gt;, among others. Also allows for assessment of weights and checking of covariate balance by interfacing directly with cobalt.">
+<meta property="og:image" content="/logo.png">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -66,18 +73,23 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-<div id="weightit" class="section level1">
+<div id="weightit-" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#weightit" class="anchor"></a>WeightIt</h1></div>
+<a href="#weightit-" class="anchor"></a>WeightIt <img src="reference/figures/logo.png" align="right" width="150">
+</h1></div>
 
+<hr>
+<div id="overview" class="section level3">
+<h3 class="hasAnchor">
+<a href="#overview" class="anchor"></a>Overview</h3>
 <p><code>WeightIt</code> is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Contained within <code>WeightIt</code> are methods that call on other R packages to estimate weights. The value of <code>WeightIt</code> is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. <code>WeightIt</code> extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, ATC, and other estimands for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, <code>WeightIt</code> does for weighting what <code>MatchIt</code> has done for matching, and <code>MatchIt</code> users will find the syntax familiar.</p>
-<p>For a complete vignette, see the <a href="https://CRAN.R-project.org/package=WeightIt">CRAN page</a> for <code>WeightIt</code>.</p>
+<p>For a complete vignette, see the <a href="https://ngreifer.github.io/WeightIt/articles/WeightIt.html">website</a> for <code>WeightIt</code>.</p>
 <p>To install and load <code>WeightIt</code>, use the code below:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="co"># CRAN version</span>
+<code class="sourceCode R"><span class="co">#CRAN version</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"WeightIt"</span><span class="op">)</span>
 
-<span class="co"># Development version</span>
+<span class="co">#Development version</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"ngreifer/WeightIt"</span><span class="op">)</span>
 
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/">"WeightIt"</a></span><span class="op">)</span></code></pre></div>
@@ -85,8 +97,10 @@
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span>
 
-<span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>, data <span class="op">=</span> <span class="va">lalonde</span>, 
-    method <span class="op">=</span> <span class="st">"ps"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span>
+<span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> 
+                <span class="va">married</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>, 
+              data <span class="op">=</span> <span class="va">lalonde</span>, method <span class="op">=</span> <span class="st">"ps"</span>, 
+              estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span>
 <span class="va">W</span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1"></a>A weightit object</span>
 <span id="cb3-2"><a href="#cb3-2"></a> <span class="op">-</span><span class="st"> </span>method<span class="op">:</span><span class="st"> "ps"</span> (propensity score weighting)</span>
@@ -95,7 +109,7 @@
 <span id="cb3-5"><a href="#cb3-5"></a> <span class="op">-</span><span class="st"> </span>treatment<span class="op">:</span><span class="st"> </span><span class="dv">2</span><span class="op">-</span>category</span>
 <span id="cb3-6"><a href="#cb3-6"></a> <span class="op">-</span><span class="st"> </span>estimand<span class="op">:</span><span class="st"> </span>ATE</span>
 <span id="cb3-7"><a href="#cb3-7"></a> <span class="op">-</span><span class="st"> </span>covariates<span class="op">:</span><span class="st"> </span>age, educ, nodegree, married, race, re74, re75</span></code></pre></div>
-<p>Evaluating weights has two components: evaluating the covariate balance produces by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the <code>cobalt</code> package, which are fully compatible with <code>WeightIt</code>, can be used, as demonstrated below:</p>
+<p>Evaluating weights has two components: evaluating the covariate balance produced by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the <code>cobalt</code> package, which are fully compatible with <code>WeightIt</code>, can be used, as demonstrated below:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/">"cobalt"</a></span><span class="op">)</span>
 
@@ -124,40 +138,40 @@
 <p>For the second goal, qualities of the distributions of weights can be assessed using <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>, as demonstrated below.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">W</span><span class="op">)</span></code></pre></div>
-<pre><code>                 Summary of weights
-
-- Weight ranges:
-
-           Min                                   Max
-treated 1.1721 |---------------------------| 40.0773
-control 1.0092 |-|                            4.7432
-
-- Units with 5 greatest weights by group:
-                                                
-             137     124     116      68      10
- treated 13.5451 15.9884 23.2967 23.3891 40.0773
-             597     573     411     381     303
- control  4.0301  4.0592  4.2397  4.5231  4.7432
-
-- Weight statistics:
-
-        Coef of Var   MAD Entropy # Zeros
-treated       1.478 0.807   1.630       0
-control       0.552 0.391   0.480       0
-overall       1.371 0.591   1.024       0
-
-- Effective Sample Sizes:
-
-           Control Treated
-Unweighted  429.    185.  
-Weighted    329.01   58.33</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>                 Summary of weights</span>
+<span id="cb7-2"><a href="#cb7-2"></a></span>
+<span id="cb7-3"><a href="#cb7-3"></a><span class="op">-</span><span class="st"> </span>Weight ranges<span class="op">:</span></span>
+<span id="cb7-4"><a href="#cb7-4"></a></span>
+<span id="cb7-5"><a href="#cb7-5"></a><span class="st">           </span>Min                                   Max</span>
+<span id="cb7-6"><a href="#cb7-6"></a>treated <span class="fl">1.1721</span> <span class="op">|---------------------------</span><span class="er">|</span><span class="st"> </span><span class="fl">40.0773</span></span>
+<span id="cb7-7"><a href="#cb7-7"></a>control <span class="fl">1.0092</span> <span class="op">|-</span><span class="er">|</span><span class="st">                            </span><span class="fl">4.7432</span></span>
+<span id="cb7-8"><a href="#cb7-8"></a></span>
+<span id="cb7-9"><a href="#cb7-9"></a><span class="op">-</span><span class="st"> </span>Units with <span class="dv">5</span> greatest weights by group<span class="op">:</span></span>
+<span id="cb7-10"><a href="#cb7-10"></a><span class="st">                                                </span></span>
+<span id="cb7-11"><a href="#cb7-11"></a><span class="st">             </span><span class="dv">137</span>     <span class="dv">124</span>     <span class="dv">116</span>      <span class="dv">68</span>      <span class="dv">10</span></span>
+<span id="cb7-12"><a href="#cb7-12"></a> treated <span class="fl">13.5451</span> <span class="fl">15.9884</span> <span class="fl">23.2967</span> <span class="fl">23.3891</span> <span class="fl">40.0773</span></span>
+<span id="cb7-13"><a href="#cb7-13"></a>             <span class="dv">597</span>     <span class="dv">573</span>     <span class="dv">411</span>     <span class="dv">381</span>     <span class="dv">303</span></span>
+<span id="cb7-14"><a href="#cb7-14"></a> control  <span class="fl">4.0301</span>  <span class="fl">4.0592</span>  <span class="fl">4.2397</span>  <span class="fl">4.5231</span>  <span class="fl">4.7432</span></span>
+<span id="cb7-15"><a href="#cb7-15"></a></span>
+<span id="cb7-16"><a href="#cb7-16"></a><span class="op">-</span><span class="st"> </span>Weight statistics<span class="op">:</span></span>
+<span id="cb7-17"><a href="#cb7-17"></a></span>
+<span id="cb7-18"><a href="#cb7-18"></a><span class="st">        </span>Coef of Var   MAD Entropy <span class="co"># Zeros</span></span>
+<span id="cb7-19"><a href="#cb7-19"></a>treated       <span class="fl">1.478</span> <span class="fl">0.807</span>   <span class="fl">1.630</span>       <span class="dv">0</span></span>
+<span id="cb7-20"><a href="#cb7-20"></a>control       <span class="fl">0.552</span> <span class="fl">0.391</span>   <span class="fl">0.480</span>       <span class="dv">0</span></span>
+<span id="cb7-21"><a href="#cb7-21"></a>overall       <span class="fl">1.371</span> <span class="fl">0.591</span>   <span class="fl">1.024</span>       <span class="dv">0</span></span>
+<span id="cb7-22"><a href="#cb7-22"></a></span>
+<span id="cb7-23"><a href="#cb7-23"></a><span class="op">-</span><span class="st"> </span>Effective Sample Sizes<span class="op">:</span></span>
+<span id="cb7-24"><a href="#cb7-24"></a></span>
+<span id="cb7-25"><a href="#cb7-25"></a><span class="st">           </span>Control Treated</span>
+<span id="cb7-26"><a href="#cb7-26"></a>Unweighted  <span class="fl">429.</span>    <span class="fl">185.</span>  </span>
+<span id="cb7-27"><a href="#cb7-27"></a>Weighted    <span class="fl">329.01</span>   <span class="fl">58.33</span></span></code></pre></div>
 <p>Desirable qualities include small coefficients of variation close to 0 and large effective sample sizes.</p>
 <p>The table below contains the available methods in <code>WeightIt</code> for estimating weights for binary, multinomial, and continuous treatments using various methods and functions from various packages.</p>
 <table class="table">
 <thead><tr class="header">
 <th>Treatment type</th>
 <th>Method (<code>method =</code>)</th>
-<th>Function</th>
+<th>Package</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
@@ -168,42 +182,42 @@ Weighted    329.01   58.33</code></pre>
 <tr class="even">
 <td>-</td>
 <td>Generalized boosted modeling PS (<code>"gbm"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html">gbm::gbm.fit()</a></code></td>
+<td><code>gbm</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Covariate Balancing PS (<code>"cbps"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/CBPS/man/CBPS.html">CBPS::CBPS()</a></code></td>
+<td><code>CBPS</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>Non-Parametric Covariate Balancing PS (<code>"npcbps"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/CBPS/man/npCBPS.html">CBPS::npCBPS()</a></code></td>
+<td><code>CBPS</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Entropy Balancing (<code>"ebal"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/ebal/man/ebalance.html">ebal::ebalance()</a></code></td>
+<td>-</td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>Empirical Balancing Calibration Weights (<code>"ebcw"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/ATE/man/ATE.html">ATE::ATE()</a></code></td>
+<td><code>ATE</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Optimization-Based Weights (<code>"optweight"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/optweight/man/optweight.html">optweight::optweight()</a></code></td>
+<td><code>optweight</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>SuperLearner PS (<code>"super"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html">SuperLearner::SuperLearner()</a></code></td>
+<td><code>SuperLearner</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Bayesian additive regression trees PS (<code>"bart"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/BART/man/gbart.html">BART::gbart()</a></code></td>
+<td><code>dbarts</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
@@ -218,42 +232,42 @@ Weighted    329.01   58.33</code></pre>
 <tr class="even">
 <td>-</td>
 <td>Generalized boosted modeling PS (<code>"gbm"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html">gbm::gbm.fit()</a></code></td>
+<td><code>gbm</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Covariate Balancing PS (<code>"cbps"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/CBPS/man/CBPS.html">CBPS::CBPS()</a></code></td>
+<td><code>CBPS</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>Non-Parametric Covariate Balancing PS (<code>"npcbps"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/CBPS/man/npCBPS.html">CBPS::npCBPS()</a></code></td>
+<td><code>CBPS</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Entropy Balancing (<code>"ebal"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/ebal/man/ebalance.html">ebal::ebalance()</a></code></td>
+<td>-</td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>Empirical Balancing Calibration Weights (<code>"ebcw"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/ATE/man/ATE.html">ATE::ATE()</a></code></td>
+<td><code>ATE</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Optimization-Based Weights (<code>"optweight"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/optweight/man/optweight.html">optweight::optweight()</a></code></td>
+<td><code>optweight</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>SuperLearner PS (<code>"super"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html">SuperLearner::SuperLearner()</a></code></td>
+<td><code>SuperLearner</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Bayesian additive regression trees PS (<code>"bart"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/BART/man/mbart.html">BART::mbart()</a></code></td>
+<td><code>dbarts</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
@@ -263,22 +277,22 @@ Weighted    329.01   58.33</code></pre>
 <tr class="odd">
 <td><strong>Continuous</strong></td>
 <td>Generalized linear model PS (<code>"ps"</code>)</td>
-<td><code><a href="https://rdrr.io/r/stats/glm.html">glm()</a></code></td>
+<td>-</td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>Generalized boosted modeling PS (<code>"gbm"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html">gbm::gbm.fit()</a></code></td>
+<td><code>gbm</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>Covariate Balancing PS (<code>"cbps"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/CBPS/man/CBPS.html">CBPS::CBPS()</a></code></td>
+<td><code>CBPS</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>Non-Parametric Covariate Balancing PS (<code>"npcbps"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/CBPS/man/npCBPS.html">CBPS::npCBPS()</a></code></td>
+<td><code>CBPS</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
@@ -288,22 +302,23 @@ Weighted    329.01   58.33</code></pre>
 <tr class="even">
 <td>-</td>
 <td>Optimization-Based Weights (<code>"optweight"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/optweight/man/optweight.html">optweight::optweight()</a></code></td>
+<td><code>optweight</code></td>
 </tr>
 <tr class="odd">
 <td>-</td>
 <td>SuperLearner PS (<code>"super"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html">SuperLearner::SuperLearner()</a></code></td>
+<td><code>SuperLearner</code></td>
 </tr>
 <tr class="even">
 <td>-</td>
 <td>Bayesian additive regression trees PS (<code>"bart"</code>)</td>
-<td><code><a href="https://rdrr.io/pkg/BART/man/gbart.html">BART::gbart()</a></code></td>
+<td><code>dbarts</code></td>
 </tr>
 </tbody>
 </table>
 <p>In addition, <code>WeightIt</code> implements the subgroup balancing propensity score using the function <code><a href="reference/sbps.html">sbps()</a></code>. Several other tools and utilities are available.</p>
-<p>Please submit bug reports or other issues to <a href="https://github.com/ngreifer/WeightIt/issues" class="uri">https://github.com/ngreifer/WeightIt/issues</a>. If you would like to see your package or method integrated into <code>WeightIt</code>, or for any other questions or comments about <code>WeightIt</code>, please contact Noah Greifer at <a href="mailto:noah.greifer@gmail.com" class="email">noah.greifer@gmail.com</a>. Fan mail is greatly appreciated.</p>
+<p>Please submit bug reports or other issues to <a href="https://github.com/ngreifer/WeightIt/issues" class="uri">https://github.com/ngreifer/WeightIt/issues</a>. If you would like to see your package or method integrated into <code>WeightIt</code>, or for any other questions or comments about <code>WeightIt</code>, please contact the author. Fan mail is greatly appreciated.</p>
+</div>
 </div>
   </div>
 
@@ -335,8 +350,8 @@ Weighted    329.01   58.33</code></pre>
   <div class="dev-status">
 <h2>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://cran.r-project.org/package=WeightIt"><img src="https://r-pkg.org/badges/version-last-release/WeightIt?color=0047ab" alt="CRAN_Status_Badge"></a></li>
-<li><a href="https://cran.r-project.org/package=WeightIt"><img src="https://cranlogs.r-pkg.org/badges/WeightIt?color=0047ab" alt="CRAN_Downloads_Badge"></a></li>
+<li><a href="https://cran.r-project.org/package=WeightIt"><img src="https://r-pkg.org/badges/version-last-release/WeightIt?color=00622B" alt="CRAN_Status_Badge"></a></li>
+<li><a href="https://cran.r-project.org/package=WeightIt"><img src="https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B" alt="CRAN_Downloads_Badge"></a></li>
 </ul>
 </div>
 </div>

@@ -8,6 +8,13 @@
 
 <title>User-Defined Functions for Estimating Weights — method_user • WeightIt</title>
 
+<!-- favicons -->
+<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
@@ -60,6 +67,7 @@ The fitting function must output either a numeric vector of weights or a list (o
 Longitudinal Treatments
 Longitudinal treatments can be handled either by running the fitting function for point treatments for each time point and multiplying the resulting weights together or by running a method that accommodates multiple time points and outputs a single set of weights. For the former, weightitMSM can be used with the user-defined function just as it is with weightit. The latter method is not yet accommodated by weightitMSM, but will be someday, maybe.
 " />
+<meta property="og:image" content="/logo.png" />
 
 
 
@@ -182,7 +190,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class='op'>(</span><span class='va'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='va'>my.ps</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; <span class='warning'>Warning: The following argument was specified but is not a suitable argument to the provided function:</span>
+#&gt; <span class='warning'>	treat.type</span></div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "my.ps" (a user-defined method)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -245,7 +254,10 @@ Longitudinal treatments can be handled either by running the fitting function fo
                         <span class='va'>tx3</span> <span class='op'>~</span> <span class='va'>tx2</span> <span class='op'>+</span> <span class='va'>use2</span> <span class='op'>+</span> <span class='va'>tx1</span> <span class='op'>+</span> <span class='va'>use1</span> <span class='op'>+</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>gender</span> <span class='op'>+</span> <span class='va'>use0</span><span class='op'>)</span>,
                    data <span class='op'>=</span> <span class='va'>iptwExWide</span>,
                    method <span class='op'>=</span> <span class='va'>my.ps</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightitMSM</span><span> object
+</div><div class='output co'>#&gt; <span class='warning'>Warning: The following argument was specified but is not a suitable argument to the provided function:</span>
+#&gt; <span class='warning'>	treat.type</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The following argument was specified but is not a suitable argument to the provided function:</span>
+#&gt; <span class='warning'>	treat.type</span></div><div class='output co'>#&gt; <span class='warning'>Warning: The following argument was specified but is not a suitable argument to the provided function:</span>
+#&gt; <span class='warning'>	treat.type</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightitMSM</span><span> object
 #&gt;  - method: "my.ps" (a user-defined method)
 #&gt;  - number of obs.: 1000
 #&gt;  - sampling weights: none

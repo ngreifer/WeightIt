@@ -8,6 +8,13 @@
 
 <title>Generate Balancing Weights — weightit • WeightIt</title>
 
+<!-- favicons -->
+<link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png" />
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png" />
 
 <!-- jquery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
@@ -41,6 +48,7 @@
 
 <meta property="og:title" content="Generate Balancing Weights — weightit" />
 <meta property="og:description" content="weightit allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multi-category treatments. Many of these methods exist in other packages, which weightit calls; these packages must be installed to use the desired method. Also included are print and summary methods for examining the output." />
+<meta property="og:image" content="/logo.png" />
 
 
 
@@ -218,11 +226,12 @@
   <dt>covs</dt><dd><p>The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.</p></dd>
   <dt>estimand</dt><dd><p>The estimand requested.</p></dd>
   <dt>method</dt><dd><p>The weight estimation method specified.</p></dd>
-  <dt>ps</dt><dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"ps"</code>, <code>"gbm"</code>, <code>"cbps"</code>, or <code>"super"</code>.</p></dd>
+  <dt>ps</dt><dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"ps"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
   <dt>s.weights</dt><dd><p>The provided sampling weights.</p></dd>
   <dt>focal</dt><dd><p>The focal variable if the ATT was requested with a multi-category treatment.</p></dd>
   <dt>by</dt><dd><p>A data.frame containing the <code>by</code> variable when specified.</p></dd>
   <dt>obj</dt><dd><p>When <code>include.obj = TRUE</code>, the fit object.</p></dd>
+  <dt>info</dt><dd><p>Additional information about the fitting. See the individual methods pages for what is included.</p></dd>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
@@ -243,7 +252,8 @@
 <p>When using <code>weightit</code>, please cite both the <span class="pkg">WeightIt</span> package (using <code><a href='https://rdrr.io/r/utils/citation.html'>citation("WeightIt")</a></code>) and the paper(s) in the references section of the method used.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightitMSM.html'>weightitMSM</a></code> for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal strcutural models (MSMs).</p></div>
+    <div class='dont-index'><p><code><a href='weightitMSM.html'>weightitMSM</a></code> for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal structural models (MSMs).</p>
+<p><code><a href='weightit.fit.html'>weightit.fit</a></code>, which is a lower-level dispatcher function that accepts a matrix of covariates and a vector of treatment statuses rather than a formula and data frame and performs minimal argument checking and processing. It may be useful for speeding up simulation studies for which the correct arguments are known. In general <code>weightit</code> should be used.</p></div>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Noah Greifer</p>
@@ -322,49 +332,49 @@
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
-#&gt;           Min                                   Max
-#&gt; black  1.3975 |-----------|                 13.5172
-#&gt; hispan 1.2102 |---------------------------| 28.4321
-#&gt; white  0.8170 |-|                            3.9492
+#&gt;           Min                                  Max
+#&gt; black  0.5530   |-------------------------| 5.3496
+#&gt; hispan 0.1409 |----------------|            3.3322
+#&gt; white  0.3979  |-------|                    1.9224
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                                
-#&gt;             485     244     226     182     181
-#&gt;   black  6.3711  6.4409    7.09  8.9826 13.5172
-#&gt;             564     392     371     345     269
-#&gt;  hispan 17.4558 21.5908 22.4375 23.0408 28.4321
-#&gt;             599     589     531     457      68
-#&gt;   white  3.5134  3.5373  3.5799   3.643  3.9492
+#&gt;                                           
+#&gt;            485    244    226    182    181
+#&gt;   black 2.5215 2.5491 2.8059 3.5551 5.3496
+#&gt;            564    392    371    345    269
+#&gt;  hispan 2.0467   2.53 2.6322 2.7049 3.3322
+#&gt;            599    589    531    457     68
+#&gt;   white 1.7106 1.7226 1.7426 1.7743 1.9224
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; black         0.590 0.413   1.058       0
-#&gt; hispan        0.609 0.439   2.307       0
-#&gt; white         0.371 0.306   0.787       0
-#&gt; overall       0.966 0.560   1.384       0
+#&gt; black         0.590 0.413   0.131       0
+#&gt; hispan        0.609 0.440   0.163       0
+#&gt; white         0.371 0.306   0.068       0
+#&gt; overall       0.497 0.364   0.104       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             black hispan  white
 #&gt; Unweighted 243.    72.   299.  
-#&gt; Weighted   180.48  52.74 262.93</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
+#&gt; Weighted   180.47  52.71 262.93</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "ebal", estimand = "ATE")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
 #&gt;             Type Max.Diff.Adj
-#&gt; age      Contin.       0.0005
-#&gt; educ     Contin.       0.0012
-#&gt; married   Binary       0.0002
-#&gt; nodegree  Binary       0.0002
+#&gt; age      Contin.       0.0001
+#&gt; educ     Contin.       0.0000
+#&gt; married   Binary       0.0001
+#&gt; nodegree  Binary       0.0001
 #&gt; re74     Contin.       0.0001
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;             black hispan  white
 #&gt; Unadjusted 243.    72.   299.  
-#&gt; Adjusted   180.48  52.74 262.93</div><div class='input'>
+#&gt; Adjusted   180.47  52.71 262.93</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
 <span class='op'>(</span><span class='va'>W3</span> <span class='op'>&lt;-</span> <span class='fu'>weightit</span><span class='op'>(</span><span class='va'>re75</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
