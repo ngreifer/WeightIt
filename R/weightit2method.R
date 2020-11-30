@@ -1122,7 +1122,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   }
 
   if (is_not_null(best.ps)) {
-    if (focal != t.lev) best.ps <- 1 - best.ps
+    if (is_not_null(focal) && focal != t.lev) best.ps <- 1 - best.ps
   }
 
   obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
@@ -1897,10 +1897,13 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   }
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
+  covs <- as.data.frame(covs)
+
   if (ncol(covs) > 1) {
     colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
+
 
   for (f in names(formals(SuperLearner::SuperLearner))) {
     if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]}
