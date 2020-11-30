@@ -194,15 +194,15 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
 
       if (missing == "saem") {
-        check.package("misaem")
-
-        newdata <- data.frame(binarize(treat_sub, one = t.lev), covs)
-        fit <- misaem::miss.glm(formula(newdata), newdata)
-
-        if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-
-        ps[[t.lev]] <- p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
-        ps[[c.lev]] <- 1 - ps[[t.lev]]
+        # check.package("misaem")
+        #
+        # newdata <- data.frame(binarize(treat_sub, one = t.lev), covs)
+        # fit <- misaem::miss.glm(formula(newdata), newdata)
+        #
+        # if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+        #
+        # ps[[t.lev]] <- p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
+        # ps[[c.lev]] <- 1 - ps[[t.lev]]
       }
       else {
         if (use.br) {
@@ -539,18 +539,18 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   if (is_null(ps)) {
 
     if (missing == "saem") {
-      check.package("misaem")
-
-      tryCatch({fit <- misaem::miss.lm(formula, data)},
-               error = function(e) {
-                 if (trimws(conditionMessage(e)) == "object 'p' not found") {
-                   stop("missing = \"saem\" cannot be used with continuous treatments due to a bug in the misaem package.", call. = FALSE)
-                 }
-               })
-
-      if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-
-      gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
+      # check.package("misaem")
+      #
+      # tryCatch({fit <- misaem::miss.lm(formula, data)},
+      #          error = function(e) {
+      #            if (trimws(conditionMessage(e)) == "object 'p' not found") {
+      #              stop("missing = \"saem\" cannot be used with continuous treatments due to a bug in the misaem package.", call. = FALSE)
+      #            }
+      #          })
+      #
+      # if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+      #
+      # gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
 
     }
     else {
