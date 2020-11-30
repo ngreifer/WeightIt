@@ -124,25 +124,21 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
   if (is_null(s.weights)) s.weights <- rep(1, n)
 
-  if (verbose) eval.verbose <- base::eval
-  else eval.verbose <- utils::capture.output
-
   if (is.MSM.method) {
-    eval.verbose({
-      #Returns weights (w)
-      obj <- do.call("weightit.fit", c(list(covs = covs.list,
-                                            treat = treat.list,
-                                            s.weights = s.weights,
-                                            by.factor = attr(processed.by, "by.factor"),
-                                            stabilize = stabilize,
-                                            method = method,
-                                            moments = moments,
-                                            int = int,
-                                            ps = NULL,
-                                            missing = missing,
-                                            is.MSM.method = TRUE,
-                                            include.obj = include.obj), A))
-    })
+    #Returns weights (w)
+    obj <- do.call("weightit.fit", c(list(covs = covs.list,
+                                          treat = treat.list,
+                                          s.weights = s.weights,
+                                          by.factor = attr(processed.by, "by.factor"),
+                                          stabilize = stabilize,
+                                          method = method,
+                                          moments = moments,
+                                          int = int,
+                                          ps = NULL,
+                                          missing = missing,
+                                          verbose = verbose,
+                                          is.MSM.method = TRUE,
+                                          include.obj = include.obj), A))
     w <- obj[["weights"]]
     stabout <- NULL
     obj.list <- obj[["fit.obj"]]
@@ -164,25 +160,24 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
       ## Running models ----
 
-      eval.verbose({
-        #Returns weights (w) and propensty score (ps)
-        obj <- do.call("weightit.fit", c(list(covs = covs.list[[i]],
-                                              treat = treat.list[[i]],
-                                              treat.type = get.treat.type(treat.list[[i]]),
-                                              s.weights = s.weights,
-                                              by.factor = attr(processed.by, "by.factor"),
-                                              estimand = estimand,
-                                              focal = NULL,
-                                              stabilize = FALSE,
-                                              method = method,
-                                              moments = moments,
-                                              int = int,
-                                              ps = NULL,
-                                              missing = missing,
-                                              is.MSM.method = FALSE,
-                                              include.obj = include.obj
-                                              ), A_i))
-      })
+      #Returns weights (w) and propensty score (ps)
+      obj <- do.call("weightit.fit", c(list(covs = covs.list[[i]],
+                                            treat = treat.list[[i]],
+                                            treat.type = get.treat.type(treat.list[[i]]),
+                                            s.weights = s.weights,
+                                            by.factor = attr(processed.by, "by.factor"),
+                                            estimand = estimand,
+                                            focal = NULL,
+                                            stabilize = FALSE,
+                                            method = method,
+                                            moments = moments,
+                                            int = int,
+                                            ps = NULL,
+                                            missing = missing,
+                                            verbose = verbose,
+                                            is.MSM.method = FALSE,
+                                            include.obj = include.obj
+      ), A_i))
       w.list[[i]] <- obj[["weights"]]
       ps.list[[i]] <- obj[["ps"]]
       obj.list[[i]] <- obj[["fit.obj"]]
@@ -208,21 +203,19 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
         stab.t.c_i <- get.covs.and.treat.from.formula(stab.f, data)
         stab.covs_i <- stab.t.c_i[["model.covs"]]
 
-        eval.verbose({
-          sw_obj <- do.call("weightit.fit", c(list(covs = stab.covs_i,
-                                                   treat = treat.list[[i]],
-                                                   treat.type = get.treat.type(treat.list[[i]]),
-                                                   s.weights = s.weights,
-                                                   by.factor = attr(processed.by, "by.factor"),
-                                                   estimand = estimand,
-                                                   focal = NULL,
-                                                   stabilize = FALSE,
-                                                   method = "ps",
-                                                   moments = NULL,
-                                                   int = FALSE,
-                                                   ps = NULL,
-                                                   missing = missing), A))
-        })
+        sw_obj <- do.call("weightit.fit", c(list(covs = stab.covs_i,
+                                                 treat = treat.list[[i]],
+                                                 treat.type = get.treat.type(treat.list[[i]]),
+                                                 s.weights = s.weights,
+                                                 by.factor = attr(processed.by, "by.factor"),
+                                                 estimand = estimand,
+                                                 focal = NULL,
+                                                 stabilize = FALSE,
+                                                 method = "ps",
+                                                 moments = NULL,
+                                                 int = FALSE,
+                                                 ps = NULL,
+                                                 missing = missing), A))
         sw.list[[i]] <- 1/sw_obj[["weights"]]
         stabout[[i]] <- stab.f[-2]
 
