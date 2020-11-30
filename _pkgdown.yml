@@ -15,5 +15,6 @@ reference:
   - sbps
   - ps.cont
   - ESS
+  - weightit.fit
   - as.weightit
   - make_full_rank
