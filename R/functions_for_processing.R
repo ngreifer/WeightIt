@@ -663,10 +663,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
       allowable.estimands <- c("ATT", "ATC", "ATE", "ATO", "ATM")
       try.estimand <- tryCatch(match_arg(toupper(estimand), allowable.estimands),
                                error = function(cond) NA_character_)
-      if (anyNA(try.estimand)) {
-        check.focal <- TRUE
-      }
-      else if (try.estimand %in% c("ATC", "ATT")) {
+      if (anyNA(try.estimand) || try.estimand %in% c("ATC", "ATT")) {
         check.focal <- TRUE
       }
       else {
@@ -1045,7 +1042,7 @@ stabilize_w <- function(weights, treat) {
   if (is.factor(treat)) t.levels <- levels(treat)
   else t.levels <- unique(treat)
   w.names <- names(weights)
-  tab <- vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L))
+  tab <- setNames(vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L)), t.levels)
   return(setNames(weights * tab[as.character(treat)], w.names))
 }
 `%+%` <- function(...) {
