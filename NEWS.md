@@ -3,7 +3,15 @@ WeightIt News and Updates
 
 # WeightIt (development version)
 
-* Added support for estimating propensity scores using Bayesian additive rgeression trees (BART) with `methodd = "bart"`. This method fits a BART model for the treatment using functions in the `BART` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions. Very simple and straightforward support for parallel processing is available, which makes fitting the models much faster.
+* Added support for estimating propensity scores using Bayesian additive regression trees (BART) with `method = "bart"`. This method fits a BART model for the treatment using functions in the `dbarts` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.
+
+* Fixed a bug when using `method = "gbm"` with `stop.method = "cv{#}"`.
+
+* Fixed a bug when setting `estimand = "ATC"` for methods that produce a propensity score. In the past, the output propensity score was the probability of being in the control group; now, it is the probability of being in the treated group, as it is for all other estimands. This does not affect the weights.
+
+* Setting `method = "twang"` is now deprecated. Use `method = "gbm"` for improved performance and increased functionality. `method = "twang"` relies on the `twang` package; `method = "gbm"` calls `gbm` directly.
+
+* Using `method = "ebal"` no longer requires the `ebal` package. Instead, `optim()` is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed. 
 
 # WeightIt 0.10.2
 
@@ -11,7 +19,7 @@ WeightIt News and Updates
 
 # WeightIt 0.10.1
 
-* With `method = "gbm"`, added the ability to tune hyperparameters like `interaction.depth` and `distribution` using the same critera as is used to select the optimal tree. A summary of the tuning results is included in `info` in the `weightit` output object.
+* With `method = "gbm"`, added the ability to tune hyperparameters like `interaction.depth` and `distribution` using the same criteria as is used to select the optimal tree. A summary of the tuning results is included in `info` in the `weightit` output object.
 
 * Fixed a bug where `moments` and `int` were ignored unless both were specified.
 

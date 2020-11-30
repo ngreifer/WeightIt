@@ -1,10 +1,14 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# WeightIt
+# WeightIt <img src="man/figures/logo.png" align="right" width="150"/>
 
-[![CRAN\_Status\_Badge](https://r-pkg.org/badges/version-last-release/WeightIt?color=0047ab)](https://cran.r-project.org/package=WeightIt)
-[![CRAN\_Downloads\_Badge](https://cranlogs.r-pkg.org/badges/WeightIt?color=0047ab)](https://cran.r-project.org/package=WeightIt)
+[![CRAN\_Status\_Badge](https://r-pkg.org/badges/version-last-release/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt)
+[![CRAN\_Downloads\_Badge](https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt)
+
+------------------------------------------------------------------------
+
+### Overview
 
 `WeightIt` is a one-stop package to generate balancing weights for point
 and longitudinal treatments in observational studies. Contained within
@@ -18,16 +22,17 @@ and treatment effects for continuous treatments when available. In these
 ways, `WeightIt` does for weighting what `MatchIt` has done for
 matching, and `MatchIt` users will find the syntax familiar.
 
-For a complete vignette, see the [CRAN
-page](https://CRAN.R-project.org/package=WeightIt) for `WeightIt`.
+For a complete vignette, see the
+[website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html)
+for `WeightIt`.
 
 To install and load `WeightIt`, use the code below:
 
 ``` r
-# CRAN version
+#CRAN version
 install.packages("WeightIt")
 
-# Development version
+#Development version
 devtools::install_github("ngreifer/WeightIt")
 
 library("WeightIt")
@@ -42,8 +47,10 @@ ATE:
 ``` r
 data("lalonde", package = "cobalt")
 
-W <- weightit(treat ~ age + educ + nodegree + married + race + re74 + re75, data = lalonde, 
-    method = "ps", estimand = "ATE")
+W <- weightit(treat ~ age + educ + nodegree + 
+                married + race + re74 + re75, 
+              data = lalonde, method = "ps", 
+              estimand = "ATE")
 W
 ```
 
@@ -56,7 +63,7 @@ W
      - covariates: age, educ, nodegree, married, race, re74, re75
 
 Evaluating weights has two components: evaluating the covariate balance
-produces by the weights, and evaluating whether the weights will allow
+produced by the weights, and evaluating whether the weights will allow
 for sufficient precision in the eventual effect estimate. For the first
 goal, functions in the `cobalt` package, which are fully compatible with
 `WeightIt`, can be used, as demonstrated below:
@@ -70,7 +77,7 @@ bal.tab(W, un = TRUE)
     Call
      weightit(formula = treat ~ age + educ + nodegree + married + 
         race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
-    
+
     Balance Measures
                     Type Diff.Un Diff.Adj
     prop.score  Distance  1.7569   0.1360
@@ -83,7 +90,7 @@ bal.tab(W, un = TRUE)
     race_white    Binary -0.5577  -0.0546
     re74         Contin. -0.5958  -0.2740
     re75         Contin. -0.2870  -0.1579
-    
+
     Effective sample sizes
                Control Treated
     Unadjusted  429.    185.  
@@ -96,35 +103,33 @@ assessed using `summary()`, as demonstrated below.
 summary(W)
 ```
 
-``` 
-                 Summary of weights
+                     Summary of weights
 
-- Weight ranges:
+    - Weight ranges:
 
-           Min                                   Max
-treated 1.1721 |---------------------------| 40.0773
-control 1.0092 |-|                            4.7432
+               Min                                   Max
+    treated 1.1721 |---------------------------| 40.0773
+    control 1.0092 |-|                            4.7432
 
-- Units with 5 greatest weights by group:
-                                                
-             137     124     116      68      10
- treated 13.5451 15.9884 23.2967 23.3891 40.0773
-             597     573     411     381     303
- control  4.0301  4.0592  4.2397  4.5231  4.7432
+    - Units with 5 greatest weights by group:
+                                                    
+                 137     124     116      68      10
+     treated 13.5451 15.9884 23.2967 23.3891 40.0773
+                 597     573     411     381     303
+     control  4.0301  4.0592  4.2397  4.5231  4.7432
 
-- Weight statistics:
+    - Weight statistics:
 
-        Coef of Var   MAD Entropy # Zeros
-treated       1.478 0.807   1.630       0
-control       0.552 0.391   0.480       0
-overall       1.371 0.591   1.024       0
+            Coef of Var   MAD Entropy # Zeros
+    treated       1.478 0.807   1.630       0
+    control       0.552 0.391   0.480       0
+    overall       1.371 0.591   1.024       0
 
-- Effective Sample Sizes:
+    - Effective Sample Sizes:
 
-           Control Treated
-Unweighted  429.    185.  
-Weighted    329.01   58.33
-```
+               Control Treated
+    Unweighted  429.    185.  
+    Weighted    329.01   58.33
 
 Desirable qualities include small coefficients of variation close to 0
 and large effective sample sizes.
@@ -133,36 +138,36 @@ The table below contains the available methods in `WeightIt` for
 estimating weights for binary, multinomial, and continuous treatments
 using various methods and functions from various packages.
 
-| Treatment type  | Method (`method =`)                                | Function                       |
-| --------------- | -------------------------------------------------- | ------------------------------ |
-| **Binary**      | Binary regression PS (`"ps"`)                      | various                        |
-| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
-| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS::CBPS()`                 |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS::npCBPS()`               |
-| \-              | Entropy Balancing (`"ebal"`)                       | `ebal::ebalance()`             |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`                   |
-| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
-| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
-| \-              | Bayesian additive regression trees PS (`"bart"`)   | `BART::gbart()`                |
-| \-              | Energy Balancing (`"energy"`)                      | \-                             |
-| **Multinomial** | Multinomial regression PS (`"ps"`)                 | various                        |
-| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
-| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS::CBPS()`                 |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS::npCBPS()`               |
-| \-              | Entropy Balancing (`"ebal"`)                       | `ebal::ebalance()`             |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE::ATE()`                   |
-| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
-| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
-| \-              | Bayesian additive regression trees PS (`"bart"`)   | `BART::mbart()`                |
-| \-              | Energy Balancing (`"energy"`)                      | \-                             |
-| **Continuous**  | Generalized linear model PS (`"ps"`)               | `glm()`                        |
-| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm::gbm.fit()`               |
-| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS::CBPS()`                 |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS::npCBPS()`               |
-| \-              | Entropy Balancing (`"ebal"`)                       | \-                             |
-| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight::optweight()`       |
-| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner::SuperLearner()` |
-| \-              | Bayesian additive regression trees PS (`"bart"`)   | `BART::gbart()`                |
+| Treatment type  | Method (`method =`)                                | Package        |
+|-----------------|----------------------------------------------------|----------------|
+| **Binary**      | Binary regression PS (`"ps"`)                      | various        |
+| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm`          |
+| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS`         |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS`         |
+| \-              | Entropy Balancing (`"ebal"`)                       | \-             |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE`          |
+| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight`    |
+| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner` |
+| \-              | Bayesian additive regression trees PS (`"bart"`)   | `dbarts`       |
+| \-              | Energy Balancing (`"energy"`)                      | \-             |
+| **Multinomial** | Multinomial regression PS (`"ps"`)                 | various        |
+| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm`          |
+| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS`         |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS`         |
+| \-              | Entropy Balancing (`"ebal"`)                       | \-             |
+| \-              | Empirical Balancing Calibration Weights (`"ebcw"`) | `ATE`          |
+| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight`    |
+| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner` |
+| \-              | Bayesian additive regression trees PS (`"bart"`)   | `dbarts`       |
+| \-              | Energy Balancing (`"energy"`)                      | \-             |
+| **Continuous**  | Generalized linear model PS (`"ps"`)               | \-             |
+| \-              | Generalized boosted modeling PS (`"gbm"`)          | `gbm`          |
+| \-              | Covariate Balancing PS (`"cbps"`)                  | `CBPS`         |
+| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS`         |
+| \-              | Entropy Balancing (`"ebal"`)                       | \-             |
+| \-              | Optimization-Based Weights (`"optweight"`)         | `optweight`    |
+| \-              | SuperLearner PS (`"super"`)                        | `SuperLearner` |
+| \-              | Bayesian additive regression trees PS (`"bart"`)   | `dbarts`       |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are
@@ -171,5 +176,5 @@ available.
 Please submit bug reports or other issues to
 <https://github.com/ngreifer/WeightIt/issues>. If you would like to see
 your package or method integrated into `WeightIt`, or for any other
-questions or comments about `WeightIt`, please contact Noah Greifer at
-<noah.greifer@gmail.com>. Fan mail is greatly appreciated.
+questions or comments about `WeightIt`, please contact the author. Fan
+mail is greatly appreciated.
