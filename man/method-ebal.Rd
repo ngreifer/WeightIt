@@ -6,16 +6,16 @@
 \description{
 This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on \code{\link[ebal]{ebalance}} from the \CRANpkg{ebal} package for binary and multinomial treatments and on code written for \pkg{WeightIt} using \code{\link{optim}} for continuous treatments.
+In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on code written for \pkg{WeightIt} using \code{\link{optim}}.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the weights using \code{\link[ebal]{ebalance}}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{ebalance} fit object. When the ATE is requested, \code{ebalance} is run twice, once for each treatment group.
+For binary treatments, this method estimates the weights using \code{optim} using formulas described by Hainmueller (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the weights using \code{\link[ebal]{ebalance}}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the \code{ebalance} fit objects. When the ATE is requested, \code{ebalance} is run once for each treatment group. When the ATT is requested, \code{ebalance} is run once for each non-focal (i.e., control) group.
+For multinomial treatments, this method estimates the weights using \code{optim}. The following estimands are allowed: ATE and ATT. When the ATE is requested, \code{optim} is run once for each treatment group. When the ATT is requested, \code{optim} is run once for each non-focal (i.e., control) group.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the weights using \code{optim} using formulas described by Hainmueller (2012) and Tübbicke (2020).
+For continuous treatments, this method estimates the weights using \code{optim} using formulas described by Tübbicke (2020).
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point. This method is not guaranteed to yield exact balance at each time point. NOTE: the use of entropy balancing with longitudinal treatments has not been validated!
@@ -33,17 +33,21 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 }
 \section{Additional Arguments}{
-All arguments to \code{ebal::ebalance} can be passed through \code{weightit} or \code{weightitMSM} and take on the defaults of those in \code{ebal::ebalance}.
+\describe{
+\item{\code{base.weights}}{
+A vector of base weights, one for each unit. This works for continuous treatments as well. These correspond to the base weights \emph{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{w*log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to \code{base.weights} but can be included in a \code{weightit()} call that includes \code{s.weights}.
+}
+}
 
-For \code{base.weights}, a vector with length equal to the total number of units can be supplied, in contrast to \code{ebal::ebalance}, which requires a vector with length equal to the number of controls. This works for continuous treatments as well. These correspond to the base weights \emph{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{w*log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met.
+The arguments \code{maxit} and \code{reltol} can be supplied and are passed to the \code{control} argument of \code{\link{optim}}. The \code{"BFGS"} method is used, so the defaults correspond to this.
 
-When \code{standardize = TRUE} in the call to \code{weightit} for binary and multinomial treatments, \code{\link[ebal:ebalance.trim]{ebal::ebalance.trim}} is run on the resulting \code{ebalance} fit objects. Doing so can reduce the variability of the weights while maintaining covariate balance.
+The \code{stabilize} argument is ignored; in the past it would reduce the variability of the weights through an iterative process. If you want to minimize the variance of the weights subject to balance constraints, use \code{method = "optweight"}.
 
 }
 \section{Additional Outputs}{
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the entropy balancing model fit. For binary treatments with \code{estimand = "ATT"}, the output of the call to \code{\link[ebal:ebalance]{ebal::ebalance}} or \code{\link[ebal:ebalance.trim]{ebal::ebalance.trim}} when \code{stabilize = TRUE}. For binary treatments with \code{estimand = "ATE"} and multinomial treatments, a list of outputs of calls to \code{\link[ebal:ebalance]{ebal::ebalance}} or \code{\link[ebal:ebalance.trim]{ebal::ebalance.trim}}. For continuous treatments, the output of the call to \code{optim}, which contains the dual variables and convergence information.
+When \code{include.obj = TRUE}, the output of the call to \code{optim}, which contains the dual variables and convergence information. For ATE fits or with multinomial treatments, a list of \code{optim} outputs, one for each weighted group.
 }
 }
 }
@@ -71,7 +75,6 @@ Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., & McCaffrey, D. F
 \seealso{
 \code{\link{weightit}}, \code{\link{weightitMSM}}
 
-\code{\link[ebal:ebalance]{ebal::ebalance}} for the fitting function.
 }
 
 \examples{
