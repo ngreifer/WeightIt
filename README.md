@@ -3,10 +3,7 @@
 
 # WeightIt <img src="man/figures/logo.png" align="right" width="150"/>
 
-[![CRAN\_Status\_Badge](https://r-pkg.org/badges/version-last-release/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt)
-[![CRAN\_Downloads\_Badge](https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt)
-
-------------------------------------------------------------------------
+## [![CRAN\_Status\_Badge](https://img.shields.io/cran/v/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt) [![CRAN\_Downloads\_Badge](https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt)
 
 ### Overview
 
