@@ -19,6 +19,7 @@ weightit.fit(covs,
              subclass = NULL,
              is.MSM.method = FALSE,
              missing = NULL,
+             verbose = FALSE,
              include.obj = FALSE,
              ...)
 }
