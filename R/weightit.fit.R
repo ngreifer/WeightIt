@@ -76,6 +76,10 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
     moments.int <- process.moments.int(moments, int, method)
     moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
   }
+  else {
+    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+    treat.type <- get.treat.type(treat)
+  }
 
   out <- make_list(c("weights", "ps", "fit.obj", "info"))
   out$weights <- out$ps <- rep(NA_real_, length(treat))
