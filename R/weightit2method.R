@@ -290,39 +290,38 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else if (A$link %in% c("logit", "probit")) {
         if (!isFALSE(A$use.mlogit)) {
-          if (check.package("mlogit")) {
-            if (isTRUE(A$use.mnlogit) && A$link[1] == "logit" && check.package("mnlogit", alternative = TRUE)) {
-              data <- data.frame(treat = treat_sub, covs)
-              covnames <- names(data)[-1]
-              mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = names(data)[1])
-              mult[["alt"]] <- as.character(mult[["alt"]])
-              tryCatch({
-                fit <- mnlogit::mnlogit(as.formula(paste0(names(data)[1], " ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
-                                        data = mult,
-                                        choiceVar = "alt",
-                                        weights = s.weights, ...)
-              },
-              error = function(e) {stop(paste0("There was a problem fitting the multinomial logistic regression with mnlogit().\n       Try again with use.mnlogit = FALSE."), call. = FALSE)}
-              )
-            }
-            else {
-              check.package("dfidx")
-              data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
-              covnames <- names(data)[-c(1,2)]
-              mult <- dfidx::dfidx(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
-              tryCatch({
-                fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
+          check.package("mlogit")
+          if (isTRUE(A$use.mnlogit) && A$link[1] == "logit" && check.package("mnlogit", alternative = TRUE)) {
+            data <- data.frame(treat = treat_sub, covs)
+            covnames <- names(data)[-1]
+            mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = names(data)[1])
+            mult[["alt"]] <- as.character(mult[["alt"]])
+            tryCatch({
+              fit <- mnlogit::mnlogit(as.formula(paste0(names(data)[1], " ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
                                       data = mult,
-                                      estimate = TRUE,
-                                      probit = A$link[1] == "probit",
-                                      weights = .s.weights, ...)
-              },
-              error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
-              )
-            }
-            ps <- fitted(fit, outcome = FALSE)
-            fit.obj <- fit
+                                      choiceVar = "alt",
+                                      weights = s.weights, ...)
+            },
+            error = function(e) {stop(paste0("There was a problem fitting the multinomial logistic regression with mnlogit().\n       Try again with use.mnlogit = FALSE."), call. = FALSE)}
+            )
           }
+          else {
+            check.package("dfidx")
+            data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
+            covnames <- names(data)[-c(1,2)]
+            mult <- dfidx::dfidx(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
+            tryCatch({
+              fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
+                                    data = mult,
+                                    estimate = TRUE,
+                                    probit = A$link[1] == "probit",
+                                    weights = .s.weights, ...)
+            },
+            error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
+            )
+          }
+          ps <- fitted(fit, outcome = FALSE)
+          fit.obj <- fit
         }
         else {
           ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
@@ -589,6 +588,8 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
   A <- list(...)
 
+  check.package("optweight")
+
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
@@ -607,31 +608,28 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   new.data <- data.frame(treat, covs)
   new.formula <- formula(new.data)
 
-  if (check.package("optweight")) {
-
-    for (f in names(formals(optweight::optweight))) {
-      if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
-    }
-    A[names(A) %in% names(formals(weightit2optweight))] <- NULL
-
-    if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
-    if ("targets" %in% names(A)) {
-      warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE)
-      A[["targets"]] <- NULL
-    }
-
-    A[["formula"]] <- new.formula
-    A[["data"]] <- new.data
-    A[["estimand"]] <- estimand
-    A[["s.weights"]] <- s.weights
-    A[["focal"]] <- focal
-    A[["verbose"]] <- TRUE
-
-    out <- do.call(optweight::optweight, A, quote = TRUE)
-
-    obj <- list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
-    return(obj)
+  for (f in names(formals(optweight::optweight))) {
+    if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
   }
+  A[names(A) %in% names(formals(weightit2optweight))] <- NULL
+
+  if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
+  if ("targets" %in% names(A)) {
+    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE)
+    A[["targets"]] <- NULL
+  }
+
+  A[["formula"]] <- new.formula
+  A[["data"]] <- new.data
+  A[["estimand"]] <- estimand
+  A[["s.weights"]] <- s.weights
+  A[["focal"]] <- focal
+  A[["verbose"]] <- TRUE
+
+  out <- do.call(optweight::optweight, A, quote = TRUE)
+
+  obj <- list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
+  return(obj)
 }
 weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   A <- list(...)
@@ -729,6 +727,8 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
 weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
   A <- list(...)
 
+  warning("method = \"twang\" is deprecated; please use method = \"gbm\" for increased performance and functionality.", immediate. = TRUE)
+
   if (is_null(A$stop.method)) {
     warning("No stop.method was provided. Using \"es.mean\".",
             call. = FALSE, immediate. = TRUE)
@@ -766,92 +766,98 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
   w <- rep(1, length(treat))
   ps <- NULL
 
-  if (check.package("twang")) {
-    if (estimand == "ATT") {
+  check.package("twang")
 
-      control.levels <- levels(treat)[levels(treat) != focal]
-      fit.list <- make_list(control.levels)
+  if (estimand == "ATT") {
 
-      for (i in control.levels) {
-        treat.in.i.focal <- treat %in% c(focal, i)
-        treat_ <- as.integer(treat[treat.in.i.focal] != i)
-        covs_ <- covs[treat.in.i.focal, , drop = FALSE]
-        new.data <- data.frame(treat_, covs_)
+    control.levels <- levels(treat)[levels(treat) != focal]
+    fit.list <- make_list(control.levels)
 
-        fit.list[[i]] <- twang::ps(formula(new.data),
-                                   data = new.data,
-                                   estimand = "ATT",
-                                   stop.method = A[["stop.method"]],
-                                   sampw = s.weights[subset][treat.in.i.focal],
-                                   verbose = TRUE,
-                                   print.level = 2,
-                                   n.trees = A[["n.trees"]],
-                                   interaction.depth = A[["interaction.depth"]],
-                                   shrinkage = A[["shrinkage"]],
-                                   bag.fraction = A[["bag.fraction"]],
-                                   perm.test.iters = A[["perm.test.iters"]],
-                                   iterlim = A[["iterlim"]],
-                                   multinom = FALSE)
+    for (i in control.levels) {
+      treat.in.i.focal <- treat %in% c(focal, i)
+      treat_ <- as.integer(treat[treat.in.i.focal] != i)
+      covs_ <- covs[treat.in.i.focal, , drop = FALSE]
+      new.data <- data.frame(treat_, covs_)
 
-        s <- fit.list[[i]]$stopMethods[1]
+      fit.list[[i]] <- twang::ps(formula(new.data),
+                                 data = new.data,
+                                 estimand = "ATT",
+                                 stop.method = A[["stop.method"]],
+                                 sampw = s.weights[subset][treat.in.i.focal],
+                                 verbose = TRUE,
+                                 print.level = 2,
+                                 n.trees = A[["n.trees"]],
+                                 interaction.depth = A[["interaction.depth"]],
+                                 shrinkage = A[["shrinkage"]],
+                                 bag.fraction = A[["bag.fraction"]],
+                                 perm.test.iters = A[["perm.test.iters"]],
+                                 iterlim = A[["iterlim"]],
+                                 multinom = FALSE)
 
-        w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat_ == 0]
+      s <- fit.list[[i]]$stopMethods[1]
 
-        if (nunique(treat) == 2) {
-          ps <- fit.list[[i]][["ps"]][[1]]
-          fit.list <- fit.list[[i]]
-        }
+      w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat_ == 0]
 
+      if (nunique(treat) == 2) {
+        ps <- fit.list[[i]][["ps"]][[1]]
+        fit.list <- fit.list[[i]]
       }
-    }
-    else if (estimand == "ATE") {
-      fit.list <- make_list(levels(treat))
 
-      for (i in levels(treat)) {
-        #Mimicking twang
-        #Seeks balance between weighted treat group and all others combined
-        #Note: Gives different answer than twang for some reason; has better balance though.
-        treat_i <- ifelse(treat == i, 0, 1)
-        new.data <- data.frame(treat_i, covs)
-
-        fit.list[[i]] <- twang::ps(formula(new.data),
-                                   data = new.data,
-                                   estimand = "ATE",
-                                   stop.method = A[["stop.method"]],
-                                   sampw = s.weights[subset],
-                                   verbose = TRUE,
-                                   print.level = 2,
-                                   n.trees = A[["n.trees"]],
-                                   interaction.depth = A[["interaction.depth"]],
-                                   shrinkage = A[["shrinkage"]],
-                                   bag.fraction = A[["bag.fraction"]],
-                                   perm.test.iters = A[["perm.test.iters"]],
-                                   iterlim = A[["iterlim"]],
-                                   multinom = FALSE)
-
-        s <- fit.list[[i]]$stopMethods[1]
-
-        if (nunique(treat) == 2) {
-          w <- cobalt::get.w(fit.list[[i]], stop.method = s)
-          ps <- fit.list[[i]][["ps"]][[1]]
-          fit.list <- fit.list[[i]]
-          break
-        }
-        else {
-          w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat == i]
-        }
-      }
-    }
-
-    if (stabilize) {
-      w <- stabilize_w(w, treat)
     }
   }
+  else if (estimand == "ATE") {
+    fit.list <- make_list(levels(treat))
+
+    for (i in levels(treat)) {
+      #Mimicking twang
+      #Seeks balance between weighted treat group and all others combined
+      #Note: Gives different answer than twang for some reason; has better balance though.
+      treat_i <- ifelse(treat == i, 0, 1)
+      new.data <- data.frame(treat_i, covs)
+
+      fit.list[[i]] <- twang::ps(formula(new.data),
+                                 data = new.data,
+                                 estimand = "ATE",
+                                 stop.method = A[["stop.method"]],
+                                 sampw = s.weights[subset],
+                                 verbose = TRUE,
+                                 print.level = 2,
+                                 n.trees = A[["n.trees"]],
+                                 interaction.depth = A[["interaction.depth"]],
+                                 shrinkage = A[["shrinkage"]],
+                                 bag.fraction = A[["bag.fraction"]],
+                                 perm.test.iters = A[["perm.test.iters"]],
+                                 iterlim = A[["iterlim"]],
+                                 multinom = FALSE)
+
+      s <- fit.list[[i]]$stopMethods[1]
+
+      if (nunique(treat) == 2) {
+        w <- cobalt::get.w(fit.list[[i]], stop.method = s)
+        ps <- fit.list[[i]][["ps"]][[1]]
+        fit.list <- fit.list[[i]]
+        break
+      }
+      else {
+        w[treat == i] <- cobalt::get.w(fit.list[[i]], stop.method = s)[treat == i]
+      }
+    }
+  }
+
+  if (stabilize) {
+    w <- stabilize_w(w, treat)
+  }
+
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
   return(obj)
 }
 weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ...) {
   A <- list(...)
+
+  check.package("gbm")
+
+  warning("method = \"twang\" is deprecated; please use method = \"gbm\" for increased performance and functionality.", immediate. = TRUE)
+
   A[c("formula", "data", "sampw", "verbose")] <- NULL
   if (is_null(A[["stop.method"]])) {
     warning("No stop.method was entered. Using \"p.mean\", the mean of the absolute Pearson correlations.",
@@ -880,13 +886,11 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   new.data <- data.frame(treat, covs)
 
-  if (check.package("gbm")) {
-    fit <- do.call(ps.cont, c(list(formula(new.data),
-                                   data = new.data,
-                                   sampw = s.weights[subset],
-                                   verbose = TRUE), A))
-    w <- cobalt::get.w(fit, stop.method = A[["stop.method"]])
-  }
+  fit <- do.call(ps.cont, c(list(formula(new.data),
+                                 data = new.data,
+                                 sampw = s.weights[subset],
+                                 verbose = TRUE), A))
+  w <- cobalt::get.w(fit, stop.method = A[["stop.method"]])
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -1282,7 +1286,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 
       gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
       w <- get_cont_weights(gps, treat = treat, s.weights = s.weights, dens.num = dens.num,
-                 densfun = densfun, use.kernel = use.kernel, densControl = A)
+                            densfun = densfun, use.kernel = use.kernel, densControl = A)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
       iter.grid.balance <- apply(w, 2, function(w_) {
@@ -1366,7 +1370,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
         best.fit <- fit
         best.gps <- gbm::predict.gbm(fit, n.trees = best.tree, newdata = covs)
         best.w <- get_cont_weights(best.gps, treat = treat, s.weights = s.weights, dens.num = dens.num,
-                              densfun = densfun, use.kernel = use.kernel, densControl = A)
+                                   densfun = densfun, use.kernel = use.kernel, densControl = A)
         # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
         current.best.loss <- best.loss
         best.tune.index <- i
@@ -1403,6 +1407,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 
 #CBPS
 weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+
+  check.package("CBPS")
+
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1420,8 +1427,6 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     }
   }
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
-
-  check.package("CBPS")
 
   if (estimand == "ATT") {
     ps <- make_df(levels(treat), length(treat))
@@ -1509,6 +1514,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   return(obj)
 }
 weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
+  check.package("CBPS")
+
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1526,20 +1533,19 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
 
   new.data <- data.frame(treat = treat, covs)
 
-  if (check.package("CBPS")) {
-    tryCatch({fit <- CBPS::CBPS(formula(new.data),
-                                data = new.data,
-                                method = if (isFALSE(A$over)) "exact" else "over",
-                                standardize = FALSE,
-                                sample.weights = s.weights,
-                                ...)},
-             error = function(e) {
-               e. <- conditionMessage(e)
-               e. <- gsub("method = \"exact\"", "over = FALSE", e., fixed = TRUE)
-               stop(e., call. = FALSE)
-             }
-    )
-  }
+  tryCatch({fit <- CBPS::CBPS(formula(new.data),
+                              data = new.data,
+                              method = if (isFALSE(A$over)) "exact" else "over",
+                              standardize = FALSE,
+                              sample.weights = s.weights,
+                              ...)},
+           error = function(e) {
+             e. <- conditionMessage(e)
+             e. <- gsub("method = \"exact\"", "over = FALSE", e., fixed = TRUE)
+             stop(e., call. = FALSE)
+           }
+  )
+
   w <- cobalt::get.w(fit) / s.weights
 
   obj <- list(w = w, fit.obj = fit)
@@ -1549,6 +1555,8 @@ weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing,
   stop("CBMSM doesn't work yet.")
 }
 weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+  check.package("CBPS")
+
   A <- list(...)
   if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
                                      call. = FALSE)
@@ -1571,8 +1579,6 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
 
   new.data <- data.frame(treat = treat, covs)
 
-  check.package("CBPS")
-
   fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
                  quote = TRUE)
 
@@ -1585,6 +1591,8 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
   return(obj)
 }
 weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+  check.package("CBPS")
+
   A <- list(...)
 
   if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
@@ -1608,9 +1616,8 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
 
   new.data <- data.frame(treat = treat, covs)
 
-  check.package("CBPS")
-    fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
-                   quote = TRUE)
+  fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
+                 quote = TRUE)
 
   w <- fit$weights
 
@@ -1885,6 +1892,8 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
 
 #Empirical Balancing Calibration weights with ATE
 weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+  check.package("ATE")
+
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1906,73 +1915,72 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
     if (is_null(A[[f]])) A[[f]] <- formals(ATE::ATE)[[f]]
   }
 
-  if (check.package("ATE")) {
-    if (estimand == "ATT") {
-      w <- rep(1, length(treat))
-      control.levels <- levels(treat)[levels(treat) != focal]
-      fit.list <- make_list(control.levels)
+  if (estimand == "ATT") {
+    w <- rep(1, length(treat))
+    control.levels <- levels(treat)[levels(treat) != focal]
+    fit.list <- make_list(control.levels)
 
-      for (i in control.levels) {
-        treat.in.i.focal <- treat %in% c(focal, i)
-        treat_ <- as.integer(treat[treat.in.i.focal] != i)
-        covs_ <- covs[treat.in.i.focal, , drop = FALSE]
+    for (i in control.levels) {
+      treat.in.i.focal <- treat %in% c(focal, i)
+      treat_ <- as.integer(treat[treat.in.i.focal] != i)
+      covs_ <- covs[treat.in.i.focal, , drop = FALSE]
 
-        colinear.covs.to.remove <- colnames(covs_)[colnames(covs_) %nin% colnames(make_full_rank(covs_[treat_ == 0, , drop = FALSE]))]
+      colinear.covs.to.remove <- colnames(covs_)[colnames(covs_) %nin% colnames(make_full_rank(covs_[treat_ == 0, , drop = FALSE]))]
 
-        covs_ <- covs_[, colnames(covs_) %nin% colinear.covs.to.remove, drop = FALSE]
+      covs_ <- covs_[, colnames(covs_) %nin% colinear.covs.to.remove, drop = FALSE]
 
-        covs_[treat_ == 1,] <- covs_[treat_ == 1,] * s.weights[treat == focal] * sum(treat == focal)/ sum(s.weights[treat == focal])
+      covs_[treat_ == 1,] <- covs_[treat_ == 1,] * s.weights[treat == focal] * sum(treat == focal)/ sum(s.weights[treat == focal])
 
-        Y <- rep(0, length(treat_))
+      Y <- rep(0, length(treat_))
 
-        ate.out <- ATE::ATE(Y = Y, Ti = treat_, X = covs_,
-                            ATT = TRUE,
-                            theta = A[["theta"]],
-                            verbose = TRUE,
-                            max.iter = A[["max.iter"]],
-                            tol = A[["tol"]],
-                            initial.values = A[["initial.values"]],
-                            backtrack = A[["backtrack"]],
-                            backtrack.alpha = A[["backtrack.alpha"]],
-                            backtrack.beta = A[["backtrack.beta"]])
-        w[treat == i] <- ate.out$weights.q[treat_ == 0] / s.weights[treat == i]
-        fit.list[[i]] <- ate.out
-      }
+      ate.out <- ATE::ATE(Y = Y, Ti = treat_, X = covs_,
+                          ATT = TRUE,
+                          theta = A[["theta"]],
+                          verbose = TRUE,
+                          max.iter = A[["max.iter"]],
+                          tol = A[["tol"]],
+                          initial.values = A[["initial.values"]],
+                          backtrack = A[["backtrack"]],
+                          backtrack.alpha = A[["backtrack.alpha"]],
+                          backtrack.beta = A[["backtrack.beta"]])
+      w[treat == i] <- ate.out$weights.q[treat_ == 0] / s.weights[treat == i]
+      fit.list[[i]] <- ate.out
     }
-    else if (estimand == "ATE") {
-      w <- rep(1, length(treat))
-      fit.list <- make_list(levels(treat))
-
-      for (i in levels(treat)) {
-        covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
-        treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
-
-        colinear.covs.to.remove <- colnames(covs_i)[colnames(covs_i) %nin% colnames(make_full_rank(covs_i[treat_i == 0, , drop = FALSE]))]
-
-        covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove, drop = FALSE]
-
-        covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights * sum(treat_i == 1) / sum(s.weights)
-
-        Y <- rep(0, length(treat_i))
-
-        ate.out <- ATE::ATE(Y = Y, Ti = treat_i, X = covs_i,
-                            ATT = TRUE,
-                            theta = A[["theta"]],
-                            verbose = TRUE,
-                            max.iter = A[["max.iter"]],
-                            tol = A[["tol"]],
-                            initial.values = A[["initial.values"]],
-                            backtrack = A[["backtrack"]],
-                            backtrack.alpha = A[["backtrack.alpha"]],
-                            backtrack.beta = A[["backtrack.beta"]])
-        w[treat == i] <- ate.out$weights.q[treat_i == 0] / s.weights[treat == i]
-        fit.list[[i]] <- ate.out
-      }
-    }
-    if (length(fit.list) == 1) fit.list <- fit.list[[1]]
-    obj <- list(w = w, fit.obj = fit.list)
-    return(obj)
   }
+  else if (estimand == "ATE") {
+    w <- rep(1, length(treat))
+    fit.list <- make_list(levels(treat))
+
+    for (i in levels(treat)) {
+      covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
+      treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
+
+      colinear.covs.to.remove <- colnames(covs_i)[colnames(covs_i) %nin% colnames(make_full_rank(covs_i[treat_i == 0, , drop = FALSE]))]
+
+      covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove, drop = FALSE]
+
+      covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights * sum(treat_i == 1) / sum(s.weights)
+
+      Y <- rep(0, length(treat_i))
+
+      ate.out <- ATE::ATE(Y = Y, Ti = treat_i, X = covs_i,
+                          ATT = TRUE,
+                          theta = A[["theta"]],
+                          verbose = TRUE,
+                          max.iter = A[["max.iter"]],
+                          tol = A[["tol"]],
+                          initial.values = A[["initial.values"]],
+                          backtrack = A[["backtrack"]],
+                          backtrack.alpha = A[["backtrack.alpha"]],
+                          backtrack.beta = A[["backtrack.beta"]])
+      w[treat == i] <- ate.out$weights.q[treat_i == 0] / s.weights[treat == i]
+      fit.list[[i]] <- ate.out
+    }
+  }
+  if (length(fit.list) == 1) fit.list <- fit.list[[1]]
+  obj <- list(w = w, fit.obj = fit.list)
+  return(obj)
+
 }
 
 #PS weights using SuperLearner
@@ -2614,9 +2622,9 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   #Estimate GPS
 
   fit <- do.call(dbarts::bart2, A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                                                    names(formals(dbarts::dbartsControl))),
-                                                                  c("offset.test", "weights", "subset", "test"))],
-                           quote = TRUE)
+                                                          names(formals(dbarts::dbartsControl))),
+                                                        c("offset.test", "weights", "subset", "test"))],
+                 quote = TRUE)
 
   gp.score <- fitted(fit)
 
@@ -2641,6 +2649,8 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 
 #Energy balancing
 weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+  check.package("osqp")
+
   A <- list(...)
 
   n <- length(treat)
@@ -2662,119 +2672,118 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   covs <- mat_div(center(covs, at = col.w.m(covs, s.weights)),
                   sqrt(col.w.v(covs, s.weights)))
 
-  if (check.package("osqp")) {
-    if (is_not_null(A[["dist.mat"]])) {
-      if (!is.matrix(A[["dist.mat"]]) || !all(dim(A[["dist.mat"]]) == n) ||
-          !all(check_if_zero(diag(A[["dist.mat"]]))) || any(A[["dist.mat"]] < 0) ||
-          !isSymmetric(unname(A[["dist.mat"]]))) {
-        stop("'dist.mat' must be a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
-      }
-      else d <- unname(A[["dist.mat"]][subset, subset])
+  if (is_not_null(A[["dist.mat"]])) {
+    if (!is.matrix(A[["dist.mat"]]) || !all(dim(A[["dist.mat"]]) == n) ||
+        !all(check_if_zero(diag(A[["dist.mat"]]))) || any(A[["dist.mat"]] < 0) ||
+        !isSymmetric(unname(A[["dist.mat"]]))) {
+      stop("'dist.mat' must be a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
     }
-    else d <- as.matrix(dist(covs))
-
-    n <- length(treat)
-    levels_treat <- levels(treat)
-    diagn <- diag(n)
-
-    min.w <- if_null_then(A[["min.w"]], 1e-8)
-    if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
-      warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE)
-      min.w <- 1e-8
-    }
-
-    for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean(s.weights[treat == t])
-
-    tmat <- vapply(levels_treat, function(t) treat == t, logical(n))
-    nt <- colSums(tmat)
-
-    J <- setNames(lapply(levels_treat, function(t) s.weights*tmat[,t]/nt[t]), levels_treat)
-
-    if (estimand == "ATE") {
-      J0 <- as.matrix(s.weights/n)
-
-      M2_array <- vapply(levels_treat, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
-      M1_array <- vapply(levels_treat, function(t) 2 * J[[t]] * d %*% J0, J0)
-
-      M2 <- rowSums(M2_array, dims = 2)
-      M1 <- rowSums(M1_array)
-
-      if (!isFALSE(A[["improved"]])) {
-        all_pairs <- combn(levels_treat, 2, simplify = FALSE)
-        M2_pairs_array <- vapply(all_pairs, function(p) -tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
-        M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
-      }
-
-      #Constraints for positivity and sum of weights
-      Amat <- rbind(diagn, t(s.weights * tmat))
-      lvec <- c(rep(min.w, n), nt)
-      uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), nt)
-    }
-    else {
-
-      J0_focal <- as.matrix(J[[focal]])
-      clevs <- levels_treat[levels_treat != focal]
-
-      M2_array <- vapply(clevs, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
-      M1_array <- vapply(clevs, function(t) 2 * J[[t]] * d %*% J0_focal, J0_focal)
-
-      M2 <- rowSums(M2_array, dims = 2)
-      M1 <- rowSums(M1_array)
-
-      #Constraints for positivity and sum of weights
-      Amat <- rbind(diagn, t(s.weights*tmat))
-      lvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, min.w), nt)
-      uvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, Inf), nt)
-    }
-
-    if (moments != 0 || int) {
-      #Exactly balance moments and/or interactions
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-
-      if (estimand == "ATE") targets <- col.w.m(covs, s.weights)
-      else targets <- col.w.m(covs[treat == focal, , drop = FALSE], s.weights[treat == focal])
-
-      Amat <- do.call("rbind", c(list(Amat),
-                                 lapply(levels_treat, function(t) {
-                                   if (is_null(focal) || t != focal) t(covs * J[[t]])
-                                 })))
-      lvec <- do.call("c", c(list(lvec),
-                             lapply(levels_treat, function(t) {
-                               if (is_null(focal) || t != focal) targets
-                             })))
-      uvec <- do.call("c", c(list(uvec),
-                             lapply(levels_treat, function(t) {
-                               if (is_null(focal) || t != focal) targets
-                             })))
-    }
-
-    if (is_not_null(A[["eps"]])) {
-      if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
-      if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
-    }
-    A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
-    if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E3L
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
-    A[["verbose"]] <- TRUE
-
-    options.list <- do.call(osqp::osqpSettings, A)
-
-    opt.out <- do.call(osqp::solve_osqp, list(P = M2, q = M1, A = Amat, l = lvec, u = uvec,
-                                              pars = options.list),
-                       quote = TRUE)
-
-    if (opt.out$info$status == "maximum iterations reached") {
-      warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
-    }
-
-    w <- opt.out$x
-
-    if (estimand == "ATT") w[treat == focal] <- 1
-
-    w[w <= min.w] <- min.w
-
-    obj <- list(w = w, fit.obj = opt.out)
-    return(obj)
+    else d <- unname(A[["dist.mat"]][subset, subset])
   }
+  else d <- as.matrix(dist(covs))
+
+  n <- length(treat)
+  levels_treat <- levels(treat)
+  diagn <- diag(n)
+
+  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
+    warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE)
+    min.w <- 1e-8
+  }
+
+  for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean(s.weights[treat == t])
+
+  tmat <- vapply(levels_treat, function(t) treat == t, logical(n))
+  nt <- colSums(tmat)
+
+  J <- setNames(lapply(levels_treat, function(t) s.weights*tmat[,t]/nt[t]), levels_treat)
+
+  if (estimand == "ATE") {
+    J0 <- as.matrix(s.weights/n)
+
+    M2_array <- vapply(levels_treat, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
+    M1_array <- vapply(levels_treat, function(t) 2 * J[[t]] * d %*% J0, J0)
+
+    M2 <- rowSums(M2_array, dims = 2)
+    M1 <- rowSums(M1_array)
+
+    if (!isFALSE(A[["improved"]])) {
+      all_pairs <- combn(levels_treat, 2, simplify = FALSE)
+      M2_pairs_array <- vapply(all_pairs, function(p) -tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
+      M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
+    }
+
+    #Constraints for positivity and sum of weights
+    Amat <- rbind(diagn, t(s.weights * tmat))
+    lvec <- c(rep(min.w, n), nt)
+    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), nt)
+  }
+  else {
+
+    J0_focal <- as.matrix(J[[focal]])
+    clevs <- levels_treat[levels_treat != focal]
+
+    M2_array <- vapply(clevs, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
+    M1_array <- vapply(clevs, function(t) 2 * J[[t]] * d %*% J0_focal, J0_focal)
+
+    M2 <- rowSums(M2_array, dims = 2)
+    M1 <- rowSums(M1_array)
+
+    #Constraints for positivity and sum of weights
+    Amat <- rbind(diagn, t(s.weights*tmat))
+    lvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, min.w), nt)
+    uvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, Inf), nt)
+  }
+
+  if (moments != 0 || int) {
+    #Exactly balance moments and/or interactions
+    covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+    if (estimand == "ATE") targets <- col.w.m(covs, s.weights)
+    else targets <- col.w.m(covs[treat == focal, , drop = FALSE], s.weights[treat == focal])
+
+    Amat <- do.call("rbind", c(list(Amat),
+                               lapply(levels_treat, function(t) {
+                                 if (is_null(focal) || t != focal) t(covs * J[[t]])
+                               })))
+    lvec <- do.call("c", c(list(lvec),
+                           lapply(levels_treat, function(t) {
+                             if (is_null(focal) || t != focal) targets
+                           })))
+    uvec <- do.call("c", c(list(uvec),
+                           lapply(levels_treat, function(t) {
+                             if (is_null(focal) || t != focal) targets
+                           })))
+  }
+
+  if (is_not_null(A[["eps"]])) {
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  }
+  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E3L
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
+  A[["verbose"]] <- TRUE
+
+  options.list <- do.call(osqp::osqpSettings, A)
+
+  opt.out <- do.call(osqp::solve_osqp, list(P = M2, q = M1, A = Amat, l = lvec, u = uvec,
+                                            pars = options.list),
+                     quote = TRUE)
+
+  if (opt.out$info$status == "maximum iterations reached") {
+    warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
+  }
+
+  w <- opt.out$x
+
+  if (estimand == "ATT") w[treat == focal] <- 1
+
+  w[w <= min.w] <- min.w
+
+  obj <- list(w = w, fit.obj = opt.out)
+  return(obj)
+
 }
