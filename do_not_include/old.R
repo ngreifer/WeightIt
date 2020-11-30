@@ -164,3 +164,316 @@ weightit2sbw <- function(covs, treat, s.weights, subset, estimand, focal, moment
   return(obj)
 
 }
+
+#BART using BART package (now using dbarts)----
+.weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
+  A <- list(...)
+
+  check.package("BART")
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
+
+  if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
+                                     call. = FALSE)
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    if (is_not_null(missing.ind)) {
+      covs[is.na(covs)] <- 0
+      covs <- cbind(covs, missing.ind)
+    }
+  }
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  if (is_null(A$link)) A$link <- "probit"
+  else {
+    acceptable.links <- c("probit", "logit")
+
+    which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
+    if (is.na(which.link)) {
+      A$link <- acceptable.links[1]
+      warning(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE), " allowed as the link for ",
+                     if (treat.type == "binary") "binary" else "multinomial",
+                     " treatments. Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
+              call. = FALSE, immediate. = TRUE)
+    }
+    else A$link <- which.link
+  }
+
+
+  if (is_not_null(A[["n.trees"]]) && is_null(A[["ntree"]])) A[["ntree"]] <- A[["n.trees"]]
+
+  ps <- make_df(levels(treat), nrow = length(treat))
+
+  if (treat.type == "binary") {
+
+    if (is_not_null(A[["mc.cores"]]) && A[["mc.cores"]] > 1) fun <- BART::mc.gbart
+    else fun <- BART::gbart
+
+    fit.list <- do.call(fun, c(list(covs,
+                                    y.train = binarize(treat),
+                                    type = switch(A$link, "logit" = "lbart", "pbart")),
+                               A[intersect(names(A), setdiff(names(formals(fun)),
+                                                             c("x.train", "y.train", "x.test", "type", "ntype")))]))
+
+    p.score <- fit.list$prob.train.mean
+
+    ps[[2]] <- p.score
+    ps[[1]] <- 1 - ps[[2]]
+
+    info <- list()
+
+  }
+  else {
+
+    if (is_not_null(A[["mc.cores"]]) && A[["mc.cores"]] > 1) {
+      if (isTRUE(A[["use.mbart2"]])) fun <- BART::mc.mbart2
+      else fun <- BART::mc.mbart
+    }
+    else {
+      if (isTRUE(A[["use.mbart2"]])) fun <- BART::mbart2
+      else fun <- BART::mbart
+    }
+
+    fit.list <- do.call(fun, c(list(covs,
+                                    y.train = as.integer(treat),
+                                    x.test = covs,
+                                    type = switch(A$link, "logit" = "lbart", "pbart")),
+                               A[intersect(names(A), setdiff(names(formals(fun)), c("x.train", "y.train", "x.test", "type", "ntype")))]))
+
+    ps[,] <- matrix(fit.list$prob.test.mean, nrow = length(treat), byrow = TRUE)
+
+    info <- list()
+    p.score <- NULL
+  }
+
+  #ps should be matrix of probs for each treat
+  #Computing weights
+  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
+
+  obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
+  return(obj)
+}
+.weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+  A <- list(...)
+
+  check.package("BART")
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+  s.weights <- s.weights[subset]
+
+  if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
+                                     call. = FALSE)
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    if (is_not_null(missing.ind)) {
+      covs[is.na(covs)] <- 0
+      covs <- cbind(covs, missing.ind)
+    }
+  }
+
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  #Process density params
+  if (isTRUE(A[["use.kernel"]])) {
+    if (is_null(A[["bw"]])) A[["bw"]] <- "nrd0"
+    if (is_null(A[["adjust"]])) A[["adjust"]] <- 1
+    if (is_null(A[["kernel"]])) A[["kernel"]] <- "gaussian"
+    if (is_null(A[["n"]])) A[["n"]] <- 10*length(treat)
+    use.kernel <- TRUE
+    densfun <- NULL
+  }
+  else {
+    if (is_null(A[["density"]])) densfun <- dnorm
+    else if (is.function(A[["density"]])) densfun <- A[["density"]]
+    else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
+      splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
+      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+        if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
+          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
+        }
+        densfun <- function(x) {
+          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
+                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+        }
+      }
+      else {
+        stop(paste(A[["density"]], "is not an appropriate argument to density because",
+                   splitdens[1], "is not an available function."), call. = FALSE)
+      }
+    }
+    else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+    use.kernel <- FALSE
+  }
+
+  #Stabilization - get dens.num
+  p.num <- treat - mean(treat)
+
+  if (use.kernel) {
+    d.n <- density(p.num, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]], kernel = A[["kernel"]])
+    dens.num <- with(d.n, approxfun(x = x, y = y))(p.num)
+  }
+  else {
+    dens.num <- densfun(p.num/sd(treat))
+    if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
+      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+    }
+    else if (any(dens.num <= 0)) {
+      stop("The input to density may not accept the full range of treatment values.", call. = FALSE)
+    }
+  }
+
+  if (is_not_null(A[["n.trees"]]) && is_null(A[["ntree"]])) A[["ntree"]] <- A[["n.trees"]]
+
+  #Estimate GPS
+
+  if (is_not_null(A[["mc.cores"]]) && A[["mc.cores"]] > 1) fun <- BART::mc.gbart
+  else fun <- BART::gbart
+
+  fit <- do.call(fun, c(list(covs,
+                             y.train = treat,
+                             type = "wbart"),
+                        A[intersect(names(A), setdiff(names(formals(fun)),
+                                                      c("x.train", "y.train", "x.test", "type", "ntype")))]))
+
+  gp.score <- fit$yhat.train.mean
+
+  #Get weights
+  w <- get_cont_weights(gp.score, treat = treat, s.weights = s.weights,
+                        dens.num = dens.num, densfun = densfun,
+                        use.kernel = use.kernel, densControl = A)
+
+  if (use.kernel && isTRUE(A[["plot"]])) {
+    d.d <- density(treat - gp.score, n = A[["n"]],
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = A[["bw"]], adjust = A[["adjust"]],
+                   kernel = A[["kernel"]])
+    plot_density(d.n, d.d)
+  }
+
+  info <- list()
+
+  obj <- list(w = w, info = info, fit.obj = fit)
+  return(obj)
+}
+
+#ebal using ebal package (now using optim)----
+.weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, ...) {
+  A <- list(...)
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    if (is_not_null(missing.ind)) {
+      covs[is.na(covs)] <- 0
+      covs <- cbind(covs, missing.ind)
+    }
+  }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  for (f in names(formals(ebal::ebalance))) {
+    if (is_null(A[[f]])) A[[f]] <- formals(ebal::ebalance)[[f]]
+  }
+  if (stabilize) {
+    for (f in names(formals(ebal::ebalance.trim))) {
+      if (is_null(A[[f]])) A[[f]] <- formals(ebal::ebalance.trim)[[f]]
+    }
+  }
+
+  if (check.package("ebal")) {
+    if (estimand == "ATT") {
+      w <- rep(1, length(treat))
+      control.levels <- levels(treat)[levels(treat) != focal]
+      fit.list <- make_list(control.levels)
+
+      covs[treat == focal,] <- covs[treat == focal, , drop = FALSE] * s.weights[treat == focal] * sum(treat == focal)/sum(s.weights[treat == focal])
+
+      for (i in control.levels) {
+        treat.in.i.focal <- treat %in% c(focal, i)
+        treat_ <- as.integer(treat[treat.in.i.focal] != i)
+        covs_ <- covs[treat.in.i.focal, , drop = FALSE]
+
+        colinear.covs.to.remove <- colnames(covs_)[colnames(covs_) %nin% colnames(make_full_rank(covs_[treat_ == 0, , drop = FALSE]))]
+
+        covs_ <- covs_[, colnames(covs_) %nin% colinear.covs.to.remove, drop = FALSE]
+
+        if (is_not_null(A[["base.weight"]])) {
+          A[["base.weight"]] <- A[["base.weight"]][treat == i]
+        }
+
+        ebal.out <- ebal::ebalance(Treatment = treat_, X = covs_,
+                                   base.weight = A[["base.weight"]],
+                                   norm.constant = A[["norm.constant"]],
+                                   coefs = A[["coefs"]],
+                                   max.iterations = A[["max.iterations"]],
+                                   constraint.tolerance = A[["constraint.tolerance"]],
+                                   print.level = 3)
+        if (stabilize) ebal.out <- ebal::ebalance.trim(ebalanceobj = ebal.out,
+                                                       max.weight = A[["max.weight"]],
+                                                       min.weight = A[["min.weight"]],
+                                                       max.trim.iterations = A[["max.trim.iterations"]],
+                                                       max.weight.increment = A[["max.weight.increment"]],
+                                                       min.weight.increment = A[["min.weight.increment"]],
+                                                       print.level = 3)
+        w[treat == i] <- ebal.out$w / s.weights[treat.in.i.focal][treat_ == 0]
+        fit.list[[i]] <- ebal.out
+      }
+    }
+    else if (estimand == "ATE") {
+      w <- rep(1, length(treat))
+      fit.list <- make_list(levels(treat))
+
+      for (i in levels(treat)) {
+        covs_i <- rbind(covs, covs[treat==i, , drop = FALSE])
+        treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat==i)))
+
+        colinear.covs.to.remove <- colnames(covs_i)[colnames(covs_i) %nin% colnames(make_full_rank(covs_i[treat_i == 0, , drop = FALSE]))]
+
+        covs_i <- covs_i[, colnames(covs_i) %nin% colinear.covs.to.remove, drop = FALSE]
+
+        covs_i[treat_i == 1,] <- covs_i[treat_i == 1,] * s.weights * sum(treat_i == 1) / sum(s.weights)
+
+        if (is_not_null(A[["base.weight"]])) {
+          A[["base.weight"]] <- A[["base.weight"]][treat == i]
+        }
+
+        ebal.out_i <- ebal::ebalance(Treatment = treat_i, X = covs_i,
+                                     base.weight = A[["base.weight"]],
+                                     norm.constant = A[["norm.constant"]],
+                                     coefs = A[["coefs"]],
+                                     max.iterations = A[["max.iterations"]],
+                                     constraint.tolerance = A[["constraint.tolerance"]],
+                                     print.level = 3)
+
+        if (stabilize) ebal.out_i <- ebal::ebalance.trim(ebalanceobj = ebal.out_i,
+                                                         max.weight = A[["max.weight"]],
+                                                         min.weight = A[["min.weight"]],
+                                                         max.trim.iterations = A[["max.trim.iterations"]],
+                                                         max.weight.increment = A[["max.weight.increment"]],
+                                                         min.weight.increment = A[["min.weight.increment"]],
+                                                         print.level = 3)
+
+        w[treat == i] <- ebal.out_i$w / s.weights[treat == i]
+        fit.list[[i]] <- ebal.out_i
+      }
+    }
+  }
+
+  obj <- list(w = w, fit.obj = fit.list)
+  return(obj)
+}
