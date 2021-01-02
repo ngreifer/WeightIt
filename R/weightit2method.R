@@ -1428,6 +1428,9 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   }
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
+  colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+
   if (estimand == "ATT") {
     ps <- make_df(levels(treat), length(treat))
 
@@ -1531,6 +1534,9 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
   }
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
+  colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+
   new.data <- data.frame(treat = treat, covs)
 
   tryCatch({fit <- CBPS::CBPS(formula(new.data),
@@ -1573,7 +1579,9 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1609,8 +1617,10 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
     }
   }
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -1628,7 +1638,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
   return(obj)
 }
 
-#Entropy balancing with ebal
+#Entropy balancing
 weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, ...) {
   A <- list(...)
 
