@@ -727,7 +727,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
 weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
   A <- list(...)
 
-  warning("method = \"twang\" is deprecated; please use method = \"gbm\" for increased performance and functionality.", immediate. = TRUE)
+  warning("method = \"twang\" is deprecated; please use method = \"gbm\" for increased performance and functionality.", immediate. = TRUE, call. = FALSE)
 
   if (is_null(A$stop.method)) {
     warning("No stop.method was provided. Using \"es.mean\".",
@@ -1756,12 +1756,15 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
     else q <- A[["base.weight"]]
   }
 
-  treat_sc <- (treat - weighted.mean(treat, s.weights)) /
-    cobalt::col_w_sd(treat, s.weights)
+  t.moments <- if_null_then(A[["t.moments"]], 1)
+  t.mat <- poly(treat, degree = t.moments)
+
+  treat_sc <- mat_div(center(t.mat, at = cobalt::col_w_mean(t.mat, s.weights)),
+                     cobalt::col_w_sd(t.mat, s.weights))
   covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, s.weights)),
                      cobalt::col_w_sd(covs, s.weights))
 
-  gTX <- cbind(treat_sc, covs_sc, treat_sc*covs_sc)
+  gTX <- do.call("cbind", c(list(treat_sc, covs_sc), lapply(1, function(x) treat_sc[,x] * covs_sc)))
 
   #----Code written by Stefan Tubbicke---#
   #define objective function (Lagrange dual)
@@ -1959,62 +1962,47 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   ps <- make_df(levels(treat), nrow = length(treat))
 
-  if (treat.type == "binary") {
+  for (i in levels(treat)) {
 
-    fit.list <- do.call(SuperLearner::SuperLearner, list(Y = binarize(treat),
-                                                         X = covs,
-                                                         newX = covs,
-                                                         family = binomial(),
-                                                         SL.library = A[["SL.library"]],
-                                                         verbose = FALSE,
-                                                         method = A[["SL.method"]],
-                                                         id = NULL,
-                                                         obsWeights = s.weights,
-                                                         control = A[["control"]],
-                                                         cvControl = A[["cvControl"]],
-                                                         env = A[["env"]]))
-
-    if (discrete) p.score <- fit.list$library.predict[,which.min(fit.list$cvRisk)]
-    else p.score <- fit.list$SL.predict
-
-    ps[[2]] <- p.score
-    ps[[1]] <- 1 - ps[[2]]
-
-    info <- list(coef = fit.list$coef,
-                 cvRisk = fit.list$cvRisk)
-
-  }
-  else {
-    fit.list <- info <- make_list(levels(treat))
-
-    for (i in levels(treat)) {
-      treat_i <- as.numeric(treat == i)
-
-      fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = treat_i,
-                                                                X = covs,
-                                                                newX = covs,
-                                                                family = binomial(),
-                                                                SL.library = A[["SL.library"]],
-                                                                verbose = FALSE,
-                                                                method = A[["SL.method"]],
-                                                                id = NULL,
-                                                                obsWeights = s.weights,
-                                                                control = A[["control"]],
-                                                                cvControl = A[["cvControl"]],
-                                                                env = A[["env"]]))
-      if (discrete) ps[[i]] <- fit.list[[i]]$library.predict[,which.min(fit.list[[i]]$cvRisk)]
-      else ps[[i]] <- fit.list[[i]]$SL.predict
-
-      info[[i]] <- list(coef = fit.list[[i]]$coef,
-                        cvRisk = fit.list[[i]]$cvRisk)
+    if (treat.type == "binary" && i == last(levels(treat))) {
+      ps[[i]] <- 1 - ps[[1]]
+      fit.list <- fit.list[[1]]
+      info <- info[[i]]
+      next
     }
 
-    p.score <- NULL
+    treat_i <- as.numeric(treat == i)
+
+    fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = treat_i,
+                                                              X = covs,
+                                                              newX = covs,
+                                                              family = binomial(),
+                                                              SL.library = A[["SL.library"]],
+                                                              verbose = FALSE,
+                                                              method = A[["SL.method"]],
+                                                              id = NULL,
+                                                              obsWeights = s.weights,
+                                                              control = A[["control"]],
+                                                              cvControl = A[["cvControl"]],
+                                                              env = A[["env"]]))
+    if (discrete) ps[[i]] <- fit.list[[i]]$library.predict[,which.min(fit.list[[i]]$cvRisk)]
+    else ps[[i]] <- fit.list[[i]]$SL.predict
+
+    info[[i]] <- list(coef = fit.list[[i]]$coef,
+                      cvRisk = fit.list[[i]]$cvRisk)
+
   }
 
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
+
+  if (treat.type != "binary") {
+    p.score <- NULL
+  }
+  else {
+    p.score <- ps[[get.treated.level(treat)]]
+  }
 
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
@@ -2213,13 +2201,11 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   A[["verbose"]] <- FALSE #necessary to prevent crash
 
   fit.list <- make_list(levels(treat))
-  p.score <- NULL
 
   for (i in levels(treat)) {
 
     if (treat.type == "binary" && i == last(levels(treat))) {
       ps[[i]] <- 1 - ps[[1]]
-      p.score <- ps[[get.treated.level(treat)]]
       fit.list <- fit.list[[1]]
       next
     }
@@ -2239,6 +2225,13 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
+
+  if (treat.type != "binary") {
+    p.score <- NULL
+  }
+  else {
+    p.score <- ps[[get.treated.level(treat)]]
+  }
 
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
