@@ -13,6 +13,10 @@ WeightIt News and Updates
 
 * Using `method = "ebal"` no longer requires the `ebal` package. Instead, `optim()` is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed. 
 
+* Fixed a bug (#16) when using `method = "cbps"` with factor variables, thanks to @danielebottigliengo.
+
+* Fixed a bug when using binary factor treatments, thanks to Darren Stewart.
+
 # WeightIt 0.10.2
 
 * Fixed a bug where treatment values were accidentally switched for some methods.
