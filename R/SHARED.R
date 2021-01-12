@@ -712,7 +712,7 @@ get.treated.level <- function(treat) {
         unique.vals.numeric <- str2num(unique.vals)
     }
     else {
-        unique.vals.numeric <- as.numeric(unique.vals)
+        unique.vals.numeric <- seq_along(unique.vals)
     }
 
     if (0 %in% unique.vals.numeric) treated <- unique.vals[unique.vals.numeric != 0]

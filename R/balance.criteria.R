@@ -43,7 +43,7 @@ init_es <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NUL
 
     if (treat.type == "continuous") stop("treat must be a binary or multinomial variable.")
 
-    f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+    f.e.r <- process.focal.and.estimand(focal, estimand, treat)
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 
@@ -129,7 +129,7 @@ init_ks <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NUL
 
     if (treat.type == "continuous") stop("treat must be a binary or multinomial variable.")
 
-    f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+    f.e.r <- process.focal.and.estimand(focal, estimand, treat)
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 
@@ -278,7 +278,7 @@ init_energy.dist <- function(covs, treat, s.weights = NULL, estimand = "ATE", fo
 
     if (treat.type == "continuous") stop("treat must be a binary or multinomial variable.")
 
-    f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+    f.e.r <- process.focal.and.estimand(focal, estimand, treat)
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 

@@ -37,7 +37,6 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   #ps must be a matrix/df with columns named after treat levels
 
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-
   treat.type <- get.treat.type(treat)
 
   if (treat.type == "continuous") {
@@ -46,7 +45,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 
   estimand <- process.estimand(estimand, method = "ps", treat.type = treat.type)
 
-  processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treat.type, treated)
+  processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treated)
   estimand <- processed.estimand$estimand
   focal <- processed.estimand$focal
   assumed.treated <- processed.estimand$treated

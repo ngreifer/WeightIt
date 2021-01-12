@@ -176,15 +176,21 @@ process.ps <- function(ps, data = NULL, treat) {
   else ps <- NULL
   return(ps)
 }
-process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treated = NULL) {
+process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
   reported.estimand <- estimand
 
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
   treat.type <- get.treat.type(treat)
 
+  unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multinomial" = length(treat)/4))
+
   #Check focal
+  if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
+    stop("The argument supplied to 'focal' must be the name of a level of treatment.", call. = FALSE)
+  }
+
   if (treat.type == "multinomial") {
-    unique.treat <- unique(treat, nmax = length(treat)/4)
+
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
       warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
       reported.estimand <- estimand <- "ATT"
@@ -205,60 +211,45 @@ process.focal.and.estimand <- function(focal, estimand, treat, treat.type, treat
     }
   }
   else if (treat.type == "binary") {
-    unique.treat <- unique(treat, nmax = 2)
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
       warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
       reported.estimand <- estimand <- "ATT"
     }
 
-    if (estimand == "ATT") {
+    if (is_null(treated) || treated %nin% unique.treat) {
       if (is_null(focal)) {
-        if (is_null(treated) || treated %nin% unique.treat) {
-          if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
-            #If is 0/1
-            treated <- unique.treat[unique.treat.bin == 1]
-          }
-          else {
-            treated <- names(which.min(table(treat))) #Smaller group is treated
+        if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
+          treated <- unique.treat[unique.treat.bin == 1]
+        }
+        else {
+          if (is.factor(treat)) treated <- levels(treat)[2]
+          else treated <- unique.treat[unique.treat.bin == 1]
+
+          if (estimand == "ATT") {
             message(paste0("Assuming ", word_list(treated, quotes = !is.numeric(treat), is.are = TRUE),
                            " the treated level. If not, supply an argument to 'focal'."))
-          }
-        }
-        focal <- treated
-      }
-      else {
-        if (is_null(treated) || treated %nin% unique.treat) {
-          treated <- focal
-        }
-      }
-    }
-    else if (estimand == "ATC") {
-      if (is_null(focal)) {
-        if (is_null(treated) || treated %nin% unique.treat) {
 
-          if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
-            treated <- unique.treat[unique.treat.bin == 1]
           }
-          else {
-            treated <- names(which.min(table(treat))) #Smaller group is treated
+          else if (estimand == "ATC") {
             message(paste0("Assuming ", word_list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE),
                            " the control level. If not, supply an argument to 'focal'."))
           }
+
         }
-        focal <- unique.treat[unique.treat %nin% treated]
+        if (estimand == "ATT")
+          focal <- treated
+        else if (estimand == "ATC")
+          focal <- unique.treat[unique.treat %nin% treated]
       }
       else {
-        if (is_null(treated) || treated %nin% unique.treat) {
+        if (estimand == "ATT")
+          treated <- focal
+        else if (estimand == "ATC")
           treated <- unique.treat[unique.treat %nin% focal]
-        }
       }
-      estimand <- "ATT"
+      if (estimand == "ATC") estimand <- "ATT"
     }
-  }
-
-  if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
-    stop("The argument supplied to 'focal' must be the name of a level of treatment.", call. = FALSE)
   }
 
   return(list(focal = as.character(focal),
@@ -321,34 +312,34 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 }
 process.moments.int <- function(moments, int, method) {
   # if (!is.function(method)) {
-    if (is.function(method) || method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
-      if (length(int) != 1 || !is.logical(int)) {
-        stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
-      }
-      if (is_not_null(moments)) {
-        if (length(moments) != 1 || !is.numeric(moments) ||
-            !check_if_zero(moments - round(moments))) {
-          if (method == "energy") {
-            if (moments < 0) stop("'moments' must be a nonnegative integer of length 1.", call. = FALSE)
-          }
-          else if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
-            if (moments < 1) stop("'moments' must be a positive integer of length 1.", call. = FALSE)
-          }
-          moments <- as.integer(moments)
+  if (is.function(method) || method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
+    if (length(int) != 1 || !is.logical(int)) {
+      stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
+    }
+    if (is_not_null(moments)) {
+      if (length(moments) != 1 || !is.numeric(moments) ||
+          !check_if_zero(moments - round(moments))) {
+        if (method == "energy") {
+          if (moments < 0) stop("'moments' must be a nonnegative integer of length 1.", call. = FALSE)
         }
-      }
-      else {
-        if (!is.function(method) && method == "energy") moments <- 0L
-        else moments <- 1L
+        else if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
+          if (moments < 1) stop("'moments' must be a positive integer of length 1.", call. = FALSE)
+        }
+        moments <- as.integer(moments)
       }
     }
-    else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
-      warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = 1),
-                     " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and", quotes = 1), "."), call. = FALSE)
-      moments <- NULL
-      int <- FALSE
+    else {
+      if (!is.function(method) && method == "energy") moments <- 0L
+      else moments <- 1L
     }
-    moments <- as.integer(moments)
+  }
+  else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
+    warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = 1),
+                   " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and", quotes = 1), "."), call. = FALSE)
+    moments <- NULL
+    int <- FALSE
+  }
+  moments <- as.integer(moments)
   # }
   # else {
   # }
@@ -379,18 +370,18 @@ process.missing <- function(missing, method, treat.type) {
   #Allowable estimands
   AE <- list(binary = list(ps = c("ind"
                                   # , "saem"
-                                  )
-                           , gbm = c("ind", "surr")
-                           , twang = c("ind", "surr")
-                           , cbps = c("ind")
-                           , npcbps = c("ind")
-                           , ebal = c("ind")
-                           , ebcw = c("ind")
-                           , optweight = c("ind")
-                           , super = c("ind")
-                           , bart = c("ind", "hot")
-                           , energy = c("ind")
-                           # , kbal = c("ind")
+  )
+  , gbm = c("ind", "surr")
+  , twang = c("ind", "surr")
+  , cbps = c("ind")
+  , npcbps = c("ind")
+  , ebal = c("ind")
+  , ebcw = c("ind")
+  , optweight = c("ind")
+  , super = c("ind")
+  , bart = c("ind", "hot")
+  , energy = c("ind")
+  # , kbal = c("ind")
   ),
   multinomial = list(ps = c("ind")
                      , gbm = c("ind", "surr")
@@ -407,18 +398,18 @@ process.missing <- function(missing, method, treat.type) {
   ),
   continuous = list(ps = c("ind"
                            # , "saem"
-                           )
-                    , gbm = c("ind", "surr")
-                    , twang = c("ind", "surr")
-                    , cbps = c("ind")
-                    , npcbps = c("ind")
-                    , ebal = c("ind")
-                    , ebcw = c("ind")
-                    , optweight = c("ind")
-                    , super = c("ind")
-                    , bart = c("ind", "hot")
-                    , energy = c("ind")
-                    # , kbal = c("ind")
+  )
+  , gbm = c("ind", "surr")
+  , twang = c("ind", "surr")
+  , cbps = c("ind")
+  , npcbps = c("ind")
+  , ebal = c("ind")
+  , ebcw = c("ind")
+  , optweight = c("ind")
+  , super = c("ind")
+  , bart = c("ind", "hot")
+  , energy = c("ind")
+  # , kbal = c("ind")
   ))
 
   allowable.missings <- AE[[treat.type]][[method]]
@@ -1250,8 +1241,8 @@ method.balance.cont <- function(stop.method) {
       bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
       w_mat<- get_cont_weights(Z, treat = Y, s.weights = obsWeights,
-                    dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
-                    densControl = densControl)
+                               dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
+                               densControl = densControl)
       cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
       names(cvRisk) <- libraryNames
 

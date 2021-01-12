@@ -53,7 +53,7 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
 
     #Process estimand and focal
     estimand <- process.estimand(estimand, method, treat.type)
-    f.e.r <- process.focal.and.estimand(focal, estimand, treat, treat.type)
+    f.e.r <- process.focal.and.estimand(focal, estimand, treat)
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 
