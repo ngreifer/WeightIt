@@ -52,6 +52,8 @@
 
 
 
+
+
 <!-- mathjax -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script>
@@ -129,6 +131,8 @@
 <li><p>Fixed a bug when setting <code>estimand = "ATC"</code> for methods that produce a propensity score. In the past, the output propensity score was the probability of being in the control group; now, it is the probability of being in the treated group, as it is for all other estimands. This does not affect the weights.</p></li>
 <li><p>Setting <code>method = "twang"</code> is now deprecated. Use <code>method = "gbm"</code> for improved performance and increased functionality. <code>method = "twang"</code> relies on the <code>twang</code> package; <code>method = "gbm"</code> calls <code>gbm</code> directly.</p></li>
 <li><p>Using <code>method = "ebal"</code> no longer requires the <code>ebal</code> package. Instead, <code><a href="https://rdrr.io/r/stats/optim.html">optim()</a></code> is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed.</p></li>
+<li><p>Fixed a bug (<a href='https://github.com/ngreifer/WeightIt/issues/16'>#16</a>) when using <code>method = "cbps"</code> with factor variables, thanks to <a href='https://github.com/danielebottigliengo'>@danielebottigliengo</a>.</p></li>
+<li><p>Fixed a bug when using binary factor treatments, thanks to Darren Stewart.</p></li>
 </ul>
 </div>
     <div id="weightit-0102" class="section level1">

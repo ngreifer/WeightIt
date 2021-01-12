@@ -71,6 +71,8 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
 
 
+
+
 <!-- mathjax -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script>
@@ -233,119 +235,18 @@ In the presence of missing data, the following value(s) for missing are allowed:
                 method <span class='op'>=</span> <span class='st'>"super"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span>,
                 SL.library <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"SL.glm"</span>, <span class='st'>"SL.stepAIC"</span>,
                                <span class='st'>"SL.glm.interaction"</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Loading required package: nnls</span></div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
-#&gt;  - method: "super" (propensity score weighting with SuperLearner)
-#&gt;  - number of obs.: 614
-#&gt;  - sampling weights: none
-#&gt;  - treatment: 2-category
-#&gt;  - estimand: ATT (focal: 1)
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
-#&gt; 
-#&gt;            Min                                  Max
-#&gt; treated 1.0000      ||                       1.0000
-#&gt; control 0.0059 |---------------------------| 5.8129
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                           
-#&gt;               1     2      3      4      5
-#&gt;  treated      1     1      1      1      1
-#&gt;             589   411    409    296    269
-#&gt;  control 2.4388 2.528 2.7673 3.3921 5.8129
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
-#&gt; 
-#&gt;         Coef of Var  MAD Entropy # Zeros
-#&gt; treated       0.000 0.00  -0.000       0
-#&gt; control       1.130 0.74  -0.408       0
-#&gt; overall       0.803 0.61  -0.203       0
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
-#&gt; 
-#&gt;            Control Treated
-#&gt; Unweighted  429.       185
-#&gt; Weighted    188.67     185</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
-#&gt;     re74, data = lalonde, method = "super", estimand = "ATT", 
-#&gt;     SL.library = c("SL.glm", "SL.stepAIC", "SL.glm.interaction"))
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
-#&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.0535
-#&gt; age         Contin.  -0.1475
-#&gt; educ        Contin.   0.0161
-#&gt; married      Binary  -0.0049
-#&gt; nodegree     Binary   0.0115
-#&gt; re74        Contin.  -0.0247
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;            Control Treated
-#&gt; Unadjusted  429.       185
-#&gt; Adjusted    188.67     185</div><div class='input'>
+</div><div class='output co'>#&gt; <span class='message'>Loading required package: nnls</span></div><div class='output co'>#&gt; <span class='error'>Error in weightit2super(covs = covs, treat = treat, s.weights = s.weights,     subset = by.factor == i, estimand = estimand, focal = focal,     stabilize = stabilize, subclass = subclass, missing = missing,     ...): object 'fit.list' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in summary(W1): object 'W1' not found</span></div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error: object 'W1' not found</span></div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 <span class='op'>(</span><span class='va'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>race</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"super"</span>, estimand <span class='op'>=</span> <span class='st'>"ATE"</span>,
                 SL.library <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"SL.glm"</span>, <span class='st'>"SL.stepAIC"</span>,
                                <span class='st'>"SL.glm.interaction"</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
-#&gt;  - method: "super" (propensity score weighting with SuperLearner)
-#&gt;  - number of obs.: 614
-#&gt;  - sampling weights: none
-#&gt;  - treatment: 3-category (black, hispan, white)
-#&gt;  - estimand: ATE
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
-#&gt; 
-#&gt;           Min                                   Max
-#&gt; black  1.3125 |-------------------|         14.0815
-#&gt; hispan 1.7509  |--------------------------| 19.0788
-#&gt; white  1.0815 |----|                         4.9344
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                                
-#&gt;             485     244     184     182     181
-#&gt;   black  7.5917  7.7461 10.1133 11.6337 14.0815
-#&gt;             392     371     346     345     269
-#&gt;  hispan 16.6957 17.1862 17.2636 17.8517 19.0788
-#&gt;             589     457     409     296      23
-#&gt;   white  4.0945  4.1846  4.3505  4.6072  4.9344
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
-#&gt; 
-#&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; black         0.640 0.391   1.041       0
-#&gt; hispan        0.476 0.372   2.213       0
-#&gt; white         0.388 0.317   0.780       0
-#&gt; overall       0.889 0.558   1.337       0
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
-#&gt; 
-#&gt;             black hispan  white
-#&gt; Unweighted 243.    72.   299.  
-#&gt; Weighted   172.57  58.85 260.06</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, 
-#&gt;     data = lalonde, method = "super", estimand = "ATE", SL.library = c("SL.glm", 
-#&gt;         "SL.stepAIC", "SL.glm.interaction"))
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
-#&gt;             Type Max.Diff.Adj
-#&gt; age      Contin.       0.0968
-#&gt; educ     Contin.       0.0794
-#&gt; married   Binary       0.0450
-#&gt; nodegree  Binary       0.0246
-#&gt; re74     Contin.       0.0328
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;             black hispan  white
-#&gt; Unadjusted 243.    72.   299.  
-#&gt; Adjusted   172.57  58.85 260.06</div><div class='input'>
+</div><div class='output co'>#&gt; <span class='error'>Error in weightit2super(covs = covs, treat = treat, s.weights = s.weights,     subset = by.factor == i, estimand = estimand, focal = focal,     stabilize = stabilize, subclass = subclass, missing = missing,     ...): object 'fit.list' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in summary(W2): object 'W2' not found</span></div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error: object 'W2' not found</span></div><div class='input'>
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
 <span class='co'>#assuming t(8) conditional density for treatment</span>
 <span class='op'>(</span><span class='va'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>re75</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
@@ -375,7 +276,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
 #&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
 #&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge  on full data </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Coefficients already 0 for all failed algorithm(s)</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Coefficients already 0 for all failed algorithm(s)</span></div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "super" (propensity score weighting with SuperLearner)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -386,23 +287,23 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;        Min                                   Max
-#&gt; all 0.0441 |---------------------------| 21.9616
+#&gt; all 0.0436 |---------------------------| 18.1438
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                         
-#&gt;        485     484     483   431     354
-#&gt;  all 9.647 16.9932 18.6322 19.71 21.9616
+#&gt;                                            
+#&gt;         485     484     483     431     354
+#&gt;  all 9.1503 16.1996 17.5786 17.6675 18.1438
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
-#&gt; all       1.369 0.512   0.578       0
+#&gt; all       1.273 0.497   0.542       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             Total
 #&gt; Unweighted 614.  
-#&gt; Weighted   213.86</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
+#&gt; Weighted   234.43</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "super", density = "dt_8", SL.library = c("SL.glm", 
@@ -410,16 +311,16 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Corr.Adj
-#&gt; age      Contin.   0.0303
-#&gt; educ     Contin.   0.0359
-#&gt; married   Binary   0.0584
-#&gt; nodegree  Binary  -0.0608
-#&gt; re74     Contin.   0.0347
+#&gt; age      Contin.   0.0195
+#&gt; educ     Contin.   0.0283
+#&gt; married   Binary   0.0588
+#&gt; nodegree  Binary  -0.0517
+#&gt; re74     Contin.   0.0315
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;             Total
 #&gt; Unadjusted 614.  
-#&gt; Adjusted   213.86</div><div class='input'>
+#&gt; Adjusted   234.43</div><div class='input'>
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
 <span class='co'># using balance SuperLearner to minimize the average</span>
 <span class='co'># KS statistic</span>
@@ -430,59 +331,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
                                <span class='st'>"SL.lda"</span><span class='op'>)</span>,
                 SL.method <span class='op'>=</span> <span class='st'>"method.balance"</span>,
                 stop.method <span class='op'>=</span> <span class='st'>"ks.mean"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
-#&gt;  - method: "super" (propensity score weighting with SuperLearner)
-#&gt;  - number of obs.: 614
-#&gt;  - sampling weights: none
-#&gt;  - treatment: 2-category
-#&gt;  - estimand: ATT (focal: 1)
-#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
-#&gt; 
-#&gt;            Min                                  Max
-#&gt; treated 1.0000                ||             1.0000
-#&gt; control 0.0286 |---------------------------| 1.9927
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                            
-#&gt;               1      2      3      4      5
-#&gt;  treated      1      1      1      1      1
-#&gt;             595    411    409    296    269
-#&gt;  control 1.3131 1.3991 1.4805 1.6043 1.9927
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
-#&gt; 
-#&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       0.802 0.683  -0.527       0
-#&gt; overall       0.646 0.595  -0.264       0
-#&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
-#&gt; 
-#&gt;            Control Treated
-#&gt; Unweighted  429.       185
-#&gt; Weighted    261.28     185</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
-#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
-#&gt;     re74, data = lalonde, method = "super", estimand = "ATT", 
-#&gt;     SL.library = c("SL.glm", "SL.stepAIC", "SL.lda"), SL.method = "method.balance", 
-#&gt;     stop.method = "ks.mean")
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
-#&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.0379
-#&gt; age         Contin.   0.0361
-#&gt; educ        Contin.  -0.0398
-#&gt; married      Binary  -0.0007
-#&gt; nodegree     Binary   0.0096
-#&gt; re74        Contin.  -0.0608
-#&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;            Control Treated
-#&gt; Unadjusted  429.       185
-#&gt; Adjusted    261.28     185</div></span></pre>
+</div><div class='output co'>#&gt; <span class='error'>Error in weightit2super(covs = covs, treat = treat, s.weights = s.weights,     subset = by.factor == i, estimand = estimand, focal = focal,     stabilize = stabilize, subclass = subclass, missing = missing,     ...): object 'fit.list' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error in summary(W4): object 'W4' not found</span></div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; <span class='error'>Error: object 'W4' not found</span></div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
