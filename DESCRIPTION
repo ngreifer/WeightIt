@@ -28,7 +28,6 @@ Suggests:
     brglm2 (>= 0.5.2),
     osqp (>= 0.6.0.3),
     survey,
-    jtools (>= 2.0.2),
     boot,
     MASS,
     gbm (>= 2.1.3),
