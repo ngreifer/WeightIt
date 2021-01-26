@@ -727,7 +727,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
 weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
   A <- list(...)
 
-  warning("method = \"twang\" is deprecated; please use method = \"gbm\" for increased performance and functionality.", immediate. = TRUE, call. = FALSE)
+  warning("method = \"twang\" is deprecated; please use method = \"gbm\" for improved performance and increased functionality.", immediate. = TRUE, call. = FALSE)
 
   if (is_null(A$stop.method)) {
     warning("No stop.method was provided. Using \"es.mean\".",
@@ -1740,7 +1740,13 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
     }
   }
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  d.moments <- max(if_null_then(A[["d.moments"]], 1), moments)
+  k <- ncol(covs)
+
+  poly.covs <- int.poly.f(covs, poly = d.moments)
+  int.covs <- int.poly.f(covs, int = int)
+  covs <- cbind(covs, poly.covs, int.covs)
+
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
   # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -1756,15 +1762,19 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
     else q <- A[["base.weight"]]
   }
 
-  t.moments <- if_null_then(A[["t.moments"]], 1)
-  t.mat <- poly(treat, degree = t.moments)
+  t.mat <- poly(treat, degree = d.moments)
 
   treat_sc <- mat_div(center(t.mat, at = cobalt::col_w_mean(t.mat, s.weights)),
                      cobalt::col_w_sd(t.mat, s.weights))
   covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, s.weights)),
                      cobalt::col_w_sd(covs, s.weights))
 
-  gTX <- do.call("cbind", c(list(treat_sc, covs_sc), lapply(1, function(x) treat_sc[,x] * covs_sc)))
+  kp <- ncol(poly.covs)/(d.moments-1)
+  cov_include <- c(seq_len(k),
+                   if (moments > 1) k + unlist(lapply(seq_len(moments - 1), function(i) i + (d.moments - 1)*(seq_len(kp)-1))),
+                   if (int) seq_col(covs)[-seq_len(k + ncol(poly.covs))])
+
+  gTX <- do.call("cbind", c(list(treat_sc, covs_sc, treat_sc[,1] * covs_sc[,cov_include])))
 
   #----Code written by Stefan Tubbicke---#
   #define objective function (Lagrange dual)
@@ -1960,6 +1970,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     A[["SL.method"]] <- method.balance(stop.method)
   }
 
+  fit.list <- info <- make_list(levels(treat))
   ps <- make_df(levels(treat), nrow = length(treat))
 
   for (i in levels(treat)) {
