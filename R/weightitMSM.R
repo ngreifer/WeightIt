@@ -344,8 +344,8 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
       out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
       out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(all = mean.abs.dev(w)/mean_fast(w))
-      out$negative.entropy <- c(all = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+      out$scaled.mad <- c(all = mean.abs.dev(w/mean_fast(w)))
+      out$negative.entropy <- c(all = neg_ent(w))
       out$num.zeros <- c(overall = sum(check_if_zero(w)))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
@@ -374,17 +374,13 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                           control = sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])])
 
       out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
-                           control = sd(w[t==0])/mean_fast(w[t==0]),
-                           overall = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(treated = mean.abs.dev(w[t==1])/mean_fast(w[t==1]),
-                          control = mean.abs.dev(w[t==0])/mean_fast(w[t==0]),
-                          overall = mean.abs.dev(w)/mean_fast(w))
-      out$negative.entropy <- c(treated = sum(w[t==1 & w>0]*log(w[t==1 & w>0]))/sum(w[t==1 & w>0]),
-                                control = sum(w[t==0 & w>0]*log(w[t==0 & w>0]))/sum(w[t==0 & w>0]),
-                                overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+                           control = sd(w[t==0])/mean_fast(w[t==0]))
+      out$scaled.mad <- c(treated = mean.abs.dev(w[t==1]/mean_fast(w[t==1])),
+                          control = mean.abs.dev(w[t==0]/mean_fast(w[t==0])))
+      out$negative.entropy <- c(treated = neg_ent(w[t==1]),
+                                control = neg_ent(w[t==0]))
       out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
-                         control = sum(check_if_zero(w[t==0])),
-                         overall = sum(check_if_zero(w)))
+                         control = sum(check_if_zero(w[t==0])))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
       nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
@@ -408,12 +404,11 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                                  names(top.weights))
       out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
                            overall = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
+      out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x]/mean_fast(w[t==x])), numeric(1L)),
                           overall = mean.abs.dev(w)/mean_fast(w))
-      out$negative.entropy <- c(vapply(levels(t), function(x) sum(w[t==x & w>0]*log(w[t==x & w>0]))/sum(w[t==x & w>0]), numeric(1L)),
+      out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)),
                                 overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
-      out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
-                         overall = sum(check_if_zero(w)))
+      out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
       nn <- make_df(levels(t), c("Unweighted", "Weighted"))
