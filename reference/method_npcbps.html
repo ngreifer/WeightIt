@@ -47,14 +47,14 @@
 
 
 <meta property="og:title" content="Nonparametric Covariate Balancing Propensity Score Weighting — method_npcbps" />
-<meta property="og:description" content="This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting method = &quot;npcbps&quot; in the call to weightit or weightitMSM. This method can be used with binary, multinomial, and continuous treatments.
-In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on npCBPS from the CBPS package.
+<meta property="og:description" content="This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting method = &quot;npcbps&quot; in the call to weightit() or weightitMSM(). This method can be used with binary, multinomial, and continuous treatments.
+In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on npCBPS() from the CBPS package.
 Binary Treatments
-For binary treatments, this method estimates the weights using npCBPS. The ATE is the only estimand allowed. The weights are taken from the output of the npCBPS fit object.
+For binary treatments, this method estimates the weights using npCBPS(). The ATE is the only estimand allowed. The weights are taken from the output of the npCBPS fit object.
 Multinomial Treatments
-For multinomial treatments, this method estimates the weights using npCBPS. The ATE is the only estimand allowed. The weights are taken from the output of the npCBPS fit object.
+For multinomial treatments, this method estimates the weights using npCBPS(). The ATE is the only estimand allowed. The weights are taken from the output of the npCBPS fit object.
 Continuous Treatments
-For continuous treatments, this method estimates the weights using npCBPS. The weights are taken from the output of the npCBPS fit object.
+For continuous treatments, this method estimates the weights using npCBPS(). The weights are taken from the output of the npCBPS fit object.
 Longitudinal Treatments
 For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how CBMSM in the CBPS package estimates weights for longitudinal treatments.
 Sampling Weights
@@ -142,14 +142,14 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting <code>method = "npcbps"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
-<p>In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>npCBPS</a></code> from the <a href='https://CRAN.R-project.org/package=CBPS'><span class="pkg">CBPS</span></a> package.</p>
+    <p>This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting <code>method = "npcbps"</code> in the call to <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
+<p>In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on <code>npCBPS()</code> from the <a href='https://CRAN.R-project.org/package=CBPS'><span class="pkg">CBPS</span></a> package.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
-<p>For binary treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>npCBPS</a></code>. The ATE is the only estimand allowed. The weights are taken from the output of the <code>npCBPS</code> fit object.</p>
+<p>For binary treatments, this method estimates the weights using <code>npCBPS()</code>. The ATE is the only estimand allowed. The weights are taken from the output of the <code>npCBPS</code> fit object.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
-<p>For multinomial treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>npCBPS</a></code>. The ATE is the only estimand allowed. The weights are taken from the output of the <code>npCBPS</code> fit object.</p>
+<p>For multinomial treatments, this method estimates the weights using <code>npCBPS()</code>. The ATE is the only estimand allowed. The weights are taken from the output of the <code>npCBPS</code> fit object.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
-<p>For continuous treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>npCBPS</a></code>. The weights are taken from the output of the <code>npCBPS</code> fit object.</p>
+<p>For continuous treatments, this method estimates the weights using <code>npCBPS()</code>. The weights are taken from the output of the <code>npCBPS</code> fit object.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how <code><a href='https://rdrr.io/pkg/CBPS/man/CBMSM.html'>CBMSM</a></code> in the <span class="pkg">CBPS</span> package estimates weights for longitudinal treatments.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Sampling Weights</h3>
@@ -167,19 +167,19 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="additional-arguments"><a class="anchor" href="#additional-arguments"></a>Additional Arguments</h2>
 
-    <p>All arguments to <code>npCBPS</code> can be passed through <code>weightit</code> or <code>weightitMSM</code>.</p>
-<p>All arguments take on the defaults of those in <code>npCBPS</code>.</p>
+    <p>All arguments to <code>npCBPS()</code> can be passed through <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>.</p>
+<p>All arguments take on the defaults of those in <code>npCBPS()</code>.</p>
     <h2 class="hasAnchor" id="additional-outputs"><a class="anchor" href="#additional-outputs"></a>Additional Outputs</h2>
 
     
 <dl>
-<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the nonparametric CB(G)PS model fit. The output of the call to <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>CBPS::npCBPS</a></code>.</p></dd>
+<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the nonparametric CB(G)PS model fit. The output of the call to <code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>CBPS::npCBPS()</a></code>.</p></dd>
 
 </dl>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical likelihood of the data given the weights. npCBPS is similar to entropy balancing and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the <code>cor.prior</code> argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.</p>
+    <p>Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical likelihood of the data given the weights. npCBPS is similar to <a href='method_ebal.html'>entropy balancing</a> and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the <code>cor.prior</code> argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.</p>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     
@@ -187,8 +187,8 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <p>Fong, C., Hazlett, C., &amp; Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. The Annals of Applied Statistics, 12(1), 156–177. doi: <a href='https://doi.org/10.1214/17-AOAS1101'>10.1214/17-AOAS1101</a></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p>
-<p><code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>CBPS::npCBPS</a></code> for the fitting function</p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code>, <code><a href='weightitMSM.html'>weightitMSM()</a></code>, <code><a href='method_cbps.html'>method_cbps</a></code></p>
+<p><code><a href='https://rdrr.io/pkg/CBPS/man/npCBPS.html'>CBPS::npCBPS()</a></code> for the fitting function</p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># Examples take a long time to run</span>

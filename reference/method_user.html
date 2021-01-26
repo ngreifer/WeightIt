@@ -47,7 +47,7 @@
 
 
 <meta property="og:title" content="User-Defined Functions for Estimating Weights — method_user" />
-<meta property="og:description" content="This page explains the details of estimating weights using a user-defined function. The function must take in arguments that are passed to it by weightit or weightitMSM and return a vector of weights or a list containing the weights.
+<meta property="og:description" content="This page explains the details of estimating weights using a user-defined function. The function must take in arguments that are passed to it by weightit() or weightitMSM() and return a vector of weights or a list containing the weights.
 To supply  user-defined function, the function object should be entered directly to method; for example, for a function fun, method = fun.
 Point Treatments
 The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:
@@ -57,15 +57,15 @@ s.weights: a numeric vector of sampling weights, one for each unit.
 ps: a numeric vector of propensity scores.
 subset: a logical vector the same length as treat that is TRUE for units to be included in the estimation and FALSE otherwise. This is used to subset the input objects when exact is used. treat, covs, s.weights, and ps, if supplied, will already have been subsetted by subset.
 estimand: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If &quot;ATC&quot; was supplied to estimand, weightit sets focal to the control level (usually 0 or the lowest level of treat) and sets estimand to &quot;ATT&quot;.
-focal: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). weightit ensures the value of focal is a level of treat.
-stabilize: a logical vector of length 1. It is not processed by weightit before it reaches the fitting function.
-moments: a numeric vector of length 1. It is not processed by weightit before it reaches the fitting function except that as.integer is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.
-int: a logical vector of length 1. It is not processed by weightit before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.
+focal: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). weightit() ensures the value of focal is a level of treat.
+stabilize: a logical vector of length 1. It is not processed by weightit() before it reaches the fitting function.
+moments: a numeric vector of length 1. It is not processed by weightit() before it reaches the fitting function except that as.integer is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.
+int: a logical vector of length 1. It is not processed by weightit() before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.
 None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
-In addition, any additional arguments supplied to weightit will be passed on to the fitting function. weightit ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include ... as a parameter.
+In addition, any additional arguments supplied to weightit() will be passed on to the fitting function. weightit() ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include ... as a parameter.
 The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither &quot;w&quot; or &quot;weights&quot;. If a list, the list can contain other named entries, but only entries named &quot;w&quot;, &quot;weights&quot;, &quot;ps&quot;, and &quot;fit.obj&quot; will be processed. &quot;ps&quot; is a vector of propensity scores and &quot;fit.obj&quot; should be an object used in the fitting process that a user may want to examine and that is included in the weightit output object as &quot;obj&quot; when include.obj = TRUE. The &quot;ps&quot; and &quot;fit.obj&quot; components are optional, but &quot;weights&quot; or &quot;w&quot; is required.
 Longitudinal Treatments
-Longitudinal treatments can be handled either by running the fitting function for point treatments for each time point and multiplying the resulting weights together or by running a method that accommodates multiple time points and outputs a single set of weights. For the former, weightitMSM can be used with the user-defined function just as it is with weightit. The latter method is not yet accommodated by weightitMSM, but will be someday, maybe.
+Longitudinal treatments can be handled either by running the fitting function for point treatments for each time point and multiplying the resulting weights together or by running a method that accommodates multiple time points and outputs a single set of weights. For the former, weightitMSM() can be used with the user-defined function just as it is with weightit(). The latter method is not yet accommodated by weightitMSM(), but will be someday, maybe.
 " />
 <meta property="og:image" content="/logo.png" />
 
@@ -143,7 +143,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights using a user-defined function. The function must take in arguments that are passed to it by <code>weightit</code> or <code>weightitMSM</code> and return a vector of weights or a list containing the weights.</p>
+    <p>This page explains the details of estimating weights using a user-defined function. The function must take in arguments that are passed to it by <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code> and return a vector of weights or a list containing the weights.</p>
 <p>To supply  user-defined function, the function object should be entered directly to <code>method</code>; for example, for a function <code>fun</code>, <code>method = fun</code>.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Point Treatments</h3>
 <p>The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:</p><ul>
@@ -153,15 +153,15 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <li><p><code>ps</code>: a numeric vector of propensity scores.</p></li>
 <li><p><code>subset</code>: a logical vector the same length as <code>treat</code> that is <code>TRUE</code> for units to be included in the estimation and <code>FALSE</code> otherwise. This is used to subset the input objects when <code>exact</code> is used. <code>treat</code>, <code>covs</code>, <code>s.weights</code>, and <code>ps</code>, if supplied, will already have been subsetted by <code>subset</code>.</p></li>
 <li><p><code>estimand</code>: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to estimand, <code>weightit</code> sets <code>focal</code> to the control level (usually 0 or the lowest level of <code>treat</code>) and sets <code>estimand</code> to "ATT".</p></li>
-<li><p><code>focal</code>: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). <code>weightit</code> ensures the value of focal is a level of <code>treat</code>.</p></li>
-<li><p><code>stabilize</code>: a logical vector of length 1. It is not processed by <code>weightit</code> before it reaches the fitting function.</p></li>
-<li><p><code>moments</code>: a numeric vector of length 1. It is not processed by <code>weightit</code> before it reaches the fitting function except that <code>as.integer</code> is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.</p></li>
-<li><p><code>int</code>: a logical vector of length 1. It is not processed by <code>weightit</code> before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.</p></li>
+<li><p><code>focal</code>: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). <code><a href='weightit.html'>weightit()</a></code> ensures the value of focal is a level of <code>treat</code>.</p></li>
+<li><p><code>stabilize</code>: a logical vector of length 1. It is not processed by <code><a href='weightit.html'>weightit()</a></code> before it reaches the fitting function.</p></li>
+<li><p><code>moments</code>: a numeric vector of length 1. It is not processed by <code><a href='weightit.html'>weightit()</a></code> before it reaches the fitting function except that <code>as.integer</code> is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.</p></li>
+<li><p><code>int</code>: a logical vector of length 1. It is not processed by <code><a href='weightit.html'>weightit()</a></code> before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.</p></li>
 </ul><p>None of these parameters are required to be in the fitting function. These are simply those that are automatically available.</p>
-<p>In addition, any additional arguments supplied to <code>weightit</code> will be passed on to the fitting function. <code>weightit</code> ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include <code>...</code> as a parameter.</p>
+<p>In addition, any additional arguments supplied to <code><a href='weightit.html'>weightit()</a></code> will be passed on to the fitting function. <code><a href='weightit.html'>weightit()</a></code> ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include <code>...</code> as a parameter.</p>
 <p>The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither "w" or "weights". If a list, the list can contain other named entries, but only entries named "w", "weights", "ps", and "fit.obj" will be processed. "ps" is a vector of propensity scores and "fit.obj" should be an object used in the fitting process that a user may want to examine and that is included in the <code>weightit</code> output object as "obj" when <code>include.obj = TRUE</code>. The "ps" and "fit.obj" components are optional, but "weights" or "w" is required.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
-<p>Longitudinal treatments can be handled either by running the fitting function for point treatments for each time point and multiplying the resulting weights together or by running a method that accommodates multiple time points and outputs a single set of weights. For the former, <code>weightitMSM</code> can be used with the user-defined function just as it is with <code>weightit</code>. The latter method is not yet accommodated by <code>weightitMSM</code>, but will be someday, maybe.</p>
+<p>Longitudinal treatments can be handled either by running the fitting function for point treatments for each time point and multiplying the resulting weights together or by running a method that accommodates multiple time points and outputs a single set of weights. For the former, <code><a href='weightitMSM.html'>weightitMSM()</a></code> can be used with the user-defined function just as it is with <code><a href='weightit.html'>weightit()</a></code>. The latter method is not yet accommodated by <code><a href='weightitMSM.html'>weightitMSM()</a></code>, but will be someday, maybe.</p>
 
     </div>
 
@@ -169,7 +169,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code>, <code><a href='weightitMSM.html'>weightitMSM()</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>
@@ -218,9 +218,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       0.823 0.701  -0.515       0
-#&gt; overall       0.657 0.604  -0.257       0
+#&gt; treated       0.000 0.000   -0.00       0
+#&gt; control       0.823 0.701    0.33       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -291,9 +290,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.481 0.376   1.867       0
-#&gt; control       0.768 0.494   2.789       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.481 0.376   0.117       0
+#&gt; control       0.768 0.494   0.222       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -318,9 +316,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.960 0.653   2.398       0
-#&gt; control       0.737 0.384   2.228       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.960 0.653   0.336       0
+#&gt; control       0.737 0.384   0.159       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -345,9 +342,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.773 0.565   2.167       0
-#&gt; control       0.873 0.469   2.465       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.773 0.565   0.245       0
+#&gt; control       0.873 0.469   0.227       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 

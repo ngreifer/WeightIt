@@ -47,16 +47,16 @@
 
 
 <meta property="og:title" content="Covariate Balancing Propensity Score Weighting — method_cbps" />
-<meta property="og:description" content="This page explains the details of estimating weights from covariate balancing propensity scores by setting method = &quot;cbps&quot; in the call to weightit or weightitMSM. This method can be used with binary, multinomial, and continuous treatments.
-In general, this method relies on estimating propensity scores using generalized method of moments and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on CBPS from the CBPS package.
+<meta property="og:description" content="This page explains the details of estimating weights from covariate balancing propensity scores by setting method = &quot;cbps&quot; in the call to weightit() or weightitMSM(). This method can be used with binary, multinomial, and continuous treatments.
+In general, this method relies on estimating propensity scores using generalized method of moments and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on CBPS() from the CBPS package.
 Binary Treatments
-For binary treatments, this method estimates the propensity scores and weights using CBPS. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the CBPS fit object. When the estimand is the ATE, the return propensity score is the probability of being in the &quot;second&quot; treatment group, i.e., levels(factor(treat))[2]; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.
+For binary treatments, this method estimates the propensity scores and weights using CBPS(). The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the CBPS fit object. When the estimand is the ATE, the return propensity score is the probability of being in the &quot;second&quot; treatment group, i.e., levels(factor(treat))[2]; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.
 Multinomial Treatments
-For multinomial treatments with three or four categories and when the estimand is the ATE, this method estimates the propensity scores and weights using one call to CBPS. For multinomial treatments with three or four categories or when the estimand is the ATT, this method estimates the propensity scores and weights using multiple calls to CBPS. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the CBPS fit objects.
+For multinomial treatments with three or four categories and when the estimand is the ATE, this method estimates the propensity scores and weights using one call to CBPS(). For multinomial treatments with three or four categories or when the estimand is the ATT, this method estimates the propensity scores and weights using multiple calls to CBPS(). The following estimands are allowed: ATE and ATT. The weights are taken from the output of the CBPS fit objects.
 Continuous Treatments
-For continuous treatments, the generalized propensity score and weights are estimated using CBPS.
+For continuous treatments, the generalized propensity score and weights are estimated using CBPS().
 Longitudinal Treatments
-For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how CBMSM in the CBPS package estimates weights for longitudinal treatments.
+For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how CBMSM() in the CBPS package estimates weights for longitudinal treatments.
 Sampling Weights
 Sampling weights are supported through s.weights in all scenarios. See Note about sampling weights.
 Missing Data
@@ -142,16 +142,16 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights from covariate balancing propensity scores by setting <code>method = "cbps"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
-<p>In general, this method relies on estimating propensity scores using generalized method of moments and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS</a></code> from the <a href='https://CRAN.R-project.org/package=CBPS'><span class="pkg">CBPS</span></a> package.</p>
+    <p>This page explains the details of estimating weights from covariate balancing propensity scores by setting <code>method = "cbps"</code> in the call to <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
+<p>In general, this method relies on estimating propensity scores using generalized method of moments and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on <code>CBPS()</code> from the <a href='https://CRAN.R-project.org/package=CBPS'><span class="pkg">CBPS</span></a> package.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
-<p>For binary treatments, this method estimates the propensity scores and weights using <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS</a></code>. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the <code>CBPS</code> fit object. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., <code>levels(factor(treat))[2]</code>; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.</p>
+<p>For binary treatments, this method estimates the propensity scores and weights using <code>CBPS()</code>. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the <code>CBPS</code> fit object. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., <code>levels(factor(treat))[2]</code>; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
-<p>For multinomial treatments with three or four categories and when the estimand is the ATE, this method estimates the propensity scores and weights using one call to <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS</a></code>. For multinomial treatments with three or four categories or when the estimand is the ATT, this method estimates the propensity scores and weights using multiple calls to <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS</a></code>. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the <code>CBPS</code> fit objects.</p>
+<p>For multinomial treatments with three or four categories and when the estimand is the ATE, this method estimates the propensity scores and weights using one call to <code>CBPS()</code>. For multinomial treatments with three or four categories or when the estimand is the ATT, this method estimates the propensity scores and weights using multiple calls to <code>CBPS()</code>. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the <code>CBPS</code> fit objects.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
-<p>For continuous treatments, the generalized propensity score and weights are estimated using <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS</a></code>.</p>
+<p>For continuous treatments, the generalized propensity score and weights are estimated using <code>CBPS()</code>.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
-<p>For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how <code><a href='https://rdrr.io/pkg/CBPS/man/CBMSM.html'>CBMSM</a></code> in the <span class="pkg">CBPS</span> package estimates weights for longitudinal treatments.</p>
+<p>For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how <code>CBMSM()</code> in the <span class="pkg">CBPS</span> package estimates weights for longitudinal treatments.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Sampling Weights</h3>
 <p>Sampling weights are supported through <code>s.weights</code> in all scenarios. See Note about sampling weights.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Missing Data</h3>
@@ -167,18 +167,18 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="additional-arguments"><a class="anchor" href="#additional-arguments"></a>Additional Arguments</h2>
 
-    <p>All arguments to <code>CBPS</code> can be passed through <code>weightit</code> or <code>weightitMSM</code>, with the following exceptions:</p><ul>
-<li><p><code>method</code> in <code>CBPS</code> is replaced with the argument <code>over</code> in <code>weightit</code>. Setting <code>over = FALSE</code> in <code>weightit</code> is the equivalent of setting <code>method = "exact"</code> in <code>CBPS</code>.</p></li>
+    <p>All arguments to <code>CBPS()</code> can be passed through <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>, with the following exceptions:</p><ul>
+<li><p><code>method</code> in <code>CBPS()</code> is replaced with the argument <code>over</code> in <code><a href='weightit.html'>weightit()</a></code>. Setting <code>over = FALSE</code> in <code><a href='weightit.html'>weightit()</a></code> is the equivalent of setting <code>method = "exact"</code> in <code>CBPS()</code>.</p></li>
 <li><p><code>sample.weights</code> is ignored because sampling weights are passed using <code>s.weights</code>.</p></li>
 <li><p><code>standardize</code> is ignored.</p></li>
 </ul>
 
-<p>All arguments take on the defaults of those in <code>CBPS</code>. It may be useful in many cases to set <code>over = FALSE</code>, especially with continuous treatments.</p>
+<p>All arguments take on the defaults of those in <code>CBPS()</code>. It may be useful in many cases to set <code>over = FALSE</code>, especially with continuous treatments.</p>
     <h2 class="hasAnchor" id="additional-outputs"><a class="anchor" href="#additional-outputs"></a>Additional Outputs</h2>
 
     
 <dl>
-<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the CB(G)PS model fit. For binary treatments, multinomial treatments with <code>estimand = "ATE"</code> and four or fewer treatment levels, and continuous treatments, the output of the call to <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS::CBPS</a></code>. For multinomial treatments with <code>estimand = "ATT"</code> or with more than four treatment levels, a list of <code>CBPS</code> fit objects.</p></dd>
+<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the CB(G)PS model fit. For binary treatments, multinomial treatments with <code>estimand = "ATE"</code> and four or fewer treatment levels, and continuous treatments, the output of the call to <code>CBPS()</code>. For multinomial treatments with <code>estimand = "ATT"</code> or with more than four treatment levels, a list of <code>CBPS</code> fit objects.</p></dd>
 
 </dl>
 
@@ -199,11 +199,11 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p>
-<p><code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS::CBPS</a></code> for the fitting function</p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code>, <code><a href='weightitMSM.html'>weightitMSM()</a></code></p>
+<p><code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS::CBPS()</a></code> for the fitting function</p></div>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
-    <p>When sampling weights are used with <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS::CBPS</a></code>, the estimated weights already incorporate the sampling weights. When <code>weightit</code> is used with <code>method = "cbps"</code>, the estimated weights are separated from the sampling weights, as they are with all other methods.</p>
+    <p>When sampling weights are used with <code><a href='https://rdrr.io/pkg/CBPS/man/CBPS.html'>CBPS::CBPS()</a></code>, the estimated weights already incorporate the sampling weights. When <code><a href='weightit.html'>weightit()</a></code> is used with <code>method = "cbps"</code>, the estimated weights are separated from the sampling weights, as they are with all other methods.</p>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='kw'><a href='https://rdrr.io/r/base/library.html'>library</a></span><span class='op'>(</span><span class='st'><a href='https://ngreifer.github.io/cobalt/'>"cobalt"</a></span><span class='op'>)</span>
@@ -238,9 +238,8 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000   -0.00       0
-#&gt; control       0.839 0.707   -0.50       0
-#&gt; overall       0.663 0.606   -0.25       0
+#&gt; treated       0.000 0.000  -0.000       0
+#&gt; control       0.839 0.707   0.341       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -298,7 +297,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
-#&gt; all       1.152 0.449   0.291       0
+#&gt; all       1.152 0.449   0.288       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 

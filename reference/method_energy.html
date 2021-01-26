@@ -47,14 +47,14 @@
 
 
 <meta property="og:title" content="Energy Balancing — method_energy" />
-<meta property="og:description" content="This page explains the details of estimating weights using energy balancing by setting method = &quot;energy&quot; in the call to weightit or weightitMSM. This method can be used with binary and multinomial treatments. 
+<meta property="og:description" content="This page explains the details of estimating weights using energy balancing by setting method = &quot;energy&quot; in the call to weightit() or weightitMSM(). This method can be used with binary and multinomial treatments. 
 In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multinomial treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups.
 
-This method relies on code written for WeightIt using osqp from the osqp package to perform the optimization. This method may be slow or memory-intensive for large datasets.
+This method relies on code written for WeightIt using osqp() from the osqp package to perform the optimization. This method may be slow or memory-intensive for large datasets.
 Binary Treatments
-For binary treatments, this method estimates the weights using osqp using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE, ATT, and ATC.
+For binary treatments, this method estimates the weights using osqp() using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE, ATT, and ATC.
 Multinomial Treatments
-For multinomial treatments, this method estimates the weights using osqp using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE and ATT.
+For multinomial treatments, this method estimates the weights using osqp() using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE and ATT.
 Continuous Treatments
 Continuous treatments are not currently supported.
 
@@ -145,14 +145,14 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights using energy balancing by setting <code>method = "energy"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary and multinomial treatments. <!-- %This method can be used with binary, multinomial, and continuous treatments. --></p>
+    <p>This page explains the details of estimating weights using energy balancing by setting <code>method = "energy"</code> in the call to <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. This method can be used with binary and multinomial treatments. <!-- %This method can be used with binary, multinomial, and continuous treatments. --></p>
 <p>In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multinomial treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups.
 <!-- %For continuous treatments, this is the energy covariance between the treatment variable and the covariates. -->
-This method relies on code written for <span class="pkg">WeightIt</span> using <code><a href='https://rdrr.io/pkg/osqp/man/osqp.html'>osqp</a></code> from the <a href='https://CRAN.R-project.org/package=osqp'><span class="pkg">osqp</span></a> package to perform the optimization. This method may be slow or memory-intensive for large datasets.</p>
+This method relies on code written for <span class="pkg">WeightIt</span> using <code>osqp()</code> from the <a href='https://CRAN.R-project.org/package=osqp'><span class="pkg">osqp</span></a> package to perform the optimization. This method may be slow or memory-intensive for large datasets.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
-<p>For binary treatments, this method estimates the weights using <code>osqp</code> using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE, ATT, and ATC.</p>
+<p>For binary treatments, this method estimates the weights using <code>osqp()</code> using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE, ATT, and ATC.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
-<p>For multinomial treatments, this method estimates the weights using <code>osqp</code> using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE and ATT.</p>
+<p>For multinomial treatments, this method estimates the weights using <code>osqp()</code> using formulas described by Huling and Mak (2020). The following estimands are allowed: ATE and ATT.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
 <p>Continuous treatments are not currently supported.
 <!-- %For continuous treatments, this method estimates the weights using \code{osqp} using (unpublished) formulas based on the original formulas for energy covariance. The means of the included covariates are constrained to be equal to their unweighted means. \strong{This method has not been studied and should be used with caution.} --></p>
@@ -175,7 +175,7 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
 
     <p>For binary and multinomial treatments, the following additional arguments can be specified:</p><dl>
 <dt><code>improved</code></dt><dd><p><code>logical</code>; whether to use the improved energy balancing weights as described by Huling and Mak (2020) when <code>estimand = "ATE"</code>. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2020) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is <code>TRUE</code>; set to <code>FALSE</code> to use the standard energy balancing weights instead (not recommended).</p></dd>
-<dt><code>dist.mat</code></dt><dd><p>a numeric distance matrix to be used instead of the default distance matrix computed by <code>weightit</code>, which uses <code><a href='https://rdrr.io/r/stats/dist.html'>dist</a></code> with default arguments. Note that some distance matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit.</p></dd>
+<dt><code>dist.mat</code></dt><dd><p>a numeric distance matrix to be used instead of the default distance matrix computed by <code><a href='weightit.html'>weightit()</a></code>, which uses <code><a href='https://rdrr.io/r/stats/dist.html'>dist()</a></code> with default arguments. Note that some distance matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit.</p></dd>
 
 </dl><p>The <code>moments</code> argument functions differently for <code>method = "energy"</code> from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2020). When <code>moments</code> is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multinomial treatments, this involves exact balance on the means of the entered covariates.
 <!-- %For binary and multinomial treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates. --></p>
@@ -183,7 +183,7 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
 
     
 <dl>
-<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the output of the call to <code><a href='https://rdrr.io/pkg/osqp/man/solve_osqp.html'>solve_osqp</a></code>, which contains the dual variables and convergence information.</p></dd>
+<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the output of the call to <code>solve_osqp()</code>, which contains the dual variables and convergence information.</p></dd>
 
 </dl>
 
@@ -205,7 +205,7 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
 <p><!-- %Zhu, Y., Coffman, D. L., &amp; Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1). \doi{10.1515/jci-2014-0022} --></p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code>, <code><a href='weightitMSM.html'>weightitMSM()</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'>

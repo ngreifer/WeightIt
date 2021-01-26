@@ -47,8 +47,8 @@
 
 
 <meta property="og:title" content="Generate Balancing Weights for Longitudinal Treatments — weightitMSM" />
-<meta property="og:description" content="weightitMSM allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which weightit calls; these packages must be installed to use the desired method. Also included are print and summary methods for examining the output.
-Currently only &quot;wide&quot; data sets, where each row corresponds to a unit's entire variable history, are supported. You can use reshape or other functions to transform your data into this format; see example below." />
+<meta property="og:description" content="weightitMSM() allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which weightit() calls; these packages must be installed to use the desired method. Also included are print() and summary() methods for examining the output.
+Currently only &quot;wide&quot; data sets, where each row corresponds to a unit's entire variable history, are supported. You can use reshape() or other functions to transform your data into this format; see example below." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -125,8 +125,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     </div>
 
     <div class="ref-description">
-    <p><code>weightitMSM</code> allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which <code><a href='weightit.html'>weightit</a></code> calls; these packages must be installed to use the desired method. Also included are <code>print</code> and <code>summary</code> methods for examining the output.</p>
-<p>Currently only "wide" data sets, where each row corresponds to a unit's entire variable history, are supported. You can use <code><a href='https://rdrr.io/r/stats/reshape.html'>reshape</a></code> or other functions to transform your data into this format; see example below.</p>
+    <p><code>weightitMSM()</code> allows for the easy generation of balancing weights for marginal structural models for time-varying treatments using a variety of available methods for binary, continuous, and multinomial treatments. Many of these methods exist in other packages, which <code><a href='weightit.html'>weightit()</a></code> calls; these packages must be installed to use the desired method. Also included are <code><a href='https://rdrr.io/r/base/print.html'>print()</a></code> and <code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code> methods for examining the output.</p>
+<p>Currently only "wide" data sets, where each row corresponds to a unit's entire variable history, are supported. You can use <code><a href='https://rdrr.io/r/stats/reshape.html'>reshape()</a></code> or other functions to transform your data into this format; see example below.</p>
     </div>
 
     <pre class="usage"><span class='fu'>weightitMSM</span><span class='op'>(</span><span class='va'>formula.list</span>,
@@ -161,7 +161,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     </tr>
     <tr>
       <th>method</th>
-      <td><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href='weightit.html'>weightit</a></code> for allowable options. The default is <code>"ps"</code>, which estimates the weights using generalized linear models.</p></td>
+      <td><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href='weightit.html'>weightit()</a></code> for allowable options. The default is <code>"ps"</code>, which estimates the weights using generalized linear models.</p></td>
     </tr>
     <tr>
       <th>stabilize</th>
@@ -189,7 +189,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     </tr>
     <tr>
       <th>missing</th>
-      <td><p><code>character</code>; how missing data should be handled. The options and defaults depend on the <code>method</code> used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in <span class="pkg">weightit</span> and should probably be used instead. See the <span class="pkg">MatchThem</span> package for the use of <code>weightit</code> with multiply imputed data.</p></td>
+      <td><p><code>character</code>; how missing data should be handled. The options and defaults depend on the <code>method</code> used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in <code><a href='weightit.html'>weightit()</a></code> and should probably be used instead. See the <a href='https://CRAN.R-project.org/package=MatchThem'><span class="pkg">MatchThem</span></a> package for the use of <code><a href='weightit.html'>weightit()</a></code> with multiply imputed data.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -209,11 +209,11 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     </tr>
     <tr>
       <th>...</th>
-      <td><p>other arguments for functions called by <code>weightit</code> that control aspects of fitting that are not covered by the above arguments. See Details at <code><a href='weightit.html'>weightit</a></code>.</p></td>
+      <td><p>other arguments for functions called by <code><a href='weightit.html'>weightit()</a></code> that control aspects of fitting that are not covered by the above arguments. See Details at <code><a href='weightit.html'>weightit()</a></code>.</p></td>
     </tr>
     <tr>
       <th>x</th>
-      <td><p>a <code>weightitMSM</code> object; the output of a call to <code>weightitMSM</code>.</p></td>
+      <td><p>a <code>weightitMSM</code> object; the output of a call to <code>weightitMSM()</code>.</p></td>
     </tr>
     </table>
 
@@ -223,7 +223,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <dt>weights</dt><dd><p>The estimated weights, one for each unit.</p></dd>
   <dt>treat.list</dt><dd><p>A list of the values of the time-varying treatment variables.</p></dd>
   <dt>covs.list</dt><dd><p>A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.</p></dd>
-  <dt>data</dt><dd><p>The data.frame originally entered to <code>weightitMSM</code>.</p></dd>
+  <dt>data</dt><dd><p>The data.frame originally entered to <code>weightitMSM()</code>.</p></dd>
   <dt>estimand</dt><dd><p>"ATE", currently the only estimand for MSMs with binary or multinomial treatments.</p></dd>
   <dt>method</dt><dd><p>The weight estimation method specified.</p></dd>
   <dt>ps.list</dt><dd><p>A list of the estimated propensity scores (if any) at each time point.</p></dd>
@@ -233,15 +233,15 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>In general, <code>weightitMSM</code> works by separating the estimation of weights into separate procedures for each time period based on the formulas provided. For each formula, <code>weightitMSM</code> simply calls <code>weightit</code> to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing weights.</p>
+    <p>In general, <code>weightitMSM()</code> works by separating the estimation of weights into separate procedures for each time period based on the formulas provided. For each formula, <code>weightitMSM()</code> simply calls <code><a href='weightit.html'>weightit()</a></code> to that formula, collects the weights for each time period, and multiplies them together to arrive at longitudinal balancing weights.</p>
 <p>Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in separate variables.</p>
-<p>The <code>"twang"</code> method, which calls <code>ps</code> in <span class="pkg">twang</span>, yields the same results to a call to <code>iptw</code> in <span class="pkg">twang</span>. However, the <code>cbps</code> method, which calls <code>CBPS</code> in <span class="pkg">CBPS</span>, will yield different results from <code>CBMSM</code> in <span class="pkg">CBPS</span> because <code>CBMSM</code> takes a different approach to generating weights than simply estimating several time-specific models.</p>
+<p>The <code>"twang"</code> method, which calls <code>ps</code> in <span class="pkg">twang</span>, yields the same results to a call to <code>iptw</code> in <span class="pkg">twang</span>. However, the <code>"cbps"</code> method, which calls <code>CBPS()</code> in <span class="pkg">CBPS</span>, will yield different results from <code>CBMSM()</code> in <span class="pkg">CBPS</span> because <code>CBMSM()</code> takes a different approach to generating weights than simply estimating several time-specific models.</p>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Noah Greifer</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code> for information on the allowable methods.</p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code> for information on the allowable methods.</p></div>
     <h2 class="hasAnchor" id="references"><a class="anchor" href="#references"></a>References</h2>
 
     <p>Cole, S. R., &amp; Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. doi: <a href='https://doi.org/10.1093/aje/kwn164'>10.1093/aje/kwn164</a></p>
@@ -288,9 +288,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.481 0.376   1.867       0
-#&gt; control       0.768 0.494   2.789       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.481 0.376   0.117       0
+#&gt; control       0.768 0.494   0.222       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -315,9 +314,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.960 0.653   2.398       0
-#&gt; control       0.737 0.384   2.228       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.960 0.653   0.336       0
+#&gt; control       0.737 0.384   0.159       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -342,9 +340,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.773 0.565   2.167       0
-#&gt; control       0.873 0.469   2.465       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.773 0.565   0.245       0
+#&gt; control       0.873 0.469   0.227       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -400,9 +397,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.481 0.376   1.867       0
-#&gt; control       0.768 0.494   2.789       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.481 0.376   0.117       0
+#&gt; control       0.768 0.494   0.222       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -427,9 +423,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.960 0.653   2.398       0
-#&gt; control       0.737 0.384   2.228       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.960 0.653   0.336       0
+#&gt; control       0.737 0.384   0.159       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -454,9 +449,8 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.773 0.565   2.167       0
-#&gt; control       0.873 0.469   2.465       0
-#&gt; overall       0.857 0.520   2.314       0
+#&gt; treated       0.773 0.565   0.245       0
+#&gt; control       0.873 0.469   0.227       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 

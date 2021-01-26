@@ -47,14 +47,14 @@
 
 
 <meta property="og:title" content="Propensity Score Weighting Using SuperLearner — method_super" />
-<meta property="og:description" content="This page explains the details of estimating weights from SuperLearner-based propensity scores by setting method = &quot;super&quot; in the call to weightit or weightitMSM. This method can be used with binary, multinomial, and continuous treatments.
-In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, regression algorithms are used to estimate generalized propensity scores as the conditional density of treatment given the covariates. This method relies on SuperLearner from the SuperLearner package.
+<meta property="og:description" content="This page explains the details of estimating weights from SuperLearner-based propensity scores by setting method = &quot;super&quot; in the call to weightit() or weightitMSM(). This method can be used with binary, multinomial, and continuous treatments.
+In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, regression algorithms are used to estimate generalized propensity scores as the conditional density of treatment given the covariates. This method relies on SuperLearner() from the SuperLearner package.
 Binary Treatments
-For binary treatments, this method estimates the propensity scores using SuperLearner. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li &amp;amp; Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample &quot;pair-matched&quot; with calipers) are computed as in Yoshida et al. (2017). Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps for details.
+For binary treatments, this method estimates the propensity scores using SuperLearner(). The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 Multinomial Treatments
-For multinomial treatments, the propensity scores are estimated using several calls to SuperLearner, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps for details.
+For multinomial treatments, the propensity scores are estimated using several calls to SuperLearner(), one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 Continuous Treatments
-For continuous treatments, the generalized propensity score is estimated using SuperLearner. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting use.kernel = TRUE. Other arguments to density can be specified to refine the density estimation parameters. plot = TRUE can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+For continuous treatments, the generalized propensity score is estimated using SuperLearner(). In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting use.kernel = TRUE. Other arguments to density() can be specified to refine the density estimation parameters. plot = TRUE can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 Longitudinal Treatments
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
 Sampling Weights
@@ -142,14 +142,14 @@ In the presence of missing data, the following value(s) for missing are allowed:
     </div>
 
     <div class="ref-description">
-    <p>This page explains the details of estimating weights from SuperLearner-based propensity scores by setting <code>method = "super"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
-<p>In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, regression algorithms are used to estimate generalized propensity scores as the conditional density of treatment given the covariates. This method relies on <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner</a></code> from the <a href='https://CRAN.R-project.org/package=SuperLearner'><span class="pkg">SuperLearner</span></a> package.</p>
+    <p>This page explains the details of estimating weights from SuperLearner-based propensity scores by setting <code>method = "super"</code> in the call to <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
+<p>In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, regression algorithms are used to estimate generalized propensity scores as the conditional density of treatment given the covariates. This method relies on <code>SuperLearner()</code> from the <a href='https://CRAN.R-project.org/package=SuperLearner'><span class="pkg">SuperLearner</span></a> package.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
-<p>For binary treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner</a></code>. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas, the weights for the ATO are computed as in Li &amp; Li (2018), and the weights for the ATM (i.e., average treatment effect in the equivalent sample "pair-matched" with calipers) are computed as in Yoshida et al. (2017). Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> for details.</p>
+<p>For binary treatments, this method estimates the propensity scores using <code>SuperLearner()</code>. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> for details.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
-<p>For multinomial treatments, the propensity scores are estimated using several calls to <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner</a></code>, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> for details.</p>
+<p>For multinomial treatments, the propensity scores are estimated using several calls to <code>SuperLearner()</code>, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> for details.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
-<p>For continuous treatments, the generalized propensity score is estimated using <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner</a></code>. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting <code>use.kernel = TRUE</code>. Other arguments to <code><a href='https://rdrr.io/r/stats/density.html'>density</a></code> can be specified to refine the density estimation parameters. <code>plot = TRUE</code> can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.</p>
+<p>For continuous treatments, the generalized propensity score is estimated using <code>SuperLearner()</code>. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting <code>use.kernel = TRUE</code>. Other arguments to <code><a href='https://rdrr.io/r/stats/density.html'>density()</a></code> can be specified to refine the density estimation parameters. <code>plot = TRUE</code> can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, the weights are the product of the weights estimated at each time point.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Sampling Weights</h3>
@@ -173,22 +173,22 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
 </dl>
 
-<p>An argument to <code>SL.library</code> <strong>must</strong> be supplied. To see a list of available entries, use <code><a href='https://rdrr.io/pkg/SuperLearner/man/listWrappers.html'>listWrappers</a></code>.</p>
-<p>All arguments to <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner</a></code> can be passed through <code>weightit</code> or <code>weightitMSM</code>, with the following exceptions:</p><ul>
+<p>An argument to <code>SL.library</code> <strong>must</strong> be supplied. To see a list of available entries, use <code>listWrappers()</code>.</p>
+<p>All arguments to <code>SuperLearner()</code> can be passed through <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>, with the following exceptions:</p><ul>
 <li><p><code>obsWeights</code> is ignored because sampling weights are passed using <code>s.weights</code>.</p></li>
-<li><p><code>method</code> in <code>SuperLearner</code> is replaced with the argument <code>SL.method</code> in <code>weightit</code>.</p></li>
+<li><p><code>method</code> in <code>SuperLearner()</code> is replaced with the argument <code>SL.method</code> in <code><a href='weightit.html'>weightit()</a></code>.</p></li>
 </ul>
 
 <p>For continuous treatments only, the following arguments may be supplied:</p><dl>
-<dt><code>density</code></dt><dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, <code><a href='https://rdrr.io/r/stats/Normal.html'>dnorm</a></code> is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if <code>use.kernel = TRUE</code> (described below).</p></dd>
-<dt><code>use.kernel</code></dt><dd><p>If <code>TRUE</code>, uses kernel density estimation through the <code><a href='https://rdrr.io/r/stats/density.html'>density</a></code> function to estimate the numerator and denominator densities for the weights. If <code>FALSE</code>, the argument to the <code>density</code> parameter is used instead.</p></dd>
-<dt><code>bw</code>, <code>adjust</code>, <code>kernel</code>, <code>n</code></dt><dd><p>If <code>use.kernel = TRUE</code>, the arguments to the <code><a href='https://rdrr.io/r/stats/density.html'>density</a></code> function. The defaults are the same as those in <code>density</code> except that <code>n</code> is 10 times the number of units in the sample.</p></dd>
+<dt><code>density</code></dt><dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, <code><a href='https://rdrr.io/r/stats/Normal.html'>dnorm()</a></code> is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if <code>use.kernel = TRUE</code> (described below).</p></dd>
+<dt><code>use.kernel</code></dt><dd><p>If <code>TRUE</code>, uses kernel density estimation through the <code><a href='https://rdrr.io/r/stats/density.html'>density()</a></code> function to estimate the numerator and denominator densities for the weights. If <code>FALSE</code>, the argument to the <code>density</code> parameter is used instead.</p></dd>
+<dt><code>bw</code>, <code>adjust</code>, <code>kernel</code>, <code>n</code></dt><dd><p>If <code>use.kernel = TRUE</code>, the arguments to the <code><a href='https://rdrr.io/r/stats/density.html'>density()</a></code> function. The defaults are the same as those in <code>density</code> except that <code>n</code> is 10 times the number of units in the sample.</p></dd>
 <dt><code>plot</code></dt><dd><p>If <code>use.kernel = TRUE</code>, whether to plot the estimated density.</p></dd>
 
 </dl>
 
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Balance SuperLearner</h3>
-<p>In addition to the methods allowed by <code>SuperLearner</code>, one can specify <code>SL.method = "method.balance"</code> to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with <code>SL.library</code>. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the <code>stop.method</code> argument, described below.</p><dl>
+<p>In addition to the methods allowed by <code>SuperLearner()</code>, one can specify <code>SL.method = "method.balance"</code> to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with <code>SL.library</code>. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the <code>stop.method</code> argument, described below.</p><dl>
 <dt><code>stop.method</code></dt><dd><p>A string describing the balance criterion used to select the best weights. See <code><a href='stop.method.html'>stop.method</a></code> for allowable options for each treatment type. For binary and multinomial treatments, the default is <code>"es.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
 
 </dl><p>Note that this implementation differs from that of Pirracchio and Carone (2018) in that here, balance is measured only on the terms included in the model formula (i.e., and not their interactions unless specifically included), and balance results from a sample weighted using the estimated predicted values as propensity scores, not a sample matched using propensity score matching on the predicted values. Binary and continuous treatments are supported, but currently multinomial treatments are not.</p>
@@ -201,7 +201,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <dl>
 <dt><code>coef</code></dt><dd><p>The coefficients in the linear combination of the predictions from each method in <code>SL.library</code>. Higher values indicate that the corresponding method plays a larger role in determining the resulting predicted value, and values close to zero indicate that the method plays little role in determining the predicted value. When <code>discrete = TRUE</code>, these correspond to the coefficients that would have been estimated had <code>discrete</code> been <code>FALSE</code>.</p></dd>
 <dt><code>cvRisk</code></dt><dd><p>The cross-validation risk for each method in <code>SL.library</code>. Higher values indicate that the method has worse cross-validation accuracy. When <code>SL.method = "method.balance"</code>, the sample weighted balance statistic requested with <code>stop.method</code>. Higher values indicate worse balance.</p></dd></dl></p></dd>
-<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the SuperLearner fit(s) used to generate the predicted values. For binary and continuous treatments, the output of the call to <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner::SuperLearner</a></code>. For multinomial treatments, a list of outputs to calls to <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner::SuperLearner</a></code>.</p></dd>
+<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the SuperLearner fit(s) used to generate the predicted values. For binary and continuous treatments, the output of the call to <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner::SuperLearner()</a></code>. For multinomial treatments, a list of outputs to calls to <code><a href='https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html'>SuperLearner::SuperLearner()</a></code>.</p></dd>
 
 </dl>
 
@@ -219,7 +219,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <p>See <code><a href='method_ps.html'>method_ps</a></code> for additional references.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code>, <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code>, <code><a href='weightitMSM.html'>weightitMSM()</a></code>, <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code>
 <code><a href='stop.method.html'>stop.method</a></code> for allowable arguments to <code>stop.method</code> when using <code>SL.method = "method.balance"</code></p></div>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
@@ -235,18 +235,117 @@ In the presence of missing data, the following value(s) for missing are allowed:
                 method <span class='op'>=</span> <span class='st'>"super"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span>,
                 SL.library <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"SL.glm"</span>, <span class='st'>"SL.stepAIC"</span>,
                                <span class='st'>"SL.glm.interaction"</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>Loading required package: nnls</span></div><div class='output co'>#&gt; <span class='error'>Error in weightit2super(covs = covs, treat = treat, s.weights = s.weights,     subset = by.factor == i, estimand = estimand, focal = focal,     stabilize = stabilize, subclass = subclass, missing = missing,     ...): object 'fit.list' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in summary(W1): object 'W1' not found</span></div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error: object 'W1' not found</span></div><div class='input'>
+</div><div class='output co'>#&gt; <span class='message'>Loading required package: nnls</span></div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+#&gt;  - method: "super" (propensity score weighting with SuperLearner)
+#&gt;  - number of obs.: 614
+#&gt;  - sampling weights: none
+#&gt;  - treatment: 2-category
+#&gt;  - estimand: ATT (focal: 1)
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
+#&gt; 
+#&gt;            Min                                  Max
+#&gt; treated 1.0000      ||                       1.0000
+#&gt; control 0.0062 |---------------------------| 5.6573
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
+#&gt;                                            
+#&gt;               2      4      5      6      7
+#&gt;  treated      1      1      1      1      1
+#&gt;             589    411    409    296    269
+#&gt;  control 2.4116 2.5004 2.7322 3.3402 5.6573
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
+#&gt; 
+#&gt;         Coef of Var   MAD Entropy # Zeros
+#&gt; treated       0.000 0.000  -0.000       0
+#&gt; control       1.116 0.738   0.442       0
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
+#&gt; 
+#&gt;            Control Treated
+#&gt; Unweighted  429.       185
+#&gt; Weighted    191.27     185</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
+#&gt;     re74, data = lalonde, method = "super", estimand = "ATT", 
+#&gt;     SL.library = c("SL.glm", "SL.stepAIC", "SL.glm.interaction"))
+#&gt; 
+#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;                Type Diff.Adj
+#&gt; prop.score Distance   0.0599
+#&gt; age         Contin.  -0.1408
+#&gt; educ        Contin.   0.0167
+#&gt; married      Binary  -0.0049
+#&gt; nodegree     Binary   0.0123
+#&gt; re74        Contin.  -0.0251
+#&gt; 
+#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt;            Control Treated
+#&gt; Unadjusted  429.       185
+#&gt; Adjusted    191.27     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 <span class='op'>(</span><span class='va'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>race</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"super"</span>, estimand <span class='op'>=</span> <span class='st'>"ATE"</span>,
                 SL.library <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"SL.glm"</span>, <span class='st'>"SL.stepAIC"</span>,
                                <span class='st'>"SL.glm.interaction"</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in weightit2super(covs = covs, treat = treat, s.weights = s.weights,     subset = by.factor == i, estimand = estimand, focal = focal,     stabilize = stabilize, subclass = subclass, missing = missing,     ...): object 'fit.list' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in summary(W2): object 'W2' not found</span></div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error: object 'W2' not found</span></div><div class='input'>
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+#&gt;  - method: "super" (propensity score weighting with SuperLearner)
+#&gt;  - number of obs.: 614
+#&gt;  - sampling weights: none
+#&gt;  - treatment: 3-category (black, hispan, white)
+#&gt;  - estimand: ATE
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
+#&gt; 
+#&gt;           Min                                   Max
+#&gt; black  1.3125 |-------------------|         14.0815
+#&gt; hispan 1.7509  |--------------------------| 19.0788
+#&gt; white  1.0815 |----|                         4.9344
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
+#&gt;                                                
+#&gt;             485     244     184     182     181
+#&gt;   black  7.5917  7.7461 10.1133 11.6337 14.0815
+#&gt;             392     371     346     345     269
+#&gt;  hispan 16.6957 17.1862 17.2636 17.8517 19.0788
+#&gt;             589     457     409     296      23
+#&gt;   white  4.0945  4.1846  4.3505  4.6072  4.9344
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
+#&gt; 
+#&gt;        Coef of Var   MAD Entropy # Zeros
+#&gt; black        0.640 0.391   0.138       0
+#&gt; hispan       0.476 0.372   0.110       0
+#&gt; white        0.388 0.317   0.069       0
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
+#&gt; 
+#&gt;             black hispan  white
+#&gt; Unweighted 243.    72.   299.  
+#&gt; Weighted   172.57  58.85 260.06</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, 
+#&gt;     data = lalonde, method = "super", estimand = "ATE", SL.library = c("SL.glm", 
+#&gt;         "SL.stepAIC", "SL.glm.interaction"))
+#&gt; 
+#&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
+#&gt;             Type Max.Diff.Adj
+#&gt; age      Contin.       0.0968
+#&gt; educ     Contin.       0.0794
+#&gt; married   Binary       0.0450
+#&gt; nodegree  Binary       0.0246
+#&gt; re74     Contin.       0.0328
+#&gt; 
+#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt;             black hispan  white
+#&gt; Unadjusted 243.    72.   299.  
+#&gt; Adjusted   172.57  58.85 260.06</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
 <span class='co'>#assuming t(8) conditional density for treatment</span>
 <span class='op'>(</span><span class='va'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>re75</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
@@ -276,7 +375,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
 #&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
 #&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge  on full data </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Coefficients already 0 for all failed algorithm(s)</span></div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Coefficients already 0 for all failed algorithm(s)</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "super" (propensity score weighting with SuperLearner)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -287,23 +386,23 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;        Min                                   Max
-#&gt; all 0.0436 |---------------------------| 18.1438
+#&gt; all 0.0441 |---------------------------| 21.9616
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                            
-#&gt;         485     484     483     431     354
-#&gt;  all 9.1503 16.1996 17.5786 17.6675 18.1438
+#&gt;                                         
+#&gt;        485     484     483   431     354
+#&gt;  all 9.647 16.9932 18.6322 19.71 21.9616
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
-#&gt; all       1.273 0.497   0.542       0
+#&gt; all       1.369 0.512   0.353       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             Total
 #&gt; Unweighted 614.  
-#&gt; Weighted   234.43</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
+#&gt; Weighted   213.86</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "super", density = "dt_8", SL.library = c("SL.glm", 
@@ -311,16 +410,16 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Corr.Adj
-#&gt; age      Contin.   0.0195
-#&gt; educ     Contin.   0.0283
-#&gt; married   Binary   0.0588
-#&gt; nodegree  Binary  -0.0517
-#&gt; re74     Contin.   0.0315
+#&gt; age      Contin.   0.0303
+#&gt; educ     Contin.   0.0359
+#&gt; married   Binary   0.0584
+#&gt; nodegree  Binary  -0.0608
+#&gt; re74     Contin.   0.0347
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;             Total
 #&gt; Unadjusted 614.  
-#&gt; Adjusted   234.43</div><div class='input'>
+#&gt; Adjusted   213.86</div><div class='input'>
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
 <span class='co'># using balance SuperLearner to minimize the average</span>
 <span class='co'># KS statistic</span>
@@ -331,9 +430,58 @@ In the presence of missing data, the following value(s) for missing are allowed:
                                <span class='st'>"SL.lda"</span><span class='op'>)</span>,
                 SL.method <span class='op'>=</span> <span class='st'>"method.balance"</span>,
                 stop.method <span class='op'>=</span> <span class='st'>"ks.mean"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in weightit2super(covs = covs, treat = treat, s.weights = s.weights,     subset = by.factor == i, estimand = estimand, focal = focal,     stabilize = stabilize, subclass = subclass, missing = missing,     ...): object 'fit.list' not found</span></div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error in summary(W4): object 'W4' not found</span></div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='error'>Error: object 'W4' not found</span></div></span></pre>
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+#&gt;  - method: "super" (propensity score weighting with SuperLearner)
+#&gt;  - number of obs.: 614
+#&gt;  - sampling weights: none
+#&gt;  - treatment: 2-category
+#&gt;  - estimand: ATT (focal: 1)
+#&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
+</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
+#&gt; 
+#&gt;            Min                                  Max
+#&gt; treated 1.0000                    ||         1.0000
+#&gt; control 0.0354 |---------------------------| 1.4688
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
+#&gt;                                            
+#&gt;               1      2      3      4      5
+#&gt;  treated      1      1      1      1      1
+#&gt;             595    411    409    296    269
+#&gt;  control 1.1051 1.1654 1.2041 1.2831 1.4688
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
+#&gt; 
+#&gt;         Coef of Var   MAD Entropy # Zeros
+#&gt; treated       0.000 0.000  -0.000       0
+#&gt; control       0.739 0.662   0.278       0
+#&gt; 
+#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
+#&gt; 
+#&gt;            Control Treated
+#&gt; Unweighted  429.       185
+#&gt; Weighted    277.67     185</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W4</span><span class='op'>)</span>
+</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+#&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
+#&gt;     re74, data = lalonde, method = "super", estimand = "ATT", 
+#&gt;     SL.library = c("SL.glm", "SL.stepAIC", "SL.lda"), SL.method = "method.balance", 
+#&gt;     stop.method = "ks.mean")
+#&gt; 
+#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;                Type Diff.Adj
+#&gt; prop.score Distance   0.0856
+#&gt; age         Contin.   0.0855
+#&gt; educ        Contin.  -0.0174
+#&gt; married      Binary  -0.0045
+#&gt; nodegree     Binary   0.0291
+#&gt; re74        Contin.  -0.0760
+#&gt; 
+#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt;            Control Treated
+#&gt; Unadjusted  429.       185
+#&gt; Adjusted    277.67     185</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

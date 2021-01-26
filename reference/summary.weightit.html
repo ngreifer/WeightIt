@@ -47,7 +47,7 @@
 
 
 <meta property="og:title" content="Print and Summarize Output — summary.weightit" />
-<meta property="og:description" content="summary generates a summary of the weightit or weightitMSM object to evaluate the properties of the estimated weights. plot plots the distribution of the weights." />
+<meta property="og:description" content="summary() generates a summary of the weightit or weightitMSM object to evaluate the properties of the estimated weights. plot() plots the distribution of the weights." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -124,7 +124,7 @@
     </div>
 
     <div class="ref-description">
-    <p><code>summary</code> generates a summary of the <code>weightit</code> or <code>weightitMSM</code> object to evaluate the properties of the estimated weights. <code>plot</code> plots the distribution of the weights.</p>
+    <p><code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code> generates a summary of the <code>weightit</code> or <code>weightitMSM</code> object to evaluate the properties of the estimated weights. <code><a href='https://rdrr.io/r/graphics/plot.default.html'>plot()</a></code> plots the distribution of the weights.</p>
     </div>
 
     <pre class="usage"><span class='co'># S3 method for weightit</span>
@@ -135,7 +135,7 @@
 <span class='fu'><a href='https://rdrr.io/r/base/print.html'>print</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for summary.weightit</span>
-<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>x</span>, <span class='va'>...</span><span class='op'>)</span>
+<span class='fu'><a href='https://rdrr.io/r/graphics/plot.default.html'>plot</a></span><span class='op'>(</span><span class='va'>x</span>, binwidth <span class='op'>=</span> <span class='cn'>NULL</span>, bins <span class='op'>=</span> <span class='cn'>NULL</span>, <span class='va'>...</span><span class='op'>)</span>
 
 <span class='co'># S3 method for weightitMSM</span>
 <span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>object</span>, top <span class='op'>=</span> <span class='fl'>5</span>,
@@ -149,7 +149,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>object</th>
-      <td><p>a <code>weightit</code> or <code>weightitMSM</code> object; the output of a call to <code>weightit</code> or <code>weightitMSM</code>.</p></td>
+      <td><p>a <code>weightit</code> or <code>weightitMSM</code> object; the output of a call to <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>.</p></td>
     </tr>
     <tr>
       <th>top</th>
@@ -160,12 +160,16 @@
       <td><p>whether or not to ignore sampling weights when computing the weight summary. If <code>FALSE</code>, the default, the estimated weights will be multiplied by the sampling weights (if any) before values are computed.</p></td>
     </tr>
     <tr>
+      <th>binwidth, bins</th>
+      <td><p>arguments passed to <code>geom_histogram()</code> to control the size and/or number of bins.</p></td>
+    </tr>
+    <tr>
       <th>x</th>
-      <td><p>a <code>summary.weightit</code> or <code>summary.weightitMSM</code> object; the output of a call to <code>summary.weightit</code> or <code>summary.weightitMSM</code>.</p></td>
+      <td><p>a <code>summary.weightit</code> or <code>summary.weightitMSM</code> object; the output of a call to <code>summary.weightit()</code> or <code>summary.weightitMSM()</code>.</p></td>
     </tr>
     <tr>
       <th>...</th>
-      <td><p>for <code>print</code>, arguments passed to <code><a href='https://rdrr.io/r/base/print.html'>print</a></code>. For <code>plot</code>, additional arguments passed to <code><a href='https://rdrr.io/r/graphics/hist.html'>hist</a></code> to determine the number of bins, though <code><a href='https://ggplot2.tidyverse.org/reference/geom_histogram.html'>geom_histogram</a></code> from <span class="pkg">ggplot2</span> is actually used to create the plot.</p></td>
+      <td><p>for <code><a href='https://rdrr.io/r/base/print.html'>print()</a></code>, arguments passed to <code><a href='https://rdrr.io/r/base/print.html'>print()</a></code>. For <code><a href='https://rdrr.io/r/graphics/plot.default.html'>plot()</a></code>, additional arguments passed to <code><a href='https://rdrr.io/r/graphics/hist.html'>hist()</a></code> to determine the number of bins, though <code>geom_histogram()</code> from <span class="pkg">ggplot2</span> is actually used to create the plot.</p></td>
     </tr>
     </table>
 
@@ -178,18 +182,18 @@
 <dt>scaled.mad (MAD)</dt><dd><p>The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
 <dt>negative entropy (Entropy)</dt><dd><p>The negative entropy (\(\sum w log(w)\)) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
 <dt>num.zeros</dt><dd><p>The number of weights equal to zero.</p></dd>
-<dt>effective.sample.size</dt><dd><p>The effective sample size for each treatment group before and after weighting. See <code><a href='ESS.html'>ESS</a></code>.</p></dd>
+<dt>effective.sample.size</dt><dd><p>The effective sample size for each treatment group before and after weighting. See <code><a href='ESS.html'>ESS()</a></code>.</p></dd>
 
 For longitudinal treatments (i.e., weightitMSM objects), a list of the above elements for each treatment period.
 
-plot returns a ggplot object with a histogram displaying the distribution of the estimated weights. If the estimand is the ATT or ATC, only the weights for the non-focal group(s) will be displayed (since the weights for the focal group are all 1). A dotted line is displayed at the mean of the weights.
+plot() returns a ggplot object with a histogram displaying the distribution of the estimated weights. If the estimand is the ATT or ATC, only the weights for the non-focal group(s) will be displayed (since the weights for the focal group are all 1). A dotted line is displayed at the mean of the weights.
 
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Noah Greifer</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, <code><a href='weightitMSM.html'>weightitMSM</a></code>, <code><a href='https://rdrr.io/r/base/summary.html'>summary</a></code></p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code>, <code><a href='weightitMSM.html'>weightitMSM()</a></code>, <code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code></p></div>
 
     <h2 class="hasAnchor" id="examples"><a class="anchor" href="#examples"></a>Examples</h2>
     <pre class="examples"><div class='input'><span class='co'># See example at ?weightit or ?weightitMSM</span>

@@ -47,7 +47,7 @@
 
 
 <meta property="og:title" content="Generate Balancing Weights with Minimal Input Processing — weightit.fit" />
-<meta property="og:description" content="weightit.fit dispatches one of the weight estimation methods determined by method. It is an internal function called by weightit and should probably not be used except in special cases. Unlike weightit, weightit.fit does not accept a formula and data frame interface and instead requires the covariates and treatment to be supplied as a numeric matrix and atomic vector, respectively. In this way, weightit.fit is to weightit what lm.fit is to lm - a thinner, slightly faster interface that performs minimal argument checking." />
+<meta property="og:description" content="weightit.fit() dispatches one of the weight estimation methods determined by method. It is an internal function called by weightit() and should probably not be used except in special cases. Unlike weightit(), weightit.fit() does not accept a formula and data frame interface and instead requires the covariates and treatment to be supplied as a numeric matrix and atomic vector, respectively. In this way, weightit.fit() is to weightit() what lm.fit() is to lm() - a thinner, slightly faster interface that performs minimal argument checking." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -124,7 +124,7 @@
     </div>
 
     <div class="ref-description">
-    <p><code>weightit.fit</code> dispatches one of the weight estimation methods determined by <code>method</code>. It is an internal function called by <code><a href='weightit.html'>weightit</a></code> and should probably not be used except in special cases. Unlike <code>weightit</code>, <code>weightit.fit</code> does not accept a formula and data frame interface and instead requires the covariates and treatment to be supplied as a numeric matrix and atomic vector, respectively. In this way, <code>weightit.fit</code> is to <code>weightit</code> what <code><a href='https://rdrr.io/r/stats/lmfit.html'>lm.fit</a></code> is to <code><a href='https://rdrr.io/r/stats/lm.html'>lm</a></code> - a thinner, slightly faster interface that performs minimal argument checking.</p>
+    <p><code>weightit.fit()</code> dispatches one of the weight estimation methods determined by <code>method</code>. It is an internal function called by <code><a href='weightit.html'>weightit()</a></code> and should probably not be used except in special cases. Unlike <code><a href='weightit.html'>weightit()</a></code>, <code>weightit.fit()</code> does not accept a formula and data frame interface and instead requires the covariates and treatment to be supplied as a numeric matrix and atomic vector, respectively. In this way, <code>weightit.fit()</code> is to <code><a href='weightit.html'>weightit()</a></code> what <code><a href='https://rdrr.io/r/stats/lmfit.html'>lm.fit()</a></code> is to <code><a href='https://rdrr.io/r/stats/lm.html'>lm()</a></code> - a thinner, slightly faster interface that performs minimal argument checking.</p>
     </div>
 
     <pre class="usage"><span class='fu'>weightit.fit</span><span class='op'>(</span><span class='va'>covs</span>,
@@ -158,7 +158,7 @@
     </tr>
     <tr>
       <th>method</th>
-      <td><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href='weightit.html'>weightit</a></code> for allowable options. The default is <code>"ps"</code> for propensity score weighting.</p></td>
+      <td><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href='weightit.html'>weightit()</a></code> for allowable options. The default is <code>"ps"</code> for propensity score weighting.</p></td>
     </tr>
     <tr>
       <th>s.weights</th>
@@ -166,7 +166,7 @@
     </tr>
     <tr>
       <th>by.factor</th>
-      <td><p>a factor variable for which weighting is to be done within levels. Corresponds to the <code>by</code> argument in <code><a href='weightit.html'>weightit</a></code>.</p></td>
+      <td><p>a factor variable for which weighting is to be done within levels. Corresponds to the <code>by</code> argument in <code><a href='weightit.html'>weightit()</a></code>.</p></td>
     </tr>
     <tr>
       <th>estimand</th>
@@ -174,7 +174,7 @@
     </tr>
     <tr>
       <th>stabilize</th>
-      <td><p><code>logical</code>; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the proportion of units in their treatment group. For the <code>"ebal"</code> method, this involves using <code>ebalance.trim</code> to reduce the variance of the weights. Default is <code>FALSE</code>.</p></td>
+      <td><p><code>logical</code>; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the proportion of units in their treatment group. Default is <code>FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>focal</th>
@@ -186,11 +186,11 @@
     </tr>
     <tr>
       <th>moments, int, subclass</th>
-      <td><p>arguments to customize the weight estimation. See <code><a href='weightit.html'>weightit</a></code> for details.</p></td>
+      <td><p>arguments to customize the weight estimation. See <code><a href='weightit.html'>weightit()</a></code> for details.</p></td>
     </tr>
     <tr>
       <th>is.MSM.method</th>
-      <td><p>see <code><a href='weightitMSM.html'>weightitMSM</a></code>. Typically can be ignored.</p></td>
+      <td><p>see <code><a href='weightitMSM.html'>weightitMSM()</a></code>. Typically can be ignored.</p></td>
     </tr>
     <tr>
       <th>missing</th>
@@ -206,7 +206,7 @@
     </tr>
     <tr>
       <th>...</th>
-      <td><p>other arguments for functions called by <code>weightit.fit</code> that control aspects of fitting that are not covered by the above arguments.</p></td>
+      <td><p>other arguments for functions called by <code>weightit.fit()</code> that control aspects of fitting that are not covered by the above arguments.</p></td>
     </tr>
     </table>
 
@@ -218,16 +218,16 @@
   <dt>fit.obj</dt><dd><p>When <code>include.obj = TRUE</code>, the fit object.</p></dd>
   <dt>info</dt><dd><p>Additional information about the fitting. See the individual methods pages for what is included.</p></dd>
 
-  The weightit.fit object does not have specialized print, summary, or plot methods. It is simply a list containing the above components.
+  The weightit.fit object does not have specialized print(), summary(), or plot() methods. It is simply a list containing the above components.
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p><code>weightit.fit</code> is called by <code>weightit</code> after the arguments to <code>weightit</code> have been checked and processed. <code>weightit.fit</code> dispatches the function used to actually estimate the weights, passing on the supplied arguments directly. <code>weightit.fit</code> is not meant to be used by anyone other than experienced users who have a specific use case in mind. The returned object doesn't contain any information about the supplied arguments or details of the estimation method; all that is processed by <code>weightit</code>.</p>
-<p>Less argument checking or processing occurs in <code>weightit.fit</code> than does in <code>weightit</code>, which means supplying incorrrect arguments can result in errors, crashes, and invalid weights, and error and warning messages may not be helpful in diagnosing the problem. <code>weightit.fit</code> does check to make sure weights were actually estimated, though.</p>
-<p><code>weightit.fit</code> may be most useful in speeding up simulation simulation studies that use <code>weightit</code> because the covariates can be supplied as a numeric matrix, which is often how they are generated in simulations, without having to go through the potentially slow process of extracting the covariates and treatment from a formula and data frame. If the user is certain the arguments are valid (e.g., by ensuring the estimated weights are consistent with those estimated from <code>weightit</code> with the same arguments), less time needs to be spent on processing the arguments. Also, the returned object is much smaller than a <code>weightit</code> object because the covariates are not returned alongside the weights.</p>
+    <p><code>weightit.fit()</code> is called by <code><a href='weightit.html'>weightit()</a></code> after the arguments to <code><a href='weightit.html'>weightit()</a></code> have been checked and processed. <code>weightit.fit()</code> dispatches the function used to actually estimate the weights, passing on the supplied arguments directly. <code>weightit.fit()</code> is not meant to be used by anyone other than experienced users who have a specific use case in mind. The returned object doesn't contain any information about the supplied arguments or details of the estimation method; all that is processed by <code>weightit</code>.</p>
+<p>Less argument checking or processing occurs in <code>weightit.fit()</code> than does in <code><a href='weightit.html'>weightit()</a></code>, which means supplying incorrect arguments can result in errors, crashes, and invalid weights, and error and warning messages may not be helpful in diagnosing the problem. <code>weightit.fit()</code> does check to make sure weights were actually estimated, though.</p>
+<p><code>weightit.fit()</code> may be most useful in speeding up simulation simulation studies that use <code><a href='weightit.html'>weightit()</a></code> because the covariates can be supplied as a numeric matrix, which is often how they are generated in simulations, without having to go through the potentially slow process of extracting the covariates and treatment from a formula and data frame. If the user is certain the arguments are valid (e.g., by ensuring the estimated weights are consistent with those estimated from <code><a href='weightit.html'>weightit()</a></code> with the same arguments), less time needs to be spent on processing the arguments. Also, the returned object is much smaller than a <code>weightit</code> object because the covariates are not returned alongside the weights.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightit.html'>weightit</a></code>, which you should use for estimating weights unless you know better.</p></div>
+    <div class='dont-index'><p><code><a href='weightit.html'>weightit()</a></code>, which you should use for estimating weights unless you know better.</p></div>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Noah Greifer</p>

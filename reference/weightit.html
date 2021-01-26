@@ -47,7 +47,7 @@
 
 
 <meta property="og:title" content="Generate Balancing Weights — weightit" />
-<meta property="og:description" content="weightit allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multi-category treatments. Many of these methods exist in other packages, which weightit calls; these packages must be installed to use the desired method. Also included are print and summary methods for examining the output." />
+<meta property="og:description" content="weightit() allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multi-category treatments. Many of these methods exist in other packages, which weightit() calls; these packages must be installed to use the desired method. Also included are print() and summary() methods for examining the output." />
 <meta property="og:image" content="/logo.png" />
 
 
@@ -124,7 +124,7 @@
     </div>
 
     <div class="ref-description">
-    <p><code>weightit</code> allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multi-category treatments. Many of these methods exist in other packages, which <code>weightit</code> calls; these packages must be installed to use the desired method. Also included are <code>print</code> and <code>summary</code> methods for examining the output.</p>
+    <p><code>weightit()</code> allows for the easy generation of balancing weights using a variety of available methods for binary, continuous, and multi-category treatments. Many of these methods exist in other packages, which <code>weightit()</code> calls; these packages must be installed to use the desired method. Also included are <code><a href='https://rdrr.io/r/base/print.html'>print()</a></code> and <code><a href='https://rdrr.io/r/base/summary.html'>summary()</a></code> methods for examining the output.</p>
     </div>
 
     <pre class="usage"><span class='fu'>weightit</span><span class='op'>(</span><span class='va'>formula</span>,
@@ -152,7 +152,7 @@
     <colgroup><col class="name" /><col class="desc" /></colgroup>
     <tr>
       <th>formula</th>
-      <td><p>a formula with a treatment variable on the left hand side and the covariates to be balanced on the right hand side. See <code><a href='https://rdrr.io/r/stats/glm.html'>glm</a></code> for more details. Interactions and functions of covariates are allowed.</p></td>
+      <td><p>a formula with a treatment variable on the left hand side and the covariates to be balanced on the right hand side. See <code><a href='https://rdrr.io/r/stats/glm.html'>glm()</a></code> for more details. Interactions and functions of covariates are allowed.</p></td>
     </tr>
     <tr>
       <th>data</th>
@@ -164,11 +164,11 @@
     </tr>
     <tr>
       <th>estimand</th>
-      <td><p>the desired estimand. For binary and multi-category treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO", "ATM", or "ATOS". The default for both is "ATE". This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.</p></td>
+      <td><p>the desired estimand. For binary and multi-category treatments, can be <code>"ATE"</code>, <code>"ATT"</code>, <code>"ATC"</code>, and, for some methods, <code>"ATO"</code>, <code>"ATM"</code>, or <code>"ATOS"</code>. The default for both is <code>"ATE"</code>. This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.</p></td>
     </tr>
     <tr>
       <th>stabilize</th>
-      <td><p><code>logical</code>; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the proportion of units in their treatment group. For the <code>"ebal"</code> method, this involves using <code>ebalance.trim</code> to reduce the variance of the weights. Default is <code>FALSE</code>.</p></td>
+      <td><p><code>logical</code>; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the proportion of units in their treatment group. Default is <code>FALSE</code>.</p></td>
     </tr>
     <tr>
       <th>focal</th>
@@ -176,7 +176,7 @@
     </tr>
     <tr>
       <th>by</th>
-      <td><p>a string containing the name of the variable in <code>data</code> for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~ gender</code>, weights will be generated separately within each level of the variable <code>"gender"</code>. The argument used to be called <code>exact</code>, which will still work but with a message. Only one <code>by</code> variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using <code><a href='https://rdrr.io/r/base/interaction.html'>interaction</a></code>.</p></td>
+      <td><p>a string containing the name of the variable in <code>data</code> for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>, weights will be generated separately within each level of the variable <code>"gender"</code>. The argument used to be called <code>exact</code>, which will still work but with a message. Only one <code>by</code> variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using <code><a href='https://rdrr.io/r/base/interaction.html'>interaction()</a></code>.</p></td>
     </tr>
     <tr>
       <th>s.weights</th>
@@ -184,7 +184,7 @@
     </tr>
     <tr>
       <th>ps</th>
-      <td><p>A vector of propensity scores or the name of a variable in <code>data</code> containing propensity scores. If not <code>NULL</code>, <code>method</code> is ignored, and the propensity scores will be used to create weights. <code>formula</code> must include the treatment variable in <code>data</code>, but the listed covariates will play no role in the weight estimation. Using <code>ps</code> is similar to calling <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> directly, but produces a full <code>weightit</code> object rather than just producing weights.</p></td>
+      <td><p>A vector of propensity scores or the name of a variable in <code>data</code> containing propensity scores. If not <code>NULL</code>, <code>method</code> is ignored, and the propensity scores will be used to create weights. <code>formula</code> must include the treatment variable in <code>data</code>, but the listed covariates will play no role in the weight estimation. Using <code>ps</code> is similar to calling <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> directly, but produces a full <code>weightit</code> object rather than just producing weights.</p></td>
     </tr>
     <tr>
       <th>moments</th>
@@ -196,11 +196,11 @@
     </tr>
     <tr>
       <th>subclass</th>
-      <td><p><code>numeric</code>; the number of subclasses to use for computing weights using marginal mean weighting with subclasses (MMWS). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Attempting to set a non-<code>NULL</code> value for methods that don't compute a propensity score will result in an error; see each method's help page for information on whether MMWS weights are compatible with the method. See <code><a href='get_w_from_ps.html'>get_w_from_ps</a></code> for details and references.</p></td>
+      <td><p><code>numeric</code>; the number of subclasses to use for computing weights using marginal mean weighting with subclasses (MMWS). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Attempting to set a non-<code>NULL</code> value for methods that don't compute a propensity score will result in an error; see each method's help page for information on whether MMWS weights are compatible with the method. See <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> for details and references.</p></td>
     </tr>
     <tr>
       <th>missing</th>
-      <td><p><code>character</code>; how missing data should be handled. The options and defaults depend on the <code>method</code> used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in <code>weightit</code> and should probably be used instead. Consider the <span class="pkg">MatchThem</span> package for the use of <code>weightit</code> with multiply imputed data.</p></td>
+      <td><p><code>character</code>; how missing data should be handled. The options and defaults depend on the <code>method</code> used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in <code>weightit()</code> and should probably be used instead. Consider the <a href='https://CRAN.R-project.org/package=MatchThem'><span class="pkg">MatchThem</span></a> package for the use of <code>weightit()</code> with multiply imputed data.</p></td>
     </tr>
     <tr>
       <th>verbose</th>
@@ -212,11 +212,11 @@
     </tr>
     <tr>
       <th>...</th>
-      <td><p>other arguments for functions called by <code>weightit</code> that control aspects of fitting that are not covered by the above arguments. See Details.</p></td>
+      <td><p>other arguments for functions called by <code>weightit()</code> that control aspects of fitting that are not covered by the above arguments. See Details.</p></td>
     </tr>
     <tr>
       <th>x</th>
-      <td><p>a <code>weightit</code> object; the output of a call to <code>weightit</code>.</p></td>
+      <td><p>a <code>weightit</code> object; the output of a call to <code>weightit()</code>.</p></td>
     </tr>
     </table>
 
@@ -237,7 +237,7 @@
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>The primary purpose of <code>weightit</code> is as a dispatcher to functions that perform the estimation of balancing weights using the requested <code>method</code>. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when <code>include.obj = TRUE</code>), how missing values are treated, which estimands are allowed, and whether sampling weights are allowed.</p><ul>
+    <p>The primary purpose of <code>weightit()</code> is as a dispatcher to functions that perform the estimation of balancing weights using the requested <code>method</code>. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when <code>include.obj = TRUE</code>), how missing values are treated, which estimands are allowed, and whether sampling weights are allowed.</p><ul>
 <li><p><code><a href='method_ps.html'>"ps"</a></code> - Propensity score weighting using generalized linear models.</p></li>
 <li><p><code><a href='method_gbm.html'>"gbm"</a></code> - Propensity score weighting using generalized boosted modeling.</p></li>
 <li><p><code><a href='method_cbps.html'>"cbps"</a></code> - Covariate Balancing Propensity Score weighting.</p></li>
@@ -251,11 +251,11 @@
 </ul>
 
 <p><code>method</code> can also be supplied as a user-defined function; see <code><a href='method_user.html'>method_user</a></code> for instructions and examples.</p>
-<p>When using <code>weightit</code>, please cite both the <span class="pkg">WeightIt</span> package (using <code><a href='https://rdrr.io/r/utils/citation.html'>citation("WeightIt")</a></code>) and the paper(s) in the references section of the method used.</p>
+<p>When using <code>weightit()</code>, please cite both the <span class="pkg">WeightIt</span> package (using <code><a href='https://rdrr.io/r/utils/citation.html'>citation("WeightIt")</a></code>) and the paper(s) in the references section of the method used.</p>
     <h2 class="hasAnchor" id="see-also"><a class="anchor" href="#see-also"></a>See also</h2>
 
-    <div class='dont-index'><p><code><a href='weightitMSM.html'>weightitMSM</a></code> for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal structural models (MSMs).</p>
-<p><code><a href='weightit.fit.html'>weightit.fit</a></code>, which is a lower-level dispatcher function that accepts a matrix of covariates and a vector of treatment statuses rather than a formula and data frame and performs minimal argument checking and processing. It may be useful for speeding up simulation studies for which the correct arguments are known. In general <code>weightit</code> should be used.</p></div>
+    <div class='dont-index'><p><code><a href='weightitMSM.html'>weightitMSM()</a></code> for estimating weights with sequential (i.e., longitudinal) treatments for use in estimating marginal structural models (MSMs).</p>
+<p><code><a href='weightit.fit.html'>weightit.fit()</a></code>, which is a lower-level dispatcher function that accepts a matrix of covariates and a vector of treatment statuses rather than a formula and data frame and performs minimal argument checking and processing. It may be useful for speeding up simulation studies for which the correct arguments are known. In general <code>weightit()</code> should be used.</p></div>
     <h2 class="hasAnchor" id="author"><a class="anchor" href="#author"></a>Author</h2>
 
     <p>Noah Greifer</p>
@@ -293,9 +293,8 @@
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       0.823 0.701  -0.515       0
-#&gt; overall       0.657 0.604  -0.257       0
+#&gt; treated       0.000 0.000   -0.00       0
+#&gt; control       0.823 0.701    0.33       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -350,11 +349,10 @@
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
-#&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; black         0.590 0.413   0.131       0
-#&gt; hispan        0.609 0.440   0.163       0
-#&gt; white         0.371 0.306   0.068       0
-#&gt; overall       0.497 0.364   0.104       0
+#&gt;        Coef of Var   MAD Entropy # Zeros
+#&gt; black        0.590 0.413   0.131       0
+#&gt; hispan       0.609 0.440   0.163       0
+#&gt; white        0.371 0.306   0.068       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
@@ -402,7 +400,7 @@
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
-#&gt; all       1.152 0.449   0.291       0
+#&gt; all       1.152 0.449   0.288       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
