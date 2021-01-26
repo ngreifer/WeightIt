@@ -13,6 +13,10 @@ WeightIt News and Updates
 
 * Using `method = "ebal"` no longer requires the `ebal` package. Instead, `optim()` is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed. 
 
+* When using `method = "ebal"` with continuous treatments, a new argument, `d.moments` can now be specified. This controls the number of moments of the covariate and treatment distributions that are constrained to be the same in the weighted sample as they are in the original sample. Vegetabile et al. (2020) recommend setting `d.moments` to at least 3 to ensure generalizability and reduce bias due to effect modification.
+
+* Made some minor changes to `summary.weightit()` and `plot.summary.weightit()`. Fixed how negative entropy was computed.
+
 * Fixed a bug (#16) when using `method = "cbps"` with factor variables, thanks to @danielebottigliengo.
 
 * Fixed a bug when using binary factor treatments, thanks to Darren Stewart.
