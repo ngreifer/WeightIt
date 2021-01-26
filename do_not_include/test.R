@@ -11,7 +11,10 @@ covs <- subset(lalonde, select = -c(re78, treat))
 lalonde$treat3 <- factor(ifelse(lalonde$treat == 1, "A", sample(c("B", "C"), nrow(lalonde), T)), ordered = F)
 lalonde$treat5 <- factor(sample(c(LETTERS[1:5]), nrow(lalonde), T))
 
-s <- runif(nrow(lalonde), 0, 2)
+s <- runif(nrow(lalonde), 1, 1 + lalonde$married*3)
+
+W <- weightit(treat ~ covs, data = lalonde, method = "bart", estimand = "ATT")
+for (i in 1:30) {cat(i, "| "); W <- weightit(treat ~ covs, data = lalonde, method = "bart", estimand = "ATT")}
 
 #method = "ps"
 W <- weightit(treat ~ covs, data = lalonde, method = "ps", estimand = "ATE")
@@ -125,6 +128,26 @@ W <- weightit(f.build("re78", covs), data = lalonde, method = "super",
 W <- weightit(f.build("re78", covs), data = lalonde, method = "super",
               SL.library = c("SL.glm", "SL.stepAIC"), SL.method = "method.balance",
               stop.method = "p.max", density = "dt_3", s.weights = s)
+
+#method = "bart"
+W <- weightit(treat ~ covs, data = lalonde, method = "bart", estimand = "ATE")
+W <- weightit(lalonde$treat ~ covs, method = "bart", estimand = "ATT")
+all.equal(weightit(lalonde$treat ~ covs, method = "bart", estimand = "ATT", rngSeed = 100, n.threads = 1, n.trees = 20),
+          weightit(lalonde$treat ~ covs, method = "bart", estimand = "ATT", rngSeed = 100, n.threads = 1, n.trees = 20))
+W <- weightit(f.build("treat", covs), data = lalonde, method = "bart", estimand = "ATC", s.weights = s)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "bart", estimand = "ATO")
+
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "bart", estimand = "ATE")
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "bart", estimand = "ATT",
+              focal = "A")
+
+W <- weightit(f.build("treat5", covs), data = lalonde, method = "bart", estimand = "ATE",
+              focal = "A")
+
+W <- weightit(f.build("re78", covs), data = lalonde, method = "bart", density = "dt_3")
+W <- weightit(f.build("re78", covs), data = lalonde, method = "bart", use.kernel = T, plot = T)
+all.equal(weightit(f.build("re78", covs), data = lalonde, method = "bart", rngSeed = 100, n.threads = 4, n.trees = 20),
+          weightit(f.build("re78", covs), data = lalonde, method = "bart", rngSeed = 100, n.threads = 4, n.trees = 20))
 
 #method = "energy"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATE")

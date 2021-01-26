@@ -29,9 +29,9 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 \item{\code{"ind"} (default)}{
 First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with 0s (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
 }
-\item{\code{"saem"}}{
-For binary treatments with \code{link = "logit"} or continuous treatments, a stochastic approximation version of the EM algorithm (SAEM) is used via the \CRANpkg{misaem} package. No additional covariates are created. See Jiang et al. (2019) for information on this method. In some cases, this is a suitable alternative to multiple imputation. NOTE: because the \pkg{misaem} package has been archived, this method is not available.
-}
+%\item{\code{"saem"}}{
+%For binary treatments with \code{link = "logit"} or continuous treatments, a stochastic approximation version of the EM algorithm (SAEM) is used via the \CRANpkg{misaem} package. No additional covariates are created. See Jiang et al. (2019) for information on this method. In some cases, this is a suitable alternative to multiple imputation. NOTE: because the \pkg{misaem} package has been archived, this method is not available.
+%}
 }
 }
 }
@@ -43,7 +43,7 @@ The following additional arguments can be specified:
 }
 For continuous treatments only, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
+\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \fun{dnorm} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
 }
 \item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \fun{density} function to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
 }
@@ -63,7 +63,7 @@ For multi-category treatments with \code{link = "logit"} or \code{"probit"}, the
 \section{Additional Outputs}{
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \fun{glm}. For binary treatments with missing data and \code{missing = "saem"}, the output of the call to \pkgfun2{misaem}{miss.glm}{misaem::miss.glm}. For ordinal treatments, the output of the call to \pkgfun{MASS}{polr}. For multinomial treatments with \code{link = "logit"} or \code{"probit"} and \code{use.mlogit = TRUE}, the output of the call to \pkgfun2{mlogit}{mlogit}{mlogit::mlogit}. For multinomial treatments with \code{use.mlogit = FALSE}, a list of the \code{glm()} fits. For multinomial treatments with \code{link = "br.logit"}, the output of the call to \pkgfun2{brglm2}{brmultinom}{brglm2::brmultinom}. For multinomial treatments with \code{link = "bayes.probit"}, the output of the call to \pkgfun2{MNP}{mnp}{MNP::mnp}. For continuous treatments, the output of the call to \code{glm()} (or \pkgfun2{misaem}{miss.lm}{misaem::miss.lm} if \code{missing = "saem"}) for the predicted values in the denominator density.
+When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \fun{glm}. For ordinal treatments, the output of the call to \pkgfun{MASS}{polr}. For multinomial treatments with \code{link = "logit"} or \code{"probit"} and \code{use.mlogit = TRUE}, the output of the call to \pkgfun2{mlogit}{mlogit}{mlogit::mlogit}. For multinomial treatments with \code{use.mlogit = FALSE}, a list of the \code{glm()} fits. For multinomial treatments with \code{link = "br.logit"}, the output of the call to \pkgfun2{brglm2}{brmultinom}{brglm2::brmultinom}. For multinomial treatments with \code{link = "bayes.probit"}, the output of the call to \pkgfun2{MNP}{mnp}{MNP::mnp}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
 }
 }
 }
@@ -94,9 +94,9 @@ Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for 
 
 See references for the \pkg{brglm2} \link[brglm2:brglm2]{package}.
 
-- SAEM logistic regression for missing data
+%- SAEM logistic regression for missing data
 
-Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. Computational Statistics & Data Analysis, 106907. \doi{10.1016/j.csda.2019.106907}
+%Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. Computational Statistics & Data Analysis, 106907. \doi{10.1016/j.csda.2019.106907}
 
 \strong{Multinomial Treatments}
 
