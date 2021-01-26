@@ -250,6 +250,15 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
       }
       if (estimand == "ATC") estimand <- "ATT"
     }
+    else {
+      if (is_null(focal)) {
+        if (estimand == "ATT")
+          focal <- treated
+        else if (estimand == "ATC")
+          focal <- unique.treat[unique.treat %nin% treated]
+      }
+      if (estimand == "ATC") estimand <- "ATT"
+    }
   }
 
   return(list(focal = as.character(focal),
@@ -1169,6 +1178,12 @@ plot_density <- function(d.n, d.d) {
                                           panel.grid.minor = element_blank()
     )
   print(pl)
+}
+
+neg_ent <- function(w) {
+  w <- w[w > 0]
+  w <- w/mean_fast(w)
+  mean(w*log(w))
 }
 
 #For balance SuperLearner
