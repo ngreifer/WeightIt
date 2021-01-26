@@ -152,10 +152,10 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   current.best.loss <- Inf
 
-  for (i in seq_len(nrow(tune))) {
+  for (i in seq_row(tune)) {
 
     A[["penalty.factor"]] <- rep(1, ncol(model.covs))
-    if (!tune[["reg.covs"]][i]) A[["penalty.factor"]][seq_len(ncol(covs))] <- 0
+    if (!tune[["reg.covs"]][i]) A[["penalty.factor"]][seq_col(covs)] <- 0
     gamma <- ifelse(tune[["relax"]][i], 0,  1)
 
     if (cv == 0) {
@@ -430,10 +430,10 @@ weightit2enet.cont <- function(covs, treat, s.weights, subset, estimand, focal, 
 
   current.best.loss <- Inf
 
-  for (i in seq_len(nrow(tune))) {
+  for (i in seq_row(tune)) {
 
     A[["penalty.factor"]] <- rep(1, ncol(model.covs))
-    if (!tune[["reg.covs"]][i]) A[["penalty.factor"]][seq_len(ncol(covs))] <- 0
+    if (!tune[["reg.covs"]][i]) A[["penalty.factor"]][seq_col(covs)] <- 0
 
     if (cv == 0) {
       fit <- do.call(glmnet::glmnet, list(model.covs, treat, family = family, standardize = FALSE,
