@@ -192,8 +192,8 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
     out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
     out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-    out$scaled.mad <- c(all = mean.abs.dev(w)/mean_fast(w))
-    out$negative.entropy <- c(all = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+    out$scaled.mad <- c(all = mean.abs.dev(w/mean_fast(w)))
+    out$negative.entropy <- c(all = neg_ent(w))
     out$num.zeros <- c(overall = sum(check_if_zero(w)))
 
     nn <- make_df("Total", c("Unweighted", "Weighted"))
@@ -216,17 +216,13 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                         control = sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])])
 
     out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
-                         control = sd(w[t==0])/mean_fast(w[t==0]),
-                         overall = sd(w)/mean_fast(w))
-    out$scaled.mad <- c(treated = mean.abs.dev(w[t==1])/mean_fast(w[t==1]),
-                        control = mean.abs.dev(w[t==0])/mean_fast(w[t==0]),
-                        overall = mean.abs.dev(w)/mean_fast(w))
-    out$negative.entropy <- c(treated = sum(w[t==1 & w>0]*log(w[t==1 & w>0]))/sum(w[t==1 & w>0]),
-                              control = sum(w[t==0 & w>0]*log(w[t==0 & w>0]))/sum(w[t==0 & w>0]),
-                              overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
+                         control = sd(w[t==0])/mean_fast(w[t==0]))
+    out$scaled.mad <- c(treated = mean.abs.dev(w[t==1]/mean_fast(w[t==1])),
+                        control = mean.abs.dev(w[t==0]/mean_fast(w[t==0])))
+    out$negative.entropy <- c(treated = neg_ent(w[t==1]),
+                              control = neg_ent(w[t==0]))
     out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
-                       control = sum(check_if_zero(w[t==0])),
-                       overall = sum(check_if_zero(w)))
+                       control = sum(check_if_zero(w[t==0])))
 
     #dc <- weightit$discarded
 
@@ -244,14 +240,10 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                             levels(t))
     out$weight.top <- setNames(lapply(names(top.weights), function(x) sort(setNames(top.weights[[x]], which(w %in% top.weights[[x]] & t == x)[seq_len(top)]))),
                                names(top.weights))
-    out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
-                         overall = sd(w)/mean_fast(w))
-    out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
-                        overall = mean.abs.dev(w)/mean_fast(w))
-    out$negative.entropy <- c(vapply(levels(t), function(x) sum(w[t==x & w>0]*log(w[t==x & w>0]))/sum(w[t==x & w>0]), numeric(1L)),
-                              overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
-    out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
-                       overall = sum(check_if_zero(w)))
+    out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
+    out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
+    out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)))
+    out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)))
 
     nn <- make_df(levels(t), c("Unweighted", "Weighted"))
     for (i in levels(t)) {
@@ -266,10 +258,10 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   out$effective.sample.size <- nn
 
   if (is_not_null(object$focal)) {
-    w <- w[t != object$focal]
     attr(w, "focal") <- object$focal
   }
   attr(out, "weights") <- w
+  attr(out, "treat") <- t
   class(out) <- "summary.weightit"
   return(out)
 }
@@ -297,22 +289,57 @@ print.summary.weightit <- function(x, ...) {
   print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
   invisible(x)
 }
-plot.summary.weightit <- function(x, ...) {
+plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
   w <- attr(x, "weights")
+  t <- attr(x, "treat")
   focal <- attr(w, "focal")
+  treat.type <- get.treat.type(t)
+
+  A <- list(...)
+  if (is_not_null(A[["breaks"]])) {
+    breaks <- hist(w, breaks = A[["breaks"]], plot = FALSE)$breaks
+    bins <- binwidth <- NULL
+  }
+  else {
+    breaks <- NULL
+    if (is_null(bins)) bins <- 20
+  }
 
   if (is_not_null(focal)) subtitle <- paste0("For Units Not in Treatment Group \"", focal, "\"")
   else subtitle <- NULL
 
+  if (treat.type == "continuous") {
   p <- ggplot(data = data.frame(w), mapping = aes(x = w)) +
-    geom_histogram(breaks = hist(w, plot = FALSE,
-                                 ...)$breaks,
-                   color = "black",
-                   fill = "gray", alpha = .8) +
-    scale_y_continuous(expand = expand_scale(c(0, .05))) +
-    geom_vline(xintercept = mean(w), linetype = "12") +
-    labs(x = "Weight", y = "Count", title = "Distribution of Weights",
-         subtitle = subtitle) +
+    geom_histogram(binwidth = binwidth,
+                   bins = bins,
+                   breaks = breaks,
+                   center = mean(w),
+                   color = "gray70",
+                   fill = "gray70", alpha = 1) +
+    scale_y_continuous(expand = expansion(c(0, .05))) +
+    geom_vline(xintercept = mean(w), linetype = "12", color = "blue", size = .75) +
+    labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
     theme_bw()
+  }
+  else {
+    d <- data.frame(w, t = factor(t))
+    if (is_not_null(focal)) d <- d[t != focal,]
+
+    levels(d$t) <- paste("Treat =", levels(d$t))
+    w_means <- aggregate(w ~ t, data = d, FUN = mean)
+
+    p <- ggplot(data = d, mapping = aes(x = w)) +
+      geom_histogram(binwidth = binwidth,
+                     bins = bins,
+                     breaks = breaks,
+                     # center = mean(w),
+                     color = "gray70",
+                     fill = "gray70", alpha = 1) +
+      scale_y_continuous(expand = expansion(c(0, .05))) +
+      geom_vline(data = w_means, aes(xintercept = w), linetype = "12", color = "red") +
+      labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
+      theme_bw() + facet_wrap(vars(t), ncol = 1, scales = "free") +
+      theme(panel.background = element_blank(), panel.border = element_rect(fill = NA, color = "black", size = .25))
+  }
   p
 }
