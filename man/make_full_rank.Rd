@@ -5,7 +5,7 @@
 Make a design matrix full rank
 }
 \description{
-When writing \link[=method_user]{user-defined methods} for use with \code{weightit}, it may be necessary to take the potentially non-full rank \code{covs} data frame and make it full rank for use in a downstream function. This function performs that operation.
+When writing \link[=method_user]{user-defined methods} for use with \fun{weightit}, it may be necessary to take the potentially non-full rank \code{covs} data frame and make it full rank for use in a downstream function. This function performs that operation.
 }
 \usage{
 make_full_rank(mat,
@@ -21,7 +21,7 @@ whether an intercept (i.e., a vector of 1s) should be added to \code{mat} before
 }
 }
 \details{
-\code{make_full_rank} calls \code{\link{qr}} to find the rank and linearly independent columns of \code{mat}, which are retained while others are dropped. If \code{with.intercept} is set to \code{TRUE}, an intercept column is added to the matrix before calling \code{qr}. Note that dependent columns that appear later in \code{mat} will be dropped first.
+\code{make_full_rank()} calls \fun{qr} to find the rank and linearly independent columns of \code{mat}, which are retained while others are dropped. If \code{with.intercept} is set to \code{TRUE}, an intercept column is added to the matrix before calling \code{qr()}. Note that dependent columns that appear later in \code{mat} will be dropped first.
 
 See example at \code{\link{method_user}}.
 }
@@ -37,7 +37,7 @@ Noah Greifer
 }
 
 \seealso{
-\code{\link{method_user}}, \code{\link{model.matrix}}
+\fun{method_user}, \fun{model.matrix}
 }
 \examples{
 set.seed(1000)

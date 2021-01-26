@@ -4,20 +4,20 @@
 \title{Propensity Score Weighting Using Generalized Boosted Models}
 
 \description{
-This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting \code{method = "gbm"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
+This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting \code{method = "gbm"} in the call to \fun{weightit} or \fun{weightitMSM}. This method can be used with binary, multinomial, and continuous treatments.
 
 In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). The method relies on the \CRANpkg{gbm} package.
 
-This method mimics the functionality of functions in the \CRANpkg{twang} package, but has improved performance and more flexible options. See Details section for more details.
+This method mimics the functionality of functions in the \pkg{twang} package, but has improved performance and more flexible options. See Details section for more details.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \code{\link[gbm]{gbm.fit}} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link{get_w_from_ps}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
+For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \fun{get_w_from_ps}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the propensity scores using \code{\link[gbm]{gbm.fit}} with \code{distribution = "multinomial"} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link{get_w_from_ps}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link{get_w_from_ps}} for details.
+For multinomial treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} with \code{distribution = "multinomial"} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \fun{get_w_from_ps}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the generalized propensity score using \code{\link[gbm]{gbm.fit}} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument.
+For continuous treatments, this method estimates the generalized propensity score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
@@ -43,39 +43,39 @@ The following additional arguments can be specified:
 \describe{
 \item{\code{stop.method}}{A string describing the balance criterion used to select the best weights. See \code{\link{stop.method}} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, \code{stop.method} can be set as \code{"cv{#}"}, where \code{{#}} is replaced by a number representing the number of cross-validation folds used (e.g., \code{"cv5"} for 5-fold cross-validation). For binary and multinomial treatments, the default is \code{"es.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
-\item{\code{trim.at}}{A number supplied to \code{at} in \code{\link{trim}} which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
+\item{\code{trim.at}}{A number supplied to \code{at} in \fun{trim} which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
 }
-\item{\code{distribution}}{A string with the distribution used in the loss function of the boosted model. This is supplied to the \code{distribution} argument in \code{\link[gbm]{gbm.fit}}. For binary treatments, \code{"bernoulli"} and \code{"adaboost"} are available, with \code{"bernoulli"} the default. For multinomial treatments, only \code{"multinomial"} is allowed. For continuous treatments \code{"gaussian"}, \code{"laplace"}, and \code{"tdist"} are available, with \code{"gaussian"} the default. This argument is tunable.
+\item{\code{distribution}}{A string with the distribution used in the loss function of the boosted model. This is supplied to the \code{distribution} argument in \pkgfun{gbm}{gbm.fit}. For binary treatments, \code{"bernoulli"} and \code{"adaboost"} are available, with \code{"bernoulli"} the default. For multinomial treatments, only \code{"multinomial"} is allowed. For continuous treatments \code{"gaussian"}, \code{"laplace"}, and \code{"tdist"} are available, with \code{"gaussian"} the default. This argument is tunable.
 }
-\item{\code{n.trees}}{The maximum number of trees used. This is passed onto the \code{n.trees} argument in \code{gbm.fit}. The default is 10000 for binary and multinomial treatments and 20000 for continuous treatments.
+\item{\code{n.trees}}{The maximum number of trees used. This is passed onto the \code{n.trees} argument in \code{gbm.fit()}. The default is 10000 for binary and multinomial treatments and 20000 for continuous treatments.
 }
 \item{\code{start.tree}}{The tree at which to start balance checking. If you know the best balance isn't in the first 100 trees, for example, you can set \code{start.tree = 101} so that balance statistics are not computed on the first 100 trees. This can save some time since balance checking takes up the bulk of the run time for some balance-based stopping methods, and is especially useful when running the same model adding more and more trees. The default is 1, i.e., to start from the very first tree in assessing balance.
 }
-\item{\code{interaction.depth}}{The depth of the trees. This is passed onto the \code{interaction.depth} argument in \code{gbm.fit}. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multinomial treatments and 4 for continuous treatments. This argument is tunable.
+\item{\code{interaction.depth}}{The depth of the trees. This is passed onto the \code{interaction.depth} argument in \code{gbm.fit()}. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multinomial treatments and 4 for continuous treatments. This argument is tunable.
 }
-\item{\code{shrinkage}}{The shrinkage parameter applied to the trees. This is passed onto the \code{shrinkage} argument in \code{gbm.fit}. The default is .01 for binary and multinomial treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
+\item{\code{shrinkage}}{The shrinkage parameter applied to the trees. This is passed onto the \code{shrinkage} argument in \code{gbm.fit()}. The default is .01 for binary and multinomial treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
 }
-\item{\code{bag.fraction}}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the \code{bag.fraction} argument in \code{gbm.fit}. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using \code{\link{set.seed}} to ensure replicability of results.
+\item{\code{bag.fraction}}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the \code{bag.fraction} argument in \code{gbm.fit()}. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using \fun{set.seed} to ensure replicability of results.
 }
 }
 
-All other arguments take on the defaults of those in \code{\link[gbm]{gbm.fit}}, and some are not used at all.
+All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit}, and some are not used at all.
 
-The \code{w} argument in \code{gbm.fit} is ignored because sampling weights are passed using \code{s.weights}.
+The \code{w} argument in \code{gbm.fit()} is ignored because sampling weights are passed using \code{s.weights}.
 
 For continuous treatments only, the following arguments may be supplied:
 \describe{
 \item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link{dnorm}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
 }
-\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link{density}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE} (the default), the argument to the \code{density} parameter is used instead.
+\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \fun{density} function to estimate the numerator and denominator densities for the weights. If \code{FALSE} (the default), the argument to the \code{density} parameter is used instead.
 }
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to the \code{\link{density}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to \fun{density}. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
 }
 \item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
 }
 }
 
-For tunable arguments, multiple entries may be supplied, and \code{weightit} will choose the best value by optimizing the criterion specified in \code{stop.method}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.
+For tunable arguments, multiple entries may be supplied, and \code{weightit()} will choose the best value by optimizing the criterion specified in \code{stop.method}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.
 }
 \section{Additional Outputs}{
 \describe{
@@ -83,10 +83,10 @@ For tunable arguments, multiple entries may be supplied, and \code{weightit} wil
 A list with the following entries:
 \describe{
 \item{\code{best.tree}}{
-The number of trees at the optimum. If this is close to \code{n.trees}, \code{weightit} should be rerun with a larger value for \code{n.trees}, and \code{start.tree} can be set to just below \code{best.tree}. When other parameters are tuned, this is the best tree value in the best combination of tuned parameters. See example.
+The number of trees at the optimum. If this is close to \code{n.trees}, \code{weightit()} should be rerun with a larger value for \code{n.trees}, and \code{start.tree} can be set to just below \code{best.tree}. When other parameters are tuned, this is the best tree value in the best combination of tuned parameters. See example.
 }
 \item{\code{tree.val}}{
-A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \code{\link{plot}} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.
+A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \fun{plot} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.
 }
 }
 If any arguments are to be tuned (i.e., they have been supplied more than one value), the following two additional components are included in \code{info}:
@@ -125,11 +125,11 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 }
 
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}, \code{\link{method_twang}} for an older version that calls functions in \pkg{twang}
+\fun{weightit}, \fun{weightitMSM}, \code{\link{method_twang}} for an older (deprecated) version that calls functions in \pkg{twang}
 
 \code{\link{stop.method}} for allowable arguments to \code{stop.method}
 
-\code{\link[gbm:gbm.fit]{gbm::gbm.fit}} for the fitting function
+\pkgfun2{gbm}{gbm.fit}{gbm::gbm.fit} for the fitting function
 }
 \examples{
 

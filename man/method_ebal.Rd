@@ -4,18 +4,18 @@
 \title{Entropy Balancing}
 
 \description{
-This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
+This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \fun{weightit} or \fun{weightitMSM}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on code written for \pkg{WeightIt} using \code{\link{optim}}.
+In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on code written for \pkg{WeightIt} using \fun{optim}.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the weights using \code{optim} using formulas described by Hainmueller (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
+For binary treatments, this method estimates the weights using \code{optim()} using formulas described by Hainmueller (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the weights using \code{optim}. The following estimands are allowed: ATE and ATT. When the ATE is requested, \code{optim} is run once for each treatment group. When the ATT is requested, \code{optim} is run once for each non-focal (i.e., control) group.
+For multinomial treatments, this method estimates the weights using \code{optim()}. The following estimands are allowed: ATE and ATT. When the ATE is requested, \code{optim()} is run once for each treatment group. When the ATT is requested, \code{optim()} is run once for each non-focal (i.e., control) group.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the weights using \code{optim} using formulas described by Tübbicke (2020).
+For continuous treatments, this method estimates the weights using \code{optim()} using formulas described by Tübbicke (2020).
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point. This method is not guaranteed to yield exact balance at each time point. NOTE: the use of entropy balancing with longitudinal treatments has not been validated!
@@ -33,13 +33,17 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 }
 \section{Additional Arguments}{
+\code{moments} and \code{int} are accepted. See \fun{weightit} for details.
 \describe{
 \item{\code{base.weights}}{
 A vector of base weights, one for each unit. This works for continuous treatments as well. These correspond to the base weights \emph{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{w*log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to \code{base.weights} but can be included in a \code{weightit()} call that includes \code{s.weights}.
 }
+\item{\code{d.moments}}{
+With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2020) recommend setting \code{d.moments = 3}, even if \code{moments} is less than 3. This argument corresponds to the tuning parameters $r$ and $s$ in Vegetabile et al. (2020) (which here must be equal). Ignored for binary and multi-category treatments.
+}
 }
 
-The arguments \code{maxit} and \code{reltol} can be supplied and are passed to the \code{control} argument of \code{\link{optim}}. The \code{"BFGS"} method is used, so the defaults correspond to this.
+The arguments \code{maxit} and \code{reltol} can be supplied and are passed to the \code{control} argument of \fun{optim}. The \code{"BFGS"} method is used, so the defaults correspond to this.
 
 The \code{stabilize} argument is ignored; in the past it would reduce the variability of the weights through an iterative process. If you want to minimize the variance of the weights subject to balance constraints, use \code{method = "optweight"}.
 
@@ -47,12 +51,12 @@ The \code{stabilize} argument is ignored; in the past it would reduce the variab
 \section{Additional Outputs}{
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the output of the call to \code{optim}, which contains the dual variables and convergence information. For ATE fits or with multinomial treatments, a list of \code{optim} outputs, one for each weighted group.
+When \code{include.obj = TRUE}, the output of the call to \fun{optim}, which contains the dual variables and convergence information. For ATE fits or with multinomial treatments, a list of \code{optim()} outputs, one for each weighted group.
 }
 }
 }
 \details{
-Entropy balancing involves the specification of an optimization problem, the solution to which is then used to compute the weights. The constraints of the primal optimization problem correspond to covariate balance on the means (for binary and multinomial treatments) or treatment-covariate covariances (for continuous treatments), positivity of the weights, and that the weights sum to a certain value. It turns out that the dual optimization problem is much easier to solve because it is over only as many variables as there are balance constraints rather than over the weights for each unit and it is unconstrained. Zhao and Percival (2017) found that entropy balancing for the ATT of a binary treatment actually involves the estimation of the coefficients of a logistic regression propensity score model but using a specialized loss function different from that optimized with maximum likelihood. Entropy balancing is doubly robust (for the ATT) in the sense that it is consistent either when the true propensity score model is a logistic regression of the treatment on the covariates or when the true outcome model for the control units is a linear regression of the outcome on the covariates, and it attains a semi-parametric efficiency bound when both are true. Entropy balancing will always yield exact balance on the included terms.
+Entropy balancing involves the specification of an optimization problem, the solution to which is then used to compute the weights. The constraints of the primal optimization problem correspond to covariate balance on the means (for binary and multinomial treatments) or treatment-covariate covariances (for continuous treatments), positivity of the weights, and that the weights sum to a certain value. It turns out that the dual optimization problem is much easier to solve because it is over only as many variables as there are balance constraints rather than over the weights for each unit and it is unconstrained. Zhao and Percival (2017) found that entropy balancing for the ATT of a binary treatment actually involves the estimation of the coefficients of a logistic regression propensity score model but using a specialized loss function different from that optimized with maximum likelihood. Entropy balancing is doubly robust (for the ATT) in the sense that it is consistent either when the true propensity score model is a logistic regression of the treatment on the covariates or when the true outcome model for the control units is a linear regression of the outcome on the covariates, and it attains a semi-parametric efficiency bound when both are true. Entropy balancing will always yield exact mean balance on the included terms.
 }
 \author{
 The code for continuous treatments was kindly contributed by Stefan Tübbicke (\email{tuebbicke@empwifo.uni-potsdam.de}).
@@ -73,7 +77,7 @@ Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., & McCaffrey, D. F
 
 }
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}
+\fun{weightit}, \fun{weightitMSM}
 
 }
 
@@ -91,15 +95,17 @@ bal.tab(W1)
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ebal", estimand = "ATE",
-                standardize = TRUE))
+                method = "ebal", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
 
-#Balancing covariates with respect to re75 (continuous)
+#Balancing covariates and squares with respect to
+#re75 (continuous), maintaining 3 moments of the
+#covariate and treatment distributions
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ebal"))
+                method = "ebal", moments = 2,
+                d.moments = 3))
 summary(W3)
 bal.tab(W3)
 

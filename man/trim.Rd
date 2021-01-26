@@ -32,9 +32,9 @@ Not used.
 }
 }
 \details{
-\code{trim} takes in a \code{weightit} object (the output of a call to \code{weightit} or \code{weightitMSM}) or a numeric vector of weights and trims them to the specified quantile. All weights above that quantile are set to the weight at that quantile. If \code{lower = TRUE}, all weights below 1 minus the quantile are to set the weight at 1 minus the quantile. In general, trimming weights decreases balance but also decreases the variability of the weights, improving precision at the potential expense of unbiasedness (Cole & Hernán, 2008). See Lee, Lessler, and Stuart (2011) and Thoemmes and Ong (2015) for discussions and simulation results of trimming weights at various quantiles. Note that trimming weights can also change the target population and therefore the estimand.
+\code{trim()} takes in a \code{weightit} object (the output of a call to \fun{weightit} or \fun{weightitMSM}) or a numeric vector of weights and trims them to the specified quantile. All weights above that quantile are set to the weight at that quantile. If \code{lower = TRUE}, all weights below 1 minus the quantile are to set the weight at 1 minus the quantile. In general, trimming weights decreases balance but also decreases the variability of the weights, improving precision at the potential expense of unbiasedness (Cole & Hernán, 2008). See Lee, Lessler, and Stuart (2011) and Thoemmes and Ong (2015) for discussions and simulation results of trimming weights at various quantiles. Note that trimming weights can also change the target population and therefore the estimand.
 
-When using \code{trim} on a numeric vector of weights, it is helpful to include the treatment vector as well. The helps determine the type of treatment and estimand, which are used to specify how trimming is performed. In particular, if the estimand is determined to be the ATT or ATC, the weights of the target (i.e., focal) group are ignored, since they should all be equal to 1. Otherwise, if the estimand is the ATE or the treatment is continuous, all weights are considered for trimming. In general, weights for any group for which all the weights are the same will not be considered in the trimming.
+When using \code{trim()} on a numeric vector of weights, it is helpful to include the treatment vector as well. The helps determine the type of treatment and estimand, which are used to specify how trimming is performed. In particular, if the estimand is determined to be the ATT or ATC, the weights of the target (i.e., focal) group are ignored, since they should all be equal to 1. Otherwise, if the estimand is the ATE or the treatment is continuous, all weights are considered for trimming. In general, weights for any group for which all the weights are the same will not be considered in the trimming.
 }
 \value{
 If the input is a \code{weightit} object, the output will be a \code{weightit} object with the weights replaced by the trimmed weights, while will have an additional attribute, \code{"trim"}, equal to the quantile of trimming.
@@ -54,7 +54,7 @@ Noah Greifer
 }
 
 \seealso{
-\code{link{weightit}}, \code{link{weightitMSM}}
+\fun{weightit}, \fun{weightitMSM}
 }
 \examples{
 library("cobalt")

@@ -4,18 +4,18 @@
 \title{Nonparametric Covariate Balancing Propensity Score Weighting}
 
 \description{
-This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting \code{method = "npcbps"} in the call to \code{\link{weightit}} or \code{\link{weightitMSM}}. This method can be used with binary, multinomial, and continuous treatments.
+This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting \code{method = "npcbps"} in the call to \fun{weightit} or \fun{weightitMSM}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on \code{\link[CBPS]{npCBPS}} from the \CRANpkg{CBPS} package.
+In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on \pkgfun{CBPS}{npCBPS} from the \CRANpkg{CBPS} package.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object.
+For binary treatments, this method estimates the weights using \pkgfun{CBPS}{npCBPS}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object.
+For multinomial treatments, this method estimates the weights using \pkgfun{CBPS}{npCBPS}. The ATE is the only estimand allowed. The weights are taken from the output of the \code{npCBPS} fit object.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the weights using \code{\link[CBPS]{npCBPS}}. The weights are taken from the output of the \code{npCBPS} fit object.
+For continuous treatments, this method estimates the weights using \pkgfun{CBPS}{npCBPS}. The weights are taken from the output of the \code{npCBPS} fit object.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how \code{\link[CBPS]{CBMSM}} in the \pkg{CBPS} package estimates weights for longitudinal treatments.
@@ -33,20 +33,20 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 }
 \section{Additional Arguments}{
-All arguments to \code{npCBPS} can be passed through \code{weightit} or \code{weightitMSM}.
+All arguments to \code{npCBPS()} can be passed through \code{weightit()} or \code{weightitMSM()}.
 
-All arguments take on the defaults of those in \code{npCBPS}.
+All arguments take on the defaults of those in \code{npCBPS()}.
 
 }
 \section{Additional Outputs}{
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the nonparametric CB(G)PS model fit. The output of the call to \code{\link[CBPS:npCBPS]{CBPS::npCBPS}}.
+When \code{include.obj = TRUE}, the nonparametric CB(G)PS model fit. The output of the call to \pkgfun2{CBPS}{npCBPS}{CBPS::npCBPS}.
 }
 }
 }
 \details{
-Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical likelihood of the data given the weights. npCBPS is similar to entropy balancing and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the \code{cor.prior} argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.
+Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical likelihood of the data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the \code{cor.prior} argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.
 }
 \references{
 
@@ -54,9 +54,9 @@ Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score f
 
 }
 \seealso{
-\code{\link{weightit}}, \code{\link{weightitMSM}}
+\fun{weightit}, \fun{weightitMSM}, \code{\link{method_cbps}}
 
-\code{\link[CBPS:npCBPS]{CBPS::npCBPS}} for the fitting function
+\pkgfun2{CBPS}{npCBPS}{CBPS::npCBPS} for the fitting function
 }
 
 \examples{

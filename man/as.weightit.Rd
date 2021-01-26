@@ -8,7 +8,7 @@
 Create a \code{weightit} object manually
 }
 \description{
-This function allows users to get the benefits of a \code{weightit} object when using weights not estimated with \code{weightit()} or \code{weightitMSM()}. These benefits include diagnostics, plots, and direct compatibility with \pkg{cobalt} for assessing balance.
+This function allows users to get the benefits of a \code{weightit} object when using weights not estimated with \fun{weightit} or \fun{weightitMSM}. These benefits include diagnostics, plots, and direct compatibility with \pkg{cobalt} for assessing balance.
 }
 \usage{
 as.weightit(...)
@@ -66,7 +66,7 @@ additional arguments. These must be named. They will be included in the output o
 }
 
 \value{
-An object of class \code{weightit} (for \code{as.weightit}) or \code{weightitMSM} (for \code{as.weightitMSM}).
+An object of class \code{weightit} (for \code{as.weightit()}) or \code{weightitMSM} (for \code{as.weightitMSM()}).
 }
 
 \author{

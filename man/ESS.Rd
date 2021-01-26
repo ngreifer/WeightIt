@@ -24,7 +24,7 @@ Shook-Sa, B. E., & Hudgens, M. G. (2020). Power and Sample Size for Marginal Str
 }
 
 \seealso{
-\code{\link{summary.weightit}}
+\fun{summary.weightit}
 }
 \examples{
 library("cobalt")
