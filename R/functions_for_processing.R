@@ -192,7 +192,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
   if (treat.type == "multinomial") {
 
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
+      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE, immediate. = TRUE)
       reported.estimand <- estimand <- "ATT"
     }
 
@@ -213,7 +213,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
   else if (treat.type == "binary") {
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE)
+      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE, immediate. = TRUE)
       reported.estimand <- estimand <- "ATT"
     }
 
@@ -344,7 +344,7 @@ process.moments.int <- function(moments, int, method) {
   }
   else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
     warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = 1),
-                   " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and", quotes = 1), "."), call. = FALSE)
+                   " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and", quotes = 1), "."), call. = FALSE, immediate. = TRUE)
     moments <- NULL
     int <- FALSE
   }
@@ -424,7 +424,8 @@ process.missing <- function(missing, method, treat.type) {
   allowable.missings <- AE[[treat.type]][[method]]
   if (is_null(missing)) {
     missing <- allowable.missings[1]
-    warning(paste0("Missing values are present in the covariates. See ?WeightIt::method_", method, " for information on how these are handled."), call. = FALSE)
+    warning(paste0("Missing values are present in the covariates. See ?WeightIt::method_",
+                   method, " for information on how these are handled."), call. = FALSE, immediate. = TRUE)
   }
   else {
     if (!is.character(missing) || length(missing) != 1) stop("'missing' must be a string of length 1.", call. = FALSE)

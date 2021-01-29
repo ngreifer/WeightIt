@@ -39,8 +39,8 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
       if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
       else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
 
-      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE)
-      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE)
+      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE, immediate. = TRUE)
+      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE, immediate. = TRUE)
     }
   }
 
@@ -101,8 +101,8 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
       if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
       else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
 
-      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE)
-      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE)
+      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE, immediate. = TRUE)
+      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE, immediate. = TRUE)
     }
   }
 
@@ -175,7 +175,8 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         A$link <- acceptable.links[1]
         warning(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE), " allowed as the link for ",
                        if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
-                       " treatments", if (missing == "saem") " with missing = \"saem\"", ". Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
+                       " treatments", if (missing == "saem") " with missing = \"saem\"",
+                       ". Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
                 call. = FALSE, immediate. = TRUE)
       }
       else A$link <- which.link
@@ -615,7 +616,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
   if ("targets" %in% names(A)) {
-    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE)
+    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE, immediate. = TRUE)
     A[["targets"]] <- NULL
   }
 
@@ -660,7 +661,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
   if ("targets" %in% names(A)) {
-    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE)
+    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE, immediate. = TRUE)
     A[["targets"]] <- NULL
   }
 
@@ -709,7 +710,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
   baseline.formula <- formula(baseline.data)
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(baseline.formula, baseline.data, A[["tols"]], stop = TRUE)
   if ("targets" %in% names(A)) {
-    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE)
+    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE, immediate. = TRUE)
     A[["targets"]] <- NULL
   }
 
@@ -1963,7 +1964,6 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     bal_fun <- crit$fun
 
     sneaky <- 0
-    # attr(sneaky, "vals") <- list(estimand = estimand, covs = covs)
     attr(sneaky, "vals") <- list(init = init, bal_fun = bal_fun, estimand = estimand)
     A[["control"]] <- list(trimLogit = sneaky)
 
@@ -1985,8 +1985,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     treat_i <- as.numeric(treat == i)
 
     fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = treat_i,
-                                                              X = covs,
-                                                              newX = covs,
+                                                              X = as.data.frame(covs),
                                                               family = binomial(),
                                                               SL.library = A[["SL.library"]],
                                                               verbose = FALSE,
@@ -2139,7 +2138,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   }
 
   fit <- do.call(SuperLearner::SuperLearner, list(Y = treat,
-                                                  X = covs, newX = covs,
+                                                  X = as.data.frame(covs),
                                                   family = gaussian(),
                                                   SL.library = B[["SL.library"]],
                                                   verbose = FALSE,
@@ -2396,7 +2395,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   min.w <- if_null_then(A[["min.w"]], 1e-8)
   if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
-    warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE)
+    warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
     min.w <- 1e-8
   }
 
