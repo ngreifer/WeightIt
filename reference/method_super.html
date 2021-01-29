@@ -353,29 +353,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
                 method <span class='op'>=</span> <span class='st'>"super"</span>, density <span class='op'>=</span> <span class='st'>"dt_8"</span>,
                 SL.library <span class='op'>=</span> <span class='fu'><a href='https://rdrr.io/r/base/c.html'>c</a></span><span class='op'>(</span><span class='st'>"SL.glm"</span>, <span class='st'>"SL.ridge"</span>,
                                <span class='st'>"SL.glm.interaction"</span><span class='op'>)</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='message'>X is not a data frame. Check the algorithms in SL.library to make sure they are compatible with non data.frame inputs</span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; Error in model.frame.default(formula = Y ~ ., data = X) : 
-#&gt;   'data' must be a data.frame, not a matrix or an array</div><div class='output co'>#&gt; <span class='warning'>Warning: Error in algorithm SL.ridge  on full data </span>
-#&gt; <span class='warning'>  The Algorithm will be removed from the Super Learner (i.e. given weight 0) </span></div><div class='output co'>#&gt; <span class='warning'>Warning: Coefficients already 0 for all failed algorithm(s)</span></div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "super" (propensity score weighting with SuperLearner)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -386,23 +364,23 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;        Min                                   Max
-#&gt; all 0.0441 |---------------------------| 21.9616
+#&gt; all 0.0439 |---------------------------| 21.0528
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                         
-#&gt;        485     484     483   431     354
-#&gt;  all 9.647 16.9932 18.6322 19.71 21.9616
+#&gt;                                           
+#&gt;         485    484     483     431     354
+#&gt;  all 9.4162 16.527 18.1028 19.0692 21.0528
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
-#&gt; all       1.369 0.512   0.353       0
+#&gt; all       1.334 0.504   0.341       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             Total
 #&gt; Unweighted 614.  
-#&gt; Weighted   213.86</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
+#&gt; Weighted   221.04</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "super", density = "dt_8", SL.library = c("SL.glm", 
@@ -410,16 +388,16 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Corr.Adj
-#&gt; age      Contin.   0.0303
-#&gt; educ     Contin.   0.0359
-#&gt; married   Binary   0.0584
-#&gt; nodegree  Binary  -0.0608
-#&gt; re74     Contin.   0.0347
+#&gt; age      Contin.   0.0311
+#&gt; educ     Contin.   0.0348
+#&gt; married   Binary   0.0613
+#&gt; nodegree  Binary  -0.0599
+#&gt; re74     Contin.   0.0405
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;             Total
 #&gt; Unadjusted 614.  
-#&gt; Adjusted   213.86</div><div class='input'>
+#&gt; Adjusted   221.04</div><div class='input'>
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
 <span class='co'># using balance SuperLearner to minimize the average</span>
 <span class='co'># KS statistic</span>
