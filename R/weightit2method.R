@@ -183,7 +183,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     }
 
     use.br <- startsWith(A$link, "br.")
+    # use.bayes <- startsWith(A$link, "bayes.")
     if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
+    # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
 
     if (bin.treat) {
 
@@ -2007,12 +2009,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
 
-  if (treat.type != "binary") {
-    p.score <- NULL
-  }
-  else {
-    p.score <- ps[[get.treated.level(treat)]]
-  }
+  p.score <- if (treat.type == "binary") ps[[get.treated.level(treat)]] else NULL
 
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
@@ -2236,12 +2233,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
 
-  if (treat.type != "binary") {
-    p.score <- NULL
-  }
-  else {
-    p.score <- ps[[get.treated.level(treat)]]
-  }
+  p.score <- if (treat.type == "binary") ps[[get.treated.level(treat)]] else NULL
 
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
