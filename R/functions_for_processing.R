@@ -388,7 +388,7 @@ process.missing <- function(missing, method, treat.type) {
   , ebcw = c("ind")
   , optweight = c("ind")
   , super = c("ind")
-  , bart = c("ind", "hot")
+  , bart = c("ind")
   , energy = c("ind")
   # , kbal = c("ind")
   ),
@@ -401,7 +401,7 @@ process.missing <- function(missing, method, treat.type) {
                      , ebcw = c("ind")
                      , optweight = c("ind")
                      , super = c("ind")
-                     , bart = c("ind", "hot")
+                     , bart = c("ind")
                      , energy = c("ind")
                      # , kbal = c("ind")
   ),
@@ -416,7 +416,7 @@ process.missing <- function(missing, method, treat.type) {
   , ebcw = c("ind")
   , optweight = c("ind")
   , super = c("ind")
-  , bart = c("ind", "hot")
+  , bart = c("ind")
   , energy = c("ind")
   # , kbal = c("ind")
   ))
