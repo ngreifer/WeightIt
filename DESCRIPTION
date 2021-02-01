@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.10.2.9000
+Version: 0.11.0
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -12,7 +12,7 @@ Depends:
     R (>= 3.3.0)
 Imports:
     cobalt (>= 4.2.2),
-    ggplot2 (>= 3.0.0),
+    ggplot2 (>= 3.3.0),
     crayon,
     backports (>= 1.1.9)
 Suggests:
@@ -22,8 +22,6 @@ Suggests:
     optweight (>= 0.2.4),
     SuperLearner (>= 2.0-25),
     mlogit (>= 1.1.0),
-    mnlogit (>= 1.2.6),
-    dfidx,
     MNP (>= 3.1-0),
     brglm2 (>= 0.5.2),
     osqp (>= 0.6.0.3),
