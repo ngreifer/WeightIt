@@ -143,13 +143,13 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     <div class="ref-description">
     <p>This page explains the details of estimating weights from Bayesian additive regression trees (BART)-based propensity scores by setting <code>method = "bart"</code> in the call to <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
-<p>In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on <code>bart2()</code> from the <a href='https://CRAN.R-project.org/package=dbarts'><span class="pkg">dbarts</span></a> package.</p>
+<p>In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on <code><a href='https://rdrr.io/pkg/dbarts/man/bart.html'>bart2()</a></code> from the <a href='https://CRAN.R-project.org/package=dbarts'><span class="pkg">dbarts</span></a> package.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
-<p>For binary treatments, this method estimates the propensity scores using <code>bart2()</code>. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> for details.</p>
+<p>For binary treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/dbarts/man/bart.html'>bart2()</a></code>. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> for details.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
-<p>For multinomial treatments, the propensity scores are estimated using several calls to <code>bart2()</code>, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> for details.</p>
+<p>For multinomial treatments, the propensity scores are estimated using several calls to <code><a href='https://rdrr.io/pkg/dbarts/man/bart.html'>bart2()</a></code>, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href='get_w_from_ps.html'>get_w_from_ps()</a></code> for details.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
-<p>For continuous treatments, the generalized propensity score is estimated using <code>bart2()</code>. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting <code>use.kernel = TRUE</code>. Other arguments to <code><a href='https://rdrr.io/r/stats/density.html'>density()</a></code> can be specified to refine the density estimation parameters. <code>plot = TRUE</code> can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.</p>
+<p>For continuous treatments, the generalized propensity score is estimated using <code><a href='https://rdrr.io/pkg/dbarts/man/bart.html'>bart2()</a></code>. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting <code>use.kernel = TRUE</code>. Other arguments to <code><a href='https://rdrr.io/r/stats/density.html'>density()</a></code> can be specified to refine the density estimation parameters. <code>plot = TRUE</code> can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, the weights are the product of the weights estimated at each time point.</p>
 <h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Sampling Weights</h3>
@@ -169,7 +169,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     
 
-<p>All arguments to <code>bart2()</code> can be passed through <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>, with the following exceptions:</p><ul>
+<p>All arguments to <code><a href='https://rdrr.io/pkg/dbarts/man/bart.html'>bart2()</a></code> can be passed through <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>, with the following exceptions:</p><ul>
 <li><p><code>test</code>, <code>weights</code>, <code>subset</code>, <code>offset.test</code> are ignored</p></li>
 <li><p><code>combine.chains</code> is always set to <code>TRUE</code></p></li>
 <li><p><code>sampleronly</code> is always set to <code>FALSE</code></p></li>
@@ -188,13 +188,13 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     
 <dl>
-<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the <code>bart2</code> fit(s) used to generate the predicted values. With multinomial treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using <code><a href='https://rdrr.io/r/stats/fitted.values.html'>fitted()</a></code>.</p></dd>
+<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the <code>bart2</code> fit(s) used to generate the predicted values. With multinomial treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using <code><a href='https://rdrr.io/pkg/dbarts/man/bart.html'>fitted()</a></code>.</p></dd>
 
 </dl>
 
     <h2 class="hasAnchor" id="details"><a class="anchor" href="#details"></a>Details</h2>
 
-    <p>BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the <code>n.trees</code> argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to <code><a href='weightit.html'>weightit()</a></code> that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the <code>bart2()</code> documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.</p>
+    <p>BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the <code>n.trees</code> argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to <code><a href='weightit.html'>weightit()</a></code> that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the <code><a href='https://rdrr.io/pkg/dbarts/man/bart.html'>bart2()</a></code> documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.</p>
     <h2 class="hasAnchor" id="note"><a class="anchor" href="#note"></a>Note</h2>
 
     <p>With version 0.9-19 or below of <span class="pkg">dbarts</span>, special care has to be taken to ensure reproducibility when using <code>method = "bart"</code>. Setting a seed (either with <code><a href='https://rdrr.io/r/base/Random.html'>set.seed()</a></code> or by supplying an argument to <code>rngSeed</code>) will only work when only one thread is requested. The default is to use four threads. To request that only one thread is used, which is necessary for reproducible results, set <code>n.threads = 1</code> in the call to <code><a href='weightit.html'>weightit()</a></code> and set a seed. Note that the fewer threads are used, the slower the estimation will be. One can set <code>n.chains</code> to a lower number (default 4) to speed up the estimation at the possible expense of statistical performance.</p>
@@ -233,43 +233,43 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt;            Min                                 Max
 #&gt; treated 1.0000    ||                         1.000
-#&gt; control 0.0021 |---------------------------| 9.618
+#&gt; control 0.0044 |---------------------------| 9.576
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
-#&gt;                                         
-#&gt;             1      2      3      4     5
-#&gt;  treated    1      1      1      1     1
-#&gt;           608    592    585    569   374
-#&gt;  control 2.32 2.7749 2.8652 3.3846 9.618
+#&gt;                                           
+#&gt;               1      2      3      4     5
+#&gt;  treated      1      1      1      1     1
+#&gt;             608    592    569    409   374
+#&gt;  control 2.2768 2.7897 2.8934 3.2644 9.576
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
-#&gt;         Coef of Var   MAD Entropy # Zeros
-#&gt; treated       0.000 0.000  -0.000       0
-#&gt; control       1.808 0.915   0.718       0
+#&gt;         Coef of Var  MAD Entropy # Zeros
+#&gt; treated       0.000 0.00  -0.000       0
+#&gt; control       1.793 0.91   0.708       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
-#&gt; Weighted    100.69     185</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
+#&gt; Weighted    101.99     185</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
 #&gt;     re74, data = lalonde, method = "bart", estimand = "ATT")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;                Type Diff.Adj
-#&gt; prop.score Distance   0.4793
-#&gt; age         Contin.   0.0544
+#&gt; prop.score Distance   0.4807
+#&gt; age         Contin.   0.0543
 #&gt; educ        Contin.  -0.0266
-#&gt; married      Binary  -0.0315
-#&gt; nodegree     Binary   0.0362
-#&gt; re74        Contin.  -0.0530
+#&gt; married      Binary  -0.0317
+#&gt; nodegree     Binary   0.0359
+#&gt; re74        Contin.  -0.0573
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted  429.       185
-#&gt; Adjusted    100.69     185</div><div class='input'>
+#&gt; Adjusted    101.99     185</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 <span class='op'>(</span><span class='va'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>race</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
@@ -286,47 +286,47 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;           Min                                   Max
-#&gt; black  1.2361 |-----------------|            8.8075
-#&gt; hispan 2.6477     |-----------------------| 12.8087
-#&gt; white  1.0516 |-----------------|            8.7793
+#&gt; black  1.2390 |-----------------|            9.1024
+#&gt; hispan 2.9009     |-----------------------| 13.0744
+#&gt; white  1.0611 |----------------|             8.5251
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                                
-#&gt;             423     244     231     226     181
-#&gt;   black  6.9989  7.3005  7.8497  8.2208  8.8075
+#&gt;             423     283     244     231     181
+#&gt;   black  7.0897   7.116  7.9123  8.0213  9.1024
 #&gt;             570     564     512     426     346
-#&gt;  hispan 11.7714 12.4498 12.5476 12.7529 12.8087
-#&gt;             140      96      76      60      23
-#&gt;   white  4.3161   5.224  5.5819  8.3728  8.7793
+#&gt;  hispan 12.3247 12.3577 12.4856 12.8887 13.0744
+#&gt;             140      76      68      60      23
+#&gt;   white  4.4865  5.1395  5.6015  8.1481  8.5251
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;        Coef of Var   MAD Entropy # Zeros
-#&gt; black        0.579 0.374   0.127       0
-#&gt; hispan       0.375 0.309   0.070       0
-#&gt; white        0.479 0.324   0.088       0
+#&gt; black        0.575 0.370   0.125       0
+#&gt; hispan       0.365 0.302   0.066       0
+#&gt; white        0.470 0.321   0.086       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
-#&gt;             black hispan white
-#&gt; Unweighted 243.    72.   299. 
-#&gt; Weighted   182.18  63.25 243.4</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
+#&gt;             black hispan  white
+#&gt; Unweighted 243.    72.   299.  
+#&gt; Weighted   182.78  63.65 245.06</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "bart", estimand = "ATE")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
 #&gt;             Type Max.Diff.Adj
-#&gt; age      Contin.       0.1901
-#&gt; educ     Contin.       0.1666
+#&gt; age      Contin.       0.1844
+#&gt; educ     Contin.       0.1750
 #&gt; married   Binary       0.0514
-#&gt; nodegree  Binary       0.0311
-#&gt; re74     Contin.       0.1077
+#&gt; nodegree  Binary       0.0298
+#&gt; re74     Contin.       0.1120
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
-#&gt;             black hispan white
-#&gt; Unadjusted 243.    72.   299. 
-#&gt; Adjusted   182.18  63.25 243.4</div><div class='input'>
+#&gt;             black hispan  white
+#&gt; Unadjusted 243.    72.   299.  
+#&gt; Adjusted   182.78  63.65 245.06</div><div class='input'>
 <span class='co'>#Balancing covariates with respect to re75 (continuous)</span>
 <span class='co'>#assuming t(3) conditional density for treatment</span>
 <span class='op'>(</span><span class='va'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>re75</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
@@ -342,40 +342,40 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
-#&gt;        Min                                   Max
-#&gt; all 0.0794 |---------------------------| 19.8509
+#&gt;      Min                                   Max
+#&gt; all 0.08 |---------------------------| 21.2507
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                          
-#&gt;         487    484    469     375     308
-#&gt;  all 7.5942 8.5886 9.1661 17.9162 19.8509
+#&gt;         487    486    484     469     310
+#&gt;  all 7.4802 7.6949 9.0449 17.6533 21.2507
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
-#&gt; all       1.123 0.474   0.274       0
+#&gt; all       1.138 0.479   0.278       0
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
 #&gt; 
 #&gt;             Total
 #&gt; Unweighted 614.  
-#&gt; Weighted   271.76</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
+#&gt; Weighted   267.72</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "bart", density = "dt_3")
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
 #&gt;             Type Corr.Adj
-#&gt; age      Contin.   0.0251
-#&gt; educ     Contin.   0.0519
-#&gt; married   Binary   0.0789
-#&gt; nodegree  Binary  -0.0789
-#&gt; re74     Contin.   0.1171
+#&gt; age      Contin.   0.0288
+#&gt; educ     Contin.   0.0560
+#&gt; married   Binary   0.0779
+#&gt; nodegree  Binary  -0.0817
+#&gt; re74     Contin.   0.1092
 #&gt; 
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;             Total
 #&gt; Unadjusted 614.  
-#&gt; Adjusted   271.76</div></span></pre>
+#&gt; Adjusted   267.72</div></span></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
