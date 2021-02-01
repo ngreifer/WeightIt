@@ -294,35 +294,24 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       else if (A$link %in% c("logit", "probit")) {
         if (!isFALSE(A$use.mlogit)) {
           check.package("mlogit")
-          if (isTRUE(A$use.mnlogit) && A$link[1] == "logit" && check.package("mnlogit", alternative = TRUE)) {
-            data <- data.frame(treat = treat_sub, covs)
-            covnames <- names(data)[-1]
-            mult <- mlogit::mlogit.data(data, varying = NULL, shape = "wide", sep = "", choice = names(data)[1])
-            mult[["alt"]] <- as.character(mult[["alt"]])
-            tryCatch({
-              fit <- mnlogit::mnlogit(as.formula(paste0(names(data)[1], " ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
-                                      data = mult,
-                                      choiceVar = "alt",
-                                      weights = s.weights, ...)
-            },
-            error = function(e) {stop(paste0("There was a problem fitting the multinomial logistic regression with mnlogit().\n       Try again with use.mnlogit = FALSE."), call. = FALSE)}
-            )
-          }
-          else {
-            check.package("dfidx")
-            data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
-            covnames <- names(data)[-c(1,2)]
-            mult <- dfidx::dfidx(data, varying = NULL, shape = "wide", sep = "", choice = "treat")
-            tryCatch({
-              fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "), " | 1")),
-                                    data = mult,
-                                    estimate = TRUE,
-                                    probit = A$link[1] == "probit",
-                                    weights = .s.weights, ...)
-            },
-            error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mlogit().\n       Try again with use.mlogit = FALSE."), call. = FALSE)}
-            )
-          }
+
+          data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
+          covnames <- names(data)[-c(1,2)]
+          tryCatch({
+            fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "))),
+                                  data = data,
+                                  estimate = TRUE,
+                                  probit = A$link[1] == "probit",
+                                  weights = .s.weights,
+                                  varying = NULL,
+                                  shape = "wide",
+                                  sep = "",
+                                  choice = "treat",
+                                  ...)
+          },
+          error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mlogit().\n       Try again with use.mlogit = FALSE.\nError message (from mlogit):\n       ", conditionMessage(e)), call. = FALSE)}
+          )
+
           ps <- fitted(fit, outcome = FALSE)
           fit.obj <- fit
         }

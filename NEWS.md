@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# WeightIt 0.11.0
 
 * Added support for estimating propensity scores using Bayesian additive regression trees (BART) with `method = "bart"`. This method fits a BART model for the treatment using functions in the `dbarts` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.
 
@@ -16,6 +16,8 @@ WeightIt News and Updates
 * When using `method = "ebal"` with continuous treatments, a new argument, `d.moments`, can now be specified. This controls the number of moments of the covariate and treatment distributions that are constrained to be the same in the weighted sample as they are in the original sample. Vegetabile et al. (2020) recommend setting `d.moments` to at least 3 to ensure generalizability and reduce bias due to effect modification.
 
 * Made some minor changes to `summary.weightit()` and `plot.summary.weightit()`. Fixed how negative entropy was computed.
+
+* The option `use.mnlogit` in `weightit()` with multi-category treatments and `method = "ps"` has been removed because `mnlogit` appears uncooperative.
 
 * Fixed a bug (#16) when using `method = "cbps"` with factor variables, thanks to @danielebottigliengo.
 
