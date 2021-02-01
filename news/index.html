@@ -81,7 +81,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.10.2.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0</span>
       </span>
     </div>
 
@@ -121,9 +121,9 @@
       <small>Source: <a href='https://github.com/ngreifer/WeightIt/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
-    <div id="weightit-development-version" class="section level1">
-<h1 class="page-header" data-toc-text="development version">
-<a href="#weightit-development-version" class="anchor"></a>WeightIt (development version)<small> Unreleased </small>
+    <div id="weightit-0110" class="section level1">
+<h1 class="page-header" data-toc-text="0.11.0">
+<a href="#weightit-0110" class="anchor"></a>WeightIt 0.11.0<small> Unreleased </small>
 </h1>
 <ul>
 <li><p>Added support for estimating propensity scores using Bayesian additive regression trees (BART) with <code>method = "bart"</code>. This method fits a BART model for the treatment using functions in the <code>dbarts</code> package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.</p></li>
@@ -133,6 +133,7 @@
 <li><p>Using <code>method = "ebal"</code> no longer requires the <code>ebal</code> package. Instead, <code><a href="https://rdrr.io/r/stats/optim.html">optim()</a></code> is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed.</p></li>
 <li><p>When using <code>method = "ebal"</code> with continuous treatments, a new argument, <code>d.moments</code>, can now be specified. This controls the number of moments of the covariate and treatment distributions that are constrained to be the same in the weighted sample as they are in the original sample. Vegetabile et al. (2020) recommend setting <code>d.moments</code> to at least 3 to ensure generalizability and reduce bias due to effect modification.</p></li>
 <li><p>Made some minor changes to <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code> and <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code>. Fixed how negative entropy was computed.</p></li>
+<li><p>The option <code>use.mnlogit</code> in <code><a href="../reference/weightit.html">weightit()</a></code> with multi-category treatments and <code>method = "ps"</code> has been removed because <code>mnlogit</code> appears uncooperative.</p></li>
 <li><p>Fixed a bug (<a href='https://github.com/ngreifer/WeightIt/issues/16'>#16</a>) when using <code>method = "cbps"</code> with factor variables, thanks to <a href='https://github.com/danielebottigliengo'>@danielebottigliengo</a>.</p></li>
 <li><p>Fixed a bug when using binary factor treatments, thanks to Darren Stewart.</p></li>
 <li><p>Cleaned up the documentation.</p></li>

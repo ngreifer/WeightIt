@@ -103,7 +103,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.10.2.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0</span>
       </span>
     </div>
 
@@ -185,7 +185,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 </dl>
 
 <p>For binary treatments, additional arguments to <code><a href='https://rdrr.io/r/stats/glm.html'>glm()</a></code> can be specified as well. The <code>method</code> argument in <code><a href='https://rdrr.io/r/stats/glm.html'>glm()</a></code> is renamed to <code>glm.method</code>. This can be used to supply alternative fitting functions, such as those implemented in the <a href='https://CRAN.R-project.org/package=glm2'><span class="pkg">glm2</span></a> package. Other arguments to <code><a href='weightit.html'>weightit()</a></code> are passed to <code>...</code> in <code><a href='https://rdrr.io/r/stats/glm.html'>glm()</a></code>. <!-- %In the presence of missing data with \code{link = "logit"} and \code{missing = "saem"}, additional arguments are passed to \code{\link[misaem]{miss.glm}} and \code{\link[misaem]{predict.miss.glm}}, except the \code{method} argument in \code{\link[misaem]{predict.miss.glm}} is replaced with \code{saem.method}. --></p>
-<p>For multi-category treatments with <code>link = "logit"</code> or <code>"probit"</code>, the default is to use multinomial logistic or probit regression using the <a href='https://CRAN.R-project.org/package=mlogit'><span class="pkg">mlogit</span></a> package. To request that separate binary logistic or probit regressions are run instead, set <code>use.mlogit = FALSE</code>. This can be helpful when <code>mlogit</code> is slow or fails to converge. With <code>link = "logit"</code>, the option <code>use.mnlogit = TRUE</code> can be specified to request that <code>mnlogit()</code> from the <a href='https://CRAN.R-project.org/package=mnlogit'><span class="pkg">mnlogit</span></a> package is used instead, which can be faster for large datasets.</p>
+<p>For multi-category treatments with <code>link = "logit"</code> or <code>"probit"</code>, the default is to use multinomial logistic or probit regression using the <a href='https://CRAN.R-project.org/package=mlogit'><span class="pkg">mlogit</span></a> package. To request that separate binary logistic or probit regressions are run instead, set <code>use.mlogit = FALSE</code>. This can be helpful when <code>mlogit</code> is slow or fails to converge.</p>
 <p><!-- %For continuous treatments in the presence of missing data with \code{missing = "saem"}, additional arguments are passed to \code{\link[misaem]{miss.lm}} and \code{\link[misaem]{predict.miss.lm}}. --></p>
     <h2 class="hasAnchor" id="additional-outputs"><a class="anchor" href="#additional-outputs"></a>Additional Outputs</h2>
 
