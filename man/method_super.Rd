@@ -105,6 +105,7 @@ See \code{\link{method_ps}} for additional references.
 }
 \seealso{
 \fun{weightit}, \fun{weightitMSM}, \fun{get_w_from_ps}
+
 \code{\link{stop.method}} for allowable arguments to \code{stop.method} when using \code{SL.method = "method.balance"}
 }
 \note{
