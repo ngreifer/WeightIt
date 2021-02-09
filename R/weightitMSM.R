@@ -341,8 +341,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
     if (treat.types[ti] == "continuous") {
       out$weight.range <- list(all = c(min(w[w > 0]),
                                        max(w[w > 0])))
-      top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
-      out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
+      out$weight.top <- list(all = rev(sort(w, decreasing = TRUE)[seq_len(top)]))
       out$coef.of.var <- c(all = sd(w)/mean_fast(w))
       out$scaled.mad <- c(all = mean.abs.dev(w/mean_fast(w)))
       out$negative.entropy <- c(all = neg_ent(w))
@@ -366,13 +365,8 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                                            max(w[w > 0 & t == 1])),
                                control = c(min(w[w > 0 & t == 0]),
                                            max(w[w > 0 & t == 0])))
-      top.weights <- list(treated = sort(w[t == 1], decreasing = TRUE)[seq_len(top0["treated"])],
-                          control = sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])])
-      out$weight.top <- setNames(lapply(names(top.weights), function(x) sort(setNames(top.weights[[x]], which(w %in% top.weights[[x]] & t == {if (x == "control") 0 else 1})[seq_len(top0[x])]))),
-                                 names(top.weights))
-      top.weights <- list(treated = sort(w[t == 1], decreasing = TRUE)[seq_len(top0["treated"])],
-                          control = sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])])
-
+      out$weight.top <- list(treated = rev(sort(w[t == 1], decreasing = TRUE)[seq_len(top0["treated"])]),
+                             control = rev(sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])]))
       out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
                            control = sd(w[t==0])/mean_fast(w[t==0]))
       out$scaled.mad <- c(treated = mean.abs.dev(w[t==1]/mean_fast(w[t==1])),
@@ -395,13 +389,12 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
     }
     else if (treat.types[ti] == "multinomial") {
       t <- object$treat.list[[ti]]
+      top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
       out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
                                                                    max(w[w > 0 & t == x]))),
                                    levels(t))
-      top.weights <- setNames(lapply(levels(t), function(x) sort(w[t == x], decreasing = TRUE)[seq_len(top)]),
-                              levels(t))
-      out$weight.top <- setNames(lapply(names(top.weights), function(x) sort(setNames(top.weights[[x]], which(w %in% top.weights[[x]] & t == x)[seq_len(top)]))),
-                                 names(top.weights))
+      out$weight.top <- setNames(lapply(levels(t), function(x) rev(sort(w[t == x], decreasing = TRUE)[seq_len(top0[[x]])])),
+                                 levels(t))
       out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
                            overall = sd(w)/mean_fast(w))
       out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x]/mean_fast(w[t==x])), numeric(1L)),
