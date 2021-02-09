@@ -123,7 +123,7 @@ data("lalonde", package = "cobalt")
                                "SL.glm.interaction")))
 summary(W1)
 bal.tab(W1)
-
+\donttest{
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
@@ -142,7 +142,7 @@ bal.tab(W2)
                                "SL.glm.interaction")))
 summary(W3)
 bal.tab(W3)
-
+}
 #Balancing covariates between treatment groups (binary)
 # using balance SuperLearner to minimize the average
 # KS statistic

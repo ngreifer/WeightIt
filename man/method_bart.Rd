@@ -67,7 +67,7 @@ BART works by fitting a sum-of-trees model for the treatment or probability of t
 \note{
 With version 0.9-19 or below of \pkg{dbarts}, special care has to be taken to ensure reproducibility when using \code{method = "bart"}. Setting a seed (either with \fun{set.seed} or by supplying an argument to \code{rngSeed}) will only work when only one thread is requested. The default is to use four threads. To request that only one thread is used, which is necessary for reproducible results, set \code{n.threads = 1} in the call to \code{weightit()} and set a seed. Note that the fewer threads are used, the slower the estimation will be. One can set \code{n.chains} to a lower number (default 4) to speed up the estimation at the possible expense of statistical performance.
 
-With version 0.9-20 and above, setting the seed with \code{set.seed()} works correctly and results will be reporudicble.
+With version 0.9-20 and above, setting the seed with \code{set.seed()} works correctly and results will be reproducible.
 }
 \references{
 
@@ -94,14 +94,14 @@ data("lalonde", package = "cobalt")
                 method = "bart", estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
-
+\donttest{
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "bart", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
-
+}
 #Balancing covariates with respect to re75 (continuous)
 #assuming t(3) conditional density for treatment
 (W3 <- weightit(re75 ~ age + educ + married +
