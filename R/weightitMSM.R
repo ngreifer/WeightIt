@@ -332,7 +332,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
 
   if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
-  w <- object$weights*sw
+  w <- setNames(object$weights*sw, seq_along(sw))
   treat.types <- vapply(object[["treat.list"]], get.treat.type, character(1L))
   stabilized <- is_not_null(object[["stabilization"]])
 
@@ -401,7 +401,8 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                           overall = mean.abs.dev(w)/mean_fast(w))
       out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)),
                                 overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
-      out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)))
+      out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
+                         overall = sum(check_if_zero(w)))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
       nn <- make_df(levels(t), c("Unweighted", "Weighted"))
