@@ -100,7 +100,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0.9000</span>
       </span>
     </div>
 
@@ -252,9 +252,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                            
-#&gt;               2      4      5      6      7
+#&gt;               7      6      5      4      2
 #&gt;  treated      1      1      1      1      1
-#&gt;             589    411    409    296    269
+#&gt;             411    589    269    409    296
 #&gt;  control 2.4116 2.5004 2.7322 3.3402 5.6573
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
@@ -285,7 +285,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;            Control Treated
 #&gt; Unadjusted  429.       185
-#&gt; Adjusted    191.27     185</div><div class='input'>
+#&gt; Adjusted    191.27     185</div><div class='input'><span class='co'># \donttest{</span>
 <span class='co'>#Balancing covariates with respect to race (multinomial)</span>
 <span class='op'>(</span><span class='va'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>race</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
@@ -310,11 +310,11 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                                
-#&gt;             485     244     184     182     181
+#&gt;             184     244     485     182     181
 #&gt;   black  7.5917  7.7461 10.1133 11.6337 14.0815
-#&gt;             392     371     346     345     269
+#&gt;             346     392     371     269     345
 #&gt;  hispan 16.6957 17.1862 17.2636 17.8517 19.0788
-#&gt;             589     457     409     296      23
+#&gt;             457      23     409     589     296
 #&gt;   white  4.0945  4.1846  4.3505  4.6072  4.9344
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
@@ -368,7 +368,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                           
-#&gt;         485    484     483     431     354
+#&gt;         431    483     484     485     354
 #&gt;  all 9.4162 16.527 18.1028 19.0692 21.0528
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
@@ -397,7 +397,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
 #&gt;             Total
 #&gt; Unadjusted 614.  
-#&gt; Adjusted   221.04</div><div class='input'>
+#&gt; Adjusted   221.04</div><div class='input'><span class='co'># }</span>
 <span class='co'>#Balancing covariates between treatment groups (binary)</span>
 <span class='co'># using balance SuperLearner to minimize the average</span>
 <span class='co'># KS statistic</span>
@@ -425,9 +425,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                            
-#&gt;               1      2      3      4      5
+#&gt;               5      4      3      2      1
 #&gt;  treated      1      1      1      1      1
-#&gt;             595    411    409    296    269
+#&gt;             411    595    269    409    296
 #&gt;  control 1.1051 1.1654 1.2041 1.2831 1.4688
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:

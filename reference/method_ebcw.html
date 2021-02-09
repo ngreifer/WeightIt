@@ -100,7 +100,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0.9000</span>
       </span>
     </div>
 
@@ -174,7 +174,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
     
 <dl>
-<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the empirical balancing callibration model fit. For binary treatments with <code>estimand = "ATT"</code>, the output of the call to <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE::ATE()</a></code>. For binary treatments with <code>estimand = "ATE"</code> and multinomial treatments, a list of outputs of calls to <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE::ATE()</a></code>.</p></dd>
+<dt><code>obj</code></dt><dd><p>When <code>include.obj = TRUE</code>, the empirical balancing calibration model fit. For binary treatments with <code>estimand = "ATT"</code>, the output of the call to <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE::ATE()</a></code>. For binary treatments with <code>estimand = "ATE"</code> and multinomial treatments, a list of outputs of calls to <code><a href='https://rdrr.io/pkg/ATE/man/ATE.html'>ATE::ATE()</a></code>.</p></dd>
 
 </dl>
 
@@ -212,9 +212,9 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                           
-#&gt;               1     2      3      4      5
+#&gt;               5     4      3      2      1
 #&gt;  treated      1     1      1      1      1
-#&gt;             595   589    409    296    269
+#&gt;             589   595    269    409    296
 #&gt;  control 0.0079 0.008 0.0085 0.0094 0.0122
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
@@ -266,11 +266,11 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
 #&gt;                                           
-#&gt;            485    244    226    182    181
+#&gt;            226    244    485    181    182
 #&gt;   black 0.0104 0.0105 0.0115 0.0146  0.022
-#&gt;            564    392    371    345    269
+#&gt;            392    564    269    345    371
 #&gt;  hispan 0.0284 0.0351 0.0366 0.0376 0.0463
-#&gt;            599    589    531    457     68
+#&gt;             68    457    599    589    531
 #&gt;   white 0.0057 0.0058 0.0058 0.0059 0.0064
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:

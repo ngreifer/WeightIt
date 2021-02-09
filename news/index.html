@@ -81,7 +81,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.11.0.9000</span>
       </span>
     </div>
 
@@ -121,9 +121,17 @@
       <small>Source: <a href='https://github.com/ngreifer/WeightIt/blob/master/NEWS.md'><code>NEWS.md</code></a></small>
     </div>
 
+    <div id="weightit-development-version" class="section level1">
+<h1 class="page-header" data-toc-text="development version">
+<a href="#weightit-development-version" class="anchor"></a>WeightIt (development version)<small> Unreleased </small>
+</h1>
+<ul>
+<li>Fixed a bug in <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code> where the labels of the top weights were incorrect. Thanks to Adam Lilly.</li>
+</ul>
+</div>
     <div id="weightit-0110" class="section level1">
 <h1 class="page-header" data-toc-text="0.11.0">
-<a href="#weightit-0110" class="anchor"></a>WeightIt 0.11.0<small> Unreleased </small>
+<a href="#weightit-0110" class="anchor"></a>WeightIt 0.11.0<small> 2021-02-02 </small>
 </h1>
 <ul>
 <li><p>Added support for estimating propensity scores using Bayesian additive regression trees (BART) with <code>method = "bart"</code>. This method fits a BART model for the treatment using functions in the <code>dbarts</code> package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.</p></li>
