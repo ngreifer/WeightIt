@@ -26,6 +26,8 @@
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
+    
+
     <div class="container template-home">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
   <div class="container">
@@ -79,25 +81,25 @@
 </h1></div>
 <div id="cran_status_badge-cran_downloads_badge" class="section level2">
 <h2 class="hasAnchor">
-<a href="#cran_status_badge-cran_downloads_badge" class="anchor"></a><a href="https://cran.r-project.org/package=WeightIt"><img src="https://img.shields.io/cran/v/WeightIt?color=00622B" alt="CRAN_Status_Badge"></a> <a href="https://cran.r-project.org/package=WeightIt"><img src="https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B" alt="CRAN_Downloads_Badge"></a>
+<a href="#cran_status_badge-cran_downloads_badge" class="anchor"></a><a href="https://cran.r-project.org/package=WeightIt" class="external-link"><img src="https://img.shields.io/cran/v/WeightIt?color=00622B" alt="CRAN_Status_Badge"></a> <a href="https://cran.r-project.org/package=WeightIt" class="external-link"><img src="https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B" alt="CRAN_Downloads_Badge"></a>
 </h2>
 <div id="overview" class="section level3">
 <h3 class="hasAnchor">
 <a href="#overview" class="anchor"></a>Overview</h3>
 <p><code>WeightIt</code> is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Contained within <code>WeightIt</code> are methods that call on other R packages to estimate weights. The value of <code>WeightIt</code> is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. <code>WeightIt</code> extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, ATC, and other estimands for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, <code>WeightIt</code> does for weighting what <code>MatchIt</code> has done for matching, and <code>MatchIt</code> users will find the syntax familiar.</p>
-<p>For a complete vignette, see the <a href="https://ngreifer.github.io/WeightIt/articles/WeightIt.html">website</a> for <code>WeightIt</code>.</p>
+<p>For a complete vignette, see the <a href="https://ngreifer.github.io/WeightIt/articles/WeightIt.html" class="external-link">website</a> for <code>WeightIt</code>.</p>
 <p>To install and load <code>WeightIt</code>, use the code below:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#CRAN version</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"WeightIt"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"WeightIt"</span><span class="op">)</span>
 
 <span class="co">#Development version</span>
 <span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"ngreifer/WeightIt"</span><span class="op">)</span>
 
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/">"WeightIt"</a></span><span class="op">)</span></code></pre></div>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/" class="external-link">"WeightIt"</a></span><span class="op">)</span></code></pre></div>
 <p>The workhorse function of <code>WeightIt</code> is <code><a href="reference/weightit.html">weightit()</a></code>, which generates weights from a given formula and data input according to methods and other parameters specified by the user. Below is an example of the use of <code><a href="reference/weightit.html">weightit()</a></code> to generate propensity score weights for estimating the ATE:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span>
 
 <span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> 
                 <span class="va">married</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>, 
@@ -113,9 +115,9 @@
 <span id="cb3-7"><a href="#cb3-7"></a> <span class="op">-</span><span class="st"> </span>covariates<span class="op">:</span><span class="st"> </span>age, educ, nodegree, married, race, re74, re75</span></code></pre></div>
 <p>Evaluating weights has two components: evaluating the covariate balance produced by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the <code>cobalt</code> package, which are fully compatible with <code>WeightIt</code>, can be used, as demonstrated below:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/">"cobalt"</a></span><span class="op">)</span>
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span>
 
-<span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html">bal.tab</a></span><span class="op">(</span><span class="va">W</span>, un <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W</span>, un <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1"></a>Call</span>
 <span id="cb5-2"><a href="#cb5-2"></a> <span class="kw">weightit</span>(<span class="dt">formula =</span> treat <span class="op">~</span><span class="st"> </span>age <span class="op">+</span><span class="st"> </span>educ <span class="op">+</span><span class="st"> </span>nodegree <span class="op">+</span><span class="st"> </span>married <span class="op">+</span><span class="st"> </span></span>
 <span id="cb5-3"><a href="#cb5-3"></a><span class="st">    </span>race <span class="op">+</span><span class="st"> </span>re74 <span class="op">+</span><span class="st"> </span>re75, <span class="dt">data =</span> lalonde, <span class="dt">method =</span> <span class="st">"ps"</span>, <span class="dt">estimand =</span> <span class="st">"ATE"</span>)</span>
@@ -137,9 +139,9 @@
 <span id="cb5-19"><a href="#cb5-19"></a>           Control Treated</span>
 <span id="cb5-20"><a href="#cb5-20"></a>Unadjusted  <span class="fl">429.</span>    <span class="fl">185.</span>  </span>
 <span id="cb5-21"><a href="#cb5-21"></a>Adjusted    <span class="fl">329.01</span>   <span class="fl">58.33</span></span></code></pre></div>
-<p>For the second goal, qualities of the distributions of weights can be assessed using <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>, as demonstrated below.</p>
+<p>For the second goal, qualities of the distributions of weights can be assessed using <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, as demonstrated below.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/summary.html">summary</a></span><span class="op">(</span><span class="va">W</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W</span><span class="op">)</span></code></pre></div>
 <div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1"></a>                 Summary of weights</span>
 <span id="cb7-2"><a href="#cb7-2"></a></span>
 <span id="cb7-3"><a href="#cb7-3"></a><span class="op">-</span><span class="st"> </span>Weight ranges<span class="op">:</span></span>
@@ -318,7 +320,7 @@
 </tbody>
 </table>
 <p>In addition, <code>WeightIt</code> implements the subgroup balancing propensity score using the function <code><a href="reference/sbps.html">sbps()</a></code>. Several other tools and utilities are available.</p>
-<p>Please submit bug reports or other issues to <a href="https://github.com/ngreifer/WeightIt/issues" class="uri">https://github.com/ngreifer/WeightIt/issues</a>. If you would like to see your package or method integrated into <code>WeightIt</code>, or for any other questions or comments about <code>WeightIt</code>, please contact the author. Fan mail is greatly appreciated.</p>
+<p>Please submit bug reports or other issues to <a href="https://github.com/ngreifer/WeightIt/issues" class="external-link">https://github.com/ngreifer/WeightIt/issues</a>. If you would like to see your package or method integrated into <code>WeightIt</code>, or for any other questions or comments about <code>WeightIt</code>, please contact the author. Fan mail is greatly appreciated.</p>
 </div>
 </div>
 </div>
@@ -326,7 +328,7 @@
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <div class="links">
-<h2>Links</h2>
+<h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li>Download from CRAN at <br><a href="https://cloud.r-project.org/package=WeightIt">https://​cloud.r-project.org/​package=WeightIt</a>
 </li>
@@ -336,18 +338,23 @@
 </li>
 </ul>
 </div>
+
 <div class="license">
-<h2>License</h2>
+<h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>GPL (&gt;=2)</li>
 </ul>
 </div>
+
+
 <div class="developers">
-<h2>Developers</h2>
+<h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
 <li>Noah Greifer <br><small class="roles"> Author, maintainer </small> <a href="https://orcid.org/0000-0003-3067-7154" target="orcid.widget" aria-label="ORCID"><span class="fab fa-orcid orcid" aria-hidden="true"></span></a> </li>
 </ul>
 </div>
+
+
 
   </div>
 </div>
@@ -366,6 +373,8 @@
 
   
 
+
+  
 
   </body>
 </html>
