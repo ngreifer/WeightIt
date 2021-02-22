@@ -77,6 +77,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   R <- levels(moderator.factor)
 
   if (smooth) {
+    if (!missing(full.search)) warning("'full.search' is ignored when smooth = TRUE.", call. = FALSE)
+
     ps_o <- obj[["ps"]]
     ps_s <- obj2[["ps"]]
 
@@ -283,10 +285,10 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       }
     }
     else {
-      #Stochatic search described by Dong et al (2019)
+      #Stochastic search described by Dong et al (2019)
 
       s_min <- setNames(rep(0, length(R), replace = TRUE), R)
-      F_min <- get_F(s_min)
+      F_min <- get_F(s_min, moderator.factor, w_o, w_s, treat.type)
 
       L1 <- 25
       L2 <- 10
@@ -296,7 +298,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
       while (k < L1 || iters_since_change < L2) {
         s_try <- setNames(sample(c(0, 1), length(R), replace = TRUE), R)
-        F_try <- get_F(s_try)
+        F_try <- get_F(s_try, moderator.factor, w_o, w_s, treat.type)
 
 
         Ar <- sample(R)
