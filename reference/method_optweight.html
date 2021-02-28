@@ -152,17 +152,17 @@ In the presence of missing data, the following value(s) for missing are allowed:
     <p>This page explains the details of estimating optimization-based weights 9also known as stable balancing weights) by setting <code>method = "optweight"</code> in the call to <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
 <p>In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on <code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight()</a></code> from the <a href='https://CRAN.R-project.org/package=optweight'><span class="pkg">optweight</span></a> package.</p>
 <p>Because <code>optweight()</code> offers finer control and uses the same syntax as <code><a href='weightit.html'>weightit()</a></code>, it is recommended that <code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight()</a></code> be used instead of <code>weightit</code> with <code>method = "optweight"</code>.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
+<h3 class='hasAnchor' id='binary-treatments'><a class='anchor' href='#binary-treatments'></a>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight()</a></code>. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the <code>optweight</code> fit object.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
+<h3 class='hasAnchor' id='multinomial-treatments'><a class='anchor' href='#multinomial-treatments'></a>Multinomial Treatments</h3>
 <p>For multinomial treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight()</a></code>. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the <code>optweight</code> fit object.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
+<h3 class='hasAnchor' id='continuous-treatments'><a class='anchor' href='#continuous-treatments'></a>Continuous Treatments</h3>
 <p>For binary treatments, this method estimates the weights using <code><a href='https://rdrr.io/pkg/optweight/man/optweight.html'>optweight()</a></code>. The weights are taken from the output of the <code>optweight</code> fit object.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
+<h3 class='hasAnchor' id='longitudinal-treatments'><a class='anchor' href='#longitudinal-treatments'></a>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, <code>optweight()</code> estimates weights that simultaneously satisfy balance constraints at all time points, so only one model is fit to obtain the weights. Using <code>method = "optweight"</code> in <code><a href='weightitMSM.html'>weightitMSM()</a></code> causes <code>is.MSM.method</code> to be set to <code>TRUE</code> by default. Setting it to <code>FALSE</code> will run one model for each time point and multiply the weights together, a method that is not recommended. NOTE: neither use of optimization-based weights with longitudinal treatments has been validated!</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Sampling Weights</h3>
+<h3 class='hasAnchor' id='sampling-weights'><a class='anchor' href='#sampling-weights'></a>Sampling Weights</h3>
 <p>Sampling weights are supported through <code>s.weights</code> in all scenarios.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Missing Data</h3>
+<h3 class='hasAnchor' id='missing-data'><a class='anchor' href='#missing-data'></a>Missing Data</h3>
 <p>In the presence of missing data, the following value(s) for <code>missing</code> are allowed:</p><dl>
 <dt><code>"ind"</code> (default)</dt><dd><p>First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is <code>NA</code> and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with 0s (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting <code>weightit</code> object will be the original covariates with the <code>NA</code>s.</p></dd>
 
@@ -300,7 +300,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt;   black 2.3351 2.3723 2.5586 2.8367 3.5741
 #&gt;            392    345    269    564    371
 #&gt;  hispan 2.0459 2.0984 2.1887 2.1982 2.5848
-#&gt;             68    589    324    599    531
+#&gt;            404     68    324    599    531
 #&gt;   white 1.5706 1.5706 1.5725 1.5968 1.6593
 #&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
@@ -390,11 +390,11 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
       <footer>
       <div class="copyright">
-  <p>Developed by Noah Greifer.</p>
+  <p><p>Developed by Noah Greifer.</p></p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
+  <p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.6.1.9000.</p></p>
 </div>
 
       </footer>

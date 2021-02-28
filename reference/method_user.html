@@ -151,7 +151,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
     <div class="ref-description">
     <p>This page explains the details of estimating weights using a user-defined function. The function must take in arguments that are passed to it by <code><a href='weightit.html'>weightit()</a></code> or <code><a href='weightitMSM.html'>weightitMSM()</a></code> and return a vector of weights or a list containing the weights.</p>
 <p>To supply  user-defined function, the function object should be entered directly to <code>method</code>; for example, for a function <code>fun</code>, <code>method = fun</code>.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Point Treatments</h3>
+<h3 class='hasAnchor' id='point-treatments'><a class='anchor' href='#point-treatments'></a>Point Treatments</h3>
 <p>The following arguments are automatically passed to the user-defined function, which should have named parameters corresponding to them:</p><ul>
 <li><p><code>treat</code>: a vector of treatment status for each unit. This comes directly from the left hand side of the formula passed to <code>weightit</code> and so will have it's type (e.g., numeric, factor, etc.), which may need to be converted.</p></li>
 <li><p><code>covs</code>: a data frame of covariate values for each unit. This comes directly from the right hand side of the formula passed to <code>weightit</code>. The covariates are processed so that all columns are numeric; all factor variables are split into dummies and all interactions are evaluated. All levels of factor variables are given dummies, so the matrix of the covariates is not full rank. Users can use <code><a href='make_full_rank.html'>make_full_rank</a></code>, which accepts a numeric matrix or data frame and removes columns to make it full rank, if a full rank covariate matrix is desired.</p></li>
@@ -166,7 +166,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 </ul><p>None of these parameters are required to be in the fitting function. These are simply those that are automatically available.</p>
 <p>In addition, any additional arguments supplied to <code><a href='weightit.html'>weightit()</a></code> will be passed on to the fitting function. <code><a href='weightit.html'>weightit()</a></code> ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include <code>...</code> as a parameter.</p>
 <p>The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither "w" or "weights". If a list, the list can contain other named entries, but only entries named "w", "weights", "ps", and "fit.obj" will be processed. "ps" is a vector of propensity scores and "fit.obj" should be an object used in the fitting process that a user may want to examine and that is included in the <code>weightit</code> output object as "obj" when <code>include.obj = TRUE</code>. The "ps" and "fit.obj" components are optional, but "weights" or "w" is required.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
+<h3 class='hasAnchor' id='longitudinal-treatments'><a class='anchor' href='#longitudinal-treatments'></a>Longitudinal Treatments</h3>
 <p>Longitudinal treatments can be handled either by running the fitting function for point treatments for each time point and multiplying the resulting weights together or by running a method that accommodates multiple time points and outputs a single set of weights. For the former, <code><a href='weightitMSM.html'>weightitMSM()</a></code> can be used with the user-defined function just as it is with <code><a href='weightit.html'>weightit()</a></code>. The latter method is not yet accommodated by <code><a href='weightitMSM.html'>weightitMSM()</a></code>, but will be someday, maybe.</p>
 
     </div>
@@ -198,8 +198,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class='op'>(</span><span class='va'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='va'>my.ps</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; <span class='warning'>Warning: The following argument was specified but is not a suitable argument to the provided function:</span>
-#&gt; <span class='warning'>	treat.type</span></div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; <span class='warning'>Warning: The following arguments were specified but are not suitable arguments to the provided function:</span>
+#&gt; <span class='warning'>	treat.type and data</span></div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
 #&gt;  - method: "my.ps" (a user-defined method)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -280,6 +280,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 </div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 1 </span><span style='text-decoration: line-through;'>                      </span><span>
+#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;            Min                                   Max
@@ -306,6 +308,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; Weighted    185.18   573.6
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 2 </span><span style='text-decoration: line-through;'>                      </span><span>
+#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;            Min                                   Max
@@ -332,6 +336,8 @@ Longitudinal treatments can be handled either by running the fitting function fo
 #&gt; Weighted     318.9  264.49
 #&gt; 
 #&gt; </span><span style='text-decoration: line-through;'>                      </span><span style='font-style: italic;'> Time 3 </span><span style='text-decoration: line-through;'>                      </span><span>
+#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+#&gt; 
 #&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
 #&gt; 
 #&gt;            Min                                   Max
@@ -429,11 +435,11 @@ Longitudinal treatments can be handled either by running the fitting function fo
 
       <footer>
       <div class="copyright">
-  <p>Developed by Noah Greifer.</p>
+  <p><p>Developed by Noah Greifer.</p></p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
+  <p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.6.1.9000.</p></p>
 </div>
 
       </footer>

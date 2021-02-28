@@ -153,17 +153,17 @@ In the presence of missing data, the following value(s) for missing are allowed:
     <p>This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting <code>method = "twang"</code> in the call to <code><a href='weightit.html'>weightit</a></code> or <code><a href='weightitMSM.html'>weightitMSM</a></code>. This method can be used with binary, multinomial, and continuous treatments.</p>
 <p>In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves choosing a balance criterion to optimize so that balance, rather than prediction, is prioritized. For binary and multinomial treatments, this method relies on <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> from the <a href='https://CRAN.R-project.org/package=twang'><span class="pkg">twang</span></a> package. For continuous treatments, this method relies on <code><a href='ps.cont.html'>ps.cont</a></code> from <span class="pkg">WeightIt</span>.</p>
 <p>See the Details section at <code><a href='method_gbm.html'>method_gbm</a></code> for a discussion of how this method differs from <code>method = "gbm"</code>. In general, using <code>method = "gbm"</code> is preferred because it is faster and more flexible. <code>method = "twang"</code> is no longer being developed and will likely become defunct in future versions.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
+<h3 class='hasAnchor' id='binary-treatments'><a class='anchor' href='#binary-treatments'></a>Binary Treatments</h3>
 <p>For binary treatments, this method estimates the propensity scores using <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code>. The following estimands are allowed: ATE, ATT, and ATC. The weights for the ATE, ATT, and ATC are computed from the estimated propensity scores using the standard formulas. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., <code>levels(factor(treat))[2]</code>; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
+<h3 class='hasAnchor' id='multinomial-treatments'><a class='anchor' href='#multinomial-treatments'></a>Multinomial Treatments</h3>
 <p>For multinomial treatments, this method estimates the propensity scores using multiple calls to <code><a href='https://rdrr.io/pkg/twang/man/ps.html'>ps</a></code> (which is the same thing that <code><a href='https://rdrr.io/pkg/twang/man/mnps.html'>mnps</a></code> in <span class="pkg">twang</span> does behind the scenes). The following estimands are allowed: ATE and ATT. The weights are computed from the estimated propensity scores using the standard formulas.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
+<h3 class='hasAnchor' id='continuous-treatments'><a class='anchor' href='#continuous-treatments'></a>Continuous Treatments</h3>
 <p>For continuous treatments, the generalized propensity score is estimated using <code><a href='ps.cont.html'>ps.cont</a></code>.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Longitudinal Treatments</h3>
+<h3 class='hasAnchor' id='longitudinal-treatments'><a class='anchor' href='#longitudinal-treatments'></a>Longitudinal Treatments</h3>
 <p>For longitudinal treatments, the weights are the product of the weights estimated at each time point, which is what <code><a href='https://rdrr.io/pkg/twang/man/iptw.html'>iptw</a></code> in <span class="pkg">twang</span> does behind the scenes.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Sampling Weights</h3>
+<h3 class='hasAnchor' id='sampling-weights'><a class='anchor' href='#sampling-weights'></a>Sampling Weights</h3>
 <p>Sampling weights are supported through <code>s.weights</code> in all scenarios.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Missing Data</h3>
+<h3 class='hasAnchor' id='missing-data'><a class='anchor' href='#missing-data'></a>Missing Data</h3>
 <p>In the presence of missing data, the following value(s) for <code>missing</code> are allowed:</p><dl>
 <dt><code>"ind"</code> (default)</dt><dd><p>First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is <code>NA</code> and 0 otherwise. The missingness indicators are added to the model formula as main effects. The weight estimation then proceeds with this new formula and set of covariates using surrogate splitting as described below. The covariates output in the resulting <code>weightit</code> object will be the original covariates with the <code>NA</code>s.</p></dd>
 <dt><code>"surr"</code></dt><dd><p>Surrogate splitting is used to process <code>NA</code>s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.</p></dd>
@@ -242,11 +242,11 @@ In the presence of missing data, the following value(s) for missing are allowed:
 
       <footer>
       <div class="copyright">
-  <p>Developed by Noah Greifer.</p>
+  <p><p>Developed by Noah Greifer.</p></p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
+  <p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.6.1.9000.</p></p>
 </div>
 
       </footer>

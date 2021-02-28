@@ -163,7 +163,7 @@ Continuous Treatments
     <div class="ref-description">
     <p>Some methods involve tuning of parameters and use some measure of covariate balance as the criterion to select the optimal parameter values. For example with <code><a href='method_gbm.html'>method = "gbm"</a></code>, a balance criterion can be used to select the optimal number of trees to use. In <span class="pkg">WeightIt</span>, the argument <code>stop.method</code> controls which criterion is optimized, using the naming conventions originally used in <span class="pkg">twang</span>. This page documents the available arguments to <code>stop.method</code>. There has been some research on which balance criteria perform better than others; see the References section for some articles. Of course, how each method fares in any given dataset depends on a variety of factors, and multiple methods should be tried and compared before moving forward with a set of weights.</p>
 <p>Each treatment type has its own balance criteria available.</p>
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Binary Treatments</h3>
+<h3 class='hasAnchor' id='binary-treatments'><a class='anchor' href='#binary-treatments'></a>Binary Treatments</h3>
 
 <dl>
 <dt><code>"es.mean"</code>, <code>"es.max"</code>, <code>"es.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute standardized mean difference (ASMD) among the covariates, respectively. The ASMD is computed using <code><a href='https://ngreifer.github.io/cobalt/reference/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>. All covariates are standardized, including binary covariates (note that in <span class="pkg">cobalt</span>, raw mean differences are used for binary variables by default). The standardization factor (i.e., <code>s.d.denom</code>) depends on the estimand requested and follows the conventions used in <span class="pkg">cobalt</span>.</p></dd>
@@ -174,7 +174,7 @@ Continuous Treatments
 
 </dl>
 
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Multinomial Treatments</h3>
+<h3 class='hasAnchor' id='multinomial-treatments'><a class='anchor' href='#multinomial-treatments'></a>Multinomial Treatments</h3>
 
 <dl>
 <dt><code>"es.mean"</code>, <code>"es.max"</code>, <code>"es.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute standardized mean difference (ASMD) among the covariates, respectively, across all pairs of treatments. The ASMD is computed using <code><a href='https://ngreifer.github.io/cobalt/reference/balance.summary.html'>col_w_smd()</a></code> in <span class="pkg">cobalt</span>. All covariates are standardized, including binary covariates (note that in <span class="pkg">cobalt</span>, raw mean differences are used for binary variables by default). The standardization factor (i.e., <code>s.d.denom</code>) depends on the estimand requested and follows the conventions used in <span class="pkg">cobalt</span>. The same standardization factor is used across treatment pairs for each covariate. When the estimand is the ATT, only differences between the focal group and each other group are computed.</p></dd>
@@ -183,7 +183,7 @@ Continuous Treatments
 
 </dl>
 
-<h3 class='hasAnchor' id='arguments'><a class='anchor' href='#arguments'></a>Continuous Treatments</h3>
+<h3 class='hasAnchor' id='continuous-treatments'><a class='anchor' href='#continuous-treatments'></a>Continuous Treatments</h3>
 
 <dl>
 <dt><code>"p.mean"</code>, <code>"p.max"</code>, <code>"p.rms"</code></dt><dd><p>The average, maximum, or root mean squared absolute Pearson correlation between the treatment and covariates, respectively. The Pearson correlation is computed using <code><a href='https://ngreifer.github.io/cobalt/reference/balance.summary.html'>col_w_cov()</a></code> in <span class="pkg">cobalt</span>. The correlation uses the unweighted standard deviations of the treatment and covariates in the denominator.</p></dd>
@@ -220,11 +220,11 @@ Continuous Treatments
 
       <footer>
       <div class="copyright">
-  <p>Developed by Noah Greifer.</p>
+  <p><p>Developed by Noah Greifer.</p></p>
 </div>
 
 <div class="pkgdown">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.9000.</p>
+  <p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.6.1.9000.</p></p>
 </div>
 
       </footer>
