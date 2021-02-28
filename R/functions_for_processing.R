@@ -534,114 +534,6 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
 
   return(out)
 }
-.get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
-  check.estimand <- check.weights <- check.focal <- bad.s.d.denom <- bad.estimand <- FALSE
-  s.d.denom.specified <- is_not_null(s.d.denom)
-  estimand.specified <- is_not_null(estimand)
-
-  if (is_not_null(weights) && !is.data.frame(weights)) weights <- data.frame(weights)
-
-  if (s.d.denom.specified) {
-    try.s.d.denom <- tryCatch(match_arg(s.d.denom, c("treated", "control", "pooled", "all"), several.ok = TRUE),
-                              error = function(cond) FALSE)
-    if (any(try.s.d.denom == FALSE)) {
-      check.estimand <- TRUE
-      bad.s.d.denom <- TRUE
-    }
-    else {
-      if (length(try.s.d.denom) > 1 && length(try.s.d.denom) != ncol(weights)) {
-        stop("'s.d.denom' must have length 1 or equal to the number of valid sets of weights.", call. = FALSE)
-      }
-      else s.d.denom <- try.s.d.denom
-    }
-  }
-  else {
-    check.estimand <- TRUE
-  }
-
-  if (check.estimand == TRUE) {
-    if (estimand.specified) {
-      try.estimand <- tryCatch(match_arg(tolower(estimand), c("att", "atc", "ate"), several.ok = TRUE),
-                               error = function(cond) FALSE)
-      if (any(try.estimand == FALSE)) {
-        check.focal <- TRUE
-        bad.estimand <- TRUE
-      }
-      else {
-        if (length(try.estimand) > 1 && length(try.estimand) != ncol(weights)) {
-          stop("'estimand' must have length 1 or equal to the number of valid sets of weights.", call. = FALSE)
-        }
-        else s.d.denom <- vapply(try.estimand, switch, character(1L), att = "treated", atc = "control", ate = "pooled")
-      }
-    }
-    else {
-      check.focal <- TRUE
-    }
-  }
-  if (check.focal == TRUE) {
-    if (is_not_null(focal)) {
-      s.d.denom <- "treated"
-      estimand <- "att"
-    }
-    else check.weights <- TRUE
-  }
-  if (check.weights) {
-    if (is_null(weights)) {
-      s.d.denom <- "pooled"
-      estimand <- "ate"
-    }
-    else {
-      s.d.denom <- estimand <- character(ncol(weights))
-      for (i in seq_col(weights)) {
-        if (is_binary(treat)) {
-          if (all_the_same(weights[[i]][treat==1 & !check_if_zero(weights[[i]])]) &&
-              !all_the_same(weights[[i]][treat==0 & !check_if_zero(weights[[i]])])
-          ) { #if treated weights are the same and control weights differ; ATT
-            estimand[i] <- "att"
-            s.d.denom[i] <- "treated"
-          }
-          else if (all_the_same(weights[[i]][treat==0 & !check_if_zero(weights[[i]])]) &&
-                   !all_the_same(weights[[i]][treat==1 & !check_if_zero(weights[[i]])])
-          ) { #if control weights are the same and treated weights differ; ATC
-            estimand[i] <- "atc"
-            s.d.denom[i] <- "control"
-          }
-          else {
-            estimand[i] <- "ate"
-            s.d.denom[i] <- "pooled"
-          }
-        }
-        else {
-          if (length(focal) == 1) {
-            estimand[i] <- "att"
-            s.d.denom[i] <- "treated"
-          }
-          else {
-            estimand[i] <- "ate"
-            s.d.denom[i] <- "pooled"
-          }
-        }
-      }
-    }
-  }
-  if (is_not_null(weights) && length(s.d.denom) == 1) s.d.denom <- rep(s.d.denom, ncol(weights))
-
-  if (s.d.denom.specified && bad.s.d.denom && (!estimand.specified || bad.estimand)) {
-    # message("Warning: s.d.denom should be one of \"treated\", \"control\", \"pooled\", or \"all\".\n         Using \"", word_list(s.d.denom), "\" instead.")
-  }
-  else if (estimand.specified && bad.estimand) {
-    # message("Warning: the supplied estimand is not allowed. Using \"", ifelse(all_the_same(estimand), toupper(estimand)[1], word_list(toupper(estimand))), "\" instead.")
-  }
-  else if (check.focal || check.weights) {
-    # message("Note: estimand not specified; assuming ", ifelse(all_the_same(toupper(estimand)), toupper(unique(estimand)), word_list(toupper(estimand))), ".")
-  }
-
-  if (is_not_null(weights) && length(s.d.denom) != ncol(weights)) {
-    # stop("Valid inputs to s.d.denom or estimand must have length 1 or equal to the number of valid sets of weights.", call. = FALSE)
-  }
-
-  return(s.d.denom)
-}
 get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
   check.estimand <- check.weights <- check.focal <- FALSE
   s.d.denom.specified <- is_not_null(s.d.denom)
@@ -834,7 +726,41 @@ compute_s.d.denom <- function(mat, treat, s.d.denom = "pooled", s.weights = NULL
   }
   return(denoms)
 }
+check_estimated_weights <- function(w, treat, treat.type, s.weights) {
 
+  tw <- w*s.weights
+
+  extreme.warn <- FALSE
+  if (treat.type == "continuous") {
+    if (all_the_same(w)) {
+      warning(paste0("All weights are ", w[1], ", possibly indicating an estimation failure."), call. = FALSE)
+    }
+    else if (sd(tw, na.rm = TRUE)/mean(tw, na.rm = TRUE) > 4) extreme.warn <- TRUE
+  }
+  else {
+    if (all_the_same(w)) {
+      warning(paste0("All weights are ", w[1], ", possibly indicating an estimation failure."), call. = FALSE)
+    }
+    else {
+      t.levels <- unique(treat)
+      bad.treat.groups <- setNames(rep(FALSE, length(t.levels)), t.levels)
+      for (i in t.levels) {
+        ti <- which(treat == i)
+        if (all(is.na(w[ti])) || all(w[ti] == 0)) bad.treat.groups[as.character(i)] <- TRUE
+        else if (!extreme.warn && sum(!is.na(tw[ti])) > 1 && sd(tw[ti], na.rm = TRUE)/mean(tw[ti], na.rm = TRUE) > 4) extreme.warn <- TRUE
+      }
+
+      if (any(bad.treat.groups)) {
+        n <- sum(bad.treat.groups)
+        warning(paste0("All weights are NA or 0 in treatment ", ngettext(n, "group ", "groups "),
+                       word_list(t.levels[bad.treat.groups], quotes = TRUE), "."), call. = FALSE)
+      }
+    }
+  }
+
+  if (extreme.warn) warning("Some extreme weights were generated. Examine them with summary() and maybe trim them with trim().", call. = FALSE)
+
+}
 ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
   if (is_(ps, c("matrix", "data.frame"))) {
     ps.names <- rownames(ps)

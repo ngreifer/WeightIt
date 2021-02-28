@@ -12,8 +12,6 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
     stop("'formula' must be a formula relating treatment to covariates.", call. = FALSE)
   }
 
-
-
   #Process treat and covs from formula and data
   t.c <- get.covs.and.treat.from.formula(formula, data)
   reported.covs <- t.c[["reported.covs"]]
@@ -97,7 +95,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
 
   ## Running models ----
 
-  #Returns weights (w) and propensty score (ps)
+  #Returns weights (weights) and propensity score (ps)
   obj <- weightit.fit(treat = treat,
                       covs = covs,
                       treat.type = treat.type,
@@ -114,21 +112,15 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                       missing = missing,
                       verbose = verbose,
                       include.obj = include.obj,
+                      data = data,
                       ...)
 
-  if (all_the_same(obj$w)) stop(paste0("All weights are ", obj$w[1], "."), call. = FALSE)
-
-  warn <- FALSE
-  test.w <- obj$w*s.weights
-  if (treat.type == "continuous") {if (sd(test.w, na.rm = TRUE)/mean(test.w, na.rm = TRUE) > 4) warn <- TRUE}
-  else {if (any(sapply(unique(treat), function(x) sd(test.w[treat == x], na.rm = TRUE)/mean(test.w[treat == x], na.rm = TRUE) > 4))) warn <- TRUE}
-  if (warn) warning("Some extreme weights were generated. Examine them with summary() and maybe trim them with trim().", call. = FALSE)
+  check_estimated_weights(obj$weights, treat, treat.type, s.weights)
 
   ## Assemble output object----
   out <- list(weights = obj$weights,
               treat = treat,
               covs = reported.covs,
-              #data = o.data,
               estimand = if (treat.type == "continuous") NULL else reported.estimand,
               method = method,
               ps = if (is_null(obj$ps) || all(is.na(obj$ps))) NULL else obj$ps,
@@ -175,7 +167,7 @@ print.weightit <- function(x, ...) {
   invisible(x)
 }
 summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
-  outnames <- c("weight.range", "weight.top",
+  outnames <- c("weight.range", "weight.top", "weight.mean",
                 "coef.of.var", "scaled.mad", "negative.entropy",
                 "effective.sample.size")
   out <- make_list(outnames)
@@ -185,6 +177,10 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   w <- setNames(object$weights*sw, seq_along(sw))
   t <- object$treat
   treat.type <- get.treat.type(object[["treat"]])
+  stabilized <- is_not_null(object[["stabilization"]])
+
+  attr(out, "weights") <- w
+  attr(out, "treat") <- t
 
   if (treat.type == "continuous") {
     out$weight.range <- list(all = c(min(w[w > 0]),
@@ -194,13 +190,17 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$scaled.mad <- c(all = mean.abs.dev(w/mean_fast(w)))
     out$negative.entropy <- c(all = neg_ent(w))
     out$num.zeros <- c(overall = sum(check_if_zero(w)))
+    out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     nn <- make_df("Total", c("Unweighted", "Weighted"))
     nn["Unweighted", ] <- ESS(sw)
     nn["Weighted", ] <- ESS(w)
 
   }
-  else if (treat.type == "binary") {
+  else if (treat.type == "binary" && !is_(t, c("factor", "character"))) {
+    treated <- get.treated.level(t)
+    t <- as.integer(t == treated)
+
     top0 <- c(treated = min(top, sum(t == 1)),
               control = min(top, sum(t == 0)))
     out$weight.range <- list(treated = c(min(w[w > 0 & t == 1]),
@@ -217,6 +217,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                               control = neg_ent(w[t==0]))
     out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
                        control = sum(check_if_zero(w[t==0])))
+    out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     #dc <- weightit$discarded
 
@@ -226,7 +227,9 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     nn["Weighted", ] <- c(ESS(w[t==0]),
                           ESS(w[t==1]))
   }
-  else if (treat.type == "multinomial") {
+  else if (treat.type == "multinomial" || is_(t, c("factor", "character"))) {
+    t <- as.factor(t)
+
     top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
     out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
                                                                  max(w[w > 0 & t == x]))),
@@ -237,6 +240,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
     out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)))
     out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)))
+    out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     nn <- make_df(levels(t), c("Unweighted", "Weighted"))
     for (i in levels(t)) {
@@ -253,8 +257,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   if (is_not_null(object$focal)) {
     attr(w, "focal") <- object$focal
   }
-  attr(out, "weights") <- w
-  attr(out, "treat") <- t
+
   class(out) <- "summary.weightit"
   return(out)
 }
@@ -278,6 +281,8 @@ print.summary.weightit <- function(x, ...) {
                                                               x$negative.entropy,
                                                               x$num.zeros)),
                                           c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
+  if (is_not_null(x$weight.mean)) cat("\n- " %+% italic("Mean of Weights") %+% " = " %+% round(x$weight.mean, 2) %+% "\n")
+
   cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
   print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
   invisible(x)
