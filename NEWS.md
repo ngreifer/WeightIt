@@ -5,6 +5,14 @@ WeightIt News and Updates
 
 * Fixed a bug in `summary.weightit()` where the labels of the top weights were incorrect. Thanks to Adam Lilly.
 
+* Multinomial logistic regression can now be fit using `mclogit::mblogit()`, which is quite a bit faster than `mlogit::mlogit()`. This can be requested by setting `use.mclogit = TRUE`. [Needs documenting]
+
+* Fixed a bug in `sbps()` when using a stochastic search (i.e., `full.search = FALSE` or more than 8 moderator levels). (#17)
+
+* Added a `plot()` method for `summary.weightitMSM` objects that functions just like `plot.summary.weightit()` for each time point.
+
+* Fixed a bug that would occur when all weights in a treatment group were `NA`. Bad weights (i.e., all the same) now produce a warning rather than an error so the weights can be diagnosed manually. (#18)
+
 # WeightIt 0.11.0
 
 * Added support for estimating propensity scores using Bayesian additive regression trees (BART) with `method = "bart"`. This method fits a BART model for the treatment using functions in the `dbarts` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.
