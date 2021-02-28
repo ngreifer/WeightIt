@@ -3,32 +3,32 @@ as.weightit <- function(...) {
 }
 as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.weights = NULL, ps = NULL, ...) {
 
-  if (missing(weights)) stop("weights must be supplied to as.weightit.", call. = FALSE)
-  if (missing(treat)) stop("treat must be supplied to as.weightit.", call. = FALSE)
+  if (missing(weights)) stop("'weights' must be supplied to as.weightit().", call. = FALSE)
+  if (missing(treat)) stop("'treat' must be supplied to as.weightit().", call. = FALSE)
 
-  if (!is.vector(weights, "numeric")) stop("weights must be a numeric vector.", call. = FALSE)
+  if (!is.vector(weights, "numeric")) stop("'weights' must be a numeric vector.", call. = FALSE)
 
-  if (!is.atomic(treat) && !is.factor(treat)) stop("treat must be an atomic vector (i.e., numeric, logical, or character) or a factor.", call. = FALSE)
-  if (length(weights) != length(treat)) stop("weights and treat must be the same length.", call. = FALSE)
+  if (!is.atomic(treat) && !is.factor(treat)) stop("'treat' must be an atomic vector (i.e., numeric, logical, or character) or a factor.", call. = FALSE)
+  if (length(weights) != length(treat)) stop("'weights' and 'treat' must be the same length.", call. = FALSE)
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
 
   if (is_not_null(covs)) {
-    if (!is.data.frame(covs) && !is.matrix(covs)) stop("covs must be a data.frame of covariates.", call. = FALSE)
+    if (!is.data.frame(covs) && !is.matrix(covs)) stop("'covs' must be a data.frame of covariates.", call. = FALSE)
     else if (is.matrix(covs)) covs <- as.data.frame.matrix(covs)
 
-    if (nrow(covs) != length(weights)) stop("covs and weights must be the same length.", call. = FALSE)
+    if (nrow(covs) != length(weights)) stop("'covs' and 'weights' must be the same length.", call. = FALSE)
   }
   if (is_not_null(estimand)) {
-    if (!is.vector(estimand, "character") || length(estimand) != 1L) stop("estimand must be a character vector of length 1.", call. = FALSE)
+    if (!is.vector(estimand, "character") || length(estimand) != 1L) stop("'estimand' must be a character vector of length 1.", call. = FALSE)
   }
 
   if (is_not_null(s.weights)) {
-    if (!is.vector(s.weights, "numeric")) stop("s.weights must be a numeric vector.", call. = FALSE)
-    if (length(s.weights) != length(weights)) stop("s.weights and weights must be the same length.", call. = FALSE)
+    if (!is.vector(s.weights, "numeric")) stop("'s.weights' must be a numeric vector.", call. = FALSE)
+    if (length(s.weights) != length(weights)) stop("'s.weights' and 'weights' must be the same length.", call. = FALSE)
   }
   if (is_not_null(ps)) {
-    if (!is.vector(ps, "numeric")) stop("ps must be a numeric vector.", call. = FALSE)
-    if (length(ps) != length(ps)) stop("ps and weights must be the same length.", call. = FALSE)
+    if (!is.vector(ps, "numeric")) stop("'ps' must be a numeric vector.", call. = FALSE)
+    if (length(ps) != length(ps)) stop("'ps' and 'weights' must be the same length.", call. = FALSE)
   }
 
   w.list <- list(weights = weights,
