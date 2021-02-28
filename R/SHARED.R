@@ -510,11 +510,11 @@ nobars <- function(term) {
     }
 
     nb <- nobars_(term)
-    if (is(term, "formula") && length(term) == 3 && is.symbol(nb)) {
+    if (is_(term, "formula") && length(term) == 3 && is.symbol(nb)) {
         nb <- reformulate("1", response = deparse(nb))
     }
     if (is.null(nb)) {
-        nb <- if (is(term, "formula")) {~1} else 1
+        nb <- if (is_(term, "formula")) {~1} else 1
     }
     nb
 }
