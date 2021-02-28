@@ -423,6 +423,29 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   attr(out.list, "weights") <- w
   return(out.list)
 }
+summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
+  outnames <- c("weight.range", "weight.top",
+                "coef.of.var", "scaled.mad", "negative.entropy",
+                "weight.mean",
+                "effective.sample.size")
+
+  out.list <- make_list(names(object$treat.list))
+
+  if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
+  else sw <- object$s.weights
+  w <- setNames(object$weights*sw, seq_along(sw))
+  treat.types <- vapply(object[["treat.list"]], get.treat.type, character(1L))
+  stabilized <- is_not_null(object[["stabilization"]])
+
+  for (ti in seq_along(object$treat.list)) {
+    obj <- as.weightit(weights = object$weights, treat = object$treat.list[[ti]],
+                       s.weights = object$s.weights, stabilization = object$stabilization)
+    out.list[[ti]] <- summary.weightit(obj, top = top, ignore.s.weights = ignore.s.weights, ...)
+  }
+
+  class(out.list) <- "summary.weightitMSM"
+  return(out.list)
+}
 print.summary.weightitMSM <- function(x, ...) {
   if (all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))) {
     only.one <- TRUE
@@ -432,31 +455,17 @@ print.summary.weightitMSM <- function(x, ...) {
   cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
   for (ti in seq_along(x)) {
     if (!only.one) cat(strikethrough(paste(rep(" ", 22), collapse = "")) %+% italic(" Time " %+% ti %+% " ") %+% strikethrough(paste(rep(" ", 22), collapse = "")) %+% "\n")
-    tryCatch({
-      cat("- " %+% italic("Weight ranges") %+% ":\n\n")
-      print.data.frame(round_df_char(text_box_plot(x[[ti]]$weight.range, 28), 4))
-    })
-
-    df <- setNames(data.frame(do.call("c", lapply(names(x[[ti]]$weight.top), function(y) c(" ", y))),
-                              matrix(do.call("c", lapply(x[[ti]]$weight.top, function(y) c(names(y), round(y, 4)))),
-                                     byrow = TRUE, nrow = 2*length(x[[ti]]$weight.top))),
-                   rep("", 1 + length(x[[ti]]$weight.top[[1]])))
-    cat("\n- " %+% italic("Units with", length(x[[ti]]$weight.top[[1]]), "greatest weights by group") %+% ":\n")
-    print.data.frame(df, row.names = FALSE)
-    cat("\n- " %+% italic("Weight statistics") %+% ":\n\n")
-    print.data.frame(round_df_char(setNames(as.data.frame(cbind(x[[ti]]$coef.of.var,
-                                                                x[[ti]]$scaled.mad,
-                                                                x[[ti]]$negative.entropy,
-                                                                x[[ti]]$num.zeros)),
-                                            c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
-
-    if (is_not_null(x[[ti]][["weight.mean"]])) cat("\n- " %+% italic("Mean of Weights") %+% " = " %+% round(x[[ti]][["weight.mean"]], 4) %+% "\n")
-
-    cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
-    print.data.frame(round_df_char(x[[ti]]$effective.sample.size, 2, pad = " "))
+    print(x[[ti]])
     cat("\n")
     if (only.one) break
   }
 
   invisible(x)
+}
+plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1, ...) {
+  if (!is.numeric(time) || length(time) != 1 || time %nin% seq_along(x)) {
+    stop("'time' must be a number corresponding to the time point for which to display the distribution of weights.", call. = FALSE)
+  }
+  p <- plot.summary.weightit(x[[time]], binwidth = binwidth, bins = bins, ...)
+  p + labs(subtitle = paste0("For Time ", time))
 }
