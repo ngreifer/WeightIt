@@ -13,6 +13,8 @@ WeightIt News and Updates
 
 * Fixed a bug that would occur when all weights in a treatment group were `NA`. Bad weights (i.e., all the same) now produce a warning rather than an error so the weights can be diagnosed manually. (#18)
 
+* With multinomial treatments with `link = "logit"` (the default), if the `mclogit` package is installed, it can be requested for estimating the propensity score by setting the option `use.mclogit = TRUE`, which uses `mclogit::mblogit()`. It should give the same results as the default, which uses `mlogit`, but can be faster and so is recommended.
+
 # WeightIt 0.11.0
 
 * Added support for estimating propensity scores using Bayesian additive regression trees (BART) with `method = "bart"`. This method fits a BART model for the treatment using functions in the `dbarts` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.

@@ -128,7 +128,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 }
 
 #Propensity score estimation with regression
-weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, ...) {
+weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, data, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -292,7 +292,46 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         fit.obj <- fit
       }
       else if (A$link %in% c("logit", "probit")) {
-        if (!isFALSE(A$use.mlogit)) {
+        if (isTRUE(A$use.mclogit)) {
+          check.package("mclogit")
+
+          if (is_not_null(A$random)) {
+            random <- get.covs.and.treat.from.formula(A$random, data = data)$reported.covs[subset,,drop = FALSE]
+            data <- cbind(data.frame(random), data.frame(treat = treat_sub, .s.weights = s.weights, covs))
+            covnames <- names(data)[-c(seq_col(random), ncol(random) + (1:2))]
+            tname <- names(data)[ncol(random) + 1]
+            ctrl_fun <- mclogit::mmclogit.control
+          }
+          else {
+            data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
+            covnames <- names(data)[-c(1,2)]
+            tname <- names(data)[1]
+            ctrl_fun <- mclogit::mclogit.control
+          }
+          form <- reformulate(covnames, tname)
+
+          control <- do.call(ctrl_fun, c(A[["control"]], A[names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)]]))
+
+          tryCatch({
+            fit <- do.call(mclogit::mblogit, list(form,
+                                    data = data,
+                                    weights = quote(.s.weights),
+                                    random = A[["random"]],
+                                    method = A[["mclogit.method"]],
+                                    estimator = if_null_then(A[["estimator"]], eval(formals(mclogit::mclogit)[["estimator"]])),
+                                    dispersion = if_null_then(A[["dispersion"]], eval(formals(mclogit::mclogit)[["dispersion"]])),
+                                    groups = A[["groups"]],
+                                    control = control))
+
+          },
+          error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mblogit().\n       Try again with use.mclogit = FALSE.\nError message (from mclogit):\n       ", conditionMessage(e)), call. = FALSE)}
+          )
+
+          ps <- fitted(fit)
+          colnames(ps) <- levels(treat_sub)
+          fit.obj <- fit
+        }
+        else if (!isFALSE(A$use.mlogit)) {
           check.package("mlogit")
 
           data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
@@ -444,7 +483,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
   obj <- list(w = w, ps = p.score, fit.obj = fit.obj)
   return(obj)
 }
-weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, data, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -577,7 +616,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
 }
 
 #MABW with optweight
-weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, data, ...) {
   A <- list(...)
 
   check.package("optweight")
@@ -623,7 +662,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   obj <- list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
   return(obj)
 }
-weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, data, ...) {
   A <- list(...)
   check.package("optweight")
 
@@ -667,7 +706,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   return(obj)
 
 }
-weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, ...) {
+weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, data, ...) {
   A <- list(...)
   check.package("optweight")
   if (is_not_null(covs.list)) {
@@ -716,7 +755,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
 }
 
 #Generalized boosted modeling with twang
-weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
   A <- list(...)
 
   warning("method = \"twang\" is deprecated; please use method = \"gbm\" for improved performance and increased functionality.", immediate. = TRUE, call. = FALSE)
@@ -843,7 +882,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
   return(obj)
 }
-weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ...) {
+weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missing, data, ...) {
   A <- list(...)
 
   check.package("gbm")
@@ -889,7 +928,7 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 }
 
 #Generalized boosted modeling with gbm and cobalt
-weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
 
   check.package("gbm")
 
@@ -1120,7 +1159,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
   return(obj)
 }
-weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
 
   check.package("gbm")
 
@@ -1398,7 +1437,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 }
 
 #CBPS
-weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
 
   check.package("CBPS")
 
@@ -1508,7 +1547,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   obj <- list(w = w, ps = p.score, fit.obj = fit.list)
   return(obj)
 }
-weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
+weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, data, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1549,10 +1588,10 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
   obj <- list(w = w, fit.obj = fit)
   return(obj)
 }
-weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, ...) {
+weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, data, ...) {
   stop("CBMSM doesn't work yet.")
 }
-weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missing, data, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1590,7 +1629,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
 
   return(obj)
 }
-weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, missing, data, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1631,7 +1670,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
 }
 
 #Entropy balancing
-weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, ...) {
+weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, data, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1717,7 +1756,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
   return(obj)
 }
-weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, missing, data, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1798,7 +1837,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
 }
 
 #Empirical Balancing Calibration weights with ATE
-weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, data, ...) {
   check.package("ATE")
 
   A <- list(...)
@@ -1891,7 +1930,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
 }
 
 #PS weights using SuperLearner
-weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
+weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, data, ...) {
   A <- list(...)
 
   check.package("SuperLearner")
@@ -2003,7 +2042,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
 }
-weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, data, ...) {
   A <- B <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -2159,7 +2198,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 }
 
 #PS weights using BART
-weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
+weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, data, ...) {
   A <- list(...)
 
   check.package("dbarts")
@@ -2227,7 +2266,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
 }
-weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, data, ...) {
   A <- list(...)
 
   check.package("dbarts")
@@ -2336,7 +2375,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 }
 
 #Energy balancing
-weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, data, ...) {
   check.package("osqp")
 
   A <- list(...)
