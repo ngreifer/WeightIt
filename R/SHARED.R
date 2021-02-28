@@ -466,19 +466,108 @@ bw.nrd <- function(x) {
 }
 
 #Formulas
-subbars <- function(term) {
-    if (is.name(term) || !is.language(term))
-        return(term)
-    if (length(term) == 2) {
-        term[[2]] <- subbars(term[[2]])
-        return(term)
+hasbar <- function(term) {
+    any(c("|", "||") %in% all.names(term))
+}
+nobars <- function(term) {
+    #Replace formula with version without "|"s, i.e., random effects
+
+    isBar <- function(term) {
+        is.call(term) && (term[[1]] == as.name("|") || term[[1]] == as.name("||"))
+    }
+    isAnyArgBar <- function(term) {
+        if ((term[[1]] != as.name("~")) && (term[[1]] != as.name("("))) {
+            for (i in seq_along(term)) {
+                if (isBar(term[[i]])) return(TRUE)
+            }
+        }
+        FALSE
     }
 
-    if (is.call(term) && (term[[1]] == as.name("|") || term[[1]] == as.name("||"))) {
-        term[[1]] <- as.name("+")
+    nobars_ <- function(term) {
+        if (!hasbar(term))
+            return(term)
+        if (isBar(term))
+            return(NULL)
+        if (isAnyArgBar(term))
+            return(NULL)
+        if (length(term) == 2) {
+            nb <- nobars_(term[[2]])
+            if (is.null(nb))
+                return(NULL)
+            term[[2]] <- nb
+            return(term)
+        }
+        nb2 <- nobars_(term[[2]])
+        nb3 <- nobars_(term[[3]])
+        if (is.null(nb2))
+            return(nb3)
+        if (is.null(nb3))
+            return(nb2)
+        term[[2]] <- nb2
+        term[[3]] <- nb3
+        term
     }
-    for (j in 2:length(term)) term[[j]] <- subbars(term[[j]])
-    return(term)
+
+    nb <- nobars_(term)
+    if (is(term, "formula") && length(term) == 3 && is.symbol(nb)) {
+        nb <- reformulate("1", response = deparse(nb))
+    }
+    if (is.null(nb)) {
+        nb <- if (is(term, "formula")) {~1} else 1
+    }
+    nb
+}
+form2random <- function(term) {
+    if (!hasbar(term)) return(NULL)
+    if ("||" %in% all.names(term)) stop("|| in formulas are not accepted.", call. = FALSE)
+
+    fb <- function(term) {
+        if (is.name(term) || !is.language(term))
+            return(NULL)
+        if (term[[1]] == as.name("("))
+            return(fb(term[[2]]))
+        stopifnot(is.call(term))
+        if (term[[1]] == as.name("|"))
+            return(term)
+        if (length(term) == 2)
+            return(fb(term[[2]]))
+        c(fb(term[[2]]), fb(term[[3]]))
+    }
+    expandSlash <- function(bb) {
+        makeInteraction <- function(x) {
+            if (length(x) < 2)
+                return(x)
+            trm1 <- makeInteraction(x[[1]])
+            trm11 <- if (is.list(trm1))
+                trm1[[1]]
+            else trm1
+            list(substitute(foo:bar, list(foo = x[[2]], bar = trm11)),
+                 trm1)
+        }
+        slashTerms <- function(x) {
+            if (!("/" %in% all.names(x)))
+                return(x)
+            if (x[[1]] != as.name("/"))
+                stop("unparseable formula for grouping factor",
+                     call. = FALSE)
+            list(slashTerms(x[[2]]), slashTerms(x[[3]]))
+        }
+        if (!is.list(bb))
+            expandSlash(list(bb))
+        else unlist(lapply(bb, function(x) {
+            if (length(x) > 2 && is.list(trms <- slashTerms(x[[3]])))
+                lapply(unlist(makeInteraction(trms)), function(trm) substitute(foo |
+                                                                                   bar, list(foo = x[[2]], bar = trm)))
+            else x
+        }))
+    }
+    findbars <- function(term) {
+        modterm <- (if (is.formula(term)) term[[length(term)]] else term)
+        expandSlash(fb(modterm))
+    }
+
+    as.formula(paste("~", do.call(paste, c(lapply(findbars(term), deparse1), list(sep = " + ")))))
 }
 
 #treat/covs
@@ -505,7 +594,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
     if (!is.formula(f)) stop("'f' must be a formula.")
 
-    eval.model.matrx <- identical(f, f <- subbars(f))
+    eval.model.matrx <- !hasbar(f)
 
     tryCatch(tt <- terms(f, data = data),
              error = function(e) {
