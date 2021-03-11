@@ -52,8 +52,6 @@
 
 
 
-
-
 <!-- mathjax -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script>
@@ -65,15 +63,9 @@
 
 
 
-  
-
-  
-
   </head>
 
   <body data-spy="scroll" data-target="#toc">
-    
-
     <div class="container template-news">
       <header>
       <div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -94,6 +86,12 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
+  <a href="../index.html">
+    <span class="fas fa-home fa-lg"></span>
+     
+  </a>
+</li>
+<li>
   <a href="../articles/WeightIt.html">Get started</a>
 </li>
 <li>
@@ -133,11 +131,11 @@
 </h1>
 <ul>
 <li><p>Fixed a bug in <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code> where the labels of the top weights were incorrect. Thanks to Adam Lilly.</p></li>
-<li><p>Multinomial logistic regression can now be fit using <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html" class="external-link">mclogit::mblogit()</a></code>, which is quite a bit faster than <code><a href="https://rdrr.io/pkg/mlogit/man/mlogit.html" class="external-link">mlogit::mlogit()</a></code>. This can be requested by setting <code>use.mclogit = TRUE</code>. [Needs documenting]</p></li>
+<li><p>Multinomial logistic regression can now be fit using <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html">mclogit::mblogit()</a></code>, which is quite a bit faster than <code><a href="https://rdrr.io/pkg/mlogit/man/mlogit.html">mlogit::mlogit()</a></code>. This can be requested by setting <code>use.mclogit = TRUE</code>. [Needs documenting]</p></li>
 <li><p>Fixed a bug in <code><a href="../reference/sbps.html">sbps()</a></code> when using a stochastic search (i.e., <code>full.search = FALSE</code> or more than 8 moderator levels). (<a href='https://github.com/ngreifer/WeightIt/issues/17'>#17</a>)</p></li>
-<li><p>Added a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method for <code>summary.weightitMSM</code> objects that functions just like <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code> for each time point.</p></li>
+<li><p>Added a <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code> method for <code>summary.weightitMSM</code> objects that functions just like <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code> for each time point.</p></li>
 <li><p>Fixed a bug that would occur when all weights in a treatment group were <code>NA</code>. Bad weights (i.e., all the same) now produce a warning rather than an error so the weights can be diagnosed manually. (<a href='https://github.com/ngreifer/WeightIt/issues/18'>#18</a>)</p></li>
-<li><p>With multinomial treatments with <code>link = "logit"</code> (the default), if the <code>mclogit</code> package is installed, it can be requested for estimating the propensity score by setting the option <code>use.mclogit = TRUE</code>, which uses <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html" class="external-link">mclogit::mblogit()</a></code>. It should give the same results as the default, which uses <code>mlogit</code>, but can be faster and so is recommended.</p></li>
+<li><p>With multinomial treatments with <code>link = "logit"</code> (the default), if the <code>mclogit</code> package is installed, it can be requested for estimating the propensity score by setting the option <code>use.mclogit = TRUE</code>, which uses <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html">mclogit::mblogit()</a></code>. It should give the same results as the default, which uses <code>mlogit</code>, but can be faster and so is recommended.</p></li>
 </ul>
 </div>
     <div id="weightit-0110" class="section level1">
@@ -149,7 +147,7 @@
 <li><p>Fixed a bug when using <code>method = "gbm"</code> with <code>stop.method = "cv{#}"</code>.</p></li>
 <li><p>Fixed a bug when setting <code>estimand = "ATC"</code> for methods that produce a propensity score. In the past, the output propensity score was the probability of being in the control group; now, it is the probability of being in the treated group, as it is for all other estimands. This does not affect the weights.</p></li>
 <li><p>Setting <code>method = "twang"</code> is now deprecated. Use <code>method = "gbm"</code> for improved performance and increased functionality. <code>method = "twang"</code> relies on the <code>twang</code> package; <code>method = "gbm"</code> calls <code>gbm</code> directly.</p></li>
-<li><p>Using <code>method = "ebal"</code> no longer requires the <code>ebal</code> package. Instead, <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed.</p></li>
+<li><p>Using <code>method = "ebal"</code> no longer requires the <code>ebal</code> package. Instead, <code><a href="https://rdrr.io/r/stats/optim.html">optim()</a></code> is used, as it has been with continuous treatments. Balance is a little better, but some options have been removed.</p></li>
 <li><p>When using <code>method = "ebal"</code> with continuous treatments, a new argument, <code>d.moments</code>, can now be specified. This controls the number of moments of the covariate and treatment distributions that are constrained to be the same in the weighted sample as they are in the original sample. Vegetabile et al. (2020) recommend setting <code>d.moments</code> to at least 3 to ensure generalizability and reduce bias due to effect modification.</p></li>
 <li><p>Made some minor changes to <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code> and <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code>. Fixed how negative entropy was computed.</p></li>
 <li><p>The option <code>use.mnlogit</code> in <code><a href="../reference/weightit.html">weightit()</a></code> with multi-category treatments and <code>method = "ps"</code> has been removed because <code>mnlogit</code> appears uncooperative.</p></li>
@@ -204,8 +202,8 @@
 <ul>
 <li><p>Added support for entropy balancing (<code>method = "ebal"</code>) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.</p></li>
 <li><p>Added support for Balance SuperLearner as described by Pirracchio and Carone (2018) with <code>method = "super"</code>. Rather than using NNLS to choose the optimal combination of predictions, you can now optimize balance. To do so, set <code>SL.method = "method.balance"</code>. You will need to set an argument to <code>stop.method</code>, which works identically to how it does for <code>method = "gbm"</code>. For example, for <code>stop.method = "es.max"</code>, the predicted values given will be the combination of predicted values that minimizes the largest absolute standardized mean difference of the covariates in the sample weighted using the predicted values as propensity scores.</p></li>
-<li><p>Changed some of the statistics displayed when using <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>: the weight ratio is gone (because weights can be 0, which is not problematic but would explode the ratio), and the mean absolute deviation and entropy of the weights are now present.</p></li>
-<li><p>Added <code>crayon</code> for prettier printing of <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> output.</p></li>
+<li><p>Changed some of the statistics displayed when using <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code>: the weight ratio is gone (because weights can be 0, which is not problematic but would explode the ratio), and the mean absolute deviation and entropy of the weights are now present.</p></li>
+<li><p>Added <code>crayon</code> for prettier printing of <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code> output.</p></li>
 </ul>
 </div>
     <div id="weightit-080" class="section level1">
@@ -213,12 +211,12 @@
 <a href="#weightit-080" class="anchor"></a>WeightIt 0.8.0<small> 2020-01-12 </small>
 </h1>
 <ul>
-<li><p>Formula interfaces now accept <code><a href="https://rdrr.io/r/stats/poly.html" class="external-link">poly(x, .)</a></code> and other matrix-generating functions of variables, including the <code>rms</code>-class-generating functions from the <code>rms</code> package (e.g., <code>pol()</code>, <code>rcs()</code>, etc.) (the <code>rms</code> package must be loaded to use these latter ones) and the <code>basis</code>-class-generating functions from the <code>splines</code> package (i.e., <code>bs()</code> and <code>ns()</code>). A bug in an early version of this was found by <a href='https://github.com/ahinton-mmc'>@ahinton-mmc</a>.</p></li>
+<li><p>Formula interfaces now accept <code><a href="https://rdrr.io/r/stats/poly.html">poly(x, .)</a></code> and other matrix-generating functions of variables, including the <code>rms</code>-class-generating functions from the <code>rms</code> package (e.g., <code>pol()</code>, <code>rcs()</code>, etc.) (the <code>rms</code> package must be loaded to use these latter ones) and the <code>basis</code>-class-generating functions from the <code>splines</code> package (i.e., <code>bs()</code> and <code>ns()</code>). A bug in an early version of this was found by <a href='https://github.com/ahinton-mmc'>@ahinton-mmc</a>.</p></li>
 <li><p>Added support for marginal mean weighting through stratification (MMWS) as described by Hong (2010, 2012) for <code><a href="../reference/weightit.html">weightit()</a></code> and <code><a href="../reference/get_w_from_ps.html">get_w_from_ps()</a></code> through the <code>subclass</code> argument (see References at <code><a href="../reference/get_w_from_ps.html">?get_w_from_ps</a></code>). With this method, subclasses are formed based on the propensity score and weights are computed based on the number of units in each subclass. MMWS can be used with any method that produces a propensity score. The implementation here ensures all subclasses have a least one member by filling in empty subclasses with neighboring units.</p></li>
 <li><p>Added <code>stabilize</code> option to <code><a href="../reference/get_w_from_ps.html">get_w_from_ps()</a></code>.</p></li>
 <li><p>A new <code>missing</code> argument has been added to <code><a href="../reference/weightit.html">weightit()</a></code> to choose how missing data in the covariates is handled. For most methods, only <code>"ind"</code> (i.e., missing indicators with single-value imputation) is allowed, but for <code>"ps"</code>, <code>"gbm"</code>, and <code>"twang"</code>, other methods are possible. For <code>method = "ps"</code>, a stochastic approximation of the EM algorithm (SAEM) can be used through the <code>misaem</code> package by setting <code>missing = "saem"</code>.</p></li>
 <li><p>For continuous treatments with the <code>"ps"</code>, <code>"gbm"</code>, and <code>"super"</code> methods (i.e., where the conditional density of the treatment needs to be estimated), the user can now supply their own density as a string or function rather than using the normal density or kernel density estimation. For example, to use the density of the t-distribution with 3 degrees of freedom, one can set <code>density = "dt_3"</code>. T-distributions often work better than normal distributions for extreme values of the treatment.</p></li>
-<li><p>Some methods now have an <code>info</code> component in the output object. This contains information that might be useful in diagnosing or reporting the method. For example, when <code>method = "gbm"</code>, <code>info</code> contains the tree that was used to compute the weights and the balance resulting from all the trees, which can be plotted using <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>. When <code>method = "super"</code>, <code>info</code> contains the coefficients in the stacking model and the cross-validation risk of each of the component methods.</p></li>
+<li><p>Some methods now have an <code>info</code> component in the output object. This contains information that might be useful in diagnosing or reporting the method. For example, when <code>method = "gbm"</code>, <code>info</code> contains the tree that was used to compute the weights and the balance resulting from all the trees, which can be plotted using <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code>. When <code>method = "super"</code>, <code>info</code> contains the coefficients in the stacking model and the cross-validation risk of each of the component methods.</p></li>
 <li><p>For <code>method = "gbm"</code>, the best tree can be chosen using cross validation rather than balance by setting <code>stop.method = "cv5"</code>, e.g., to do 5-fold cross-validation.</p></li>
 <li><p>For <code>method = "gbm"</code>, a new optional argument <code>start.tree</code> can be set to select the tree at which balance begins to be computed. This can speed things up when you know that the best tree is not within the first 100 trees, for example.</p></li>
 <li><p>When using <code>method = "gbm"</code> with multi-category treatments and estimands other than the <code>ATE</code>, <code>ATT</code>, or <code>ATC</code> are used with standardized mean differences as the stopping rule, the mean differences will be between the weighted overall sample and each treatment group. Otherwise, some efficiency improvements.</p></li>
@@ -247,8 +245,8 @@
 <li><p>Bug fixes when <code>stabilize = TRUE</code>, thanks to <a href='https://github.com/ulriksartipy'>@ulriksartipy</a> and Sven Rieger.</p></li>
 <li><p>Fixes for using <code>base.weight</code> argument with <code>method = "ebal"</code>. Now the supplied vector should have a length equal to the number of units in the dataset (in contrast to its use in <code>ebalance</code>, which requires a length equal to the number of control units).</p></li>
 <li><p>Restored dependency on <code>cobalt</code> for examples and vignette.</p></li>
-<li><p>When <code>method = "ps"</code> and the treatment is ordered (i.e., ordinal), <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code> is used to fit an ordinal regression. Make the treatment un-ordered to to use multinomial regression instead.</p></li>
-<li><p>Added support for using bias-reduced fitting functions when <code>method = "ps"</code> as provided by the <code>brglm2</code> package. These can be accessed by changing the <code>link</code> to, for example, <code>"br.logit"</code> or <code>"br.probit"</code>. For multinomial treatments, setting <code>link = "br.logit"</code> fits a bias-reduced multinomial regression model using <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>. This can be helpful when regular maximum likelihood models fail to converge, though this may also be a sign of lack of overlap.</p></li>
+<li><p>When <code>method = "ps"</code> and the treatment is ordered (i.e., ordinal), <code><a href="https://rdrr.io/pkg/MASS/man/polr.html">MASS::polr()</a></code> is used to fit an ordinal regression. Make the treatment un-ordered to to use multinomial regression instead.</p></li>
+<li><p>Added support for using bias-reduced fitting functions when <code>method = "ps"</code> as provided by the <code>brglm2</code> package. These can be accessed by changing the <code>link</code> to, for example, <code>"br.logit"</code> or <code>"br.probit"</code>. For multinomial treatments, setting <code>link = "br.logit"</code> fits a bias-reduced multinomial regression model using <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html">brglm2::brmultinom()</a></code>. This can be helpful when regular maximum likelihood models fail to converge, though this may also be a sign of lack of overlap.</p></li>
 </ul>
 </div>
     <div id="weightit-060" class="section level1">
@@ -299,7 +297,7 @@
 </h1>
 <ul>
 <li><p>Added <code><a href="../reference/trim.html">trim()</a></code> function to trim weights.</p></li>
-<li><p>Added <code><a href="../reference/ps.cont.html">ps.cont()</a></code> function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in <code>twang</code>. This function uses the same syntax as <code><a href="https://rdrr.io/pkg/twang/man/ps.html" class="external-link">ps()</a></code> in <code>twang</code>, and can also be accessed using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code>. Support functions were added to make it compatible with <code>twang</code> functions for assessing balance (e.g., <code>summary</code>, <code>bal.table</code>, <code>plot</code>). Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.</p></li>
+<li><p>Added <code><a href="../reference/ps.cont.html">ps.cont()</a></code> function, which estimates generalized propensity score weights for continuous treatments using generalized boosted modeling, as in <code>twang</code>. This function uses the same syntax as <code><a href="https://rdrr.io/pkg/twang/man/ps.html">ps()</a></code> in <code>twang</code>, and can also be accessed using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code>. Support functions were added to make it compatible with <code>twang</code> functions for assessing balance (e.g., <code>summary</code>, <code>bal.table</code>, <code>plot</code>). Thanks to Donna Coffman for enlightening me about this method and providing the code to implement it.</p></li>
 <li><p>The input formula is now much more forgiving, allowing objects in the environment to be included. The <code>data</code> argument to <code><a href="../reference/weightit.html">weightit()</a></code> is now optional. To simplify things, the output object no longer contains a <code>data</code> field.</p></li>
 <li><p>Under-the-hood changes to facilitate adding new features and debugging. Some aspects of the output objects have been slightly changed, but it shouldn’t affect use for most users.</p></li>
 <li><p>Fixed a bug where variables would be thrown out when <code>method = "ebal"</code>.</p></li>
@@ -331,7 +329,7 @@
 <a href="#weightit-030" class="anchor"></a>WeightIt 0.3.0<small> 2018-01-14 </small>
 </h1>
 <ul>
-<li><p>Added <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> function (and supporting <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> functions) to estimate weights for marginal structural models with time-varying treatments and covariates.</p></li>
+<li><p>Added <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> function (and supporting <code><a href="https://rdrr.io/r/base/print.html">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html">summary()</a></code> functions) to estimate weights for marginal structural models with time-varying treatments and covariates.</p></li>
 <li><p>Fixed some bugs, including when using CBPS with continuous treatments, and when using <code>focal</code> incorrectly.</p></li>
 </ul>
 </div>
@@ -367,11 +365,11 @@
 
       <footer>
       <div class="copyright">
-  <p><p>Developed by Noah Greifer.</p></p>
+  <p>Developed by Noah Greifer.</p>
 </div>
 
 <div class="pkgdown">
-  <p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 1.6.1.9000.</p></p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/">pkgdown</a> 1.6.1.</p>
 </div>
 
       </footer>
@@ -379,8 +377,6 @@
 
   
 
-
-  
 
   </body>
 </html>
