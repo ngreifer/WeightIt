@@ -112,7 +112,7 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
                       missing = missing,
                       verbose = verbose,
                       include.obj = include.obj,
-                      data = data,
+                      .data = data,
                       ...)
 
   check_estimated_weights(obj$weights, treat, treat.type, s.weights)

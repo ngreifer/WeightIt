@@ -40,7 +40,9 @@ For binary and multinomial treatments, the following additional arguments can be
 \describe{
 \item{\code{improved}}{\code{logical}; whether to use the improved energy balancing weights as described by Huling and Mak (2020) when \code{estimand = "ATE"}. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2020) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is \code{TRUE}; set to \code{FALSE} to use the standard energy balancing weights instead (not recommended).
 }
-\item{\code{dist.mat}}{a numeric distance matrix to be used instead of the default distance matrix computed by \code{weightit()}, which uses \fun{dist} with default arguments. Note that some distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit.
+\item{\code{dist.mat}}{a numeric distance matrix to be used instead of the default distance matrix computed by \code{weightit()}, which uses \fun{dist} with default arguments. Note that some distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to \fun{dist}.
+}
+\item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2020), which penalizes the complexity of individual treatment rules rather than the weights.
 }
 }
 The \code{moments} argument functions differently for \code{method = "energy"} from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2020). When \code{moments} is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multinomial treatments, this involves exact balance on the means of the entered covariates.
@@ -55,7 +57,7 @@ When \code{include.obj = TRUE}, the output of the call to \pkgfun{osqp}{solve_os
 }
 }
 \note{
-Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything. If the method repeatedly fails, you should try another method (though this is uncommon).
+Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything. If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon).
 }
 \author{
 Noah Greifer

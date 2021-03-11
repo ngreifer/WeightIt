@@ -128,7 +128,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 }
 
 #Propensity score estimation with regression
-weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, data, ...) {
+weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, .data, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -296,7 +296,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           check.package("mclogit")
 
           if (is_not_null(A$random)) {
-            random <- get.covs.and.treat.from.formula(A$random, data = data)$reported.covs[subset,,drop = FALSE]
+            random <- get.covs.and.treat.from.formula(A$random, data = .data)$reported.covs[subset,,drop = FALSE]
             data <- cbind(data.frame(random), data.frame(treat = treat_sub, .s.weights = s.weights, covs))
             covnames <- names(data)[-c(seq_col(random), ncol(random) + (1:2))]
             tname <- names(data)[ncol(random) + 1]
@@ -483,7 +483,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
   obj <- list(w = w, ps = p.score, fit.obj = fit.obj)
   return(obj)
 }
-weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, data, ...) {
+weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -616,7 +616,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
 }
 
 #MABW with optweight
-weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, data, ...) {
+weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
   A <- list(...)
 
   check.package("optweight")
@@ -662,7 +662,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   obj <- list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
   return(obj)
 }
-weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, data, ...) {
+weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   A <- list(...)
   check.package("optweight")
 
@@ -706,7 +706,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   return(obj)
 
 }
-weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, data, ...) {
+weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, ...) {
   A <- list(...)
   check.package("optweight")
   if (is_not_null(covs.list)) {
@@ -755,7 +755,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
 }
 
 #Generalized boosted modeling with twang
-weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
+weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
   A <- list(...)
 
   warning("method = \"twang\" is deprecated; please use method = \"gbm\" for improved performance and increased functionality.", immediate. = TRUE, call. = FALSE)
@@ -882,7 +882,7 @@ weightit2twang <- function(covs, treat, s.weights, estimand, focal, subset, stab
   obj <- list(w = w, ps = ps, fit.obj = fit.list)
   return(obj)
 }
-weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missing, data, ...) {
+weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ...) {
   A <- list(...)
 
   check.package("gbm")
@@ -928,7 +928,7 @@ weightit2twang.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 }
 
 #Generalized boosted modeling with gbm and cobalt
-weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
+weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
 
   check.package("gbm")
 
@@ -1159,7 +1159,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
   return(obj)
 }
-weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
+weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
 
   check.package("gbm")
 
@@ -1437,7 +1437,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 }
 
 #CBPS
-weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, data, ...) {
+weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
 
   check.package("CBPS")
 
@@ -1547,7 +1547,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   obj <- list(w = w, ps = p.score, fit.obj = fit.list)
   return(obj)
 }
-weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, data, ...) {
+weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1588,10 +1588,10 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, data, ..
   obj <- list(w = w, fit.obj = fit)
   return(obj)
 }
-weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, data, ...) {
+weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, ...) {
   stop("CBMSM doesn't work yet.")
 }
-weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missing, data, ...) {
+weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1629,7 +1629,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
 
   return(obj)
 }
-weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, missing, data, ...) {
+weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1670,7 +1670,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, m
 }
 
 #Entropy balancing
-weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, data, ...) {
+weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1756,7 +1756,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
   return(obj)
 }
-weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, missing, data, ...) {
+weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1837,7 +1837,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
 }
 
 #Empirical Balancing Calibration weights with ATE
-weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, data, ...) {
+weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
   check.package("ATE")
 
   A <- list(...)
@@ -1930,7 +1930,7 @@ weightit2ebcw <- function(covs, treat, s.weights, subset, estimand, focal, missi
 }
 
 #PS weights using SuperLearner
-weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, data, ...) {
+weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
   A <- list(...)
 
   check.package("SuperLearner")
@@ -2042,7 +2042,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
 }
-weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, data, ...) {
+weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- B <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -2198,7 +2198,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 }
 
 #PS weights using BART
-weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, data, ...) {
+weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
   A <- list(...)
 
   check.package("dbarts")
@@ -2266,7 +2266,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
 }
-weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, data, ...) {
+weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- list(...)
 
   check.package("dbarts")
@@ -2375,7 +2375,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 }
 
 #Energy balancing
-weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, data, ...) {
+weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
   check.package("osqp")
 
   A <- list(...)
@@ -2400,12 +2400,14 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
                   sqrt(col.w.v(covs, s.weights)))
 
   if (is_not_null(A[["dist.mat"]])) {
-    if (!is.matrix(A[["dist.mat"]]) || !all(dim(A[["dist.mat"]]) == n) ||
-        !all(check_if_zero(diag(A[["dist.mat"]]))) || any(A[["dist.mat"]] < 0) ||
-        !isSymmetric(unname(A[["dist.mat"]]))) {
-      stop("'dist.mat' must be a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
+    if (inherits(A[["dist.mat"]], "dist")) A[["dist.mat"]] <- as.matrix(A[["dist.mat"]])
+
+    if (is.matrix(A[["dist.mat"]]) && all(dim(A[["dist.mat"]]) == n) &&
+        all(check_if_zero(diag(A[["dist.mat"]]))) && !any(A[["dist.mat"]] < 0) &&
+        isSymmetric(unname(A[["dist.mat"]]))) {
+      d <- unname(A[["dist.mat"]][subset, subset])
     }
-    else d <- unname(A[["dist.mat"]][subset, subset])
+    else stop("'dist.mat' must be a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
   }
   else d <- as.matrix(dist(covs))
 
@@ -2463,6 +2465,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     uvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, Inf), nt)
   }
 
+  #Add weight penalty
+  if (is_not_null(A[["lambda"]])) M2 <- M2 + A[["lambda"]]*diag(n) / n
+
   if (moments != 0 || int) {
     #Exactly balance moments and/or interactions
     covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
@@ -2500,7 +2505,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
                                             pars = options.list),
                      quote = TRUE)
 
-  if (opt.out$info$status == "maximum iterations reached") {
+  if (identical(opt.out$info$status, "maximum iterations reached")) {
     warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
   }
 
