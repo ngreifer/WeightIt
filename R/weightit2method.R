@@ -2439,7 +2439,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
     if (!isFALSE(A[["improved"]])) {
       all_pairs <- combn(levels_treat, 2, simplify = FALSE)
-      M2_pairs_array <- vapply(all_pairs, function(p) -tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
+      M2_pairs_array <- vapply(all_pairs, function(p) -2 * tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
       M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
     }
 
@@ -2466,7 +2466,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   }
 
   #Add weight penalty
-  if (is_not_null(A[["lambda"]])) M2 <- M2 + A[["lambda"]]*diag(n) / n
+  if (is_not_null(A[["lambda"]])) diag(M2) <- diag(M2) + A[["lambda"]] / n
 
   if (moments != 0 || int) {
     #Exactly balance moments and/or interactions

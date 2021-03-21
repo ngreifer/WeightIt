@@ -15,6 +15,8 @@ WeightIt News and Updates
 
 * With multinomial treatments with `link = "logit"` (the default), if the `mclogit` package is installed, it can be requested for estimating the propensity score by setting the option `use.mclogit = TRUE`, which uses `mclogit::mblogit()`. It should give the same results as the default, which uses `mlogit`, but can be faster and so is recommended.
 
+* Fixed a bug when using `method = "energy"` with `estimand = "ATE"` and `improved = TRUE` (the default). The between-treatment energy distance contribution was half of what it should have been; this has now been corrected.
+
 # WeightIt 0.11.0
 
 * Added support for estimating propensity scores using Bayesian additive regression trees (BART) with `method = "bart"`. This method fits a BART model for the treatment using functions in the `dbarts` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.
