@@ -2,7 +2,6 @@ method.to.proper.method <- function(method) {
   method <- tolower(method)
   if      (method %in% c("ps")) return("ps")
   else if (method %in% c("gbm", "gbr")) return("gbm")
-  else if (method %in% c("twang")) return("twang")
   else if (method %in% c("cbps", "cbgps")) return("cbps")
   else if (method %in% c("npcbps", "npcbgps")) return("npcbps")
   else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
@@ -18,7 +17,6 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
   acceptable.methods <- c("ps"
                           , "gbm", "gbr"
-                          , "twang"
                           , "cbps", "cbgps"
                           , "npcbps", "npcbgps"
                           , "ebal", "entropy", "ebalance"
@@ -38,7 +36,10 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   }
   else if (!is.function(method)) bad.method <- TRUE
 
-  if (bad.method) stop("'method' must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.", call. = FALSE)
+  if (bad.method) {
+    if (identical(method, "twang")) stop('"twang" is no longer an acceptable argument to \'method\'. Please use "gmb" for generalized boosted modeling.', call. = FALSE)
+    stop("'method' must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.", call. = FALSE)
+  }
 
   if (msm && !force && is.character(method)) {
     m <- method.to.proper.method(method)
@@ -64,7 +65,6 @@ method.to.phrase <- function(method) {
     method <- method.to.proper.method(method)
     if (method %in% c("ps")) return("propensity score weighting")
     else if (method %in% c("gbm")) return("propensity score weighting with GBM")
-    else if (method %in% c("twang")) return("generalized boosted modeling with TWANG")
     else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
     else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
     else if (method %in% c("ebal")) return("entropy balancing")
@@ -82,7 +82,6 @@ process.estimand <- function(estimand, method, treat.type) {
   AE <- list(
     binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM", "ATOS")
                   , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                  , twang = c("ATT", "ATC", "ATE")
                   , cbps = c("ATT", "ATC", "ATE")
                   , npcbps = c("ATE")
                   , ebal = c("ATT", "ATC", "ATE")
@@ -95,7 +94,6 @@ process.estimand <- function(estimand, method, treat.type) {
     ),
     multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
                        , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                       , twang = c("ATT", "ATC", "ATE")
                        , cbps = c("ATT", "ATC", "ATE")
                        , npcbps = c("ATE")
                        , ebal = c("ATT", "ATC", "ATE")
@@ -122,7 +120,6 @@ check.subclass <- function(method, treat.type) {
   AE <- list(
     binary = list(ps = TRUE
                   , gbm = TRUE
-                  , twang = FALSE
                   , cbps = TRUE
                   , npcbps = FALSE
                   , ebal = FALSE
@@ -135,7 +132,6 @@ check.subclass <- function(method, treat.type) {
     ),
     multinomial = list(ps = TRUE
                        , gbm = TRUE
-                       , twang = FALSE
                        , cbps = FALSE
                        , npcbps = FALSE
                        , ebal = FALSE
@@ -320,7 +316,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
   return(by.components)
 }
 process.moments.int <- function(moments, int, method) {
-  # if (!is.function(method)) {
+
   if (is.function(method) || method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
     if (length(int) != 1 || !is.logical(int)) {
       stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
@@ -349,9 +345,7 @@ process.moments.int <- function(moments, int, method) {
     int <- FALSE
   }
   moments <- as.integer(moments)
-  # }
-  # else {
-  # }
+
   return(list(moments = moments, int = int))
 }
 process.MSM.method <- function(is.MSM.method, method) {
@@ -381,7 +375,6 @@ process.missing <- function(missing, method, treat.type) {
                                   # , "saem"
   )
   , gbm = c("ind", "surr")
-  , twang = c("ind", "surr")
   , cbps = c("ind")
   , npcbps = c("ind")
   , ebal = c("ind")
@@ -394,7 +387,6 @@ process.missing <- function(missing, method, treat.type) {
   ),
   multinomial = list(ps = c("ind")
                      , gbm = c("ind", "surr")
-                     , twang = c("ind", "surr")
                      , cbps = c("ind")
                      , npcbps = c("ind")
                      , ebal = c("ind")
@@ -409,7 +401,6 @@ process.missing <- function(missing, method, treat.type) {
                            # , "saem"
   )
   , gbm = c("ind", "surr")
-  , twang = c("ind", "surr")
   , cbps = c("ind")
   , npcbps = c("ind")
   , ebal = c("ind")

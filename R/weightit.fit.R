@@ -207,29 +207,6 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
       }
 
     }
-    else if (method == "twang") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2twang(covs = covs,
-                              treat = treat,
-                              s.weights = s.weights,
-                              estimand = estimand,
-                              focal = focal,
-                              subset = by.factor == i,
-                              stabilize = stabilize,
-                              subclass = subclass,
-                              missing = missing,
-                              ...)
-      }
-      else {
-        obj <- weightit2twang.cont(covs = covs,
-                                   treat = treat,
-                                   s.weights = s.weights,
-                                   subset = by.factor == i,
-                                   missing = missing,
-                                   ...)
-      }
-
-    }
     else if (method == "cbps") {
       if (is.MSM.method) {
         obj <- weightit2cbps.msm()

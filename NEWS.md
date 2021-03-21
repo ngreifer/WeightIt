@@ -11,6 +11,8 @@ WeightIt News and Updates
 
 * Added a `plot()` method for `summary.weightitMSM` objects that functions just like `plot.summary.weightit()` for each time point.
 
+* The use of `method = "twang"` has been retired and will now give an error message. Use `method = "gbm"` for nearly identical functionality with more options, as detailed at `?method_gbm`.
+
 * Fixed a bug that would occur when all weights in a treatment group were `NA`. Bad weights (i.e., all the same) now produce a warning rather than an error so the weights can be diagnosed manually. (#18)
 
 * With multinomial treatments with `link = "logit"` (the default), if the `mclogit` package is installed, it can be requested for estimating the propensity score by setting the option `use.mclogit = TRUE`, which uses `mclogit::mblogit()`. It should give the same results as the default, which uses `mlogit`, but can be faster and so is recommended.

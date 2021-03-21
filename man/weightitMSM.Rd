@@ -96,7 +96,7 @@ In general, \code{weightitMSM()} works by separating the estimation of weights i
 
 Each formula should contain all the covariates to be balanced on. For example, the formula corresponding to the second time period should contain all the baseline covariates, the treatment variable at the first time period, and the time-varying covariates that took on values after the first treatment and before the second. Currently, only wide data sets are supported, where each unit is represented by exactly one row that contains the covariate and treatment history encoded in separate variables.
 
-The \code{"twang"} method, which calls \code{ps} in \pkg{twang}, yields the same results to a call to \code{iptw} in \pkg{twang}. However, the \code{"cbps"} method, which calls \code{CBPS()} in \pkg{CBPS}, will yield different results from \code{CBMSM()} in \pkg{CBPS} because \code{CBMSM()} takes a different approach to generating weights than simply estimating several time-specific models.
+The \code{"cbps"} method, which calls \code{CBPS()} in \pkg{CBPS}, will yield different results from \code{CBMSM()} in \pkg{CBPS} because \code{CBMSM()} takes a different approach to generating weights than simply estimating several time-specific models.
 
 }
 
