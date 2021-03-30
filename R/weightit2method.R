@@ -838,7 +838,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     else n.grid <- round(A[["n.grid"]])
 
     crit <- bal_criterion(treat.type, stop.method)
-    init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
+    init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal, ...)
   }
 
   A[["x"]] <- covs
@@ -1057,7 +1057,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     else n.grid <- round(A[["n.grid"]])
 
     crit <- bal_criterion("continuous", stop.method)
-    init <- crit$init(covs, treat, s.weights = s.weights)
+    init <- crit$init(covs, treat, s.weights = s.weights, ...)
   }
 
   A[["x"]] <- covs
@@ -1817,7 +1817,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     else stop.method <- available.stop.methods[s.m.matches]
 
     crit <- bal_criterion("binary", stop.method)
-    init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal)
+    init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal, ...)
     bal_fun <- crit$fun
 
     sneaky <- 0
@@ -1974,7 +1974,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     else stop.method <- available.stop.methods[s.m.matches]
 
     crit <- bal_criterion("continuous", stop.method)
-    init <- crit$init(covs, treat, s.weights = s.weights)
+    init <- crit$init(covs, treat, s.weights = s.weights, ...)
     bal_fun <- crit$fun
 
     sneaky <- 0
