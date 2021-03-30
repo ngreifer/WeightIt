@@ -488,8 +488,9 @@ init_r2 <- function(covs, treat, s.weights = NULL, ...) {
     class(out) <- "init_r2"
     out
 }
-init_L1.med <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NULL, L1.min.bin = 2, L1.max.bin = 12, L1.n = 101, ...) {
+init_L1.med <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NULL, .covs = NULL, L1.min.bin = 2, L1.max.bin = 12, L1.n = 101, ...) {
 
+    if (is_not_null(.covs)) covs <- .covs
     if (!is.data.frame(covs)) {
         if (is.atomic(covs) && is_null(dim(covs))) covs <- data.frame(covs)
         else if (!is.matrix(covs)) stop("covs must be a data.frame or matrix.")

@@ -96,24 +96,26 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   ## Running models ----
 
   #Returns weights (weights) and propensity score (ps)
-  obj <- weightit.fit(treat = treat,
-                      covs = covs,
-                      treat.type = treat.type,
-                      s.weights = s.weights,
-                      by.factor = attr(processed.by, "by.factor"),
-                      estimand = estimand,
-                      focal = focal,
-                      stabilize = stabilize,
-                      method = method,
-                      moments = moments,
-                      int = int,
-                      subclass = subclass,
-                      ps = ps,
-                      missing = missing,
-                      verbose = verbose,
-                      include.obj = include.obj,
-                      .data = data,
-                      ...)
+  A[["treat"]] <- treat
+  A[["covs"]] <- covs
+  A[["treat.type"]] <- treat.type
+  A[["s.weights"]] <- s.weights
+  A[["by.factor"]] <- attr(processed.by, "by.factor")
+  A[["estimand"]] <- estimand
+  A[["focal"]] <- focal
+  A[["stabilize"]] <- stabilize
+  A[["method"]] <- method
+  A[["moments"]] <- moments
+  A[["int"]] <- int
+  A[["subclass"]] <- subclass
+  A[["ps"]] <- ps
+  A[["missing"]] <- missing
+  A[["verbose"]] <- verbose
+  A[["include.obj"]] <- include.obj
+  A[[".data"]] <- data
+  A[[".covs"]] <- reported.covs
+
+  obj <- do.call("weightit.fit", A)
 
   check_estimated_weights(obj$weights, treat, treat.type, s.weights)
 

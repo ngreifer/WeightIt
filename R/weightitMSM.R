@@ -126,27 +126,30 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
   if (is.MSM.method) {
     #Returns weights (w)
-    obj <- do.call("weightit.fit", c(list(covs = covs.list,
-                                          treat = treat.list,
-                                          s.weights = s.weights,
-                                          by.factor = attr(processed.by, "by.factor"),
-                                          stabilize = stabilize,
-                                          method = method,
-                                          moments = moments,
-                                          int = int,
-                                          ps = NULL,
-                                          missing = missing,
-                                          verbose = verbose,
-                                          is.MSM.method = TRUE,
-                                          include.obj = include.obj), A))
+
+    A[["covs"]] <- covs.list
+    A[["treat"]] <- treat.list
+    A[["s.weights"]] <- s.weights
+    A[["by.factor"]] <- attr(processed.by, "by.factor")
+    A[["focal"]] <- character()
+    A[["stabilize"]] <- stabilize
+    A[["method"]] <- method
+    A[["moments"]] <- moments
+    A[["int"]] <- int
+    A[["subclass"]] <- numeric()
+    A[["ps"]] <- numeric()
+    A[["missing"]] <- missing
+    A[["verbose"]] <- verbose
+    A[["is.MSM.method"]] <- TRUE
+    A[["include.obj"]] <- include.obj
+
+    obj <- do.call("weightit.fit", A)
+
     w <- obj[["weights"]]
     stabout <- NULL
     obj.list <- obj[["fit.obj"]]
   }
   else {
-    A[["estimand"]] <- NULL
-    estimand <- "ATE"
-
     if (length(A[["link"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
     else if (length(A[["link"]]) == 1) A[["link"]] <- rep(A[["link"]], length(formula.list))
     # if (length(A[["family"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
@@ -154,30 +157,36 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
     obj.list <- make_list(length(formula.list))
 
+    A[["s.weights"]] <- s.weights
+    A[["by.factor"]] <- attr(processed.by, "by.factor")
+    A[["estimand"]] <- "ATE"
+    A[["focal"]] <- character()
+    A[["stabilize"]] <- FALSE
+    A[["method"]] <- method
+    A[["moments"]] <- moments
+    A[["int"]] <- int
+    A[["subclass"]] <- numeric()
+    A[["ps"]] <- numeric()
+    A[["missing"]] <- missing
+    A[["verbose"]] <- verbose
+    A[["is.MSM.method"]] <- FALSE
+    A[["include.obj"]] <- include.obj
+
     for (i in seq_along(formula.list)) {
       A_i <- A
-      if (is_not_null(A[["link"]])) A_i[["link"]] <- A[["link"]][[i]]
+      if (length(A[["link"]]) == length(formula.list)) A_i[["link"]] <- A[["link"]][[i]]
+
+      A_i[["covs"]] <- covs.list[[i]]
+      A_i[["treat"]] <- treat.list[[i]]
+      A_i[["treat.type"]] <- get.treat.type(treat.list[[i]])
+      A_i[[".data"]] <- data
+      A_i[[".covs"]] <- reported.covs.list[[i]]
 
       ## Running models ----
 
       #Returns weights (w) and propensty score (ps)
-      obj <- do.call("weightit.fit", c(list(covs = covs.list[[i]],
-                                            treat = treat.list[[i]],
-                                            treat.type = get.treat.type(treat.list[[i]]),
-                                            s.weights = s.weights,
-                                            by.factor = attr(processed.by, "by.factor"),
-                                            estimand = estimand,
-                                            focal = NULL,
-                                            stabilize = FALSE,
-                                            method = method,
-                                            moments = moments,
-                                            int = int,
-                                            ps = NULL,
-                                            missing = missing,
-                                            verbose = verbose,
-                                            is.MSM.method = FALSE,
-                                            include.obj = include.obj
-      ), A_i))
+      obj <- do.call("weightit.fit", A_i)
+
       w.list[[i]] <- obj[["weights"]]
       ps.list[[i]] <- obj[["ps"]]
       obj.list[[i]] <- obj[["fit.obj"]]
@@ -201,21 +210,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
           }
         }
         stab.t.c_i <- get.covs.and.treat.from.formula(stab.f, data)
-        stab.covs_i <- stab.t.c_i[["model.covs"]]
 
-        sw_obj <- do.call("weightit.fit", c(list(covs = stab.covs_i,
-                                                 treat = treat.list[[i]],
-                                                 treat.type = get.treat.type(treat.list[[i]]),
-                                                 s.weights = s.weights,
-                                                 by.factor = attr(processed.by, "by.factor"),
-                                                 estimand = estimand,
-                                                 focal = NULL,
-                                                 stabilize = FALSE,
-                                                 method = "ps",
-                                                 moments = NULL,
-                                                 int = FALSE,
-                                                 ps = NULL,
-                                                 missing = missing), A))
+        A_i[["covs"]] <- stab.t.c_i[["model.covs"]]
+        A_i[["method"]] <- "ps"
+        A_i[["moments"]] <- numeric()
+        A_i[["int"]] <- FALSE
+
+        sw_obj <- do.call("weightit.fit", A_i)
+
         sw.list[[i]] <- 1/sw_obj[["weights"]]
         stabout[[i]] <- stab.f[-2]
 
@@ -237,7 +239,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
 
 
   if (all_the_same(w)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
-  if (all(sapply(ps.list, is_null))) ps.list <- NULL
+  if (all(vapply(ps.list, is_null, logical(1L)))) ps.list <- NULL
   else names(ps.list) <- names(treat.list)
 
   if (include.obj) names(obj.list) <- names(treat.list)
@@ -247,7 +249,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
               treat.list = treat.list,
               covs.list = reported.covs.list,
               #data = data,
-              estimand = if (exists("estimand")) estimand else "ATE",
+              estimand = get0("estimand", ifnotfound = "ATE"),
               method = method,
               ps.list = ps.list,
               s.weights = s.weights,
