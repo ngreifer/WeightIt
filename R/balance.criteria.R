@@ -168,7 +168,7 @@ init_ks <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NUL
     class(out) <- "init_ks"
     out
 }
-init_mahalanobis <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = focal, ...) {
+init_mahalanobis <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NULL, ...) {
     needs.splitting <- FALSE
     if (!is.matrix(covs)) {
         if (is.data.frame(covs)) {
@@ -288,16 +288,16 @@ init_energy.dist <- function(covs, treat, s.weights = NULL, estimand = "ATE", fo
     d <- as.matrix(dist(covs))
 
     n <- length(treat)
-    levels_treat <- unique(treat)
-    treat.seq <- seq_along(levels_treat)
+    unique.treats <- unique(treat)
+    treat.seq <- seq_along(unique.treats)
     diagn <- diag(n)
 
-    for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean_fast(s.weights[treat == t])
+    for (t in unique.treats) s.weights[treat == t] <- s.weights[treat == t]/mean_fast(s.weights[treat == t])
 
-    tmat <- vapply(levels_treat, function(t) treat == t, logical(n))
+    tmat <- vapply(unique.treats, function(t) treat == t, logical(n))
     nt <- colSums(tmat)
 
-    J <- setNames(lapply(treat.seq, function(t) s.weights*tmat[,t]/nt[t]), levels_treat)
+    J <- setNames(lapply(treat.seq, function(t) s.weights*tmat[,t]/nt[t]), unique.treats)
 
     if (is_null(focal)) {
         J0 <- as.matrix(s.weights/n)
@@ -310,13 +310,13 @@ init_energy.dist <- function(covs, treat, s.weights = NULL, estimand = "ATE", fo
 
         if (improved) {
             all_pairs <- combn(treat.seq, 2, simplify = FALSE)
-            M2_pairs_array <- vapply(all_pairs, function(p) -tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
+            M2_pairs_array <- vapply(all_pairs, function(p) -2 * tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
             M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
         }
     }
     else {
         J0_focal <- as.matrix(J[[focal]])
-        clevs <- treat.seq[levels_treat != focal]
+        clevs <- treat.seq[unique.treats != focal]
 
         M2_array <- vapply(clevs, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
         M1_array <- vapply(clevs, function(t) 2 * J[[t]] * d %*% J0_focal, J0_focal)
@@ -329,7 +329,7 @@ init_energy.dist <- function(covs, treat, s.weights = NULL, estimand = "ATE", fo
                 M2 = M2,
                 s.weights = s.weights,
                 treat = treat,
-                unique.treats = levels_treat)
+                unique.treats = unique.treats)
     class(out) <- "init_energy.dist"
     out
 }
@@ -488,6 +488,173 @@ init_r2 <- function(covs, treat, s.weights = NULL, ...) {
     class(out) <- "init_r2"
     out
 }
+init_L1.med <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal = NULL, L1.min.bin = 2, L1.max.bin = 12, L1.n = 101, ...) {
+
+    if (!is.data.frame(covs)) {
+        if (is.atomic(covs) && is_null(dim(covs))) covs <- data.frame(covs)
+        else if (!is.matrix(covs)) stop("covs must be a data.frame or matrix.")
+    }
+    covs <- as.data.frame(covs)
+
+    if (missing(treat) || !is.atomic(treat)) stop("treat must be an atomic vector.")
+
+    possibly.supplied <- c("covs", "treat", "s.weights")
+    lengths <- setNames(vapply(mget(possibly.supplied), len, integer(1L)),
+                        possibly.supplied)
+    supplied <- lengths > 0
+    if (!all_the_same(lengths[supplied])) {
+        stop(paste(word_list(possibly.supplied[supplied]), "must have the same number of units."))
+    }
+
+    if (lengths["s.weights"] == 0) s.weights <- rep(1, NROW(covs))
+
+    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+    treat.type <- get.treat.type(treat)
+
+    coarsen <- function(covs, cutpoints = NULL, grouping = NULL) {
+        is.numeric.cov <- setNames(sapply(covs, is.numeric), names(covs))
+        for (i in names(cutpoints)) {
+            if (cutpoints[[i]] == 0) is.numeric.cov[i] <- FALSE #Will not be binned
+        }
+
+        #Process grouping
+        if (!is.null(grouping) && !is.null(names(grouping))) {
+            covs[names(grouping)] <- lapply(names(grouping), function(g) {
+                x <- covs[[g]]
+                groups <- grouping[[g]]
+
+                for (i in seq_along(groups)) {
+                    x[x %in% groups[[i]]] <- groups[[i]][1]
+                }
+                x
+            })
+            cutpoints[names(cutpoints) %in% names(grouping)] <- NULL
+        }
+
+        #Create bins for numeric variables
+        for (i in names(covs)[is.numeric.cov]) {
+            bins <- cutpoints[[i]]
+
+            #cutpoints is number of bins, unlike in cem
+            breaks <- seq(min(covs[[i]]), max(covs[[i]]), length = bins + 1)
+            breaks[c(1, bins + 1)] <- c(-Inf, Inf)
+
+            covs[[i]] <- findInterval(covs[[i]], breaks)
+        }
+
+        #Reduce to strata
+        factor(do.call("paste", c(covs, sep = " | ")))
+    }
+
+    f.e.r <- process.focal.and.estimand(focal, estimand, treat)
+    focal <- f.e.r[["focal"]]
+    estimand <- f.e.r[["estimand"]]
+
+    if (treat.type == "continuous") {
+        unique.treats <- focal <- NULL
+        nunique.treat <- nunique(treat)
+    }
+    else {
+        unique.treats <- unique(treat)
+        for (t in unique.treats) s.weights[treat == t] <- s.weights[treat == t]/sum(s.weights[treat == t])
+    }
+
+    is.numeric.cov <- setNames(sapply(covs, is.numeric), names(covs))
+    nunique.covs <- vapply(covs, nunique, integer(1L))
+
+    if (treat.type == "continuous") {
+        coarsenings <- lapply(1:L1.n, function(i) {
+            cutpoints <- setNames(lapply(nunique.covs[is.numeric.cov], function(nu) {
+                sample(seq(min(L1.min.bin, nu), min(L1.max.bin, nu)), 1)
+            }), names(covs)[is.numeric.cov])
+            grouping <- setNames(lapply(seq_along(covs)[!is.numeric.cov], function(x) {
+                nu <- nunique.covs[x]
+                u <- unique(covs[[x]], nmax = nu)
+
+                #Randomly select number of bins
+                nbins <- sample(seq(min(L1.min.bin, nu), min(L1.max.bin, nu)), 1)
+
+                #Randomly assign bin numbers to levels of covariate
+                bin.assignments <- sample(seq_len(nbins), nu, replace = TRUE)
+
+                #Group levels with same bin number
+                lapply(unique(bin.assignments, nmax = nbins),
+                       function(b) u[bin.assignments == b])
+
+            }), names(covs)[!is.numeric.cov])
+            treat_cutpoints <- list(.treat = sample(seq(min(L1.min.bin, nunique.treat), min(L1.max.bin, nunique.treat)), 1))
+            list(cutpoints = cutpoints, grouping = grouping, treat_cutpoints = treat_cutpoints)
+        })
+    }
+    else {
+        coarsenings <- lapply(1:L1.n, function(i) {
+            cutpoints <- setNames(lapply(nunique.covs[is.numeric.cov], function(nu) {
+                sample(seq(min(L1.min.bin, nu), min(L1.max.bin, nu)), 1)
+            }), names(covs)[is.numeric.cov])
+            grouping <- setNames(lapply(seq_along(covs)[!is.numeric.cov], function(x) {
+                nu <- nunique.covs[x]
+                u <- unique(covs[[x]], nmax = nu)
+
+                #Randomly select number of bins
+                nbins <- sample(seq(min(L1.min.bin, nu), min(L1.max.bin, nu)), 1)
+
+                #Randomly assign bin numbers to levels of covariate
+                bin.assignments <- sample(seq_len(nbins), nu, replace = TRUE)
+
+                #Group levels with same bin number
+                lapply(unique(bin.assignments, nmax = nbins),
+                       function(b) u[bin.assignments == b])
+
+            }), names(covs)[!is.numeric.cov])
+            list(cutpoints = cutpoints, grouping = grouping, treat_cutpoints = NULL)
+        })
+    }
+
+    L1s <- unlist(lapply(coarsenings, function(co) {
+        x <- coarsen(covs, cutpoints = co[["cutpoints"]], grouping = co[["grouping"]])
+
+        if (treat.type == "continuous") {
+            treat <- coarsen(data.frame(.treat = treat), cutpoints = co[["treat_cutpoints"]])
+            unique.treats <- unique(treat, nmax = L1.max.bin)
+            for (t in unique.treats) s.weights[treat == t] <- s.weights[treat == t]/sum(s.weights[treat == t])
+        }
+
+        if (treat.type == "binary" || is_null(focal)) {
+            sum(vapply(levels(x), function(l) {
+                in_l <- which(x == l)
+                abs(diff(range(vapply(unique.treats, function(t) sum(s.weights[in_l][treat[in_l] == t]), numeric(1L)))))
+            }, numeric(1L))) / length(unique.treats)
+        }
+        else {
+            sum(vapply(levels(x), function(l) {
+                in_l <- which(x == l)
+                sum.s.weights.focal <- sum(s.weights[in_l][treat[in_l] == focal])
+                max(abs(vapply(unique.treats[unique.treats != focal],
+                               function(t) sum(s.weights[in_l][treat[in_l] == t]) - sum.s.weights.focal, numeric(1L))))
+            }, numeric(1L))) / length(unique.treats)
+        }
+    }))
+
+    L1.med <- sort(L1s, partial = ceiling(L1.n/2))[ceiling(L1.n/2)]
+
+    L1.med.coarsening <- coarsenings[[which(L1s == L1.med)[1]]]
+
+    if (treat.type == "continuous") {
+        treat <- coarsen(data.frame(.treat = treat), cutpoints = L1.med.coarsening[["treat_cutpoints"]])
+        unique.treats <- unique(treat, nmax = L1.max.bin)
+    }
+
+    out <- list(coarsened.covs = coarsen(covs,
+                                         cutpoints = L1.med.coarsening[["cutpoints"]],
+                                         grouping = L1.med.coarsening[["grouping"]]),
+                s.weights = s.weights,
+                treat = treat,
+                unique.treats = unique.treats,
+                focal = focal)
+    class(out) <- "init_L1.med"
+    out
+
+}
 
 #Statistics
 es.binary <- function(init, weights = NULL) {
@@ -531,6 +698,23 @@ r2.binary <- function(init, weights = NULL) {
 
     SSmodel / (sum(weights) * pi^2/3 + SSmodel)
 }
+L1.med.binary <- function(init, weights = NULL) {
+    check_init(init, "init_L1.med")
+
+    if (is_null(weights)) weights <- rep(1, length(init[["treat"]]))
+
+    weights <- weights * init[["s.weights"]]
+
+    for (t in init[["unique.treats"]]) weights[init[["treat"]] == t] <- weights[init[["treat"]] == t]/sum(weights[init[["treat"]] == t])
+
+    x <- init[["coarsened.covs"]]
+
+    sum(vapply(levels(x), function(l) {
+        in_l <- which(x == l)
+        abs(diff(vapply(init[["unique.treats"]], function(t) sum(weights[in_l][init[["treat"]][in_l] == t]), numeric(1L))))
+    }, numeric(1L))) / 2
+
+}
 es.multinomial <- function(init, weights = NULL) {
     check_init(init, "init_es")
 
@@ -563,6 +747,33 @@ ks.multinomial <- function(init, weights = NULL) {
     }))
 }
 energy.dist.multinomial <- energy.dist.binary
+L1.med.multinomial <- function(init, weights = NULL) {
+    check_init(init, "init_L1.med")
+
+    if (is_null(weights)) weights <- rep(1, length(init[["treat"]]))
+
+    weights <- weights * init[["s.weights"]]
+
+    for (t in init[["unique.treats"]]) weights[init[["treat"]] == t] <- weights[init[["treat"]] == t]/sum(weights[init[["treat"]] == t])
+
+    x <- init[["coarsened.covs"]]
+
+    if (is_null(init[["focal"]])) {
+        sum(vapply(levels(x), function(l) {
+            in_l <- which(x == l)
+            abs(diff(range(vapply(init[["unique.treats"]], function(t) sum(weights[in_l][init[["treat"]][in_l] == t]), numeric(1L)))))
+        }, numeric(1L))) / length(init[["unique.treats"]])
+    }
+    else {
+        sum(vapply(levels(x), function(l) {
+            in_l <- which(x == l)
+            sum.weights.focal <- sum(weights[in_l][init[["treat"]][in_l] == init[["focal"]]])
+            max(abs(vapply(init[["unique.treats"]][init[["unique.treats"]] != init[["focal"]]],
+                           function(t) sum(weights[in_l][init[["treat"]][in_l] == t]) - sum.weights.focal, numeric(1L))))
+        }, numeric(1L))) / length(init[["unique.treats"]])
+    }
+
+}
 pearson.corr.continuous <- function(init, weights = NULL) {
     check_init(init, "init_p")
     cobalt::col_w_cov(init$covs, treat = init$treat, weights = weights, s.weights = init$s.weights,
@@ -587,6 +798,28 @@ r2.continuous <- function(init, weights = NULL) {
     SSmodel <- sum(weights * (fit$fitted.values - wmtreat)^2)
     SStreat <- sum(weights * (init$treat - wmtreat)^2)
     SSmodel / SStreat
+}
+L1.med.continuous <- function(init, weights = NULL) {
+    check_init(init, "init_L1.med")
+
+    if (is_null(weights)) weights <- rep(1, length(init[["treat"]]))
+
+    weights <- weights * init[["s.weights"]]
+
+    for (t in init[["unique.treats"]]) weights[init[["treat"]] == t] <- weights[init[["treat"]] == t]/sum(weights[init[["treat"]] == t])
+
+    x <- init[["coarsened.covs"]]
+
+    sum(vapply(levels(x), function(l) {
+        in_l <- which(x == l)
+        abs(diff(range(vapply(init[["unique.treats"]], function(t) sum(weights[in_l][init[["treat"]][in_l] == t]), numeric(1L)))))
+    }, numeric(1L))) / 2
+
+    sum(vapply(levels(x), function(l) {
+        in_l <- which(x == l)
+        abs(diff(range(vapply(init[["unique.treats"]], function(t) sum(weights[in_l][init[["treat"]][in_l] == t]), numeric(1L)))))
+    }, numeric(1L))) / length(init[["unique.treats"]])
+
 }
 
 bal_criterion <- function(treat.type = "binary", criterion, list = FALSE) {
@@ -667,6 +900,15 @@ bal_criterion <- function(treat.type = "binary", criterion, list = FALSE) {
                 },
                 init = init_energy.dist
             ),
+            L1.med = list(
+                fun = function(covs, treat, weights = NULL, s.weights = NULL, estimand = "ATE", focal = NULL, init = NULL, ...) {
+                    if (is_null(init)) {
+                        init <- init_L1.med(covs, treat, s.weights, estimand, focal, ...)
+                    }
+                    L1.med.binary(init, weights)
+                },
+                init = init_L1.med
+            ),
             r2 = list(
                 fun = function(covs, treat, weights, s.weights = NULL, init = NULL, ...) {
                     if (is_null(init)) {
@@ -741,6 +983,15 @@ bal_criterion <- function(treat.type = "binary", criterion, list = FALSE) {
                     energy.dist.multinomial(init, weights)
                 },
                 init = init_energy.dist
+            ),
+            L1.med = list(
+                fun = function(covs, treat, weights = NULL, s.weights = NULL, estimand = "ATE", focal = NULL, init = NULL, ...) {
+                    if (is_null(init)) {
+                        init <- init_L1.med(covs, treat, s.weights, estimand, focal, ...)
+                    }
+                    L1.med.multinomial(init, weights)
+                },
+                init = init_L1.med
             )
         ),
 
@@ -799,6 +1050,15 @@ bal_criterion <- function(treat.type = "binary", criterion, list = FALSE) {
                 },
                 init = init_s
             ),
+            L1.med = list(
+                fun = function(covs, treat, weights = NULL, s.weights = NULL, init = NULL, ...) {
+                    if (is_null(init)) {
+                        init <- init_L1.med(covs, treat, s.weights, ...)
+                    }
+                    L1.med.continuous(init, weights)
+                },
+                init = init_L1.med
+            ),
             r2 = list(
                 fun <- function(covs, treat, weights, s.weights = NULL, init = NULL, ...) {
                     if (is_null(init)) {
@@ -839,6 +1099,7 @@ bal_criterion.to.phrase <- function(criterion) {
                      "ks.rms" = "root-mean-square Kolmogorov-Smirnov statistic",
                      "mahalanobis" = "sample Mahalanobis distance",
                      "energy.dist" = "energy distance",
+                     "L1.med" = "L1 median",
                      "r2" = "post-weighting treatment R-squared",
                      NA_character_
     )
