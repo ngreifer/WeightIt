@@ -5,8 +5,6 @@ WeightIt News and Updates
 
 * Fixed a bug in `summary.weightit()` where the labels of the top weights were incorrect. Thanks to Adam Lilly.
 
-* Multinomial logistic regression can now be fit using `mclogit::mblogit()`, which is quite a bit faster than `mlogit::mlogit()`. This can be requested by setting `use.mclogit = TRUE`. [Needs documenting]
-
 * Fixed a bug in `sbps()` when using a stochastic search (i.e., `full.search = FALSE` or more than 8 moderator levels). (#17)
 
 * Added a `plot()` method for `summary.weightitMSM` objects that functions just like `plot.summary.weightit()` for each time point.
@@ -18,6 +16,10 @@ WeightIt News and Updates
 * With multinomial treatments with `link = "logit"` (the default), if the `mclogit` package is installed, it can be requested for estimating the propensity score by setting the option `use.mclogit = TRUE`, which uses `mclogit::mblogit()`. It should give the same results as the default, which uses `mlogit`, but can be faster and so is recommended.
 
 * Fixed a bug when using `method = "energy"` with `estimand = "ATE"` and `improved = TRUE` (the default). The between-treatment energy distance contribution was half of what it should have been; this has now been corrected.
+
+* Added L1 median measure as a balance criterion. See `?stop.method` for details.
+
+* Fixed a bug where `Warning: Deprecated` would appear sometimes when `purrr` (part of the `tidyverse`) was loaded. (#22) Thanks to MrFlick on StackOverflow for the [solution](https://stackoverflow.com/a/66897921/6348551).
 
 # WeightIt 0.11.0
 
