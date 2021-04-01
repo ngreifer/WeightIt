@@ -197,8 +197,9 @@ can_str2num <- function(x) {
 }
 str2num <- function(x) {
     nas <- is.na(x)
-    suppressWarnings(x_num <- as.numeric(as.character(x)))
-    x_num[nas] <- NA
+    if (!is_(x, c("numeric", "logical"))) x <- as.character(x)
+    suppressWarnings(x_num <- as.numeric(x))
+    is.na(x_num[nas]) <- TRUE
     return(x_num)
 }
 trim_string <- function(x, char = " ", symmetrical = TRUE, recursive = TRUE) {
@@ -264,14 +265,14 @@ check_if_int <- function(x) {
 binarize <- function(variable, zero = NULL, one = NULL) {
     var.name <- deparse1(substitute(variable))
     if (is.character(variable) || is.factor(variable)) {
-        variable <- factor(variable)
+        variable <- factor(variable, nmax = if (is.factor(variable)) nlevels(variable) else NA)
         unique.vals <- levels(variable)
     }
     else {
         unique.vals <- unique(variable)
     }
 
-    if (length(unique.vals) == 1) setNames(rep(1, length(variable)), names(variable))
+    if (length(unique.vals) == 1) return(setNames(rep(1, length(variable)), names(variable)))
     else if (length(unique.vals) != 2) stop(paste0("Cannot binarize ", var.name, ": more than two levels."))
 
     if (is_null(zero)) {
@@ -280,7 +281,7 @@ binarize <- function(variable, zero = NULL, one = NULL) {
                 variable.numeric <- str2num(variable)
             }
             else {
-                variable.numeric <- as.numeric(variable)
+                variable.numeric <- as.numeric(as.factor(variable))
             }
 
             if (0 %in% variable.numeric) zero <- 0
@@ -322,7 +323,7 @@ center <- function(x, at = NULL, na.rm = TRUE) {
 }
 w.m <- function(x, w = NULL, na.rm = TRUE) {
     if (is_null(w)) w <- rep(1, length(x))
-    if (anyNA(x)) w[is.na(x)] <- NA
+    if (anyNA(x)) is.na(w[is.na(x)]) <- TRUE
     return(sum(x*w, na.rm=na.rm)/sum(w, na.rm=na.rm))
 }
 col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
@@ -365,7 +366,7 @@ col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
     else if (na.rm && anyNA(mat)) {
         # n <- nrow(mat)
         w <- array(w, dim = dim(mat))
-        w[is.na(mat)] <- NA
+        is.na(w[is.na(mat)]) <- TRUE
         s <- colSums(w, na.rm = na.rm)
         w <- mat_div(w, s)
         if (non.bin.vars.present) {
@@ -400,15 +401,15 @@ col.w.cov <- function(mat, y, w = NULL, na.rm = TRUE) {
     }
     if (is_null(w)) {
         y <- array(y, dim = dim(mat))
-        if (anyNA(mat)) y[is.na(mat)] <- NA
-        if (anyNA(y)) mat[is.na(y)] <- NA
+        if (anyNA(mat)) is.na(y[is.na(mat)]) <- TRUE
+        if (anyNA(y)) is.na(mat[is.na(y)]) <- TRUE
         den <- colSums(!is.na(mat*y)) - 1
         cov <- colSums(center(mat, na.rm = na.rm)*center(y, na.rm = na.rm), na.rm = na.rm)/den
     }
     else if (na.rm && anyNA(mat)) {
         n <- nrow(mat)
         w <- array(w, dim = dim(mat))
-        w[is.na(mat)] <- NA_real_
+        is.na(w[is.na(mat)]) <- TRUE
         s <- colSums(w, na.rm = na.rm)
         w <- mat_div(w, s)
         x <- w * center(mat, at = colSums(w * mat, na.rm = na.rm))
@@ -898,7 +899,8 @@ is_binary_col <- function(dat, na.rm = TRUE) {
 }
 
 #R Processing
-get1 <- function(name, env = parent.frame(), mode = "any", ifnotfound = NULL) {
+.pkgenv <- environment() #Needed for get1()
+get1 <- function(name, env = .pkgenv, mode = "any", ifnotfound = NULL) {
     #Replacement for get0 that only searches within package. Provided at
     #https://stackoverflow.com/a/66897921/6348551 by user MrFlick.
     get1_ <- function(name, env, mode, ifnotfound) {
