@@ -262,14 +262,17 @@ check_if_int <- function(x) {
 
 #Statistics
 binarize <- function(variable, zero = NULL, one = NULL) {
-    if (!is_binary(variable)) stop(paste0("Cannot binarize ", deparse1(substitute(variable)), ": more than two levels."))
+    var.name <- deparse1(substitute(variable))
     if (is.character(variable) || is.factor(variable)) {
-        variable <- factor(variable, nmax = 2)
+        variable <- factor(variable)
         unique.vals <- levels(variable)
     }
     else {
-        unique.vals <- unique(variable, nmax = 2)
+        unique.vals <- unique(variable)
     }
+
+    if (length(unique.vals) == 1) setNames(rep(1, length(variable)), names(variable))
+    else if (length(unique.vals) != 2) stop(paste0("Cannot binarize ", var.name, ": more than two levels."))
 
     if (is_null(zero)) {
         if (is_null(one)) {
@@ -895,6 +898,40 @@ is_binary_col <- function(dat, na.rm = TRUE) {
 }
 
 #R Processing
+get1 <- function(name, env = parent.frame(), mode = "any", ifnotfound = NULL) {
+    #Replacement for get0 that only searches within package. Provided at
+    #https://stackoverflow.com/a/66897921/6348551 by user MrFlick.
+    get1_ <- function(name, env, mode, ifnotfound) {
+        if (identical(env, emptyenv())) {
+            ifnotfound
+        } else if (identical(env, globalenv())) {
+            # stop at global env
+            ifnotfound
+        } else if (exists(name, envir = env, mode = mode, inherits = FALSE)) {
+            env[[name]]
+        } else {
+            # try parent
+            if (!identical(parent.env(env), emptyenv()) && !identical(parent.env(env), globalenv())) {
+                get1_(name, parent.env(env), mode = mode, ifnotfound = ifnotfound)
+            }
+            else ifnotfound
+        }
+    }
+
+    if (identical(env, emptyenv())) {
+        ifnotfound
+    } else if (identical(env, globalenv())) {
+        get0(name, mode = mode, ifnotfound = ifnotfound)
+    } else if (exists(name, envir = env, mode = mode, inherits = FALSE)) {
+        env[[name]]
+    } else {
+        # try parent
+        if (!identical(parent.env(env), emptyenv()) && !identical(parent.env(env), globalenv())) {
+            get1_(name, parent.env(env), mode = mode, ifnotfound = ifnotfound)
+        }
+        else ifnotfound
+    }
+}
 make_list <- function(n) {
     if (length(n) == 1L && is.numeric(n)) {
         vector("list", as.integer(n))
@@ -963,27 +1000,26 @@ is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
     if (is_not_null(x)) {
         for (i in types) {
             if (i == "list") it.is <- is.list(x) && !is.data.frame(x)
-            else if (is_not_null(get0(paste0("is_", i)))) {
-                it.is <- get0(paste0("is_", i))(x)
+            else if (is_not_null(fn <- get1(paste0("is_", i)))) {
+                it.is <- fn(x)
             }
-            else if (is_not_null(get0(paste.("is", i)))) {
-                it.is <- get0(paste.("is", i))(x)
+            else if (is_not_null(fn <- get1(paste.("is", i)))) {
+                it.is <- fn(x)
             }
             else it.is <- inherits(x, i)
-            if (it.is) break
+
+            if (isTRUE(it.is)) return(TRUE)
         }
     }
-    else it.is <- FALSE
 
     if (stop) {
-        if (!it.is) {
-            s0 <- ifelse(arg.to, "The argument to ", "")
-            s2 <- ifelse(any(types %in% c("factor", "character", "numeric", "logical")),
-                         "vector", "")
-            stop(paste0(s0, "'", s1, "' must be a ", word_list(types, and.or = "or"), " ", s2, "."), call. = FALSE)
-        }
+        s0 <- ifelse(arg.to, "The argument to ", "")
+        s2 <- ifelse(any(types %in% c("factor", "character", "numeric", "logical")),
+                     "vector", "")
+        stop(paste0(s0, "'", s1, "' must be a ", word_list(types, and.or = "or"), " ", s2, "."), call. = FALSE)
     }
-    return(it.is)
+
+    FALSE
 }
 is_null <- function(x) length(x) == 0L
 is_not_null <- function(x) !is_null(x)
