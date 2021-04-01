@@ -36,7 +36,6 @@ Each treatment type has its own balance criteria available.
 }
 }
 }
-}
 
 \references{
 Ali, M. S., Groenwold, R. H. H., Pestman, W. R., Belitser, S. V., Roes, K. C. B., Hoes, A. W., de Boer, A., & Klungel, O. H. (2014). Propensity score balance measures in pharmacoepidemiology: A simulation study. Pharmacoepidemiology and Drug Safety, 23(8), 802–811. \doi{10.1002/pds.3574}
