@@ -22,7 +22,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
 
   fun_args <- Fun_formal
   for (i in names(fun_args)) {
-    if (exists(i)) fun_args[i] <- list(get0(i))
+    if (exists(i, inherits = FALSE)) fun_args[i] <- list(get0(i, inherits = FALSE))
     else if (i %in% names(A)) {
       fun_args[i] <- A[i]
       A[[i]] <- NULL
@@ -84,7 +84,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 
   fun_args <- Fun_formal
   for (i in names(fun_args)) {
-    if (is_not_null(get0(i))) fun_args[[i]] <- get0(i)
+    if (exists(i, inherits = FALSE)) fun_args[i] <- list(get0(i, inherits = FALSE))
     else if (is_not_null(A[[i]])) {
       fun_args[[i]] <- A[[i]]
       A[[i]] <- NULL
@@ -528,22 +528,22 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
     else if (is.function(A[["density"]])) densfun <- A[["density"]]
     else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
-      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+      if (is_not_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
         if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
                      word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
         }
         densfun <- function(x) {
-          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
+          tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
                    error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
         }
       }
       else {
-        stop(paste(A[["density"]], "is not an appropriate argument to density because",
+        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
                    splitdens[1], "is not an available function."), call. = FALSE)
       }
     }
-    else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
     use.kernel <- FALSE
   }
 
@@ -1907,7 +1907,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
       if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
         if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
                      word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
         }
         densfun <- function(x) {
@@ -1916,11 +1916,11 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
         }
       }
       else {
-        stop(paste(A[["density"]], "is not an appropriate argument to density because",
+        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
                    splitdens[1], "is not an available function."), call. = FALSE)
       }
     }
-    else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
     use.kernel <- FALSE
   }
 
@@ -2131,7 +2131,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
       if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
         if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          stop(paste(A[["density"]], "is not an appropriate argument to density because",
+          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
                      word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
         }
         densfun <- function(x) {
@@ -2140,11 +2140,11 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
         }
       }
       else {
-        stop(paste(A[["density"]], "is not an appropriate argument to density because",
+        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
                    splitdens[1], "is not an available function."), call. = FALSE)
       }
     }
-    else stop("The argument to density cannot be evaluated as a density function.", call. = FALSE)
+    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
     use.kernel <- FALSE
   }
 
