@@ -131,11 +131,14 @@
 </h1>
 <ul>
 <li><p>Fixed a bug in <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code> where the labels of the top weights were incorrect. Thanks to Adam Lilly.</p></li>
-<li><p>Multinomial logistic regression can now be fit using <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html">mclogit::mblogit()</a></code>, which is quite a bit faster than <code><a href="https://rdrr.io/pkg/mlogit/man/mlogit.html">mlogit::mlogit()</a></code>. This can be requested by setting <code>use.mclogit = TRUE</code>. [Needs documenting]</p></li>
 <li><p>Fixed a bug in <code><a href="../reference/sbps.html">sbps()</a></code> when using a stochastic search (i.e., <code>full.search = FALSE</code> or more than 8 moderator levels). (<a href='https://github.com/ngreifer/WeightIt/issues/17'>#17</a>)</p></li>
 <li><p>Added a <code><a href="https://rdrr.io/r/graphics/plot.default.html">plot()</a></code> method for <code>summary.weightitMSM</code> objects that functions just like <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code> for each time point.</p></li>
+<li><p>The use of <code>method = "twang"</code> has been retired and will now give an error message. Use <code>method = "gbm"</code> for nearly identical functionality with more options, as detailed at <code><a href="../reference/method_gbm.html">?method_gbm</a></code>.</p></li>
 <li><p>Fixed a bug that would occur when all weights in a treatment group were <code>NA</code>. Bad weights (i.e., all the same) now produce a warning rather than an error so the weights can be diagnosed manually. (<a href='https://github.com/ngreifer/WeightIt/issues/18'>#18</a>)</p></li>
 <li><p>With multinomial treatments with <code>link = "logit"</code> (the default), if the <code>mclogit</code> package is installed, it can be requested for estimating the propensity score by setting the option <code>use.mclogit = TRUE</code>, which uses <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html">mclogit::mblogit()</a></code>. It should give the same results as the default, which uses <code>mlogit</code>, but can be faster and so is recommended.</p></li>
+<li><p>Fixed a bug when using <code>method = "energy"</code> with <code>estimand = "ATE"</code> and <code>improved = TRUE</code> (the default). The between-treatment energy distance contribution was half of what it should have been; this has now been corrected.</p></li>
+<li><p>Added L1 median measure as a balance criterion. See <code><a href="../reference/stop.method.html">?stop.method</a></code> for details.</p></li>
+<li><p>Fixed a bug where <code>Warning: Deprecated</code> would appear sometimes when <code>purrr</code> (part of the <code>tidyverse</code>) was loaded. (<a href='https://github.com/ngreifer/WeightIt/issues/22'>#22</a>) Thanks to MrFlick on StackOverflow for the <a href="https://stackoverflow.com/a/66897921/6348551">solution</a>.</p></li>
 </ul>
 </div>
     <div id="weightit-0110" class="section level1">
