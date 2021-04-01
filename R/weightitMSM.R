@@ -249,7 +249,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
               treat.list = treat.list,
               covs.list = reported.covs.list,
               #data = data,
-              estimand = get0("estimand", ifnotfound = "ATE"),
+              estimand = "ATE",
               method = method,
               ps.list = ps.list,
               s.weights = s.weights,
