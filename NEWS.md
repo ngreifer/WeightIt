@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# WeightIt 0.12.0
 
 * The use of `method = "twang"` has been retired and will now give an error message. Use `method = "gbm"` for nearly identical functionality with more options, as detailed at `?method_gbm`.
 
