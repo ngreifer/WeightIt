@@ -51,7 +51,7 @@ firstup <- function(x) {
     x
 }
 expand.grid_string <- function(..., collapse = "") {
-    return(apply(expand.grid(...), 1, paste, collapse = collapse))
+    return(do.call("paste", c(expand.grid(...), sep = collapse)))
 }
 num_to_superscript <- function(x) {
     nums <- setNames(c("\u2070",
@@ -864,12 +864,9 @@ process.s.weights <- function(s.weights, data = NULL) {
 #Uniqueness
 nunique <- function(x, nmax = NA, na.rm = TRUE) {
     if (is_null(x)) return(0)
-    else {
-        if (na.rm && anyNA(x)) x <- na.rem(x)
-        if (is.factor(x)) return(nlevels(x))
-        else return(length(unique(x, nmax = nmax)))
-    }
-
+    if (is.factor(x)) return(nlevels(x))
+    if (na.rm && anyNA(x)) x <- na.rem(x)
+    length(unique(x, nmax = nmax))
 }
 nunique.gt <- function(x, n, na.rm = TRUE) {
     if (missing(n)) stop("'n' must be supplied.")
@@ -1002,10 +999,10 @@ is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
     if (is_not_null(x)) {
         for (i in types) {
             if (i == "list") it.is <- is.list(x) && !is.data.frame(x)
-            else if (is_not_null(fn <- get1(paste0("is_", i)))) {
+            else if (is_not_null(fn <- get1(paste0("is_", i), mode = "function"))) {
                 it.is <- fn(x)
             }
-            else if (is_not_null(fn <- get1(paste.("is", i)))) {
+            else if (is_not_null(fn <- get1(paste.("is", i), mode = "function"))) {
                 it.is <- fn(x)
             }
             else it.is <- inherits(x, i)
@@ -1064,7 +1061,7 @@ probably.a.bug <- function() {
     #Partial in w/ charmatch. TRUE if x at all in table.
     !is.na(charmatch(x, table))
 }
-null_or_error <- function(x) {is_null(x) || any(class(x) == "try-error")}
+null_or_error <- function(x) {is_null(x) || inherits(x, "try-error")}
 match_arg <- function(arg, choices, several.ok = FALSE) {
     #Replaces match.arg() but gives cleaner error message and processing
     #of arg.
@@ -1165,4 +1162,3 @@ is.formula <- function(f, sides = NULL) {
     }
     return(res)
 }
-if (getRversion() < 3.6) str2expression <- function(text) parse(text=text, keep.source=FALSE)
