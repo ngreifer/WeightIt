@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.11.0.9000
+Version: 0.12.0
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -11,10 +11,10 @@ Description: Generates weights to form equivalent groups in observational studie
 Depends:
     R (>= 3.3.0)
 Imports:
-    cobalt (>= 4.2.2),
+    cobalt (>= 4.3.0),
     ggplot2 (>= 3.3.0),
     crayon,
-    backports (>= 1.1.9)
+    backports (>= 1.2.0)
 Suggests:
     twang (>= 1.5),
     CBPS (>= 0.18),
@@ -35,7 +35,6 @@ Suggests:
     rmarkdown
 License: GPL (>=2)
 Encoding: UTF-8
-LazyData: true
 URL: https://ngreifer.github.io/WeightIt/, https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr
