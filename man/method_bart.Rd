@@ -101,7 +101,7 @@ bal.tab(W1)
                 method = "bart", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
-}
+
 #Balancing covariates with respect to re75 (continuous)
 #assuming t(3) conditional density for treatment
 (W3 <- weightit(re75 ~ age + educ + married +
@@ -109,4 +109,5 @@ bal.tab(W2)
                 method = "bart", density = "dt_3"))
 summary(W3)
 bal.tab(W3)
-}
+}}
+
