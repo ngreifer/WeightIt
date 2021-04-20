@@ -610,7 +610,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
     #Check if response exists
     if (is.formula(tt, 2)) {
-        resp.vars.mentioned <- as.character(tt)[2]
+        resp.vars.mentioned <- as.character(tt[[2]])
         resp.vars.failed <- vapply(resp.vars.mentioned, function(v) {
             test <- tryCatch(eval(parse(text=v), data, env), error = function(e) e)
             if (inherits(test, "simpleError")) {
@@ -622,7 +622,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
         }, logical(1L))
 
         if (any(resp.vars.failed)) {
-            if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", as.character(tt)[2], "\", is not a variable in ", word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
+            if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", as.character(tt[[2]]), "\", is not a variable in ", word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
             tt <- delete.response(tt)
         }
     }
@@ -640,16 +640,14 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     #Check if RHS variables exist
     tt.covs <- delete.response(tt)
 
-    rhs.vars.mentioned.lang <- attr(tt.covs, "variables")[-1]
-    rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse1, character(1L))
+    rhs.vars.mentioned <- vapply(attr(tt.covs, "variables")[-1], deparse1, character(1L))
     rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
         test <- tryCatch(eval(parse(text=v), data, env), error = function(e) e)
         if (inherits(test, "simpleError")) {
             if (conditionMessage(test) == paste0("object '", v, "' not found")) return(TRUE)
             else stop(test)
         }
-        else if (is_null(test)) return(TRUE)
-        else return(FALSE)
+        else is_null(test)
     }, logical(1L))
 
     if (any(rhs.vars.failed)) {
@@ -662,8 +660,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     rhs.term.orders <- attr(tt.covs, "order")
 
     rhs.df <- setNames(vapply(rhs.vars.mentioned, function(v) {
-        is_(try(eval(parse(text=v)[[1]], data, env), silent = TRUE),
-            c("data.frame", "matrix", "rms"))
+        length(dim(try(eval(parse(text=v)[[1]], data, env), silent = TRUE))) == 2L
     }, logical(1L)), rhs.vars.mentioned)
 
     rhs.term.labels.list <- setNames(as.list(rhs.term.labels), rhs.term.labels)
@@ -674,7 +671,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
         addl.dfs <- setNames(lapply(rhs.vars.mentioned[rhs.df], function(x) {
             df <- eval(parse(text=x)[[1]], data, env)
             if (is_(df, "rms")) {
-                if (length(dim(df)) == 2L) class(df) <- "matrix"
+                class(df) <- "matrix"
                 df <- setNames(as.data.frame(as.matrix(df)), attr(df, "colnames"))
             }
             else if (can_str2num(colnames(df))) colnames(df) <- paste(x, colnames(df), sep = sep)
@@ -747,10 +744,8 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
                                                            contrasts, contrasts=FALSE))
 
         if (s) {
-            for (i in names(covs)) {
-                if (is.factor(covs[[i]])) {
-                    levels(covs[[i]]) <- original.covs.levels[[i]]
-                }
+            for (i in names(covs)[vapply(covs, is.factor, logical(1L))]) {
+                levels(covs[[i]]) <- original.covs.levels[[i]]
             }
         }
     }
