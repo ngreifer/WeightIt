@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# WeightIt (development version)
+
+* Fixed a bug that would occur when the `formula.tools` package was loaded, which would occur most commonly when `logistf` was loaded. It would cause the error `The treatment and covariates must have the same number of units.` (#25)
+
 # WeightIt 0.12.0
 
 * The use of `method = "twang"` has been retired and will now give an error message. Use `method = "gbm"` for nearly identical functionality with more options, as detailed at `?method_gbm`.
