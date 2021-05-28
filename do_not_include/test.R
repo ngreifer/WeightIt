@@ -66,7 +66,7 @@ W <- weightit(f.build("re78", covs), data = lalonde, method = "cbps", over = FAL
 #method = "npcbps"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "npcbps", estimand = "ATE")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "npcbps", estimand = "ATT")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "npcbps", estimand = "ATC", s.weights = s)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "npcbps", estimand = "ATE", s.weights = s)
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "npcbps", estimand = "ATE")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "npcbps", estimand = "ATT")
@@ -85,6 +85,7 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebal", estimand
               focal = "A", s.weights = s)
 
 W <- weightit(f.build("re78", covs), data = lalonde, method = "ebal")
+W <- weightit(f.build("re78", covs), data = lalonde, method = "ebal", moments = 2, d.moments = 3)
 
 
 #method = "ebcw"
@@ -180,8 +181,13 @@ W_ <- as.weightit(W$weights, lalonde$treat, covs = covs, estimand = "ATE", s.wei
 summary(W_)
 bal.tab(W_)
 
+#rms in formula
+library(rms)
+W <- weightit(treat ~ rcs(age) + poly(educ,2) + catg(race) + married + nodegree + re74 + re75,
+              data = lalonde)
+
 library("twang")
-data(iptwExWide)
+data(iptwExWide, package = "twang")
 iptwExWide$tx2_ <- factor(ifelse(iptwExWide$tx2 == 0, 0, sample(1:2, 1000, replace = T)))
 psmsm <- iptw(list(tx1 ~ use0 + gender + age,
                    tx2 ~ use1 + use0 + tx1 + gender + age,

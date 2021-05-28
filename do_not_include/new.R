@@ -560,6 +560,151 @@ weightit2enet.cont <- function(covs, treat, s.weights, subset, estimand, focal, 
 
 }
 
+weightit2kernbal <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+  check.package("osqp")
+
+  A <- list(...)
+
+  n <- length(treat)
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
+
+  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  treat.type <- get.treat.type(treat)
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    if (is_not_null(missing.ind)) {
+      covs[is.na(covs)] <- 0
+      covs <- cbind(covs, missing.ind)
+    }
+  }
+
+  covs <- mat_div(center(covs, at = col.w.m(covs, s.weights)),
+                  sqrt(col.w.v(covs, s.weights)))
+
+  if (is_not_null(A[["dist.mat"]])) {
+    if (inherits(A[["dist.mat"]], "dist")) A[["dist.mat"]] <- as.matrix(A[["dist.mat"]])
+
+    if (is.matrix(A[["dist.mat"]]) && all(dim(A[["dist.mat"]]) == n) &&
+        all(check_if_zero(diag(A[["dist.mat"]]))) && !any(A[["dist.mat"]] < 0) &&
+        isSymmetric(unname(A[["dist.mat"]]))) {
+      d <- unname(A[["dist.mat"]][subset, subset])
+    }
+    else stop("'dist.mat' must be a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
+  }
+  else d <- as.matrix(dist(covs))
+
+  n <- length(treat)
+  levels_treat <- levels(treat)
+  diagn <- diag(n)
+
+  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
+    warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
+    min.w <- 1e-8
+  }
+
+  for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean(s.weights[treat == t])
+
+  tmat <- vapply(levels_treat, function(t) treat == t, logical(n))
+  nt <- colSums(tmat)
+
+  J <- setNames(lapply(levels_treat, function(t) s.weights*tmat[,t]/nt[t]), levels_treat)
+
+  if (estimand == "ATE") {
+    J0 <- as.matrix(s.weights/n)
+
+    M2_array <- vapply(levels_treat, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
+    M1_array <- vapply(levels_treat, function(t) 2 * J[[t]] * d %*% J0, J0)
+
+    M2 <- rowSums(M2_array, dims = 2)
+    M1 <- rowSums(M1_array)
+
+    if (!isFALSE(A[["improved"]])) {
+      all_pairs <- combn(levels_treat, 2, simplify = FALSE)
+      M2_pairs_array <- vapply(all_pairs, function(p) -2 * tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
+      M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
+    }
+
+    #Constraints for positivity and sum of weights
+    Amat <- rbind(diagn, t(s.weights * tmat))
+    lvec <- c(rep(min.w, n), nt)
+    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), nt)
+  }
+  else {
+
+    J0_focal <- as.matrix(J[[focal]])
+    clevs <- levels_treat[levels_treat != focal]
+
+    M2_array <- vapply(clevs, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
+    M1_array <- vapply(clevs, function(t) 2 * J[[t]] * d %*% J0_focal, J0_focal)
+
+    M2 <- rowSums(M2_array, dims = 2)
+    M1 <- rowSums(M1_array)
+
+    #Constraints for positivity and sum of weights
+    Amat <- rbind(diagn, t(s.weights*tmat))
+    lvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, min.w), nt)
+    uvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, Inf), nt)
+  }
+
+  #Add weight penalty
+  if (is_not_null(A[["lambda"]])) diag(M2) <- diag(M2) + A[["lambda"]] / n
+
+  if (moments != 0 || int) {
+    #Exactly balance moments and/or interactions
+    covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+    if (estimand == "ATE") targets <- col.w.m(covs, s.weights)
+    else targets <- col.w.m(covs[treat == focal, , drop = FALSE], s.weights[treat == focal])
+
+    Amat <- do.call("rbind", c(list(Amat),
+                               lapply(levels_treat, function(t) {
+                                 if (is_null(focal) || t != focal) t(covs * J[[t]])
+                               })))
+    lvec <- do.call("c", c(list(lvec),
+                           lapply(levels_treat, function(t) {
+                             if (is_null(focal) || t != focal) targets
+                           })))
+    uvec <- do.call("c", c(list(uvec),
+                           lapply(levels_treat, function(t) {
+                             if (is_null(focal) || t != focal) targets
+                           })))
+  }
+
+  if (is_not_null(A[["eps"]])) {
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  }
+  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E3L
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
+  A[["verbose"]] <- TRUE
+
+  options.list <- do.call(osqp::osqpSettings, A)
+
+  opt.out <- do.call(osqp::solve_osqp, list(P = M2, q = M1, A = Amat, l = lvec, u = uvec,
+                                            pars = options.list),
+                     quote = TRUE)
+
+  if (identical(opt.out$info$status, "maximum iterations reached")) {
+    warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
+  }
+
+  w <- opt.out$x
+
+  if (estimand == "ATT") w[treat == focal] <- 1
+
+  w[w <= min.w] <- min.w
+
+  obj <- list(w = w, fit.obj = opt.out)
+  return(obj)
+
+}
+
 #------Ready for use, but not ready for CRAN----
 #KBAL
 weightit2kbal <- function(covs, treat, s.weights, subset, estimand, focal, ...) {
@@ -640,6 +785,8 @@ weightit2kbal <- function(covs, treat, s.weights, subset, estimand, focal, ...) 
 
 #Energy balancing
 weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+  check.package("osqp")
+
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -659,69 +806,66 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
                   sqrt(col.w.v(covs, sw)))
   p <- ncol(covs)
 
-  if (check.package("osqp")) {
+  covs_dist <- as.matrix(dist(covs))
+  covs_means <- colMeans(covs_dist)
+  covs_grand_mean <- mean(covs_means)
+  covs_A <- covs_dist + covs_grand_mean - outer(covs_means, covs_means, "+")
 
-    covs_dist <- as.matrix(dist(covs))
-    covs_means <- colMeans(covs_dist)
-    covs_grand_mean <- mean(covs_means)
-    covs_A <- covs_dist + covs_grand_mean - outer(covs_means, covs_means, "+")
+  treat_dist <- as.matrix(dist(treat))
+  treat_means <- colMeans(treat_dist)
+  treat_grand_mean <- mean(treat_means)
+  treat_A <- treat_dist + treat_grand_mean - outer(treat_means, treat_means, "+")
 
-    treat_dist <- as.matrix(dist(treat))
-    treat_means <- colMeans(treat_dist)
-    treat_grand_mean <- mean(treat_means)
-    treat_A <- treat_dist + treat_grand_mean - outer(treat_means, treat_means, "+")
+  n <- length(treat)
 
-    n <- length(treat)
-
-    min.w <- if_null_then(A[["min.w"]], 1e-8)
-    if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
-      warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE)
-      min.w <- 1e-8
-    }
-
-    Pmat <- (covs_A * treat_A) %*% diag((sw/n)^2)
-
-    Amat <- rbind(diag(n), sw, t(covs * sw)/n, treat * sw/n)
-    lvec <- c(rep(min.w, n), n, rep(0, p), 0)
-    uvec <- c(ifelse(check_if_zero(sw), min.w, Inf), n, rep(0, p), 0)
-
-    if ((is_not_null(moments) && moments != 0) || int) {
-      #Exactly balance correlations of moments and/or interactions
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-      covs <- center(covs, at = col.w.m(covs, sw))
-
-      Amat <- do.call("rbind", list(Amat,
-                                    t(covs * treat * sw / n),
-                                    if (moments > 1) t(covs[,-seq_len(p), drop = FALSE] * sw)/n))
-      lvec <- do.call("c", list(lvec,
-                                rep(0, ncol(covs)),
-                                if (moments > 1) rep(0, ncol(covs)-p)))
-      uvec <- do.call("c", list(uvec,
-                                rep(0, ncol(covs)),
-                                if (moments > 1) rep(0, ncol(covs)-p)))
-    }
-
-    if (is_not_null(A[["eps"]])) {
-      if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
-      if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
-    }
-    A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
-    if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E5L
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
-    A[["verbose"]] <- TRUE
-
-    options.list <- do.call(osqp::osqpSettings, A)
-
-    opt.out <- do.call(osqp::solve_osqp, list(2*Pmat, A = Amat, l = lvec, u = uvec,
-                                              pars = options.list),
-                       quote = TRUE)
-
-    w <- opt.out$x
-
-    w[w <= min.w] <- min.w
-
-    obj <- list(w = w, fit.obj = opt.out)
-    return(obj)
+  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
+    warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE)
+    min.w <- 1e-8
   }
+
+  Pmat <- (covs_A * treat_A) %*% diag((sw/n)^2)
+
+  Amat <- rbind(diag(n), sw, t(covs * sw)/n, treat * sw/n)
+  lvec <- c(rep(min.w, n), n, rep(0, p), 0)
+  uvec <- c(ifelse(check_if_zero(sw), min.w, Inf), n, rep(0, p), 0)
+
+  if ((is_not_null(moments) && moments != 0) || int) {
+    #Exactly balance correlations of moments and/or interactions
+    covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+    covs <- center(covs, at = col.w.m(covs, sw))
+
+    Amat <- do.call("rbind", list(Amat,
+                                  t(covs * treat * sw / n),
+                                  if (moments > 1) t(covs[,-seq_len(p), drop = FALSE] * sw)/n))
+    lvec <- do.call("c", list(lvec,
+                              rep(0, ncol(covs)),
+                              if (moments > 1) rep(0, ncol(covs)-p)))
+    uvec <- do.call("c", list(uvec,
+                              rep(0, ncol(covs)),
+                              if (moments > 1) rep(0, ncol(covs)-p)))
+  }
+
+  if (is_not_null(A[["eps"]])) {
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  }
+  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E5L
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
+  A[["verbose"]] <- TRUE
+
+  options.list <- do.call(osqp::osqpSettings, A)
+
+  opt.out <- do.call(osqp::solve_osqp, list(2*Pmat, A = Amat, l = lvec, u = uvec,
+                                            pars = options.list),
+                     quote = TRUE)
+
+  w <- opt.out$x
+
+  w[w <= min.w] <- min.w
+
+  obj <- list(w = w, fit.obj = opt.out)
+  return(obj)
 }
