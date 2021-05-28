@@ -79,7 +79,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0.9000</span>
       </span>
     </div>
 
@@ -130,7 +130,8 @@
 <a href="#weightit-development-version" class="anchor"></a>WeightIt (development version)<small> Unreleased </small>
 </h1>
 <ul>
-<li>Fixed a bug that would occur when the <code>formula.tools</code> package was loaded, which would occur most commonly when <code>logistf</code> was loaded. It would cause the error <code>The treatment and covariates must have the same number of units.</code> (<a href='https://github.com/ngreifer/WeightIt/issues/25'>#25</a>)</li>
+<li><p>Fixed a bug that would occur when the <code>formula.tools</code> package was loaded, which would occur most commonly when <code>logistf</code> was loaded. It would cause the error <code>The treatment and covariates must have the same number of units.</code> (<a href='https://github.com/ngreifer/WeightIt/issues/25'>#25</a>)</p></li>
+<li><p>Fixed a bug where the <code>info</code> component would not be included in the output of <code><a href="../reference/weightit.html">weightit()</a></code> when using <code>method = "super"</code>.</p></li>
 </ul>
 </div>
     <div id="weightit-0120" class="section level1">

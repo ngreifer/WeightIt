@@ -99,7 +99,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0.9000</span>
       </span>
     </div>
 
@@ -238,44 +238,44 @@ In the presence of missing data, the following value(s) for missing are allowed:
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span>,
                 link <span class='op'>=</span> <span class='st'>"probit"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATT (focal: 1)
 #&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span>
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight ranges</span>:
 #&gt; 
 #&gt;            Min                                  Max
 #&gt; treated 1.0000                 ||            1.0000
 #&gt; control 0.0176 |---------------------------| 1.8339
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
+#&gt; - <span style='font-style: italic;'>Units with 5 greatest weights by group</span>:
 #&gt;                                         
 #&gt;               5     4     3     2      1
 #&gt;  treated      1     1     1     1      1
 #&gt;             612   595   269   409    296
 #&gt;  control 1.2781 1.351 1.412 1.518 1.8339
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight statistics</span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
 #&gt; treated       0.000 0.000  -0.000       0
 #&gt; control       0.804 0.691   0.322       0
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
+#&gt; - <span style='font-style: italic;'>Effective Sample Sizes</span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.       185
 #&gt; Weighted    260.83     185</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+</div><div class='output co'>#&gt; <span style='text-decoration: underline;'>Call</span>
 #&gt;  weightit(formula = treat ~ age + educ + married + nodegree + 
 #&gt;     re74, data = lalonde, method = "ps", estimand = "ATT", link = "probit")
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;                Type Diff.Adj
 #&gt; prop.score Distance   0.0252
 #&gt; age         Contin.   0.0716
@@ -284,7 +284,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; nodegree     Binary   0.0128
 #&gt; re74        Contin.  -0.0507
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            Control Treated
 #&gt; Unadjusted  429.       185
 #&gt; Adjusted    260.83     185</div><div class='input'>
@@ -292,23 +292,23 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <span class='op'>(</span><span class='va'>W2</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>race</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATE"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 3-category (black, hispan, white)
 #&gt;  - estimand: ATE
 #&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span>
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight ranges</span>:
 #&gt; 
 #&gt;           Min                                   Max
 #&gt; black  1.4528 |---------------------------| 30.8071
 #&gt; hispan 1.7990  |---------------------|      25.9532
 #&gt; white  1.1123 |-|                            3.9770
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
+#&gt; - <span style='font-style: italic;'>Units with 5 greatest weights by group</span>:
 #&gt;                                               
 #&gt;             226     231    485     181     182
 #&gt;   black   7.532  7.6243 8.5246 12.3509 30.8071
@@ -317,23 +317,23 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt;             432     589    437     404     599
 #&gt;   white   3.686  3.6864  3.712  3.7842   3.977
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight statistics</span>:
 #&gt; 
 #&gt;        Coef of Var   MAD Entropy # Zeros
 #&gt; black        0.890 0.426   0.192       0
 #&gt; hispan       0.541 0.404   0.132       0
 #&gt; white        0.382 0.317   0.068       0
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
+#&gt; - <span style='font-style: italic;'>Effective Sample Sizes</span>:
 #&gt; 
 #&gt;            black hispan  white
 #&gt; Unweighted 243.   72.   299.  
 #&gt; Weighted   135.8  55.86 261.02</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W2</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+</div><div class='output co'>#&gt; <span style='text-decoration: underline;'>Call</span>
 #&gt;  weightit(formula = race ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "ps", estimand = "ATE")
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance summary across all treatment pairs</span><span>
+#&gt; <span style='text-decoration: underline;'>Balance summary across all treatment pairs</span>
 #&gt;             Type Max.Diff.Adj
 #&gt; age      Contin.       0.0419
 #&gt; educ     Contin.       0.1276
@@ -341,7 +341,7 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; nodegree  Binary       0.0605
 #&gt; re74     Contin.       0.2023
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            black hispan  white
 #&gt; Unadjusted 243.   72.   299.  
 #&gt; Adjusted   135.8  55.86 261.02</div><div class='input'>
@@ -349,39 +349,39 @@ In the presence of missing data, the following value(s) for missing are allowed:
 <span class='op'>(</span><span class='va'>W3</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>re75</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"ps"</span>, use.kernel <span class='op'>=</span> <span class='cn'>TRUE</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: continuous
 #&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span>
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight ranges</span>:
 #&gt; 
 #&gt;       Min                                   Max
 #&gt; all 0.088 |---------------------------| 83.1017
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
+#&gt; - <span style='font-style: italic;'>Units with 5 greatest weights by group</span>:
 #&gt;                                           
 #&gt;         482     481    484     483     485
 #&gt;  all 56.933 56.9865 70.237 77.1173 83.1017
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight statistics</span>:
 #&gt; 
 #&gt;     Coef of Var   MAD Entropy # Zeros
 #&gt; all       2.908 1.049   1.156       0
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
+#&gt; - <span style='font-style: italic;'>Effective Sample Sizes</span>:
 #&gt; 
 #&gt;             Total
 #&gt; Unweighted 614.  
 #&gt; Weighted    65.03</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>W3</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+</div><div class='output co'>#&gt; <span style='text-decoration: underline;'>Call</span>
 #&gt;  weightit(formula = re75 ~ age + educ + married + nodegree + re74, 
 #&gt;     data = lalonde, method = "ps", use.kernel = TRUE)
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;             Type Corr.Adj
 #&gt; age      Contin.  -0.0501
 #&gt; educ     Contin.   0.0016
@@ -389,10 +389,10 @@ In the presence of missing data, the following value(s) for missing are allowed:
 #&gt; nodegree  Binary  -0.0196
 #&gt; re74     Contin.  -0.0773
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;             Total
 #&gt; Unadjusted 614.  
-#&gt; Adjusted    65.03</div></span></pre>
+#&gt; Adjusted    65.03</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

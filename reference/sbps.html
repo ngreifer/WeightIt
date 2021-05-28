@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0.9000</span>
       </span>
     </div>
 
@@ -228,7 +228,7 @@
 <span class='op'>(</span><span class='va'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                 <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>race</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -239,7 +239,7 @@
                 <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>race</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATT"</span>,
                 by <span class='op'>=</span> <span class='st'>"race"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A </span><span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
@@ -331,13 +331,13 @@
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
 #&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>S</span>, cluster <span class='op'>=</span> <span class='st'>"race"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+</div><div class='output co'>#&gt; <span style='text-decoration: underline;'>Call</span>
 #&gt;  sbps(obj = W1, obj2 = W2)
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
+#&gt; <span style='text-decoration: underline;'>Balance by cluster</span>
 #&gt; 
-#&gt;  - - - </span><span style='font-style: italic;'>Cluster: black</span><span> - - - 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;  - - - <span style='font-style: italic;'>Cluster: black</span> - - - 
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;                Type Diff.Adj
 #&gt; prop.score Distance   0.0016
 #&gt; age         Contin.   0.0126
@@ -346,13 +346,13 @@
 #&gt; nodegree     Binary   0.0062
 #&gt; re74        Contin.  -0.0826
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            Control Treated
 #&gt; Unadjusted   87.       156
 #&gt; Adjusted     73.82     156
 #&gt; 
-#&gt;  - - - </span><span style='font-style: italic;'>Cluster: hispan</span><span> - - - 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;  - - - <span style='font-style: italic;'>Cluster: hispan</span> - - - 
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;                Type Diff.Adj
 #&gt; prop.score Distance  -0.2678
 #&gt; age         Contin.   0.1196
@@ -361,13 +361,13 @@
 #&gt; nodegree     Binary   0.0018
 #&gt; re74        Contin.   0.0114
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            Control Treated
 #&gt; Unadjusted   61.        11
 #&gt; Adjusted     40.62      11
 #&gt; 
-#&gt;  - - - </span><span style='font-style: italic;'>Cluster: white</span><span> - - - 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;  - - - <span style='font-style: italic;'>Cluster: white</span> - - - 
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;                Type Diff.Adj
 #&gt; prop.score Distance   0.0652
 #&gt; age         Contin.   0.0191
@@ -376,7 +376,7 @@
 #&gt; nodegree     Binary   0.0039
 #&gt; re74        Contin.  -0.0117
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            Control Treated
 #&gt; Unadjusted  281.        18
 #&gt; Adjusted    120.78      18
@@ -470,13 +470,13 @@
 #&gt;            Control Treated
 #&gt; Unweighted 281.000      18
 #&gt; Weighted   120.777      18</div><div class='input'><span class='fu'><a href='https://ngreifer.github.io/cobalt/reference/bal.tab.html'>bal.tab</a></span><span class='op'>(</span><span class='va'>S_</span>, cluster <span class='op'>=</span> <span class='st'>"race"</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; </span><span style='text-decoration: underline;'>Call</span><span>
+</div><div class='output co'>#&gt; <span style='text-decoration: underline;'>Call</span>
 #&gt;  sbps(obj = W1, obj2 = W2, smooth = TRUE)
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Balance by cluster</span><span>
+#&gt; <span style='text-decoration: underline;'>Balance by cluster</span>
 #&gt; 
-#&gt;  - - - </span><span style='font-style: italic;'>Cluster: black</span><span> - - - 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;  - - - <span style='font-style: italic;'>Cluster: black</span> - - - 
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;                Type Diff.Adj
 #&gt; prop.score Distance   0.0019
 #&gt; age         Contin.   0.0388
@@ -485,13 +485,13 @@
 #&gt; nodegree     Binary   0.0086
 #&gt; re74        Contin.  -0.0561
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            Control Treated
 #&gt; Unadjusted   87.       156
 #&gt; Adjusted     73.74     156
 #&gt; 
-#&gt;  - - - </span><span style='font-style: italic;'>Cluster: hispan</span><span> - - - 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;  - - - <span style='font-style: italic;'>Cluster: hispan</span> - - - 
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;                Type Diff.Adj
 #&gt; prop.score Distance  -0.1909
 #&gt; age         Contin.   0.0167
@@ -500,13 +500,13 @@
 #&gt; nodegree     Binary   0.0084
 #&gt; re74        Contin.  -0.0175
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            Control Treated
 #&gt; Unadjusted   61.        11
 #&gt; Adjusted     41.95      11
 #&gt; 
-#&gt;  - - - </span><span style='font-style: italic;'>Cluster: white</span><span> - - - 
-#&gt; </span><span style='text-decoration: underline;'>Balance Measures</span><span>
+#&gt;  - - - <span style='font-style: italic;'>Cluster: white</span> - - - 
+#&gt; <span style='text-decoration: underline;'>Balance Measures</span>
 #&gt;                Type Diff.Adj
 #&gt; prop.score Distance   0.0652
 #&gt; age         Contin.   0.0191
@@ -515,13 +515,13 @@
 #&gt; nodegree     Binary   0.0039
 #&gt; re74        Contin.  -0.0117
 #&gt; 
-#&gt; </span><span style='text-decoration: underline;'>Effective sample sizes</span><span>
+#&gt; <span style='text-decoration: underline;'>Effective sample sizes</span>
 #&gt;            Control Treated
 #&gt; Unadjusted  281.        18
 #&gt; Adjusted    120.78      18
 #&gt;  - - - - - - - - - - - - - - 
 #&gt; </div><div class='input'>
-</div></span></pre>
+</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">

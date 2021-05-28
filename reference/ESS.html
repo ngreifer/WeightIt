@@ -80,7 +80,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="Released version">0.12.0.9000</span>
       </span>
     </div>
 
@@ -161,41 +161,41 @@
 <span class='op'>(</span><span class='va'>W1</span> <span class='op'>&lt;-</span> <span class='fu'><a href='weightit.html'>weightit</a></span><span class='op'>(</span><span class='va'>treat</span> <span class='op'>~</span> <span class='va'>age</span> <span class='op'>+</span> <span class='va'>educ</span> <span class='op'>+</span> <span class='va'>married</span> <span class='op'>+</span>
                   <span class='va'>nodegree</span> <span class='op'>+</span> <span class='va'>re74</span>, data <span class='op'>=</span> <span class='va'>lalonde</span>,
                 method <span class='op'>=</span> <span class='st'>"ps"</span>, estimand <span class='op'>=</span> <span class='st'>"ATE"</span><span class='op'>)</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span><span> object
+</div><div class='output co'>#&gt; A <span style='font-style: italic;'>weightit</span> object
 #&gt;  - method: "ps" (propensity score weighting)
 #&gt;  - number of obs.: 614
 #&gt;  - sampling weights: none
 #&gt;  - treatment: 2-category
 #&gt;  - estimand: ATE
 #&gt;  - covariates: age, educ, married, nodegree, re74</div><div class='input'><span class='fu'><a href='https://rdrr.io/r/base/summary.html'>summary</a></span><span class='op'>(</span><span class='va'>W1</span><span class='op'>)</span>
-</div><div class='output co'>#&gt;                  </span><span style='text-decoration: underline;'>Summary of weights</span><span>
+</div><div class='output co'>#&gt;                  <span style='text-decoration: underline;'>Summary of weights</span>
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight ranges</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight ranges</span>:
 #&gt; 
 #&gt;            Min                                   Max
 #&gt; treated 1.5560  |--------------------------| 73.3315
 #&gt; control 1.0222 ||                             3.0438
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Units with 5 greatest weights by group</span><span>:
+#&gt; - <span style='font-style: italic;'>Units with 5 greatest weights by group</span>:
 #&gt;                                                 
 #&gt;              124     184     172     181     182
 #&gt;  treated 11.2281 11.3437 12.0848 26.1775 73.3315
 #&gt;              411     595     269     409     296
 #&gt;  control  2.3303  2.4365  2.5005  2.6369  3.0438
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Weight statistics</span><span>:
+#&gt; - <span style='font-style: italic;'>Weight statistics</span>:
 #&gt; 
 #&gt;         Coef of Var   MAD Entropy # Zeros
 #&gt; treated       1.609 0.555   0.403       0
 #&gt; control       0.247 0.211   0.029       0
 #&gt; 
-#&gt; - </span><span style='font-style: italic;'>Effective Sample Sizes</span><span>:
+#&gt; - <span style='font-style: italic;'>Effective Sample Sizes</span>:
 #&gt; 
 #&gt;            Control Treated
 #&gt; Unweighted  429.    185.  
 #&gt; Weighted    404.35   51.73</div><div class='input'><span class='fu'>ESS</span><span class='op'>(</span><span class='va'>W1</span><span class='op'>$</span><span class='va'>weights</span><span class='op'>[</span><span class='va'>W1</span><span class='op'>$</span><span class='va'>treat</span> <span class='op'>==</span> <span class='fl'>0</span><span class='op'>]</span><span class='op'>)</span>
 </div><div class='output co'>#&gt; [1] 404.3484</div><div class='input'><span class='fu'>ESS</span><span class='op'>(</span><span class='va'>W1</span><span class='op'>$</span><span class='va'>weights</span><span class='op'>[</span><span class='va'>W1</span><span class='op'>$</span><span class='va'>treat</span> <span class='op'>==</span> <span class='fl'>1</span><span class='op'>]</span><span class='op'>)</span>
-</div><div class='output co'>#&gt; [1] 51.73462</div></span></pre>
+</div><div class='output co'>#&gt; [1] 51.73462</div></pre>
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
     <nav id="toc" data-toggle="toc" class="sticky-top">
