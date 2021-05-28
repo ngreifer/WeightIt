@@ -1835,7 +1835,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     if (treat.type == "binary" && i == last(levels(treat))) {
       ps[[i]] <- 1 - ps[[1]]
       fit.list <- fit.list[[1]]
-      info <- info[[i]]
+      info <- info[[1]]
       next
     }
 
