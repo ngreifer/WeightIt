@@ -132,7 +132,7 @@ as.weightitMSM.default <- function(weights, treat.list, covs.list = NULL, estima
   if (any(vapply(treat.list, function(x) !is.atomic(x) && !is.factor(x), logical(1L)))) stop("treat.list must be a list of atomic vectors (i.e., numeric, logical, or character) or factors.", call. = FALSE)
   if (!all_the_same(lengths(treat.list))) stop("Each component of treat.list must have the same length.", call. = FALSE)
   if (length(weights) != length(treat.list[[1]])) stop("weights and each component of treat.list must be the same length.", call. = FALSE)
-  treat.list <- sapply(treat.list, function(t) if (!has.treat.type(t)) assign.treat.type(t) else t, simplify = FALSE)
+  for (i in seq_along(treat.list)) if (!has.treat.type(treat.list[[i]])) treat.list[[i]] <- assign.treat.type(treat.list[[i]])
 
   if (is_not_null(covs.list)) {
     if (!is.vector(covs.list, "list") || any(vapply(covs.list, function(x) !is.data.frame(x), logical(1L)))) stop("covs.list must be a list of data.frames for each time point.", call. = FALSE)

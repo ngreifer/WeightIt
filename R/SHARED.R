@@ -67,7 +67,7 @@ num_to_superscript <- function(x) {
                      as.character(0:9))
     x <- as.character(x)
     splitx <- strsplit(x, "", fixed = TRUE)
-    supx <- sapply(splitx, function(y) paste0(nums[y], collapse = ""))
+    supx <- vapply(splitx, function(y) paste0(nums[y], collapse = ""), character(1L))
     return(supx)
 }
 ordinal <- function(x) {

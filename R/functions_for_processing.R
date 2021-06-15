@@ -300,7 +300,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     if (is_not_null(colnames(by))) names(by.components) <- colnames(by)
     else names(by.components) <- by.name
 
-    if (is_null(by)) by.factor <- factor(rep(1, n))
+    if (is_null(by)) by.factor <- factor(rep(1L, n), levels = 1L)
     else by.factor <- factor(by.components[[1]], levels = unique(by.components[[1]]),
                              labels = paste(names(by.components), "=", unique(by.components[[1]])))
     # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]

@@ -7,6 +7,8 @@ WeightIt News and Updates
 
 * Fixed a bug where the `info` component would not be included in the output of `weightit()` when using `method = "super"`.
 
+* Added the ability to specify `num.formula` as a list of formulas in `weightitMSM()`. This is primarily to get around the fact that when `stabilize = TRUE`, a fully saturated model with all treatments is used to compute the stabilization factor, which, for many time points, is time-consuming and may be impossible (especially if not all treatment combinations are observed). Thanks to @maellecoursonnais for bringing up this issue (#27).
+
 # WeightIt 0.12.0
 
 * The use of `method = "twang"` has been retired and will now give an error message. Use `method = "gbm"` for nearly identical functionality with more options, as detailed at `?method_gbm`.
@@ -69,7 +71,7 @@ WeightIt News and Updates
 
 * Fixed a bug when using `weightitMSM` with methods that process `int` and `moments` (though you probably shouldn't use them anyway). Thanks to Sven Reiger.
 
-* Fixed a bug when using `method = "npcbps"` where weights could be excessively small and mistaken for all being them. The weights now sum to the number of units.
+* Fixed a bug when using `method = "npcbps"` where weights could be excessively small and mistaken for all being the same. The weights now sum to the number of units.
 
 # WeightIt 0.10.0
 
