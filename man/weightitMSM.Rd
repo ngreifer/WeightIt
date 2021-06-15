@@ -38,10 +38,10 @@ an optional data set in the form of a data frame that contains the variables in 
 a string of length 1 containing the name of the method that will be used to estimate weights. See \fun{weightit} for allowable options. The default is \code{"ps"}, which estimates the weights using generalized linear models.
 }
   \item{stabilize}{
-\code{logical}; whether or not to stabilize the weights. Stabilizing the weights involves fitting a model predicting treatment at each time point from treatment status at prior time points. If \code{TRUE}, a saturated model will be fit, essentially using the observed treatment probabilities in the numerator (for binary and multinomial treatments). This may yield an error if some combinations are not observed. Default is \code{FALSE}. To manually specify stabilization model formulas, use \code{num.formula}.
+\code{logical}; whether or not to stabilize the weights. Stabilizing the weights involves fitting a model predicting treatment at each time point from treatment status at prior time points. If \code{TRUE}, a fully saturated model will be fit (i.e., all interactions between all treatments up to each time point), essentially using the observed treatment probabilities in the numerator (for binary and multinomial treatments). This may yield an error if some combinations are not observed. Default is \code{FALSE}. To manually specify stabilization model formulas, e.g., to specify non-saturated models, use \code{num.formula}. With many time points, saturated models may be time-consuming or impossible to fit.
 }
 \item{num.formula}{
-optional; a one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernán (2008) for a discussion of how to specify this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
+optional; a one-sided formula with the stabilization factors (other than the previous treatments) on the right hand side, which adds, for each time point, the stabilization factors to a model saturated with previous treatments. See Cole & Hernán (2008) for a discussion of how to specify this model; including stabilization factors can change the estimand without proper adjustment, and should be done with caution. Can also be a list of one-sided formulas, one for each time point. Unless you know what you are doing, we recommend setting \code{stabilize = TRUE} and ignoring \code{num.formula}.
 }
   \item{by}{
 a string containing the name of the variable in \code{data} for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~ gender}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message. Only one \code{by} variable is allowed.
@@ -115,13 +115,13 @@ library("twang")
 # library("cobalt")
 
 data("iptwExWide", package = "twang")
-(W <- weightitMSM(list(tx1 ~ age + gender + use0,
+(W1 <- weightitMSM(list(tx1 ~ age + gender + use0,
                       tx2 ~ tx1 + use1 + age + gender + use0,
                       tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
                  data = iptwExWide,
                  method = "ps"))
-summary(W)
-# bal.tab(W)
+summary(W1)
+# bal.tab(W1)
 
 ##Going from long to wide data
 data("iptwExLong", package = "twang")
@@ -140,5 +140,26 @@ wide_data <- reshape(iptwExLong$covariates,    #long data
                  method = "ps"))
 summary(W2)
 
-all.equal(W$weights, W2$weights)
+all.equal(W1$weights, W2$weights)
+
+#Using stabilization factors
+W3 <- weightitMSM(list(tx1 ~ age + gender + use0,
+                       tx2 ~ tx1 + use1 + age + gender + use0,
+                       tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
+                  data = iptwExWide,
+                  method = "ps",
+                  stabilize = TRUE,
+                  num.formula = list(~ 1,
+                                     ~ tx1,
+                                     ~ tx2 + tx1))
+
+#Same as above but with fully saturated stabilization factors
+#(i.e., making the last entry in 'num.formula' tx2*tx2)
+W4 <- weightitMSM(list(tx1 ~ age + gender + use0,
+                       tx2 ~ tx1 + use1 + age + gender + use0,
+                       tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
+                  data = iptwExWide,
+                  method = "ps",
+                  stabilize = TRUE)
+
 }
