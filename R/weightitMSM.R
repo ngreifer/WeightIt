@@ -300,7 +300,7 @@ print.weightitMSM <- function(x, ...) {
   cat(paste0(" - sampling weights: ", ifelse(all_the_same(x[["s.weights"]]), "none", "present"), "\n"))
   cat(paste0(" - number of time points: ", length(x[["treat.list"]]), " (", paste(names(x[["treat.list"]]), collapse = ", "), ")\n"))
   cat(paste0(" - treatment: \n",
-             paste0(vapply(1:length(x$covs.list), function(i) {
+             paste0(vapply(seq_along(x$covs.list), function(i) {
                paste0("    + time ", i, ": ", if (treat.types[i] == "continuous") "continuous"
                       else paste0(nunique(x[["treat.list"]][[i]]), "-category",
                                   if (treat.types[i] == "multinomial") paste0(" (", paste(levels(x[["treat.list"]][[i]]), collapse = ", "), ")")
@@ -308,7 +308,7 @@ print.weightitMSM <- function(x, ...) {
                       ), "\n")
              }, character(1L)), collapse = ""), collapse = "\n"))
   cat(paste0(" - covariates: \n",
-             paste0(vapply(1:length(x$covs.list), function(i) {
+             paste0(vapply(seq_along(x$covs.list), function(i) {
                if (i == 1) {
                  paste0("    + baseline: ", if (is_null(x$covs.list[[i]])) "(none)" else paste(names(x$covs.list[[i]]), collapse = ", "), "\n")
                }
@@ -324,7 +324,7 @@ print.weightitMSM <- function(x, ...) {
     if (any(vapply(x$stabilization, function(s) is_not_null(all.vars(s)), logical(1L)))) {
       cat(paste0("; stabilization factors:\n", if (length(x$stabilization) == 1) paste0("      ", paste0(attr(terms(x[["stabilization"]][[1]]), "term.labels"), collapse = ", "))
                  else {
-                   paste0(vapply(1:length(x$stabilization), function(i) {
+                   paste0(vapply(seq_along(x$stabilization), function(i) {
                      if (i == 1) {
                        paste0("    + baseline: ", if (is_null(attr(terms(x[["stabilization"]][[i]]), "term.labels"))) "(none)" else paste(attr(terms(x[["stabilization"]][[i]]), "term.labels"), collapse = ", "))
                      }

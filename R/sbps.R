@@ -274,7 +274,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
       F_min <- Inf
 
-      for (i in 1:nrow(S)) {
+      for (i in seq_row(S)) {
         s_try <- S[i,]
         F_try <- get_F(s_try, moderator.factor, w_o, w_s, treat.type)
 

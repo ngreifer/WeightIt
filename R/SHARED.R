@@ -13,19 +13,19 @@ word_list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
     }
     if (L == 0) {
         out <- ""
-        attr(out, "plural") = FALSE
+        attr(out, "plural") <- FALSE
     }
     else {
         word.list <- word.list[!word.list %in% c(NA_character_, "")]
         L <- length(word.list)
         if (L == 0) {
             out <- ""
-            attr(out, "plural") = FALSE
+            attr(out, "plural") <- FALSE
         }
         else if (L == 1) {
             out <- word.list
             if (is.are) out <- paste(out, "is")
-            attr(out, "plural") = FALSE
+            attr(out, "plural") <- FALSE
         }
         else {
             and.or <- match_arg(and.or)
@@ -38,7 +38,7 @@ word_list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
 
             }
             if (is.are) out <- paste(out, "are")
-            attr(out, "plural") = TRUE
+            attr(out, "plural") <- TRUE
         }
 
 
@@ -137,7 +137,7 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
 }
 text_box_plot <- function(range.list, width = 12) {
     full.range <- range(unlist(range.list))
-    ratio = diff(full.range)/(width+1)
+    ratio <- diff(full.range)/(width+1)
     rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
     rescaled.full.range <- round(full.range/ratio)
     d <- make_df(c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"),

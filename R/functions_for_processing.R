@@ -1104,6 +1104,21 @@ neg_ent <- function(w) {
   mean(w*log(w))
 }
 
+#Mahalanobis distance matrix
+mah_dist <- function(X, Y = X, Sinv) {
+  do.call("rbind", lapply(seq_len(nrow(X)), function(i) {
+    sqrt(mahalanobis(Y, X[i,], Sinv, inverted = TRUE))
+  }))
+}
+
+#Generalized matrix inverse (port of MASS::ginv)
+generalized_inverse <- function(sigma) {
+  sigmasvd <- svd(sigma)
+  pos <- sigmasvd$d > max(1e-9 * sigmasvd$d[1L], 0)
+  sigma_inv <- sigmasvd$v[, pos, drop = FALSE] %*% (sigmasvd$d[pos]^-1 * t(sigmasvd$u[, pos, drop = FALSE]))
+  return(sigma_inv)
+}
+
 #For balance SuperLearner
 method.balance <- function(stop.method) {
 
@@ -1121,7 +1136,7 @@ method.balance <- function(stop.method) {
       bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
       tol <- .001
-      for (i in 1:ncol(Z)) {
+      for (i in seq_col(Z)) {
         Z[Z[,i] < tol, i] <- tol
         Z[Z[,i] > 1-tol, i] <- 1-tol
       }
