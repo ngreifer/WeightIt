@@ -421,7 +421,7 @@ init_s <- function(covs, treat, s.weights = NULL, ...) {
 
     if (get.treat.type(assign.treat.type(treat)) != "continuous") stop("treat must be a numeric non-binary variable.")
 
-    for (i in 1:ncol(covs)) if (!bin.vars[i]) covs[,i] <- rank(covs[,i], na.last = "keep")
+    for (i in seq_col(covs)) if (!bin.vars[i]) covs[,i] <- rank(covs[,i], na.last = "keep")
     treat <- rank(treat, na.last = "keep")
 
     s.d.denom <- get.s.d.denom.cont.weightit()
@@ -513,7 +513,7 @@ init_L1.med <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal =
     treat.type <- get.treat.type(treat)
 
     coarsen <- function(covs, cutpoints = NULL, grouping = NULL) {
-        is.numeric.cov <- setNames(sapply(covs, is.numeric), names(covs))
+        is.numeric.cov <- setNames(vapply(covs, is.numeric, logical(1L)), names(covs))
         for (i in names(cutpoints)) {
             if (cutpoints[[i]] == 0) is.numeric.cov[i] <- FALSE #Will not be binned
         }
@@ -560,7 +560,7 @@ init_L1.med <- function(covs, treat, s.weights = NULL, estimand = "ATE", focal =
         for (t in unique.treats) s.weights[treat == t] <- s.weights[treat == t]/sum(s.weights[treat == t])
     }
 
-    is.numeric.cov <- setNames(sapply(covs, is.numeric), names(covs))
+    is.numeric.cov <- setNames(vapply(covs, is.numeric, logical(1L)), names(covs))
     nunique.covs <- vapply(covs, nunique, integer(1L))
 
     if (treat.type == "continuous") {
@@ -901,6 +901,16 @@ bal_criterion <- function(treat.type = "binary", criterion, list = FALSE) {
                 },
                 init = init_energy.dist
             ),
+            # kernel.dist = list(
+            #     fun = function(covs, treat, weights = NULL, s.weights = NULL, estimand = "ATE", focal = NULL, init = NULL, ...) {
+            #
+            #         if (is_null(init)) {
+            #             init <- init_kernel.dist(covs, treat, s.weights, estimand, focal)
+            #         }
+            #         kernel.dist.binary(init, weights)
+            #     },
+            #     init = init_kernel.dist
+            # ),
             L1.med = list(
                 fun = function(covs, treat, weights = NULL, s.weights = NULL, estimand = "ATE", focal = NULL, init = NULL, ...) {
                     if (is_null(init)) {
@@ -1100,6 +1110,7 @@ bal_criterion.to.phrase <- function(criterion) {
                      "ks.rms" = "root-mean-square Kolmogorov-Smirnov statistic",
                      "mahalanobis" = "sample Mahalanobis distance",
                      "energy.dist" = "energy distance",
+                     # "kernel.dist" = "kernel distance",
                      "L1.med" = "L1 median",
                      "r2" = "post-weighting treatment R-squared",
                      NA_character_
