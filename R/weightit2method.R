@@ -192,7 +192,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       t.lev <- get.treated.level(treat_sub)
       c.lev <- setdiff(levels(treat_sub), t.lev)
 
-      family <- binomial(link = A[["link"]])
+
 
       ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
 
@@ -211,21 +211,36 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         if (use.br) {
           ctrl_fun <- brglm2::brglmControl
           glm_method <- brglm2::brglmFit
+          family <- binomial(link = A[["link"]])
         }
         else {
           ctrl_fun <- stats::glm.control
           glm_method <- if_null_then(A[["glm.method"]], stats::glm.fit)
+          family <- quasibinomial(link = A[["link"]])
         }
 
         control <- A[names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)]]
 
         treat <- binarize(treat_sub, one = t.lev)
 
+        start <- mustart <- NULL
+
+        if (family$link %in% c("log", "identity")) {
+          #Need starting values because links are unbounded
+          start <- c(family$linkfun(w.m(treat, s.weights)), rep(0, ncol(covs)))
+        }
+        else {
+          #Default starting values from glm.fit() without weights; these
+          #work better with s.weights than usual default.
+          mustart <- .25 + .5*treat
+        }
+
         withCallingHandlers({
           if (isTRUE(A[["quick"]])) {
             fit <- do.call(glm_method, c(list(y = treat,
-                                              x = cbind(1, covs),
-                                              start = c(family$linkfun(mean(treat)), rep(0, ncol(covs))),
+                                              x = cbind(`(Intercept)` = 1, covs),
+                                              mustart = mustart,
+                                              start = start,
                                               weights = s.weights,
                                               family = family),
                                          control), quote = TRUE)
@@ -235,7 +250,8 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
             formula <- formula(data)
             fit <- do.call(stats::glm, c(list(formula, data = data,
                                               weights = s.weights,
-                                              start = c(family$linkfun(mean(treat)), rep(0, ncol(covs))),
+                                              mustart = mustart,
+                                              start = start,
                                               family = family,
                                               method = glm_method),
                                          control), quote = TRUE)
@@ -2293,7 +2309,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   }
 
   #Add weight penalty
-  if (is_not_null(A[["lambda"]])) diag(M2) <- diag(M2) + A[["lambda"]] / n
+  if (is_not_null(A[["lambda"]])) diag(M2) <- diag(M2) + A[["lambda"]] / n^2
 
   if (moments != 0 || int) {
     #Exactly balance moments and/or interactions
