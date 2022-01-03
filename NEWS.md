@@ -19,6 +19,10 @@ WeightIt News and Updates
 
 * `miss = "saem"` can once again be used with `method = "ps"` when missing values are present in the covariates.
 
+* Fixed bugs with processing input formulas.
+
+* An error is now thrown if an incorrect `link` is supplied with `method = "ps"`.
+
 # WeightIt 0.12.0
 
 * The use of `method = "twang"` has been retired and will now give an error message. Use `method = "gbm"` for nearly identical functionality with more options, as detailed at `?method_gbm`.

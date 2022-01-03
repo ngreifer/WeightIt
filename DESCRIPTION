@@ -14,7 +14,7 @@ Imports:
     cobalt (>= 4.3.0),
     ggplot2 (>= 3.3.0),
     crayon,
-    backports (>= 1.2.0)
+    backports (>= 1.4.1)
 Suggests:
     twang (>= 1.5),
     CBPS (>= 0.18),
@@ -25,7 +25,7 @@ Suggests:
     mclogit,
     MNP (>= 3.1-0),
     brglm2 (>= 0.5.2),
-    osqp (>= 0.6.0.3),
+    osqp (>= 0.6.0.5),
     survey,
     boot,
     MASS,
