@@ -173,11 +173,10 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
         A$link <- acceptable.links[1]
-        warning(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE), " allowed as the link for ",
-                       if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
-                       " treatments", if (missing == "saem") " with missing = \"saem\"",
-                       ". Using link = ", word_list(acceptable.links[1], quotes = TRUE), "."),
-                call. = FALSE, immediate. = TRUE)
+        stop(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE), " allowed as the link for ",
+                    if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
+                    " treatments", if (missing == "saem") " with missing = \"saem\"", "."),
+             call. = FALSE)
       }
       else A$link <- which.link
     }
@@ -614,10 +613,25 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
       gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
     }
     else {
-      if (is_null(A$link)) A$link <- "identity"
+      if (is_null(A[["link"]])) A[["link"]] <- "identity"
+      else {
+        if (missing == "saem") acceptable.links <- "identity"
+        else acceptable.links <- c("identity", "log", "inverse")
+
+        which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
+        if (is.na(which.link)) {
+          A[["link"]] <- acceptable.links[1]
+          stop(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
+                      " allowed as the link for continuous treatments",
+                      if (missing == "saem") " with missing = \"saem\"", "."),
+               call. = FALSE)
+        }
+        else A[["link"]] <- which.link
+      }
+
       fit <- do.call("glm", c(list(formula, data = data,
                                    weights = s.weights,
-                                   family = gaussian(link = A$link),
+                                   family = gaussian(link = A[["link"]]),
                                    control = as.list(A$control))),
                      quote = TRUE)
 
