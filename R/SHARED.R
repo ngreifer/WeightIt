@@ -610,41 +610,45 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
     #Check if response exists
     if (is.formula(tt, 2)) {
-        resp.vars.mentioned <- as.character(tt[[2]])
-        resp.vars.failed <- vapply(resp.vars.mentioned, function(v) {
-            test <- tryCatch(eval(parse(text=v), data, env), error = function(e) e)
+        resp.var.mentioned <- attr(tt, "variables")[[2]]
+        resp.var.mentioned.char <- deparse1(resp.var.mentioned)
+
+        resp.var.failed <- {
+            test <- tryCatch(eval(resp.var.mentioned, data, env), error = function(e) e)
             if (inherits(test, "simpleError")) {
-                if (conditionMessage(test) == paste0("object '", v, "' not found")) return(TRUE)
+                if (startsWith(conditionMessage(test), "object") &&
+                    endsWith(conditionMessage(test), "not found")) TRUE
                 else stop(test)
             }
-            else if (is_null(test)) return(TRUE)
-            else return(FALSE)
-        }, logical(1L))
+            else is_null(test)
+        }
 
-        if (any(resp.vars.failed)) {
-            if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", as.character(tt[[2]]), "\", is not a variable in ", word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
+        if (resp.var.failed) {
+            if (is_null(A[["treat"]])) stop(paste0("The given response variable, \"", resp.var.mentioned.char, "\", is not a variable in ", word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or"), "."), call. = FALSE)
             tt <- delete.response(tt)
         }
     }
-    else resp.vars.failed <- TRUE
+    else resp.var.failed <- TRUE
 
-    if (any(!resp.vars.failed)) {
-        treat.name <- resp.vars.mentioned[!resp.vars.failed][1]
-        treat <- eval(parse(text=treat.name)[[1]], data, env)
-    }
-    else {
+    if (resp.var.failed) {
         treat <- A[["treat"]]
         treat.name <- NULL
+    }
+    else {
+        treat.name <- as.character(resp.var.mentioned)
+        treat <- eval(resp.var.mentioned, data, env)
     }
 
     #Check if RHS variables exist
     tt.covs <- delete.response(tt)
 
-    rhs.vars.mentioned <- vapply(attr(tt.covs, "variables")[-1], deparse1, character(1L))
-    rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
-        test <- tryCatch(eval(parse(text=v), data, env), error = function(e) e)
+    rhs.vars.mentioned <- attr(tt.covs, "variables")[-1]
+    rhs.vars.mentioned.char <- vapply(rhs.vars.mentioned, deparse1, character(1L))
+    rhs.vars.failed <- vapply(seq_along(rhs.vars.mentioned), function(i) {
+        test <- tryCatch(eval(rhs.vars.mentioned[[i]], data, env), error = function(e) e)
         if (inherits(test, "simpleError")) {
-            if (conditionMessage(test) == paste0("object '", v, "' not found")) return(TRUE)
+            if (startsWith(conditionMessage(test), "object") &&
+                endsWith(conditionMessage(test), "not found")) return(TRUE)
             else stop(test)
         }
         else is_null(test)
@@ -652,7 +656,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
     if (any(rhs.vars.failed)) {
         stop(paste0(c("All variables in 'formula' must be variables in 'data' or objects in the global environment.\nMissing variables: ",
-                      paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), call. = FALSE)
+                      paste(rhs.vars.mentioned.char[rhs.vars.failed], collapse= ", "))), call. = FALSE)
 
     }
 
@@ -660,26 +664,26 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     rhs.term.orders <- attr(tt.covs, "order")
 
     rhs.df <- setNames(vapply(rhs.vars.mentioned, function(v) {
-        length(dim(try(eval(parse(text=v)[[1]], data, env), silent = TRUE))) == 2L
-    }, logical(1L)), rhs.vars.mentioned)
+        length(dim(try(eval(v, data, env), silent = TRUE))) == 2L
+    }, logical(1L)), rhs.vars.mentioned.char)
 
     rhs.term.labels.list <- setNames(as.list(rhs.term.labels), rhs.term.labels)
     if (any(rhs.df)) {
-        if (any(rhs.vars.mentioned[rhs.df] %in% unlist(lapply(rhs.term.labels[rhs.term.orders > 1], function(x) strsplit(x, ":", fixed = TRUE))))) {
+        if (any(rhs.vars.mentioned.char[rhs.df] %in% unlist(lapply(rhs.term.labels[rhs.term.orders > 1], function(x) strsplit(x, ":", fixed = TRUE))))) {
             stop("Interactions with data.frames are not allowed in the input formula.", call. = FALSE)
         }
-        addl.dfs <- setNames(lapply(rhs.vars.mentioned[rhs.df], function(x) {
-            df <- eval(parse(text=x)[[1]], data, env)
+        addl.dfs <- setNames(lapply(which(rhs.df), function(i) {
+            df <- eval(rhs.vars.mentioned[[i]], data, env)
             if (is_(df, "rms")) {
                 class(df) <- "matrix"
                 df <- setNames(as.data.frame(as.matrix(df)), attr(df, "colnames"))
             }
-            else if (can_str2num(colnames(df))) colnames(df) <- paste(x, colnames(df), sep = sep)
+            else if (can_str2num(colnames(df))) colnames(df) <- paste(rhs.vars.mentioned.char[i], colnames(df), sep = sep)
             return(as.data.frame(df))
         }),
-        rhs.vars.mentioned[rhs.df])
+        rhs.vars.mentioned.char[rhs.df])
 
-        for (i in rhs.term.labels[rhs.term.labels %in% rhs.vars.mentioned[rhs.df]]) {
+        for (i in rhs.term.labels[rhs.term.labels %in% rhs.vars.mentioned.char[rhs.df]]) {
             ind <- which(rhs.term.labels == i)
             rhs.term.labels <- append(rhs.term.labels[-ind],
                                       values = names(addl.dfs[[i]]),
@@ -701,7 +705,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     }
     else {
         new.form.char <- paste("~", paste(vapply(names(rhs.term.labels.list), function(x) {
-            if (x %in% rhs.vars.mentioned[rhs.df]) paste0("`", rhs.term.labels.list[[x]], "`", collapse = " + ")
+            if (x %in% rhs.vars.mentioned.char[rhs.df]) paste0("`", rhs.term.labels.list[[x]], "`", collapse = " + ")
             else rhs.term.labels.list[[x]]
             # try.form <- try(as.formula(paste("~", x)), silent = TRUE)
             # if (null_or_error(try.form) || (grepl("^", x, fixed = TRUE) && !startsWith(x, "I("))) {
