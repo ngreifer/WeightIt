@@ -49,7 +49,7 @@ First, for each variable with missingness, a new missingness indicator variable 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9000</span>
       </span>
     </div>
 
@@ -191,28 +191,28 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000    ||                         1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0029 |---------------------------| 9.5064</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000    ||                          1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0022 |---------------------------| 10.1776</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               6      4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             409    592    569    374    608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.3059 2.7791 2.8188 3.3436 9.5064</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              10      7     5      3       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1     1      1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             585    569   592    374     608</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.1201 2.9347 3.155 3.4633 10.1776</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var  MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.00  -0.000       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.795 0.92   0.718       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.00   -0.00       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.875 0.93    0.74       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    101.76     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     95.19     185</span>
 <span class="r-in"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = treat ~ age + educ + married + nodegree + </span>
@@ -220,17 +220,17 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.4890</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0573</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0256</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0304</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0313</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0564</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.4926</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0644</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0295</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0335</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0373</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0574</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    101.76     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted     95.19     185</span>
 <span class="r-in"><span class="co"># \donttest{</span></span>
 <span class="r-in"><span class="co">#Balancing covariates with respect to race (multinomial)</span></span>
 <span class="r-in"><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span>
@@ -249,31 +249,31 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.2422  |---------------|             8.7849</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 2.6134     |-----------------------| 13.5436</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.0651 |---------------|              8.0988</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.2333 |-----------------|            9.1327</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 2.7945     |-----------------------| 13.1667</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.0636 |---------------|              8.2898</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             226     181     244     423     231</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black  7.0926  7.3315  8.1744  8.4124  8.7849</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             392     346     426     570     564</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 12.3447 12.4854 12.7213 13.0636 13.5436</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black  6.9601  7.4262  8.0693  8.3117  9.1327</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             346     512     426     570     564</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 12.0738 12.2962 12.3039 12.6941 13.1667</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              68      23      60      76     140</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white   4.427  5.0884  5.4632  7.8822  8.0988</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  4.2981  5.0464  5.4277  7.9396  8.2898</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.576 0.371   0.125       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.381 0.309   0.072       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.457 0.318   0.083       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black         0.58 0.374   0.126       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan        0.37 0.307   0.068       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white         0.46 0.318   0.083       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   182.71  62.98 247.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.   72.   299.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   182.1  63.43 246.89</span>
 <span class="r-in"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = race ~ age + educ + married + nodegree + re74, </span>
@@ -281,16 +281,16 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.1882</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1632</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0512</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0266</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.1124</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.1862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1703</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0533</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0305</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.1156</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.    72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   182.71  62.98 247.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.   72.   299.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   182.1  63.43 246.89</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span>
 <span class="r-in"><span class="co">#assuming t(3) conditional density for treatment</span></span>
@@ -309,23 +309,23 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0804 |---------------------------| 20.8712</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0789 |---------------------------| 18.9312</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         308   310    469    487     484</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 7.6693 7.933 9.1348 18.782 20.8712</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         486    310   469     484     487</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 7.1836 7.2476 8.366 17.3746 18.9312</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.145 0.476   0.277       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var  MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.087 0.47   0.266       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   265.97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   281.62</span>
 <span class="r-in"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = re75 ~ age + educ + married + nodegree + re74, </span>
@@ -333,16 +333,16 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0523</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary   0.0784</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0792</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.   0.1147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0321</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0549</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary   0.0820</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.   0.1211</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   265.97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   281.62</span>
 <span class="r-in"><span class="co"># }</span></span>
 </code></pre></div>
     </div>

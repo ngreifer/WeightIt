@@ -18,7 +18,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9000</span>
       </span>
     </div>
 
@@ -399,11 +399,11 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in">                                     <span class="op">~</span> <span class="va">tx1</span>,</span>
 <span class="r-in">                                     <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">tx1</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> tx1 ~ 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8241b967f8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8646c72070&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> tx2 ~ tx1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8241b967f8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8646c72070&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> tx3 ~ tx2 + tx1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8241b967f8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8646c72070&gt;</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">#Same as above but with fully saturated stabilization factors</span></span>
 <span class="r-in"><span class="co">#(i.e., making the last entry in 'num.formula' tx2*tx2)</span></span>
@@ -414,11 +414,11 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in">                  method <span class="op">=</span> <span class="st">"ps"</span>,</span>
 <span class="r-in">                  stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> tx1 ~ 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8234ac3318&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f863493b6e0&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> tx2 ~ tx1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8234ac3318&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f863493b6e0&gt;</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> tx3 ~ tx1 * tx2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8234ac3318&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f863493b6e0&gt;</span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
