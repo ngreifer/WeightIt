@@ -67,10 +67,10 @@ A vector of propensity scores or the name of a variable in \code{data} containin
 \code{character}; how missing data should be handled. The options and defaults depend on the \code{method} used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in \code{weightit()} and should probably be used instead. Consider the \CRANpkg{MatchThem} package for the use of \code{weightit()} with multiply imputed data.
 }
   \item{verbose}{
-whether to print additional information output by the fitting function.
+\code{logical}; whether to print additional information output by the fitting function.
 }
   \item{include.obj}{
-whether to include in the output any fit objects created in the process of estimating the weights. For example, with \code{method = "ps"}, the \code{glm} objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if \code{TRUE}.
+\code{logical}; whether to include in the output any fit objects created in the process of estimating the weights. For example, with \code{method = "ps"}, the \code{glm} objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if \code{TRUE}.
 }
   \item{...}{
 other arguments for functions called by \code{weightit()} that control aspects of fitting that are not covered by the above arguments. See Details.
