@@ -192,20 +192,27 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       t.lev <- get.treated.level(treat_sub)
       c.lev <- setdiff(levels(treat_sub), t.lev)
 
-
-
       ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
 
+      treat <- binarize(treat_sub, one = t.lev)
+
       if (missing == "saem") {
-        # check.package("misaem")
-        #
-        # newdata <- data.frame(binarize(treat_sub, one = t.lev), covs)
-        # fit <- misaem::miss.glm(formula(newdata), newdata)
-        #
-        # if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-        #
-        # ps[[t.lev]] <- p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
-        # ps[[c.lev]] <- 1 - ps[[t.lev]]
+        check.package("misaem")
+
+        data <- data.frame(treat, covs)
+
+        withCallingHandlers({
+          fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
+        },
+        warning = function(w) {
+          if (conditionMessage(w) != "one argument not used by format '%i '") warning(w)
+          invokeRestart("muffleWarning")
+        })
+
+        if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+
+        ps[[t.lev]] <- p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
+        ps[[c.lev]] <- 1 - ps[[t.lev]]
       }
       else {
         if (use.br) {
@@ -219,9 +226,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           family <- quasibinomial(link = A[["link"]])
         }
 
-        control <- A[names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)]]
-
-        treat <- binarize(treat_sub, one = t.lev)
+        control <- do.call(ctrl_fun, c(A[["control"]],
+                                       A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                                 names(A[["control"]]))]))
 
         start <- mustart <- NULL
 
@@ -237,25 +244,24 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
 
         withCallingHandlers({
           if (isTRUE(A[["quick"]])) {
-            fit <- do.call(glm_method, c(list(y = treat,
-                                              x = cbind(`(Intercept)` = 1, covs),
-                                              mustart = mustart,
-                                              start = start,
-                                              weights = s.weights,
-                                              family = family),
-                                         control), quote = TRUE)
+            fit <- do.call(glm_method, list(y = treat,
+                                            x = cbind(`(Intercept)` = 1, covs),
+                                            mustart = mustart,
+                                            start = start,
+                                            weights = s.weights,
+                                            family = family,
+                                            control = control), quote = TRUE)
           }
           else {
             data <- data.frame(treat, covs)
             formula <- formula(data)
-            fit <- do.call(stats::glm, c(list(formula, data = data,
-                                              weights = s.weights,
-                                              mustart = mustart,
-                                              start = start,
-                                              family = family,
-                                              method = glm_method),
-                                         control), quote = TRUE)
-
+            fit <- do.call(stats::glm, list(formula, data = data,
+                                            weights = s.weights,
+                                            mustart = mustart,
+                                            start = start,
+                                            family = family,
+                                            method = glm_method,
+                                            control = control), quote = TRUE)
           }
         },
         warning = function(w) {
@@ -276,15 +282,15 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       # message(paste("Using ordinal", A$link, "regression."))
       data <- data.frame(treat_sub, covs)
       formula <- formula(data)
-      # control <- A[names(A) %nin% c("link", names(formals(MASS::polr)))]
+
       tryCatch({fit <- do.call(MASS::polr,
-                               c(list(formula,
-                                      data = data,
-                                      weights = s.weights,
-                                      Hess = FALSE,
-                                      model = FALSE,
-                                      method = A[["link"]],
-                                      contrasts = NULL)), quote = TRUE)},
+                               list(formula,
+                                    data = data,
+                                    weights = s.weights,
+                                    Hess = FALSE,
+                                    model = FALSE,
+                                    method = A[["link"]],
+                                    contrasts = NULL), quote = TRUE)},
                error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment.",
                                                 "\n       Error message: ", conditionMessage(e)), call. = FALSE)})
 
@@ -297,11 +303,14 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         check.package("brglm2")
         data <- data.frame(treat_sub, covs)
         formula <- formula(data)
-        control <- A[names(formals(brglm2::brglmControl))[pmatch(names(A), names(formals(brglm2::brglmControl)), 0)]]
+        ctrl_fun <- brglm2::brglmControl
+        control <- do.call(ctrl_fun, c(A[["control"]],
+                                       A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                                 names(A[["control"]]))]))
         tryCatch({fit <- do.call(brglm2::brmultinom,
-                                 c(list(formula, data,
-                                        weights = s.weights),
-                                   control), quote = TRUE)},
+                                 list(formula, data,
+                                      weights = s.weights,
+                                      control = control), quote = TRUE)},
                  error = function(e) stop("There was a problem with the bias-reduced multinomial logit regression. Try a different link.", call. = FALSE))
 
         ps <- fit$fitted.values
@@ -326,18 +335,19 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
           }
           form <- reformulate(covnames, tname)
 
-          control <- do.call(ctrl_fun, c(A[["control"]], A[names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)]]))
-
+          control <- do.call(ctrl_fun, c(A[["control"]],
+                                         A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                                   names(A[["control"]]))]))
           tryCatch({
             fit <- do.call(mclogit::mblogit, list(form,
-                                    data = data,
-                                    weights = quote(.s.weights),
-                                    random = A[["random"]],
-                                    method = A[["mclogit.method"]],
-                                    estimator = if_null_then(A[["estimator"]], eval(formals(mclogit::mclogit)[["estimator"]])),
-                                    dispersion = if_null_then(A[["dispersion"]], eval(formals(mclogit::mclogit)[["dispersion"]])),
-                                    groups = A[["groups"]],
-                                    control = control))
+                                                  data = data,
+                                                  weights = quote(.s.weights),
+                                                  random = A[["random"]],
+                                                  method = A[["mclogit.method"]],
+                                                  estimator = if_null_then(A[["estimator"]], eval(formals(mclogit::mclogit)[["estimator"]])),
+                                                  dispersion = if_null_then(A[["dispersion"]], eval(formals(mclogit::mclogit)[["dispersion"]])),
+                                                  groups = A[["groups"]],
+                                                  control = control))
 
           },
           error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mblogit().\n       Try again with use.mclogit = FALSE.\nError message (from mclogit):\n       ", conditionMessage(e)), call. = FALSE)}
@@ -373,7 +383,10 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
         else {
           ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
 
-          control <- A[names(formals(stats::glm.control))[pmatch(names(A), names(formals(stats::glm.control)), 0)]]
+          ctrl_fun <- stats::glm.control
+          control <- do.call(ctrl_fun, c(A[["control"]],
+                                         A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                                   names(A[["control"]]))]))
           fit.list <- make_list(levels(treat_sub))
 
           for (i in levels(treat_sub)) {
@@ -385,10 +398,10 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
             }
             t_i <- as.numeric(treat_sub == i)
             data_i <- data.frame(t_i, covs)
-            fit.list[[i]] <- do.call(stats::glm, c(list(formula(data_i), data = data_i,
-                                                        family = quasibinomial(link = A$link),
-                                                        weights = s.weights),
-                                                   control), quote = TRUE)
+            fit.list[[i]] <- do.call(stats::glm, list(formula(data_i), data = data_i,
+                                                      family = quasibinomial(link = A$link),
+                                                      weights = s.weights,
+                                                      control = control), quote = TRUE)
             ps[[i]] <- fit.list[[i]]$fitted.values
           }
           if (isTRUE(A[["test2"]])) ps <- ps/rowSums(ps)
@@ -586,19 +599,19 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   if (is_null(ps)) {
 
     if (missing == "saem") {
-      # check.package("misaem")
-      #
-      # tryCatch({fit <- misaem::miss.lm(formula, data)},
-      #          error = function(e) {
-      #            if (trimws(conditionMessage(e)) == "object 'p' not found") {
-      #              stop("missing = \"saem\" cannot be used with continuous treatments due to a bug in the misaem package.", call. = FALSE)
-      #            }
-      #          })
-      #
-      # if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-      #
-      # gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
+      check.package("misaem")
 
+      withCallingHandlers({
+        fit <- misaem::miss.lm(formula, data, control = as.list(A[["control"]]))
+      },
+      warning = function(w) {
+        if (conditionMessage(w) != "one argument not used by format '%i '") warning(w)
+        invokeRestart("muffleWarning")
+      })
+
+      if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+
+      gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
     }
     else {
       if (is_null(A$link)) A$link <- "identity"
@@ -1573,7 +1586,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
     list(Z = setNames(opt.out$par, colnames(C)),
          w = w/(mean(w) * s.weights_t),
-                opt.out = opt.out)
+         opt.out = opt.out)
   }
 
   w <- rep(1, length(treat))
@@ -1639,7 +1652,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
   t.mat <- poly(treat, degree = d.moments)
 
   treat_sc <- mat_div(center(t.mat, at = cobalt::col_w_mean(t.mat, s.weights)),
-                     cobalt::col_w_sd(t.mat, s.weights))
+                      cobalt::col_w_sd(t.mat, s.weights))
   covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, s.weights)),
                      cobalt::col_w_sd(covs, s.weights))
 

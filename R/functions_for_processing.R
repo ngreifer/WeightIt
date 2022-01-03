@@ -372,7 +372,7 @@ process.MSM.method <- function(is.MSM.method, method) {
 process.missing <- function(missing, method, treat.type) {
   #Allowable estimands
   AE <- list(binary = list(ps = c("ind"
-                                  # , "saem"
+                                  , "saem"
   )
   , gbm = c("ind", "surr")
   , cbps = c("ind")
@@ -398,7 +398,7 @@ process.missing <- function(missing, method, treat.type) {
                      # , kbal = c("ind")
   ),
   continuous = list(ps = c("ind"
-                           # , "saem"
+                           , "saem"
   )
   , gbm = c("ind", "surr")
   , cbps = c("ind")
