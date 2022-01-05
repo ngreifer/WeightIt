@@ -40,7 +40,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9001</span>
       </span>
     </div>
 
@@ -79,7 +79,7 @@
       <h1 data-toc-skip>Using WeightIt to Estimate Balancing Weights</h1>
                         <h4 data-toc-skip class="author">Noah Greifer</h4>
             
-            <h4 data-toc-skip class="date">2022-01-03</h4>
+            <h4 data-toc-skip class="date">2022-01-05</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="hidden name"><code>WeightIt.Rmd</code></div>
@@ -91,7 +91,7 @@
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
-<p><code>WeightIt</code> contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see Austin (2011), Austin and Stuart (2015), Robins, Hernán, and Brumback (2000), or Thoemmes and Ong (2016).</p>
+<p><code>WeightIt</code> contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see <span class="citation">Austin (<a href="#ref-austinIntroductionPropensityScore2011" role="doc-biblioref">2011</a>)</span>, <span class="citation">Austin and Stuart (<a href="#ref-austinMovingBestPractice2015" role="doc-biblioref">2015</a>)</span>, <span class="citation">Robins, Hernán, and Brumback (<a href="#ref-robinsMarginalStructuralModels2000" role="doc-biblioref">2000</a>)</span>, or <span class="citation">Thoemmes and Ong (<a href="#ref-thoemmesPrimerInverseProbability2016" role="doc-biblioref">2016</a>)</span>.</p>
 <p>Typically, the analysis of an observation study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through all these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a definitive guide, but rather an introduction to the relevant issues.</p>
 </div>
 <div class="section level2">
@@ -114,7 +114,7 @@
 <pre><code><span class="co">##  cobalt (Version 4.3.1, Build Date: 2021-03-30 09:50:18 UTC)</span></code></pre>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,
-        data <span class="op">=</span> <span class="va">lalonde</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>, m.threshold <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span></code></pre></div>
+        data <span class="op">=</span> <span class="va">lalonde</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>, thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="co">##                Type Diff.Un      M.Threshold.Un</span>
 <span class="co">## age         Contin. -0.3094 Not Balanced, &gt;0.05</span>
@@ -184,7 +184,7 @@
 <span class="co">## Weighted     99.82     185</span></code></pre>
 <p>These weights have quite high variability, and yield an ESS of close to 100 in the control group. Let’s see if these weights managed to yield balance on our covariates.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W.out</span>, m.threshold <span class="op">=</span> <span class="fl">.05</span>, disp.v.ratio <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"v"</span><span class="op">)</span>, thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="text-decoration: underline;">Call</span></span>
 <span class="co">##  weightit(formula = treat ~ age + educ + race + married + nodegree + </span>
 <span class="co">##     re74 + re75, data = lalonde, method = "ps", estimand = "ATT")</span>
@@ -248,7 +248,7 @@
 <span class="co">## Weighted     98.46     185</span></code></pre>
 <p>The variability of the weights has not changed much, but let’s see if there are any gains in terms of balance:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W.out</span>, m.threshold <span class="op">=</span> <span class="fl">.05</span>, disp.v.ratio <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"v"</span><span class="op">)</span>, thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="text-decoration: underline;">Call</span></span>
 <span class="co">##  weightit(formula = treat ~ age + educ + race + married + nodegree + </span>
 <span class="co">##     re74 + re75, data = lalonde, method = "ebal", estimand = "ATT")</span>
@@ -287,7 +287,7 @@
 <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## (Intercept)       treat </span>
 <span class="co">##    5075.929    1273.215</span></code></pre>
-<p>Now let’s do some inference. Although some authors recommend using “robust” sandwich standard errors to adjust for the weights (Robins et al., 2000; Hainmueller, 2012), others believe these can misleading and recommend bootstrapping instead (e.g., Chan, Yam, &amp; Zhang, 2016). We’ll examine both approaches.</p>
+<p>Now let’s do some inference. Although some authors recommend using “robust” sandwich standard errors to adjust for the weights <span class="citation">(Robins, Hernán, and Brumback <a href="#ref-robinsMarginalStructuralModels2000" role="doc-biblioref">2000</a>; Hainmueller <a href="#ref-hainmuellerEntropyBalancingCausal2012" role="doc-biblioref">2012</a>)</span>, others believe these can misleading and recommend bootstrapping instead <span class="citation">(Reifeis and Hudgens <a href="#ref-reifeisVarianceTreatmentEffect2020" role="doc-biblioref">2020</a>; Chan, Yam, and Zhang <a href="#ref-chanGloballyEfficientNonparametric2016" role="doc-biblioref">2016</a>)</span>. We’ll examine both approaches.</p>
 <p><code><a href="https://rdrr.io/pkg/survey/man/svyglm.html" class="external-link">svyglm()</a></code> in the survey package produces robust standard errors, so we can use <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> to view the standard error of the effect estimate.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Robust standard errors and confidence intervals</span>
@@ -315,7 +315,7 @@
 <span class="co">## (Intercept) 3918.409 6233.449</span>
 <span class="co">## treat       -347.069 2893.498</span></code></pre>
 <p>Our confidence interval for <code>treat</code> contains 0, so there isn’t evidence that <code>treat</code> has an effect on <code>re78</code>.</p>
-<p>Next let’s use bootstrapping to estimate confidence intervals. We don’t need to use <code><a href="https://rdrr.io/pkg/survey/man/svyglm.html" class="external-link">svyglm()</a></code> and can simply use <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> to compute the effect estimates in each bootstrapped sample because we are not computing standard errors, and the treatment effect estimates will be the same.</p>
+<p>Next let’s use bootstrapping to estimate confidence intervals. We don’t need to use <code><a href="https://rdrr.io/pkg/survey/man/svyglm.html" class="external-link">svyglm()</a></code> and can simply use <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> (or <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code>) to compute the effect estimates in each bootstrapped sample because we are not computing standard errors, and the treatment effect estimates will be the same.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="co">#Bootstrapping</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"boot"</span><span class="op">)</span>
@@ -434,16 +434,16 @@
 <p><code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> indicates significant imbalance on most covariates at most time points, so we need to do some work to eliminate that imbalance in our weighted data set. We’ll use the <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> function to specify our weight models. The syntax is similar both to that of <code><a href="../reference/weightit.html">weightit()</a></code> for point treatments and to that of <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> for longitudinal treatments. We’ll use <code>method = "ps"</code> and <code>stabilize = TRUE</code> for stabilized propensity score weights estimated using logistic regression.</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">Wmsm.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tx1</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,
-             <span class="va">tx2</span> <span class="op">~</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,
-             <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span><span class="op">)</span>,
-        data <span class="op">=</span> <span class="va">iptwExWide</span>, method <span class="op">=</span> <span class="st">"ps"</span>,
-        stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+                             <span class="va">tx2</span> <span class="op">~</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,
+                             <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span><span class="op">)</span>,
+                        data <span class="op">=</span> <span class="va">iptwExWide</span>, method <span class="op">=</span> <span class="st">"ps"</span>,
+                        stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## tx1 ~ 1</span>
-<span class="co">## &lt;environment: 0x7fd2a211f0e8&gt;</span>
+<span class="co">## &lt;environment: 0x7fb3fa5de640&gt;</span>
 <span class="co">## tx2 ~ tx1</span>
-<span class="co">## &lt;environment: 0x7fd2a211f0e8&gt;</span>
+<span class="co">## &lt;environment: 0x7fb3fa5de640&gt;</span>
 <span class="co">## tx3 ~ tx1 * tx2</span>
-<span class="co">## &lt;environment: 0x7fd2a211f0e8&gt;</span></code></pre>
+<span class="co">## &lt;environment: 0x7fb3fa5de640&gt;</span></code></pre>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">Wmsm.out</span></code></pre></div>
 <pre><code><span class="co">## A <span style="font-style: italic;">weightitMSM</span> object</span>
@@ -559,7 +559,7 @@
 <span class="co">## Weighted     302.9  472.55</span></code></pre>
 <p>Displayed are summaries of how the weights perform at each time point with respect to variability. Next, we’ll examine how well they perform with respect to covariate balance.</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">Wmsm.out</span>, m.threshold <span class="op">=</span> <span class="fl">.05</span>, disp.ks <span class="op">=</span> <span class="cn">TRUE</span>, which.time <span class="op">=</span> <span class="va">.none</span><span class="op">)</span></code></pre></div>
+<code class="sourceCode R"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">Wmsm.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span>, thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span>, which.time <span class="op">=</span> <span class="va">.none</span><span class="op">)</span></code></pre></div>
 <pre><code><span class="co">## <span style="text-decoration: underline;">Call</span></span>
 <span class="co">##  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ </span>
 <span class="co">##     tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + </span>
@@ -611,7 +611,7 @@
 <span class="co">##  in svyglm(formula = outcome ~ tx1 * tx2 * tx3, design = d.w.msm)</span>
 <span class="co">## Working 2logLR =  7.689984 p= 0.10639 </span>
 <span class="co">## (scale factors:  1.3 1.1 0.96 0.65 );  denominator df= 992</span></code></pre>
-<p>Based on the non-significant p-value, we don’t have to assume specific treatment patterns yield different outcomes, but rather only that which treatments received or the number of treatments received are sufficient to explain variation in the outcome. Next we’ll narrow down these options by comparing the main effects fit to one that constrains the coefficients to be equal (implying that the cumulative number of treatments received is what matters), as Robins et al. (2000) describe.</p>
+<p>Based on the non-significant p-value, we don’t have to assume specific treatment patterns yield different outcomes, but rather only that which treatments received or the number of treatments received are sufficient to explain variation in the outcome. Next we’ll narrow down these options by comparing the main effects fit to one that constrains the coefficients to be equal (implying that the cumulative number of treatments received is what matters), as <span class="citation">Robins, Hernán, and Brumback (<a href="#ref-robinsMarginalStructuralModels2000" role="doc-biblioref">2000</a>)</span> describe.</p>
 <div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span class="va">cum.fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svyglm.html" class="external-link">svyglm</a></span><span class="op">(</span><span class="va">outcome</span> <span class="op">~</span> <span class="fu"><a href="https://rdrr.io/r/base/AsIs.html" class="external-link">I</a></span><span class="op">(</span><span class="va">tx1</span><span class="op">+</span><span class="va">tx2</span><span class="op">+</span><span class="va">tx3</span><span class="op">)</span>, design <span class="op">=</span> <span class="va">d.w.msm</span><span class="op">)</span>
 <span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">main.effects.fit</span>, <span class="va">cum.fit</span><span class="op">)</span></code></pre></div>
@@ -651,18 +651,37 @@
 <span class="co">## (Intercept)         0.02452672  0.23691596</span>
 <span class="co">## I(tx1 + tx2 + tx3) -0.20520895 -0.09792381</span></code></pre>
 <p>For each additional treatment received, the outcome is expected to decrease by 0.15 points. The confidence interval excludes 0, so there is evidence of a treatment effect in the population.</p>
-<p>There is more we can do, as well. We could have fit different types of models to estimate the weights, and we could have stabilized the weights with <code>stabilize = TRUE</code> or by including stabilization factors in our weights using <code>num.formula</code> (see Cole &amp; Hernán, 2008, for more details on doing so). There are other ways of computing confidence intervals for our effect estimates (although model comparison is the most straightforward with the method we used).</p>
+<p>There is more we can do, as well. We could have fit different types of models to estimate the weights, and we could have stabilized the weights with <code>stabilize = TRUE</code> or by including stabilization factors in our weights using <code>num.formula</code> (see <span class="citation">Cole and Hernán (<a href="#ref-coleConstructingInverseProbability2008" role="doc-biblioref">2008</a>)</span> for more details on doing so). There are other ways of computing confidence intervals for our effect estimates (although model comparison is the most straightforward with the method we used).</p>
 </div>
-<div class="section level2">
+<div class="section level2 unnumbered">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<p>Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. Multivariate Behavioral Research, 46(3), 399–424.</p>
-<p>Austin, P. C., &amp; Stuart, E. A. (2015). Moving towards best practice when using inverse probability of treatment weighting (IPTW) using the propensity score to estimate causal treatment effects in observational studies. Statistics in Medicine, 34(28), 3661–3679.</p>
-<p>Chan, K. C. G., Yam, S. C. P., &amp; Zhang, Z. (2016). Globally efficient non-parametric inference of average treatment effects by empirical balancing calibration weighting. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 78(3), 673–700.</p>
-<p>Cole, S. R., &amp; Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664.</p>
-<p>Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25–46.</p>
-<p>Robins, J. M., Hernán, M. Á., &amp; Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. Epidemiology, 11(5), 550–560.</p>
-<p>Thoemmes, F., &amp; Ong, A. D. (2016). A Primer on Inverse Probability of Treatment Weighting and Marginal Structural Models. Emerging Adulthood, 4(1), 40–59.</p>
+<div id="refs" class="references">
+<div id="ref-austinIntroductionPropensityScore2011">
+<p>Austin, Peter C. 2011. “An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies.” <em>Multivariate Behavioral Research</em> 46 (3): 399–424. <a href="https://doi.org/10.1080/00273171.2011.568786" class="external-link">https://doi.org/10.1080/00273171.2011.568786</a>.</p>
+</div>
+<div id="ref-austinMovingBestPractice2015">
+<p>Austin, Peter C., and Elizabeth A. Stuart. 2015. “Moving Towards Best Practice When Using Inverse Probability of Treatment Weighting (IPTW) Using the Propensity Score to Estimate Causal Treatment Effects in Observational Studies.” <em>Statistics in Medicine</em> 34 (28): 3661–79. <a href="https://doi.org/10.1002/sim.6607" class="external-link">https://doi.org/10.1002/sim.6607</a>.</p>
+</div>
+<div id="ref-chanGloballyEfficientNonparametric2016">
+<p>Chan, Kwun Chuen Gary, Sheung Chi Phillip Yam, and Zheng Zhang. 2016. “Globally Efficient Non-Parametric Inference of Average Treatment Effects by Empirical Balancing Calibration Weighting.” <em>Journal of the Royal Statistical Society: Series B (Statistical Methodology)</em> 78 (3): 673–700. <a href="https://doi.org/10.1111/rssb.12129" class="external-link">https://doi.org/10.1111/rssb.12129</a>.</p>
+</div>
+<div id="ref-coleConstructingInverseProbability2008">
+<p>Cole, Stephen R., and Miguel A Hernán. 2008. “Constructing Inverse Probability Weights for Marginal Structural Models.” <em>American Journal of Epidemiology</em> 168 (6): 656–64. <a href="https://doi.org/10.1093/aje/kwn164" class="external-link">https://doi.org/10.1093/aje/kwn164</a>.</p>
+</div>
+<div id="ref-hainmuellerEntropyBalancingCausal2012">
+<p>Hainmueller, J. 2012. “Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies.” <em>Political Analysis</em> 20 (1): 25–46. <a href="https://doi.org/10.1093/pan/mpr025" class="external-link">https://doi.org/10.1093/pan/mpr025</a>.</p>
+</div>
+<div id="ref-reifeisVarianceTreatmentEffect2020">
+<p>Reifeis, Sarah A., and Michael G. Hudgens. 2020. “On Variance of the Treatment Effect in the Treated Using Inverse Probability Weighting.” <em>arXiv:2011.11874 [Stat]</em>, November. <a href="http://arxiv.org/abs/2011.11874" class="external-link">http://arxiv.org/abs/2011.11874</a>.</p>
+</div>
+<div id="ref-robinsMarginalStructuralModels2000">
+<p>Robins, James M., Miguel Ángel Hernán, and Babette Brumback. 2000. “Marginal Structural Models and Causal Inference in Epidemiology.” <em>Epidemiology</em> 11 (5): 550–60. <a href="https://doi.org/10.2307/3703997" class="external-link">https://doi.org/10.2307/3703997</a>.</p>
+</div>
+<div id="ref-thoemmesPrimerInverseProbability2016">
+<p>Thoemmes, Felix J., and Anthony D. Ong. 2016. “A Primer on Inverse Probability of Treatment Weighting and Marginal Structural Models.” <em>Emerging Adulthood</em> 4 (1): 40–59. <a href="https://doi.org/10.1177/2167696815621645" class="external-link">https://doi.org/10.1177/2167696815621645</a>.</p>
+</div>
+</div>
 </div>
   </div>
 
