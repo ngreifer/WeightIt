@@ -1,7 +1,9 @@
 #Test
-for (i in dir("R/")) source(paste0("R/", i))
-library(ggplot2); library(crayon)
-stop("Done sourcing.", call. = FALSE)
+# for (i in dir("R/")) source(paste0("R/", i))
+# library(ggplot2); library(crayon)
+# stop("Done sourcing.", call. = FALSE)
+
+devtools::load_all(".")
 
 #Tests things quickly
 library("cobalt")

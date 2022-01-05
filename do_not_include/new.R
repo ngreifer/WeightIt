@@ -711,7 +711,7 @@ weightit2kbal <- function(covs, treat, s.weights, subset, estimand, focal, ...) 
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat)[subset]
+  treat <- factor(treat[subset])
 
   covs <- apply(covs, 2, make.closer.to.1)
 

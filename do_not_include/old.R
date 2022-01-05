@@ -40,7 +40,7 @@ weightit2sbw <- function(covs, treat, s.weights, subset, estimand, focal, moment
     }
 
     covs <- covs[subset, , drop = FALSE]
-    treat <- factor(treat)[subset]
+    treat <- factor(treat[subset])
 
     if (anyNA(covs)) {
       stop("Stable balancing weights are not compatible with missing values.", call. = FALSE)
