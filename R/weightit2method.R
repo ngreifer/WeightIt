@@ -138,6 +138,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     covs <- covs[subset, , drop = FALSE]
     treat_sub <- factor(treat[subset])
     s.weights <- s.weights[subset]
+
     bin.treat <- is_binary(treat_sub)
     ord.treat <- is.ordered(treat_sub)
 
@@ -161,15 +162,16 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
     }
 
-    if (is_null(A$link)) A$link <- "logit"
-    else {
-      if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit")
-      else if (bin.treat || isFALSE(A$use.mlogit)) {
-        if (missing == "saem") acceptable.links <- "logit"
-        else acceptable.links <- expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
-      }
-      else acceptable.links <- c("logit", "probit", "bayes.probit", "br.logit")
+    #Process link
+    if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit")
+    else if (bin.treat || isFALSE(A$use.mlogit)) {
+      if (missing == "saem") acceptable.links <- "logit"
+      else acceptable.links <- expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
+    }
+    else acceptable.links <- c("logit", "probit", "bayes.probit", "br.logit")
 
+    if (is_null(A$link)) A$link <- acceptable.links[1]
+    else {
       which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
         A$link <- acceptable.links[1]
@@ -2286,8 +2288,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   diagn <- diag(n)
 
   min.w <- if_null_then(A[["min.w"]], 1e-8)
-  if (!is.numeric(min.w) || length(min.w) != 1 || min.w < 0) {
-    warning("'min.w' must be a nonnegative number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
+  if (!is.numeric(min.w) || length(min.w) != 1) {
+    warning("'min.w' must be a single number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
     min.w <- 1e-8
   }
 

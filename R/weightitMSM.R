@@ -237,7 +237,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
         A_i[["method"]] <- "ps"
         A_i[["moments"]] <- numeric()
         A_i[["int"]] <- FALSE
-print(stab.f)
+
         sw_obj <- do.call("weightit.fit", A_i)
 
         sw.list[[i]] <- 1/sw_obj[["weights"]]
@@ -365,9 +365,9 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   for (ti in seq_along(object$treat.list)) {
     out <- make_list(outnames)
     if (treat.types[ti] == "continuous") {
-      out$weight.range <- list(all = c(min(w[w > 0]),
-                                       max(w[w > 0])))
-      out$weight.top <- list(all = rev(sort(w, decreasing = TRUE)[seq_len(top)]))
+      out$weight.range <- list(all = c(min(w[w != 0]),
+                                       max(w[w != 0])))
+      out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
       out$coef.of.var <- c(all = sd(w)/mean_fast(w))
       out$scaled.mad <- c(all = mean.abs.dev(w/mean_fast(w)))
       out$negative.entropy <- c(all = neg_ent(w))
@@ -387,12 +387,12 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       t <- object$treat.list[[ti]]
       top0 <- c(treated = min(top, sum(t == 1)),
                 control = min(top, sum(t == 0)))
-      out$weight.range <- list(treated = c(min(w[w > 0 & t == 1]),
-                                           max(w[w > 0 & t == 1])),
-                               control = c(min(w[w > 0 & t == 0]),
-                                           max(w[w > 0 & t == 0])))
-      out$weight.top <- list(treated = rev(sort(w[t == 1], decreasing = TRUE)[seq_len(top0["treated"])]),
-                             control = rev(sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])]))
+      out$weight.range <- list(treated = c(min(w[w != 0 & t == 1]),
+                                           max(w[w != 0 & t == 1])),
+                               control = c(min(w[w != 0 & t == 0]),
+                                           max(w[w != 0 & t == 0])))
+      out$weight.top <- list(treated = rev(w[t == 1][order(abs(w[t == 1]), decreasing = TRUE)][seq_len(top0["treated"])]),
+                             control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
       out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
                            control = sd(w[t==0])/mean_fast(w[t==0]))
       out$scaled.mad <- c(treated = mean.abs.dev(w[t==1]/mean_fast(w[t==1])),
@@ -416,10 +416,10 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
     else if (treat.types[ti] == "multinomial") {
       t <- object$treat.list[[ti]]
       top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
-      out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
-                                                                   max(w[w > 0 & t == x]))),
+      out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w != 0 & t == x]),
+                                                                   max(w[w != 0 & t == x]))),
                                    levels(t))
-      out$weight.top <- setNames(lapply(levels(t), function(x) rev(sort(w[t == x], decreasing = TRUE)[seq_len(top0[[x]])])),
+      out$weight.top <- setNames(lapply(levels(t), function(x) rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])),
                                  levels(t))
       out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
                            overall = sd(w)/mean_fast(w))
@@ -481,7 +481,7 @@ print.summary.weightitMSM <- function(x, ...) {
   cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
   for (ti in seq_along(x)) {
     if (!only.one) cat(strikethrough(paste(rep(" ", 22), collapse = "")) %+% italic(" Time " %+% ti %+% " ") %+% strikethrough(paste(rep(" ", 22), collapse = "")) %+% "\n")
-    print(x[[ti]])
+
     cat("\n")
     if (only.one) break
   }
