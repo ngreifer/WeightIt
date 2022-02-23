@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9002</span>
       </span>
     </div>
 
@@ -56,8 +56,9 @@
 <li><p>Fixed a bug where the <code>info</code> component would not be included in the output of <code><a href="../reference/weightit.html">weightit()</a></code> when using <code>method = "super"</code>.</p></li>
 <li><p>Added the ability to specify <code>num.formula</code> as a list of formulas in <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>. This is primarily to get around the fact that when <code>stabilize = TRUE</code>, a fully saturated model with all treatments is used to compute the stabilization factor, which, for many time points, is time-consuming and may be impossible (especially if not all treatment combinations are observed). Thanks to <a href="https://github.com/maellecoursonnais" class="external-link">@maellecoursonnais</a> for bringing up this issue (<a href="https://github.com/ngreifer/WeightIt/issues/27" class="external-link">#27</a>).</p></li>
 <li><p><code>ps.cont()</code> has been retired since the same functionality is available using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code> and in the <code>twangContinuous</code> package.</p></li>
-<li><p>With <code>method = "energy"</code>, the distance matrix used by default is now the Mahalanobis distance matrix rather than the Euclidean distance with scale variables. This makes it so the weights are invariant to how factors are coded or how many (near) copies of a variable are present among the covariates. To recover old behavior, manually supply a distance matrix of the scaled Euclidean distance using the <code>dist.mat</code> argument.</p></li>
 <li><p>With <code>method = "energy"</code>, a new argument, <code>lambda</code>, can be supplied, which puts a penalty on the square of the weights to control the effective sample size. Typically this is not needed but can help when the balancing is too aggressive.</p></li>
+<li><p>With <code>method = "energy"</code>, <code>min.w</code> can now be negative, allowing for negative weights.</p></li>
+<li><p>Support for negative weights added to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>. Negative weights are possible (not by default) when using <code>method = "energy"</code> or <code>method = "optweight"</code>.</p></li>
 <li><p>Fixed a bug where <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> would fail to converge with <code>method = "ps"</code> for binary treatments due to bad starting values. (<a href="https://github.com/ngreifer/WeightIt/issues/31" class="external-link">#31</a>)</p></li>
 <li><p><code>miss = "saem"</code> can once again be used with <code>method = "ps"</code> when missing values are present in the covariates.</p></li>
 <li><p>Fixed bugs with processing input formulas.</p></li>
@@ -236,7 +237,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer></div>

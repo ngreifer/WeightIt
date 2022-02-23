@@ -49,7 +49,7 @@ First, for each variable with missingness, a new missingness indicator variable 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9002</span>
       </span>
     </div>
 
@@ -153,8 +153,8 @@ First, for each variable with missingness, a new missingness indicator variable 
 <p>Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25–46. doi: <a href="https://doi.org/10.1093/pan/mpr025" class="external-link">10.1093/pan/mpr025</a></p>
 <p>Zhao, Q., &amp; Percival, D. (2017). Entropy balancing is doubly robust. Journal of Causal Inference, 5(1). doi: <a href="https://doi.org/10.1515/jci-2016-0010" class="external-link">10.1515/jci-2016-0010</a></p>
 <p><strong>Continuous Treatments</strong></p>
-<p>Tübbicke, S. (2020). Entropy Balancing for Continuous Treatments. ArXiv:2001.06281 [Econ, Stat]. <a href="https://arxiv.org/abs/2001.06281" class="external-link">https://arxiv.org/abs/2001.06281</a></p>
-<p>Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., &amp; McCaffrey, D. F. (2020). Nonparametric Estimation of Population Average Dose-Response Curves using Entropy Balancing Weights for Continuous Exposures. ArXiv:2003.02938 [Stat]. <a href="https://arxiv.org/abs/2003.02938" class="external-link">https://arxiv.org/abs/2003.02938</a></p>
+<p>Tübbicke, S. (2022). Entropy Balancing for Continuous Treatments. Journal of Econometric Methods, 11(1), 71–89. doi: <a href="https://doi.org/10.1515/jem-2021-0002" class="external-link">10.1515/jem-2021-0002</a></p>
+<p>Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., Robbins, M. W., &amp; McCaffrey, D. F. (2021). Nonparametric estimation of population average dose-response curves using entropy balancing weights for continuous exposures. Health Services and Outcomes Research Methodology, 21(1), 69–110. doi: <a href="https://doi.org/10.1007/s10742-020-00236-2" class="external-link">10.1007/s10742-020-00236-2</a></p>
     </div>
     <div id="see-also">
     <h2>See also</h2>
@@ -186,7 +186,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000       ||                      1.0000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0398 |---------------------------| 5.2466</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
@@ -243,7 +243,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.1409 |----------------|            3.3322</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white  0.3979  |-------|                    1.9224</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            226    244    485    181    182</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.5215 2.5491 2.8059 3.5551 5.3496</span>
@@ -303,7 +303,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0001 |---------------------------| 17.6633</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         484    200    166     171     180</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  all 6.7551 7.6026 8.5179 10.2507 17.6633</span>
@@ -350,7 +350,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer></div>

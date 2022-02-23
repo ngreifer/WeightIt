@@ -18,7 +18,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9002</span>
       </span>
     </div>
 
@@ -159,7 +159,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"twang"</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># library("cobalt")</span></span>
+<span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"iptwExWide"</span>, package <span class="op">=</span> <span class="st">"twang"</span><span class="op">)</span></span>
 <span class="r-in"><span class="op">(</span><span class="va">W1</span> <span class="op">&lt;-</span> <span class="fu">weightitMSM</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tx1</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span>
@@ -184,90 +184,41 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 1 </span><span style="text-decoration: line-through;">                      </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |---|                         15.5292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |---------------------------| 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              477     442     307     409     906</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 13.4464 13.6233 13.7059  14.436 15.5292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              206     282     641     547     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 44.8027 46.1355 58.4164 79.8919 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.481 0.376   0.117       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.768 0.494   0.222       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  294.     706. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    185.18   573.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 2 </span><span style="text-decoration: line-through;">                      </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |---------------------------| 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |--------------------------|  79.8919</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               34     561     553     641     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  33.371 34.7405 42.9442 58.4164 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              109      95     206     282     547</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 39.7862 42.2256 44.8027 46.1355 79.8919</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.960 0.653   0.336       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.737 0.384   0.159       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   492.   508.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     318.9  264.49</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 3 </span><span style="text-decoration: line-through;">                      </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-in"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     use1 + age + gender + use0), data = iptwExWide, method = "ps")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |-------------|               44.8027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |---------------------------| 82.2349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all time points</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              Times     Type Max.Diff.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score 1, 2, 3 Distance       0.0251</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age        1, 2, 3  Contin.       0.0703</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> gender     1, 2, 3   Binary       0.0263</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> use0       1, 2, 3  Contin.       0.0558</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> tx1           2, 3   Binary       0.0171</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> use1          2, 3  Contin.       0.0316</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> tx2              3   Binary       0.0085</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> use2             3  Contin.       0.0315</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              936     650     763     109     206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  26.003  26.471 28.0582 39.7862 44.8027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              553     282     641     547     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 42.9442 46.1355 58.4164 79.8919 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.773 0.565   0.245       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.873 0.469   0.227       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 1</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  415.     585. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    235.67   366.4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span class="co"># bal.tab(W1)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  294.     706. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    185.18   573.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted   492.   508.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted     318.9  264.49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 3</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  415.     585. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    235.67   366.4</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">##Going from long to wide data</span></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"iptwExLong"</span>, package <span class="op">=</span> <span class="st">"twang"</span><span class="op">)</span></span>
@@ -301,88 +252,10 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 1 </span><span style="text-decoration: line-through;">                      </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |---|                         15.5292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |---------------------------| 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              477     442     307     409     906</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 13.4464 13.6233 13.7059  14.436 15.5292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              206     282     641     547     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 44.8027 46.1355 58.4164 79.8919 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.481 0.376   0.117       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.768 0.494   0.222       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  294.     706. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    185.18   573.6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 2 </span><span style="text-decoration: line-through;">                      </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |---------------------------| 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |--------------------------|  79.8919</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               34     561     553     641     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  33.371 34.7405 42.9442 58.4164 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              109      95     206     282     547</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 39.7862 42.2256 44.8027 46.1355 79.8919</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.960 0.653   0.336       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.737 0.384   0.159       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   492.   508.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     318.9  264.49</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 3 </span><span style="text-decoration: line-through;">                      </span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |-------------|               44.8027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |---------------------------| 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              936     650     763     109     206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  26.003  26.471 28.0582 39.7862 44.8027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              553     282     641     547     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 42.9442 46.1355 58.4164 79.8919 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.773 0.565   0.245       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.873 0.469   0.227       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  415.     585. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    235.67   366.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"></span>
 <span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="va">W1</span><span class="op">$</span><span class="va">weights</span>, <span class="va">W2</span><span class="op">$</span><span class="va">weights</span><span class="op">)</span></span>
@@ -398,12 +271,6 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in">                  num.formula <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span>,</span>
 <span class="r-in">                                     <span class="op">~</span> <span class="va">tx1</span>,</span>
 <span class="r-in">                                     <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">tx1</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx1 ~ 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8a85cd41f8&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx2 ~ tx1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8a85cd41f8&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx3 ~ tx2 + tx1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8a85cd41f8&gt;</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">#Same as above but with fully saturated stabilization factors</span></span>
 <span class="r-in"><span class="co">#(i.e., making the last entry in 'num.formula' tx2*tx2)</span></span>
@@ -413,12 +280,6 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in">                  data <span class="op">=</span> <span class="va">iptwExWide</span>,</span>
 <span class="r-in">                  method <span class="op">=</span> <span class="st">"ps"</span>,</span>
 <span class="r-in">                  stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx1 ~ 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8a6fd3e808&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx2 ~ tx1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8a6fd3e808&gt;</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx3 ~ tx1 * tx2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x7f8a6fd3e808&gt;</span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
@@ -434,7 +295,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer></div>

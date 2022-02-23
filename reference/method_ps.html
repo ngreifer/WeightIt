@@ -52,7 +52,7 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9002</span>
       </span>
     </div>
 
@@ -218,7 +218,7 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 <span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                 ||            1.0000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0176 |---------------------------| 1.8338</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>               5     4     3     2      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1     1     1     1      1</span>
@@ -258,7 +258,8 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 <span class="r-in"><span class="co">#Balancing covariates with respect to race (multinomial)</span></span>
 <span class="r-in"><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span>
 <span class="r-in">                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span>
-<span class="r-in">                method <span class="op">=</span> <span class="st">"ps"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in">                method <span class="op">=</span> <span class="st">"ps"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span>,</span>
+<span class="r-in">                use.mlogit <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit</span> object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "ps" (propensity score weighting)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
@@ -272,48 +273,48 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.4528 |---------------------------| 30.8071</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.7990  |---------------------|      25.9532</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.1123 |-|                            3.9770</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.4486 |---------------------------| 29.1514</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.8148  |------------------------|   26.9274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.1180 |-|                            4.1126</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             226     231    485     181     182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black   7.532  7.6243 8.5246 12.3509 30.8071</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             392     564    345     269     371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 15.9922 16.7517 18.784 23.4106 25.9532</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             432     589    437     404     599</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white   3.686  3.6864  3.712  3.7842   3.977</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             226     231     485     181     182</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black  7.6815  7.8028   8.566 12.2152 29.1514</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             346     392     345     269     371</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 17.5087 18.3157 18.4663 21.5593 26.9274</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             432      68     404     599     531</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  3.8059  3.8309  3.8835  4.0487  4.1126</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.890 0.426   0.192       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.541 0.404   0.132       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.382 0.317   0.068       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.861 0.426   0.188       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.546 0.407   0.134       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.385 0.313   0.069       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.   72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   135.8  55.86 261.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   139.74  55.66 260.44</span>
 <span class="r-in"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = race ~ age + educ + married + nodegree + re74, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     data = lalonde, method = "ps", estimand = "ATE")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     data = lalonde, method = "ps", estimand = "ATE", use.mlogit = FALSE)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0419</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1276</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0605</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.2023</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0374</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1187</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0540</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0510</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.1682</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.   72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   135.8  55.86 261.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.    72.   299.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   139.74  55.66 260.44</span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span>
 <span class="r-in"><span class="op">(</span><span class="va">W3</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span>
@@ -333,7 +334,7 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Min                                   Max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> all 0.088 |---------------------------| 83.1017</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 greatest weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         482     481    484     483     485</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  all 56.933 56.9865 70.237 77.1173 83.1017</span>
@@ -379,7 +380,7 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.2.</p>
 </div>
 
       </footer></div>
