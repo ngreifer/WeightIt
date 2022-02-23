@@ -147,7 +147,8 @@ bal.tab(W1)
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATE"))
+                method = "ps", estimand = "ATE",
+                use.mlogit = FALSE))
 summary(W2)
 bal.tab(W2)
 

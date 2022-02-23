@@ -81,8 +81,7 @@ Huling, J. D., & Mak, S. (2020). Energy Balancing of Covariate Distributions. Ar
 \fun{weightit}, \fun{weightitMSM}
 }
 
-\examples{
-
+\examples{\dontshow{if (requireNamespace("osqp", quietly = TRUE)) force(\{ # examplesIf}
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -103,8 +102,7 @@ bal.tab(W1)
 summary(W2)
 bal.tab(W2)
 }
-
-}
+\dontshow{\}) # examplesIf}}
 
 %#Balancing covariates with respect to re75 (continuous)
 %(W3 <- weightit(re75 ~ age + educ + married +

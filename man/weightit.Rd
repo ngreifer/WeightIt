@@ -141,11 +141,11 @@ bal.tab(W1)
                 method = "ebal", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
-
+\dontshow{if (requireNamespace("CBPS", quietly = TRUE)) force(\{ # examplesIf}
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "cbps", over = FALSE))
 summary(W3)
 bal.tab(W3)
-}
+\dontshow{\}) # examplesIf}}

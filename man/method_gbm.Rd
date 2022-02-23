@@ -131,8 +131,7 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 
 \pkgfun2{gbm}{gbm.fit}{gbm::gbm.fit} for the fitting function
 }
-\examples{
-
+\examples{\dontshow{if (requireNamespace("gbm", quietly = TRUE)) force(\{ # examplesIf}
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -198,4 +197,4 @@ W5$info$best.tune #Best values of tuned parameters
 
 bal.tab(W5, stats = "k")
 }
-}
+\dontshow{\}) # examplesIf}}

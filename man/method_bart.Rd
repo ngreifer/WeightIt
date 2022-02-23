@@ -84,7 +84,7 @@ See \code{\link{method_ps}} for additional references on propensity score weight
 
 \code{\link{method_super}} for stacking predictions from several machine learning methods, including BART.
 }
-\examples{
+\examples{\dontshow{if (requireNamespace("dbarts", quietly = TRUE)) force(\{ # examplesIf}
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -109,5 +109,6 @@ bal.tab(W2)
                 method = "bart", density = "dt_3"))
 summary(W3)
 bal.tab(W3)
-}}
+}
+\dontshow{\}) # examplesIf}}
 

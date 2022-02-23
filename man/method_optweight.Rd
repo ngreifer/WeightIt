@@ -90,7 +90,7 @@ Greifer, N. (2020). Estimating Balancing Weights for Continuous Treatments Using
 
 \pkgfun2{optweight}{optweight}{optweight::optweight} for the fitting function
 }
-\examples{
+\examples{\dontshow{if (all(sapply(c("optweight", "osqp"), requireNamespace, quietly = TRUE))) force(\{ # examplesIf}
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -116,4 +116,4 @@ bal.tab(W2)
                 method = "optweight", tols = .05))
 summary(W3)
 bal.tab(W3)
-}
+\dontshow{\}) # examplesIf}}

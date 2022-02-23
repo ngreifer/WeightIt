@@ -110,9 +110,9 @@ Noah Greifer
 Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 }
 
-\examples{
+\examples{\dontshow{if (requireNamespace("twang", quietly = TRUE)) force(\{ # examplesIf}
 library("twang")
-# library("cobalt")
+library("cobalt")
 
 data("iptwExWide", package = "twang")
 (W1 <- weightitMSM(list(tx1 ~ age + gender + use0,
@@ -121,7 +121,7 @@ data("iptwExWide", package = "twang")
                  data = iptwExWide,
                  method = "ps"))
 summary(W1)
-# bal.tab(W1)
+bal.tab(W1)
 
 ##Going from long to wide data
 data("iptwExLong", package = "twang")
@@ -162,4 +162,4 @@ W4 <- weightitMSM(list(tx1 ~ age + gender + use0,
                   method = "ps",
                   stabilize = TRUE)
 
-}
+\dontshow{\}) # examplesIf}}

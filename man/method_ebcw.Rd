@@ -56,7 +56,7 @@ Chan, K. C. G., Yam, S. C. P., & Zhang, Z. (2016). Globally efficient non-parame
 \fun{weightit}
 }
 
-\examples{
+\examples{\dontshow{if (requireNamespace("ATE", quietly = TRUE)) force(\{ # examplesIf}
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -73,5 +73,4 @@ bal.tab(W1)
                 method = "ebcw", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
-
-}
+\dontshow{\}) # examplesIf}}

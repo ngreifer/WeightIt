@@ -111,7 +111,7 @@ See \code{\link{method_ps}} for additional references.
 \note{
 Some methods formerly available in \pkg{SuperLearner} are now in \pkg{SuperLearnerExtra}, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
 }
-\examples{
+\examples{\dontshow{if (all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))) force(\{ # examplesIf}
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -155,4 +155,4 @@ bal.tab(W3)
                 stop.method = "ks.mean"))
 summary(W4)
 bal.tab(W4)
-}
+\dontshow{\}) # examplesIf}}

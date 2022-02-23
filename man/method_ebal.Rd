@@ -71,9 +71,9 @@ Zhao, Q., & Percival, D. (2017). Entropy balancing is doubly robust. Journal of 
 
 \strong{Continuous Treatments}
 
-Tübbicke, S. (2020). Entropy Balancing for Continuous Treatments. ArXiv:2001.06281 [Econ, Stat]. \url{https://arxiv.org/abs/2001.06281}
+Tübbicke, S. (2022). Entropy Balancing for Continuous Treatments. Journal of Econometric Methods, 11(1), 71–89. \doi{10.1515/jem-2021-0002}
 
-Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., & McCaffrey, D. F. (2020). Nonparametric Estimation of Population Average Dose-Response Curves using Entropy Balancing Weights for Continuous Exposures. ArXiv:2003.02938 [Stat]. \url{https://arxiv.org/abs/2003.02938}
+Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., Robbins, M. W., & McCaffrey, D. F. (2021). Nonparametric estimation of population average dose-response curves using entropy balancing weights for continuous exposures. Health Services and Outcomes Research Methodology, 21(1), 69–110. \doi{10.1007/s10742-020-00236-2}
 
 }
 \seealso{

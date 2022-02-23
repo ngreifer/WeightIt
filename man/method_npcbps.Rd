@@ -59,7 +59,7 @@ Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score f
 \pkgfun2{CBPS}{npCBPS}{CBPS::npCBPS} for the fitting function
 }
 
-\examples{
+\examples{\dontshow{if (requireNamespace("CBPS", quietly = TRUE)) force(\{ # examplesIf}
 # Examples take a long time to run
 \dontrun{
 library("cobalt")
@@ -79,4 +79,4 @@ bal.tab(W1)
 summary(W2)
 bal.tab(W2)
 }
-}
+\dontshow{\}) # examplesIf}}

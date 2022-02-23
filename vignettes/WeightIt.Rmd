@@ -49,7 +49,7 @@ First, we'll start simple, and use inverse probability weights from propensity s
 ```{r}
 library("WeightIt")
 W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
-        data = lalonde, estimand = "ATT", method = "ps")
+                  data = lalonde, estimand = "ATT", method = "ps")
 W.out #print the output
 ```
 
@@ -65,11 +65,11 @@ These weights have quite high variability, and yield an ESS of close to 100 in t
 bal.tab(W.out, stats = c("m", "v"), thresholds = c(m = .05))
 ```
 
-For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing, which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.
+For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing [@hainmuellerEntropyBalancingCausal2012], which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.
 
 ```{r}
 W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
-        data = lalonde, estimand = "ATT", method = "ebal")
+                  data = lalonde, estimand = "ATT", method = "ebal")
 summary(W.out)
 ```
 
@@ -83,6 +83,9 @@ Indeed, we have achieved perfect balance on the means of the covariates. However
 
 Now that we have our weights stored in `W.out`, let's extract them and estimate our treatment effect.
 
+```{r, include=FALSE}
+knitr::opts_chunk$set(eval = requireNamespace("survey", quietly = TRUE))
+```
 ```{r, message=FALSE}
 library(survey)
 d.w <- svydesign(~1, weights = W.out$weights, data = lalonde)
@@ -103,13 +106,15 @@ confint(fit)
 Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`.
 
 Next let's use bootstrapping to estimate confidence intervals. We don't need to use `svyglm()` and can simply use `glm()` (or `lm()`) to compute the effect estimates in each bootstrapped sample because we are not computing standard errors, and the treatment effect estimates will be the same.
-
+```{r, include=FALSE, eval=TRUE}
+knitr::opts_chunk$set(eval = requireNamespace("boot", quietly = TRUE))
+```
 ```{r, warning=FALSE, message=FALSE}
 #Bootstrapping
 library("boot")
 est.fun <- function(data, index) {
   W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
-        data = data[index,], estimand = "ATT", method = "ebal")
+                    data = data[index,], estimand = "ATT", method = "ebal")
   fit <- glm(re78 ~ treat, data = data[index,], weights = W.out$weights)
   return(coef(fit)["treat"])
 }
@@ -122,7 +127,9 @@ In this case, our confidence intervals were similar. Bootstrapping can take some
 If we wanted to produce a "doubly-robust" treatment effect estimate, we could add baseline covariates to the `glm()` (or `svyglm()`) model (in both the original effect estimation and the confidence interval estimation).
 
 ## Estimating the Effect of a Longitudinal Treatment
-
+```{r, include=FALSE, eval=TRUE}
+knitr::opts_chunk$set(eval = all(sapply(c("twang", "survey"), requireNamespace, quietly = TRUE)))
+```
 `WeightIt` can estimate weights for longitudinal treatment marginal structural models as well. This time, we'll use the sample data set from `twang` to estimate our weights. Data must be in "wide" format; to go from long to wide, see the example at `?weightitMSM`.
 
 ```{r}
@@ -163,7 +170,8 @@ summary(Wmsm.out)
 Displayed are summaries of how the weights perform at each time point with respect to variability. Next, we'll examine how well they perform with respect to covariate balance.
 
 ```{r}
-bal.tab(Wmsm.out, stats = c("m", "ks"), thresholds = c(m = .05), which.time = .none)
+bal.tab(Wmsm.out, stats = c("m", "ks"), thresholds = c(m = .05),
+        which.time = .none)
 ```
 
 By setting `which.time = .none` in `bal.tab()`, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and variances. Now we can estimate our treatment effects. We'll sequentially simplify our model by checking whether interaction terms are needed (implying that specific patterns of treatment yield different outcomes), then by checking whether different coefficients are needed for the treatments (implying that outcomes depend on which treatments are received).
@@ -195,5 +203,7 @@ confint(cum.fit)
 For each additional treatment received, the outcome is expected to decrease by 0.15 points. The confidence interval excludes 0, so there is evidence of a treatment effect in the population.
 
 There is more we can do, as well. We could have fit different types of models to estimate the weights, and we could have stabilized the weights with `stabilize = TRUE` or by including stabilization factors in our weights using `num.formula` (see @coleConstructingInverseProbability2008 for more details on doing so). There are other ways of computing confidence intervals for our effect estimates (although model comparison is the most straightforward with the method we used).
-
+```{r, include=FALSE, eval=TRUE}
+knitr::opts_chunk$set(eval = TRUE)
+```
 ## References
