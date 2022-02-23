@@ -11,9 +11,11 @@ WeightIt News and Updates
 
 * `ps.cont()` has been retired since the same functionality is available using `weightit()` with `method = "gbm"` and in the `twangContinuous` package.
 
-* With `method = "energy"`, the distance matrix used by default is now the Mahalanobis distance matrix rather than the Euclidean distance with scale variables. This makes it so the weights are invariant to how factors are coded or how many (near) copies of a variable are present among the covariates. To recover old behavior, manually supply a distance matrix of the scaled Euclidean distance using the `dist.mat` argument.
-
 * With `method = "energy"`, a new argument, `lambda`, can be supplied, which puts a penalty on the square of the weights to control the effective sample size. Typically this is not needed but can help when the balancing is too aggressive.
+
+* With `method = "energy"`, `min.w` can now be negative, allowing for negative weights.
+
+* Support for negative weights added to `summary()`. Negative weights are possible (not by default) when using `method = "energy"` or `method = "optweight"`.
 
 * Fixed a bug where `glm()` would fail to converge with `method = "ps"` for binary treatments due to bad starting values. (#31)
 
