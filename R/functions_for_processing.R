@@ -1119,6 +1119,13 @@ generalized_inverse <- function(sigma) {
   return(sigma_inv)
 }
 
+#Choleski decomp for non-negative definite matrices
+chol2 <- function(Sinv) {
+  ch <- suppressWarnings(chol(Sinv, pivot = TRUE))
+  p <- order(attr(ch, "pivot"))
+  return(ch[,p])
+}
+
 #For balance SuperLearner
 method.balance <- function(stop.method) {
 

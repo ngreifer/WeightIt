@@ -15,6 +15,8 @@ WeightIt News and Updates
 
 * With `method = "energy"`, `min.w` can now be negative, allowing for negative weights.
 
+* With `method = "energy"`, `dist.mat` can now be supplied as the name of a method to compute the distance matrix: `"scaled"`, `"mahalanobis"`, or `"euclidean"`. `"mahalanobis"` is recommended when categorical variables are present.
+
 * Support for negative weights added to `summary()`. Negative weights are possible (not by default) when using `method = "energy"` or `method = "optweight"`.
 
 * Fixed a bug where `glm()` would fail to converge with `method = "ps"` for binary treatments due to bad starting values. (#31)

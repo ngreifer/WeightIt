@@ -2268,20 +2268,33 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     }
   }
 
-  covs <- mat_div(center(covs, at = col.w.m(covs, s.weights)),
-                  sqrt(col.w.v(covs, s.weights)))
+  if (is_null(A[["dist.mat"]])) A[["dist.mat"]] <- "scaled"
 
-  if (is_not_null(A[["dist.mat"]])) {
-    if (inherits(A[["dist.mat"]], "dist")) A[["dist.mat"]] <- as.matrix(A[["dist.mat"]])
+  if (is.character(A[["dist.mat"]]) && length(A[["dist.mat"]]) == 1L) {
+    A[["dist.mat"]] <- match_arg(A[["dist.mat"]], c("mahalanobis", "scaled", "euclidean"))
 
-    if (is.matrix(A[["dist.mat"]]) && all(dim(A[["dist.mat"]]) == n) &&
-        all(check_if_zero(diag(A[["dist.mat"]]))) && !any(A[["dist.mat"]] < 0) &&
-        isSymmetric(unname(A[["dist.mat"]]))) {
-      d <- unname(A[["dist.mat"]][subset, subset])
+    A[["dist.mat"]] <- {
+      if (A[["dist.mat"]] == "mahalanobis") {
+        mahSigma_inv <- generalized_inverse(cov.wt(covs, s.weights)$cov)
+        dist(tcrossprod(covs, chol2(mahSigma_inv)))
+      }
+      else if (A[["dist.mat"]] == "scaled") {
+        dist(mat_div(covs, sqrt(col.w.v(covs, s.weights))))
+      }
+      else if (A[["dist.mat"]] == "euclidean") {
+        dist(covs)
+      }
     }
-    else stop("'dist.mat' must be a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
   }
-  else d <- as.matrix(dist(covs))
+
+  if (inherits(A[["dist.mat"]], "dist")) A[["dist.mat"]] <- as.matrix(A[["dist.mat"]])
+
+  if (is.matrix(A[["dist.mat"]]) && all(dim(A[["dist.mat"]]) == n) &&
+      all(check_if_zero(diag(A[["dist.mat"]]))) && !any(A[["dist.mat"]] < 0) &&
+      isSymmetric(unname(A[["dist.mat"]]))) {
+    d <- unname(A[["dist.mat"]][subset, subset])
+  }
+  else stop("'dist.mat' must be one of \"mahalanobis\", \"scaled\", or \"euclidean\" or a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
 
   n <- length(treat)
   levels_treat <- levels(treat)
