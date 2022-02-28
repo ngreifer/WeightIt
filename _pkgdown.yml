@@ -13,7 +13,6 @@ reference:
   - get_w_from_ps
   - trim
   - sbps
-  - ps.cont
   - ESS
   - weightit.fit
   - as.weightit
