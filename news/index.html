@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.12.0.9002</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0</span>
       </span>
     </div>
 
@@ -51,7 +51,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="weightit-development-version">WeightIt (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<h2 class="page-header" data-toc-text="0.13.0" id="weightit-0130">WeightIt 0.13.0<a class="anchor" aria-label="anchor" href="#weightit-0130"></a></h2>
 <ul><li><p>Fixed a bug that would occur when the <code>formula.tools</code> package was loaded, which would occur most commonly when <code>logistf</code> was loaded. It would cause the error <code>The treatment and covariates must have the same number of units.</code> (<a href="https://github.com/ngreifer/WeightIt/issues/25" class="external-link">#25</a>)</p></li>
 <li><p>Fixed a bug where the <code>info</code> component would not be included in the output of <code><a href="../reference/weightit.html">weightit()</a></code> when using <code>method = "super"</code>.</p></li>
 <li><p>Added the ability to specify <code>num.formula</code> as a list of formulas in <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>. This is primarily to get around the fact that when <code>stabilize = TRUE</code>, a fully saturated model with all treatments is used to compute the stabilization factor, which, for many time points, is time-consuming and may be impossible (especially if not all treatment combinations are observed). Thanks to <a href="https://github.com/maellecoursonnais" class="external-link">@maellecoursonnais</a> for bringing up this issue (<a href="https://github.com/ngreifer/WeightIt/issues/27" class="external-link">#27</a>).</p></li>
@@ -59,7 +59,7 @@
 <li><p>With <code>method = "energy"</code>, a new argument, <code>lambda</code>, can be supplied, which puts a penalty on the square of the weights to control the effective sample size. Typically this is not needed but can help when the balancing is too aggressive.</p></li>
 <li><p>With <code>method = "energy"</code>, <code>min.w</code> can now be negative, allowing for negative weights.</p></li>
 <li><p>With <code>method = "energy"</code>, <code>dist.mat</code> can now be supplied as the name of a method to compute the distance matrix: <code>"scaled"</code>, <code>"mahalanobis"</code>, or <code>"euclidean"</code>. <code>"mahalanobis"</code> is recommended when categorical variables are present.</p></li>
-<li><p>Support for negative weights added to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>. Negative weights are possible (not by default) when using <code>method = "energy"</code> or <code>method = "optweight"</code>.</p></li>
+<li><p>Support for negative weights added to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>. Negative weights are possible (though not by default) when using <code>method = "energy"</code> or <code>method = "optweight"</code>.</p></li>
 <li><p>Fixed a bug where <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> would fail to converge with <code>method = "ps"</code> for binary treatments due to bad starting values. (<a href="https://github.com/ngreifer/WeightIt/issues/31" class="external-link">#31</a>)</p></li>
 <li><p><code>miss = "saem"</code> can once again be used with <code>method = "ps"</code> when missing values are present in the covariates.</p></li>
 <li><p>Fixed bugs with processing input formulas.</p></li>
