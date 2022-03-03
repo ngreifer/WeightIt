@@ -98,7 +98,6 @@ weightit <- function(formula, data = NULL, method = "ps", estimand = "ATE", stab
   #Returns weights (weights) and propensity score (ps)
   A[["treat"]] <- treat
   A[["covs"]] <- covs
-  A[["treat.type"]] <- treat.type
   A[["s.weights"]] <- s.weights
   A[["by.factor"]] <- attr(processed.by, "by.factor")
   A[["estimand"]] <- estimand
