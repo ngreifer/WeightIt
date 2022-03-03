@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# WeightIt 0.13.0
 
 * Fixed a bug that would occur when the `formula.tools` package was loaded, which would occur most commonly when `logistf` was loaded. It would cause the error `The treatment and covariates must have the same number of units.` (#25)
 
@@ -17,7 +17,7 @@ WeightIt News and Updates
 
 * With `method = "energy"`, `dist.mat` can now be supplied as the name of a method to compute the distance matrix: `"scaled"`, `"mahalanobis"`, or `"euclidean"`. `"mahalanobis"` is recommended when categorical variables are present.
 
-* Support for negative weights added to `summary()`. Negative weights are possible (not by default) when using `method = "energy"` or `method = "optweight"`.
+* Support for negative weights added to `summary()`. Negative weights are possible (though not by default) when using `method = "energy"` or `method = "optweight"`.
 
 * Fixed a bug where `glm()` would fail to converge with `method = "ps"` for binary treatments due to bad starting values. (#31)
 
