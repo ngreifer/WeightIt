@@ -81,7 +81,7 @@ The cross-validation risk for each method in \code{SL.library}. Higher values in
 }
 }
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the SuperLearner fit(s) used to generate the predicted values. For binary and continuous treatments, the output of the call to \pkgfun2{SuperLearner}{SuperLearner}{SuperLearner::SuperLearner}. For multinomial treatments, a list of outputs to calls to \code{SuperLearner::SuperLearner()}.
+When \code{include.obj = TRUE}, the SuperLearner fit(s) used to generate the predicted values. For binary and continuous treatments, the output of the call to \pkgfun{SuperLearner}{SuperLearner}. For multinomial treatments, a list of outputs to calls to \code{SuperLearner::SuperLearner()}.
 }
 }
 }

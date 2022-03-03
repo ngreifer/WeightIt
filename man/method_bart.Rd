@@ -6,16 +6,16 @@
 \description{
 This page explains the details of estimating weights from Bayesian additive regression trees (BART)-based propensity scores by setting \code{method = "bart"} in the call to \fun{weightit} or \fun{weightitMSM}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on \pkgfun2{dbarts}{bart}{bart2} from the \CRANpkg{dbarts} package.
+In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on \pkgfun2{dbarts}{bart}{dbarts::bart2} from the \CRANpkg{dbarts} package.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \pkgfun2{dbarts}{bart}{bart2}. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
+For binary treatments, this method estimates the propensity scores using \pkgfun2{dbarts}{bart}{dbarts::bart2}. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, the propensity scores are estimated using several calls to \pkgfun2{dbarts}{bart}{bart2}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
+For multinomial treatments, the propensity scores are estimated using several calls to \pkgfun2{dbarts}{bart}{dbarts::bart2}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, the generalized propensity score is estimated using \pkgfun2{dbarts}{bart}{bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \fun{density} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+For continuous treatments, the generalized propensity score is estimated using \pkgfun2{dbarts}{bart}{dbarts::bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \fun{density} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
@@ -34,7 +34,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 \section{Additional Arguments}{
 
-All arguments to \pkgfun2{dbarts}{bart}{bart2} can be passed through \code{weightit()} or \code{weightitMSM()}, with the following exceptions:
+All arguments to \pkgfun2{dbarts}{bart}{dbarts::bart2} can be passed through \code{weightit()} or \code{weightitMSM()}, with the following exceptions:
 \itemize{
 \item{\code{test}, \code{weights}, \code{subset}, \code{offset.test} are ignored}
 \item{\code{combine.chains} is always set to \code{TRUE}}
@@ -62,7 +62,7 @@ When \code{include.obj = TRUE}, the \code{bart2} fit(s) used to generate the pre
 }
 }
 \details{
-BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the \code{n.trees} argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to \code{weightit()} that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun2{dbarts}{bart}{bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
+BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the \code{n.trees} argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to \code{weightit()} that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun2{dbarts}{bart}{dbarts::bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
 }
 \note{
 With version 0.9-19 or below of \pkg{dbarts}, special care has to be taken to ensure reproducibility when using \code{method = "bart"}. Setting a seed (either with \fun{set.seed} or by supplying an argument to \code{rngSeed}) will only work when only one thread is requested. The default is to use four threads. To request that only one thread is used, which is necessary for reproducible results, set \code{n.threads = 1} in the call to \code{weightit()} and set a seed. Note that the fewer threads are used, the slower the estimation will be. One can set \code{n.chains} to a lower number (default 4) to speed up the estimation at the possible expense of statistical performance.

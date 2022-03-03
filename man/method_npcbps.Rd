@@ -41,7 +41,7 @@ All arguments take on the defaults of those in \code{npCBPS()}.
 \section{Additional Outputs}{
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the nonparametric CB(G)PS model fit. The output of the call to \pkgfun2{CBPS}{npCBPS}{CBPS::npCBPS}.
+When \code{include.obj = TRUE}, the nonparametric CB(G)PS model fit. The output of the call to \pkgfun{CBPS}{npCBPS}.
 }
 }
 }
@@ -56,7 +56,7 @@ Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score f
 \seealso{
 \fun{weightit}, \fun{weightitMSM}, \code{\link{method_cbps}}
 
-\pkgfun2{CBPS}{npCBPS}{CBPS::npCBPS} for the fitting function
+\pkgfun{CBPS}{npCBPS} for the fitting function
 }
 
 \examples{\dontshow{if (requireNamespace("CBPS", quietly = TRUE)) force(\{ # examplesIf}

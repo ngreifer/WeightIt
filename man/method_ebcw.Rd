@@ -43,7 +43,7 @@ All arguments take on the defaults of those in \code{ATE}.
 \section{Additional Outputs}{
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the empirical balancing calibration model fit. For binary treatments with \code{estimand = "ATT"}, the output of the call to \pkgfun2{ATE}{ATE}{ATE::ATE}. For binary treatments with \code{estimand = "ATE"} and multinomial treatments, a list of outputs of calls to \code{ATE::ATE()}.
+When \code{include.obj = TRUE}, the empirical balancing calibration model fit. For binary treatments with \code{estimand = "ATT"}, the output of the call to \pkgfun{ATE}{ATE}. For binary treatments with \code{estimand = "ATE"} and multinomial treatments, a list of outputs of calls to \code{ATE::ATE()}.
 }
 }
 }
