@@ -31,18 +31,6 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
   }
 
   if (has_dots) fun_args <- c(fun_args, A)
-  else {
-    if (is_not_null(A)) {
-      Anames <- names(A)
-      unnamedAnames <- Anames[Anames == ""]
-      namedAnames <- Anames[Anames != ""]
-      if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
-      else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
-
-      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE, immediate. = TRUE)
-      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE, immediate. = TRUE)
-    }
-  }
 
   obj <- do.call(Fun, fun_args)
 
@@ -93,18 +81,6 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
   }
 
   if (has_dots) fun_args <- c(fun_args, A)
-  else {
-    if (is_not_null(A)) {
-      Anames <- names(A)
-      unnamedAnames <- Anames[Anames == ""]
-      namedAnames <- Anames[Anames != ""]
-      if (length(unnamedAnames) == 1) Anames <- c(namedAnames, "an unnamed argument")
-      else if (length(unnamedAnames) > 1) Anames <- c(namedAnames, paste(length(unnamedAnames), "unnamed arguments"))
-
-      if (length(Anames) > 1) warning(paste0("The following arguments were specified but are not suitable arguments to the provided function:\n\t", word_list(Anames)), call. = FALSE, immediate. = TRUE)
-      else warning(paste0("The following argument was specified but is not a suitable argument to the provided function:\n\t", Anames), call. = FALSE, immediate. = TRUE)
-    }
-  }
 
   obj <- do.call(Fun, fun_args)
 
