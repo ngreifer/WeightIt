@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# WeightIt (development version)
+
+* Fixed a bug that would occur when a factor or character predictor with a single level was passed to `weightit()`.
+
 # WeightIt 0.13.0
 
 * Fixed a bug that would occur when the `formula.tools` package was loaded, which would occur most commonly when `logistf` was loaded. It would cause the error `The treatment and covariates must have the same number of units.` (#25)
