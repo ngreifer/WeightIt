@@ -19,7 +19,7 @@ For longitudinal treatments, the weights are the product of the weights estimate
 
 
 Sampling Weights
-Sampling weights are supported through s.weights in all scenarios except for multinomial treatments with link = "bayes.probit". Warning messages may appear otherwise about non-integer successes, and these can be ignored.
+Sampling weights are supported through s.weights in all scenarios except for multinomial treatments with link = "bayes.probit" and for binary and continuous treatments with missing = "saem" (see below). Warning messages may appear otherwise about non-integer successes, and these can be ignored.
 
 
 Missing Data
@@ -107,7 +107,7 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 </div>
 <div class="section">
 <h3 id="sampling-weights">Sampling Weights<a class="anchor" aria-label="anchor" href="#sampling-weights"></a></h3>
-<p>Sampling weights are supported through <code>s.weights</code> in all scenarios except for multinomial treatments with <code>link = "bayes.probit"</code>. Warning messages may appear otherwise about non-integer successes, and these can be ignored.</p>
+<p>Sampling weights are supported through <code>s.weights</code> in all scenarios except for multinomial treatments with <code>link = "bayes.probit"</code> and for binary and continuous treatments with <code>missing = "saem"</code> (see below). Warning messages may appear otherwise about non-integer successes, and these can be ignored.</p>
 </div>
 <div class="section">
 <h3 id="missing-data">Missing Data<a class="anchor" aria-label="anchor" href="#missing-data"></a></h3>
