@@ -5,7 +5,7 @@ WeightIt News and Updates
 
 * Fixed a bug that would occur when a factor or character predictor with a single level was passed to `weightit()`.
 
-* Improved the code for entropy balancing, fixing a bug when using `s.weights` with a continuous treatment.
+* Improved the code for entropy balancing, fixing a bug when using `s.weights` with a continuous treatment and improving messages when the optimization fails to converge. (#33)
 
 * Improved robustness of documentation to missing packages.
 
