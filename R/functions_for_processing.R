@@ -149,7 +149,6 @@ check.subclass <- function(method, treat.type) {
   }
 }
 process.ps <- function(ps, data = NULL, treat) {
-  #Process s.weights
   if (is_not_null(ps)) {
     if (is.character(ps) && length(ps)==1) {
       if (is_null(data)) {
@@ -162,7 +161,7 @@ process.ps <- function(ps, data = NULL, treat) {
     }
     else if (is.numeric(ps)) {
       if (length(ps) != length(treat)) {
-        stop("'ps' must have teh same number of units as the treatment.", call. = FALSE)
+        stop("'ps' must have the same number of units as the treatment.", call. = FALSE)
       }
     }
     else {

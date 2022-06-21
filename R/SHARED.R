@@ -1035,7 +1035,7 @@ if_null_then <- function(x1 = NULL, x2 = NULL, ...) {
   else return(x1)
 }
 clear_null <- function(x) {
-  x[vapply(x, is_null, logical(1L))] <- NULL
+  x[lengths(x) == 0] <- NULL
   return(x)
 }
 clear_attr <- function(x, all = FALSE) {
