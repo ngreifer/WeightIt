@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -69,18 +69,25 @@
     <h2>Arguments</h2>
     <dl><dt>ps</dt>
 <dd><p>A vector, matrix, or data frame of propensity scores. See Details.</p></dd>
-<dt>treat</dt>
+
+  <dt>treat</dt>
 <dd><p>A vector of treatment status for each individual. See Details.</p></dd>
-<dt>estimand</dt>
+
+  <dt>estimand</dt>
 <dd><p>The desired estimand that the weights should target. Current options include "ATE" (average treatment effect), "ATT" (average treatment effect on the treated), "ATC" (average treatment effect on the control), "ATO" (average treatment effect in the overlap), "ATM" (average treatment effect in the matched sample), and "ATOS" (average treatment effect in the optimal subset).</p></dd>
-<dt>focal</dt>
+
+  <dt>focal</dt>
 <dd><p>When the estimand is the ATT or ATC, which group should be consider the (focal) "treated" or "control" group, respectively. If not <code>NULL</code> and <code>estimand</code> is not "ATT" or "ATC", <code>estimand</code> will automatically be set to "ATT".</p></dd>
-<dt>treated</dt>
+
+  <dt>treated</dt>
 <dd><p>When treatment is binary, the value of <code>treat</code> that is considered the "treated" group (i.e., the group for which the propensity scores are the probability of being in). If <code>NULL</code>, <code>get_w_from_ps()</code> will attempt to figure it out on its own using some heuristics. This really only matters when <code>treat</code> has values other than 0 and 1 and when <code>ps</code> is given as a vector or an unnamed single-column matrix or data frame.</p></dd>
-<dt>subclass</dt>
+
+  <dt>subclass</dt>
 <dd><p><code>numeric</code>; the number of subclasses to use when computing weights using marginal mean weighting through stratification (also known as fine stratification). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. <code>estimand</code> must be ATE, ATT, or ATC if <code>subclass</code> is non-<code>NULL</code>. See Details.</p></dd>
-<dt>stabilize</dt>
+
+  <dt>stabilize</dt>
 <dd><p><code>logical</code>; whether to compute stabilized weights or not. This simply involves multiplying each unit's weight by the proportion of units in their treatment group. For saturated outcome models and in balance checking, this won't make a difference; otherwise, this can improve performance.</p></dd>
+
 </dl></div>
     <div id="details">
     <h2>Details</h2>
@@ -92,7 +99,9 @@
     </div>
     <div id="value">
     <h2>Value</h2>
-    <p>A vector of weights. When <code>subclass</code> is not <code>NULL</code>, the subclasses are returned as the <code>"subclass"</code> attribute. When <code>estimand = "ATOS"</code>, the chosen value of <code>alpha</code> (the smallest propensity score allowed to remain in the sample) is returned in the <code>"alpha"</code> attribute.</p>
+    
+
+<p>A vector of weights. When <code>subclass</code> is not <code>NULL</code>, the subclasses are returned as the <code>"subclass"</code> attribute. When <code>estimand = "ATOS"</code>, the chosen value of <code>alpha</code> (the smallest propensity score allowed to remain in the sample) is returned in the <code>"alpha"</code> attribute.</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -183,7 +192,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

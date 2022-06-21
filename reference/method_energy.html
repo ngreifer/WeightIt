@@ -52,7 +52,7 @@ First, for each variable with missingness, a new missingness indicator variable 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -129,7 +129,7 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
 <dd><p><code>logical</code>; whether to use the improved energy balancing weights as described by Huling and Mak (2020) when <code>estimand = "ATE"</code>. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2020) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is <code>TRUE</code>; set to <code>FALSE</code> to use the standard energy balancing weights instead (not recommended).</p></dd>
 
 <dt><code>dist.mat</code></dt>
-<dd><p>the name of the method used to compute the distance matrix or the numeric distance matrix itself. Allowable options include <code>"scaled"</code> for the Euclidean (L2) distance on the scaled covariates (the default), <code>"mahalanobis"</code> for the Mahalanobis distance, and <code>"euclidean"</code> for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to <code><a href="https://rdrr.io/r/stats/dist.html" class="external-link">dist()</a></code>. When any categorical variables are present, it is recommended to use <code>"mahalanobis"</code> to eliminate the dependence on specific dummy variable coding schemes.</p></dd>
+<dd><p>the name of the method used to compute the distance matrix or the numeric distance matrix itself. Allowable options include <code>"scaled_euclidean"</code> for the Euclidean (L2) distance on the scaled covariates (the default), <code>"mahalanobis"</code> for the Mahalanobis distance, and <code>"euclidean"</code> for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within <span class="pkg">osqp</span>, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to <code><a href="https://rdrr.io/r/stats/dist.html" class="external-link">dist()</a></code>.</p></dd>
 
 <dt><code>lambda</code></dt>
 <dd><p>a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2020), which penalizes the complexity of individual treatment rules rather than the weights.</p></dd>
@@ -206,7 +206,7 @@ This method relies on code written for <span class="pkg">WeightIt</span> using <
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

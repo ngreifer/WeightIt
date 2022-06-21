@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -81,64 +81,95 @@
     <h2>Arguments</h2>
     <dl><dt>formula</dt>
 <dd><p>a formula with a treatment variable on the left hand side and the covariates to be balanced on the right hand side. See <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for more details. Interactions and functions of covariates are allowed.</p></dd>
-<dt>data</dt>
+
+  <dt>data</dt>
 <dd><p>an optional data set in the form of a data frame that contains the variables in <code>formula</code>.</p></dd>
-<dt>method</dt>
+
+  <dt>method</dt>
 <dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is <code>"ps"</code> for propensity score weighting.</p></dd>
-<dt>estimand</dt>
+
+  <dt>estimand</dt>
 <dd><p>the desired estimand. For binary and multi-category treatments, can be <code>"ATE"</code>, <code>"ATT"</code>, <code>"ATC"</code>, and, for some methods, <code>"ATO"</code>, <code>"ATM"</code>, or <code>"ATOS"</code>. The default for both is <code>"ATE"</code>. This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.</p></dd>
-<dt>stabilize</dt>
+
+  <dt>stabilize</dt>
 <dd><p><code>logical</code>; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the proportion of units in their treatment group. Default is <code>FALSE</code>.</p></dd>
-<dt>focal</dt>
+
+  <dt>focal</dt>
 <dd><p>when multi-category treatments are used and ATT weights are requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. If specified, <code>estimand</code> will automatically be set to <code>"ATT"</code>.</p></dd>
-<dt>by</dt>
+
+  <dt>by</dt>
 <dd><p>a string containing the name of the variable in <code>data</code> for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>, weights will be generated separately within each level of the variable <code>"gender"</code>. The argument used to be called <code>exact</code>, which will still work but with a message. Only one <code>by</code> variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code>.</p></dd>
-<dt>s.weights</dt>
+
+  <dt>s.weights</dt>
 <dd><p>A vector of sampling weights or the name of a variable in <code>data</code> that contains sampling weights. These can also be matching weights if weighting is to be used on matched data. See the individual pages for each method for information on whether sampling weights can be supplied.</p></dd>
-<dt>ps</dt>
+
+  <dt>ps</dt>
 <dd><p>A vector of propensity scores or the name of a variable in <code>data</code> containing propensity scores. If not <code>NULL</code>, <code>method</code> is ignored, and the propensity scores will be used to create weights. <code>formula</code> must include the treatment variable in <code>data</code>, but the listed covariates will play no role in the weight estimation. Using <code>ps</code> is similar to calling <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> directly, but produces a full <code>weightit</code> object rather than just producing weights.</p></dd>
-<dt>moments</dt>
+
+  <dt>moments</dt>
 <dd><p><code>numeric</code>; for some methods, the greatest power of each covariate to be balanced. For example, if <code>moments = 3</code>, for each non-categorical covariate, the covariate, its square, and its cube will be balanced. This argument is ignored for other methods; to balance powers of the covariates, appropriate functions must be entered in <code>formula</code>. See the individual pages for each method for information on whether they accept <code>moments</code>.</p></dd>
-<dt>int</dt>
+
+  <dt>int</dt>
 <dd><p><code>logical</code>; for some methods, whether first-order interactions of the covariates are to be balanced. This argument is ignored for other methods; to balance interactions between the variables, appropriate functions must be entered in <code>formula</code>. See the individual pages for each method for information on whether they accept <code>int</code>.</p></dd>
-<dt>subclass</dt>
+
+  <dt>subclass</dt>
 <dd><p><code>numeric</code>; the number of subclasses to use for computing weights using marginal mean weighting with subclasses (MMWS). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Attempting to set a non-<code>NULL</code> value for methods that don't compute a propensity score will result in an error; see each method's help page for information on whether MMWS weights are compatible with the method. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details and references.</p></dd>
-<dt>missing</dt>
+
+  <dt>missing</dt>
 <dd><p><code>character</code>; how missing data should be handled. The options and defaults depend on the <code>method</code> used. Ignored if no missing data is present. It should be noted that multiple imputation outperforms all available missingness methods available in <code>weightit()</code> and should probably be used instead. Consider the <a href="https://CRAN.R-project.org/package=MatchThem" class="external-link"><span class="pkg">MatchThem</span></a> package for the use of <code>weightit()</code> with multiply imputed data.</p></dd>
-<dt>verbose</dt>
+
+  <dt>verbose</dt>
 <dd><p><code>logical</code>; whether to print additional information output by the fitting function.</p></dd>
-<dt>include.obj</dt>
+
+  <dt>include.obj</dt>
 <dd><p><code>logical</code>; whether to include in the output any fit objects created in the process of estimating the weights. For example, with <code>method = "ps"</code>, the <code>glm</code> objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
-<dt>...</dt>
+
+  <dt>...</dt>
 <dd><p>other arguments for functions called by <code>weightit()</code> that control aspects of fitting that are not covered by the above arguments. See Details.</p></dd>
-<dt>x</dt>
+
+  <dt>x</dt>
 <dd><p>a <code>weightit</code> object; the output of a call to <code>weightit()</code>.</p></dd>
+
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A <code>weightit</code> object with the following elements:</p>
+    
+
+<p>A <code>weightit</code> object with the following elements:</p>
 <dl><dt>weights</dt>
 <dd><p>The estimated weights, one for each unit.</p></dd>
-<dt>treat</dt>
+
+  <dt>treat</dt>
 <dd><p>The values of the treatment variable.</p></dd>
-<dt>covs</dt>
+
+  <dt>covs</dt>
 <dd><p>The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.</p></dd>
-<dt>estimand</dt>
+
+  <dt>estimand</dt>
 <dd><p>The estimand requested.</p></dd>
-<dt>method</dt>
+
+  <dt>method</dt>
 <dd><p>The weight estimation method specified.</p></dd>
-<dt>ps</dt>
+
+  <dt>ps</dt>
 <dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"ps"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
-<dt>s.weights</dt>
+
+  <dt>s.weights</dt>
 <dd><p>The provided sampling weights.</p></dd>
-<dt>focal</dt>
+
+  <dt>focal</dt>
 <dd><p>The focal variable if the ATT was requested with a multi-category treatment.</p></dd>
-<dt>by</dt>
+
+  <dt>by</dt>
 <dd><p>A data.frame containing the <code>by</code> variable when specified.</p></dd>
-<dt>obj</dt>
+
+  <dt>obj</dt>
 <dd><p>When <code>include.obj = TRUE</code>, the fit object.</p></dd>
-<dt>info</dt>
+
+  <dt>info</dt>
 <dd><p>Additional information about the fitting. See the individual methods pages for what is included.</p></dd>
+
 </dl></div>
     <div id="details">
     <h2>Details</h2>
@@ -350,7 +381,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

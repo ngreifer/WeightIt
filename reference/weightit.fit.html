@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -79,46 +79,69 @@
     <h2>Arguments</h2>
     <dl><dt>covs</dt>
 <dd><p>a numeric matrix of covariates.</p></dd>
-<dt>treat</dt>
+
+  <dt>treat</dt>
 <dd><p>a vector of treatment statuses.</p></dd>
-<dt>method</dt>
+
+  <dt>method</dt>
 <dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href="weightit.html">weightit()</a></code> for allowable options. The default is <code>"ps"</code> for propensity score weighting.</p></dd>
-<dt>s.weights</dt>
+
+  <dt>s.weights</dt>
 <dd><p>a numeric vector of sampling weights. See the individual pages for each method for information on whether sampling weights can be supplied.</p></dd>
-<dt>by.factor</dt>
+
+  <dt>by.factor</dt>
 <dd><p>a factor variable for which weighting is to be done within levels. Corresponds to the <code>by</code> argument in <code><a href="weightit.html">weightit()</a></code>.</p></dd>
-<dt>estimand</dt>
+
+  <dt>estimand</dt>
 <dd><p>the desired estimand. For binary and multi-category treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO", "ATM", or "ATOS". The default for both is "ATE". This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.</p></dd>
-<dt>stabilize</dt>
+
+  <dt>stabilize</dt>
 <dd><p><code>logical</code>; whether or not to stabilize the weights. For the methods that involve estimating propensity scores, this involves multiplying each unit's weight by the proportion of units in their treatment group. Default is <code>FALSE</code>.</p></dd>
-<dt>focal</dt>
+
+  <dt>focal</dt>
 <dd><p>when multi-category treatments are used and ATT weights are requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. Must be non-<code>NULL</code> if <code>estimand = "ATT"</code> or <code>"ATC"</code>.</p></dd>
-<dt>ps</dt>
+
+  <dt>ps</dt>
 <dd><p>a vector of propensity scores. If specified, <code>method</code> will be ignored and set to <code>"ps"</code>.</p></dd>
-<dt>moments, int, subclass</dt>
+
+  <dt>moments, int, subclass</dt>
 <dd><p>arguments to customize the weight estimation. See <code><a href="weightit.html">weightit()</a></code> for details.</p></dd>
-<dt>is.MSM.method</dt>
+
+  <dt>is.MSM.method</dt>
 <dd><p>see <code><a href="weightitMSM.html">weightitMSM()</a></code>. Typically can be ignored.</p></dd>
-<dt>missing</dt>
+
+  <dt>missing</dt>
 <dd><p><code>character</code>; how missing data should be handled. The options depend on the <code>method</code> used. If <code>NULL</code>, <code>covs</code> covs will be checked for <code>NA</code> values, and if present, <code>missing</code> will be set to <code>"ind"</code>. If <code>""</code>, <code>covs</code> covs will not be checked for <code>NA</code> values; this can be faster when it is known there are none.</p></dd>
-<dt>verbose</dt>
+
+  <dt>verbose</dt>
 <dd><p>whether to print additional information output by the fitting function.</p></dd>
-<dt>include.obj</dt>
+
+  <dt>include.obj</dt>
 <dd><p>whether to include in the output any fit objects created in the process of estimating the weights. For example, with <code>method = "ps"</code>, the <code>glm</code> objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
-<dt>...</dt>
+
+  <dt>...</dt>
 <dd><p>other arguments for functions called by <code>weightit.fit()</code> that control aspects of fitting that are not covered by the above arguments.</p></dd>
+
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A <code>weightit.fit</code> object with the following elements:</p>
+    
+
+<p>A <code>weightit.fit</code> object with the following elements:</p>
 <dl><dt>weights</dt>
 <dd><p>The estimated weights, one for each unit.</p></dd>
-<dt>ps</dt>
+
+  <dt>ps</dt>
 <dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"ps"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
-<dt>fit.obj</dt>
+
+  <dt>fit.obj</dt>
 <dd><p>When <code>include.obj = TRUE</code>, the fit object.</p></dd>
-<dt>info</dt>
+
+  <dt>info</dt>
 <dd><p>Additional information about the fitting. See the individual methods pages for what is included.</p></dd>
+
+
 </dl><p>The <code>weightit.fit</code> object does not have specialized <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, or <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods. It is simply a list containing the above components.</p>
     </div>
     <div id="details">
@@ -167,7 +190,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

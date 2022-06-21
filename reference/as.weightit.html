@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -83,28 +83,40 @@
     <h2>Arguments</h2>
     <dl><dt>weights</dt>
 <dd><p>required; a <code>numeric</code> vector of weights, one for each unit.</p></dd>
-<dt>treat</dt>
+
+  <dt>treat</dt>
 <dd><p>required; a vector of treatment statuses, one for each unit.</p></dd>
-<dt>covs</dt>
+
+  <dt>covs</dt>
 <dd><p>an optional <code>data.frame</code> of covariates. For using <span class="pkg">WeightIt</span> functions, this is not necessary, but for use with <span class="pkg">cobalt</span> it is.</p></dd>
-<dt>estimand</dt>
+
+  <dt>estimand</dt>
 <dd><p>an optional <code>character</code> of length 1 giving the estimand. The text is not checked.</p></dd>
-<dt>s.weights</dt>
+
+  <dt>s.weights</dt>
 <dd><p>an optional <code>numeric</code> vector of sampling weights, one for each unit.</p></dd>
-<dt>ps</dt>
+
+  <dt>ps</dt>
 <dd><p>an optional <code>numeric</code> vector of propensity scores, one for each unit.</p></dd>
-<dt>treat.list</dt>
+
+  <dt>treat.list</dt>
 <dd><p>a list of treatment statuses at each time point..</p></dd>
-<dt>covs.list</dt>
+
+  <dt>covs.list</dt>
 <dd><p>an optional list of <code>data.frame</code>s of covariates of covariates at each time point. For using <span class="pkg">WeightIt</span> functions, this is not necessary, but for use with <span class="pkg">cobalt</span> it is.</p></dd>
-<dt>ps.list</dt>
+
+  <dt>ps.list</dt>
 <dd><p>an optional list of <code>numeric</code> vectors of propensity scores at each time point.</p></dd>
-<dt>...</dt>
+
+  <dt>...</dt>
 <dd><p>additional arguments. These must be named. They will be included in the output object.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>An object of class <code>weightit</code> (for <code>as.weightit()</code>) or <code>weightitMSM</code> (for <code>as.weightitMSM()</code>).</p>
+    
+
+<p>An object of class <code>weightit</code> (for <code>as.weightit()</code>) or <code>weightitMSM</code> (for <code>as.weightitMSM()</code>).</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -123,27 +135,27 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.0093 |---------------------------| 11.2305</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0010 |--------------------|         8.4818</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.0458 |----------------|             8.1432</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0015 |---------------------------| 13.2923</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                              </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             475    377    481     496     419</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 7.1309 8.3664 8.4081 10.7043 11.2305</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             132    389    430     469     289</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 6.9544  7.375 7.6145  7.7472  8.4818</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             168    235    376     413      42</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 6.7293 7.1807 7.6166   8.062  8.1432</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              83    254    436     192      93</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 8.4384 9.3188 9.7558 12.4775 13.2923</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.958 0.720   0.403       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.902 0.712   0.382       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.928 0.745   0.395       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.962 0.715   0.401       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  367.    133.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    202.55   69.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  362.    138.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    188.22   74.43</span>
 </code></pre></div>
     </div>
   </div>
@@ -158,7 +170,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

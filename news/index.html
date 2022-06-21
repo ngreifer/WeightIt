@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -51,8 +51,12 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="development version" id="weightit-development-version">WeightIt (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
-<ul><li>Fixed a bug that would occur when a factor or character predictor with a single level was passed to <code><a href="../reference/weightit.html">weightit()</a></code>.</li></ul></div>
+<h2 class="page-header" data-toc-text="0.13.1" id="weightit-0131">WeightIt 0.13.1<a class="anchor" aria-label="anchor" href="#weightit-0131"></a></h2>
+<ul><li><p>Fixed a bug that would occur when a factor or character predictor with a single level was passed to <code><a href="../reference/weightit.html">weightit()</a></code>.</p></li>
+<li><p>Improved the code for entropy balancing, fixing a bug when using <code>s.weights</code> with a continuous treatment.</p></li>
+<li><p>Improved robustness of documentation to missing packages.</p></li>
+<li><p>Updated the logo, thanks to <a href="https://stillben.com" class="external-link">Ben Stillerman</a>.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.13.0" id="weightit-0130">WeightIt 0.13.0<a class="anchor" aria-label="anchor" href="#weightit-0130"></a></h2>
 <ul><li><p>Fixed a bug that would occur when the <code>formula.tools</code> package was loaded, which would occur most commonly when <code>logistf</code> was loaded. It would cause the error <code>The treatment and covariates must have the same number of units.</code> (<a href="https://github.com/ngreifer/WeightIt/issues/25" class="external-link">#25</a>)</p></li>
@@ -61,7 +65,7 @@
 <li><p><code>ps.cont()</code> has been retired since the same functionality is available using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code> and in the <code>twangContinuous</code> package.</p></li>
 <li><p>With <code>method = "energy"</code>, a new argument, <code>lambda</code>, can be supplied, which puts a penalty on the square of the weights to control the effective sample size. Typically this is not needed but can help when the balancing is too aggressive.</p></li>
 <li><p>With <code>method = "energy"</code>, <code>min.w</code> can now be negative, allowing for negative weights.</p></li>
-<li><p>With <code>method = "energy"</code>, <code>dist.mat</code> can now be supplied as the name of a method to compute the distance matrix: <code>"scaled"</code>, <code>"mahalanobis"</code>, or <code>"euclidean"</code>. <code>"mahalanobis"</code> is recommended when categorical variables are present.</p></li>
+<li><p>With <code>method = "energy"</code>, <code>dist.mat</code> can now be supplied as the name of a method to compute the distance matrix: <code>"scaled_euclidean"</code>, <code>"mahalanobis"</code>, or <code>"euclidean"</code>.</p></li>
 <li><p>Support for negative weights added to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>. Negative weights are possible (though not by default) when using <code>method = "energy"</code> or <code>method = "optweight"</code>.</p></li>
 <li><p>Fixed a bug where <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> would fail to converge with <code>method = "ps"</code> for binary treatments due to bad starting values. (<a href="https://github.com/ngreifer/WeightIt/issues/31" class="external-link">#31</a>)</p></li>
 <li><p><code>miss = "saem"</code> can once again be used with <code>method = "ps"</code> when missing values are present in the covariates.</p></li>
@@ -239,7 +243,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

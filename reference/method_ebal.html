@@ -49,7 +49,7 @@ First, for each variable with missingness, a new missingness indicator variable 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -120,10 +120,10 @@ First, for each variable with missingness, a new missingness indicator variable 
     <div id="additional-arguments">
     <h2>Additional Arguments</h2>
     <p><code>moments</code> and <code>int</code> are accepted. See <code><a href="weightit.html">weightit()</a></code> for details.</p><dl><dt><code>base.weights</code></dt>
-<dd><p>A vector of base weights, one for each unit. This works for continuous treatments as well. These correspond to the base weights <em>q</em> in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \(w*log(w/q)\), subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to <code>base.weights</code> but can be included in a <code><a href="weightit.html">weightit()</a></code> call that includes <code>s.weights</code>.</p></dd>
+<dd><p>A vector of base weights, one for each unit. This works for continuous treatments as well. These correspond to the base weights \(q\) in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \(\sum w \text{log}(w/q)\), subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to <code>base.weights</code> but can be included in a <code><a href="weightit.html">weightit()</a></code> call that includes <code>s.weights</code>.</p></dd>
 
 <dt><code>d.moments</code></dt>
-<dd><p>With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting <code>d.moments = 3</code> ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. <code>d.moments</code> should be greater than or equal to <code>moments</code> and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2020) recommend setting <code>d.moments = 3</code>, even if <code>moments</code> is less than 3. This argument corresponds to the tuning parameters $r$ and $s$ in Vegetabile et al. (2020) (which here must be equal). Ignored for binary and multi-category treatments.</p></dd>
+<dd><p>With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting <code>d.moments = 3</code> ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. <code>d.moments</code> should be greater than or equal to <code>moments</code> and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2020) recommend setting <code>d.moments = 3</code>, even if <code>moments</code> is less than 3. This argument corresponds to the tuning parameters \(r\) and \(s\) in Vegetabile et al. (2020) (which here must be equal). Ignored for binary and multi-category treatments.</p></dd>
 
 
 </dl><p>The arguments <code>maxit</code> and <code>reltol</code> can be supplied and are passed to the <code>control</code> argument of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>. The <code>"BFGS"</code> method is used, so the defaults correspond to this.</p>
@@ -141,16 +141,13 @@ First, for each variable with missingness, a new missingness indicator variable 
     <h2>Details</h2>
     <p>Entropy balancing involves the specification of an optimization problem, the solution to which is then used to compute the weights. The constraints of the primal optimization problem correspond to covariate balance on the means (for binary and multinomial treatments) or treatment-covariate covariances (for continuous treatments), positivity of the weights, and that the weights sum to a certain value. It turns out that the dual optimization problem is much easier to solve because it is over only as many variables as there are balance constraints rather than over the weights for each unit and it is unconstrained. Zhao and Percival (2017) found that entropy balancing for the ATT of a binary treatment actually involves the estimation of the coefficients of a logistic regression propensity score model but using a specialized loss function different from that optimized with maximum likelihood. Entropy balancing is doubly robust (for the ATT) in the sense that it is consistent either when the true propensity score model is a logistic regression of the treatment on the covariates or when the true outcome model for the control units is a linear regression of the outcome on the covariates, and it attains a semi-parametric efficiency bound when both are true. Entropy balancing will always yield exact mean balance on the included terms.</p>
     </div>
-    <div id="author">
-    <h2>Author</h2>
-    <p>The code for continuous treatments was kindly contributed by Stefan Tübbicke (<a href="mailto:tuebbicke@empwifo.uni-potsdam.de">tuebbicke@empwifo.uni-potsdam.de</a>).</p>
-    </div>
     <div id="references">
     <h2>References</h2>
     
 
 <p><strong>Binary Treatments</strong></p>
 <p>Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. Political Analysis, 20(1), 25–46. <a href="https://doi.org/10.1093/pan/mpr025" class="external-link">doi:10.1093/pan/mpr025</a></p>
+<p>Källberg, D., &amp; Waernbaum, I. (2022). Large Sample Properties of Entropy Balancing Estimators of Average Causal Effects. ArXiv:2204.10623 [Stat]. <a href="http://arxiv.org/abs/2204.10623" class="external-link">http://arxiv.org/abs/2204.10623</a></p>
 <p>Zhao, Q., &amp; Percival, D. (2017). Entropy balancing is doubly robust. Journal of Causal Inference, 5(1). <a href="https://doi.org/10.1515/jci-2016-0010" class="external-link">doi:10.1515/jci-2016-0010</a></p>
 <p><strong>Continuous Treatments</strong></p>
 <p>Tübbicke, S. (2022). Entropy Balancing for Continuous Treatments. Journal of Econometric Methods, 11(1), 71–89. <a href="https://doi.org/10.1515/jem-2021-0002" class="external-link">doi:10.1515/jem-2021-0002</a></p>
@@ -301,23 +298,23 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0001 |---------------------------| 17.6633</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0001 |---------------------------| 17.6716</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         484    200    166     171     180</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 6.7551 7.6026 8.5179 10.2507 17.6633</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         484   200    166     171     180</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 6.7602 7.609 8.5222 10.2613 17.6716</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.253 0.615   0.423       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.254 0.615   0.424       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   239.19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   239.02</span>
 <span class="r-in"><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = re75 ~ age + educ + married + nodegree + re74, </span>
@@ -325,16 +322,16 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       -0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       -0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.  -0.0002</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary  -0.0001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary   0.0002</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.  -0.0005</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   239.19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   239.02</span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
@@ -350,7 +347,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

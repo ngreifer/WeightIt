@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -78,28 +78,41 @@
     <h2>Arguments</h2>
     <dl><dt>obj</dt>
 <dd><p>a <code>weightit</code> object containing weights estimated in the overall sample.</p></dd>
-<dt>obj2</dt>
+
+  <dt>obj2</dt>
 <dd><p>a <code>weightit</code> object containing weights estimated in the subgroups. Typically this has been estimated by including <code>by</code> in the call to <code><a href="weightit.html">weightit()</a></code>. Either <code>obj2</code> or <code>moderator</code> must be specified.</p></dd>
-<dt>moderator</dt>
+
+  <dt>moderator</dt>
 <dd><p>optional; a string containing the name of the variable in <code>data</code> for which weighting is to be done within subgroups or a one-sided formula with the subgrouping variable on the right-hand side. This argument is analogous to the <code>by</code> argument in <code><a href="weightit.html">weightit()</a></code>, and in fact it is passed on to <code>by</code>. Either <code>obj2</code> or <code>moderator</code> must be specified.</p></dd>
-<dt>formula</dt>
+
+  <dt>formula</dt>
 <dd><p>an optional formula with the covariates for which balance is to be optimized. If not specified, the formula in <code>obj$call</code> will be used.</p></dd>
-<dt>data</dt>
+
+  <dt>data</dt>
 <dd><p>an optional data set in the form of a data frame that contains the variables in <code>formula</code> or <code>moderator</code>.</p></dd>
-<dt>smooth</dt>
+
+  <dt>smooth</dt>
 <dd><p><code>logical</code>; whether the smooth version of the SBPS should be used. This is only compatible with <code>weightit</code> methods that return a propensity score.</p></dd>
-<dt>full.search</dt>
+
+  <dt>full.search</dt>
 <dd><p><code>logical</code>; when <code>smooth = FALSE</code>, whether every combination of subgroup and overall weights should be evaluated. If <code>FALSE</code>, a stochastic search as described in DZZL will be used instead. If <code>TRUE</code>, all 2^R combinations will be checked, where R is the number of subgroups, which can take a long time with many subgroups. If unspecified, will default to <code>TRUE</code> if R &lt;= 8 and <code>FALSE</code> otherwise.</p></dd>
-<dt>x</dt>
+
+  <dt>x</dt>
 <dd><p>a <code>weightit.sbps</code> or <code>summary.weightit.sbps</code> object; the output of a call to <code>sbps()</code> or <code>summary.weightit.sbps()</code>.</p></dd>
-<dt>object</dt>
+
+  <dt>object</dt>
 <dd><p>a <code>weightit.sbps</code> object; the output of a call to <code>sbps()</code>.</p></dd>
-<dt>top</dt>
+
+  <dt>top</dt>
 <dd><p>how many of the largest and smallest weights to display. Default is 5.</p></dd>
-<dt>ignore.s.weights</dt>
+
+  <dt>ignore.s.weights</dt>
 <dd><p>whether or not to ignore sampling weights when computing the weight summary. If <code>FALSE</code>, the default, the estimated weights will be multiplied by the sampling weights (if any) before values are computed.</p></dd>
-<dt>...</dt>
+
+
+  <dt>...</dt>
 <dd><p>for <code>print</code>, arguments passed to <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. Ignored otherwise.</p></dd>
+
 </dl></div>
     <div id="details">
     <h2>Details</h2>
@@ -109,8 +122,12 @@
     </div>
     <div id="value">
     <h2>Value</h2>
-    <p>A <code>weightit.sbps</code> object, which inherits from <code>weightit</code>. This contains all the information in <code>obj</code> with the weights, propensity scores, call, and possibly covariates updated from <code>sbps()</code>. In addition, the <code>prop.subgroup</code> component contains the values of the coefficients C for the subgroups (which are either 0 or 1 for the standard SBPS), and the <code>moderator</code> component contains a data.frame with the moderator.
-This object has its own summary methods and is compatible with <span class="pkg">cobalt</span> functions. The <code>cluster</code> argument should be used with <span class="pkg">cobalt</span> functions to accurately reflect the performance of the weights in balancing the subgroups.</p>
+    
+
+<p>A <code>weightit.sbps</code> object, which inherits from <code>weightit</code>. This contains all the information in <code>obj</code> with the weights, propensity scores, call, and possibly covariates updated from <code>sbps()</code>. In addition, the <code>prop.subgroup</code> component contains the values of the coefficients C for the subgroups (which are either 0 or 1 for the standard SBPS), and the <code>moderator</code> component contains a data.frame with the moderator.</p>
+
+
+<p>This object has its own summary methods and is compatible with <span class="pkg">cobalt</span> functions. The <code>cluster</code> argument should be used with <span class="pkg">cobalt</span> functions to accurately reflect the performance of the weights in balancing the subgroups.</p>
     </div>
     <div id="references">
     <h2>References</h2>
@@ -449,7 +466,7 @@ This object has its own summary methods and is compatible with <span class="pkg"
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>

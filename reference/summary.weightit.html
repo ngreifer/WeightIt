@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">WeightIt</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.13.1</span>
       </span>
     </div>
 
@@ -78,36 +78,55 @@
     <h2>Arguments</h2>
     <dl><dt>object</dt>
 <dd><p>a <code>weightit</code> or <code>weightitMSM</code> object; the output of a call to <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>.</p></dd>
-<dt>top</dt>
+
+  <dt>top</dt>
 <dd><p>how many of the largest and smallest weights to display. Default is 5.</p></dd>
-<dt>ignore.s.weights</dt>
+
+  <dt>ignore.s.weights</dt>
 <dd><p>whether or not to ignore sampling weights when computing the weight summary. If <code>FALSE</code>, the default, the estimated weights will be multiplied by the sampling weights (if any) before values are computed.</p></dd>
-<dt>binwidth, bins</dt>
+
+  <dt>binwidth, bins</dt>
 <dd><p>arguments passed to <code><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">ggplot2::geom_histogram()</a></code> to control the size and/or number of bins.</p></dd>
-<dt>x</dt>
+
+
+  <dt>x</dt>
 <dd><p>a <code>summary.weightit</code> or <code>summary.weightitMSM</code> object; the output of a call to <code>summary.weightit()</code> or <code>summary.weightitMSM()</code>.</p></dd>
-<dt>...</dt>
+
+  <dt>...</dt>
 <dd><p>for <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>, arguments passed to <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. For <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code>, additional arguments passed to <code><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">graphics::hist()</a></code> to determine the number of bins, though <code><a href="https://ggplot2.tidyverse.org/reference/geom_histogram.html" class="external-link">ggplot2::geom_histogram()</a></code> from <span class="pkg">ggplot2</span> is actually used to create the plot.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>For point treatments (i.e., <code>weightit</code> objects), a <code>summary.weightit</code> object with the following elements:</p>
+    
+
+<p>For point treatments (i.e., <code>weightit</code> objects), a <code>summary.weightit</code> object with the following elements:</p>
 <dl><dt>weight.range</dt>
 <dd><p>The range (minimum and maximum) weight for each treatment group.</p></dd>
+
 <dt>weight.top</dt>
 <dd><p>The units with the greatest weights in each treatment group; how many are included is determined by <code>top</code>.</p></dd>
+
 <dt>coef.of.var (Coef of Var)</dt>
 <dd><p>The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.</p></dd>
+
 <dt>scaled.mad (MAD)</dt>
 <dd><p>The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
+
 <dt>negative entropy (Entropy)</dt>
 <dd><p>The negative entropy (\(\sum w log(w)\)) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
+
 <dt>num.zeros</dt>
 <dd><p>The number of weights equal to zero.</p></dd>
+
 <dt>effective.sample.size</dt>
 <dd><p>The effective sample size for each treatment group before and after weighting. See <code><a href="ESS.html">ESS()</a></code>.</p></dd>
-</dl><p>For longitudinal treatments (i.e., <code>weightitMSM</code> objects), a list of the above elements for each treatment period.
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> returns a <code>ggplot</code> object with a histogram displaying the distribution of the estimated weights. If the estimand is the ATT or ATC, only the weights for the non-focal group(s) will be displayed (since the weights for the focal group are all 1). A dotted line is displayed at the mean of the weights.</p>
+
+
+</dl><p>For longitudinal treatments (i.e., <code>weightitMSM</code> objects), a list of the above elements for each treatment period.</p>
+
+
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> returns a <code>ggplot</code> object with a histogram displaying the distribution of the estimated weights. If the estimand is the ATT or ATC, only the weights for the non-focal group(s) will be displayed (since the weights for the focal group are all 1). A dotted line is displayed at the mean of the weights.</p>
     </div>
     <div id="author">
     <h2>Author</h2>
@@ -136,7 +155,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.4.</p>
 </div>
 
       </footer></div>
