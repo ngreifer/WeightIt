@@ -14,13 +14,13 @@ a vector of weights
 }
 }
 \details{
-The ESS is calculated as \code{sum(w)^2/sum(w^2)}.
+The ESS is calculated as \eqn{(\sum w)^2/\sum w^2}.
 }
 
 \references{
 McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. Psychological Methods, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 
-Shook-Sa, B. E., & Hudgens, M. G. (2020). Power and Sample Size for Marginal Structural Models. ArXiv:2003.05979 [Stat]. \url{https://arxiv.org/abs/2003.05979}
+Shook‐Sa, B. E., & Hudgens, M. G. (2020). Power and sample size for observational studies of point exposure effects. Biometrics, biom.13405. \doi{doi.org/10.1111/biom.13405}
 }
 
 \seealso{

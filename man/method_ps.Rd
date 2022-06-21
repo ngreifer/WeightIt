@@ -21,7 +21,7 @@ For continuous treatments, the generalized propensity score is estimated using l
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
 }
 \subsection{Sampling Weights}{
-Sampling weights are supported through \code{s.weights} in all scenarios except for multinomial treatments with \code{link = "bayes.probit"}. Warning messages may appear otherwise about non-integer successes, and these can be ignored.
+Sampling weights are supported through \code{s.weights} in all scenarios except for multinomial treatments with \code{link = "bayes.probit"} and for binary and continuous treatments with \code{missing = "saem"} (see below). Warning messages may appear otherwise about non-integer successes, and these can be ignored.
 }
 \subsection{Missing Data}{
 In the presence of missing data, the following value(s) for \code{missing} are allowed:
