@@ -478,7 +478,7 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
 
   binary.vars <- is_binary_col(d)
 
-  if (center) {
+  if (center && (int || !orthogonal_poly)) {
     d[,!binary.vars] <- center(d[, !binary.vars, drop = FALSE])
   }
   nd <- NCOL(d)
@@ -520,7 +520,9 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
       out <- out[, !single_value, drop = FALSE]
     }
   }
-  else out <- NULL
+  else {
+    out <- matrix(ncol = 0, nrow = nrow(d), dimnames = list(rownames(d), NULL))
+  }
 
   return(out)
 }
@@ -723,27 +725,34 @@ check_estimated_weights <- function(w, treat, treat.type, s.weights) {
   extreme.warn <- FALSE
   if (treat.type == "continuous") {
     if (all_the_same(w)) {
-      warning(paste0("All weights are ", w[1], ", possibly indicating an estimation failure."), call. = FALSE)
+      warning(sprintf("All weights are %s, possibly indicating an estimation failure.", w[1]), call. = FALSE)
     }
-    else if (sd(tw, na.rm = TRUE)/mean(tw, na.rm = TRUE) > 4) extreme.warn <- TRUE
+    else {
+      w.cv <- sd(tw, na.rm = TRUE)/mean(tw, na.rm = TRUE)
+      if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
+    }
   }
   else {
     if (all_the_same(w)) {
-      warning(paste0("All weights are ", w[1], ", possibly indicating an estimation failure."), call. = FALSE)
+      warning(sprintf("All weights are %s, possibly indicating an estimation failure.", w[1]), call. = FALSE)
     }
     else {
       t.levels <- unique(treat)
       bad.treat.groups <- setNames(rep(FALSE, length(t.levels)), t.levels)
       for (i in t.levels) {
         ti <- which(treat == i)
-        if (all(is.na(w[ti])) || all(w[ti] == 0)) bad.treat.groups[as.character(i)] <- TRUE
-        else if (!extreme.warn && sum(!is.na(tw[ti])) > 1 && sd(tw[ti], na.rm = TRUE)/mean(tw[ti], na.rm = TRUE) > 4) extreme.warn <- TRUE
+        if (all(is.na(w[ti])) || all(check_if_zero(w[ti]))) bad.treat.groups[as.character(i)] <- TRUE
+        else if (!extreme.warn && sum(is.finite(tw[ti])) > 1) {
+          w.cv <- sd(tw[ti], na.rm = TRUE)/mean(tw[ti], na.rm = TRUE)
+          if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
+        }
       }
 
       if (any(bad.treat.groups)) {
         n <- sum(bad.treat.groups)
-        warning(paste0("All weights are NA or 0 in treatment ", ngettext(n, "group ", "groups "),
-                       word_list(t.levels[bad.treat.groups], quotes = TRUE), "."), call. = FALSE)
+        warning(sprintf("All weights are NA or 0 in treatment %s %s.",
+                        ngettext(n, "group", "groups"),
+                        word_list(t.levels[bad.treat.groups], quotes = TRUE)), call. = FALSE)
       }
     }
   }

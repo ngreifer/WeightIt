@@ -1112,10 +1112,12 @@ len <- function(x, recursive = TRUE) {
   else length(x)
 }
 seq_row <- function(x) {
+  if (is_null(x)) return(integer(0))
   if (length(dim(x)) != 2) stop("dim(x) must be 2")
   seq_len(NROW(x))
 }
 seq_col <- function(x) {
+  if (is_null(x)) return(integer(0))
   if (length(dim(x)) != 2) stop("dim(x) must be 2")
   seq_len(NCOL(x))
 }

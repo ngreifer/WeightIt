@@ -1548,10 +1548,9 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     else bw <- A[["base.weight"]]
   }
 
-  eb <- function(C, M, s.weights_t, Q) {
-    #X_t : covariates in control group;
-    #Returns weights for control group
+  reltol <- if_null_then(A[["reltol"]], sqrt(.Machine$double.eps))
 
+  eb <- function(C, s.weights_t, Q) {
     n <- nrow(C)
 
     W <- function(Z) {
@@ -1559,26 +1558,36 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     }
 
     objective.EB <- function(Z) {
-      log(sum(W(Z))) + sum(M * Z)
+      log(sum(W(Z)))
     }
 
     gradient.EB <- function(Z) {
       w <- W(Z)
-      drop(M - w %*% C/sum(w))
+      drop(-(w %*% C)/sum(w))
     }
 
     opt.out <- optim(par = rep(0, ncol(C)),
                      fn = objective.EB,
                      gr = gradient.EB,
                      method = "BFGS",
-                     control = list(trace = 0,
-                                    reltol = if_null_then(A[["reltol"]], sqrt(.Machine$double.eps)),
+                     control = list(trace = 1,
+                                    reltol = reltol,
                                     maxit = if_null_then(A[["maxit"]], 200)))
 
     w <- W(opt.out$par)
+    opt.out$gradient <- gradient.EB(opt.out$par)
+
+    if (opt.out$convergence == 1) {
+      warning("The optimization failed to converge in the alotted number of iterations. Try increasing 'maxit'.", call. = FALSE)
+    }
+    else if (any(abs(opt.out$gradient) > 1e-3)) {
+      warning("The estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization.", call. = FALSE)
+    }
+
+    if (sum(w) > n*.Machine$double.eps) w <- w*n/sum(w)
 
     list(Z = setNames(opt.out$par, colnames(C)),
-         w = w/(mean(w) * s.weights_t),
+         w = w/s.weights_t,
          opt.out = opt.out)
   }
 
@@ -1592,12 +1601,13 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     groups_to_weight <- levels(treat)
     targets <- cobalt::col_w_mean(covs, s.weights = s.weights)
   }
+  covs <- sweep(covs, 2, targets, check.margin = FALSE)
 
   fit.list <- make_list(groups_to_weight)
   for (i in groups_to_weight) {
 
-    fit.list[[i]] <- eb(covs[treat == i,,drop = FALSE], targets,
-                        s.weights[treat == i], bw[treat == i])
+    fit.list[[i]] <- eb(covs[treat == i,,drop = FALSE], s.weights[treat == i],
+                        bw[treat == i])
 
     w[treat == i] <- fit.list[[i]]$w
   }
@@ -1620,67 +1630,107 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, mis
     }
   }
 
-  d.moments <- max(if_null_then(A[["d.moments"]], 1), moments)
-  k <- ncol(covs)
-
-  poly.covs <- int.poly.f(covs, poly = d.moments)
-  int.covs <- int.poly.f(covs, int = int)
-  covs <- cbind(covs, poly.covs, int.covs)
-
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
-  # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
-  # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-
   if (is_not_null(A[["base.weights"]])) A[["base.weight"]] <- A[["base.weights"]]
   if (is_null(A[["base.weight"]])) {
-    q <- rep(1, length(treat))
+    bw <- rep(1, length(treat))
   }
   else {
     if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
       stop("The argument to base.weight must be a numeric vector with length equal to the number of units.", call. = FALSE)
     }
-    else q <- A[["base.weight"]]
+    else bw <- A[["base.weight"]]
   }
 
-  t.mat <- poly(treat, degree = d.moments)
+  bw <- bw[subset]
 
-  treat_sc <- mat_div(center(t.mat, at = cobalt::col_w_mean(t.mat, s.weights)),
-                      cobalt::col_w_sd(t.mat, s.weights))
-  covs_sc <- mat_div(center(covs, at = cobalt::col_w_mean(covs, s.weights)),
-                     cobalt::col_w_sd(covs, s.weights))
+  reltol <- if_null_then(A[["reltol"]], sqrt(.Machine$double.eps))
 
-  kp <- ncol(poly.covs)/(d.moments-1)
-  cov_include <- c(seq_len(k),
-                   if (moments > 1) k + unlist(lapply(seq_len(moments - 1), function(i) i + (d.moments - 1)*(seq_len(kp)-1))),
-                   if (int) seq_col(covs)[-seq_len(k + ncol(poly.covs))])
+  d.moments <- max(if_null_then(A[["d.moments"]], 1), moments)
+  k <- ncol(covs)
 
-  gTX <- do.call("cbind", c(list(treat_sc, covs_sc, treat_sc[,1] * covs_sc[,cov_include])))
+  poly.covs <- int.poly.f(covs, poly = moments)
+  int.covs <- int.poly.f(covs, int = int)
 
-  #----Code written by Stefan Tubbicke---#
-  #define objective function (Lagrange dual)
-  objective.EBCT <- function(theta) {
-    f <- log(mean(q*s.weights*exp(gTX %*% theta)))*nrow(gTX)
-    return(f)
+  treat <- make.closer.to.1(treat)
+  for (i in seq_col(poly.covs)) poly.covs[,i] <- make.closer.to.1(poly.covs[,i])
+  for (i in seq_col(int.covs)) int.covs[,i] <- make.closer.to.1(int.covs[,i])
+  if (d.moments == moments) {
+    d.poly.covs <- poly.covs
+  }
+  else {
+    d.poly.covs <- int.poly.f(covs, poly = d.moments)
+    for (i in seq_col(d.poly.covs)) d.poly.covs[,i] <- make.closer.to.1(d.poly.covs[,i])
+  }
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  covs <- cbind(covs, poly.covs, int.covs, d.poly.covs)
+  # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+  # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+
+  t.mat <- matrix(treat, ncol = 1, dimnames = list(NULL, "treat"))
+  if (d.moments > 1) t.mat <- cbind(t.mat, int.poly.f(t.mat, poly = d.moments))
+
+  treat_c <- sweep(t.mat, 2, cobalt::col_w_mean(t.mat, s.weights))
+  covs_c <- sweep(covs, 2, cobalt::col_w_mean(covs, s.weights))
+
+  covs.ind <- seq_len(k)
+  poly.covs.ind <- k + seq_col(poly.covs)
+  int.covs.ind <- k + ncol(poly.covs) + seq_col(int.covs)
+  d.poly.covs.ind <- k + ncol(poly.covs) + ncol(int.covs) + seq_col(d.poly.covs)
+
+  C <- cbind(treat_c, covs_c[, c(covs.ind, int.covs.ind, d.poly.covs.ind)],
+             treat_c[,1] * covs_c[, c(covs.ind, int.covs.ind, poly.covs.ind)])
+
+  colnames(C) <- c(paste(colnames(treat_c), "(mean)"),
+                   paste(colnames(covs_c)[c(covs.ind, int.covs.ind, d.poly.covs.ind)], "(mean)"),
+                   colnames(covs_c)[c(covs.ind, int.covs.ind, poly.covs.ind)])
+
+  eb <- function(C, s.weights, Q) {
+    n <- nrow(C)
+
+    W <- function(Z) {
+      drop(Q * exp(-C %*% Z))
+    }
+
+    objective.EB <- function(Z) {
+      log(sum(W(Z)))
+    }
+
+    gradient.EB <- function(Z) {
+      w <- W(Z)
+      drop(-(w %*% C)/sum(w))
+    }
+
+    opt.out <- optim(par = rep(0, ncol(C)),
+                     fn = objective.EB,
+                     gr = gradient.EB,
+                     method = "BFGS",
+                     control = list(trace = 0,
+                                    reltol = reltol,
+                                    maxit = if_null_then(A[["maxit"]], 200)))
+
+    w <- W(opt.out$par)
+    opt.out$gradient <- gradient.EB(opt.out$par)
+
+    if (opt.out$convergence == 1) {
+      warning("The optimization failed to converge in the alotted number of iterations. Try increasing 'maxit'.", call. = FALSE)
+    }
+    else if (any(abs(opt.out$gradient) > 1e-3)) {
+      warning("The estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization.", call. = FALSE)
+    }
+
+    if (sum(w) > n*.Machine$double.eps) w <- w*n/sum(w)
+
+    list(Z = setNames(opt.out$par, colnames(C)),
+         w = w/s.weights,
+         opt.out = opt.out)
   }
 
-  #define gradient function (LHS of equations 8 in Tubbicke (2020))
-  gradient.EBCT<- function(theta) {
-    g <- t(gTX) %*% (q*s.weights*exp(gTX %*% theta)/(mean(q*s.weights*exp(gTX %*% theta))))
-    return(g)
-  }
+  fit <- eb(C, s.weights, bw)
 
-  opt.out <- optim(par = rep(0, ncol(gTX)),
-                   fn = objective.EBCT,
-                   gr = gradient.EBCT,
-                   method = "BFGS",
-                   control = list(trace = TRUE,
-                                  reltol = if_null_then(A[["reltol"]], sqrt(.Machine$double.eps)),
-                                  maxit = if_null_then(A[["maxit"]], 200)))
+  w <- fit$w
 
-  w <-  q*exp(gTX %*% opt.out$par)/(mean(q*exp(gTX %*% opt.out$par)))
-  #--------------------------------------#
-
-  obj <- list(w = w, fit.obj = opt.out)
+  obj <- list(w = w, fit.obj = fit$opt.out)
 
   return(obj)
 }
