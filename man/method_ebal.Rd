@@ -6,7 +6,7 @@
 \description{
 This page explains the details of estimating weights using entropy balancing by setting \code{method = "ebal"} in the call to \fun{weightit} or \fun{weightitMSM}. This method can be used with binary, multinomial, and continuous treatments.
 
-In general, this method relies on estimating weights by minimizing the entropy of the weights subject to exact moment balancing constraints. This method relies on code written for \pkg{WeightIt} using \fun{optim}.
+In general, this method relies on estimating weights by minimizing the negative entropy of the weights subject to exact moment balancing constraints. This method relies on code written for \pkg{WeightIt} using \fun{optim}.
 
 \subsection{Binary Treatments}{
 For binary treatments, this method estimates the weights using \code{optim()} using formulas described by Hainmueller (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
@@ -36,7 +36,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 \code{moments} and \code{int} are accepted. See \fun{weightit} for details.
 \describe{
 \item{\code{base.weights}}{
-A vector of base weights, one for each unit. This works for continuous treatments as well. These correspond to the base weights \eqn{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{\sum w \text{log}(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to \code{base.weights} but can be included in a \code{weightit()} call that includes \code{s.weights}.
+A vector of base weights, one for each unit. This works for continuous treatments as well. These correspond to the base weights \eqn{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{\sum w \log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to \code{base.weights} but can be included in a \code{weightit()} call that includes \code{s.weights}.
 }
 \item{\code{d.moments}}{
 With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2020) recommend setting \code{d.moments = 3}, even if \code{moments} is less than 3. This argument corresponds to the tuning parameters \eqn{r} and \eqn{s} in Vegetabile et al. (2020) (which here must be equal). Ignored for binary and multi-category treatments.
