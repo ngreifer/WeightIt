@@ -473,15 +473,12 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   return(out.list)
 }
 print.summary.weightitMSM <- function(x, ...) {
-  if (all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))) {
-    only.one <- TRUE
-  }
-  else only.one <- FALSE
+  only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))
 
   cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
   for (ti in seq_along(x)) {
     if (!only.one) cat(strikethrough(paste(rep(" ", 22), collapse = "")) %+% italic(" Time " %+% ti %+% " ") %+% strikethrough(paste(rep(" ", 22), collapse = "")) %+% "\n")
-
+    print(x[[ti]])
     cat("\n")
     if (only.one) break
   }
