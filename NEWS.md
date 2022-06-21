@@ -5,6 +5,8 @@ WeightIt News and Updates
 
 * Fixed a bug that would occur when a factor or character predictor with a single level was passed to `weightit()`.
 
+* Improved the code for entropy balancing, fixing a bug when using `s.weights` with a continuous treatment.
+
 * Improved robustness of documentation to missing packages.
 
 * Updated the logo, thanks to [Ben Stillerman](https://stillben.com).
@@ -23,7 +25,7 @@ WeightIt News and Updates
 
 * With `method = "energy"`, `min.w` can now be negative, allowing for negative weights.
 
-* With `method = "energy"`, `dist.mat` can now be supplied as the name of a method to compute the distance matrix: `"scaled"`, `"mahalanobis"`, or `"euclidean"`. `"mahalanobis"` is recommended when categorical variables are present.
+* With `method = "energy"`, `dist.mat` can now be supplied as the name of a method to compute the distance matrix: `"scaled_euclidean"`, `"mahalanobis"`, or `"euclidean"`.
 
 * Support for negative weights added to `summary()`. Negative weights are possible (though not by default) when using `method = "energy"` or `method = "optweight"`.
 
