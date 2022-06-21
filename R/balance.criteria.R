@@ -282,10 +282,9 @@ init_energy.dist <- function(covs, treat, s.weights = NULL, estimand = "ATE", fo
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 
-    covs <- mat_div(center(covs, at = col.w.m(covs, s.weights)),
-                    sqrt(col.w.v(covs, s.weights)))
-
-    d <- as.matrix(dist(covs))
+    dist.covs <- transform_covariates(data = covs, method = "scaled_euclidean",
+                                      s.weights = s.weights)
+    d <- unname(eucdist_internal(dist.covs))
 
     n <- length(treat)
     unique.treats <- unique(treat)

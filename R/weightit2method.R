@@ -193,6 +193,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else {
         if (use.br) {
+          check.package("brglm2")
           ctrl_fun <- brglm2::brglmControl
           glm_method <- brglm2::brglmFit
           family <- binomial(link = A[["link"]])
@@ -2228,49 +2229,53 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   A <- list(...)
 
-  n <- length(treat)
-  covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat[subset])
-  s.weights <- s.weights[subset]
-
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
-
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    missing.ind <- apply(covs[subset, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
     if (is_not_null(missing.ind)) {
       covs[is.na(covs)] <- 0
       covs <- cbind(covs, missing.ind)
     }
   }
 
-  if (is_null(A[["dist.mat"]])) A[["dist.mat"]] <- "scaled"
+  dist.mat <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
+  A[["dist.mat"]] <- NULL
 
-  if (is.character(A[["dist.mat"]]) && length(A[["dist.mat"]]) == 1L) {
-    A[["dist.mat"]] <- match_arg(A[["dist.mat"]], c("mahalanobis", "scaled", "euclidean"))
+  if (is.character(dist.mat) && length(dist.mat) == 1L) {
+    dist.covs <- transform_covariates(data = covs, method = dist.mat,
+                                      s.weights = s.weights, discarded = !subset)
+    d <- unname(eucdist_internal(dist.covs))
 
-    A[["dist.mat"]] <- {
-      if (A[["dist.mat"]] == "mahalanobis") {
-        mahSigma_inv <- generalized_inverse(cov.wt(covs, s.weights)$cov)
-        dist(tcrossprod(covs, chol2(mahSigma_inv)))
-      }
-      else if (A[["dist.mat"]] == "scaled") {
-        dist(mat_div(covs, sqrt(col.w.v(covs, s.weights))))
-      }
-      else if (A[["dist.mat"]] == "euclidean") {
-        dist(covs)
-      }
+    # dist.mat <- match_arg(dist.mat, c("mahalanobis", "scaled_euclidean", "euclidean"))
+    #
+    # dist.mat <- {
+    #   if (dist.mat == "mahalanobis") {
+    #     mahSigma_inv <- generalized_inverse(cov.wt(covs, s.weights)$cov)
+    #     as.matrix(dist(tcrossprod(covs, chol2(mahSigma_inv))))
+    #   }
+    #   else if (dist.mat == "scaled_euclidean") {
+    #     as.matrix(dist(mat_div(covs, sqrt(col.w.v(covs, s.weights)))))
+    #   }
+    #   else if (dist.mat == "euclidean") {
+    #     as.matrix(dist(covs))
+    #   }
+    # }
+  }
+  else {
+    if (inherits(dist.mat, "dist")) dist.mat <- as.matrix(dist.mat)
+
+    if (!is.matrix(dist.mat) || !all(dim(dist.mat) == length(treat)) ||
+        !all(check_if_zero(diag(dist.mat))) || any(dist.mat < 0) ||
+        !isSymmetric(unname(dist.mat))) {
+      stop(sprintf("'dist.mat' must be one of %s or a square, symmetric distance matrix with a value for all pairs of units.",
+                   word_list(weightit_distances(), "or", quotes = TRUE)), call. = FALSE)
     }
+
+    d <- unname(dist.mat[subset, subset])
   }
 
-  if (inherits(A[["dist.mat"]], "dist")) A[["dist.mat"]] <- as.matrix(A[["dist.mat"]])
-
-  if (is.matrix(A[["dist.mat"]]) && all(dim(A[["dist.mat"]]) == n) &&
-      all(check_if_zero(diag(A[["dist.mat"]]))) && !any(A[["dist.mat"]] < 0) &&
-      isSymmetric(unname(A[["dist.mat"]]))) {
-    d <- unname(A[["dist.mat"]][subset, subset])
-  }
-  else stop("'dist.mat' must be one of \"mahalanobis\", \"scaled\", or \"euclidean\" or a square, symmetric distance matrix with a value for all pairs of units.", call. = FALSE)
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
 
   n <- length(treat)
   levels_treat <- levels(treat)
