@@ -1,9 +1,13 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# WeightIt 0.13.1
 
 * Fixed a bug that would occur when a factor or character predictor with a single level was passed to `weightit()`.
+
+* Improved robustness of documentation to missing packages.
+
+* Updated the logo, thanks to [Ben Stillerman](https://stillben.com).
 
 # WeightIt 0.13.0
 
