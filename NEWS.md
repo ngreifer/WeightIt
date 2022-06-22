@@ -3,6 +3,10 @@ WeightIt News and Updates
 
 # WeightIt 0.13.1
 
+* For ordinal multicategory treatments, setting `link = "br.logit"` now uses `brglm2::bracl()` to fit a bias-reduced ordinal regression model.
+
+* Added the vignette "Installing Supporting Packages" to explain how to install the various packages that might be needed for `WeightIt` to use certain methods, including when the package is not on CRAN. See the vignette at `vignette("installing-packages")`.
+
 * Fixed a bug that would occur when a factor or character predictor with a single level was passed to `weightit()`.
 
 * Improved the code for entropy balancing, fixing a bug when using `s.weights` with a continuous treatment and improving messages when the optimization fails to converge. (#33)
