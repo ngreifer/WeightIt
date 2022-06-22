@@ -3,5 +3,6 @@ pkgdown: 2.0.4
 pkgdown_sha: ~
 articles:
   WeightIt: WeightIt.html
-last_built: 2022-06-21T21:27Z
+  installing-packages: installing-packages.html
+last_built: 2022-06-22T21:16Z
 
