@@ -139,27 +139,27 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
     }
 
     #Process link
-    if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit")
+    if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit", "br.logit")
     else if (bin.treat || isFALSE(A$use.mlogit)) {
       if (missing == "saem") acceptable.links <- "logit"
       else acceptable.links <- expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
     }
     else acceptable.links <- c("logit", "probit", "bayes.probit", "br.logit")
 
-    if (is_null(A$link)) A$link <- acceptable.links[1]
+    if (is_null(A[["link"]])) A$link <- acceptable.links[1]
     else {
-      which.link <- acceptable.links[pmatch(A$link, acceptable.links, nomatch = 0)][1]
+      which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
-        A$link <- acceptable.links[1]
+        A[["link"]] <- acceptable.links[1]
         stop(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE), " allowed as the link for ",
                     if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
                     " treatments", if (missing == "saem") " with missing = \"saem\"", "."),
              call. = FALSE)
       }
-      else A$link <- which.link
+      else A[["link"]] <- which.link
     }
 
-    use.br <- startsWith(A$link, "br.")
+    use.br <- startsWith(A[["link"]], "br.")
     # use.bayes <- startsWith(A$link, "bayes.")
     if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
     # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
@@ -255,22 +255,44 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       fit.obj <- fit
     }
     else if (ord.treat) {
-      if (A[["link"]] == "logit") A[["link"]] <- "logistic"
-      check.package("MASS")
-      # message(paste("Using ordinal", A$link, "regression."))
-      data <- data.frame(treat_sub, covs)
-      formula <- formula(data)
+      if (use.br) {
+        check.package("brglm2")
 
-      tryCatch({fit <- do.call(MASS::polr,
-                               list(formula,
-                                    data = data,
-                                    weights = s.weights,
-                                    Hess = FALSE,
-                                    model = FALSE,
-                                    method = A[["link"]],
-                                    contrasts = NULL), quote = TRUE)},
-               error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment.",
-                                                "\n       Error message: ", conditionMessage(e)), call. = FALSE)})
+        ctrl_fun <- brglm2::brglmControl
+        control <- do.call(ctrl_fun, c(A[["control"]],
+                                       A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                                 names(A[["control"]]))]))
+
+        data <- data.frame(treat_sub, covs)
+        formula <- formula(data)
+
+        tryCatch({fit <- do.call(brglm2::bracl, list(formula,
+                             data = data,
+                             weights = s.weights,
+                             control = control,
+                             parallel = if_null_then(A[["parallel"]], FALSE)),
+                       quote = TRUE)},
+                 error = function(e) stop("There was a problem with the bias-reduced ordinal logit regression. Try a different link.", call. = FALSE))
+      }
+      else {
+        if (A[["link"]] == "logit") A[["link"]] <- "logistic"
+        check.package("MASS")
+        # message(paste("Using ordinal", A$link, "regression."))
+        data <- data.frame(treat_sub, covs)
+        formula <- formula(data)
+
+        tryCatch({fit <- do.call(MASS::polr,
+                                 list(formula,
+                                      data = data,
+                                      weights = s.weights,
+                                      Hess = FALSE,
+                                      model = FALSE,
+                                      method = A[["link"]],
+                                      contrasts = NULL), quote = TRUE)},
+                 error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment.",
+                                                  "\n       Error message: ", conditionMessage(e)), call. = FALSE)})
+      }
+
 
       ps <- fit$fitted.values
       fit.obj <- fit
