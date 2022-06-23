@@ -10,3 +10,4 @@
 ^pkgdown$
 ^\.github$
 ^.DS_Store$
+^revdep$
