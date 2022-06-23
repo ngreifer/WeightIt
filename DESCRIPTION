@@ -7,16 +7,16 @@ Authors@R: c(
            email = "noah.greifer@gmail.com",
 	       comment=c(ORCID="0000-0003-3067-7154"))
     )
-Description: Generates balancing weights for causal effect estimation in observational studies with 
-             binary, multi-category, or continuous point or longitudinal treatments by easing and 
-             extending the functionality of several R packages and providing in-house estimation methods. 
-             Available methods include propensity score weighting using generalized linear models, gradient 
+Description: Generates balancing weights for causal effect estimation in observational studies with
+             binary, multi-category, or continuous point or longitudinal treatments by easing and
+             extending the functionality of several R packages and providing in-house estimation methods.
+             Available methods include propensity score weighting using generalized linear models, gradient
              boosting machines, the covariate balancing propensity score algorithm, Bayesian additive regression trees, and
              SuperLearner, and directly estimating balancing weights using entropy balancing, empirical
-             balancing calibration weights, energy balancing, and optimization-based weights. Also 
-             allows for assessment of weights and checking of covariate balance by interfacing directly 
-             with the 'cobalt' package. See the vignette "Installing Supporting Packages" for instructions on how 
-             to install any package 'WeightIt' uses, including those not on CRAN.
+             balancing calibration weights, energy balancing, and optimization-based weights. Also
+             allows for assessment of weights and checking of covariate balance by interfacing directly
+             with the 'cobalt' package. See the vignette "Installing Supporting Packages" for instructions on how
+             to install any package 'WeightIt' uses, including those that may not be on CRAN.
 Depends:
     R (>= 3.3.0)
 Imports:

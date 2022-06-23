@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 # WeightIt: Weighting for Covariate Balance in Observational Studies <img src="man/figures/logo.png" align="right" width="150"/>
 
 <!-- badges: start -->
-[![CRAN status](https://www.r-pkg.org/badges/version/WeightIt)](https://CRAN.R-project.org/package=WeightIt)
+[![CRAN status](https://www.r-pkg.org/badges/version/WeightIt?color=00622B)](https://CRAN.R-project.org/package=WeightIt)
 [![CRAN_Downloads_Badge](https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt)
 <!-- badges: end -->
 
@@ -27,7 +27,7 @@ knitr::opts_chunk$set(
 
 `WeightIt` is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Contained within `WeightIt` are methods that call on other R packages to estimate weights. The value of `WeightIt` is in its unified and familiar syntax used to generate the weights, as each of these other packages have their own, often challenging to navigate, syntax. `WeightIt` extends the capabilities of these packages to generate weights used to estimate the ATE, ATT, ATC, and other estimands for binary or multinomial treatments, and treatment effects for continuous treatments when available. In these ways, `WeightIt` does for weighting what `MatchIt` has done for matching, and `MatchIt` users will find the syntax familiar.
 
-For a complete vignette, see the [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html) for `WeightIt`.
+For a complete vignette, see the [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html) for `WeightIt` or `vignette("WeightIt")`.
 
 To install and load `WeightIt`, use the code below:
 
@@ -36,7 +36,7 @@ To install and load `WeightIt`, use the code below:
 install.packages("WeightIt")
 
 #Development version
-devtools::install_github("ngreifer/WeightIt")
+remotes::install_github("ngreifer/WeightIt")
 
 library("WeightIt")
 ```
@@ -72,7 +72,7 @@ summary(W)
 
 Desirable qualities include small coefficients of variation close to 0 and large effective sample sizes.
 
-The table below contains the available methods in `WeightIt` for estimating weights for binary, multinomial, and continuous treatments using various methods and functions from various packages.
+The table below contains the available methods in `WeightIt` for estimating weights for binary, multinomial, and continuous treatments using various methods and functions from various packages. See `vignette("installing-packages")` for information on how to install these packages.
  
  Treatment type | Method (`method = `) | Package
  -------------- | -------------------- | --------
