@@ -635,7 +635,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
     treat.name <- NULL
   }
   else {
-    treat.name <- as.character(resp.var.mentioned)
+    treat.name <- resp.var.mentioned.char
     treat <- eval(resp.var.mentioned, data, env)
   }
 
