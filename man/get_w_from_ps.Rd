@@ -126,7 +126,7 @@ all.equal(w1, w3)
 w4 <- get_w_from_ps(ps, treat = lalonde$treat,
                     estimand = "ATE", subclass = 20,
                     stabilize = TRUE)
-
+\dontshow{if (requireNamespace("gbm", quietly = TRUE)) force(\{ # examplesIf}
 #A multi-category example using GBM predicted probabilities
 library(gbm)
 T3 <- factor(sample(c("A", "B", "C"), nrow(lalonde), replace = TRUE))
@@ -138,5 +138,4 @@ gbm.fit <- gbm(T3 ~ age + educ + race + married +
 ps.multi <- drop(predict(gbm.fit, type = "response",
                          n.trees = 200))
 w <- get_w_from_ps(ps.multi, T3, estimand = "ATE")
-
-}
+\dontshow{\}) # examplesIf}}
