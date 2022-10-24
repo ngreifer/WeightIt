@@ -193,7 +193,7 @@ anova(main.effects.fit, cum.fit)
 anova(full.fit, cum.fit)
 ```
 
-Based on the non-significant p-value, we can assume the effects of each treatment are close enough to be treated as the same, indicating that the number of treatments received is the relevant predictor of the outcome. Now we can examine what that treatment effect is with `summ()` in `jtools` (or `summary()`).
+Based on the non-significant p-value, we can assume the effects of each treatment are close enough to be treated as the same, indicating that the number of treatments received is the relevant predictor of the outcome. Now we can examine what that treatment effect is with `summary()`.
 
 ```{r}
 summary(cum.fit)

@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# WeightIt (development version)
+
+* Updates to the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.
+
 # WeightIt 0.13.1
 
 * For ordinal multicategory treatments, setting `link = "br.logit"` now uses `brglm2::bracl()` to fit a bias-reduced ordinal regression model.
