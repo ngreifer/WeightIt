@@ -45,6 +45,7 @@ Suggests:
     rmarkdown
 License: GPL (>=2)
 Encoding: UTF-8
-URL: https://ngreifer.github.io/WeightIt/, https://github.com/ngreifer/WeightIt
+URL: https://ngreifer.github.io/WeightIt/,
+    https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr

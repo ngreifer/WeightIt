@@ -1,3 +1,4 @@
+url: https://ngreifer.github.io/WeightIt/
 reference:
 - title: Estimate weights
 - contents:
@@ -5,8 +6,7 @@ reference:
   - weightitMSM
   - summary.weightit
 - title: Specific estimation methods
-- contents:
-  - starts_with("method_")
+- contents: starts_with("method_")
 - title: Other functions
 - contents:
   - stop.method
@@ -17,3 +17,4 @@ reference:
   - weightit.fit
   - as.weightit
   - make_full_rank
+
