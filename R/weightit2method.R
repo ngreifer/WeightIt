@@ -2309,11 +2309,11 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     }
   }
 
-  dist.mat <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
+  d <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
   A[["dist.mat"]] <- NULL
 
-  if (is.character(dist.mat) && length(dist.mat) == 1L) {
-    dist.covs <- transform_covariates(data = covs, method = dist.mat,
+  if (is.character(d) && length(d) == 1L) {
+    dist.covs <- transform_covariates(data = covs, method = d,
                                       s.weights = s.weights, discarded = !subset)
     d <- unname(eucdist_internal(dist.covs))
 
@@ -2333,17 +2333,18 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     # }
   }
   else {
-    if (inherits(dist.mat, "dist")) dist.mat <- as.matrix(dist.mat)
+    if (inherits(d, "dist")) d <- as.matrix(d)
 
-    if (!is.matrix(dist.mat) || !all(dim(dist.mat) == length(treat)) ||
-        !all(check_if_zero(diag(dist.mat))) || any(dist.mat < 0) ||
-        !isSymmetric(unname(dist.mat))) {
+    if (!is.matrix(d) || !all(dim(d) == length(treat)) ||
+        !all(check_if_zero(diag(d))) || any(d < 0) ||
+        !isSymmetric(unname(d))) {
       stop(sprintf("'dist.mat' must be one of %s or a square, symmetric distance matrix with a value for all pairs of units.",
                    word_list(weightit_distances(), "or", quotes = TRUE)), call. = FALSE)
     }
 
-    d <- unname(dist.mat[subset, subset])
   }
+
+  d <- unname(d[subset, subset])
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])

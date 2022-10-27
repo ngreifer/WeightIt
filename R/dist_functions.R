@@ -54,7 +54,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
   }
   else if (method == "scaled_euclidean") {
     if (is.null(var)) {
-      sds <- sqrt(col.w.v(X[!discarded,, drop = FALSE], w = s.weights))
+      sds <- sqrt(col.w.v(X[!discarded,, drop = FALSE], w = s.weights[!discarded]))
     }
     else if (is.cov_like(var, X)) {
       sds <- sqrt(diag(var))
