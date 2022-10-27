@@ -11,7 +11,7 @@ knitr::opts_chunk$set(
   message = FALSE,
   tidy = FALSE,
   fig.align='center',
-  comment = "",
+  comment = "#>",
   fig.path = "man/figures/README-"
 )
 ```

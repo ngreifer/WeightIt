@@ -58,13 +58,13 @@ W <- weightit(treat ~ age + educ + nodegree +
 W
 ```
 
-    A weightit object
-     - method: "ps" (propensity score weighting)
-     - number of obs.: 614
-     - sampling weights: none
-     - treatment: 2-category
-     - estimand: ATE
-     - covariates: age, educ, nodegree, married, race, re74, re75
+    #> A weightit object
+    #>  - method: "ps" (propensity score weighting)
+    #>  - number of obs.: 614
+    #>  - sampling weights: none
+    #>  - treatment: 2-category
+    #>  - estimand: ATE
+    #>  - covariates: age, educ, nodegree, married, race, re74, re75
 
 Evaluating weights has two components: evaluating the covariate balance
 produced by the weights, and evaluating whether the weights will allow
@@ -78,27 +78,27 @@ library("cobalt")
 bal.tab(W, un = TRUE)
 ```
 
-    Call
-     weightit(formula = treat ~ age + educ + nodegree + married + 
-        race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
-
-    Balance Measures
-                    Type Diff.Un Diff.Adj
-    prop.score  Distance  1.7569   0.1360
-    age          Contin. -0.2419  -0.1676
-    educ         Contin.  0.0448   0.1296
-    nodegree      Binary  0.1114  -0.0547
-    married       Binary -0.3236  -0.0944
-    race_black    Binary  0.6404   0.0499
-    race_hispan   Binary -0.0827   0.0047
-    race_white    Binary -0.5577  -0.0546
-    re74         Contin. -0.5958  -0.2740
-    re75         Contin. -0.2870  -0.1579
-
-    Effective sample sizes
-               Control Treated
-    Unadjusted  429.    185.  
-    Adjusted    329.01   58.33
+    #> Call
+    #>  weightit(formula = treat ~ age + educ + nodegree + married + 
+    #>     race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
+    #> 
+    #> Balance Measures
+    #>                 Type Diff.Un Diff.Adj
+    #> prop.score  Distance  1.7569   0.1360
+    #> age          Contin. -0.2419  -0.1676
+    #> educ         Contin.  0.0448   0.1296
+    #> nodegree      Binary  0.1114  -0.0547
+    #> married       Binary -0.3236  -0.0944
+    #> race_black    Binary  0.6404   0.0499
+    #> race_hispan   Binary -0.0827   0.0047
+    #> race_white    Binary -0.5577  -0.0546
+    #> re74         Contin. -0.5958  -0.2740
+    #> re75         Contin. -0.2870  -0.1579
+    #> 
+    #> Effective sample sizes
+    #>            Control Treated
+    #> Unadjusted  429.    185.  
+    #> Adjusted    329.01   58.33
 
 For the second goal, qualities of the distributions of weights can be
 assessed using `summary()`, as demonstrated below.
@@ -107,32 +107,32 @@ assessed using `summary()`, as demonstrated below.
 summary(W)
 ```
 
-                     Summary of weights
-
-    - Weight ranges:
-
-               Min                                   Max
-    treated 1.1721 |---------------------------| 40.0773
-    control 1.0092 |-|                            4.7432
-
-    - Units with 5 most extreme weights by group:
-                                                    
-                  68     116      10     137     124
-     treated 13.5451 15.9884 23.2967 23.3891 40.0773
-                 597     573     381     411     303
-     control  4.0301  4.0592  4.2397  4.5231  4.7432
-
-    - Weight statistics:
-
-            Coef of Var   MAD Entropy # Zeros
-    treated       1.478 0.807   0.534       0
-    control       0.552 0.391   0.118       0
-
-    - Effective Sample Sizes:
-
-               Control Treated
-    Unweighted  429.    185.  
-    Weighted    329.01   58.33
+    #>                  Summary of weights
+    #> 
+    #> - Weight ranges:
+    #> 
+    #>            Min                                   Max
+    #> treated 1.1721 |---------------------------| 40.0773
+    #> control 1.0092 |-|                            4.7432
+    #> 
+    #> - Units with 5 most extreme weights by group:
+    #>                                                 
+    #>               68     116      10     137     124
+    #>  treated 13.5451 15.9884 23.2967 23.3891 40.0773
+    #>              597     573     381     411     303
+    #>  control  4.0301  4.0592  4.2397  4.5231  4.7432
+    #> 
+    #> - Weight statistics:
+    #> 
+    #>         Coef of Var   MAD Entropy # Zeros
+    #> treated       1.478 0.807   0.534       0
+    #> control       0.552 0.391   0.118       0
+    #> 
+    #> - Effective Sample Sizes:
+    #> 
+    #>            Control Treated
+    #> Unweighted  429.    185.  
+    #> Weighted    329.01   58.33
 
 Desirable qualities include small coefficients of variation close to 0
 and large effective sample sizes.

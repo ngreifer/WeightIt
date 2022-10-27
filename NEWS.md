@@ -5,9 +5,11 @@ WeightIt News and Updates
 
 * Updates to the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.
 
+* Fixed a bug when using `method = "energy"` with `by`.
+
 # WeightIt 0.13.1
 
-* For ordinal multicategory treatments, setting `link = "br.logit"` now uses `brglm2::bracl()` to fit a bias-reduced ordinal regression model.
+* For ordinal multi-category treatments, setting `link = "br.logit"` now uses `brglm2::bracl()` to fit a bias-reduced ordinal regression model.
 
 * Added the vignette "Installing Supporting Packages" to explain how to install the various packages that might be needed for `WeightIt` to use certain methods, including when the package is not on CRAN. See the vignette at `vignette("installing-packages")`.
 
