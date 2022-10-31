@@ -27,7 +27,6 @@ Imports:
 Suggests:
     twang (>= 1.5),
     CBPS (>= 0.18),
-    ATE (>= 0.2.0),
     optweight (>= 0.2.4),
     SuperLearner (>= 2.0-25),
     mlogit (>= 1.1.0),

@@ -5,7 +5,7 @@ method.to.proper.method <- function(method) {
   else if (method %in% c("cbps", "cbgps")) return("cbps")
   else if (method %in% c("npcbps", "npcbgps")) return("npcbps")
   else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
-  else if (method %in% c("ebcw", "ate")) return("ebcw")
+  # else if (method %in% c("ebcw", "ate")) return("ebcw")
   else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
   else if (method %in% c("super", "superlearner")) return("super")
   else if (method %in% c("bart")) return("bart")
@@ -21,7 +21,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
                           , "npcbps", "npcbgps"
                           , "ebal", "entropy", "ebalance"
                           , "sbw"
-                          , "ebcw", "ate"
+                          # , "ebcw", "ate"
                           , "optweight", "opt", "sbw"
                           , "super", "superlearner"
                           , "energy"
@@ -68,7 +68,7 @@ method.to.phrase <- function(method) {
     else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
     else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
     else if (method %in% c("ebal")) return("entropy balancing")
-    else if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
+    # else if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
     else if (method %in% c("optweight")) return("targeted stable balancing weights")
     else if (method %in% c("super")) return("propensity score weighting with SuperLearner")
     else if (method %in% c("bart")) return("propensity score weighting with BART")
@@ -85,7 +85,7 @@ process.estimand <- function(estimand, method, treat.type) {
                   , cbps = c("ATT", "ATC", "ATE")
                   , npcbps = c("ATE")
                   , ebal = c("ATT", "ATC", "ATE")
-                  , ebcw = c("ATT", "ATC", "ATE")
+                  # , ebcw = c("ATT", "ATC", "ATE")
                   , optweight = c("ATT", "ATC", "ATE")
                   , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
                   , energy = c("ATT", "ATC", "ATE")
@@ -97,7 +97,7 @@ process.estimand <- function(estimand, method, treat.type) {
                        , cbps = c("ATT", "ATC", "ATE")
                        , npcbps = c("ATE")
                        , ebal = c("ATT", "ATC", "ATE")
-                       , ebcw = c("ATT", "ATC", "ATE")
+                       # , ebcw = c("ATT", "ATC", "ATE")
                        , optweight = c("ATT", "ATC", "ATE")
                        , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
                        , energy = c("ATT", "ATC", "ATE")
@@ -123,7 +123,7 @@ check.subclass <- function(method, treat.type) {
                   , cbps = TRUE
                   , npcbps = FALSE
                   , ebal = FALSE
-                  , ebcw = FALSE
+                  # , ebcw = FALSE
                   , optweight = FALSE
                   , super = TRUE
                   , energy = FALSE
@@ -135,7 +135,7 @@ check.subclass <- function(method, treat.type) {
                        , cbps = FALSE
                        , npcbps = FALSE
                        , ebal = FALSE
-                       , ebcw = FALSE
+                       # , ebcw = FALSE
                        , optweight = FALSE
                        , super = TRUE
                        , energy = FALSE
@@ -377,7 +377,7 @@ process.missing <- function(missing, method, treat.type) {
   , cbps = c("ind")
   , npcbps = c("ind")
   , ebal = c("ind")
-  , ebcw = c("ind")
+  # , ebcw = c("ind")
   , optweight = c("ind")
   , super = c("ind")
   , bart = c("ind")
@@ -389,7 +389,7 @@ process.missing <- function(missing, method, treat.type) {
                      , cbps = c("ind")
                      , npcbps = c("ind")
                      , ebal = c("ind")
-                     , ebcw = c("ind")
+                     # , ebcw = c("ind")
                      , optweight = c("ind")
                      , super = c("ind")
                      , bart = c("ind")
@@ -403,7 +403,7 @@ process.missing <- function(missing, method, treat.type) {
   , cbps = c("ind")
   , npcbps = c("ind")
   , ebal = c("ind")
-  , ebcw = c("ind")
+  # , ebcw = c("ind")
   , optweight = c("ind")
   , super = c("ind")
   , bart = c("ind")

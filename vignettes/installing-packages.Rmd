@@ -147,19 +147,21 @@ remotes::install_github("kosukeimai/CBPS")
 
 ## Empirical balancing calibration weighting (`method = "ebcw"`)
 
-`WeightIt` uses the R package `ATE` to perform empirical balancing calibration weighting. To install `ATE` from CRAN, run
+Empirical balancing calibration weighting is no longer available with `WeightIt`. Use entropy balancing, which in most cases is mathematically identical. 
 
-```{r}
-install.packages("ATE")
-```
+<!-- `WeightIt` uses the R package `ATE` to perform empirical balancing calibration weighting. To install `ATE` from CRAN, run -->
 
-If `ATE` is not on CRAN, or if you want to install the development version from source, you can do so from the developer, Asad Haris's, [GitHub repo](https://github.com/asadharis/ATE) using the following code:
+<!-- ```{r} -->
+<!-- install.packages("ATE") -->
+<!-- ``` -->
 
-```{r}
-remotes::install_github("asadharis/ATE")
-```
+<!-- If `ATE` is not on CRAN, or if you want to install the development version from source, you can do so from the developer, Asad Haris's, [GitHub repo](https://github.com/asadharis/ATE) using the following code: -->
 
-`ATE` requires compilation, which means you may need additional software installed on your computer to install it from source.
+<!-- ```{r} -->
+<!-- remotes::install_github("asadharis/ATE") -->
+<!-- ``` -->
+
+<!-- `ATE` requires compilation, which means you may need additional software installed on your computer to install it from source. -->
 
 ## Optimization-based weighting (`method = "optweight"`)
 

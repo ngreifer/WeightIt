@@ -78,10 +78,6 @@ library("cobalt")
 bal.tab(W, un = TRUE)
 ```
 
-    #> Call
-    #>  weightit(formula = treat ~ age + educ + nodegree + married + 
-    #>     race + re74 + re75, data = lalonde, method = "ps", estimand = "ATE")
-    #> 
     #> Balance Measures
     #>                 Type Diff.Un Diff.Adj
     #> prop.score  Distance  1.7569   0.1360
@@ -115,7 +111,7 @@ summary(W)
     #> treated 1.1721 |---------------------------| 40.0773
     #> control 1.0092 |-|                            4.7432
     #> 
-    #> - Units with 5 most extreme weights by group:
+    #> - Units with the 5 most extreme weights by group:
     #>                                                 
     #>               68     116      10     137     124
     #>  treated 13.5451 15.9884 23.2967 23.3891 40.0773
@@ -150,7 +146,6 @@ these packages.
 | \-              | Covariate Balancing PS (`"cbps"`)                   | `CBPS`         |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)  | `CBPS`         |
 | \-              | Entropy Balancing (`"ebal"`)                        | \-             |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)  | `ATE`          |
 | \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
 | \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
 | \-              | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
@@ -160,7 +155,6 @@ these packages.
 | \-              | Covariate Balancing PS (`"cbps"`)                   | `CBPS`         |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)  | `CBPS`         |
 | \-              | Entropy Balancing (`"ebal"`)                        | \-             |
-| \-              | Empirical Balancing Calibration Weights (`"ebcw"`)  | `ATE`          |
 | \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
 | \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
 | \-              | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
@@ -173,6 +167,7 @@ these packages.
 | \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
 | \-              | SuperLearner GPS (`"super"`)                        | `SuperLearner` |
 | \-              | Bayesian additive regression trees GPS (`"bart"`)   | `dbarts`       |
+| \-              | Energy Balancing (`"energy"`)                       | \-             |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are

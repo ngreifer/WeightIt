@@ -102,7 +102,7 @@ The primary purpose of \code{weightit()} is as a dispatcher to functions that pe
 \item{\code{\link[=method_cbps]{"cbps"}} - Covariate Balancing Propensity Score weighting.}
 \item{\code{\link[=method_npcbps]{"npcbps"}} - Non-parametric Covariate Balancing Propensity Score weighting.}
 \item{\code{\link[=method_ebal]{"ebal"}} - Entropy balancing.}
-\item{\code{\link[=method_ebcw]{"ebcw"}} - Empirical balancing calibration weighting.}
+%\item{\code{\link[=method_ebcw]{"ebcw"}} - Empirical balancing calibration weighting.}
 \item{\code{\link[=method_optweight]{"optweight"}} - Optimization-based weighting.}
 \item{\code{\link[=method_super]{"super"}} - Propensity score weighting using SuperLearner.}
 \item{\code{\link[=method_bart]{"bart"}} - Propensity score weighting using Bayesian additive regression trees (BART).}
@@ -134,13 +134,14 @@ data("lalonde", package = "cobalt")
                 method = "ps", estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
-
+\dontshow{if (requireNamespace("osqp", quietly = TRUE)) force(\{ # examplesIf}
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "ebal", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
+\dontshow{\}) # examplesIf}
 \dontshow{if (requireNamespace("CBPS", quietly = TRUE)) force(\{ # examplesIf}
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +

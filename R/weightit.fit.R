@@ -307,24 +307,24 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
                                    ...)
       }
     }
-    else if (method == "ebcw") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2ebcw(covs = covs,
-                             treat = treat,
-                             s.weights = s.weights,
-                             subset = by.factor == i,
-                             estimand = estimand,
-                             focal = focal,
-                             #stabilize = stabilize,
-                             moments = moments,
-                             int = int,
-                             missing = missing,
-                             ...)
-      }
-      else {
-        stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
-      }
-    }
+    # else if (method == "ebcw") {
+    #   if (treat.type %in% c("binary", "multinomial")) {
+    #     obj <- weightit2ebcw(covs = covs,
+    #                          treat = treat,
+    #                          s.weights = s.weights,
+    #                          subset = by.factor == i,
+    #                          estimand = estimand,
+    #                          focal = focal,
+    #                          #stabilize = stabilize,
+    #                          moments = moments,
+    #                          int = int,
+    #                          missing = missing,
+    #                          ...)
+    #   }
+    #   else {
+    #     stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
+    #   }
+    # }
     else if (method == "energy") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2energy(covs = covs,
