@@ -1,93 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>/404.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/404.html</loc>
   </url>
   <url>
-    <loc>/articles/WeightIt.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/articles/WeightIt.html</loc>
   </url>
   <url>
-    <loc>/articles/index.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/articles/index.html</loc>
   </url>
   <url>
-    <loc>/articles/installing-packages.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/articles/installing-packages.html</loc>
   </url>
   <url>
-    <loc>/authors.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/authors.html</loc>
   </url>
   <url>
-    <loc>/index.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/index.html</loc>
   </url>
   <url>
-    <loc>/news/index.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/news/index.html</loc>
   </url>
   <url>
-    <loc>/reference/ESS.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/ESS.html</loc>
   </url>
   <url>
-    <loc>/reference/as.weightit.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/as.weightit.html</loc>
   </url>
   <url>
-    <loc>/reference/get_w_from_ps.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.html</loc>
   </url>
   <url>
-    <loc>/reference/index.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/index.html</loc>
   </url>
   <url>
-    <loc>/reference/make_full_rank.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/make_full_rank.html</loc>
   </url>
   <url>
-    <loc>/reference/method_bart.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_bart.html</loc>
   </url>
   <url>
-    <loc>/reference/method_cbps.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_cbps.html</loc>
   </url>
   <url>
-    <loc>/reference/method_ebal.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_ebal.html</loc>
   </url>
   <url>
-    <loc>/reference/method_ebcw.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_energy.html</loc>
   </url>
   <url>
-    <loc>/reference/method_energy.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_gbm.html</loc>
   </url>
   <url>
-    <loc>/reference/method_gbm.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_npcbps.html</loc>
   </url>
   <url>
-    <loc>/reference/method_npcbps.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_optweight.html</loc>
   </url>
   <url>
-    <loc>/reference/method_optweight.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_ps.html</loc>
   </url>
   <url>
-    <loc>/reference/method_ps.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_super.html</loc>
   </url>
   <url>
-    <loc>/reference/method_super.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/method_user.html</loc>
   </url>
   <url>
-    <loc>/reference/method_user.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/sbps.html</loc>
   </url>
   <url>
-    <loc>/reference/sbps.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/stop.method.html</loc>
   </url>
   <url>
-    <loc>/reference/stop.method.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/summary.weightit.html</loc>
   </url>
   <url>
-    <loc>/reference/summary.weightit.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/trim.html</loc>
   </url>
   <url>
-    <loc>/reference/trim.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/weightit.fit.html</loc>
   </url>
   <url>
-    <loc>/reference/weightit.fit.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/weightit.html</loc>
   </url>
   <url>
-    <loc>/reference/weightit.html</loc>
-  </url>
-  <url>
-    <loc>/reference/weightitMSM.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/weightitMSM.html</loc>
   </url>
 </urlset>
