@@ -15,7 +15,7 @@ For binary treatments, this method estimates the weights using \code{optim()} us
 For multinomial treatments, this method estimates the weights using \code{optim()}. The following estimands are allowed: ATE and ATT. When the ATE is requested, \code{optim()} is run once for each treatment group. When the ATT is requested, \code{optim()} is run once for each non-focal (i.e., control) group.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the weights using \code{optim()} using formulas described by Tübbicke (2020).
+For continuous treatments, this method estimates the weights using \code{optim()} using formulas described by Tübbicke (2022) and Vegetabile et al. (2021).
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point. This method is not guaranteed to yield exact balance at each time point. NOTE: the use of entropy balancing with longitudinal treatments has not been validated!
@@ -39,7 +39,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 A vector of base weights, one for each unit. This works for continuous treatments as well. These correspond to the base weights \eqn{q} in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{\sum w \log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to \code{base.weights} but can be included in a \code{weightit()} call that includes \code{s.weights}.
 }
 \item{\code{d.moments}}{
-With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2020) recommend setting \code{d.moments = 3}, even if \code{moments} is less than 3. This argument corresponds to the tuning parameters \eqn{r} and \eqn{s} in Vegetabile et al. (2020) (which here must be equal). Ignored for binary and multi-category treatments.
+With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2021) recommend setting \code{d.moments = 3}, even if \code{moments} is less than 3. This argument corresponds to the tuning parameters \eqn{r} and \eqn{s} in Vegetabile et al. (2021) (which here are set to be equal). Ignored for binary and multi-category treatments.
 }
 }
 
