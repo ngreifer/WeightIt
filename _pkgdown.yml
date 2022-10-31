@@ -1,4 +1,8 @@
+template:
+  bootstrap: 5
+
 url: https://ngreifer.github.io/WeightIt/
+
 reference:
 - title: Estimate weights
 - contents:
