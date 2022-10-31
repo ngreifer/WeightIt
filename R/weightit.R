@@ -274,7 +274,9 @@ print.summary.weightit <- function(x, ...) {
                             matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), rep("", top - length(x)), round(x, 4), rep("", top - length(x))))),
                                    byrow = TRUE, nrow = 2*length(x$weight.top))),
                  rep("", 1 + top))
-  cat("\n- " %+% italic("Units with", top, "most extreme weights by group") %+% ":\n")
+  cat("\n- " %+% italic(sprintf("Units with the %s most extreme weights%s",
+                        top, ngettext(length(x$weight.top), "",
+                                      " by group"))) %+% ":\n")
   print.data.frame(df, row.names = FALSE)
   cat("\n- " %+% italic("Weight statistics") %+% ":\n\n")
   print.data.frame(round_df_char(setNames(as.data.frame(cbind(x$coef.of.var,
