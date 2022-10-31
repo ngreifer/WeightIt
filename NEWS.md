@@ -3,7 +3,9 @@ WeightIt News and Updates
 
 # WeightIt (development version)
 
-* Updates to the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.
+* Added energy balance for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2021)](http://arxiv.org/abs/2107.07086). These weights minimize the distance covariance between the treatment and covariates. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
+
+* Updated the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.
 
 * Fixed a bug when using `method = "energy"` with `by`.
 

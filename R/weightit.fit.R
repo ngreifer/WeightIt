@@ -334,21 +334,20 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
                                estimand = estimand,
                                focal = focal,
                                stabilize = stabilize,
+                               missing = missing,
                                moments = moments,
                                int = int,
-                               missing = missing,
                                ...)
       }
       else {
-        stop("Energy balancing weights are not compatible with continuous treatments.", call. = FALSE)
-        # obj <- weightit2energy.cont(covs = covs,
-        #                             treat = treat,
-        #                             subset = by.factor == i,
-        #                             s.weights = s.weights,
-        #                             moments = moments,
-        #                             int = int,
-        #                             missing = missing,
-        #                             ...)
+        obj <- weightit2energy.cont(covs = covs,
+                                    treat = treat,
+                                    subset = by.factor == i,
+                                    s.weights = s.weights,
+                                    missing = missing,
+                                    moments = moments,
+                                    int = int,
+                                    ...)
       }
     }
     else if (method == "bart") {

@@ -1462,7 +1462,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
 weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, ...) {
   stop("CBMSM doesn't work yet.")
 }
-weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1500,7 +1500,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, moments, int, missin
 
   return(obj)
 }
-weightit2npcbps.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   check.package("CBPS")
 
   A <- list(...)
@@ -1637,7 +1637,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   obj <- list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
   return(obj)
 }
-weightit2ebal.cont <- function(covs, treat, s.weights, subset, moments, int, missing, ...) {
+weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -2316,21 +2316,6 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     dist.covs <- transform_covariates(data = covs, method = d,
                                       s.weights = s.weights, discarded = !subset)
     d <- unname(eucdist_internal(dist.covs))
-
-    # dist.mat <- match_arg(dist.mat, c("mahalanobis", "scaled_euclidean", "euclidean"))
-    #
-    # dist.mat <- {
-    #   if (dist.mat == "mahalanobis") {
-    #     mahSigma_inv <- generalized_inverse(cov.wt(covs, s.weights)$cov)
-    #     as.matrix(dist(tcrossprod(covs, chol2(mahSigma_inv))))
-    #   }
-    #   else if (dist.mat == "scaled_euclidean") {
-    #     as.matrix(dist(mat_div(covs, sqrt(col.w.v(covs, s.weights)))))
-    #   }
-    #   else if (dist.mat == "euclidean") {
-    #     as.matrix(dist(covs))
-    #   }
-    # }
   }
   else {
     if (inherits(d, "dist")) d <- as.matrix(d)
@@ -2358,6 +2343,12 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   if (!is.numeric(min.w) || length(min.w) != 1) {
     warning("'min.w' must be a single number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
     min.w <- 1e-8
+  }
+
+  lambda <- if_null_then(A[["lambda"]], 1e-4)
+  if (!is.numeric(lambda) || length(lambda) != 1) {
+    warning("'lambda' must be a single number. Setting lambda = 1e-4.", call. = FALSE, immediate. = TRUE)
+    lambda <- 1e-4
   }
 
   for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean(s.weights[treat == t])
@@ -2405,7 +2396,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   }
 
   #Add weight penalty
-  if (is_not_null(A[["lambda"]])) diag(M2) <- diag(M2) + A[["lambda"]] / n^2
+  diag(M2) <- diag(M2) + lambda / n^2
 
   if (moments != 0 || int) {
     #Exactly balance moments and/or interactions
@@ -2426,6 +2417,15 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
                            lapply(levels_treat, function(t) {
                              if (is_null(focal) || t != focal) targets
                            })))
+  }
+
+  if (lambda < 0) {
+    e <- eigen(M2, symmetric = TRUE, only.values = TRUE)
+    e.min <- min(e$values)
+    if (e.min < 0) {
+      lambda <- -e.min*n^2
+      diag(M2) <- diag(M2) - e.min
+    }
   }
 
   if (is_not_null(A[["eps"]])) {
@@ -2454,7 +2454,183 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   w[w <= min.w] <- min.w
 
+  opt.out$lambda <- lambda
+
   obj <- list(w = w, fit.obj = opt.out)
   return(obj)
 
+}
+weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+  check.package("osqp")
+
+  A <- list(...)
+
+  if (missing == "ind") {
+    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+    if (is_not_null(missing.ind)) {
+      covs[is.na(covs)] <- 0
+      covs <- cbind(covs, missing.ind)
+    }
+  }
+
+  Xdist <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
+  A[["dist.mat"]] <- NULL
+
+  if (is.character(Xdist) && length(Xdist) == 1L) {
+    dist.covs <- transform_covariates(data = covs, method = Xdist,
+                                      s.weights = s.weights, discarded = !subset)
+    Xdist <- unname(eucdist_internal(X = dist.covs))
+  }
+  else {
+    if (inherits(Xdist, "dist")) Xdist <- as.matrix(Xdist)
+
+    if (!is.matrix(Xdist) || !all(dim(Xdist) == length(treat)) ||
+        !all(check_if_zero(diag(Xdist))) || any(Xdist < 0) ||
+        !isSymmetric(unname(Xdist))) {
+      stop(sprintf("'dist.mat' must be one of %s or a square, symmetric distance matrix with a value for all pairs of units.",
+                   word_list(weightit_distances(), "or", quotes = TRUE)), call. = FALSE)
+    }
+
+  }
+
+  Xdist <- unname(Xdist[subset, subset])
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+  s.weights <- s.weights[subset]
+
+  n <- length(treat)
+
+  s.weights <- n * s.weights/sum(s.weights)
+
+  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  if (!is.numeric(min.w) || length(min.w) != 1) {
+    warning("'min.w' must be a single number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
+    min.w <- 1e-8
+  }
+
+  lambda <- if_null_then(A[["lambda"]], 1e-4)
+  if (!is.numeric(lambda) || length(lambda) != 1) {
+    warning("'lambda' must be a single number. Setting lambda = 1e-4.", call. = FALSE, immediate. = TRUE)
+    lambda <- 1e-4
+  }
+
+  d.moments <- max(if_null_then(A[["d.moments"]], 0), moments)
+  if (!is.numeric(d.moments) || length(d.moments) != 1) {
+    warning(sprintf("'d.moments' must be a single number. Setting lambda = %s.", moments),
+            call. = FALSE, immediate. = TRUE)
+    d.moments <- moments
+  }
+
+  dimension.adj <- if_null_then(A[["dimension.adj"]], TRUE)
+
+  Adist <- eucdist_internal(X = treat/sqrt(col.w.v(treat, s.weights)))
+
+  Xmeans <- colMeans(Xdist)
+  Xgrand_mean <- mean(Xmeans)
+  XA <- Xdist + Xgrand_mean - outer(Xmeans, Xmeans, "+")
+
+  Ameans <- colMeans(Adist)
+  Agrand_mean <- mean(Ameans)
+  AA <- Adist + Agrand_mean - outer(Ameans, Ameans, "+")
+
+  Pdcow <- XA * AA/n^2
+  PebA <- -Adist/n^2
+  PebX <- -Xdist/n^2
+  Plam <- diag(n)*lambda/n^2
+
+  qebA <- drop(s.weights %*% Adist)*2/n^2
+  qebX <- drop(s.weights %*% Xdist)*2/n^2
+
+  if (isFALSE(dimension.adj)) {
+    Q_energy_A_adj <- 1 / 2
+  }
+  else {
+    Q_energy_A_adj <- 1 / (1 + sqrt(ncol(covs)))
+  }
+  Q_energy_X_adj <- 1 - Q_energy_A_adj
+
+  PebA <- PebA * Q_energy_A_adj
+  PebX <- PebX * Q_energy_X_adj
+
+  qebA <- qebA * Q_energy_A_adj
+  qebX <- qebX * Q_energy_X_adj
+
+  P <- Pdcow + PebA + PebX + Plam
+  q <- qebA + qebX
+
+  P <- P * outer(s.weights, s.weights)
+  q <- q * s.weights
+
+  Amat <- cbind(diag(n), s.weights)
+  lvec <- c(ifelse(check_if_zero(s.weights), 1, 0), n)
+  uvec <- c(ifelse(check_if_zero(s.weights), 1, Inf), n)
+
+  if (d.moments != 0) {
+    d.covs <- covs
+    d.treat <- cbind(poly(treat, degree = d.moments))
+
+    if (d.moments > 1) {
+      d.covs <- cbind(d.covs, int.poly.f(d.covs, poly = d.moments))
+    }
+
+    X.targets <- col.w.m(d.covs, s.weights)
+    A.targets <- col.w.m(d.treat, s.weights)
+
+    d.covs <- scale(d.covs, center = X.targets, scale = FALSE)
+    d.treat <- scale(d.treat, center = A.targets, scale = FALSE)
+
+    Amat <- cbind(Amat, d.covs * s.weights, d.treat * s.weights)
+    lvec <- c(lvec, rep(0, ncol(d.covs)), rep(0, ncol(d.treat)))
+    uvec <- c(uvec, rep(0, ncol(d.covs)), rep(0, ncol(d.treat)))
+  }
+  if (moments != 0 || int) {
+    covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+    X.means <- col.w.m(covs, s.weights)
+    A.mean <- w.m(treat, s.weights)
+
+    covs <- scale(covs, center = X.means, scale = FALSE)
+    treat <- treat - A.mean
+
+    Amat <- cbind(Amat, covs * treat * s.weights)
+
+    lvec <- c(lvec, rep(0, ncol(covs)))
+    uvec <- c(uvec, rep(0, ncol(covs)))
+  }
+
+  if (lambda < 0) {
+    e <- eigen(P, symmetric = TRUE, only.values = TRUE)
+    e.min <- min(e$values)
+    if (e.min < 0) {
+      lambda <- -e.min*n^2
+      diag(P) <- diag(P) - e.min
+    }
+  }
+
+  if (is_not_null(A[["eps"]])) {
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  }
+  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2e3L
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-8
+  A[["verbose"]] <- TRUE
+  options.list <- do.call(osqp::osqpSettings, A)
+
+  opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
+                              pars = options.list)
+
+  if (identical(opt.out$info$status, "maximum iterations reached")) {
+    warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
+  }
+
+  w <- opt.out$x
+  w[w <= min.w] <- min.w
+
+  opt.out$lambda = lambda
+
+  obj <- list(w = w, fit.obj = opt.out)
+  return(obj)
 }
