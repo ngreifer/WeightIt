@@ -15,10 +15,10 @@ The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic amo
 The sample Mahalanobis distance in the weighted sample. This is similar to "es.rms" except that variables that are redundant with each other will be downweighted. The sample Mahalanobis distance is computed using the (generalized) inverse of the unweighted covariance matrix computed in the focal group when the estimand is the ATT or ATC and using the (generalized) inverse of the average of the unweighted covariance matrices computed within each treatment group (analogous the the ASMD, which uses the average of the group variances in its denominator).
 
 "energy.dist"
-The energy distance between the weighted samples, as described by Huling &amp;amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using method = "energy".)
+The energy distance between the weighted samples, as described by Huling &amp;amp; Mak (2022). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using method = "energy".)
 
-"r2"
-The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseudo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp;amp; Zavoina pseudo-R2.
+"r2", "r2.2", "r2.3"
+For "r2", the pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. "r2.2" and "r2.3" include squares and cubes of the covariates in the model as well. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseudo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp;amp; Zavoina pseudo-R2.
 
 "L1.med"
 The L1 statistic of the weighted samples, which is half the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. Each continuous covariate is coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.
@@ -57,11 +57,14 @@ The average, maximum, or root mean squared absolute Pearson correlation between 
 "s.mean", "s.max", "s.rms"
 The average, maximum, or root mean squared absolute Spearman correlation between the treatment and covariates, respectively. The Spearman correlation is computed using col_w_cov() in cobalt. The correlation uses the unweighted standard deviations of the rank-transformed treatment and covariates in the denominator.
 
-"r2"
-The model R2 of a linear regression of the treatment on the covariates with the weights applied. The standard R2 is used.
+"r2", "r2.2", "r2.3"
+For "r2", the model R2 of a linear regression of the treatment on the covariates with the weights applied. The standard R2 is used. "r2.2" and "r2.3" include squares and cubes of the covariates in the model as well.
 
 "L1.med"
-The L1 statistic of the weighted samples, which is the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates nd treatment, divided by the number of levels of the coarsened treatment. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. The treatment and each continuous covariate are coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.
+The L1 statistic of the weighted samples, which is the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates and treatment, divided by the number of levels of the coarsened treatment. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. The treatment and each continuous covariate are coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.
+
+"distance.cov"
+The distance covariance between the treatment and covariates with the weights applied as described in Huling, Greifer, and Chen (2021). Unlike with method = "energy", the energy distance between the treatment and covariates in the weighted sample and the tretament and covariates in the original sample is not included.
 
 
 
@@ -83,10 +86,10 @@ The average, maximum, or root mean squared Kolmogorov-Smirnov (KS) statistic amo
 The sample Mahalanobis distance in the weighted sample. This is similar to "es.rms" except that variables that are redundant with each other will be downweighted. The sample Mahalanobis distance is computed using the (generalized) inverse of the unweighted covariance matrix computed in the focal group when the estimand is the ATT or ATC and using the (generalized) inverse of the average of the unweighted covariance matrices computed within each treatment group (analogous the the ASMD, which uses the average of the group variances in its denominator).
 
 "energy.dist"
-The energy distance between the weighted samples, as described by Huling &amp;amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using method = "energy".)
+The energy distance between the weighted samples, as described by Huling &amp;amp; Mak (2022). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using method = "energy".)
 
-"r2"
-The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseudo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp;amp; Zavoina pseudo-R2.
+"r2", "r2.2", "r2.3"
+For "r2", the pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. "r2.2" and "r2.3" include squares and cubes of the covariates in the model as well. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseudo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp;amp; Zavoina pseudo-R2.
 
 "L1.med"
 The L1 statistic of the weighted samples, which is half the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. Each continuous covariate is coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.
@@ -125,11 +128,14 @@ The average, maximum, or root mean squared absolute Pearson correlation between 
 "s.mean", "s.max", "s.rms"
 The average, maximum, or root mean squared absolute Spearman correlation between the treatment and covariates, respectively. The Spearman correlation is computed using col_w_cov() in cobalt. The correlation uses the unweighted standard deviations of the rank-transformed treatment and covariates in the denominator.
 
-"r2"
-The model R2 of a linear regression of the treatment on the covariates with the weights applied. The standard R2 is used.
+"r2", "r2.2", "r2.3"
+For "r2", the model R2 of a linear regression of the treatment on the covariates with the weights applied. The standard R2 is used. "r2.2" and "r2.3" include squares and cubes of the covariates in the model as well.
 
 "L1.med"
-The L1 statistic of the weighted samples, which is the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates nd treatment, divided by the number of levels of the coarsened treatment. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. The treatment and each continuous covariate are coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.
+The L1 statistic of the weighted samples, which is the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates and treatment, divided by the number of levels of the coarsened treatment. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. The treatment and each continuous covariate are coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.
+
+"distance.cov"
+The distance covariance between the treatment and covariates with the weights applied as described in Huling, Greifer, and Chen (2021). Unlike with method = "energy", the energy distance between the treatment and covariates in the weighted sample and the tretament and covariates in the original sample is not included.
 
 
 
@@ -146,7 +152,7 @@ The L1 statistic of the weighted samples, which is the average absolute differen
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9003</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -206,10 +212,10 @@ The L1 statistic of the weighted samples, which is the average absolute differen
 <dd><p>The sample Mahalanobis distance in the weighted sample. This is similar to <code>"es.rms"</code> except that variables that are redundant with each other will be downweighted. The sample Mahalanobis distance is computed using the (generalized) inverse of the unweighted covariance matrix computed in the focal group when the estimand is the ATT or ATC and using the (generalized) inverse of the average of the unweighted covariance matrices computed within each treatment group (analogous the the ASMD, which uses the average of the group variances in its denominator).</p></dd>
 
 <dt><code>"energy.dist"</code></dt>
-<dd><p>The energy distance between the weighted samples, as described by Huling &amp; Mak (2020). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using <code><a href="method_energy.html">method = "energy"</a></code>.)</p></dd>
+<dd><p>The energy distance between the weighted samples, as described by Huling &amp; Mak (2022). The "improved" energy distance is used when the estimand is not the ATT. (Note that weights directly minimizing the energy distance can be found using <code><a href="method_energy.html">method = "energy"</a></code>.)</p></dd>
 
-<dt><code>"r2"</code></dt>
-<dd><p>The pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseudo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp; Zavoina pseudo-R2.</p></dd>
+<dt><code>"r2"</code>, <code>"r2.2"</code>, <code>"r2.3"</code></dt>
+<dd><p>For <code>"r2"</code>, the pseudo-R2 of a logistic regression of the treatment on the covariates with the weights applied. <code>"r2.2"</code> and <code>"r2.3"</code> include squares and cubes of the covariates in the model as well. Franklin et al. (2014) consider a similar metric, the post-matching C-statistic, but the pseudo-R2 accomplishes the same goal without requiring a decision boundary. The pseudo-R2 used is the McKelvy &amp; Zavoina pseudo-R2.</p></dd>
 
 <dt><code>"L1.med"</code></dt>
 <dd><p>The L1 statistic of the weighted samples, which is half the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. Each continuous covariate is coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.</p></dd>
@@ -242,11 +248,14 @@ The L1 statistic of the weighted samples, which is the average absolute differen
 <dt><code>"s.mean"</code>, <code>"s.max"</code>, <code>"s.rms"</code></dt>
 <dd><p>The average, maximum, or root mean squared absolute Spearman correlation between the treatment and covariates, respectively. The Spearman correlation is computed using <code><a href="https://ngreifer.github.io/cobalt/reference/balance.summary.html" class="external-link">col_w_cov()</a></code> in <span class="pkg">cobalt</span>. The correlation uses the unweighted standard deviations of the rank-transformed treatment and covariates in the denominator.</p></dd>
 
-<dt><code>"r2"</code></dt>
-<dd><p>The model R2 of a linear regression of the treatment on the covariates with the weights applied. The standard R2 is used.</p></dd>
+<dt><code>"r2"</code>, <code>"r2.2"</code>, <code>"r2.3"</code></dt>
+<dd><p>For <code>"r2"</code>, the model R2 of a linear regression of the treatment on the covariates with the weights applied. The standard R2 is used. <code>"r2.2"</code> and <code>"r2.3"</code> include squares and cubes of the covariates in the model as well.</p></dd>
 
 <dt><code>"L1.med"</code></dt>
-<dd><p>The L1 statistic of the weighted samples, which is the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates nd treatment, divided by the number of levels of the coarsened treatment. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. The treatment and each continuous covariate are coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.</p></dd>
+<dd><p>The L1 statistic of the weighted samples, which is the average absolute difference in proportion for categories of a multidimensional histogram formed by coarsening the covariates and treatment, divided by the number of levels of the coarsened treatment. The coarsening used is the one that yields the median unweighted L1 statistic among 101 random coarsenings of the data. The treatment and each continuous covariate are coarsened into between 2 and 12 bins, and each categorical covariate is combined into between 2 and 12 levels (or however many levels are available). Because the coarsening is random, a seed should be set to ensure results are replicable.</p></dd>
+
+<dt><code>"distance.cov"</code></dt>
+<dd><p>The distance covariance between the treatment and covariates with the weights applied as described in Huling, Greifer, and Chen (2021). Unlike with <code><a href="method_energy.html">method = "energy"</a></code>, the energy distance between the treatment and covariates in the weighted sample and the tretament and covariates in the original sample is not included.</p></dd>
 
 
 </dl></div>
@@ -259,7 +268,8 @@ The L1 statistic of the weighted samples, which is the average absolute differen
     <p>Ali, M. S., Groenwold, R. H. H., Pestman, W. R., Belitser, S. V., Roes, K. C. B., Hoes, A. W., de Boer, A., &amp; Klungel, O. H. (2014). Propensity score balance measures in pharmacoepidemiology: A simulation study. Pharmacoepidemiology and Drug Safety, 23(8), 802–811. <a href="https://doi.org/10.1002/pds.3574" class="external-link">doi:10.1002/pds.3574</a></p>
 <p>Belitser, S. V., Martens, E. P., Pestman, W. R., Groenwold, R. H. H., de Boer, A., &amp; Klungel, O. H. (2011). Measuring balance and model selection in propensity score methods. Pharmacoepidemiology and Drug Safety, 20(11), 1115–1129. <a href="https://doi.org/10.1002/pds.2188" class="external-link">doi:10.1002/pds.2188</a></p>
 <p>Franklin, J. M., Rassen, J. A., Ackermann, D., Bartels, D. B., &amp; Schneeweiss, S. (2014). Metrics for covariate balance in cohort studies of causal effects. Statistics in Medicine, 33(10), 1685–1699. <a href="https://doi.org/10.1002/sim.6058" class="external-link">doi:10.1002/sim.6058</a></p>
-<p>Huling, J. D., &amp; Mak, S. (2020). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. <a href="https://arxiv.org/abs/2004.13962" class="external-link">https://arxiv.org/abs/2004.13962</a></p>
+<p>Huling, J. D., Greifer, N., &amp; Chen, G. (2021). Independence weights for causal inference with continuous exposures (arXiv:2107.07086). arXiv. https://doi.org/10.48550/arXiv.2107.07086</p>
+<p>Huling, J. D., &amp; Mak, S. (2022). Energy Balancing of Covariate Distributions. ArXiv:2004.13962 [Stat]. <a href="https://arxiv.org/abs/2004.13962" class="external-link">https://arxiv.org/abs/2004.13962</a></p>
 <p>Griffin, B. A., McCaffrey, D. F., Almirall, D., Burgette, L. F., &amp; Setodji, C. M. (2017). Chasing Balance and Other Recommendations for Improving Nonparametric Propensity Score Models. Journal of Causal Inference, 5(2). <a href="https://doi.org/10.1515/jci-2015-0026" class="external-link">doi:10.1515/jci-2015-0026</a></p>
     </div>
     <div class="section level2">
