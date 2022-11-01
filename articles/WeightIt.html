@@ -181,14 +181,15 @@ covariates.</p>
 propensity scores generated through logistic regression. We need to
 supply <code><a href="../reference/weightit.html">weightit()</a></code> with the formula for the model, the data
 set, the estimand (ATT), and the method of estimation
-(<code>"ps"</code>) for propensity score weights).</p>
+(<code>"glm"</code>) for generalized linear model propensity score
+weights).</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/">"WeightIt"</a></span><span class="op">)</span></span>
 <span><span class="va">W.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
-<span>                  data <span class="op">=</span> <span class="va">lalonde</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>, method <span class="op">=</span> <span class="st">"ps"</span><span class="op">)</span></span>
+<span>                  data <span class="op">=</span> <span class="va">lalonde</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>, method <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span></span>
 <span><span class="va">W.out</span> <span class="co">#print the output</span></span></code></pre></div>
 <pre><code><span><span class="co">## A <span style="font-style: italic;">weightit</span> object</span></span>
-<span><span class="co">##  - method: "ps" (propensity score weighting)</span></span>
+<span><span class="co">##  - method: "glm" (propensity score weighting with GLM)</span></span>
 <span><span class="co">##  - number of obs.: 614</span></span>
 <span><span class="co">##  - sampling weights: none</span></span>
 <span><span class="co">##  - treatment: 2-category</span></span>
@@ -243,7 +244,7 @@ balance on our covariates.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"v"</span><span class="op">)</span>, thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Call</span></span></span>
 <span><span class="co">##  weightit(formula = treat ~ age + educ + race + married + nodegree + </span></span>
-<span><span class="co">##     re74 + re75, data = lalonde, method = "ps", estimand = "ATT")</span></span>
+<span><span class="co">##     re74 + re75, data = lalonde, method = "glm", estimand = "ATT")</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span></span>
 <span><span class="co">##                 Type Diff.Adj         M.Threshold V.Ratio.Adj</span></span>
@@ -538,18 +539,18 @@ that imbalance in our weighted data set. We’ll use the
 <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> function to specify our weight models. The
 syntax is similar both to that of <code><a href="../reference/weightit.html">weightit()</a></code> for point
 treatments and to that of <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab()</a></code> for longitudinal
-treatments. We’ll use <code>method = "ps"</code> and
+treatments. We’ll use <code>method = "glm"</code> and
 <code>stabilize = TRUE</code> for stabilized propensity score weights
 estimated using logistic regression.</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Wmsm.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tx1</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span>
 <span>                             <span class="va">tx2</span> <span class="op">~</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span>
 <span>                             <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span><span class="op">)</span>,</span>
-<span>                        data <span class="op">=</span> <span class="va">iptwExWide</span>, method <span class="op">=</span> <span class="st">"ps"</span>,</span>
+<span>                        data <span class="op">=</span> <span class="va">iptwExWide</span>, method <span class="op">=</span> <span class="st">"glm"</span>,</span>
 <span>                        stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">Wmsm.out</span></span></code></pre></div>
 <pre><code><span><span class="co">## A <span style="font-style: italic;">weightitMSM</span> object</span></span>
-<span><span class="co">##  - method: "ps" (propensity score weighting)</span></span>
+<span><span class="co">##  - method: "glm" (propensity score weighting with GLM)</span></span>
 <span><span class="co">##  - number of obs.: 1000</span></span>
 <span><span class="co">##  - sampling weights: none</span></span>
 <span><span class="co">##  - number of time points: 3 (tx1, tx2, tx3)</span></span>
@@ -674,7 +675,7 @@ with respect to covariate balance.</p>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Call</span></span></span>
 <span><span class="co">##  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ </span></span>
 <span><span class="co">##     tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + </span></span>
-<span><span class="co">##     use1 + age + gender + use0), data = iptwExWide, method = "ps", </span></span>
+<span><span class="co">##     use1 + age + gender + use0), data = iptwExWide, method = "glm", </span></span>
 <span><span class="co">##     stabilize = TRUE)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance summary across all time points</span></span></span>

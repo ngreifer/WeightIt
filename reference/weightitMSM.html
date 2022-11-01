@@ -65,7 +65,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">weightitMSM</span><span class="op">(</span><span class="va">formula.list</span>,</span>
 <span>            data <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>            method <span class="op">=</span> <span class="st">"ps"</span>,</span>
+<span>            method <span class="op">=</span> <span class="st">"glm"</span>,</span>
 <span>            stabilize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>            by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>            s.weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -92,7 +92,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <dd><p>an optional data set in the form of a data frame that contains the variables in the formulas in <code>formula.list</code>. This must be a wide data set with exactly one row per unit.</p></dd>
 
   <dt>method</dt>
-<dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href="weightit.html">weightit()</a></code> for allowable options. The default is <code>"ps"</code>, which estimates the weights using generalized linear models.</p></dd>
+<dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href="weightit.html">weightit()</a></code> for allowable options. The default is <code>"glm"</code>, which estimates the weights using generalized linear models.</p></dd>
 
   <dt>stabilize</dt>
 <dd><p><code>logical</code>; whether or not to stabilize the weights. Stabilizing the weights involves fitting a model predicting treatment at each time point from treatment status at prior time points. If <code>TRUE</code>, a fully saturated model will be fit (i.e., all interactions between all treatments up to each time point), essentially using the observed treatment probabilities in the numerator (for binary and multinomial treatments). This may yield an error if some combinations are not observed. Default is <code>FALSE</code>. To manually specify stabilization model formulas, e.g., to specify non-saturated models, use <code>num.formula</code>. With many time points, saturated models may be time-consuming or impossible to fit.</p></dd>
@@ -119,7 +119,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <dd><p>whether to print additional information output by the fitting function.</p></dd>
 
   <dt>include.obj</dt>
-<dd><p>whether to include in the output a list of the fit objects created in the process of estimating the weights at each time point. For example, with <code>method = "ps"</code>, a list of the <code>glm</code> objects containing the propensity score models at each time point will be included. See the help pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
+<dd><p>whether to include in the output a list of the fit objects created in the process of estimating the weights at each time point. For example, with <code>method = "glm"</code>, a list of the <code>glm</code> objects containing the propensity score models at each time point will be included. See the help pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
 
   <dt>is.MSM.method</dt>
 <dd><p>whether the method estimates weights for multiple time points all at once (<code>TRUE</code>) or by estimating weights at each time point and then multiplying them together (<code>FALSE</code>). This is only relevant for <code>method = "optweight")</code>, which estimates weights for longitudinal treatments all at once, and for user-specified functions.</p></dd>
@@ -200,9 +200,9 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in"><span>                      <span class="va">tx2</span> <span class="op">~</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span></span>
 <span class="r-in"><span>                      <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 data <span class="op">=</span> <span class="va">iptwExWide</span>,</span></span>
-<span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"ps"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightitMSM</span> object</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "ps" (propensity score weighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 1000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of time points: 3 (tx1, tx2, tx3)</span>
@@ -305,7 +305,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     use1 + age + gender + use0), data = iptwExWide, method = "ps")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     use1 + age + gender + use0), data = iptwExWide, method = "glm")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all time points</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Times     Type Max.Diff.Adj</span>
@@ -346,9 +346,9 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in"><span>                      <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use3</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                          <span class="va">gender</span> <span class="op">+</span> <span class="va">use1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 data <span class="op">=</span> <span class="va">wide_data</span>,</span></span>
-<span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"ps"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                 method <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightitMSM</span> object</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "ps" (propensity score weighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 1000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of time points: 3 (tx1, tx2, tx3)</span>
@@ -456,7 +456,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in"><span>                       <span class="va">tx2</span> <span class="op">~</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span></span>
 <span class="r-in"><span>                       <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  data <span class="op">=</span> <span class="va">iptwExWide</span>,</span></span>
-<span class="r-in"><span>                  method <span class="op">=</span> <span class="st">"ps"</span>,</span></span>
+<span class="r-in"><span>                  method <span class="op">=</span> <span class="st">"glm"</span>,</span></span>
 <span class="r-in"><span>                  stabilize <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                  num.formula <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>                                     <span class="op">~</span> <span class="va">tx1</span>,</span></span>
@@ -468,7 +468,7 @@ Currently only &quot;wide&quot; data sets, where each row corresponds to a unit'
 <span class="r-in"><span>                       <span class="va">tx2</span> <span class="op">~</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span></span>
 <span class="r-in"><span>                       <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  data <span class="op">=</span> <span class="va">iptwExWide</span>,</span></span>
-<span class="r-in"><span>                  method <span class="op">=</span> <span class="st">"ps"</span>,</span></span>
+<span class="r-in"><span>                  method <span class="op">=</span> <span class="st">"glm"</span>,</span></span>
 <span class="r-in"><span>                  stabilize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

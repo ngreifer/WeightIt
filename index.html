@@ -122,11 +122,11 @@
 <span></span>
 <span><span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> </span>
 <span>                <span class="va">married</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>, </span>
-<span>              data <span class="op">=</span> <span class="va">lalonde</span>, method <span class="op">=</span> <span class="st">"ps"</span>, </span>
+<span>              data <span class="op">=</span> <span class="va">lalonde</span>, method <span class="op">=</span> <span class="st">"glm"</span>, </span>
 <span>              estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span>
 <span><span class="va">W</span></span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; A weightit object</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - method: "ps" (propensity score weighting)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - method: "glm" (propensity score weighting with GLM)</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - number of obs.: 614</span></span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - sampling weights: none</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  - treatment: 2-category</span></span>
@@ -199,7 +199,7 @@
 <tbody>
 <tr class="odd">
 <td><strong>Binary</strong></td>
-<td>Binary regression PS (<code>"ps"</code>)</td>
+<td>Binary regression PS (<code>"glm"</code>)</td>
 <td>various</td>
 </tr>
 <tr class="even">
@@ -244,7 +244,7 @@
 </tr>
 <tr class="even">
 <td><strong>Multinomial</strong></td>
-<td>Multinomial regression PS (<code>"ps"</code>)</td>
+<td>Multinomial regression PS (<code>"glm"</code>)</td>
 <td>various</td>
 </tr>
 <tr class="odd">
@@ -289,7 +289,7 @@
 </tr>
 <tr class="odd">
 <td><strong>Continuous</strong></td>
-<td>Generalized linear model GPS (<code>"ps"</code>)</td>
+<td>Generalized linear model GPS (<code>"glm"</code>)</td>
 <td>-</td>
 </tr>
 <tr class="even">

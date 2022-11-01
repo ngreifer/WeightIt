@@ -62,7 +62,7 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">weightit.fit</span><span class="op">(</span><span class="va">covs</span>,</span>
 <span>             <span class="va">treat</span>,</span>
-<span>             method <span class="op">=</span> <span class="st">"ps"</span>,</span>
+<span>             method <span class="op">=</span> <span class="st">"glm"</span>,</span>
 <span>             s.weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>             by.factor <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>             estimand <span class="op">=</span> <span class="st">"ATE"</span>,</span>
@@ -88,7 +88,7 @@
 <dd><p>a vector of treatment statuses.</p></dd>
 
   <dt>method</dt>
-<dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href="weightit.html">weightit()</a></code> for allowable options. The default is <code>"ps"</code> for propensity score weighting.</p></dd>
+<dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See <code><a href="weightit.html">weightit()</a></code> for allowable options. The default is <code>"glm"</code> for propensity score weighting using a generalized linear model to estimate the propensity score.</p></dd>
 
   <dt>s.weights</dt>
 <dd><p>a numeric vector of sampling weights. See the individual pages for each method for information on whether sampling weights can be supplied.</p></dd>
@@ -106,7 +106,7 @@
 <dd><p>when multi-category treatments are used and ATT weights are requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. Must be non-<code>NULL</code> if <code>estimand = "ATT"</code> or <code>"ATC"</code>.</p></dd>
 
   <dt>ps</dt>
-<dd><p>a vector of propensity scores. If specified, <code>method</code> will be ignored and set to <code>"ps"</code>.</p></dd>
+<dd><p>a vector of propensity scores. If specified, <code>method</code> will be ignored and set to <code>"glm"</code>.</p></dd>
 
   <dt>moments, int, subclass</dt>
 <dd><p>arguments to customize the weight estimation. See <code><a href="weightit.html">weightit()</a></code> for details.</p></dd>
@@ -121,7 +121,7 @@
 <dd><p>whether to print additional information output by the fitting function.</p></dd>
 
   <dt>include.obj</dt>
-<dd><p>whether to include in the output any fit objects created in the process of estimating the weights. For example, with <code>method = "ps"</code>, the <code>glm</code> objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
+<dd><p>whether to include in the output any fit objects created in the process of estimating the weights. For example, with <code>method = "glm"</code>, the <code>glm</code> objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
 
   <dt>...</dt>
 <dd><p>other arguments for functions called by <code>weightit.fit()</code> that control aspects of fitting that are not covered by the above arguments.</p></dd>
@@ -137,7 +137,7 @@
 <dd><p>The estimated weights, one for each unit.</p></dd>
 
   <dt>ps</dt>
-<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"ps"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
+<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
 
   <dt>fit.obj</dt>
 <dd><p>When <code>include.obj = TRUE</code>, the fit object.</p></dd>
@@ -172,7 +172,7 @@
 <span class="r-in"><span><span class="va">covs_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="va">lalonde</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"age"</span>, <span class="st">"educ"</span>, <span class="st">"married"</span>,</span></span>
 <span class="r-in"><span>                                <span class="st">"nodegree"</span>, <span class="st">"re74"</span>, <span class="st">"re75"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">wf1</span> <span class="op">&lt;-</span> <span class="fu">weightit.fit</span><span class="op">(</span><span class="va">covs_mat</span>, treat <span class="op">=</span> <span class="va">lalonde</span><span class="op">$</span><span class="va">treat</span>,</span></span>
-<span class="r-in"><span>                    method <span class="op">=</span> <span class="st">"ps"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                    method <span class="op">=</span> <span class="st">"glm"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/str.html" class="external-link">str</a></span><span class="op">(</span><span class="va">wf1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> List of 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ weights: num [1:614] 1 1 1 1 1 1 1 1 1 1 ...</span>

@@ -62,7 +62,7 @@
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">weightit</span><span class="op">(</span><span class="va">formula</span>,</span>
 <span>         data <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>         method <span class="op">=</span> <span class="st">"ps"</span>,</span>
+<span>         method <span class="op">=</span> <span class="st">"glm"</span>,</span>
 <span>         estimand <span class="op">=</span> <span class="st">"ATE"</span>,</span>
 <span>         stabilize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>         focal <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -90,7 +90,7 @@
 <dd><p>an optional data set in the form of a data frame that contains the variables in <code>formula</code>.</p></dd>
 
   <dt>method</dt>
-<dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is <code>"ps"</code> for propensity score weighting.</p></dd>
+<dd><p>a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is <code>"glm"</code> for propensity score weighting using a generalized linear model to estimate the propensity score.</p></dd>
 
   <dt>estimand</dt>
 <dd><p>the desired estimand. For binary and multi-category treatments, can be <code>"ATE"</code>, <code>"ATT"</code>, <code>"ATC"</code>, and, for some methods, <code>"ATO"</code>, <code>"ATM"</code>, or <code>"ATOS"</code>. The default for both is <code>"ATE"</code>. This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.</p></dd>
@@ -102,7 +102,7 @@
 <dd><p>when multi-category treatments are used and ATT weights are requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. If specified, <code>estimand</code> will automatically be set to <code>"ATT"</code>.</p></dd>
 
   <dt>by</dt>
-<dd><p>a string containing the name of the variable in <code>data</code> for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>, weights will be generated separately within each level of the variable <code>"gender"</code>. The argument used to be called <code>exact</code>, which will still work but with a message. Only one <code>by</code> variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code>.</p></dd>
+<dd><p>a string containing the name of the variable in <code>data</code> for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>, weights will be generated separately within each level of the variable <code>"gender"</code>. (The argument used to be called <code>exact</code>, which will still work but with a message.) Only one <code>by</code> variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code>.</p></dd>
 
   <dt>s.weights</dt>
 <dd><p>A vector of sampling weights or the name of a variable in <code>data</code> that contains sampling weights. These can also be matching weights if weighting is to be used on matched data. See the individual pages for each method for information on whether sampling weights can be supplied.</p></dd>
@@ -126,7 +126,7 @@
 <dd><p><code>logical</code>; whether to print additional information output by the fitting function.</p></dd>
 
   <dt>include.obj</dt>
-<dd><p><code>logical</code>; whether to include in the output any fit objects created in the process of estimating the weights. For example, with <code>method = "ps"</code>, the <code>glm</code> objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
+<dd><p><code>logical</code>; whether to include in the output any fit objects created in the process of estimating the weights. For example, with <code>method = "glm"</code>, the <code>glm</code> objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if <code>TRUE</code>.</p></dd>
 
   <dt>...</dt>
 <dd><p>other arguments for functions called by <code>weightit()</code> that control aspects of fitting that are not covered by the above arguments. See Details.</p></dd>
@@ -157,7 +157,7 @@
 <dd><p>The weight estimation method specified.</p></dd>
 
   <dt>ps</dt>
-<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"ps"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
+<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
 
   <dt>s.weights</dt>
 <dd><p>The provided sampling weights.</p></dd>
@@ -177,7 +177,7 @@
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The primary purpose of <code>weightit()</code> is as a dispatcher to functions that perform the estimation of balancing weights using the requested <code>method</code>. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when <code>include.obj = TRUE</code>), how missing values are treated, which estimands are allowed, and whether sampling weights are allowed.</p><ul><li><p><code><a href="method_ps.html">"ps"</a></code> - Propensity score weighting using generalized linear models.</p></li>
+    <p>The primary purpose of <code>weightit()</code> is as a dispatcher to functions that perform the estimation of balancing weights using the requested <code>method</code>. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when <code>include.obj = TRUE</code>), how missing values are treated, which estimands are allowed, and whether sampling weights are allowed.</p><ul><li><p><code><a href="method_glm.html">"glm"</a></code> - Propensity score weighting using generalized linear models.</p></li>
 <li><p><code><a href="method_gbm.html">"gbm"</a></code> - Propensity score weighting using generalized boosted modeling.</p></li>
 <li><p><code><a href="method_cbps.html">"cbps"</a></code> - Covariate Balancing Propensity Score weighting.</p></li>
 <li><p><code><a href="method_npcbps.html">"npcbps"</a></code> - Non-parametric Covariate Balancing Propensity Score weighting.</p></li>
@@ -208,9 +208,9 @@
 <span class="r-in"><span><span class="co">#Balancing covariates between treatment groups (binary)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W1</span> <span class="op">&lt;-</span> <span class="fu">weightit</span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
-<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"ps"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                method <span class="op">=</span> <span class="st">"glm"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit</span> object</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "ps" (propensity score weighting)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
@@ -246,7 +246,7 @@
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = treat ~ age + educ + married + nodegree + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     re74, data = lalonde, method = "ps", estimand = "ATT")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     re74, data = lalonde, method = "glm", estimand = "ATT")</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
