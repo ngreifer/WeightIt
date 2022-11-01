@@ -1,4 +1,4 @@
-weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FALSE, by = NULL, s.weights = NULL,
+weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = FALSE, by = NULL, s.weights = NULL,
                         num.formula = NULL, moments = NULL, int = FALSE, missing = NULL,
                         verbose = FALSE, include.obj = FALSE, is.MSM.method, weightit.force = FALSE, ...) {
 
@@ -234,7 +234,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "ps", stabilize = FA
         stab.t.c_i <- get.covs.and.treat.from.formula(stab.f, data)
 
         A_i[["covs"]] <- stab.t.c_i[["model.covs"]]
-        A_i[["method"]] <- "ps"
+        A_i[["method"]] <- "glm"
         A_i[["moments"]] <- numeric()
         A_i[["int"]] <- FALSE
 

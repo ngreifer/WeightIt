@@ -104,7 +104,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 }
 
 #Propensity score estimation with regression
-weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, .data, ...) {
+weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, .data, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -498,7 +498,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
       }
       else bad.ps <- TRUE
 
-      if (bad.ps) stop("ps must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit.", call. = FALSE)
+      if (bad.ps) stop("'ps' must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit.", call. = FALSE)
 
     }
 
@@ -512,7 +512,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal, stabili
   obj <- list(w = w, ps = p.score, fit.obj = fit.obj)
   return(obj)
 }
-weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- list(...)
 
   fit.obj <- NULL

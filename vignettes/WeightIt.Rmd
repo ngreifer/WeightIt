@@ -44,12 +44,12 @@ bal.tab(treat ~ age + educ + race + married + nodegree + re74 + re75,
 
 Based on this output, we can see that all variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .05 for all variables. In particular, `re74` and `re75` are quite imbalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using `weightit()` to try to attain balance on these covariates.
 
-First, we'll start simple, and use inverse probability weights from propensity scores generated through logistic regression. We need to supply `weightit()` with the formula for the model, the data set, the estimand (ATT), and the method of estimation (`"ps"`) for propensity score weights).
+First, we'll start simple, and use inverse probability weights from propensity scores generated through logistic regression. We need to supply `weightit()` with the formula for the model, the data set, the estimand (ATT), and the method of estimation (`"glm"`) for generalized linear model propensity score weights).
 
 ```{r}
 library("WeightIt")
 W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
-                  data = lalonde, estimand = "ATT", method = "ps")
+                  data = lalonde, estimand = "ATT", method = "glm")
 W.out #print the output
 ```
 
@@ -150,13 +150,13 @@ bal.tab(list(tx1 ~ age + gender + use0,
         which.time = .all)
 ```
 
-`bal.tab()` indicates significant imbalance on most covariates at most time points, so we need to do some work to eliminate that imbalance in our weighted data set. We'll use the `weightitMSM()` function to specify our weight models. The syntax is similar both to that of `weightit()` for point treatments and to that of `bal.tab()` for longitudinal treatments. We'll use `method = "ps"` and `stabilize = TRUE` for stabilized propensity score weights estimated using logistic regression.
+`bal.tab()` indicates significant imbalance on most covariates at most time points, so we need to do some work to eliminate that imbalance in our weighted data set. We'll use the `weightitMSM()` function to specify our weight models. The syntax is similar both to that of `weightit()` for point treatments and to that of `bal.tab()` for longitudinal treatments. We'll use `method = "glm"` and `stabilize = TRUE` for stabilized propensity score weights estimated using logistic regression.
 
 ```{r}
 Wmsm.out <- weightitMSM(list(tx1 ~ age + gender + use0,
                              tx2 ~ tx1 + use1 + age + gender + use0,
                              tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-                        data = iptwExWide, method = "ps",
+                        data = iptwExWide, method = "glm",
                         stabilize = TRUE)
 Wmsm.out
 ```

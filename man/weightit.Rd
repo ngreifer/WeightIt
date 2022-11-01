@@ -9,7 +9,7 @@
 \usage{
 weightit(formula,
          data = NULL,
-         method = "ps",
+         method = "glm",
          estimand = "ATE",
          stabilize = FALSE,
          focal = NULL,
@@ -34,7 +34,7 @@ a formula with a treatment variable on the left hand side and the covariates to 
 an optional data set in the form of a data frame that contains the variables in \code{formula}.
 }
   \item{method}{
-a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is \code{"ps"} for propensity score weighting.
+a string of length 1 containing the name of the method that will be used to estimate weights. See Details below for allowable options. The default is \code{"glm"} for propensity score weighting using a generalized linear model to estimate the propensity score.
 }
   \item{estimand}{
 the desired estimand. For binary and multi-category treatments, can be \code{"ATE"}, \code{"ATT"}, \code{"ATC"}, and, for some methods, \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"}. The default for both is \code{"ATE"}. This argument is ignored for continuous treatments. See the individual pages for each method for more information on which estimands are allowed with each method and what literature to read to interpret these estimands.
@@ -46,7 +46,7 @@ the desired estimand. For binary and multi-category treatments, can be \code{"AT
 when multi-category treatments are used and ATT weights are requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. If specified, \code{estimand} will automatically be set to \code{"ATT"}.
 }
   \item{by}{
-a string containing the name of the variable in \code{data} for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, weights will be generated separately within each level of the variable \code{"gender"}. The argument used to be called \code{exact}, which will still work but with a message. Only one \code{by} variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using \fun{interaction}.
+a string containing the name of the variable in \code{data} for which weighting is to be done within categories or a one-sided formula with the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, weights will be generated separately within each level of the variable \code{"gender"}. (The argument used to be called \code{exact}, which will still work but with a message.) Only one \code{by} variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using \fun{interaction}.
 }
   \item{s.weights}{
 A vector of sampling weights or the name of a variable in \code{data} that contains sampling weights. These can also be matching weights if weighting is to be used on matched data. See the individual pages for each method for information on whether sampling weights can be supplied.
@@ -70,7 +70,7 @@ A vector of propensity scores or the name of a variable in \code{data} containin
 \code{logical}; whether to print additional information output by the fitting function.
 }
   \item{include.obj}{
-\code{logical}; whether to include in the output any fit objects created in the process of estimating the weights. For example, with \code{method = "ps"}, the \code{glm} objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if \code{TRUE}.
+\code{logical}; whether to include in the output any fit objects created in the process of estimating the weights. For example, with \code{method = "glm"}, the \code{glm} objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if \code{TRUE}.
 }
   \item{...}{
 other arguments for functions called by \code{weightit()} that control aspects of fitting that are not covered by the above arguments. See Details.
@@ -87,7 +87,7 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
   \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
   \item{estimand}{The estimand requested.}
   \item{method}{The weight estimation method specified.}
-  \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"ps"}, \code{"gbm"}, \code{"cbps"}, \code{"super"}, or \code{"bart"}.}
+  \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"super"}, or \code{"bart"}.}
   \item{s.weights}{The provided sampling weights.}
   \item{focal}{The focal variable if the ATT was requested with a multi-category treatment.}
   \item{by}{A data.frame containing the \code{by} variable when specified.}
@@ -97,7 +97,7 @@ a \code{weightit} object; the output of a call to \code{weightit()}.
 \details{
 The primary purpose of \code{weightit()} is as a dispatcher to functions that perform the estimation of balancing weights using the requested \code{method}. Below are the methods allowed and links to pages containing more information about them, including additional arguments and outputs (e.g., when \code{include.obj = TRUE}), how missing values are treated, which estimands are allowed, and whether sampling weights are allowed.
 \itemize{
-\item{\code{\link[=method_ps]{"ps"}} - Propensity score weighting using generalized linear models.}
+\item{\code{\link[=method_glm]{"glm"}} - Propensity score weighting using generalized linear models.}
 \item{\code{\link[=method_gbm]{"gbm"}} - Propensity score weighting using generalized boosted modeling.}
 \item{\code{\link[=method_cbps]{"cbps"}} - Covariate Balancing Propensity Score weighting.}
 \item{\code{\link[=method_npcbps]{"npcbps"}} - Non-parametric Covariate Balancing Propensity Score weighting.}
@@ -131,7 +131,7 @@ data("lalonde", package = "cobalt")
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATT"))
+                method = "glm", estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
 \dontshow{if (requireNamespace("osqp", quietly = TRUE)) force(\{ # examplesIf}

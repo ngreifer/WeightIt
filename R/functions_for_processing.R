@@ -1,6 +1,6 @@
 method.to.proper.method <- function(method) {
   method <- tolower(method)
-  if      (method %in% c("ps")) return("ps")
+  if      (method %in% c("glm", "ps")) return("glm")
   else if (method %in% c("gbm", "gbr")) return("gbm")
   else if (method %in% c("cbps", "cbgps")) return("cbps")
   else if (method %in% c("npcbps", "npcbgps")) return("npcbps")
@@ -15,12 +15,11 @@ method.to.proper.method <- function(method) {
 }
 check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
-  acceptable.methods <- c("ps"
+  acceptable.methods <- c(  "glm", "ps"
                           , "gbm", "gbr"
                           , "cbps", "cbgps"
                           , "npcbps", "npcbgps"
                           , "ebal", "entropy", "ebalance"
-                          , "sbw"
                           # , "ebcw", "ate"
                           , "optweight", "opt", "sbw"
                           , "super", "superlearner"
@@ -29,7 +28,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
                           # "kbal",
   )
 
-  if (missing(method)) method <- "ps"
+  if (missing(method)) method <- "glm"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (is.character(method)) {
     if (tolower(method) %nin% acceptable.methods) bad.method <- TRUE
@@ -63,7 +62,7 @@ method.to.phrase <- function(method) {
   if (is.function(method)) return("a user-defined method")
   else {
     method <- method.to.proper.method(method)
-    if (method %in% c("ps")) return("propensity score weighting")
+    if      (method %in% c("glm")) return("propensity score weighting with GLM")
     else if (method %in% c("gbm")) return("propensity score weighting with GBM")
     else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
     else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
@@ -80,7 +79,7 @@ method.to.phrase <- function(method) {
 process.estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
   AE <- list(
-    binary = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM", "ATOS")
+    binary = list(  glm = c("ATT", "ATC", "ATE", "ATO", "ATM", "ATOS")
                   , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
                   , cbps = c("ATT", "ATC", "ATE")
                   , npcbps = c("ATE")
@@ -92,7 +91,7 @@ process.estimand <- function(estimand, method, treat.type) {
                   , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
                   # , kbal = c("ATT", "ATC", "ATE")
     ),
-    multinomial = list(ps = c("ATT", "ATC", "ATE", "ATO", "ATM")
+    multinomial = list(  glm = c("ATT", "ATC", "ATE", "ATO", "ATM")
                        , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
                        , cbps = c("ATT", "ATC", "ATE")
                        , npcbps = c("ATE")
@@ -118,7 +117,7 @@ process.estimand <- function(estimand, method, treat.type) {
 check.subclass <- function(method, treat.type) {
   #Allowable estimands
   AE <- list(
-    binary = list(ps = TRUE
+    binary = list(  glm = TRUE
                   , gbm = TRUE
                   , cbps = TRUE
                   , npcbps = FALSE
@@ -130,7 +129,7 @@ check.subclass <- function(method, treat.type) {
                   , bart = TRUE
                   # , kbal = FALSE
     ),
-    multinomial = list(ps = TRUE
+    multinomial = list(  glm = TRUE
                        , gbm = TRUE
                        , cbps = FALSE
                        , npcbps = FALSE
@@ -370,21 +369,19 @@ process.MSM.method <- function(is.MSM.method, method) {
 }
 process.missing <- function(missing, method, treat.type) {
   #Allowable estimands
-  AE <- list(binary = list(ps = c("ind"
-                                  , "saem"
-  )
-  , gbm = c("ind", "surr")
-  , cbps = c("ind")
-  , npcbps = c("ind")
-  , ebal = c("ind")
-  # , ebcw = c("ind")
-  , optweight = c("ind")
-  , super = c("ind")
-  , bart = c("ind")
-  , energy = c("ind")
-  # , kbal = c("ind")
+  AE <- list(binary = list(  glm = c("ind", "saem")
+                           , gbm = c("ind", "surr")
+                           , cbps = c("ind")
+                           , npcbps = c("ind")
+                           , ebal = c("ind")
+                           # , ebcw = c("ind")
+                           , optweight = c("ind")
+                           , super = c("ind")
+                           , bart = c("ind")
+                           , energy = c("ind")
+                           # , kbal = c("ind")
   ),
-  multinomial = list(ps = c("ind")
+  multinomial = list(  glm = c("ind")
                      , gbm = c("ind", "surr")
                      , cbps = c("ind")
                      , npcbps = c("ind")
@@ -396,19 +393,17 @@ process.missing <- function(missing, method, treat.type) {
                      , energy = c("ind")
                      # , kbal = c("ind")
   ),
-  continuous = list(ps = c("ind"
-                           , "saem"
-  )
-  , gbm = c("ind", "surr")
-  , cbps = c("ind")
-  , npcbps = c("ind")
-  , ebal = c("ind")
-  # , ebcw = c("ind")
-  , optweight = c("ind")
-  , super = c("ind")
-  , bart = c("ind")
-  , energy = c("ind")
-  # , kbal = c("ind")
+  continuous = list(  glm = c("ind", "saem")
+                      , gbm = c("ind", "surr")
+                      , cbps = c("ind")
+                      , npcbps = c("ind")
+                      , ebal = c("ind")
+                      # , ebcw = c("ind")
+                      , optweight = c("ind")
+                      , super = c("ind")
+                      , bart = c("ind")
+                      , energy = c("ind")
+                      # , kbal = c("ind")
   ))
 
   allowable.missings <- AE[[treat.type]][[method]]

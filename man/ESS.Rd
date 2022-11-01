@@ -33,7 +33,7 @@ data("lalonde", package = "cobalt")
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATE"))
+                method = "glm", estimand = "ATE"))
 summary(W1)
 ESS(W1$weights[W1$treat == 0])
 ESS(W1$weights[W1$treat == 1])

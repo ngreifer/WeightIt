@@ -1,4 +1,4 @@
-weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor = NULL,
+weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.factor = NULL,
                          estimand = "ATE", focal = NULL, stabilize = FALSE, ps = NULL, moments = NULL, int = FALSE,
                          subclass = NULL, is.MSM.method = FALSE, missing = NULL, verbose = FALSE, include.obj = FALSE, ...){
 
@@ -32,7 +32,7 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
       else if (length(ps) != length(treat)) {
         stop("'ps' and 'treat' must be the same length.", call. = FALSE)
       }
-      method <- "ps"
+      method <- "glm"
     }
 
     if (is_null(s.weights)) s.weights <- rep(1, length(treat))
@@ -124,9 +124,9 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
       }
 
     }
-    else if (method == "ps") {
+    else if (method == "glm") {
       if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2ps(covs = covs,
+        obj <- weightit2glm(covs = covs,
                            treat = treat,
                            s.weights = s.weights,
                            subset = by.factor == i,
@@ -139,7 +139,7 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
                            ...)
       }
       else if (treat.type == "continuous") {
-        obj <- weightit2ps.cont(covs = covs,
+        obj <- weightit2glm.cont(covs = covs,
                                 treat = treat,
                                 s.weights = s.weights,
                                 subset = by.factor == i,
@@ -209,7 +209,7 @@ weightit.fit <- function(covs, treat, method = "ps", s.weights = NULL, by.factor
     }
     else if (method == "cbps") {
       if (is.MSM.method) {
-        obj <- weightit2cbps.msm()
+        # obj <- weightit2cbps.msm()
       }
       else {
         if (treat.type %in% c("binary", "multinomial")) {

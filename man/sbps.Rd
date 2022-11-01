@@ -98,11 +98,11 @@ data("lalonde", package = "cobalt")
 #Balancing covariates between treatment groups within races
 (W1 <- weightit(treat ~ age + educ + married +
                 nodegree + race + re74, data = lalonde,
-                method = "ps", estimand = "ATT"))
+                method = "glm", estimand = "ATT"))
 
 (W2 <- weightit(treat ~ age + educ + married +
                 nodegree + race + re74, data = lalonde,
-                method = "ps", estimand = "ATT",
+                method = "glm", estimand = "ATT",
                 by = "race"))
 S <- sbps(W1, W2)
 print(S)

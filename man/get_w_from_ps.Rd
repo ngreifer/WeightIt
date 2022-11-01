@@ -100,7 +100,7 @@ McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., 
 Hong, G. (2012). Marginal mean weighting through stratification: A generalized method for evaluating multivalued and multiple treatments with nonexperimental data. Psychological Methods, 17(1), 44–60. \doi{10.1037/a0024918}
 }
 \seealso{
-\fun{method_ps}
+\code{\link{method_glm}}
 }
 \examples{
 library("cobalt")

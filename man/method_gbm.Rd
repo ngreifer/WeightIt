@@ -169,7 +169,7 @@ W4a <- weightit(re75 ~ age + educ + married +
                 n.trees = 10000)
 
 W4a$info$best.tree #10000; optimum hasn't been found
-plot(W4a$info$tree.val) #decreasing at right edge
+plot(W4a$info$tree.val, type = "l") #decreasing at right edge
 
 W4b <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
@@ -179,7 +179,7 @@ W4b <- weightit(re75 ~ age + educ + married +
                 n.trees = 20000)
 
 W4b$info$best.tree #13417; optimum has been found
-plot(W4b$info$tree.val) #increasing at right edge
+plot(W4b$info$tree.val, type = "l") #increasing at right edge
 
 bal.tab(W4b)
 

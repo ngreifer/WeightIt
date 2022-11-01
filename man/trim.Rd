@@ -62,7 +62,7 @@ data("lalonde", package = "cobalt")
 
 (W <- weightit(treat ~ age + educ + married +
                  nodegree + re74, data = lalonde,
-               method = "ps", estimand = "ATT"))
+               method = "glm", estimand = "ATT"))
 summary(W)
 
 #Trimming the top and bottom 5 weights

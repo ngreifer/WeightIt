@@ -25,7 +25,7 @@ This document explains how to install each package `WeightIt` uses. You do not n
 
 Below we note each method (by name and by the input to the `method` argument of `weightit()`) and how to install the required packages either from CRAN or otherwise when the CRAN version is not available. In many cases, this involves installing the package from the author's GitHub repository, which requires either the `remotes` or `devtools` package, which both contain the function `install_github()`.
 
-## Propensity score weighting using GLMs (`method = "ps"`)
+## Propensity score weighting using GLMs (`method = "glm"`)
 
 Several options are available for estimating propensity score weights using GLMs depending on the treatment type and other features of the desired model. For binary treatments, `weightit()` uses `stats::glm()` by default, and for continuous treatments, `weightit()` uses `stats::lm()` by default, so no additional packages are required. For multi-category treatments with `use.mlogit = FALSE`, `weightit()` uses `stats::glm()`.
 

@@ -51,7 +51,7 @@ data("lalonde", package = "cobalt")
 
 W <- weightit(treat ~ age + educ + nodegree + 
                 married + race + re74 + re75, 
-              data = lalonde, method = "ps", 
+              data = lalonde, method = "glm", 
               estimand = "ATE")
 W
 ```
@@ -76,7 +76,7 @@ The table below contains the available methods in `WeightIt` for estimating weig
  
  Treatment type | Method (`method = `) | Package
  -------------- | -------------------- | --------
- **Binary** | Binary regression PS (`"ps"`) | various 
+ **Binary** | Binary regression PS (`"glm"`) | various 
  - | Generalized boosted modeling PS (`"gbm"`) | `gbm`
  - | Covariate Balancing PS (`"cbps"`) | `CBPS`
  - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS`
@@ -85,7 +85,7 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | SuperLearner PS (`"super"`) | `SuperLearner`
  - | Bayesian additive regression trees PS (`"bart"`) | `dbarts`
  - | Energy Balancing (`"energy"`) | -
- **Multinomial** | Multinomial regression PS (`"ps"`) | various
+ **Multinomial** | Multinomial regression PS (`"glm"`) | various
  - | Generalized boosted modeling PS (`"gbm"`) | `gbm`
  - | Covariate Balancing PS (`"cbps"`) | `CBPS`
  - | Non-Parametric Covariate Balancing PS (`"npcbps"`) | `CBPS`
@@ -94,7 +94,7 @@ The table below contains the available methods in `WeightIt` for estimating weig
  - | SuperLearner PS (`"super"`) | `SuperLearner`
  - | Bayesian additive regression trees PS (`"bart"`) | `dbarts`
  - | Energy Balancing (`"energy"`) | -
- **Continuous** | Generalized linear model GPS (`"ps"`) | -
+ **Continuous** | Generalized linear model GPS (`"glm"`) | -
  - | Generalized boosted modeling GPS (`"gbm"`) | `gbm`
  - | Covariate Balancing GPS (`"cbps"`) | `CBPS`
  - | Non-Parametric Covariate Balancing GPS (`"npcbps"`) | `CBPS`

@@ -9,6 +9,8 @@ WeightIt News and Updates
 
 * Added new `stop.method`s for binary and continuous treatments: `"r2.2"` and `"r2.3"`, which find weights that minimize the R2 from a weighted model with covariates plus their squares or squares and cubes, respectively, as the predictors.
 
+* Renamed `method = "ps"` to `method = "glm"`. `"ps"` continues to work as it always had for back compatibility. `"glm"` is a more descriptive name since many methods use propensity scores; what distinguishes this method is that it uses generalized linear models.
+
 * Using `method = "ebcw"` for empirical balancing calibration weighting is no longer available because the `ATE` package has been removed. Use `method = "ebal"` for entropy balancing instead, which is essentially identical.
 
 * Updated the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.

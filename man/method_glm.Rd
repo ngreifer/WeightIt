@@ -1,10 +1,11 @@
-\name{method_ps}
+\name{method_glm}
+\alias{method_glm}
 \alias{method_ps}
 
 \title{Propensity Score Weighting Using Generalized Linear Models}
 
 \description{
-This page explains the details of estimating weights from generalized linear model-based propensity scores by setting \code{method = "ps"} in the call to \fun{weightit} or \fun{weightitMSM}. This method can be used with binary, multinomial, and continuous treatments.
+This page explains the details of estimating weights from generalized linear model-based propensity scores by setting \code{method = "glm"} in the call to \fun{weightit} or \fun{weightitMSM}. This method can be used with binary, multinomial, and continuous treatments. (This method used to be requested with \code{method = "ps"}, and this still works.)
 
 In general, this method relies on estimating propensity scores with a parametric generalized linear model and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, a binomial or multinomial regression model is used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For ordinal treatments, an ordinal regression model is used to estimate generalized propensity scores. For continuous treatments, a generalized linear model is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 
@@ -139,7 +140,7 @@ data("lalonde", package = "cobalt")
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATT",
+                method = "glm", estimand = "ATT",
                 link = "probit"))
 summary(W1)
 bal.tab(W1)
@@ -147,7 +148,7 @@ bal.tab(W1)
 #Balancing covariates with respect to race (multinomial)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ps", estimand = "ATE",
+                method = "glm", estimand = "ATE",
                 use.mlogit = FALSE))
 summary(W2)
 bal.tab(W2)
@@ -155,7 +156,7 @@ bal.tab(W2)
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "ps", use.kernel = TRUE))
+                method = "glm", use.kernel = TRUE))
 summary(W3)
 bal.tab(W3)
 }

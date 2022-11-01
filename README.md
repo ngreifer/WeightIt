@@ -53,13 +53,13 @@ data("lalonde", package = "cobalt")
 
 W <- weightit(treat ~ age + educ + nodegree + 
                 married + race + re74 + re75, 
-              data = lalonde, method = "ps", 
+              data = lalonde, method = "glm", 
               estimand = "ATE")
 W
 ```
 
     #> A weightit object
-    #>  - method: "ps" (propensity score weighting)
+    #>  - method: "glm" (propensity score weighting with GLM)
     #>  - number of obs.: 614
     #>  - sampling weights: none
     #>  - treatment: 2-category
@@ -141,7 +141,7 @@ these packages.
 
 | Treatment type  | Method (`method =`)                                 | Package        |
 |-----------------|-----------------------------------------------------|----------------|
-| **Binary**      | Binary regression PS (`"ps"`)                       | various        |
+| **Binary**      | Binary regression PS (`"glm"`)                      | various        |
 | \-              | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
 | \-              | Covariate Balancing PS (`"cbps"`)                   | `CBPS`         |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)  | `CBPS`         |
@@ -150,7 +150,7 @@ these packages.
 | \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
 | \-              | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
 | \-              | Energy Balancing (`"energy"`)                       | \-             |
-| **Multinomial** | Multinomial regression PS (`"ps"`)                  | various        |
+| **Multinomial** | Multinomial regression PS (`"glm"`)                 | various        |
 | \-              | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
 | \-              | Covariate Balancing PS (`"cbps"`)                   | `CBPS`         |
 | \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)  | `CBPS`         |
@@ -159,7 +159,7 @@ these packages.
 | \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
 | \-              | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
 | \-              | Energy Balancing (`"energy"`)                       | \-             |
-| **Continuous**  | Generalized linear model GPS (`"ps"`)               | \-             |
+| **Continuous**  | Generalized linear model GPS (`"glm"`)              | \-             |
 | \-              | Generalized boosted modeling GPS (`"gbm"`)          | `gbm`          |
 | \-              | Covariate Balancing GPS (`"cbps"`)                  | `CBPS`         |
 | \-              | Non-Parametric Covariate Balancing GPS (`"npcbps"`) | `CBPS`         |

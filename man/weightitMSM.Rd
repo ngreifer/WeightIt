@@ -5,7 +5,7 @@
 \usage{
 weightitMSM(formula.list,
             data = NULL,
-            method = "ps",
+            method = "glm",
             stabilize = FALSE,
             by = NULL,
             s.weights = NULL,
@@ -35,7 +35,7 @@ a list of formulas corresponding to each time point with the time-specific treat
 an optional data set in the form of a data frame that contains the variables in the formulas in \code{formula.list}. This must be a wide data set with exactly one row per unit.
 }
   \item{method}{
-a string of length 1 containing the name of the method that will be used to estimate weights. See \fun{weightit} for allowable options. The default is \code{"ps"}, which estimates the weights using generalized linear models.
+a string of length 1 containing the name of the method that will be used to estimate weights. See \fun{weightit} for allowable options. The default is \code{"glm"}, which estimates the weights using generalized linear models.
 }
   \item{stabilize}{
 \code{logical}; whether or not to stabilize the weights. Stabilizing the weights involves fitting a model predicting treatment at each time point from treatment status at prior time points. If \code{TRUE}, a fully saturated model will be fit (i.e., all interactions between all treatments up to each time point), essentially using the observed treatment probabilities in the numerator (for binary and multinomial treatments). This may yield an error if some combinations are not observed. Default is \code{FALSE}. To manually specify stabilization model formulas, e.g., to specify non-saturated models, use \code{num.formula}. With many time points, saturated models may be time-consuming or impossible to fit.
@@ -62,7 +62,7 @@ a vector of sampling weights or the name of a variable in \code{data} that conta
 whether to print additional information output by the fitting function.
 }
   \item{include.obj}{
-whether to include in the output a list of the fit objects created in the process of estimating the weights at each time point. For example, with \code{method = "ps"}, a list of the \code{glm} objects containing the propensity score models at each time point will be included. See the help pages for each method for information on what object will be included if \code{TRUE}.
+whether to include in the output a list of the fit objects created in the process of estimating the weights at each time point. For example, with \code{method = "glm"}, a list of the \code{glm} objects containing the propensity score models at each time point will be included. See the help pages for each method for information on what object will be included if \code{TRUE}.
 }
   \item{is.MSM.method}{
 whether the method estimates weights for multiple time points all at once (\code{TRUE}) or by estimating weights at each time point and then multiplying them together (\code{FALSE}). This is only relevant for \code{method = "optweight")}, which estimates weights for longitudinal treatments all at once, and for user-specified functions.
@@ -119,7 +119,7 @@ data("iptwExWide", package = "twang")
                       tx2 ~ tx1 + use1 + age + gender + use0,
                       tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
                  data = iptwExWide,
-                 method = "ps"))
+                 method = "glm"))
 summary(W1)
 bal.tab(W1)
 
@@ -137,7 +137,7 @@ wide_data <- reshape(iptwExLong$covariates,    #long data
                       tx3 ~ tx2 + use3 + tx1 + use2 + age +
                           gender + use1),
                  data = wide_data,
-                 method = "ps"))
+                 method = "glm"))
 summary(W2)
 
 all.equal(W1$weights, W2$weights)
@@ -147,7 +147,7 @@ W3 <- weightitMSM(list(tx1 ~ age + gender + use0,
                        tx2 ~ tx1 + use1 + age + gender + use0,
                        tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
                   data = iptwExWide,
-                  method = "ps",
+                  method = "glm",
                   stabilize = TRUE,
                   num.formula = list(~ 1,
                                      ~ tx1,
@@ -159,7 +159,7 @@ W4 <- weightitMSM(list(tx1 ~ age + gender + use0,
                        tx2 ~ tx1 + use1 + age + gender + use0,
                        tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
                   data = iptwExWide,
-                  method = "ps",
+                  method = "glm",
                   stabilize = TRUE)
 
 \dontshow{\}) # examplesIf}}

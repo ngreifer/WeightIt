@@ -7,7 +7,7 @@
 \usage{
 weightit.fit(covs,
              treat,
-             method = "ps",
+             method = "glm",
              s.weights = NULL,
              by.factor = NULL,
              estimand = "ATE",
@@ -31,7 +31,7 @@ a numeric matrix of covariates.
 a vector of treatment statuses.
 }
   \item{method}{
-a string of length 1 containing the name of the method that will be used to estimate weights. See \fun{weightit} for allowable options. The default is \code{"ps"} for propensity score weighting.
+a string of length 1 containing the name of the method that will be used to estimate weights. See \fun{weightit} for allowable options. The default is \code{"glm"} for propensity score weighting using a generalized linear model to estimate the propensity score.
 }
   \item{s.weights}{
 a numeric vector of sampling weights. See the individual pages for each method for information on whether sampling weights can be supplied.
@@ -49,7 +49,7 @@ the desired estimand. For binary and multi-category treatments, can be "ATE", "A
 when multi-category treatments are used and ATT weights are requested, which group to consider the "treated" or focal group. This group will not be weighted, and the other groups will be weighted to be more like the focal group. Must be non-\code{NULL} if \code{estimand = "ATT"} or \code{"ATC"}.
 }
   \item{ps}{
-a vector of propensity scores. If specified, \code{method} will be ignored and set to \code{"ps"}.
+a vector of propensity scores. If specified, \code{method} will be ignored and set to \code{"glm"}.
 }
   \item{moments, int, subclass}{
 arguments to customize the weight estimation. See \fun{weightit} for details.
@@ -64,7 +64,7 @@ see \fun{weightitMSM}. Typically can be ignored.
 whether to print additional information output by the fitting function.
 }
   \item{include.obj}{
-whether to include in the output any fit objects created in the process of estimating the weights. For example, with \code{method = "ps"}, the \code{glm} objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if \code{TRUE}.
+whether to include in the output any fit objects created in the process of estimating the weights. For example, with \code{method = "glm"}, the \code{glm} objects containing the propensity score model will be included. See the individual pages for each method for information on what object will be included if \code{TRUE}.
 }
   \item{...}{
 other arguments for functions called by \code{weightit.fit()} that control aspects of fitting that are not covered by the above arguments.
@@ -74,7 +74,7 @@ other arguments for functions called by \code{weightit.fit()} that control aspec
 \value{
   A \code{weightit.fit} object with the following elements:
   \item{weights}{The estimated weights, one for each unit.}
-  \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"ps"}, \code{"gbm"}, \code{"cbps"}, \code{"super"}, or \code{"bart"}.}
+  \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"super"}, or \code{"bart"}.}
   \item{fit.obj}{When \code{include.obj = TRUE}, the fit object.}
   \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 
@@ -103,6 +103,6 @@ data("lalonde", package = "cobalt")
 covs_mat <- as.matrix(lalonde[c("age", "educ", "married",
                                 "nodegree", "re74", "re75")])
 wf1 <- weightit.fit(covs_mat, treat = lalonde$treat,
-                    method = "ps", estimand = "ATT")
+                    method = "glm", estimand = "ATT")
 str(wf1)
 }
