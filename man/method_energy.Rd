@@ -56,7 +56,7 @@ The number of moments of the treatment and covariate distributions that are cons
 }
 }
 
-The \code{moments} argument functions differently for \code{method = "energy"} from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2022) for binary and multi-category treatments or by Huling et al. (2021) for contionuous treatments. When \code{moments} is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multinomial treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
+The \code{moments} argument functions differently for \code{method = "energy"} from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2022) for binary and multi-category treatments or by Huling et al. (2021) for continuous treatments. When \code{moments} is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multinomial treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
 }
 \section{Additional Outputs}{
 \describe{
@@ -67,9 +67,9 @@ When \code{include.obj = TRUE}, the output of the call to \pkgfun{osqp}{solve_os
 }
 
 \details{
-Energy balancing is a method of estimating weights using optimization without a propensity score. The weights are the solution to a constrain quadratic optimization problem where the objective function concerns covariate balance as measured by the energy distance and (for continuous tretaments) the distance covariance.
+Energy balancing is a method of estimating weights using optimization without a propensity score. The weights are the solution to a constrain quadratic optimization problem where the objective function concerns covariate balance as measured by the energy distance and (for continuous treatments) the distance covariance.
 
-Energy balancing for binary and multi-category tretaments involves minimizing the energy disance between the treatment groups and between each treatment group and a target group (e.g., the full sample for the ATE). The energy distance is a scalar measure of the difference between two multivariate distributions and is equal to 0 when the two distributions are identical.
+Energy balancing for binary and multi-category treatments involves minimizing the energy distance between the treatment groups and between each treatment group and a target group (e.g., the full sample for the ATE). The energy distance is a scalar measure of the difference between two multivariate distributions and is equal to 0 when the two distributions are identical.
 
 Energy balancing for continuous treatments involves minimizing the distance covariance between the treatment and the covariates; the distance covariance is a scalar measure of the association between two (possibly multivariate) distributions that is equal to 0 when the two distributions are independent. In addition, the energy distances between the treatment and covariate distributions in the weighted sample and the treatment and covariate distributions in the original sample are minimized.
 

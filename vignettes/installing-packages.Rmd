@@ -19,9 +19,9 @@ link-citations: true
 knitr::opts_chunk$set(eval = FALSE)
 ```
 
-`WeightIt` is a wrapper for several other packages that aid in estimating balancing weights. In many ways, this is `WeigthIt`'s strength, because it is easy to try out several weighting methods without having to learn a completley new syntax for each one. One weakness of this is that when one of these packages is not available (e.g., on CRAN), the method that relies on that package cannot be used.
+`WeightIt` is a wrapper for several other packages that aid in estimating balancing weights. In many ways, this is `WeigthIt`'s strength, because it is easy to try out several weighting methods without having to learn a completely new syntax for each one. One weakness of this is that when one of these packages is not available (e.g., on CRAN), the method that relies on that package cannot be used.
 
-This document explains how to install each package `WeightIt` uses. You do not need to install every single one; you only need the one you want to use. For example, the `miseam` package provides support for logistic regression with missing data, but if you have no missing data or you don't want to use the approach implemented in `miseam`, you don't need to install it. `WeightIt` strongly depends on four packages, which are automatically installed along with `WeightIt`, so you don't need to worry about installing them seperately; these are `cobalt`, `ggplot2`, `crayon`, and `backports`.
+This document explains how to install each package `WeightIt` uses. You do not need to install every single one; you only need the one you want to use. For example, the `miseam` package provides support for logistic regression with missing data, but if you have no missing data or you don't want to use the approach implemented in `miseam`, you don't need to install it. `WeightIt` strongly depends on four packages, which are automatically installed along with `WeightIt`, so you don't need to worry about installing them separately; these are `cobalt`, `ggplot2`, `crayon`, and `backports`.
 
 Below we note each method (by name and by the input to the `method` argument of `weightit()`) and how to install the required packages either from CRAN or otherwise when the CRAN version is not available. In many cases, this involves installing the package from the author's GitHub repository, which requires either the `remotes` or `devtools` package, which both contain the function `install_github()`.
 
@@ -43,7 +43,7 @@ If `misaem` is not on CRAN, or if you want to install the development version fr
 remotes::install_github("julierennes/misaem")
 ```
 
-### Binary and multicatgeory treatments with `link = "br.logit"`
+### Binary and multicategory treatments with `link = "br.logit"`
 
 For binary and multicategory treatments, when `link` is supplied as `"br.logit"` or another link beginning with `"br."`, the `brglm2` package is required. To install `brglm2` from CRAN, run
 
