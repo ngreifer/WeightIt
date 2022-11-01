@@ -3,13 +3,19 @@ WeightIt News and Updates
 
 # WeightIt (development version)
 
-* Added energy balance for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2021)](http://arxiv.org/abs/2107.07086). These weights minimize the distance covariance between the treatment and covariates. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
+* Added energy balancing for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2021)](http://arxiv.org/abs/2107.07086). These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
+
+* Added a new `stop.method` for continuous treatments, `"distance.cov"`, which finds weights that minimize the distance covariance between the treatment and covariates.
+
+* Added new `stop.method`s for binary and continuous treatments: `"r2.2"` and `"r2.3"`, which find weights that minimize the R2 from a weighted model with covariates plus their squares or squares and cubes, respectively, as the predictors.
 
 * Using `method = "ebcw"` for empirical balancing calibration weighting is no longer available because the `ATE` package has been removed. Use `method = "ebal"` for entropy balancing instead, which is essentially identical.
 
 * Updated the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.
 
 * Fixed a bug when using `method = "energy"` with `by`.
+
+* Previously, `stop.method = "r2"` would fail to include an intercept in the weighted model used to compute the R2. Now the intercept is included.
 
 # WeightIt 0.13.1
 
