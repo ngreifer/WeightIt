@@ -15,7 +15,13 @@ WeightIt News and Updates
 
 * Updated the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.
 
+* Fixed bugs when some `s.weights` are equal to zero with `method = "ebal"`, "`cbps"`, and `"energy"`. Suggested by @statzhero.
+
+* Improved performance of `method = "energy"` for the ATT.
+
 * Fixed a bug when using `method = "energy"` with `by`.
+
+* With `method = "energy"`, setting `int = TRUE` automatically sets `moments = 1` if unspecified.
 
 * Previously, `stop.method = "r2"` would fail to include an intercept in the weighted model used to compute the R2. Now the intercept is included.
 

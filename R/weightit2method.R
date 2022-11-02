@@ -1333,6 +1333,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
+  sw0 <- check_if_zero(s.weights)
+
   if (estimand == "ATT") {
     ps <- make_df(levels(treat), length(treat))
 
@@ -1340,16 +1342,16 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     fit.list <- make_list(control.levels)
 
     for (i in control.levels) {
-      treat.in.i.focal <- which(treat %in% c(focal, i))
+      treat.in.i.focal <- treat %in% c(focal, i)
       treat_ <- as.integer(treat[treat.in.i.focal] != i)
       covs_ <- covs[treat.in.i.focal, , drop = FALSE]
-      new.data <- data.frame(treat_, covs_)
+      new.data <- as.data.frame(cbind(treat_, covs_))
 
       tryCatch({fit.list[[i]] <- CBPS::CBPS(formula(new.data),
-                                            data = new.data,
+                                            data = new.data[!sw0[treat.in.i.focal],],
                                             method = if (is_not_null(A$over) && A$over == FALSE) "exact" else "over",
                                             standardize = FALSE,
-                                            sample.weights = s.weights[treat.in.i.focal],
+                                            sample.weights = s.weights[!sw0 & treat.in.i.focal],
                                             ATT = 1,
                                             ...)},
                error = function(e) {
@@ -1360,20 +1362,24 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
 
       )
 
-      ps[[focal]][treat.in.i.focal] <- fit.list[[i]][["fitted.values"]]
-      ps[[i]][treat.in.i.focal] <- 1 - ps[[focal]][treat.in.i.focal]
-
+      if (!any(sw0[treat.in.i.focal])) {
+        ps[[focal]][treat.in.i.focal] <- fit.list[[i]][["fitted.values"]]
+        ps[[i]][treat.in.i.focal] <- 1 - ps[[focal]][treat.in.i.focal]
+      }
+      else {
+        ps[[focal]][treat.in.i.focal] <- plogis(drop(cbind(1, covs_) %*% fit.list[[i]][["coefficients"]]))
+        ps[[i]][treat.in.i.focal] <- 1 - ps[[focal]][treat.in.i.focal]
+      }
     }
-
   }
   else {
-    new.data <- data.frame(treat, covs)
+    new.data <- cbind(treat, as.data.frame(covs))
     if (treat.type == "binary" || !nunique.gt(treat, 4)) {
       tryCatch({fit.list <- CBPS::CBPS(formula(new.data),
-                                       data = new.data,
+                                       data = new.data[!sw0,],
                                        method = if (isFALSE(A$over)) "exact" else "over",
                                        standardize = FALSE,
-                                       sample.weights = s.weights,
+                                       sample.weights = s.weights[!sw0],
                                        ATT = 0,
                                        ...)},
                error = function(e) {
@@ -1383,24 +1389,42 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                }
       )
 
-      ps <- fit.list[["fitted.values"]]
+      if (!any(sw0)) {
+        ps <- fit.list[["fitted.values"]]
+      }
+      else if (treat.type == "binary") {
+        ps <- plogis(drop(cbind(1, covs) %*% fit.list[["coefficients"]]))
+      }
+      else {
+        ps <- make_df(levels(treat), length(treat))
+        base.lvl <- setdiff(levels(treat), colnames(fit.list$coefficients))
+
+        lin.pred <- cbind(1, covs) %*% fit.list[["coefficients"]]
+        ps[, base.lvl] <- 1/rowSums(exp(lin.pred))
+        ps[, colnames(fit.list$coefficients)] <- exp(lin.pred[, colnames(fit.list$coefficients)]) * ps[, base.lvl]
+        ps <- ps/rowSums(ps)
+      }
     }
     else {
-      ps <- rep(NA_real_, length(treat))
+      ps <- make_df(levels(treat), length(treat))
 
       fit.list <- make_list(levels(treat))
 
       for (i in levels(treat)) {
         new.data[[1]] <- as.integer(treat == i)
-        fit.list[[i]] <- CBPS::CBPS(formula(new.data), data = new.data,
+        fit.list[[i]] <- CBPS::CBPS(formula(new.data), data = new.data[!sw0,],
                                     method = if (isFALSE(A$over)) "exact" else "over",
                                     standardize = FALSE,
-                                    sample.weights = s.weights,
+                                    sample.weights = s.weights[!sw0],
                                     ATT = 0, ...)
 
-        ps[treat==i] <- fit.list[[i]][["fitted.values"]][treat==i]
+        if (!any(sw0)) {
+          ps[, i] <- fit.list[[i]][["fitted.values"]]
+        }
+        else {
+          ps[, i] <- plogis(drop(cbind(1, covs) %*% fit.list[[i]][["coefficients"]]))
+        }
       }
-
     }
   }
 
@@ -1439,13 +1463,17 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
+  sw0 <- check_if_zero(s.weights)
+
   new.data <- data.frame(treat = treat, covs)
 
+  w <- rep(0, length(treat))
+
   tryCatch({fit <- CBPS::CBPS(formula(new.data),
-                              data = new.data,
+                              data = new.data[!sw0,],
                               method = if (isFALSE(A$over)) "exact" else "over",
                               standardize = FALSE,
-                              sample.weights = s.weights,
+                              sample.weights = s.weights[!sw0],
                               ...)},
            error = function(e) {
              e. <- conditionMessage(e)
@@ -1454,7 +1482,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
            }
   )
 
-  w <- fit$weights / s.weights
+  w[!sw0] <- fit$weights / s.weights[!sw0]
 
   obj <- list(w = w, fit.obj = fit)
   return(obj)
@@ -1614,6 +1642,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   }
 
   w <- rep(1, length(treat))
+  sw0 <- check_if_zero(s.weights)
 
   if (estimand == "ATT") {
     groups_to_weight <- levels(treat)[levels(treat) != focal]
@@ -1628,10 +1657,10 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   fit.list <- make_list(groups_to_weight)
   for (i in groups_to_weight) {
 
-    fit.list[[i]] <- eb(covs[treat == i,,drop = FALSE], s.weights[treat == i],
-                        bw[treat == i])
+    fit.list[[i]] <- eb(covs[treat == i & !sw0,,drop = FALSE], s.weights[treat == i & !sw0],
+                        bw[treat == i & !sw0])
 
-    w[treat == i] <- fit.list[[i]]$w
+    w[treat == i & !sw0] <- fit.list[[i]]$w
   }
 
   obj <- list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
@@ -1748,9 +1777,12 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
          opt.out = opt.out)
   }
 
-  fit <- eb(C, s.weights, bw)
+  w <- rep(0, length(treat))
+  sw0 <- check_if_zero(s.weights)
 
-  w <- fit$w
+  fit <- eb(C[!sw0,, drop = FALSE], s.weights[!sw0], bw[!sw0])
+
+  w[!sw0] <- fit$w
 
   obj <- list(w = w, fit.obj = fit$opt.out)
 
@@ -2260,104 +2292,106 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean(s.weights[treat == t])
 
-  tmat <- vapply(levels_treat, function(t) treat == t, logical(n))
-  nt <- colSums(tmat)
+  treat_t <- vapply(levels_treat, function(t) treat == t, logical(n))
+  n_t <- colSums(treat_t)
 
-  J <- setNames(lapply(levels_treat, function(t) s.weights*tmat[,t]/nt[t]), levels_treat)
+  s.weights_n_t <- setNames(lapply(levels_treat, function(t) treat_t[,t] * s.weights / n_t[t]),
+                            levels_treat)
 
   if (estimand == "ATE") {
-    J0 <- as.matrix(s.weights/n)
 
-    M2_array <- vapply(levels_treat, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
-    M1_array <- vapply(levels_treat, function(t) 2 * J[[t]] * d %*% J0, J0)
+    P <- -d * Reduce("+", lapply(s.weights_n_t, tcrossprod))
 
-    M2 <- rowSums(M2_array, dims = 2)
-    M1 <- rowSums(M1_array)
+    q <- ((s.weights * 2 / n) %*% d) * Reduce("+", s.weights_n_t)
 
     if (!isFALSE(A[["improved"]])) {
       all_pairs <- combn(levels_treat, 2, simplify = FALSE)
-      M2_pairs_array <- vapply(all_pairs, function(p) -2 * tcrossprod(J[[p[1]]]-J[[p[2]]]) * d, diagn)
-      M2 <- M2 + rowSums(M2_pairs_array, dims = 2)
+      P <- P - d * Reduce("+", lapply(all_pairs, function(p) {
+        tcrossprod(s.weights_n_t[[p[1]]] - s.weights_n_t[[p[2]]])
+      }))
     }
 
     #Constraints for positivity and sum of weights
-    Amat <- rbind(diagn, t(s.weights * tmat))
-    lvec <- c(rep(min.w, n), nt)
-    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), nt)
+    Amat <- cbind(diagn, s.weights * treat_t)
+    lvec <- c(rep(min.w, n), n_t)
+    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), n_t)
+
+    if (moments != 0 || int) {
+      #Exactly balance moments and/or interactions
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+      targets <- col.w.m(covs, s.weights)
+
+      Amat <- cbind(Amat, do.call("cbind", lapply(s.weights_n_t, function(x) covs * x)))
+      lvec <- c(lvec, rep(targets, length(levels_treat)))
+      uvec <- c(uvec, rep(targets, length(levels_treat)))
+    }
   }
   else {
+    non_focal <- setdiff(levels_treat, focal)
+    in_focal <- treat == focal
 
-    J0_focal <- as.matrix(J[[focal]])
-    clevs <- levels_treat[levels_treat != focal]
+    P <- -d[!in_focal, !in_focal] *
+      Reduce("+", lapply(s.weights_n_t[non_focal], function(x) tcrossprod(x[!in_focal])))
 
-    M2_array <- vapply(clevs, function(t) -2 * tcrossprod(J[[t]]) * d, diagn)
-    M1_array <- vapply(clevs, function(t) 2 * J[[t]] * d %*% J0_focal, J0_focal)
+    q <- 2 * (s.weights_n_t[[focal]][in_focal] %*% d[in_focal, !in_focal]) *
+      Reduce("+", lapply(s.weights_n_t[non_focal], function(x) x[!in_focal]))
 
-    M2 <- rowSums(M2_array, dims = 2)
-    M1 <- rowSums(M1_array)
+    Amat <- cbind(diag(sum(!in_focal)), s.weights[!in_focal] * treat_t[!in_focal, non_focal])
+    lvec <- c(rep(min.w, sum(!in_focal)), n_t[non_focal])
+    uvec <- c(ifelse_(check_if_zero(s.weights[!in_focal]), min.w, Inf), n_t[non_focal])
 
-    #Constraints for positivity and sum of weights
-    Amat <- rbind(diagn, t(s.weights*tmat))
-    lvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, min.w), nt)
-    uvec <- c(ifelse_(check_if_zero(s.weights), min.w, treat == focal, 1, Inf), nt)
+    if (moments != 0 || int) {
+      #Exactly balance moments and/or interactions
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+      targets <- col.w.m(covs[in_focal,, drop = FALSE], s.weights[in_focal])
+
+      Amat <- cbind(Amat, do.call("cbind", lapply(s.weights_n_t[non_focal],
+                                               function(x) covs[!in_focal,, drop = FALSE] * x[!in_focal])))
+      lvec <- c(lvec, rep(targets, length(non_focal)))
+      uvec <- c(uvec, rep(targets, length(non_focal)))
+    }
   }
 
   #Add weight penalty
-  diag(M2) <- diag(M2) + lambda / n^2
-
-  if (moments != 0 || int) {
-    #Exactly balance moments and/or interactions
-    covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-
-    if (estimand == "ATE") targets <- col.w.m(covs, s.weights)
-    else targets <- col.w.m(covs[treat == focal, , drop = FALSE], s.weights[treat == focal])
-
-    Amat <- do.call("rbind", c(list(Amat),
-                               lapply(levels_treat, function(t) {
-                                 if (is_null(focal) || t != focal) t(covs * J[[t]])
-                               })))
-    lvec <- do.call("c", c(list(lvec),
-                           lapply(levels_treat, function(t) {
-                             if (is_null(focal) || t != focal) targets
-                           })))
-    uvec <- do.call("c", c(list(uvec),
-                           lapply(levels_treat, function(t) {
-                             if (is_null(focal) || t != focal) targets
-                           })))
-  }
-
   if (lambda < 0) {
-    e <- eigen(M2, symmetric = TRUE, only.values = TRUE)
+    #Find lambda to make P PSD
+    e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
     if (e.min < 0) {
       lambda <- -e.min*n^2
-      diag(M2) <- diag(M2) - e.min
     }
   }
+
+  diag(P) <- diag(P) + lambda / n^2
 
   if (is_not_null(A[["eps"]])) {
     if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
   }
   A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2E3L
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1E-8
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1E-8
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2e3L
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
   A[["verbose"]] <- TRUE
 
   options.list <- do.call(osqp::osqpSettings, A)
 
-  opt.out <- do.call(osqp::solve_osqp, list(P = M2, q = M1, A = Amat, l = lvec, u = uvec,
-                                            pars = options.list),
-                     quote = TRUE)
+  opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
+                              pars = options.list)
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
     warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
   }
 
-  w <- opt.out$x
-
-  if (estimand == "ATT") w[treat == focal] <- 1
+  if (estimand == "ATT") {
+    w <- rep(1, length(treat))
+    w[treat != focal] <- opt.out$x
+  }
+  else {
+    w <- opt.out$x
+  }
 
   w[w <= min.w] <- min.w
 
@@ -2365,7 +2399,6 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   obj <- list(w = w, fit.obj = opt.out)
   return(obj)
-
 }
 weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   check.package("osqp")
@@ -2408,6 +2441,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   n <- length(treat)
 
+  sw0 <- check_if_zero(s.weights)
+
   s.weights <- n * s.weights/sum(s.weights)
 
   min.w <- if_null_then(A[["min.w"]], 1e-8)
@@ -2444,7 +2479,6 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   Pdcow <- XA * AA/n^2
   PebA <- -Adist/n^2
   PebX <- -Xdist/n^2
-  Plam <- diag(n)*lambda/n^2
 
   qebA <- drop(s.weights %*% Adist)*2/n^2
   qebX <- drop(s.weights %*% Xdist)*2/n^2
@@ -2463,15 +2497,15 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   qebA <- qebA * Q_energy_A_adj
   qebX <- qebX * Q_energy_X_adj
 
-  P <- Pdcow + PebA + PebX + Plam
+  P <- Pdcow + PebA + PebX
   q <- qebA + qebX
 
   P <- P * outer(s.weights, s.weights)
   q <- q * s.weights
 
   Amat <- cbind(diag(n), s.weights)
-  lvec <- c(ifelse(check_if_zero(s.weights), 1, 0), n)
-  uvec <- c(ifelse(check_if_zero(s.weights), 1, Inf), n)
+  lvec <- c(rep(min.w, n), n)
+  uvec <- c(ifelse(sw0, min.w, Inf), n)
 
   if (d.moments != 0) {
     d.covs <- covs
@@ -2506,23 +2540,26 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     uvec <- c(uvec, rep(0, ncol(covs)))
   }
 
+  #Add weight penalty
   if (lambda < 0) {
+    #Find lambda to make P PSD
     e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
     if (e.min < 0) {
       lambda <- -e.min*n^2
-      diag(P) <- diag(P) - e.min
     }
   }
+
+  diag(P) <- diag(P) + lambda / n^2
 
   if (is_not_null(A[["eps"]])) {
     if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
   }
   A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2e3L
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
   if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-8
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
   A[["verbose"]] <- TRUE
   options.list <- do.call(osqp::osqpSettings, A)
 
@@ -2536,7 +2573,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   w <- opt.out$x
   w[w <= min.w] <- min.w
 
-  opt.out$lambda = lambda
+  opt.out$lambda <- lambda
 
   obj <- list(w = w, fit.obj = opt.out)
   return(obj)

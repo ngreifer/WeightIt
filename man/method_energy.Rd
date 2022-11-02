@@ -79,6 +79,8 @@ The primary benefit of energy balancing is that all features of the covariate di
 
 \note{
 Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything. If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon). Increasing \code{max_iter} might help.
+
+If it seems like the weights are balancing the covariates but you still get a failure to converge, this usually indicates that more iterations are needs to find the optimal solutions. This can occur when \code{moments} or \code{int} are specified. \code{max_iter} should be increased, and setting \code{verbose = TRUE} allows you to monitor the process and examine if the optimization is approaching convergence.
 }
 \author{
 Noah Greifer, using code from Jared Huling's \CRANpkg{independenceWeights} package for continuous treatments.

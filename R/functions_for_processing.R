@@ -332,7 +332,7 @@ process.moments.int <- function(moments, int, method) {
       }
     }
     else {
-      if (!is.function(method) && method == "energy") moments <- 0L
+      if (!is.function(method) && method == "energy" && !int) moments <- 0L
       else moments <- 1L
     }
   }
