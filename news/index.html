@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9004</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,10 @@
 <li><p>Renamed <code>method = "ps"</code> to <code>method = "glm"</code>. <code>"ps"</code> continues to work as it always had for back compatibility. <code>"glm"</code> is a more descriptive name since many methods use propensity scores; what distinguishes this method is that it uses generalized linear models.</p></li>
 <li><p>Using <code>method = "ebcw"</code> for empirical balancing calibration weighting is no longer available because the <code>ATE</code> package has been removed. Use <code>method = "ebal"</code> for entropy balancing instead, which is essentially identical.</p></li>
 <li><p>Updated the <code><a href="../reference/trim.html">trim()</a></code> documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.</p></li>
+<li><p>Fixed bugs when some <code>s.weights</code> are equal to zero with <code>method = "ebal"</code>, “<code>cbps"</code>, and <code>"energy"</code>. Suggested by <a href="https://github.com/statzhero" class="external-link">@statzhero</a>.</p></li>
+<li><p>Improved performance of <code>method = "energy"</code> for the ATT.</p></li>
 <li><p>Fixed a bug when using <code>method = "energy"</code> with <code>by</code>.</p></li>
+<li><p>With <code>method = "energy"</code>, setting <code>int = TRUE</code> automatically sets <code>moments = 1</code> if unspecified.</p></li>
 <li><p>Previously, <code>stop.method = "r2"</code> would fail to include an intercept in the weighted model used to compute the R2. Now the intercept is included.</p></li>
 </ul></div>
     <div class="section level2">
