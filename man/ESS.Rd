@@ -14,7 +14,7 @@ a vector of weights
 }
 }
 \details{
-The ESS is calculated as \eqn{(\sum w)^2/\sum w^2}.
+The ESS is calculated as \eqn{(n\sum w)^2/\sum w^2}.
 }
 
 \references{
