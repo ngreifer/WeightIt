@@ -267,11 +267,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         formula <- formula(data)
 
         tryCatch({fit <- do.call(brglm2::bracl, list(formula,
-                             data = data,
-                             weights = s.weights,
-                             control = control,
-                             parallel = if_null_then(A[["parallel"]], FALSE)),
-                       quote = TRUE)},
+                                                     data = data,
+                                                     weights = s.weights,
+                                                     control = control,
+                                                     parallel = if_null_then(A[["parallel"]], FALSE)),
+                                 quote = TRUE)},
                  error = function(e) stop("There was a problem with the bias-reduced ordinal logit regression. Try a different link.", call. = FALSE))
       }
       else {
@@ -414,7 +414,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         formula <- formula(data)
         tryCatch({fit <- MNP::mnp(formula, data, verbose = TRUE)},
                  error = function(e) stop("There was a problem with the Bayes probit regression. Try a different link.", call. = FALSE))
-        ps <- MNP::predict.mnp(fit, type = "prob")$p
+        ps <- predict(fit, type = "prob")$p
         fit.obj <- fit
       }
 
@@ -822,28 +822,46 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     }
   }
 
-  if (is_null(A[["stop.method"]])) {
-    warning("No stop.method was provided. Using \"es.mean\".",
-            call. = FALSE, immediate. = TRUE)
-    A[["stop.method"]] <- "es.mean"
+  if (is_null(A[["criterion"]])) {
+    A[["criterion"]] <- A[["stop.method"]]
   }
-  else if (length(A[["stop.method"]]) > 1) {
-    warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
+
+  if (is_null(A[["criterion"]])) {
+    warning("No `criterion` was provided. Using \"smd.mean\".",
             call. = FALSE, immediate. = TRUE)
-    A[["stop.method"]] <- A[["stop.method"]][1]
+    A[["criterion"]] <- "smd.mean"
+  }
+  else if (length(A[["criterion"]]) > 1) {
+    warning("Only one `criterion` is allowed at a time. Using just the first `criterion`",
+            call. = FALSE, immediate. = TRUE)
+    A[["criterion"]] <- A[["criterion"]][1]
+  }
+
+  available.criteria <- cobalt::available.stats(treat.type)
+
+  if (is.character(A[["criterion"]]) &&
+      startsWith(A[["criterion"]], "es.")) {
+    subbed.crit <- sub("es.", "smd.", A[["criterion"]], fixed = TRUE)
+    subbed.match <- charmatch(subbed.crit, available.criteria)
+    if (!anyNA(subbed.match) && subbed.match != 0L) {
+      A[["criterion"]] <- subbed.crit
+    }
   }
 
   cv <- 0
-  available.stop.methods <- bal_criterion(treat.type, list = TRUE)
-  s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
-  if (is.na(s.m.matches) || s.m.matches == 0L) {
-    if (startsWith(A[["stop.method"]], "cv") && can_str2num(numcv <- substr(A[["stop.method"]], 3, nchar(A[["stop.method"]])))) {
+
+  s.m.matches <- charmatch(A[["criterion"]], available.criteria)
+  if (anyNA(s.m.matches) || s.m.matches == 0L) {
+    if (startsWith(A[["criterion"]], "cv") &&
+        can_str2num(numcv <- substr(A[["criterion"]], 3, nchar(A[["criterion"]])))) {
       cv <- round(str2num(numcv))
-      if (cv < 2) stop("At least 2 CV-folds must be specified in stop.method.", call. = FALSE)
+      if (cv < 2) stop("At least 2 CV-folds must be specified in `criterion`.", call. = FALSE)
     }
-    else stop(paste0("'stop.method' must be one of ", word_list(c(available.stop.methods, "cv{#}"), "or", quotes = TRUE), "."), call. = FALSE)
+    else stop(sprintf("`criterion` must be one of %s.",
+                      word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)),
+              call. = FALSE)
   }
-  else stop.method <- available.stop.methods[s.m.matches]
+  else criterion <- available.criteria[s.m.matches]
 
   tunable <- c("interaction.depth", "shrinkage", "distribution")
 
@@ -881,8 +899,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     }
     else n.grid <- round(A[["n.grid"]])
 
-    crit <- bal_criterion(treat.type, stop.method)
-    init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal, ...)
+    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
+                             estimand = estimand, s.weights = s.weights,
+                             focal = focal, ...)
   }
 
   A[["x"]] <- covs
@@ -917,9 +936,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-      iter.grid.balance <- apply(w, 2, function(w_) {
-        crit$fun(init = init, weights = w_)
-      })
+      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, init = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -927,7 +944,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
         best.tree <- iters.grid[best.tree.index]
         tree.val <- setNames(data.frame(iters.grid,
                                         iter.grid.balance),
-                             c("tree", stop.method))
+                             c("tree", criterion))
       }
       else {
         it <- which.min(iter.grid.balance) + c(-1, 1)
@@ -935,29 +952,29 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
         it[2] <- iters.grid[min(length(iters.grid), it[2])]
         iters.to.check <- iters[between(iters, iters[it])]
 
-        if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
+        if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) {
+          stop("A problem has occurred")
+        }
 
         ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
         w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-        iter.grid.balance.fine <- apply(w, 2, function(w_) {
-          crit$fun(init = init, weights = w_)
-        })
+        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, init = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
         best.tree <- iters.to.check[best.tree.index]
         tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
                                         c(iter.grid.balance, iter.grid.balance.fine)),
-                             c("tree", stop.method))
+                             c("tree", criterion))
       }
 
       tree.val <- unique(tree.val[order(tree.val$tree),])
       w <- w[,best.tree.index]
       ps <- if (treat.type == "binary") ps[,best.tree.index] else NULL
 
-      tune[[paste.("best", stop.method)]][i] <- best.loss
+      tune[[paste.("best", criterion)]][i] <- best.loss
       tune[["best.tree"]][i] <- best.tree
 
       if (best.loss < current.best.loss) {
@@ -1016,15 +1033,15 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (treat.type == "multinomial") ps <- NULL
   }
 
-  tune[tunable[vapply(tune[tunable], all_the_same, logical(1L))]] <- NULL
+  tune[tunable[lengths(A[tunable]) == 1]] <- NULL
 
   if (ncol(tune) > 2) {
     info[["tune"]] <- tune
     info[["best.tune"]] <- tune[best.tune.index,]
   }
 
-  if (is_not_null(best.ps)) {
-    if (is_not_null(focal) && focal != t.lev) best.ps <- 1 - best.ps
+  if (is_not_null(best.ps) && is_not_null(focal) && focal != t.lev) {
+    best.ps <- 1 - best.ps
   }
 
   obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
@@ -1050,28 +1067,36 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     }
   }
 
-  if (is_null(A[["stop.method"]])) {
-    warning("No stop.method was provided. Using \"p.mean\".",
-            call. = FALSE, immediate. = TRUE)
-    A[["stop.method"]] <- "p.mean"
+  if (is_null(A[["criterion"]])) {
+    A[["criterion"]] <- A[["stop.method"]]
   }
-  else if (length(A[["stop.method"]]) > 1) {
-    warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
+  if (is_null(A[["criterion"]])) {
+    warning("No `criterion` was provided. Using \"p.mean\".",
             call. = FALSE, immediate. = TRUE)
-    A[["stop.method"]] <- A[["stop.method"]][1]
+    A[["criterion"]] <- "p.mean"
+  }
+  else if (length(A[["criterion"]]) > 1) {
+    warning("Only one `criterion` is allowed at a time. Using just the first `criterion`.",
+            call. = FALSE, immediate. = TRUE)
+    A[["criterion"]] <- A[["criterion"]][1]
   }
 
+  available.criteria <- cobalt::available.stats("continuous")
+
   cv <- 0
-  available.stop.methods <- bal_criterion("continuous", list = TRUE)
-  s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
-  if (is.na(s.m.matches) || s.m.matches == 0L) {
-    if (startsWith(A[["stop.method"]], "cv") && can_str2num(numcv <- substr(A[["stop.method"]], 3, nchar(A[["stop.method"]])))) {
+
+  s.m.matches <- charmatch(A[["criterion"]], available.criteria)
+  if (anyNA(s.m.matches) || s.m.matches == 0L) {
+    if (startsWith(A[["criterion"]], "cv") &&
+        can_str2num(numcv <- substr(A[["criterion"]], 3, nchar(A[["criterion"]])))) {
       cv <- round(str2num(numcv))
-      if (cv < 2) stop("At least 2 CV-folds must be specified in stop.method.", call. = FALSE)
+      if (cv < 2) stop("At least 2 CV-folds must be specified in `criterion`.", call. = FALSE)
     }
-    else stop(paste0("'stop.method' must be one of ", word_list(c(available.stop.methods, "cv{#}"), "or", quotes = TRUE), "."), call. = FALSE)
+    else stop(sprintf("`criterion` must be one of %s.",
+                      word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)),
+              call. = FALSE)
   }
-  else stop.method <- available.stop.methods[s.m.matches]
+  else criterion <- available.criteria[s.m.matches]
 
   tunable <- c("interaction.depth", "shrinkage", "distribution")
 
@@ -1100,15 +1125,20 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     }
     else n.grid <- round(A[["n.grid"]])
 
-    crit <- bal_criterion("continuous", stop.method)
-    init <- crit$init(covs, treat, s.weights = s.weights, ...)
+    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
+                             s.weights = s.weights, ...)
   }
 
   A[["x"]] <- covs
   A[["y"]] <- treat
-  A[["distribution"]] <- if (is_null(distribution <- A[["distribution"]])) {
-    available.distributions[1]} else {
-      match_arg(distribution, available.distributions, several.ok = TRUE)}
+  A[["distribution"]] <- {
+    if (is_null(distribution <- A[["distribution"]])) {
+      available.distributions[1]
+    }
+    else {
+      match_arg(distribution, available.distributions, several.ok = TRUE)
+    }
+  }
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
 
@@ -1144,8 +1174,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
         }
       }
       else {
-        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                   splitdens[1], "is not an available function."), call. = FALSE)
+        stop("%s is not an appropriate argument to 'density' because %s is not an available function.",
+             sprintf(A[["density"]], splitdens[1]), call. = FALSE)
       }
     }
     else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
@@ -1191,9 +1221,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
                             densfun = densfun, use.kernel = use.kernel, densControl = A)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-      iter.grid.balance <- apply(w, 2, function(w_) {
-        crit$fun(init = init, weights = w_)
-      })
+      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, init = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -1201,7 +1229,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
         best.tree <- iters.grid[best.tree.index]
         tree.val <- setNames(data.frame(iters.grid,
                                         iter.grid.balance),
-                             c("tree", stop.method))
+                             c("tree", criterion))
       }
       else {
         it <- which.min(iter.grid.balance) + c(-1, 1)
@@ -1216,23 +1244,21 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
                               densfun = densfun, use.kernel = use.kernel, densControl = A)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-        iter.grid.balance.fine <- apply(w, 2, function(w_) {
-          crit$fun(init = init, weights = w_)
-        })
+        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, init = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
         best.tree <- iters.to.check[best.tree.index]
         tree.val <- setNames(data.frame(c(iters.grid, iters.to.check),
                                         c(iter.grid.balance, iter.grid.balance.fine)),
-                             c("tree", stop.method))
+                             c("tree", criterion))
       }
 
       tree.val <- unique(tree.val[order(tree.val$tree),])
       w <- w[,best.tree.index]
       gps <- gps[,as.character(best.tree)]
 
-      tune[[paste.("best", stop.method)]][i] <- best.loss
+      tune[[paste.("best", criterion)]][i] <- best.loss
       tune[["best.tree"]][i] <- best.tree
 
       if (best.loss < current.best.loss) {
@@ -1296,7 +1322,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     plot_density(d.n, d.d)
   }
 
-  tune[tunable[vapply(tunable, function(x) length(A[[x]]) == 1, logical(1L))]] <- NULL
+  tune[tunable[lengths(A[tunable]) == 1]] <- NULL
 
   if (ncol(tune) > 2) {
     info[["tune"]] <- tune
@@ -1831,33 +1857,44 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   if (identical(A[["SL.method"]], "method.balance")) {
     if (treat.type != "binary") stop("\"method.balance\" cannot be used with multi-category treatments.", call. = FALSE)
 
-    if (is_null(A[["stop.method"]])) {
-      warning("No stop.method was provided. Using \"es.mean\".",
-              call. = FALSE, immediate. = TRUE)
-      A[["stop.method"]] <- "es.mean"
-    }
-    else if (length(A[["stop.method"]]) > 1) {
-      warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
-              call. = FALSE, immediate. = TRUE)
-      A[["stop.method"]] <- A[["stop.method"]][1]
+    if (is_null(A[["criterion"]])) {
+      A[["criterion"]] <- A[["stop.method"]]
     }
 
-    available.stop.methods <- bal_criterion(treat.type, list = TRUE)
-    s.m.matches <- charmatch(A[["stop.method"]], available.stop.methods)
-    if (is.na(s.m.matches) || s.m.matches == 0L) {
-      stop(paste0("'stop.method' must be one of ", word_list(available.stop.methods, "or", quotes = TRUE), "."), call. = FALSE)
+    if (is_null(A[["criterion"]])) {
+      warning("No `criterion` was provided. Using \"smd.mean\".",
+              call. = FALSE, immediate. = TRUE)
+      A[["criterion"]] <- "smd.mean"
     }
-    else stop.method <- available.stop.methods[s.m.matches]
+    else if (length(A[["criterion"]]) > 1) {
+      warning("Only one `criterion` is allowed at a time. Using just the first `criterion`.",
+              call. = FALSE, immediate. = TRUE)
+      A[["criterion"]] <- A[["criterion"]][1]
+    }
 
-    crit <- bal_criterion("binary", stop.method)
-    init <- crit$init(covs, treat, estimand = estimand, s.weights = s.weights, focal = focal, ...)
-    bal_fun <- crit$fun
+    available.criteria <- cobalt::available.stats(treat.type)
+
+    if (is.character(A[["criterion"]]) &&
+        startsWith(A[["criterion"]], "es.")) {
+      subbed.crit <- sub("es.", "smd.", A[["criterion"]], fixed = TRUE)
+      subbed.match <- charmatch(subbed.crit, available.criteria)
+      if (!anyNA(subbed.match) && subbed.match != 0L) {
+        A[["criterion"]] <- subbed.crit
+      }
+    }
+
+    criterion <- A[["criterion"]]
+    criterion <- match_arg(criterion, available.criteria)
+
+    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
+                             estimand = estimand, s.weights = s.weights,
+                             focal = focal, ...)
 
     sneaky <- 0
-    attr(sneaky, "vals") <- list(init = init, bal_fun = bal_fun, estimand = estimand)
+    attr(sneaky, "vals") <- list(init = init, estimand = estimand)
     A[["control"]] <- list(trimLogit = sneaky)
 
-    A[["SL.method"]] <- method.balance(stop.method)
+    A[["SL.method"]] <- method.balance()
   }
 
   fit.list <- info <- make_list(levels(treat))
@@ -1988,38 +2025,38 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   if (identical(B[["SL.method"]], "method.balance")) {
 
-    if (is_null(B[["stop.method"]])) {
-      warning("No stop.method was provided. Using \"p.mean\".",
-              call. = FALSE, immediate. = TRUE)
-      B[["stop.method"]] <- "p.mean"
-    }
-    else if (length(B[["stop.method"]]) > 1) {
-      warning("Only one stop.method is allowed at a time. Using just the first stop.method.",
-              call. = FALSE, immediate. = TRUE)
-      B[["stop.method"]] <- B[["stop.method"]][1]
+    if (is_null(A[["criterion"]])) {
+      A[["criterion"]] <- A[["stop.method"]]
     }
 
-    available.stop.methods <- bal_criterion("continuous", list = TRUE)
-    s.m.matches <- charmatch(B[["stop.method"]], available.stop.methods)
-    if (is.na(s.m.matches) || s.m.matches == 0L) {
-      stop(paste0("'stop.method' must be one of ", word_list(available.stop.methods, "or", quotes = TRUE), "."), call. = FALSE)
+    if (is_null(A[["criterion"]])) {
+      warning("No `criterion` was provided. Using \"p.mean\".",
+              call. = FALSE, immediate. = TRUE)
+      A[["criterion"]] <- "p.mean"
     }
-    else stop.method <- available.stop.methods[s.m.matches]
+    else if (length(A[["criterion"]]) > 1) {
+      warning("Only one `criterion` is allowed at a time. Using just the first `criterion`.",
+              call. = FALSE, immediate. = TRUE)
+      A[["criterion"]] <- A[["criterion"]][1]
+    }
 
-    crit <- bal_criterion("continuous", stop.method)
-    init <- crit$init(covs, treat, s.weights = s.weights, ...)
-    bal_fun <- crit$fun
+    available.criteria <- cobalt::available.stats("continuous")
+
+    criterion <- A[["criterion"]]
+    criterion <- match_arg(criterion, available.criteria)
+
+    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
+                             s.weights = s.weights, ...)
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init,
-                                 bal_fun = bal_fun,
                                  dens.num = dens.num,
                                  densfun = densfun,
                                  use.kernel = use.kernel,
                                  densControl = A)
     B[["control"]] <- list(trimLogit = sneaky)
 
-    B[["SL.method"]] <- method.balance.cont(stop.method)
+    B[["SL.method"]] <- method.balance.cont()
   }
 
   fit <- do.call(SuperLearner::SuperLearner, list(Y = treat,
@@ -2348,7 +2385,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
       targets <- col.w.m(covs[in_focal,, drop = FALSE], s.weights[in_focal])
 
       Amat <- cbind(Amat, do.call("cbind", lapply(s.weights_n_t[non_focal],
-                                               function(x) covs[!in_focal,, drop = FALSE] * x[!in_focal])))
+                                                  function(x) covs[!in_focal,, drop = FALSE] * x[!in_focal])))
       lvec <- c(lvec, rep(targets, length(non_focal)))
       uvec <- c(uvec, rep(targets, length(non_focal)))
     }
@@ -2545,9 +2582,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     #Find lambda to make P PSD
     e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
-    if (e.min < 0) {
-      lambda <- -e.min*n^2
-    }
+
+    lambda <- -e.min*n^2
   }
 
   diag(P) <- diag(P) + lambda / n^2

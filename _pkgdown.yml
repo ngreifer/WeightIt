@@ -13,7 +13,6 @@ reference:
 - contents: starts_with("method_")
 - title: Other functions
 - contents:
-  - stop.method
   - get_w_from_ps
   - trim
   - sbps

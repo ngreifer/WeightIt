@@ -1130,7 +1130,7 @@ chol2 <- function(Sinv) {
 }
 
 #For balance SuperLearner
-method.balance <- function(stop.method) {
+method.balance <- function() {
 
   out <- list(
     # require allows you to pass a character vector with required packages
@@ -1143,7 +1143,6 @@ method.balance <- function(stop.method) {
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
       estimand <- attr(control$trimLogit, "vals")$estimand
       init <- attr(control$trimLogit, "vals")$init
-      bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
       tol <- .001
       for (i in seq_col(Z)) {
@@ -1151,14 +1150,14 @@ method.balance <- function(stop.method) {
         Z[Z[,i] > 1-tol, i] <- 1-tol
       }
       w_mat <- get.w.from.ps(Z, treat = Y, estimand = estimand)
-      cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
+      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, init = init)
 
       names(cvRisk) <- libraryNames
 
       loss <- function(coefs) {
         ps <- crossprod(t(Z), coefs/sum(coefs))
         w <- get_w_from_ps(ps, Y, estimand)
-        out <- bal_fun(init = init, weights = w)
+        out <- cobalt::bal.compute(init, weights = w)
         out
       }
       fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
@@ -1175,12 +1174,11 @@ method.balance <- function(stop.method) {
       return(out)
     }
   )
-  # attr(out, "stop.method") <- stop.method
-  # class(out) <- "method.balance"
+
   return(out)
 }
 
-method.balance.cont <- function(stop.method) {
+method.balance.cont <- function() {
 
   out <- list(
     # require allows you to pass a character vector with required packages
@@ -1196,12 +1194,11 @@ method.balance.cont <- function(stop.method) {
       use.kernel <- attr(control$trimLogit, "vals")$use.kernel
       densControl <- attr(control$trimLogit, "vals")$densControl
       init <- attr(control$trimLogit, "vals")$init
-      bal_fun <- attr(control$trimLogit, "vals")$bal_fun
 
       w_mat<- get_cont_weights(Z, treat = Y, s.weights = obsWeights,
                                dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
                                densControl = densControl)
-      cvRisk <- apply(w_mat, 2, function(w) bal_fun(init = init, weights = w))
+      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, init = init)
       names(cvRisk) <- libraryNames
 
       loss <- function(coefs) {
@@ -1210,7 +1207,7 @@ method.balance.cont <- function(stop.method) {
                               dens.num = dens.num, densfun = densfun,
                               use.kernel = use.kernel,
                               densControl = densControl)
-        out <- bal_fun(init = init, weights = w)
+        out <- cobalt::bal.compute(init, weights = w)
         out
       }
       fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
@@ -1227,8 +1224,7 @@ method.balance.cont <- function(stop.method) {
       return(out)
     }
   )
-  # attr(out, "stop.method") <- stop.method
-  # class(out) <- "method.balance"
+
   return(out)
 }
 
