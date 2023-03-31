@@ -13,18 +13,20 @@ covs <- subset(lalonde, select = -c(re78, treat))
 lalonde$treat3 <- factor(ifelse(lalonde$treat == 1, "A", sample(c("B", "C"), nrow(lalonde), T)), ordered = F)
 lalonde$treat5 <- factor(sample(c(LETTERS[1:5]), nrow(lalonde), T))
 
-s <- runif(nrow(lalonde), 1, 1 + lalonde$married*3)
+s <- optweight::optweight.svy(~age + educ + married + re74, data = lalonde,
+                              targets = c(age = 26, educ = 12, married = .5, re74 = 4000),
+                              min.w = 0)$weights
 
 W <- weightit(treat ~ covs, data = lalonde, method = "bart", estimand = "ATT")
 for (i in 1:30) {cat(i, "| "); W <- weightit(treat ~ covs, data = lalonde, method = "bart", estimand = "ATT")}
 
-#method = "ps"
-W <- weightit(treat ~ covs, data = lalonde, method = "ps", estimand = "ATE")
-W <- weightit(lalonde$treat ~ covs, method = "ps", estimand = "ATT", link = "probit")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "ps", estimand = "ATC", s.weights = s)
+#method = "glm"
+W <- weightit(treat ~ covs, data = lalonde, method = "glm", estimand = "ATE")
+W <- weightit(lalonde$treat ~ covs, method = "glm", estimand = "ATT", link = "probit")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "glm", estimand = "ATC", s.weights = s)
 W <- weightit(f.build("treat", covs), data = lalonde, method = "ps", estimand = "ATO", stabilize = T,
               link = "br.logit")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "ps", estimand = "ATM")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "glm", estimand = "ATM")
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "ps", estimand = "ATE",
               link = "bayes.probit")
@@ -34,7 +36,7 @@ W <- weightit(f.build("treat3", covs), data = lalonde, method = "ps", estimand =
 W <- weightit(f.build("treat5", covs), data = lalonde, method = "ps", estimand = "ATE",
               link = "logit", focal = "A")
 
-W <- weightit(f.build("re78", covs), data = lalonde, method = "ps")
+W <- weightit(f.build("re78", covs), data = lalonde, method = "glm")
 W <- weightit(f.build("re78", covs), data = lalonde, method = "ps", use.kernel = T, plot = T)
 
 #method = "gbm"
@@ -43,14 +45,18 @@ W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
               stop.method = c("es.mean"), estimand = "ATT",
               subclass = 40)
-W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "gbm", estimand = "ATT")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "gbr", estimand = "ATC", s.weights = s)
+W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "gbm", estimand = "ATT", missing = "surr",
+              stop.method = "r2.2")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "gbr", estimand = "ATC", s.weights = s,
+              stop.method = "ks.rms")
 
-W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATE")
+W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATE",
+              stop.method = "energy.dist")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATT",
-              focal = "A", s.weights = s, stop.method = "es.blarg")
+              focal = "A", s.weights = s, stop.method = "ks.max")
 
 W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max")
+W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "distance.cov")
 W <- weightit(f.build("re78", covs), data = lalonde_mis, method = "gbm", stop.method = "p.max", use.kernel = TRUE)
 
 
@@ -154,10 +160,11 @@ all.equal(weightit(f.build("re78", covs), data = lalonde, method = "bart", rngSe
 
 #method = "energy"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATE")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATE", dist.mat = "mahal")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATE", improved = FALSE)
-W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATT", moments = 1)
-W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATC",
-              s.weights = s)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATC", moments = 1)
+W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estimand = "ATT",
+              s.weights = s, moments = 1)
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "energy", estimand = "ATE")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "energy", estimand = "ATT",

@@ -1,0 +1,93 @@
+---
+title: "Weighted Distance Covariance"
+author: "Noah Greifer"
+date: "6/8/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Below is my formula for weighted the weighted sample distance covariance:
+
+$$\text{dCov}_w(X,Y)=\left(\sum_{i=1}^N w_i\right)^{-1}\sqrt{\mathbf{w}'(\mathbf{A}_X \circ \mathbf{A}_Y)\mathbf{w}}$$
+where $\mathbf{w}$ is an $n \times 1$ vector of weights and $\mathbf{A}_X$ and $\mathbf{A}_Y$ are the centered distance matrices for $X$ and $Y$. This was developed based on intuition so it's possible for this implementation to be wrong. I can't verify it mathematically, but in numerical experiments I never get a negative number under the radical. The implementation is below:
+
+```{r}
+wdCov <- function(X, Y, w = NULL) {
+  Xdist <- as.matrix(dist(X))
+  Xmeans <- colMeans(Xdist)
+  Xgrand_mean <- mean(Xmeans)
+  XA <- Xdist + Xgrand_mean - outer(Xmeans, Xmeans, "+")
+  
+  Ydist <- as.matrix(dist(Y))
+  Ymeans <- colMeans(Ydist)
+  Ygrand_mean <- mean(Ymeans)
+  YA <- Ydist + Ygrand_mean - outer(Ymeans, Ymeans, "+")
+  
+  if (is.null(w)) w <- rep(1, nrow(Xdist))
+  
+  drop(sqrt(t(w) %*% (XA * YA) %*% w) / sum(w))
+}
+```
+
+As a sanity check, when I enter the weights as 1s, I get the same results as I do when using `dcor` in the `energy` package. 
+
+This formula lends itself very easily to inclusion in a quadratic optimization problem where the square of the distance covariance is minimized:
+
+```{r}
+est_w <- function(A, X) {
+  Xdist <- as.matrix(dist(X))
+  Xmeans <- colMeans(Xdist)
+  Xgrand_mean <- mean(Xmeans)
+  XA <- Xdist + Xgrand_mean - outer(Xmeans, Xmeans, "+")
+  
+  Adist <- as.matrix(dist(A))
+  Ameans <- colMeans(Adist)
+  Agrand_mean <- mean(Ameans)
+  AA <- Adist + Agrand_mean - outer(Ameans, Ameans, "+")
+  
+  P <- XA * AA
+  n <- length(A)
+  
+  #Constraints: positive weights, weights sum to 1
+  Amat <- rbind(diag(n), rep(1, n))
+  lvec <- c(rep(0, n), 1)
+  uvec <- c(rep(Inf, n), 1)
+  
+  #Optimize
+  opt.out <- osqp::solve_osqp(2*P, A = Amat, l = lvec, u = uvec,
+                              pars = osqp::osqpSettings(max_iter = 2e5,
+                                                        eps_abs = 1e-8,
+                                                        eps_rel = 1e-8,
+                                                        verbose = FALSE))
+  weights <- opt.out$x
+  weights[weights < 0] <- 0 #due to numerical imprecision
+  
+  return(weights)
+}
+```
+
+I constrain the weights to sum to 1 to simplify the code. I make the quadratic part `2*P` because `osqp` minimizes $.5\mathbf{x'Px}$ and this way the objective function is the square of of the distance covariance rather than one half of it. Numerical imprecision causes some weights to be just below zero, so I correct that.
+
+Running this on some sample data gives pretty remarkable results:
+
+```{r}
+library(cobalt)
+data("lalonde")
+A <- lalonde$re75
+X <- lalonde[c(2,3,5,6,7)]
+
+weights <- est_w(A,X)
+
+bal.tab(X, treat = A, weights = weights, un = TRUE,
+        int = TRUE, poly = 3)
+
+bal.plot(X, treat = A, weights = weights, var.name = "re74",
+         which = "both")
+```
+
+Treatment-covariate correlations vanish, even with interactions and polynomials of the covariates. The smoothed fit line between treatment and the covariate originally most correlated with it is flat.
+
+One issue I notice is that the distribution of covariates differs between the weighted and unweighted sample. This is problematic any time there is effect modification by the covariates. In my `WeightIt` implementation, I added constraints to ensure the means of each covariate are equal in the weighted sample to what they are in the unweighted sample, and it probably makes sense to do the same with the treatment variable. One thought I had was to additionally minimize the energy distance between the weighted and unweighted samples. There would likely need to be a tuning parameter that controls the degree to which each component of this new criterion has influence, since they are at odds. I imagined the user could choose based on substantive knowledge about the proportion of variance in the outcome due to the main effects of the covariates vs. to effect modification by the covariates.

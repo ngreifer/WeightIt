@@ -1,0 +1,55 @@
+---
+title: Testing entropy balancing for continuous treatments in WeightIt with base weights
+  and sampling weights
+output:
+  html_document:
+    fig_width: 8
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(width = 132)
+```
+
+Here's a brief demonstration that the base weights and sampling weights are correctly coded in WeightIt.
+
+```{r cars}
+library(cobalt)
+library(WeightIt)
+data("lalonde", package = "cobalt")
+re75 <- lalonde[[8]] #treatment
+covs <- lalonde[-c(1,8,9)]
+
+#Create base weights; these are from a previous fit that 
+#focused on decreasing the relationship between re74^2 and re75
+bw <- get.w(weightit(re75 ~ poly(re74, 2), data = lalonde, 
+                     method = "optweight"))
+
+#Ebal fit without base weights:
+w1 <- get.w(weightit(re75 ~ covs, method = "ebal"))
+
+#Ebal fit with base weights
+w2 <- get.w(weightit(re75 ~ covs, method = "ebal", base.weight = bw))
+
+bal.tab(re75 ~ covs, weights = list(w1 = w1, w2 = w2),
+        un = TRUE, disp.means = TRUE, poly = 2)
+```
+
+Things to note: the means of the covariates weighted with `w1` (ebal without base weights) and `w2` (ebal with base weights) are both equal to the means in the unweighted sample. `w1` and `w2` both achieve exact balance on the specified moment conditions. Balance for `re74^2` is better with `w2` than it is for `w1` because the `w2` weights do not stray far from the base weights and therefore retain some of their properties, which in this case was balance on `re74^2`. (By the way, actually attempting to balance `re74^2` along with the covariates in a single model drastically reduces effective sample size compared to this two-step procedure.)
+
+Typically, the base weights would be from a fit that is more complicated, possibly from a flexible machine learning method to attempt to capture the true generalized propensity score. Then, the estimated weights balance the moments exactly while retaining the properties of the base weights because the estimated weights do not stray far from them. This was the strategy of the winning do-it-yourself method in the 2016 causal inference competition.
+
+```{r}
+#Create sampling weights; here they are just random
+s <- rchisq(nrow(lalonde), 3) 
+
+#Estimating the weights using sampling weights
+w3 <- get.w(weightit(re75 ~ covs, method = "ebal", s.weights = s))
+
+bal.tab(re75 ~ covs, weights = w3, s.weights = s,
+        un = TRUE, disp.means = TRUE)
+```
+
+Things to note: the means of the covariates weighted with `w3` and `s` are equal to the means of the covariates weighted just with `s`. The balance of the covariates weighted with `w3` and `s` is exact.
