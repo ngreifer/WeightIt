@@ -59,9 +59,9 @@ For continuous treatments only, the following arguments may be supplied:
 }
 
 \subsection{Balance SuperLearner}{
-In addition to the methods allowed by \code{SuperLearner()}, one can specify \code{SL.method = "method.balance"} to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with \code{SL.library}. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the \code{stop.method} argument, described below.
+In addition to the methods allowed by \code{SuperLearner()}, one can specify \code{SL.method = "method.balance"} to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with \code{SL.library}. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the \code{criterion} argument, described below.
 \describe{
-\item{\code{stop.method}}{A string describing the balance criterion used to select the best weights. See \code{\link{stop.method}} for allowable options for each treatment type. For binary and multinomial treatments, the default is \code{"es.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+\item{\code{criterion}}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{available_stats} for allowable options for each treatment type. For binary and multinomial treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
 }
 Note that this implementation differs from that of Pirracchio and Carone (2018) in that here, balance is measured only on the terms included in the model formula (i.e., and not their interactions unless specifically included), and balance results from a sample weighted using the estimated predicted values as propensity scores, not a sample matched using propensity score matching on the predicted values. Binary and continuous treatments are supported, but currently multinomial treatments are not.
@@ -76,7 +76,7 @@ For binary and continuous treatments, a list with two entries, \code{coef} and \
 The coefficients in the linear combination of the predictions from each method in \code{SL.library}. Higher values indicate that the corresponding method plays a larger role in determining the resulting predicted value, and values close to zero indicate that the method plays little role in determining the predicted value. When \code{discrete = TRUE}, these correspond to the coefficients that would have been estimated had \code{discrete} been \code{FALSE}.
 }
 \item{\code{cvRisk}}{
-The cross-validation risk for each method in \code{SL.library}. Higher values indicate that the method has worse cross-validation accuracy. When \code{SL.method = "method.balance"}, the sample weighted balance statistic requested with \code{stop.method}. Higher values indicate worse balance.
+The cross-validation risk for each method in \code{SL.library}. Higher values indicate that the method has worse cross-validation accuracy. When \code{SL.method = "method.balance"}, the sample weighted balance statistic requested with \code{criterion}. Higher values indicate worse balance.
 }
 }
 }
@@ -101,15 +101,15 @@ Kreif, N., Grieve, R., Díaz, I., & Harrison, D. (2015). Evaluation of the Effec
 
 Pirracchio, R., & Carone, M. (2018). The Balance Super Learner: A robust adaptation of the Super Learner to improve estimation of the average treatment effect in the treated based on propensity score matching. Statistical Methods in Medical Research, 27(8), 2504–2518. \doi{10.1177/0962280216682055}
 
-See \code{\link{method_ps}} for additional references.
+See \code{\link{method_glm}} for additional references.
 }
 \seealso{
 \fun{weightit}, \fun{weightitMSM}, \fun{get_w_from_ps}
-
-\code{\link{stop.method}} for allowable arguments to \code{stop.method} when using \code{SL.method = "method.balance"}
 }
 \note{
 Some methods formerly available in \pkg{SuperLearner} are now in \pkg{SuperLearnerExtra}, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
+
+The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{es.mean}, \code{es.max}, and \code{es.rms} have been renamed to \code{smd.mean}, \code{smd.max}, and \code{smd.rms}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
 }
 \examples{\dontshow{if (all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))) force(\{ # examplesIf}
 library("cobalt")
@@ -144,7 +144,7 @@ summary(W3)
 bal.tab(W3)
 }
 #Balancing covariates between treatment groups (binary)
-# using balance SuperLearner to minimize the average
+# using balance SuperLearner to minimize the maximum
 # KS statistic
 (W4 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
@@ -152,7 +152,7 @@ bal.tab(W3)
                 SL.library = c("SL.glm", "SL.stepAIC",
                                "SL.lda"),
                 SL.method = "method.balance",
-                stop.method = "ks.mean"))
+                criterion = "ks.max"))
 summary(W4)
-bal.tab(W4)
+bal.tab(W4, stats = c("m", "ks"))
 \dontshow{\}) # examplesIf}}

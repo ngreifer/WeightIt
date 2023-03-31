@@ -9,7 +9,7 @@
 Subgroup Balancing Propensity Score
 }
 \description{
-Implements the subgroup balancing propensity score (SBPS), which is an algorithm that attempts to achieve balance in subgroups by sharing information from the overall sample and subgroups. (Dong, Zhang, Zeng, & Li, 2020; DZZL). Each subgroup can use either weights estimated using the whole sample, weights estimated using just that subgroup, or a combination of the two. The optimal combination is chosen as that which minimizes an imbalance criterion that includes subgroup as well as overall balance.
+Implements the subgroup balancing propensity score (SBPS), which is an algorithm that attempts to achieve balance in subgroups by sharing information from the overall sample and subgroups (Dong, Zhang, Zeng, & Li, 2020; DZZL). Each subgroup can use either weights estimated using the whole sample, weights estimated using just that subgroup, or a combination of the two. The optimal combination is chosen as that which minimizes an imbalance criterion that includes subgroup as well as overall balance.
 }
 \usage{
 sbps(obj, obj2 = NULL,
@@ -48,7 +48,7 @@ an optional data set in the form of a data frame that contains the variables in 
 \code{logical}; whether the smooth version of the SBPS should be used. This is only compatible with \code{weightit} methods that return a propensity score.
 }
   \item{full.search}{
-\code{logical}; when \code{smooth = FALSE}, whether every combination of subgroup and overall weights should be evaluated. If \code{FALSE}, a stochastic search as described in DZZL will be used instead. If \code{TRUE}, all 2^R combinations will be checked, where R is the number of subgroups, which can take a long time with many subgroups. If unspecified, will default to \code{TRUE} if R <= 8 and \code{FALSE} otherwise.
+\code{logical}; when \code{smooth = FALSE}, whether every combination of subgroup and overall weights should be evaluated. If \code{FALSE}, a stochastic search as described in DZZL will be used instead. If \code{TRUE}, all \eqn{2^R} combinations will be checked, where \eqn{R} is the number of subgroups, which can take a long time with many subgroups. If unspecified, will default to \code{TRUE} if \eqn{R <= 8} and \code{FALSE} otherwise.
 }
   \item{x}{
 a \code{weightit.sbps} or \code{summary.weightit.sbps} object; the output of a call to \code{sbps()} or \code{summary.weightit.sbps()}.
@@ -68,7 +68,7 @@ for \code{print}, arguments passed to \fun{print}. Ignored otherwise.
 }
 }
 \details{
-The SBPS relies on two sets of weights: one estimated in the overall sample and one estimated within each subgroup. The algorithm decides whether each subgroup should use the weights estimated in the overall sample or those estimated in the subgroup. There are 2^R permutations of overall and subgroup weights, where R is the number of subgroups. The optimal permutation is chosen as that which minimizes a balance criterion as described in DZZL. The balance criterion used here is, for binary and multinomial treatments, the sum of the squared standardized mean differences within subgroups and overall, which are computed using \pkgfun2{cobalt}{balance.summary}{col_w_smd} in \pkg{cobalt}, and for continuous treatments, the sum of the squared correlations between each covariate and treatment within subgroups and overall, which are computed using \pkgfun2{cobalt}{balance.summary}{col_w_corr} in \pkg{cobalt}.
+The SBPS relies on two sets of weights: one estimated in the overall sample and one estimated within each subgroup. The algorithm decides whether each subgroup should use the weights estimated in the overall sample or those estimated in the subgroup. There are 2^R permutations of overall and subgroup weights, where R is the number of subgroups. The optimal permutation is chosen as that which minimizes a balance criterion as described in DZZL. The balance criterion used here is, for binary and multinomial treatments, the sum of the squared standardized mean differences within subgroups and overall, which are computed using \pkgfun{cobalt}{col_w_smd} in \pkg{cobalt}, and for continuous treatments, the sum of the squared correlations between each covariate and treatment within subgroups and overall, which are computed using \pkgfun{cobalt}{col_w_corr} in \pkg{cobalt}.
 
 The smooth version estimates weights that determine the relative contribution of the overall and subgroup propensity scores to a weighted average propensity score for each subgroup. If P_O are the propensity scores estimated in the overall sample and P_S are the propensity scores estimated in each subgroup, the smooth SBPS finds R coefficients C so that for each subgroup, the ultimate propensity score is \eqn{C*P_S + (1-C)*P_O}, and weights are computed from this propensity score. The coefficients are estimated using \fun{optim} with \code{method = "L-BFGS-B"}. When C is estimated to be 1 or 0 for each subgroup, the smooth SBPS coincides with the standard SBPS.
 

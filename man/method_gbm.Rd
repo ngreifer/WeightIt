@@ -11,13 +11,13 @@ In general, this method relies on estimating propensity scores using generalized
 This method mimics the functionality of functions in the \pkg{twang} package, but has improved performance and more flexible options. See Details section for more details.
 
 \subsection{Binary Treatments}{
-For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \fun{get_w_from_ps}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
+For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \fun{get_w_from_ps}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
 }
 \subsection{Multinomial Treatments}{
-For multinomial treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} with \code{distribution = "multinomial"} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \fun{get_w_from_ps}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
+For multinomial treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} with \code{distribution = "multinomial"} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \fun{get_w_from_ps}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \fun{get_w_from_ps} for details.
 }
 \subsection{Continuous Treatments}{
-For continuous treatments, this method estimates the generalized propensity score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{stop.method} argument.
+For continuous treatments, this method estimates the generalized propensity score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument.
 }
 \subsection{Longitudinal Treatments}{
 For longitudinal treatments, the weights are the product of the weights estimated at each time point.
@@ -41,7 +41,7 @@ Surrogate splitting is used to process \code{NA}s. No missingness indicators are
 
 The following additional arguments can be specified:
 \describe{
-\item{\code{stop.method}}{A string describing the balance criterion used to select the best weights. See \code{\link{stop.method}} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, \code{stop.method} can be set as \code{"cv{#}"}, where \code{{#}} is replaced by a number representing the number of cross-validation folds used (e.g., \code{"cv5"} for 5-fold cross-validation). For binary and multinomial treatments, the default is \code{"es.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+\item{\code{criterion}}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{available_stats} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, \code{criterion} can be set as \code{"cv{#}"}, where \code{{#}} is replaced by a number representing the number of cross-validation folds used (e.g., \code{"cv5"} for 5-fold cross-validation). For binary and multinomial treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
 \item{\code{trim.at}}{A number supplied to \code{at} in \fun{trim} which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
 }
@@ -75,7 +75,7 @@ For continuous treatments only, the following arguments may be supplied:
 }
 }
 
-For tunable arguments, multiple entries may be supplied, and \code{weightit()} will choose the best value by optimizing the criterion specified in \code{stop.method}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.
+For tunable arguments, multiple entries may be supplied, and \code{weightit()} will choose the best value by optimizing the criterion specified in \code{criterion}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.
 }
 \section{Additional Outputs}{
 \describe{
@@ -109,6 +109,11 @@ Generalized boosted modeling (GBM, also known as gradient boosting machines) is 
 
 \pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multinomial treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multinomial treatments.
 }
+
+\note{
+The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{es.mean}, \code{es.max}, and \code{es.rms} have been renamed to \code{smd.mean}, \code{smd.max}, and \code{smd.rms}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
+}
+
 \references{
 \strong{Binary treatments}
 
@@ -127,8 +132,6 @@ Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating
 \seealso{
 \fun{weightit}, \fun{weightitMSM}
 
-\code{\link{stop.method}} for allowable arguments to \code{stop.method}
-
 \pkgfun{gbm}{gbm.fit} for the fitting function
 }
 \examples{\dontshow{if (requireNamespace("gbm", quietly = TRUE)) force(\{ # examplesIf}
@@ -139,7 +142,7 @@ data("lalonde", package = "cobalt")
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", estimand = "ATE",
-                stop.method = "es.max"))
+                criterion = "smd.max"))
 summary(W1)
 bal.tab(W1)
 
@@ -148,15 +151,15 @@ bal.tab(W1)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", estimand = "ATT",
-                focal = "hispan", stop.method = "ks.mean"))
+                focal = "hispan", criterion = "ks.mean"))
 summary(W2)
-bal.tab(W2)
+bal.tab(W2, stats = c("m", "ks"))
 
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", use.kernel = TRUE,
-                stop.method = "p.rms", trim.at = .97))
+                criterion = "p.rms", trim.at = .97))
 summary(W3)
 bal.tab(W3)
 
@@ -165,7 +168,7 @@ bal.tab(W3)
 W4a <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", density = "dt_3",
-                stop.method = "p.max",
+                criterion = "p.max",
                 n.trees = 10000)
 
 W4a$info$best.tree #10000; optimum hasn't been found
@@ -174,7 +177,7 @@ plot(W4a$info$tree.val, type = "l") #decreasing at right edge
 W4b <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", density = "dt_3",
-                stop.method = "p.max",
+                criterion = "p.max",
                 start.tree = 10000,
                 n.trees = 20000)
 
@@ -187,7 +190,7 @@ bal.tab(W4b)
 (W5 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", estimand = "ATT",
-                stop.method = "ks.max",
+                criterion = "ks.max",
                 interaction.depth = 2:4,
                 distribution = c("bernoulli", "adaboost")))
 
@@ -195,6 +198,6 @@ W5$info$tune
 
 W5$info$best.tune #Best values of tuned parameters
 
-bal.tab(W5, stats = "k")
+bal.tab(W5, stats = c("m", "ks"))
 }
 \dontshow{\}) # examplesIf}}

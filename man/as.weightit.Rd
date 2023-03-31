@@ -52,7 +52,7 @@ an optional \code{numeric} vector of sampling weights, one for each unit.
 an optional \code{numeric} vector of propensity scores, one for each unit.
 }
   \item{treat.list}{
-a list of treatment statuses at each time point..
+a list of treatment statuses at each time point.
 }
   \item{covs.list}{
 an optional list of \code{data.frame}s of covariates of covariates at each time point. For using \pkg{WeightIt} functions, this is not necessary, but for use with \pkg{cobalt} it is.
