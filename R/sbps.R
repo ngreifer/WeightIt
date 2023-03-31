@@ -7,7 +7,7 @@
 sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL, smooth = FALSE, full.search) {
 
   if (is_null(obj2) && is_null(moderator)) {
-    stop("Either obj2 or moderator must be specified.", call. = FALSE)
+    stop("Either `obj2` or `moderator` must be specified.", call. = FALSE)
   }
 
   treat <- obj[["treat"]]
@@ -25,11 +25,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   if (is_not_null(obj2)) {
     if (!inherits(obj2, "weightit")) {
-      stop("obj2 must be a weightit object, ideally with a 'by' component.", call. = FALSE)
+      stop("`obj2` must be a `weightit` object, ideally with a 'by' component.", call. = FALSE)
     }
     else if (is_not_null(obj2[["by"]])) {
       if (is_not_null(obj[["by"]])) {
-        if (is_null(processed.moderator)) stop("Cannot figure out moderator. Please supply a value to moderator.", call. = FALSE)
+        if (is_null(processed.moderator)) stop("Cannot figure out moderator. Please supply a value to `moderator`.", call. = FALSE)
       }
       else {
         processed.moderator <- obj2[["by"]]
