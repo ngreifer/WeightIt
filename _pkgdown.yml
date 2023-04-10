@@ -20,4 +20,7 @@ reference:
   - weightit.fit
   - as.weightit
   - make_full_rank
+- title: Datasets
+- contents:
+  - msmdata
 
