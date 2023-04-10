@@ -4,15 +4,15 @@ In general, this method relies on estimating propensity scores using generalized
 This method mimics the functionality of functions in the twang package, but has improved performance and more flexible options. See Details section for more details.
 
 Binary Treatments
-For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 Multinomial Treatments
-For multinomial treatments, this method estimates the propensity scores using gbm::gbm.fit() with distribution = "multinomial" and then selects the optimal tuning parameter values using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For multinomial treatments, this method estimates the propensity scores using gbm::gbm.fit() with distribution = "multinomial" and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 Continuous Treatments
-For continuous treatments, this method estimates the generalized propensity score using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the stop.method argument.
+For continuous treatments, this method estimates the generalized propensity score using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument.
 
 
 Longitudinal Treatments
@@ -35,20 +35,20 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 
 
 
-'><title>Propensity Score Weighting Using Generalized Boosted Models — method_gbm • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Propensity Score Weighting Using Generalized Boosted Models — method_gbm"><meta property="og:description" content='This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting method = "gbm" in the call to weightit() or weightitMSM(). This method can be used with binary, multinomial, and continuous treatments.
+'><title>Propensity Score Weighting Using Generalized Boosted Models — method_gbm • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Propensity Score Weighting Using Generalized Boosted Models — method_gbm"><meta property="og:description" content='This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting method = "gbm" in the call to weightit() or weightitMSM(). This method can be used with binary, multinomial, and continuous treatments.
 In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). The method relies on the gbm package.
 This method mimics the functionality of functions in the twang package, but has improved performance and more flexible options. See Details section for more details.
 
 Binary Treatments
-For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 Multinomial Treatments
-For multinomial treatments, this method estimates the propensity scores using gbm::gbm.fit() with distribution = "multinomial" and then selects the optimal tuning parameter values using the method specified in the stop.method argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For multinomial treatments, this method estimates the propensity scores using gbm::gbm.fit() with distribution = "multinomial" and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 Continuous Treatments
-For continuous treatments, this method estimates the generalized propensity score using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the stop.method argument.
+For continuous treatments, this method estimates the generalized propensity score using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument.
 
 
 Longitudinal Treatments
@@ -82,7 +82,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,6 +99,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a>
     <a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a>
   </div>
 </li>
@@ -132,15 +133,15 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <p>This method mimics the functionality of functions in the <span class="pkg">twang</span> package, but has improved performance and more flexible options. See Details section for more details.</p>
 <div class="section">
 <h3 id="binary-treatments">Binary Treatments<a class="anchor" aria-label="anchor" href="#binary-treatments"></a></h3>
-<p>For binary treatments, this method estimates the propensity scores using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>stop.method</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
+<p>For binary treatments, this method estimates the propensity scores using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
 </div>
 <div class="section">
 <h3 id="multinomial-treatments">Multinomial Treatments<a class="anchor" aria-label="anchor" href="#multinomial-treatments"></a></h3>
-<p>For multinomial treatments, this method estimates the propensity scores using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> with <code>distribution = "multinomial"</code> and then selects the optimal tuning parameter values using the method specified in the <code>stop.method</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
+<p>For multinomial treatments, this method estimates the propensity scores using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> with <code>distribution = "multinomial"</code> and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
 </div>
 <div class="section">
 <h3 id="continuous-treatments">Continuous Treatments<a class="anchor" aria-label="anchor" href="#continuous-treatments"></a></h3>
-<p>For continuous treatments, this method estimates the generalized propensity score using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>stop.method</code> argument.</p>
+<p>For continuous treatments, this method estimates the generalized propensity score using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument.</p>
 </div>
 <div class="section">
 <h3 id="longitudinal-treatments">Longitudinal Treatments<a class="anchor" aria-label="anchor" href="#longitudinal-treatments"></a></h3>
@@ -168,8 +169,8 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
     <h2 id="additional-arguments">Additional Arguments<a class="anchor" aria-label="anchor" href="#additional-arguments"></a></h2>
     
 
-<p>The following additional arguments can be specified:</p><dl><dt><code>stop.method</code></dt>
-<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="stop.method.html">stop.method</a></code> for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>stop.method</code> can be set as <code>"cv{#}"</code>, where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multinomial treatments, the default is <code>"es.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
+<p>The following additional arguments can be specified:</p><dl><dt><code>criterion</code></dt>
+<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">cobalt::bal.compute()</a></code> for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>criterion</code> can be set as <code>"cv{#}"</code>, where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multinomial treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
 
 <dt><code>trim.at</code></dt>
 <dd><p>A number supplied to <code>at</code> in <code><a href="trim.html">trim()</a></code> which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).</p></dd>
@@ -208,7 +209,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <dd><p>If <code>use.kernel = TRUE</code> with continuous treatments, whether to plot the estimated density.</p></dd>
 
 
-</dl><p>For tunable arguments, multiple entries may be supplied, and <code><a href="weightit.html">weightit()</a></code> will choose the best value by optimizing the criterion specified in <code>stop.method</code>. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.</p>
+</dl><p>For tunable arguments, multiple entries may be supplied, and <code><a href="weightit.html">weightit()</a></code> will choose the best value by optimizing the criterion specified in <code>criterion</code>. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.</p>
     </div>
     <div class="section level2">
     <h2 id="additional-outputs">Additional Outputs<a class="anchor" aria-label="anchor" href="#additional-outputs"></a></h2>
@@ -241,6 +242,10 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <p><span class="pkg">WeightIt</span> offers almost identical functionality to <span class="pkg">twang</span>, the first package to implement this method. Compared to the current version of <span class="pkg">twang</span>, <span class="pkg">WeightIt</span> offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. <span class="pkg">WeightIt</span> computes weights for multinomial treatments differently from how <span class="pkg">twang</span> does; rather than fitting a separate binary GBM for each pair of treatments, <span class="pkg">WeightIt</span> fits a single multi-class GBM model and uses balance measures appropriate for multinomial treatments.</p>
     </div>
     <div class="section level2">
+    <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
+    <p>The <code>criterion</code> argument used to be called <code>stop.method</code>, which is its name in <span class="pkg">twang</span>. <code>stop.method</code> still works for backward compatibility. Additionally, the criteria formerly named as <code>es.mean</code>, <code>es.max</code>, and <code>es.rms</code> have been renamed to <code>smd.mean</code>, <code>smd.max</code>, and <code>smd.rms</code>. The former are used in <span class="pkg">twang</span> and will still work with <code><a href="weightit.html">weightit()</a></code> for backward compatibility.</p>
+    </div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p><strong>Binary treatments</strong></p>
 <p>McCaffrey, D. F., Ridgeway, G., &amp; Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. Psychological Methods, 9(4), 403–425. <a href="https://doi.org/10.1037/1082-989X.9.4.403" class="external-link">doi:10.1037/1082-989X.9.4.403</a></p>
@@ -252,7 +257,6 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code>, <code><a href="weightitMSM.html">weightitMSM()</a></code></p>
-<p><code><a href="stop.method.html">stop.method</a></code> for allowable arguments to <code>stop.method</code></p>
 <p><code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> for the fitting function</p></div>
     </div>
 
@@ -265,7 +269,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <span class="r-in"><span><span class="op">(</span><span class="va">W1</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"gbm"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span>,</span></span>
-<span class="r-in"><span>                stop.method <span class="op">=</span> <span class="st">"es.max"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                criterion <span class="op">=</span> <span class="st">"smd.max"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit</span> object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "gbm" (propensity score weighting with GBM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
@@ -301,10 +305,6 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.    185.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    354.26  107.84</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = treat ~ age + educ + married + nodegree + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     re74, data = lalonde, method = "gbm", estimand = "ATE", stop.method = "es.max")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.7940</span>
@@ -324,15 +324,15 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"gbm"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>,</span></span>
-<span class="r-in"><span>                focal <span class="op">=</span> <span class="st">"hispan"</span>, stop.method <span class="op">=</span> <span class="st">"ks.mean"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                focal <span class="op">=</span> <span class="st">"hispan"</span>, criterion <span class="op">=</span> <span class="st">"ks.mean"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W3</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"gbm"</span>, use.kernel <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>                stop.method <span class="op">=</span> <span class="st">"p.rms"</span>, trim.at <span class="op">=</span> <span class="fl">.97</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                criterion <span class="op">=</span> <span class="st">"p.rms"</span>, trim.at <span class="op">=</span> <span class="fl">.97</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -341,7 +341,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <span class="r-in"><span><span class="va">W4a</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"gbm"</span>, density <span class="op">=</span> <span class="st">"dt_3"</span>,</span></span>
-<span class="r-in"><span>                stop.method <span class="op">=</span> <span class="st">"p.max"</span>,</span></span>
+<span class="r-in"><span>                criterion <span class="op">=</span> <span class="st">"p.max"</span>,</span></span>
 <span class="r-in"><span>                n.trees <span class="op">=</span> <span class="fl">10000</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">W4a</span><span class="op">$</span><span class="va">info</span><span class="op">$</span><span class="va">best.tree</span> <span class="co">#10000; optimum hasn't been found</span></span></span>
@@ -350,7 +350,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <span class="r-in"><span><span class="va">W4b</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"gbm"</span>, density <span class="op">=</span> <span class="st">"dt_3"</span>,</span></span>
-<span class="r-in"><span>                stop.method <span class="op">=</span> <span class="st">"p.max"</span>,</span></span>
+<span class="r-in"><span>                criterion <span class="op">=</span> <span class="st">"p.max"</span>,</span></span>
 <span class="r-in"><span>                start.tree <span class="op">=</span> <span class="fl">10000</span>,</span></span>
 <span class="r-in"><span>                n.trees <span class="op">=</span> <span class="fl">20000</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -363,7 +363,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <span class="r-in"><span><span class="op">(</span><span class="va">W5</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"gbm"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>,</span></span>
-<span class="r-in"><span>                stop.method <span class="op">=</span> <span class="st">"ks.max"</span>,</span></span>
+<span class="r-in"><span>                criterion <span class="op">=</span> <span class="st">"ks.max"</span>,</span></span>
 <span class="r-in"><span>                interaction.depth <span class="op">=</span> <span class="fl">2</span><span class="op">:</span><span class="fl">4</span>,</span></span>
 <span class="r-in"><span>                distribution <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bernoulli"</span>, <span class="st">"adaboost"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -371,7 +371,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">W5</span><span class="op">$</span><span class="va">info</span><span class="op">$</span><span class="va">best.tune</span> <span class="co">#Best values of tuned parameters</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W5</span>, stats <span class="op">=</span> <span class="st">"k"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W5</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>
@@ -384,7 +384,7 @@ Surrogate splitting is used to process NAs. No missingness indicators are create
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
     </footer></div>

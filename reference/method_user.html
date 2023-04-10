@@ -22,7 +22,7 @@ The fitting function must output either a numeric vector of weights or a list (o
 Longitudinal Treatments
 Longitudinal treatments can be handled either by running the fitting function for point treatments for each time point and multiplying the resulting weights together or by running a method that accommodates multiple time points and outputs a single set of weights. For the former, weightitMSM() can be used with the user-defined function just as it is with weightit(). The latter method is not yet accommodated by weightitMSM(), but will be someday, maybe.
 
-"><title>User-Defined Functions for Estimating Weights — method_user • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="User-Defined Functions for Estimating Weights — method_user"><meta property="og:description" content="This page explains the details of estimating weights using a user-defined function. The function must take in arguments that are passed to it by weightit() or weightitMSM() and return a vector of weights or a list containing the weights.
+"><title>User-Defined Functions for Estimating Weights — method_user • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="User-Defined Functions for Estimating Weights — method_user"><meta property="og:description" content="This page explains the details of estimating weights using a user-defined function. The function must take in arguments that are passed to it by weightit() or weightitMSM() and return a vector of weights or a list containing the weights.
 To supply  user-defined function, the function object should be entered directly to method; for example, for a function fun, method = fun.
 
 Point Treatments
@@ -56,7 +56,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,6 +73,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a>
     <a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a>
   </div>
 </li>
@@ -172,7 +173,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               7      5      4      3      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             411    595    269    409    296</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.3303 1.4365 1.5005 1.6369 2.0438</span>
@@ -189,10 +190,6 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    255.99     185</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = treat ~ age + educ + married + nodegree + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     re74, data = lalonde, method = my.ps, estimand = "ATT")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0199</span>
@@ -206,29 +203,30 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    255.99     185</span>
-<span class="r-in"><span><span class="co">#Balancing covariates for longitudinal treatments</span></span></span>
-<span class="r-in"><span><span class="co"># my.ps is used at each time point.</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"twang"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> To reproduce results from prior versions of the twang package, please see the version="legacy" option described in the documentation.</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"iptwExWide"</span>, package <span class="op">=</span> <span class="st">"twang"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tx1</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span></span>
-<span class="r-in"><span>                        <span class="va">tx2</span> <span class="op">~</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span>,</span></span>
-<span class="r-in"><span>                        <span class="va">tx3</span> <span class="op">~</span> <span class="va">tx2</span> <span class="op">+</span> <span class="va">use2</span> <span class="op">+</span> <span class="va">tx1</span> <span class="op">+</span> <span class="va">use1</span> <span class="op">+</span> <span class="va">age</span> <span class="op">+</span> <span class="va">gender</span> <span class="op">+</span> <span class="va">use0</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                   data <span class="op">=</span> <span class="va">iptwExWide</span>,</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"msmdata"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span></span>
+<span class="r-in"><span>                        <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>                          <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span></span>
+<span class="r-in"><span>                        <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>                          <span class="va">A_2</span> <span class="op">+</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>                          <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                   data <span class="op">=</span> <span class="va">msmdata</span>,</span></span>
 <span class="r-in"><span>                   method <span class="op">=</span> <span class="va">my.ps</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightitMSM</span> object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "my.ps" (a user-defined method)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 1000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 7500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - number of time points: 3 (tx1, tx2, tx3)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - number of time points: 3 (A_1, A_2, A_3)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     + time 1: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     + time 2: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     + time 3: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     + baseline: age, gender, use0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     + after time 1: tx1, use1, age, gender, use0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     + after time 2: tx2, use2, tx1, use1, age, gender, use0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     + baseline: X1_0, X2_0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     + after time 1: X1_1, X2_1, A_1, X1_0, X2_0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     + after time 2: X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -237,115 +235,112 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |---|                         15.5292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |---------------------------| 82.2349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |-------------------|         284.7636</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              477     442     307     409     906</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 13.4464 13.6233 13.7059  14.436 15.5292</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              206     282     641     547     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 44.8027 46.1355 58.4164 79.8919 82.2349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              5488     3440     3593     1286     5685</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  166.992 170.5549 196.4136 213.1934 403.4833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              2594     2932     5226     1875     2533</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.6248  168.964 172.4195 245.8822 284.7636</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.481 0.376   0.117       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.768 0.494   0.222       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.914 0.816   0.649       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.706 0.862   0.670       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  294.     706. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    185.18   573.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 3306.    4194. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    845.79   899.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 2 </span><span style="text-decoration: line-through;">                      </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |---------------------------| 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |--------------------------|  79.8919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |----------------|            245.8822</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               34     561     553     641     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  33.371 34.7405 42.9442 58.4164 82.2349</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              109      95     206     282     547</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 39.7862 42.2256 44.8027 46.1355 79.8919</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              2932     3440     3593     2533     5685</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  168.964 170.5549 196.4136 284.7636 403.4833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              2594     5488     5226     1286     1875</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.6248  166.992 172.4195 213.1934 245.8822</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.960 0.653   0.336       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.737 0.384   0.159       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.892 0.819   0.652       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.748 0.869   0.686       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   492.   508.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     318.9  264.49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 3701.   3799.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    912.87  829.87</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 3 </span><span style="text-decoration: line-through;">                      </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.6667 |-------------|               44.8027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 2.6123 |---------------------------| 82.2349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |---------|                   148.1547</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              936     650     763     109     206</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  26.003  26.471 28.0582 39.7862 44.8027</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              553     282     641     547     980</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 42.9442 46.1355 58.4164 79.8919 82.2349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              3593     1286     1875     2533     5685</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 196.4136 213.1934 245.8822 284.7636 403.4833</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              6862      168     3729     6158     3774</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control  88.0721  97.8273  104.623 121.8451 148.1547</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.773 0.565   0.245       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.873 0.469   0.227       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.832 0.975   0.785       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.254 0.683   0.412       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  415.     585. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    235.67   366.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 4886.   2614.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   1900.26  600.12</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  weightitMSM(formula.list = list(tx1 ~ age + gender + use0, tx2 ~ </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     tx1 + use1 + age + gender + use0, tx3 ~ tx2 + use2 + tx1 + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     use1 + age + gender + use0), data = iptwExWide, method = my.ps)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all time points</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              Times     Type Max.Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score 1, 2, 3 Distance       0.0251</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age        1, 2, 3  Contin.       0.0703</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> gender     1, 2, 3   Binary       0.0263</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> use0       1, 2, 3  Contin.       0.0558</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx1           2, 3   Binary       0.0171</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> use1          2, 3  Contin.       0.0316</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> tx2              3   Binary       0.0085</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> use2             3  Contin.       0.0315</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score 1, 2, 3 Distance       0.0773</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X1_0       1, 2, 3  Contin.       0.0342</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X2_0       1, 2, 3   Binary       0.0299</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X1_1          2, 3  Contin.       0.0657</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X2_1          2, 3   Binary       0.0299</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> A_1           2, 3   Binary       0.0262</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X1_2             3  Contin.       0.0643</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> X2_2             3   Binary       0.0096</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> A_2              3   Binary       0.0054</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 1</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  294.     706. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    185.18   573.6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 3306.    4194. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    845.79   899.4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 2</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted   492.   508.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted     318.9  264.49</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 3701.   3799.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    912.87  829.87</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - <span style="font-style: italic;">Time 3</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  415.     585. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    235.67   366.4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 4886.   2614.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   1900.26  600.12</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Kernel balancing using the KBAL package, available</span></span></span>
 <span class="r-in"><span><span class="co"># using devtools::install_github("chadhazlett/KBAL").</span></span></span>
 <span class="r-in"><span><span class="co"># Only the ATT and ATC are available. Use 'kbal.method'</span></span></span>
@@ -388,7 +383,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
     </footer></div>

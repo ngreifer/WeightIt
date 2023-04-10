@@ -7,6 +7,9 @@
     <loc>https://ngreifer.github.io/WeightIt/articles/WeightIt.html</loc>
   </url>
   <url>
+    <loc>https://ngreifer.github.io/WeightIt/articles/estimating-effects.html</loc>
+  </url>
+  <url>
     <loc>https://ngreifer.github.io/WeightIt/articles/index.html</loc>
   </url>
   <url>
@@ -67,10 +70,10 @@
     <loc>https://ngreifer.github.io/WeightIt/reference/method_user.html</loc>
   </url>
   <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/sbps.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/msmdata.html</loc>
   </url>
   <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/stop.method.html</loc>
+    <loc>https://ngreifer.github.io/WeightIt/reference/sbps.html</loc>
   </url>
   <url>
     <loc>https://ngreifer.github.io/WeightIt/reference/summary.weightit.html</loc>

@@ -31,7 +31,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 
 
 
-'><title>Propensity Score Weighting Using SuperLearner — method_super • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.1.3/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.1.3/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.rawgit.com/afeld/bootstrap-toc/v1.0.1/dist/bootstrap-toc.min.js"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Propensity Score Weighting Using SuperLearner — method_super"><meta property="og:description" content='This page explains the details of estimating weights from SuperLearner-based propensity scores by setting method = "super" in the call to weightit() or weightitMSM(). This method can be used with binary, multinomial, and continuous treatments.
+'><title>Propensity Score Weighting Using SuperLearner — method_super • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Propensity Score Weighting Using SuperLearner — method_super"><meta property="og:description" content='This page explains the details of estimating weights from SuperLearner-based propensity scores by setting method = "super" in the call to weightit() or weightitMSM(). This method can be used with binary, multinomial, and continuous treatments.
 In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, regression algorithms are used to estimate generalized propensity scores as the conditional density of treatment given the covariates. This method relies on SuperLearner::SuperLearner() from the SuperLearner package.
 
 Binary Treatments
@@ -74,7 +74,7 @@ First, for each variable with missingness, a new missingness indicator variable 
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,6 +91,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <li class="nav-item dropdown">
   <a href="#" class="nav-link dropdown-toggle" data-bs-toggle="dropdown" role="button" aria-expanded="false" aria-haspopup="true" id="dropdown-articles">Articles</a>
   <div class="dropdown-menu" aria-labelledby="dropdown-articles">
+    <a class="dropdown-item" href="../articles/estimating-effects.html">Estimating Effects After Weighting</a>
     <a class="dropdown-item" href="../articles/installing-packages.html">Installing Supporting Packages</a>
   </div>
 </li>
@@ -177,8 +178,8 @@ First, for each variable with missingness, a new missingness indicator variable 
 
 </dl><div class="section">
 <h3 id="balance-superlearner">Balance SuperLearner<a class="anchor" aria-label="anchor" href="#balance-superlearner"></a></h3>
-<p>In addition to the methods allowed by <code>SuperLearner()</code>, one can specify <code>SL.method = "method.balance"</code> to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with <code>SL.library</code>. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the <code>stop.method</code> argument, described below.</p><dl><dt><code>stop.method</code></dt>
-<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="stop.method.html">stop.method</a></code> for allowable options for each treatment type. For binary and multinomial treatments, the default is <code>"es.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
+<p>In addition to the methods allowed by <code>SuperLearner()</code>, one can specify <code>SL.method = "method.balance"</code> to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with <code>SL.library</code>. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the <code>criterion</code> argument, described below.</p><dl><dt><code>criterion</code></dt>
+<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">cobalt::bal.compute()</a></code> for allowable options for each treatment type. For binary and multinomial treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
 
 
 </dl><p>Note that this implementation differs from that of Pirracchio and Carone (2018) in that here, balance is measured only on the terms included in the model formula (i.e., and not their interactions unless specifically included), and balance results from a sample weighted using the estimated predicted values as propensity scores, not a sample matched using propensity score matching on the predicted values. Binary and continuous treatments are supported, but currently multinomial treatments are not.</p>
@@ -193,7 +194,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <dd><p>The coefficients in the linear combination of the predictions from each method in <code>SL.library</code>. Higher values indicate that the corresponding method plays a larger role in determining the resulting predicted value, and values close to zero indicate that the method plays little role in determining the predicted value. When <code>discrete = TRUE</code>, these correspond to the coefficients that would have been estimated had <code>discrete</code> been <code>FALSE</code>.</p></dd>
 
 <dt><code>cvRisk</code></dt>
-<dd><p>The cross-validation risk for each method in <code>SL.library</code>. Higher values indicate that the method has worse cross-validation accuracy. When <code>SL.method = "method.balance"</code>, the sample weighted balance statistic requested with <code>stop.method</code>. Higher values indicate worse balance.</p></dd>
+<dd><p>The cross-validation risk for each method in <code>SL.library</code>. Higher values indicate that the method has worse cross-validation accuracy. When <code>SL.method = "method.balance"</code>, the sample weighted balance statistic requested with <code>criterion</code>. Higher values indicate worse balance.</p></dd>
 
 
 </dl></dd>
@@ -215,16 +216,16 @@ First, for each variable with missingness, a new missingness indicator variable 
 <p>Kreif, N., Grieve, R., Díaz, I., &amp; Harrison, D. (2015). Evaluation of the Effect of a Continuous Treatment: A Machine Learning Approach with an Application to Treatment for Traumatic Brain Injury. Health Economics, 24(9), 1213–1228. <a href="https://doi.org/10.1002/hec.3189" class="external-link">doi:10.1002/hec.3189</a></p>
 <p>- Balance SuperLearner (<code>SL.method = "method.balance"</code>)</p>
 <p>Pirracchio, R., &amp; Carone, M. (2018). The Balance Super Learner: A robust adaptation of the Super Learner to improve estimation of the average treatment effect in the treated based on propensity score matching. Statistical Methods in Medical Research, 27(8), 2504–2518. <a href="https://doi.org/10.1177/0962280216682055" class="external-link">doi:10.1177/0962280216682055</a></p>
-<p>See <code><a href="method_glm.html">method_ps</a></code> for additional references.</p>
+<p>See <code><a href="method_glm.html">method_glm</a></code> for additional references.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code>, <code><a href="weightitMSM.html">weightitMSM()</a></code>, <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code></p>
-<p><code><a href="stop.method.html">stop.method</a></code> for allowable arguments to <code>stop.method</code> when using <code>SL.method = "method.balance"</code></p></div>
+    <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code>, <code><a href="weightitMSM.html">weightitMSM()</a></code>, <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code></p></div>
     </div>
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
     <p>Some methods formerly available in <span class="pkg">SuperLearner</span> are now in <span class="pkg">SuperLearnerExtra</span>, which can be found on GitHub at <a href="https://github.com/ecpolley/SuperLearnerExtra" class="external-link">https://github.com/ecpolley/SuperLearnerExtra</a>.</p>
+<p>The <code>criterion</code> argument used to be called <code>stop.method</code>, which is its name in <span class="pkg">twang</span>. <code>stop.method</code> still works for backward compatibility. Additionally, the criteria formerly named as <code>es.mean</code>, <code>es.max</code>, and <code>es.rms</code> have been renamed to <code>smd.mean</code>, <code>smd.max</code>, and <code>smd.rms</code>. The former are used in <span class="pkg">twang</span> and will still work with <code><a href="weightit.html">weightit()</a></code> for backward compatibility.</p>
     </div>
 
     <div class="section level2">
@@ -257,7 +258,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               7      5      4      3      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             411    589    269    409    296</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.4116 2.5004 2.7322 3.3402 5.6573</span>
@@ -274,11 +275,6 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    191.27     185</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = treat ~ age + educ + married + nodegree + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     re74, data = lalonde, method = "super", estimand = "ATT", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     SL.library = c("SL.glm", "SL.stepAIC", "SL.glm.interaction"))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0599</span>
@@ -338,11 +334,6 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   172.57  58.85 260.06</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = race ~ age + educ + married + nodegree + re74, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     data = lalonde, method = "super", estimand = "ATE", SL.library = c("SL.glm", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         "SL.stepAIC", "SL.glm.interaction"))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0968</span>
@@ -393,11 +384,6 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   221.04</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = re75 ~ age + educ + married + nodegree + re74, </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     data = lalonde, method = "super", density = "dt_8", SL.library = c("SL.glm", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         "SL.ridge", "SL.glm.interaction"))</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0311</span>
@@ -412,7 +398,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   221.04</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates between treatment groups (binary)</span></span></span>
-<span class="r-in"><span><span class="co"># using balance SuperLearner to minimize the average</span></span></span>
+<span class="r-in"><span><span class="co"># using balance SuperLearner to minimize the maximum</span></span></span>
 <span class="r-in"><span><span class="co"># KS statistic</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W4</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
@@ -420,7 +406,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-in"><span>                SL.library <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"SL.glm"</span>, <span class="st">"SL.stepAIC"</span>,</span></span>
 <span class="r-in"><span>                               <span class="st">"SL.lda"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                SL.method <span class="op">=</span> <span class="st">"method.balance"</span>,</span></span>
-<span class="r-in"><span>                stop.method <span class="op">=</span> <span class="st">"ks.mean"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                criterion <span class="op">=</span> <span class="st">"ks.max"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit</span> object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "super" (propensity score weighting with SuperLearner)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
@@ -434,47 +420,41 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                    ||         1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0354 |---------------------------| 1.4688</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                 ||            1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0339 |---------------------------| 1.7088</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               8      7      4      3      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               6      5      4      2      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             411    595    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.1051 1.1654 1.2041 1.2831 1.4688</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.2058 1.2729 1.3372 1.4342 1.7088</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000  -0.000       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.739 0.662   0.278       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000   -0.00       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.763 0.666    0.29       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    277.67     185</span>
-<span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W4</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  weightit(formula = treat ~ age + educ + married + nodegree + </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     re74, data = lalonde, method = "super", estimand = "ATT", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     SL.library = c("SL.glm", "SL.stepAIC", "SL.lda"), SL.method = "method.balance", </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     stop.method = "ks.mean")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    271.31     185</span>
+<span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W4</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0856</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0855</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0174</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0045</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0291</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0760</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj KS.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0694 0.1030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0567 0.2727</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0305 0.0587</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0042 0.0042</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0193 0.0193</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0789 0.2993</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    277.67     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    271.31     185</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
@@ -486,7 +466,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
 </div>
 
     </footer></div>
