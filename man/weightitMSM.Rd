@@ -110,56 +110,44 @@ Noah Greifer
 Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. American Journal of Epidemiology, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 }
 
-\examples{\dontshow{if (requireNamespace("twang", quietly = TRUE)) force(\{ # examplesIf}
-library("twang")
+\examples{
 library("cobalt")
 
-data("iptwExWide", package = "twang")
-(W1 <- weightitMSM(list(tx1 ~ age + gender + use0,
-                      tx2 ~ tx1 + use1 + age + gender + use0,
-                      tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-                 data = iptwExWide,
-                 method = "glm"))
+data("msmdata")
+(W1 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                        A_2 ~ X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0,
+                        A_3 ~ X1_2 + X2_2 +
+                          A_2 + X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0),
+                   data = msmdata,
+                   method = "glm"))
 summary(W1)
 bal.tab(W1)
 
-##Going from long to wide data
-data("iptwExLong", package = "twang")
-wide_data <- reshape(iptwExLong$covariates,    #long data
-                     timevar = "time",         #time variable
-                     v.names = c("use", "tx"), #time-varying
-                     idvar = "ID",             #time-stable
-                     direction = "wide",
-                     sep = "")
-
-(W2 <- weightitMSM(list(tx1 ~ age + gender + use1,
-                      tx2 ~ tx1 + use2 + age + gender + use1,
-                      tx3 ~ tx2 + use3 + tx1 + use2 + age +
-                          gender + use1),
-                 data = wide_data,
-                 method = "glm"))
-summary(W2)
-
-all.equal(W1$weights, W2$weights)
-
 #Using stabilization factors
-W3 <- weightitMSM(list(tx1 ~ age + gender + use0,
-                       tx2 ~ tx1 + use1 + age + gender + use0,
-                       tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-                  data = iptwExWide,
-                  method = "glm",
-                  stabilize = TRUE,
-                  num.formula = list(~ 1,
-                                     ~ tx1,
-                                     ~ tx2 + tx1))
+W2 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                        A_2 ~ X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0,
+                        A_3 ~ X1_2 + X2_2 +
+                          A_2 + X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0),
+                   data = msmdata,
+                   method = "glm",
+                   stabilize = TRUE,
+                   num.formula = list(~ 1,
+                                      ~ A_1,
+                                      ~ A_1 + A_2))
 
 #Same as above but with fully saturated stabilization factors
-#(i.e., making the last entry in 'num.formula' tx2*tx2)
-W4 <- weightitMSM(list(tx1 ~ age + gender + use0,
-                       tx2 ~ tx1 + use1 + age + gender + use0,
-                       tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-                  data = iptwExWide,
-                  method = "glm",
-                  stabilize = TRUE)
-
-\dontshow{\}) # examplesIf}}
+#(i.e., making the last entry in 'num.formula' A_1*A_2)
+W3 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                        A_2 ~ X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0,
+                        A_3 ~ X1_2 + X2_2 +
+                          A_2 + X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0),
+                   data = msmdata,
+                   method = "glm",
+                   stabilize = TRUE)
+}
