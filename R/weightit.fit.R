@@ -7,48 +7,52 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   #Checks
   if (!check_if_call_from_fun(weightit) && !check_if_call_from_fun(weightitMSM)) {
 
-    if (missing(covs) || !is.matrix(covs) || !is.numeric(covs)) {
-      stop("'covs' must be a numeric matrix of covariates.", call. = FALSE)
+    chk::chk_not_missing(covs, "`covs`")
+    chk::chk_matrix(covs)
+    chk::chk_numeric(covs)
+
+    chk::chk_not_missing(treat, "`treat`")
+    chk::chk_vector(treat)
+    chk::chk_numeric(treat)
+    chk::chk_not_any_na(treat)
+
+    if (length(treat) != nrow(covs)) {
+      .err("`treat` and `'covs` must contain the same number of units")
     }
 
-    if (missing(treat) || is_not_null(dim(treat)) || !is.atomic(treat)) {
-      stop("'treat' must be an atomic vector.", call. = FALSE)
-    }
-    else if (length(treat) != nrow(covs)) {
-      stop("'treat' and 'covs' must contain the same number of units.", call. = FALSE)
-    }
-    if (anyNA(treat)) {
-      stop("No missing values are allowed in 'treat'.", call. = FALSE)
-    }
     if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
     treat.type <- get.treat.type(treat)
 
     check.acceptable.method(method, msm = FALSE, force = FALSE)
 
     if (is_not_null(ps)) {
-      if (!is.numeric(ps) || is_not_null(dim(ps))) {
-        stop("'ps' must be a numeric vector.", call. = FALSE)
+      chk::chk_vector(ps)
+      chk::chk_numeric(ps)
+
+      if (length(ps) != length(treat)) {
+        .err("`ps` and `treat` must be the same length")
       }
-      else if (length(ps) != length(treat)) {
-        stop("'ps' and 'treat' must be the same length.", call. = FALSE)
-      }
+
       method <- "glm"
     }
 
     if (is_null(s.weights)) s.weights <- rep(1, length(treat))
-    else if (!is.numeric(s.weights) || is_not_null(dim(s.weights))) {
-      stop("'s.weights' must be a numeric vector.", call. = FALSE)
-    }
-    else if (length(s.weights) != length(treat)) {
-      stop("'s.weights' and 'treat' must be the same length.", call. = FALSE)
+    else {
+      chk::chk_vector(s.weights)
+      chk::chk_numeric(s.weights)
+
+      if (length(s.weights) != length(treat)) {
+        .err("`s.weights` and `treat` must be the same length")
+      }
     }
 
     if (is_null(by.factor)) by.factor <- factor(rep(1, length(treat)), levels = 1)
-    else if (!is.factor(by.factor)) {
-      stop("'by.factor' must be a factor.", call. = FALSE)
-    }
-    else if (length(by.factor) != length(treat)) {
-      stop("'by.factor' and 'treat' must be the same length.", call. = FALSE)
+    else {
+      chk::chk_factor(by.factor)
+
+      if (length(by.factor) != length(treat)) {
+        .err("`by.factor` and `treat` must be the same length")
+      }
     }
 
     #Process estimand and focal
@@ -57,12 +61,11 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 
+    .chk_null_or(missing, chk::chk_string)
+
     if (is_null(missing)) {
       if (anyNA(covs)) missing <- "ind"
       else missing <- ""
-    }
-    else if (!is.character(missing) || is_not_null(dim(missing))) {
-      stop("'missing' must be NULL or a character vector.", call. = FALSE)
     }
     else if (missing != "" && anyNA(covs)) {
       missing <- process.missing(missing, method, treat.type)
@@ -322,7 +325,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     #                          ...)
     #   }
     #   else {
-    #     stop("Empirical balancing calibration weights are not compatible with continuous treatments.", call. = FALSE)
+    #     stop("Empirical balancing calibration weights are not compatible with continuous treatments")
     #   }
     # }
     else if (method == "energy") {
@@ -384,17 +387,21 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     #                          missing = missing,
     #                          ...)
     #   }
-    #   else stop("Kernel balancing is not compatible with continuous treatments.", call. = FALSE)
+    #   else stop("Kernel balancing is not compatible with continuous treatments")
     # }
     else {
-      stop("Invalid argument to 'method'.", call. = FALSE)
+      .err("invalid argument to `method`")
     }
 
     #Extract weights
-    if (is_null(obj)) stop("No object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
-    if (is_null(obj$w) || all(is.na(obj$w))) warning("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues.", call. = FALSE)
+    if (is_null(obj)) {
+      .err("no object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues")
+    }
+    if (is_null(obj$w) || all(is.na(obj$w))) {
+      .wrn("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues")
+    }
     if (any(!is.finite(obj$w))) {
-      warning("Some weights were estimated as NA, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0.", call. = FALSE)
+      .wrn("Some weights were estimated as `NA`, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
       obj$w[!is.finite(obj$w)] <- 0
     }
     # else if (any(!is.finite(obj$w))) probably.a.bug()
@@ -419,5 +426,6 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   if (all(is.na(out$ps))) out$ps <- NULL
 
   class(out) <- "weightit.fit"
-  return(out)
+
+  out
 }

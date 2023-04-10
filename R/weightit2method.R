@@ -38,19 +38,21 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
     obj <- list(w = obj)
   }
   else if (!is.list(obj) || !any(c("w", "weights") %nin% names(obj))) {
-    stop("The output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights.", call. = FALSE)
+    .err("the output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights")
   }
   else {
     names(obj)[names(obj) == "weights"] <- "w"
   }
-  if (is_null(obj[["w"]])) stop("No weights were estimated.", call. = FALSE)
-  if (!is.vector(obj[["w"]], mode = "numeric")) stop("The \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights.", call. = FALSE)
-  if (all(is.na(obj[["w"]]))) stop("All weights were generated as NA.", call = FALSE)
+
+  if (is_null(obj[["w"]])) .err("no weights were estimated")
+  if (!is.vector(obj[["w"]], mode = "numeric")) .err("the \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights")
+  if (all(is.na(obj[["w"]]))) .err("all weights were generated as `NA`")
   if (length(obj[["w"]]) != length(treat)) {
-    stop(paste(length(obj[["w"]]), "weights were estimated, but there are", length(treat), "units."), call. = FALSE)
+    .err(sprintf("%s weights were estimated, but there are %s units",
+                 length(obj[["w"]]), length(treat)))
   }
 
-  return(obj)
+  obj
 }
 weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize, missing, moments, int, ...) {
   A <- list(...)
@@ -88,19 +90,20 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
     obj <- list(w = obj)
   }
   else if (!is.list(obj) || !any(c("w", "weights") %nin% names(obj))) {
-    stop("The output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights.", call. = FALSE)
+    .err("the output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights")
   }
   else {
     names(obj)[names(obj) == "weights"] <- "w"
   }
-  if (is_null(obj[["w"]])) stop("No weights were estimated.", call. = FALSE)
-  if (!is.vector(obj[["w"]], mode = "numeric")) stop("The \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights.", call. = FALSE)
-  if (all(is.na(obj[["w"]]))) stop("All weights were generated as NA.", call = FALSE)
+  if (is_null(obj[["w"]])) .err("no weights were estimated")
+  if (!is.vector(obj[["w"]], mode = "numeric")) .err("the \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights")
+  if (all(is.na(obj[["w"]]))) .err("All weights were generated as `NA`")
   if (length(obj[["w"]]) != length(treat.list[[1]])) {
-    stop(paste(length(obj[["w"]]), "weights were estimated, but there are", length(treat.list[[1]]), "units."), call. = FALSE)
+    .err(sprintf("%s weights were estimated, but there are %s units",
+                 length(obj[["w"]]), length(treat.list[[1]])))
   }
 
-  return(obj)
+  obj
 }
 
 #Propensity score estimation with regression
@@ -150,13 +153,13 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
     else {
       which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
       if (is.na(which.link)) {
-        A[["link"]] <- acceptable.links[1]
-        stop(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE), " allowed as the link for ",
-                    if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
-                    " treatments", if (missing == "saem") " with missing = \"saem\"", "."),
-             call. = FALSE)
+        .err(sprintf("Only %s allowed as the link for %s treatments%",
+                     word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
+                     if (bin.treat) "binary" else if (ord.treat) "ordinal" else "multinomial",
+                     if (missing == "saem") ' with `missing = "saem"`' else ""))
       }
-      else A[["link"]] <- which.link
+
+      A[["link"]] <- which.link
     }
 
     use.br <- startsWith(A[["link"]], "br.")
@@ -174,7 +177,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
       treat <- binarize(treat_sub, one = t.lev)
 
       if (missing == "saem") {
-        check.package("misaem")
+        rlang::check_installed("misaem")
 
         data <- data.frame(treat, covs)
 
@@ -182,7 +185,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
           fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
         },
         warning = function(w) {
-          if (conditionMessage(w) != "one argument not used by format '%i '") warning(w)
+          if (conditionMessage(w) != "one argument not used by format '%i '") .wrn(w, tidy = FALSE)
           invokeRestart("muffleWarning")
         })
 
@@ -193,7 +196,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
       }
       else {
         if (use.br) {
-          check.package("brglm2")
+          rlang::check_installed("brglm2")
           ctrl_fun <- brglm2::brglmControl
           glm_method <- brglm2::brglmFit
           family <- binomial(link = A[["link"]])
@@ -243,7 +246,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
           }
         },
         warning = function(w) {
-          if (conditionMessage(w) != "non-integer #successes in a binomial glm!") warning(w)
+          if (conditionMessage(w) != "non-integer #successes in a binomial glm!") .wrn(w, tidy = FALSE)
           invokeRestart("muffleWarning")
         })
 
@@ -256,7 +259,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
     }
     else if (ord.treat) {
       if (use.br) {
-        check.package("brglm2")
+        rlang::check_installed("brglm2")
 
         ctrl_fun <- brglm2::brglmControl
         control <- do.call(ctrl_fun, c(A[["control"]],
@@ -272,11 +275,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                                      control = control,
                                                      parallel = if_null_then(A[["parallel"]], FALSE)),
                                  quote = TRUE)},
-                 error = function(e) stop("There was a problem with the bias-reduced ordinal logit regression. Try a different link.", call. = FALSE))
+                 error = function(e) .err("there was a problem with the bias-reduced ordinal logit regression. Try a different link"))
       }
       else {
         if (A[["link"]] == "logit") A[["link"]] <- "logistic"
-        check.package("MASS")
+        rlang::check_installed("MASS")
         # message(paste("Using ordinal", A$link, "regression."))
         data <- data.frame(treat_sub, covs)
         formula <- formula(data)
@@ -289,8 +292,9 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                       model = FALSE,
                                       method = A[["link"]],
                                       contrasts = NULL), quote = TRUE)},
-                 error = function(e) {stop(paste0("There was a problem fitting the ordinal ", A$link, " regressions with polr().\n       Try again with an un-ordered treatment.",
-                                                  "\n       Error message: ", conditionMessage(e)), call. = FALSE)})
+                 error = function(e) {.err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.",
+                                                   "\n       Error message: %s",
+                                                   A$link, conditionMessage(e)), tidy = FALSE)})
       }
 
 
@@ -300,7 +304,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
     }
     else {
       if (use.br) {
-        check.package("brglm2")
+        rlang::check_installed("brglm2")
         data <- data.frame(treat_sub, covs)
         formula <- formula(data)
         ctrl_fun <- brglm2::brglmControl
@@ -311,14 +315,14 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                  list(formula, data,
                                       weights = s.weights,
                                       control = control), quote = TRUE)},
-                 error = function(e) stop("There was a problem with the bias-reduced multinomial logit regression. Try a different link.", call. = FALSE))
+                 error = function(e) .err("there was a problem with the bias-reduced multinomial logit regression. Try a different link"))
 
         ps <- fit$fitted.values
         fit.obj <- fit
       }
       else if (A$link %in% c("logit", "probit")) {
         if (isTRUE(A$use.mclogit)) {
-          check.package("mclogit")
+          rlang::check_installed("mclogit")
 
           if (is_not_null(A$random)) {
             random <- get.covs.and.treat.from.formula(A$random, data = .data)$reported.covs[subset,,drop = FALSE]
@@ -350,7 +354,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                                   control = control))
 
           },
-          error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mblogit().\n       Try again with use.mclogit = FALSE.\nError message (from mclogit):\n       ", conditionMessage(e)), call. = FALSE)}
+          error = function(e) {.err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try again with `use.mclogit = FALSE`.\nError message (from mclogit):\n       %s",
+                                            A$link, conditionMessage(e)), tidy = FALSE)}
           )
 
           ps <- fitted(fit)
@@ -358,7 +363,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
           fit.obj <- fit
         }
         else if (!isFALSE(A$use.mlogit)) {
-          check.package("mlogit")
+          rlang::check_installed("mlogit")
 
           data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
           covnames <- names(data)[-c(1,2)]
@@ -374,7 +379,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                   choice = "treat",
                                   ...)
           },
-          error = function(e) {stop(paste0("There was a problem fitting the multinomial ", A$link, " regression with mlogit().\n       Try again with use.mlogit = FALSE.\nError message (from mlogit):\n       ", conditionMessage(e)), call. = FALSE)}
+          error = function(e) {.err(sprintf("There was a problem fitting the multinomial %s regression with mlogit().\n       Try again with use.mlogit = FALSE.\nError message (from mlogit):\n       %s",
+                                            A$link, conditionMessage(e)), tidy = FALSE)}
           )
 
           ps <- fitted(fit, outcome = FALSE)
@@ -409,11 +415,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         }
       }
       else if (A$link == "bayes.probit") {
-        check.package("MNP")
+        rlang::check_installed("MNP")
         data <- data.frame(treat_sub, covs)
         formula <- formula(data)
         tryCatch({fit <- MNP::mnp(formula, data, verbose = TRUE)},
-                 error = function(e) stop("There was a problem with the Bayes probit regression. Try a different link.", call. = FALSE))
+                 error = function(e) .err("there was a problem with the Bayes probit regression. Try a different link"))
         ps <- predict(fit, type = "prob")$p
         fit.obj <- fit
       }
@@ -464,7 +470,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         }
       }
 
-      if (is_null(p.score)) stop("'ps' must be a numeric vector with a propensity score for each unit.", call. = FALSE)
+      if (is_null(p.score)) .err("`ps` must be a numeric vector with a propensity score for each unit")
 
     }
     else {
@@ -477,7 +483,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
           ps <- setNames(list2DF(lapply(levels(treat), function(x) {
             p_ <- rep(1, length(treat))
             p_[treat == x] <- ps[treat == x, 1]
-            return(p_)
+            p_
           })), levels(treat))[subset, , drop = FALSE]
         }
         else {
@@ -489,7 +495,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
           ps <- setNames(list2DF(lapply(levels(treat), function(x) {
             p_ <- rep(1, length(treat))
             p_[treat == x] <- ps[treat == x]
-            return(p_)
+            p_
           })), levels(treat))[subset, , drop = FALSE]
         }
         else {
@@ -498,7 +504,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
       }
       else bad.ps <- TRUE
 
-      if (bad.ps) stop("'ps' must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit.", call. = FALSE)
+      if (bad.ps) .err("`ps` must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit")
 
     }
 
@@ -509,8 +515,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
   w <- get_w_from_ps(ps = ps, treat = treat_sub, estimand, focal = focal,
                      stabilize = stabilize, subclass = subclass)
 
-  obj <- list(w = w, ps = p.score, fit.obj = fit.obj)
-  return(obj)
+  list(w = w, ps = p.score, fit.obj = fit.obj)
 }
 weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- list(...)
@@ -559,20 +564,20 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
       if (is_not_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
         if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
+          .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
+                       A[["density"]], word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
         }
         densfun <- function(x) {
           tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
-                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+                   error = function(e) .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE))
         }
       }
       else {
-        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                   splitdens[1], "is not an available function."), call. = FALSE)
+        .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
+                     A[["density"]], splitdens[1]))
       }
     }
-    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
+    else .err("the argument to `density` cannot be evaluated as a density function")
     use.kernel <- FALSE
   }
 
@@ -588,10 +593,10 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   else {
     dens.num <- densfun(p.num/sd(treat))
     if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
-      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the normal density")
     }
-    else if (any(dens.num <= 0)) {
-      stop("The input to density may not accept the full range of treatment values.", call. = FALSE)
+    if (any(dens.num <= 0)) {
+      .err("the input to density may not accept the full range of treatment values")
     }
   }
 
@@ -599,13 +604,13 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   if (is_null(ps)) {
 
     if (missing == "saem") {
-      check.package("misaem")
+      rlang::check_installed("misaem")
 
       withCallingHandlers({
         fit <- misaem::miss.lm(formula, data, control = as.list(A[["control"]]))
       },
       warning = function(w) {
-        if (conditionMessage(w) != "one argument not used by format '%i '") warning(w)
+        if (conditionMessage(w) != "one argument not used by format '%i '") .wrn(w, tidy = FALSE)
         invokeRestart("muffleWarning")
       })
 
@@ -621,13 +626,12 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
 
         which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
         if (is.na(which.link)) {
-          A[["link"]] <- acceptable.links[1]
-          stop(paste0("Only ", word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
-                      " allowed as the link for continuous treatments",
-                      if (missing == "saem") " with missing = \"saem\"", "."),
-               call. = FALSE)
+          .err(sprintf("Only %s allowed as the link for continuous treatments%s",
+                       word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
+                       if (missing == "saem") ' with missing = "saem"' else ""))
         }
-        else A[["link"]] <- which.link
+
+        A[["link"]] <- which.link
       }
 
       fit <- do.call("glm", c(list(formula, data = data,
@@ -655,15 +659,14 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     plot_density(d.n, d.d)
   }
 
-  obj <- list(w = w, fit.obj = fit.obj)
-  return(obj)
+  list(w = w, fit.obj = fit.obj)
 }
 
 #MABW with optweight
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
   A <- list(...)
 
-  check.package("optweight")
+  rlang::check_installed("optweight")
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -690,7 +693,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
   if ("targets" %in% names(A)) {
-    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE, immediate. = TRUE)
+    .wrn("`targets` cannot be used through WeightIt and will be ignored")
     A[["targets"]] <- NULL
   }
 
@@ -703,12 +706,11 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
   out <- do.call(optweight::optweight, A, quote = TRUE)
 
-  obj <- list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
-  return(obj)
+  list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
 }
 weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   A <- list(...)
-  check.package("optweight")
+  rlang::check_installed("optweight")
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -735,7 +737,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
   if ("targets" %in% names(A)) {
-    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE, immediate. = TRUE)
+    .wrn("`targets` cannot be used through WeightIt and will be ignored")
     A[["targets"]] <- NULL
   }
 
@@ -746,13 +748,11 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 
   out <- do.call(optweight::optweight, A, quote = TRUE)
 
-  obj <- list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
-  return(obj)
-
+  list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
 }
 weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, ...) {
   A <- list(...)
-  check.package("optweight")
+  rlang::check_installed("optweight")
   if (is_not_null(covs.list)) {
     covs.list <- lapply(covs.list, function(c) {
       covs <- c[subset, , drop = FALSE]
@@ -784,7 +784,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
   baseline.formula <- formula(baseline.data)
   if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(baseline.formula, baseline.data, A[["tols"]], stop = TRUE)
   if ("targets" %in% names(A)) {
-    warning("targets cannot be used through WeightIt and will be ignored.", call. = FALSE, immediate. = TRUE)
+    .wrn("`targets` cannot be used through WeightIt and will be ignored")
     A[["targets"]] <- NULL
   }
 
@@ -793,15 +793,13 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
                                                   s.weights = s.weights,
                                                   verbose = TRUE),
                                              A), quote = TRUE)
-  obj <- list(w = out$w, fit.obj = out)
-  return(obj)
-
+  list(w = out$w, fit.obj = out)
 }
 
 #Generalized boosted modeling with gbm and cobalt
 weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
 
-  check.package("gbm")
+  rlang::check_installed("gbm")
 
   A <- list(...)
 
@@ -827,17 +825,16 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   }
 
   if (is_null(A[["criterion"]])) {
-    warning("No `criterion` was provided. Using \"smd.mean\".",
-            call. = FALSE, immediate. = TRUE)
+    .wrn("no `criterion` was provided. Using \"smd.mean\"",
+         call. = FALSE, immediate. = TRUE)
     A[["criterion"]] <- "smd.mean"
   }
   else if (length(A[["criterion"]]) > 1) {
-    warning("Only one `criterion` is allowed at a time. Using just the first `criterion`",
-            call. = FALSE, immediate. = TRUE)
+    .wrn("only one `criterion` is allowed at a time. Using just the first `criterion`")
     A[["criterion"]] <- A[["criterion"]][1]
   }
 
-  available.criteria <- cobalt::available.stats(treat.type)
+  available.criteria <- available.stats(treat.type)
 
   if (is.character(A[["criterion"]]) &&
       startsWith(A[["criterion"]], "es.")) {
@@ -855,11 +852,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (startsWith(A[["criterion"]], "cv") &&
         can_str2num(numcv <- substr(A[["criterion"]], 3, nchar(A[["criterion"]])))) {
       cv <- round(str2num(numcv))
-      if (cv < 2) stop("At least 2 CV-folds must be specified in `criterion`.", call. = FALSE)
+      if (cv < 2) .err("at least 2 CV-folds must be specified in `criterion`")
     }
-    else stop(sprintf("`criterion` must be one of %s.",
-                      word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)),
-              call. = FALSE)
+    else {
+      .err(sprintf("`criterion` must be one of %s.",
+                   word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
+    }
   }
   else criterion <- available.criteria[s.m.matches]
 
@@ -880,6 +878,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     }
   }
 
+  chk::chk_count(A[["n.trees"]], "`n.trees`")
+  chk::chk_gt(A[["n.trees"]], 1, "`n.trees`")
+
   if (treat.type == "binary")  {
     available.distributions <- c("bernoulli", "adaboost")
     t.lev <- get.treated.level(treat)
@@ -895,13 +896,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*(A[["n.trees"]]-start.tree+1)))
     else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
              !between(A[["n.grid"]], c(2, A[["n.trees"]]))) {
-      stop("'n.grid' must be a numeric value between 2 and n.trees.", call. = FALSE)
+      .err("`n.grid` must be a numeric value between 2 and `n.trees`")
     }
     else n.grid <- round(A[["n.grid"]])
 
-    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
-                             estimand = estimand, s.weights = s.weights,
-                             focal = focal, ...)
+    init <- bal.init(covs, treat = treat, stat = criterion,
+                     estimand = estimand, s.weights = s.weights,
+                     focal = focal, ...)
   }
 
   A[["x"]] <- covs
@@ -930,13 +931,15 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       iters <- 1:n.trees
       iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
 
-      if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
+      if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) {
+        .err("a problem has occurred")
+      }
 
       ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
       w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, init = init)
+      iter.grid.balance <- apply(w, 2, bal.compute, x = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -953,14 +956,14 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
         iters.to.check <- iters[between(iters, iters[it])]
 
         if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) {
-          stop("A problem has occurred")
+          .err("a problem has occurred")
         }
 
         ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
         w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, init = init)
+        iter.grid.balance.fine <- apply(w, 2, bal.compute, x = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
@@ -1044,12 +1047,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     best.ps <- 1 - best.ps
   }
 
-  obj <- list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
-  return(obj)
+  list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
 }
 weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
 
-  check.package("gbm")
+  rlang::check_installed("gbm")
 
   A <- list(...)
 
@@ -1071,17 +1073,15 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     A[["criterion"]] <- A[["stop.method"]]
   }
   if (is_null(A[["criterion"]])) {
-    warning("No `criterion` was provided. Using \"p.mean\".",
-            call. = FALSE, immediate. = TRUE)
+    .err("no `criterion` was provided. Using \"p.mean\"")
     A[["criterion"]] <- "p.mean"
   }
   else if (length(A[["criterion"]]) > 1) {
-    warning("Only one `criterion` is allowed at a time. Using just the first `criterion`.",
-            call. = FALSE, immediate. = TRUE)
+    .wrn("only one `criterion` is allowed at a time. Using just the first `criterion`")
     A[["criterion"]] <- A[["criterion"]][1]
   }
 
-  available.criteria <- cobalt::available.stats("continuous")
+  available.criteria <- available.stats("continuous")
 
   cv <- 0
 
@@ -1090,11 +1090,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     if (startsWith(A[["criterion"]], "cv") &&
         can_str2num(numcv <- substr(A[["criterion"]], 3, nchar(A[["criterion"]])))) {
       cv <- round(str2num(numcv))
-      if (cv < 2) stop("At least 2 CV-folds must be specified in `criterion`.", call. = FALSE)
+      if (cv < 2) .err("at least 2 CV-folds must be specified in `criterion`")
     }
-    else stop(sprintf("`criterion` must be one of %s.",
-                      word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)),
-              call. = FALSE)
+    else .err(sprintf("`criterion` must be one of %s",
+                      word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
   }
   else criterion <- available.criteria[s.m.matches]
 
@@ -1114,6 +1113,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     }
   }
 
+  chk::chk_count(A[["n.trees"]], "`n.trees`")
+  chk::chk_gt(A[["n.trees"]], 1, "`n.trees`")
+
   available.distributions <- c("gaussian", "laplace", "tdist", "poisson")
 
   if (cv == 0) {
@@ -1121,12 +1123,12 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*(A[["n.trees"]]-start.tree+1)))
     else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
              !between(A[["n.grid"]], c(2, A[["n.trees"]]))) {
-      stop("'n.grid' must be a numeric value between 2 and n.trees.", call. = FALSE)
+      .err("`n.grid` must be a numeric value between 2 and `n.trees`")
     }
     else n.grid <- round(A[["n.grid"]])
 
-    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
-                             s.weights = s.weights, ...)
+    init <- bal.init(covs, treat = treat, stat = criterion,
+                     s.weights = s.weights, ...)
   }
 
   A[["x"]] <- covs
@@ -1141,10 +1143,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
   }
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
-
-  if (!is.numeric(A[["n.trees"]]) || length(A[["n.trees"]]) > 1 || A[["n.trees"]] <= 1) {
-    stop("'n.trees' must be a number greater than 1.", call. = FALSE)
-  }
 
   tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
                                    list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
@@ -1163,22 +1161,22 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     else if (is.function(A[["density"]])) densfun <- A[["density"]]
     else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
-      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+      if (is_not_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
         if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
+          .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
+                       A[["density"]], word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
         }
         densfun <- function(x) {
-          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
-                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+          tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
+                   error = function(e) .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE))
         }
       }
       else {
-        stop("%s is not an appropriate argument to 'density' because %s is not an available function.",
-             sprintf(A[["density"]], splitdens[1]), call. = FALSE)
+        .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
+                     A[["density"]], splitdens[1]))
       }
     }
-    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
+    else .err("the argument to `density` cannot be evaluated as a density function")
     use.kernel <- FALSE
   }
 
@@ -1194,10 +1192,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
   else {
     dens.num <- densfun(p.num/sd(treat))
     if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
-      stop("There was a problem with the output of 'density'. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the normal density")
     }
     else if (any(dens.num <= 0)) {
-      stop("The input to 'density' may not accept the full range of treatment values.", call. = FALSE)
+      .err("the input to `density` may not accept the full range of treatment values")
     }
   }
 
@@ -1214,14 +1212,16 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
       iters <- 1:n.trees
       iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
 
-      if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) stop("A problem has occurred")
+      if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) {
+        .err("a problem has occurred")
+      }
 
       gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
       w <- get_cont_weights(gps, treat = treat, s.weights = s.weights, dens.num = dens.num,
                             densfun = densfun, use.kernel = use.kernel, densControl = A)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, init = init)
+      iter.grid.balance <- apply(w, 2, bal.compute, x = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -1237,14 +1237,16 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
         it[2] <- iters.grid[min(length(iters.grid), it[2])]
         iters.to.check <- iters[between(iters, iters[it])]
 
-        if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) stop("A problem has occurred")
+        if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) {
+          .err("a problem has occurred")
+        }
 
         gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
         w <- get_cont_weights(gps, treat = treat, s.weights = s.weights, dens.num = dens.num,
                               densfun = densfun, use.kernel = use.kernel, densControl = A)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, init = init)
+        iter.grid.balance.fine <- apply(w, 2, bal.compute, x = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
@@ -1329,14 +1331,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     info[["best.tune"]] <- tune[best.tune.index,]
   }
 
-  obj <- list(w = best.w, info = info, fit.obj = best.fit)
-  return(obj)
+  list(w = best.w, info = info, fit.obj = best.fit)
 }
 
 #CBPS
 weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
 
-  check.package("CBPS")
+  rlang::check_installed("CBPS")
 
   A <- list(...)
 
@@ -1382,8 +1383,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                                             ...)},
                error = function(e) {
                  e. <- conditionMessage(e)
-                 e. <- gsub("method = \"exact\"", "over = FALSE", e., fixed = TRUE)
-                 stop(e., call. = FALSE)
+                 e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
+                 .err(e., tidy = FALSE)
                }
 
       )
@@ -1410,8 +1411,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
                                        ...)},
                error = function(e) {
                  e. <- conditionMessage(e)
-                 e. <- gsub("method = \"exact\"", "over = FALSE", e., fixed = TRUE)
-                 stop(e., call. = FALSE)
+                 e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
+                 .err(e., tidy = FALSE)
                }
       )
 
@@ -1465,11 +1466,10 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   }
   else p.score <- ps
 
-  obj <- list(w = w, ps = p.score, fit.obj = fit.list)
-  return(obj)
+  list(w = w, ps = p.score, fit.obj = fit.list)
 }
 weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
-  check.package("CBPS")
+  rlang::check_installed("CBPS")
 
   A <- list(...)
 
@@ -1503,25 +1503,25 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
                               ...)},
            error = function(e) {
              e. <- conditionMessage(e)
-             e. <- gsub("method = \"exact\"", "over = FALSE", e., fixed = TRUE)
-             stop(e., call. = FALSE)
+             e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
+             .err(e., tidy = FALSE)
            }
   )
 
   w[!sw0] <- fit$weights / s.weights[!sw0]
 
-  obj <- list(w = w, fit.obj = fit)
-  return(obj)
+  list(w = w, fit.obj = fit)
 }
 weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, ...) {
-  stop("CBMSM doesn't work yet.")
+  .err("CBMSM doesn't work yet")
 }
 weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
-  check.package("CBPS")
+  rlang::check_installed("CBPS")
 
   A <- list(...)
-  if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
-                                     call. = FALSE)
+  if (!all_the_same(s.weights)) {
+    .err("sampling weights cannot be used with `method = \"npcbps\"`")
+  }
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -1550,17 +1550,16 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
 
   for (i in levels(treat)) w[treat == i] <- w[treat == i]/mean(w[treat == i])
 
-  obj <- list(w = w, fit.obj = fit)
-
-  return(obj)
+  list(w = w, fit.obj = fit)
 }
 weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
-  check.package("CBPS")
+  rlang::check_installed("CBPS")
 
   A <- list(...)
 
-  if (!all_the_same(s.weights)) stop(paste0("Sampling weights cannot be used with method = \"npcbps\"."),
-                                     call. = FALSE)
+  if (!all_the_same(s.weights)) {
+    .err("sampling weights cannot be used with `method = \"npcbps\"`")
+  }
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -1589,9 +1588,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   w <- w/mean(w)
 
-  obj <- list(w = w, fit.obj = fit)
-
-  return(obj)
+  list(w = w, fit.obj = fit)
 }
 
 #Entropy balancing
@@ -1619,7 +1616,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   }
   else {
     if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
-      stop("The argument to base.weight must be a numeric vector with length equal to the number of units.", call. = FALSE)
+      .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
     }
     else bw <- A[["base.weight"]]
   }
@@ -1654,10 +1651,10 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     opt.out$gradient <- gradient.EB(opt.out$par)
 
     if (opt.out$convergence == 1) {
-      warning("The optimization failed to converge in the alotted number of iterations. Try increasing 'maxit'.", call. = FALSE)
+      .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing `maxit`")
     }
     else if (any(abs(opt.out$gradient) > 1e-3)) {
-      warning("The estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization.", call. = FALSE)
+      .wrn("the estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization")
     }
 
     if (sum(w) > n*.Machine$double.eps) w <- w*n/sum(w)
@@ -1689,8 +1686,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     w[treat == i & !sw0] <- fit.list[[i]]$w
   }
 
-  obj <- list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
-  return(obj)
+  list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
 }
 weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
   A <- list(...)
@@ -1713,7 +1709,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
   }
   else {
     if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
-      stop("The argument to base.weight must be a numeric vector with length equal to the number of units.", call. = FALSE)
+      .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
     }
     else bw <- A[["base.weight"]]
   }
@@ -1790,10 +1786,10 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
     opt.out$gradient <- gradient.EB(opt.out$par)
 
     if (opt.out$convergence == 1) {
-      warning("The optimization failed to converge in the alotted number of iterations. Try increasing 'maxit'.", call. = FALSE)
+      .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing `maxit`")
     }
     else if (any(abs(opt.out$gradient) > 1e-3)) {
-      warning("The estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization.", call. = FALSE)
+      .wrn("the estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization")
     }
 
     if (sum(w) > n*.Machine$double.eps) w <- w*n/sum(w)
@@ -1810,16 +1806,14 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   w[!sw0] <- fit$w
 
-  obj <- list(w = w, fit.obj = fit$opt.out)
-
-  return(obj)
+  list(w = w, fit.obj = fit$opt.out)
 }
 
 #PS weights using SuperLearner
 weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
   A <- list(...)
 
-  check.package("SuperLearner")
+  rlang::check_installed("SuperLearner")
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -1852,27 +1846,25 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   }
 
   discrete <- if_null_then(A[["discrete"]], FALSE)
-  if (length(discrete) != 1 || !is_(discrete, "logical")) stop("'discrete' must be TRUE or FALSE.", call. = FALSE)
+  chk::chk_flag(discrete)
 
   if (identical(A[["SL.method"]], "method.balance")) {
-    if (treat.type != "binary") stop("\"method.balance\" cannot be used with multi-category treatments.", call. = FALSE)
+    if (treat.type != "binary") .err("\"method.balance\" cannot be used with multi-category treatments")
 
     if (is_null(A[["criterion"]])) {
       A[["criterion"]] <- A[["stop.method"]]
     }
 
     if (is_null(A[["criterion"]])) {
-      warning("No `criterion` was provided. Using \"smd.mean\".",
-              call. = FALSE, immediate. = TRUE)
+      .wrn("no `criterion` was provided. Using \"smd.mean\"")
       A[["criterion"]] <- "smd.mean"
     }
     else if (length(A[["criterion"]]) > 1) {
-      warning("Only one `criterion` is allowed at a time. Using just the first `criterion`.",
-              call. = FALSE, immediate. = TRUE)
+      .wrn("only one `criterion` is allowed at a time. Using just the first `criterion`")
       A[["criterion"]] <- A[["criterion"]][1]
     }
 
-    available.criteria <- cobalt::available.stats(treat.type)
+    available.criteria <- available.stats(treat.type)
 
     if (is.character(A[["criterion"]]) &&
         startsWith(A[["criterion"]], "es.")) {
@@ -1886,9 +1878,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     criterion <- A[["criterion"]]
     criterion <- match_arg(criterion, available.criteria)
 
-    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
-                             estimand = estimand, s.weights = s.weights,
-                             focal = focal, ...)
+    init <- bal.init(covs, treat = treat, stat = criterion,
+                     estimand = estimand, s.weights = s.weights,
+                     focal = focal, ...)
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init, estimand = estimand)
@@ -1936,8 +1928,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   p.score <- if (treat.type == "binary") ps[[get.treated.level(treat)]] else NULL
 
-  obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
-  return(obj)
+  list(w = w, ps = p.score, info = info, fit.obj = fit.list)
 }
 weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- B <- list(...)
@@ -1975,22 +1966,22 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     else if (is.function(A[["density"]])) densfun <- A[["density"]]
     else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
-      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+      if (is_not_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
         if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
+          .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
+                       A[["density"]], word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
         }
         densfun <- function(x) {
-          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
-                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+          tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
+                   error = function(e) .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE))
         }
       }
       else {
-        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                   splitdens[1], "is not an available function."), call. = FALSE)
+        .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
+                     A[["density"]], splitdens[1]))
       }
     }
-    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
+    else .err("the argument to `density` cannot be evaluated as a density function")
     use.kernel <- FALSE
   }
 
@@ -2006,10 +1997,10 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   else {
     dens.num <- densfun(p.num/sd(treat))
     if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
-      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the normal density")
     }
-    else if (any(dens.num <= 0)) {
-      stop("The input to density may not accept the full range of treatment values.", call. = FALSE)
+    if (any(dens.num <= 0)) {
+      .err("the input to density may not accept the full range of treatment values")
     }
   }
 
@@ -2021,7 +2012,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   }
 
   discrete <- if_null_then(A[["discrete"]], FALSE)
-  if (length(discrete) != 1 || !is_(discrete, "logical")) stop("discrete must be TRUE or FALSE.", call. = FALSE)
+  chk::chk_flag(discrete)
 
   if (identical(B[["SL.method"]], "method.balance")) {
 
@@ -2030,23 +2021,21 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     }
 
     if (is_null(A[["criterion"]])) {
-      warning("No `criterion` was provided. Using \"p.mean\".",
-              call. = FALSE, immediate. = TRUE)
+      .wrn("no `criterion` was provided. Using \"p.mean\"")
       A[["criterion"]] <- "p.mean"
     }
     else if (length(A[["criterion"]]) > 1) {
-      warning("Only one `criterion` is allowed at a time. Using just the first `criterion`.",
-              call. = FALSE, immediate. = TRUE)
+      .wrn("only one `criterion` is allowed at a time. Using just the first `criterion`")
       A[["criterion"]] <- A[["criterion"]][1]
     }
 
-    available.criteria <- cobalt::available.stats("continuous")
+    available.criteria <- available.stats("continuous")
 
     criterion <- A[["criterion"]]
     criterion <- match_arg(criterion, available.criteria)
 
-    init <- cobalt::bal.init(criterion, treat = treat, covs = covs,
-                             s.weights = s.weights, ...)
+    init <- bal.init(covs, treat = treat, stat = criterion,
+                     s.weights = s.weights, ...)
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init,
@@ -2090,22 +2079,22 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   info <- list(coef = fit$coef,
                cvRisk = fit$cvRisk)
 
-  obj <- list(w = w, info = info, fit.obj = fit)
-  return(obj)
+  list(w = w, info = info, fit.obj = fit)
 }
 
 #PS weights using BART
 weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
   A <- list(...)
 
-  check.package("dbarts")
+  rlang::check_installed("dbarts")
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
-  if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
-                                     call. = FALSE)
+  if (!all_the_same(s.weights)) {
+    .err("sampling weights cannot be used with `method = \"bart\"`")
+  }
 
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
   treat.type <- get.treat.type(treat)
@@ -2160,20 +2149,20 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   p.score <- if (treat.type == "binary") ps[[get.treated.level(treat)]] else NULL
 
-  obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
-  return(obj)
+  list(w = w, ps = p.score, info = info, fit.obj = fit.list)
 }
 weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
   A <- list(...)
 
-  check.package("dbarts")
+  rlang::check_installed("dbarts")
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
-                                     call. = FALSE)
+  if (!all_the_same(s.weights)) {
+    .err("sampling weights cannot be used with `method = \"bart\"`")
+  }
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -2199,22 +2188,22 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     else if (is.function(A[["density"]])) densfun <- A[["density"]]
     else if (is.character(A[["density"]]) && length(A[["density"]] == 1)) {
       splitdens <- strsplit(A[["density"]], "_", fixed = TRUE)[[1]]
-      if (exists(splitdens[1], mode = "function", envir = parent.frame())) {
+      if (is_not_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
         if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                     word_list(splitdens[-1], and.or = "or", quotes = TRUE), "cannot be coerced to numeric."), call. = FALSE)
+          .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
+                       A[["density"]], word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
         }
         densfun <- function(x) {
-          tryCatch(do.call(get(splitdens[1]), c(list(x), as.list(str2num(splitdens[-1])))),
-                   error = function(e) stop(paste0("Error in applying density:\n  ", conditionMessage(e)), call. = FALSE))
+          tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
+                   error = function(e) .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE))
         }
       }
       else {
-        stop(paste(A[["density"]], "is not an appropriate argument to 'density' because",
-                   splitdens[1], "is not an available function."), call. = FALSE)
+        .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
+                     A[["density"]], splitdens[1]))
       }
     }
-    else stop("The argument to 'density' cannot be evaluated as a density function.", call. = FALSE)
+    else .err("the argument to `density` cannot be evaluated as a density function")
     use.kernel <- FALSE
   }
 
@@ -2230,10 +2219,10 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   else {
     dens.num <- densfun(p.num/sd(treat))
     if (is_null(dens.num) || !is.atomic(dens.num) || anyNA(dens.num)) {
-      stop("There was a problem with the output of density. Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the normal density")
     }
-    else if (any(dens.num <= 0)) {
-      stop("The input to density may not accept the full range of treatment values.", call. = FALSE)
+    if (any(dens.num <= 0)) {
+      .err("the input to density may not accept the full range of treatment values")
     }
   }
 
@@ -2267,13 +2256,12 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 
   info <- list()
 
-  obj <- list(w = w, info = info, fit.obj = fit)
-  return(obj)
+  list(w = w, info = info, fit.obj = fit)
 }
 
 #Energy balancing
 weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
-  check.package("osqp")
+  rlang::check_installed("osqp")
 
   A <- list(...)
 
@@ -2299,8 +2287,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     if (!is.matrix(d) || !all(dim(d) == length(treat)) ||
         !all(check_if_zero(diag(d))) || any(d < 0) ||
         !isSymmetric(unname(d))) {
-      stop(sprintf("'dist.mat' must be one of %s or a square, symmetric distance matrix with a value for all pairs of units.",
-                   word_list(weightit_distances(), "or", quotes = TRUE)), call. = FALSE)
+      .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
+                   word_list(weightit_distances(), "or", quotes = TRUE)))
     }
 
   }
@@ -2316,14 +2304,14 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   diagn <- diag(n)
 
   min.w <- if_null_then(A[["min.w"]], 1e-8)
-  if (!is.numeric(min.w) || length(min.w) != 1) {
-    warning("'min.w' must be a single number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
+  if (!chk::vld_number(min.w)) {
+    .wrn("`min.w` must be a single number. Setting `min.w = 1e-8`")
     min.w <- 1e-8
   }
 
   lambda <- if_null_then(A[["lambda"]], 1e-4)
-  if (!is.numeric(lambda) || length(lambda) != 1) {
-    warning("'lambda' must be a single number. Setting lambda = 1e-4.", call. = FALSE, immediate. = TRUE)
+  if (!chk::vld_number(lambda)) {
+    .wrn("`lambda` must be a single number. Setting lambda = 1e-4.")
     lambda <- 1e-4
   }
 
@@ -2419,7 +2407,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
                               pars = options.list)
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
-    warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
+    .wrn("the optimization failed to converge. See Notes section at `?method_energy` for information")
   }
 
   if (estimand == "ATT") {
@@ -2434,11 +2422,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   opt.out$lambda <- lambda
 
-  obj <- list(w = w, fit.obj = opt.out)
-  return(obj)
+  list(w = w, fit.obj = opt.out)
 }
 weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
-  check.package("osqp")
+  rlang::check_installed("osqp")
 
   A <- list(...)
 
@@ -2464,8 +2451,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     if (!is.matrix(Xdist) || !all(dim(Xdist) == length(treat)) ||
         !all(check_if_zero(diag(Xdist))) || any(Xdist < 0) ||
         !isSymmetric(unname(Xdist))) {
-      stop(sprintf("'dist.mat' must be one of %s or a square, symmetric distance matrix with a value for all pairs of units.",
-                   word_list(weightit_distances(), "or", quotes = TRUE)), call. = FALSE)
+      .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
+                   word_list(weightit_distances(), "or", quotes = TRUE)))
     }
 
   }
@@ -2483,22 +2470,21 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   s.weights <- n * s.weights/sum(s.weights)
 
   min.w <- if_null_then(A[["min.w"]], 1e-8)
-  if (!is.numeric(min.w) || length(min.w) != 1) {
-    warning("'min.w' must be a single number. Setting min.w = 1e-8.", call. = FALSE, immediate. = TRUE)
+  if (!chk::vld_number(min.w)) {
+    .wrn("`min.w` must be a single number. Setting `min.w = 1e-8`")
     min.w <- 1e-8
   }
 
   lambda <- if_null_then(A[["lambda"]], 1e-4)
-  if (!is.numeric(lambda) || length(lambda) != 1) {
-    warning("'lambda' must be a single number. Setting lambda = 1e-4.", call. = FALSE, immediate. = TRUE)
+  if (!chk::vld_number(lambda)) {
+    .wrn("`lambda` must be a single number. Setting lambda = 1e-4")
     lambda <- 1e-4
   }
 
   d.moments <- max(if_null_then(A[["d.moments"]], 0), moments)
-  if (!is.numeric(d.moments) || length(d.moments) != 1) {
-    warning(sprintf("'d.moments' must be a single number. Setting lambda = %s.", moments),
-            call. = FALSE, immediate. = TRUE)
-    d.moments <- moments
+  if (!chk::vld_number(d.moments)) {
+    .wrn(sprintf("`d.moments` must be a single number. Setting `lambda = %s`", moments))
+    lambda <- 1e-4
   }
 
   dimension.adj <- if_null_then(A[["dimension.adj"]], TRUE)
@@ -2603,7 +2589,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
                               pars = options.list)
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
-    warning("The optimization failed to converge. See Notes section at ?method_energy for information.", call. = FALSE)
+    .wrn("the optimization failed to converge. See Notes section at `?method_energy` for information")
   }
 
   w <- opt.out$x
@@ -2611,6 +2597,5 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   opt.out$lambda <- lambda
 
-  obj <- list(w = w, fit.obj = opt.out)
-  return(obj)
+  list(w = w, fit.obj = opt.out)
 }

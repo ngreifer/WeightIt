@@ -6,10 +6,9 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   A <- list(...)
 
-
   #Checks
-  if (is_null(formula) || is_null(class(formula)) || !is.formula(formula, 2)) {
-    stop("'formula' must be a formula relating treatment to covariates.", call. = FALSE)
+  if (is_null(formula) || !rlang::is_formula(formula, lhs = TRUE)) {
+    .err("`formula` must be a formula relating treatment to covariates")
   }
 
   #Process treat and covs from formula and data
@@ -19,16 +18,20 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   treat <- t.c[["treat"]]
   # treat.name <- t.c[["treat.name"]]
 
-  if (is_null(covs)) stop("No covariates were specified.", call. = FALSE)
-  if (is_null(treat)) stop("No treatment variable was specified.", call. = FALSE)
+  if (is_null(covs)) {
+    .err("no covariates were specified")
+  }
+  if (is_null(treat)) {
+    .err("no treatment variable was specified")
+  }
   if (length(treat) != nrow(covs)) {
-    stop("The treatment and covariates must have the same number of units.", call. = FALSE)
+    .err("the treatment and covariates must have the same number of units")
   }
 
   n <- length(treat)
 
   if (anyNA(treat)) {
-    stop("No missing values are allowed in the treatment variable.", call. = FALSE)
+    .err("no missing values are allowed in the treatment variable")
   }
 
   #Get treat type
@@ -77,7 +80,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
-    message("'by' has replaced 'exact' in the weightit() syntax, but 'exact' will always work.")
+    .msg("`by` has replaced `exact` in the `weightit()` syntax, but `exact` will always work")
     by <- A[["exact"]]
     by.arg <- "exact"
   }
@@ -137,7 +140,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   class(out) <- "weightit"
 
-  return(out)
+  out
   ####----
 }
 
@@ -250,7 +253,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     }
   }
   else if (treat.type == "ordinal") {
-    stop("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)
+    .err("Sneaky, sneaky! Ordinal coming one day :)", tidy = FALSE)
   }
 
   out$effective.sample.size <- nn

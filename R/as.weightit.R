@@ -3,32 +3,42 @@ as.weightit <- function(...) {
 }
 as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.weights = NULL, ps = NULL, ...) {
 
-  if (missing(weights)) stop("'weights' must be supplied to as.weightit().", call. = FALSE)
-  if (missing(treat)) stop("'treat' must be supplied to as.weightit().", call. = FALSE)
+  chk::chk_not_missing(weights, "`weights`")
+  chk::chk_numeric(weights)
 
-  if (!is.vector(weights, "numeric")) stop("'weights' must be a numeric vector.", call. = FALSE)
+  chk::chk_not_missing(treat, "`treat`")
+  chk::chk_atomic(treat)
 
-  if (!is.atomic(treat) && !is.factor(treat)) stop("'treat' must be an atomic vector (i.e., numeric, logical, or character) or a factor.", call. = FALSE)
-  if (length(weights) != length(treat)) stop("'weights' and 'treat' must be the same length.", call. = FALSE)
+  if (length(weights) != length(treat)) {
+    .err("`weights` and `treat` must be the same length")
+  }
+
   if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
 
   if (is_not_null(covs)) {
-    if (!is.data.frame(covs) && !is.matrix(covs)) stop("'covs' must be a data.frame of covariates.", call. = FALSE)
-    else if (is.matrix(covs)) covs <- as.data.frame.matrix(covs)
+    if (!is.data.frame(covs) && !is.matrix(covs)) {
+      .err("`covs` must be a data.frame of covariates")
+    }
+    else if (is.matrix(covs)) {
+      covs <- as.data.frame.matrix(covs)
+    }
 
-    if (nrow(covs) != length(weights)) stop("'covs' and 'weights' must be the same length.", call. = FALSE)
-  }
-  if (is_not_null(estimand)) {
-    if (!is.vector(estimand, "character") || length(estimand) != 1L) stop("'estimand' must be a character vector of length 1.", call. = FALSE)
+    if (nrow(covs) != length(weights)) {
+      .err("`covs` and `weights` must be the same length")
+    }
   }
 
-  if (is_not_null(s.weights)) {
-    if (!is.vector(s.weights, "numeric")) stop("'s.weights' must be a numeric vector.", call. = FALSE)
-    if (length(s.weights) != length(weights)) stop("'s.weights' and 'weights' must be the same length.", call. = FALSE)
+  .chk_null_or(estimand, chk::chk_string)
+  .chk_null_or(s.weights, chk::chk_numeric)
+
+  if (is_not_null(s.weights) && length(s.weights) != length(weights)) {
+    .err("`s.weights` and `weights` must be the same length")
   }
-  if (is_not_null(ps)) {
-    if (!is.vector(ps, "numeric")) stop("'ps' must be a numeric vector.", call. = FALSE)
-    if (length(ps) != length(ps)) stop("'ps' and 'weights' must be the same length.", call. = FALSE)
+
+  .chk_null_or(ps, chk::chk_numeric)
+
+  if (is_not_null(ps) && length(ps) != length(weights)) {
+    .err("`ps` and `weights` must be the same length")
   }
 
   w.list <- list(weights = weights,
@@ -41,15 +51,16 @@ as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.
   if (...length() > 0L) {
     A <- list(...)
     if (is_null(names(A)) || any(names(A) == "")) {
-      stop("All arguments in ... must be named.")
+      .err("all arguments in `...` must be named")
     }
     w.list <- c(w.list, A)
   }
 
   class(w.list) <- "weightit"
 
-  return(w.list)
+  w.list
 }
+
 as.weightit.CBPS <- function(cbps, s.weights = NULL, ...) {
 
   treat <- model.response(model.frame(cbps$terms, cbps$data))
@@ -61,7 +72,7 @@ as.weightit.CBPS <- function(cbps, s.weights = NULL, ...) {
 
   if (is_not_null(s.weights)) {
     if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
-      stop("The argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights.", call. = FALSE)
+      .err("the argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights")
     }
     if (is.character(s.weights) && length(s.weights)==1) {
       if (any(names(data) == s.weights)) {
@@ -70,7 +81,9 @@ as.weightit.CBPS <- function(cbps, s.weights = NULL, ...) {
       else if (any(names(c.data) == s.weights)) {
         s.weights <- data[[s.weights]]
       }
-      else stop("The name supplied to s.weights is not the name of a variable in data.", call. = FALSE)
+      else {
+        .err("the name supplied to `s.weights` is not the name of a variable in `data`")
+      }
     }
   }
   else s.weights <- rep(1, length(treat))
@@ -115,7 +128,8 @@ as.weightit.CBPS <- function(cbps, s.weights = NULL, ...) {
                  s.weights = s.weights,
                  call = call)
   class(w.list) <- "weightit"
-  return(w.list)
+
+  w.list
 }
 
 as.weightitMSM <- function(...) {
@@ -123,36 +137,67 @@ as.weightitMSM <- function(...) {
 }
 as.weightitMSM.default <- function(weights, treat.list, covs.list = NULL, estimand = NULL, s.weights = NULL, ps.list = NULL, ...) {
 
-  if (missing(weights)) stop("weights must be supplied to as.weightitMSM.", call. = FALSE)
-  if (missing(treat.list)) stop("treat.list must be supplied to as.weightitMSM.", call. = FALSE)
+  chk::chk_not_missing(weights, "`weights`")
+  chk::chk_numeric(weights)
 
-  if (!is.vector(weights, "numeric")) stop("weights must be a numeric vector.", call. = FALSE)
+  chk::chk_not_missing(treat.list, "`treat.list`")
+  chk::chk_list(treat.list)
 
-  if (!is.vector(treat.list, "list")) stop("treat.list must be a list of treatment statuses for each individual at each time point.", call. = FALSE)
-  if (any(vapply(treat.list, function(x) !is.atomic(x) && !is.factor(x), logical(1L)))) stop("treat.list must be a list of atomic vectors (i.e., numeric, logical, or character) or factors.", call. = FALSE)
-  if (!all_the_same(lengths(treat.list))) stop("Each component of treat.list must have the same length.", call. = FALSE)
-  if (length(weights) != length(treat.list[[1]])) stop("weights and each component of treat.list must be the same length.", call. = FALSE)
-  for (i in seq_along(treat.list)) if (!has.treat.type(treat.list[[i]])) treat.list[[i]] <- assign.treat.type(treat.list[[i]])
+  if (!all(vapply(treat.list, is.atomic, logical(1L)))) {
+    .err("`treat.list` must be a list of atomic vectors (i.e., numeric, logical, or character) or factors")
+  }
 
+  if (!all_the_same(lengths(treat.list))) {
+    .err("each component of `treat.list` must have the same length")
+  }
+
+  if (length(weights) != length(treat.list[[1]])) {
+    .err("`weights` and each component of `treat.list` must be the same length")
+  }
+
+  for (i in seq_along(treat.list)) {
+    if (!has.treat.type(treat.list[[i]])) {
+      treat.list[[i]] <- assign.treat.type(treat.list[[i]])
+    }
+  }
+
+  .chk_null_or(covs.list, chk::chk_list)
   if (is_not_null(covs.list)) {
-    if (!is.vector(covs.list, "list") || any(vapply(covs.list, function(x) !is.data.frame(x), logical(1L)))) stop("covs.list must be a list of data.frames for each time point.", call. = FALSE)
-    if (length(covs.list) != length(treat.list)) stop("covs.list must have the same number of time points as treat.list.", call. = FALSE)
-    if (!all_the_same(vapply(covs.list, nrow, numeric(1L)))) stop("Each component of covs.list must have the same number of rows.", call. = FALSE)
-    if (length(weights) != nrow(covs.list[[1]])) stop("weights and each component of covs.list must be the same length.", call. = FALSE)
+    if (!all(vapply(covs.list, is.data.frame, logical(1L)))) {
+      .err("`covs.list` must be a list of data.frames for each time point")
+    }
+    if (length(covs.list) != length(treat.list)) {
+      .err("`covs.list` must have the same number of time points as `treat.list`")
+    }
+    if (!all_the_same(vapply(covs.list, nrow, numeric(1L)))) {
+      .err("each component of `covs.list` must have the same number of rows")
+    }
+    if (length(weights) != nrow(covs.list[[1]])) {
+      .err("`weights` and each component of `covs.list` must be the same length")
+    }
   }
-  if (is_not_null(estimand)) {
-    if (!is.vector(estimand, "character") || length(estimand) != 1L) stop("estimand must be a character vector of length 1.", call. = FALSE)
+
+  .chk_null_or(estimand, chk::chk_string)
+  .chk_null_or(s.weights, chk::chk_numeric)
+
+  if (is_not_null(s.weights) && length(s.weights) != length(weights)) {
+    .err("`s.weights` and `weights` must be the same length")
   }
-  if (is_not_null(s.weights)) {
-    if (!is.vector(s.weights, "numeric")) stop("s.weights must be a numeric vector.", call. = FALSE)
-    if (length(s.weights) != length(weights)) stop("s.weights and weights must be the same length.", call. = FALSE)
-  }
+
+  .chk_null_or(ps.list, chk::chk_list)
   if (is_not_null(ps.list)) {
-    if (!is.vector(ps.list, "list")) stop("ps.list must be a list of propensity scores for each individual at each time point.", call. = FALSE)
-    if (length(ps.list) != length(treat.list)) stop("ps.list must have the same number of time points as treat.list.", call. = FALSE)
-    if (any(vapply(ps.list, function(x) !is.vector(x, "numeric"), logical(1L)))) stop("ps.list must be a list of numeric vectors.", call. = FALSE)
-    if (!all_the_same(lengths(ps.list))) stop("Each component of ps.list must have the same length.", call. = FALSE)
-    if (length(weights) != length(ps.list[[1]])) stop("weights and each component of ps.list must be the same length.", call. = FALSE)
+    if (length(ps.list) != length(treat.list)) {
+      .err("`ps.list` must have the same number of time points as `treat.list`")
+    }
+    if (!all(vapply(ps.list, is.vector, logical(1L), "numeric"))) {
+      .err("`ps.list` must be a list of numeric vectors")
+    }
+    if (!all_the_same(lengths(ps.list))) {
+      .err("each component of `ps.list` must have the same length")
+    }
+    if (length(weights) != length(ps.list[[1]])) {
+      .err("`weights` and each component of `ps.list` must be the same length")
+    }
   }
 
   w.list <- list(weights = weights,
@@ -166,12 +211,12 @@ as.weightitMSM.default <- function(weights, treat.list, covs.list = NULL, estima
   if (...length() > 0L) {
     A <- list(...)
     if (is_null(names(A)) || any(names(A) == "")) {
-      stop("All arguments in ... must be named.")
+      .err("all arguments in `...` must be named")
     }
     w.list <- c(w.list, A)
   }
 
   class(w.list) <- c("weightitMSM", "weightit")
 
-  return(w.list)
+  w.list
 }

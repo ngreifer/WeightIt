@@ -7,7 +7,7 @@
 sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL, smooth = FALSE, full.search) {
 
   if (is_null(obj2) && is_null(moderator)) {
-    stop("Either `obj2` or `moderator` must be specified.", call. = FALSE)
+    .err("either `obj2` or `moderator` must be specified")
   }
 
   treat <- obj[["treat"]]
@@ -25,11 +25,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   if (is_not_null(obj2)) {
     if (!inherits(obj2, "weightit")) {
-      stop("`obj2` must be a `weightit` object, ideally with a 'by' component.", call. = FALSE)
+      .err("`obj2` must be a `weightit` object, ideally with a 'by' component")
     }
     else if (is_not_null(obj2[["by"]])) {
       if (is_not_null(obj[["by"]])) {
-        if (is_null(processed.moderator)) stop("Cannot figure out moderator. Please supply a value to `moderator`.", call. = FALSE)
+        if (is_null(processed.moderator)) .err("cannot figure out moderator. Please supply a value to `moderator`")
       }
       else {
         processed.moderator <- obj2[["by"]]
@@ -37,7 +37,9 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
         moderator.factor <- attr(processed.moderator, "by.factor")
       }
     }
-    else if (is_null(processed.moderator)) stop("No moderator was specified.", call. = FALSE)
+    else if (is_null(processed.moderator)) {
+      .err("no moderator was specified")
+    }
   }
   else {
     call <- obj[["call"]]
@@ -48,19 +50,27 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
                                paste(names(processed.moderator), names(obj[["by"]]), sep = " | "))
 
     }
-    else call[["by"]] <- processed.moderator
+    else {
+      call[["by"]] <- processed.moderator
+    }
 
     obj2 <- eval(call)
   }
 
-  if ((is_null(obj[["ps"]]) || is_null(obj2[["ps"]])) && smooth) stop("Smooth SBPS can only be used with methods that produce a propensity score.", call. = FALSE)
+  if ((is_null(obj[["ps"]]) || is_null(obj2[["ps"]])) && smooth) {
+    .err("smooth SBPS can only be used with methods that produce a propensity score")
+  }
 
   call <- obj[["call"]]
-  if (is_null(formula) && "formula" %in% names(call)) formula <- eval(call[["formula"]])
+  if (is_null(formula) && "formula" %in% names(call)) {
+    formula <- eval(call[["formula"]])
+  }
   formula <- delete.response(terms(formula))
 
   t.c <- get.covs.and.treat.from.formula(formula, combined.data)
-  if (is_null(t.c[["reported.covs"]])) stop("No covariates were found.", call. = FALSE)
+  if (is_null(t.c[["reported.covs"]])) {
+    .err("No covariates were found")
+  }
   covs <- t.c[["model.covs"]]
   s.weights <- obj[["s.weights"]]
 
@@ -77,16 +87,18 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   R <- levels(moderator.factor)
 
   if (smooth) {
-    if (!missing(full.search)) warning("'full.search' is ignored when smooth = TRUE.", call. = FALSE)
+    if (!missing(full.search)) {
+      .wrn("`full.search` is ignored when `smooth = TRUE`")
+    }
 
     ps_o <- obj[["ps"]]
     ps_s <- obj2[["ps"]]
 
     get_w_smooth <- function(coefs, moderator.factor, treat, ps_o, ps_s, estimand) {
       ind.coefs <- coefs[moderator.factor] #Gives each unit the coef for their subgroup
-      ps_ <- (1-ind.coefs)*ps_o + ind.coefs*ps_s
-      w_ <- get_w_from_ps(ps_, treat, estimand)
-      return(w_)
+      ps_ <- (1 - ind.coefs) * ps_o + ind.coefs * ps_s
+
+      get_w_from_ps(ps_, treat, estimand)
     }
 
     get_F_smooth <- function(ps_o, ps_s, treat.type, ...) {
@@ -159,8 +171,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       #                           abs = TRUE, s.weights = s.weights,
       #                           bin.vars = rep(TRUE, length(R)))
 
-      F0 <- sum(F0_o^2) + sum(F0_s^2) #+ sum(F0_g^2)
-      return(F0)
+      sum(F0_o^2) + sum(F0_s^2) #+ sum(F0_g^2)
     }
 
     opt.out <- optim(rep(.5, length(R)), fn = get_F_smooth,
@@ -170,18 +181,17 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
     s_min <- setNames(opt.out$par, R) #coef is proportion subgroup vs. overall
     weights <- get_w_smooth(s_min, moderator.factor, treat, ps_o, ps_s, estimand = obj[["estimand"]])
-    ps <- (1-s_min[moderator.factor])*ps_o + s_min[moderator.factor]*ps_s
+    ps <- (1 - s_min[moderator.factor]) * ps_o + s_min[moderator.factor] * ps_s
   }
   else {
     w_o <- obj[["weights"]]
     w_s <- obj2[["weights"]]
 
     if (missing(full.search)) {
-      if (length(R) <= 8) full.search <- TRUE
-      else full.search <- FALSE
+      full.search <- (length(R) <= 8)
     }
-    else if (!is.logical(full.search) || length(full.search) != 1) {
-      stop("full.search must be a logical of length 1.", call. = FALSE)
+    else {
+      chk::chk_flag(full.search)
     }
 
     get_w <- function(s, moderator.factor, w_o, w_s) {
@@ -191,7 +201,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
         if (s[g] == 0) w_[moderator.factor == g] <- w_o[moderator.factor == g]
         else if (s[g] == 1) w_[moderator.factor == g] <- w_s[moderator.factor == g]
       }
-      return(w_)
+
+      w_
     }
 
     get_F <- function(s, moderator.factor, w_o, w_s, treat.type) {
@@ -264,8 +275,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       #                           abs = TRUE, s.weights = s.weights,
       #                           bin.vars = rep(TRUE, length(R)))
 
-      F0 <- sum(F0_o^2) + sum(F0_s^2) #+ sum(F0_g^2)
-      return(F0)
+      sum(F0_o^2) + sum(F0_s^2) #+ sum(F0_g^2)
     }
 
     if (full.search) {
@@ -330,7 +340,9 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     }
 
     weights <- get_w(s_min, moderator.factor, w_o, w_s)
-    if (is_not_null(obj[["ps"]]) && is_not_null(obj2[["ps"]])) ps <- get_w(s_min, moderator.factor, obj[["ps"]], obj2[["ps"]])
+    if (is_not_null(obj[["ps"]]) && is_not_null(obj2[["ps"]])) {
+      ps <- get_w(s_min, moderator.factor, obj[["ps"]], obj2[["ps"]])
+    }
     else ps <- NULL
   }
 
@@ -345,7 +357,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   out <- clear_null(out)
 
   class(out) <- c("weightit.sbps", "weightit")
-  return(out)
+
+  out
 }
 
 print.weightit.sbps <- function(x, ...) {
@@ -460,7 +473,7 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
       }
     }
     else if (treat.type == "ordinal") {
-      stop("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)
+      .err("Sneaky, sneaky! Ordinal coming soon :)", tidy = FALSE)
     }
 
     out$effective.sample.size <- nn
@@ -480,7 +493,7 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
                                                             names(object$prop.subgroup)))
   names(out.list) <- mod_levels
   class(out.list) <- "summary.weightit.sbps"
-  return(out.list)
+  out.list
 }
 print.summary.weightit.sbps <- function(x, ...) {
   cat("Summary of weights:\n")

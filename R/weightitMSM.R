@@ -35,35 +35,34 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
   if (is_not_null(num.formula)) {
     if (!stabilize) {
-      message("Setting stabilize to TRUE based on num.formula input.")
+      .msg("setting `stabilize` to `TRUE` based on `num.formula` input")
     }
     stabilize <- TRUE
   }
   if (stabilize) {
     if (is_not_null(num.formula)) {
-      if (is.formula(num.formula)) {
-        if (is.formula(num.formula, sides = 1)) {
-          rhs.vars.mentioned.lang <- attr(terms(num.formula), "variables")[-1]
-          rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse1, character(1L))
-          rhs.vars.failed <- vapply(rhs.vars.mentioned.lang, function(v) {
-            null_or_error(try(eval(v, c(data, .GlobalEnv)), silent = TRUE))
-          }, logical(1L))
-
-          if (any(rhs.vars.failed)) {
-            stop(paste0(c("All variables in 'num.formula' must be variables in 'data' or objects in the global environment.\nMissing variables: ",
-                          paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), call. = FALSE)
-          }
+      if (rlang::is_formula(num.formula)) {
+        if (!rlang::is_formula(num.formula, lhs = FALSE)) {
+          .err("the argument to `num.formula` must have right hand side variables but not a response variable (e.g., ~ V1 + V2)")
         }
-        else {
-          stop("The argument to 'num.formula' must have right hand side variables but not a response variable (e.g., ~ V1 + V2).", call. = FALSE)
+
+        rhs.vars.mentioned.lang <- attr(terms(num.formula), "variables")[-1]
+        rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse1, character(1L))
+        rhs.vars.failed <- vapply(rhs.vars.mentioned.lang, function(v) {
+          null_or_error(try(eval(v, c(data, .GlobalEnv)), silent = TRUE))
+        }, logical(1L))
+
+        if (any(rhs.vars.failed)) {
+          .err(paste0(c("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: ",
+                        paste(rhs.vars.mentioned[rhs.vars.failed], collapse = ", "))), tidy = FALSE)
         }
       }
       else if (is.list(num.formula)) {
         if (length(num.formula) != length(formula.list)) {
-          stop("When supplied as a list, 'num.formula' must have as many entries as 'formula.list'.", call. = FALSE)
+          .err("when supplied as a list, `num.formula` must have as many entries as `formula.list`", call. = FALSE)
         }
-        if (!all(vapply(num.formula, is.formula, logical(1L), sides = 1))) {
-          stop("'num.formula' must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof.", call. = FALSE)
+        if (!all(vapply(num.formula, rlang::is_formula, logical(1L), lhs = FALSE))) {
+          .err("'num.formula' must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
         }
         rhs.vars.mentioned.lang.list <- lapply(num.formula, function(nf) attr(terms(nf), "variables")[-1])
         rhs.vars.mentioned <- unique(unlist(lapply(rhs.vars.mentioned.lang.list, function(r) vapply(r, deparse1, character(1L)))))
@@ -72,20 +71,20 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
         }, logical(1L))
 
         if (any(rhs.vars.failed)) {
-          stop(paste0(c("All variables in 'num.formula' must be variables in 'data' or objects in the global environment.\nMissing variables: ",
-                        paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), call. = FALSE)
+          .err(paste0(c("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: ",
+                        paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), tidy = FALSE)
         }
 
       }
       else {
-        stop("'num.formula' must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof.", call. = FALSE)
+        .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
       }
     }
   }
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
-    message("'by' has replaced 'exact' in the weightit() syntax, but 'exact' will always work.")
+    .msg("`by` has replaced `exact` in the `weightit()` syntax, but `exact` will always work")
     # by.name <- deparse(A[["exact"]])
     by <- A[["exact"]]
     by.arg <- "exact"
@@ -95,8 +94,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   reported.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
     stabout <- sw.list <- make_list(length(formula.list))
 
-  if (is_null(formula.list) || !is_(formula.list, "list") || !all(vapply(formula.list, is.formula, logical(1L), sides = 2))) {
-    stop("'formula.list' must be a list of formulas.", call. = FALSE)
+  if (is_null(formula.list) || !is.list(formula.list) || !all(vapply(formula.list, rlang::is_formula, logical(1L), lhs = TRUE))) {
+    .err("`formula.list` must be a list of formulas")
   }
 
   for (i in seq_along(formula.list)) {
@@ -110,19 +109,19 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     names(treat.list)[i] <- treat.name
     names(reported.covs.list)[i] <- treat.name
 
-    if (is_null(covs.list[[i]])) stop("No covariates were specified in the ", ordinal(i), " formula.", call. = FALSE)
-    if (is_null(treat.list[[i]])) stop("No treatment variable was specified in the ", ordinal(i), " formula.", call. = FALSE)
+    if (is_null(covs.list[[i]])) .err(sprintf("no covariates were specified in the %s formula", ordinal(i)))
+    if (is_null(treat.list[[i]])) .err(sprintf("no treatment variable was specified in the %s formula", ordinal(i)))
 
     n <- length(treat.list[[i]])
 
     if (nrow(covs.list[[i]]) != n) {
-      stop("Treatment and covariates must have the same number of units.", call. = FALSE)
+      .err("treatment and covariates must have the same number of units")
     }
     if (anyNA(treat.list[[i]])) {
-      stop(paste0("No missing values are allowed in the treatment variable. Missing values found in ", treat.name, "."), call. = FALSE)
+      .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s", treat.name))
     }
     if (anyNA(reported.covs.list[[i]])) {
-      warning("Missing values are present in the covariates. See ?weightit for information on how these are handled.", call. = FALSE)
+      .wrn("missing values are present in the covariates. See `?weightit` for information on how these are handled")
     }
 
     treat.list[[i]] <- assign.treat.type(treat.list[[i]])
@@ -169,8 +168,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     obj.list <- obj[["fit.obj"]]
   }
   else {
-    if (length(A[["link"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
-    else if (length(A[["link"]]) == 1) A[["link"]] <- rep(A[["link"]], length(formula.list))
+    if (length(A[["link"]]) %nin% c(0, 1, length(formula.list))) {
+      .err(sprintf("the argument to `link` must have length 1 or %s", length(formula.list)))
+    }
+    if (length(A[["link"]]) == 1) A[["link"]] <- rep(A[["link"]], length(formula.list))
     # if (length(A[["family"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
     # if (length(A[["family"]]) == 1) A[["family"]] <- rep(A[["family"]], length(formula.list))
 
@@ -212,7 +213,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
-        if (is.formula(num.formula)) {
+        if (rlang::is_formula(num.formula)) {
           if (i == 1) {
             stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")), as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
           }
@@ -260,7 +261,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   }
 
 
-  if (all_the_same(w)) stop(paste0("All weights are ", w[1], "."), call. = FALSE)
+  if (all_the_same(w)) .err(sprintf("All weights are %s", w[1]))
   if (all(vapply(ps.list, is_null, logical(1L)))) ps.list <- NULL
   else names(ps.list) <- names(treat.list)
 
@@ -286,7 +287,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
   class(out) <- c("weightitMSM", "weightit")
 
-  return(out)
+  out
   ####----
 }
 
@@ -441,36 +442,30 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
       out.list[[ti]] <- out
     }
     else if (treat.types[ti] == "ordinal") {
-      warning("Sneaky, sneaky! Ordinal coming soon :)", call. = FALSE)
+      .wrn("Sneaky, sneaky! Ordinal coming soon :)", tidy = FALSE)
     }
   }
 
   class(out.list) <- "summary.weightitMSM"
   attr(out.list, "weights") <- w
-  return(out.list)
+
+  out.list
 }
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
-  outnames <- c("weight.range", "weight.top",
-                "coef.of.var", "scaled.mad", "negative.entropy",
-                "weight.mean",
-                "effective.sample.size")
-
   out.list <- make_list(names(object$treat.list))
 
   if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
-  w <- setNames(object$weights*sw, seq_along(sw))
-  treat.types <- vapply(object[["treat.list"]], get.treat.type, character(1L))
-  stabilized <- is_not_null(object[["stabilization"]])
 
   for (ti in seq_along(object$treat.list)) {
     obj <- as.weightit(weights = object$weights, treat = object$treat.list[[ti]],
-                       s.weights = object$s.weights, stabilization = object$stabilization)
+                       s.weights = sw, stabilization = object$stabilization)
     out.list[[ti]] <- summary.weightit(obj, top = top, ignore.s.weights = ignore.s.weights, ...)
   }
 
   class(out.list) <- "summary.weightitMSM"
-  return(out.list)
+
+  out.list
 }
 print.summary.weightitMSM <- function(x, ...) {
   only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))
@@ -487,7 +482,7 @@ print.summary.weightitMSM <- function(x, ...) {
 }
 plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1, ...) {
   if (!is.numeric(time) || length(time) != 1 || time %nin% seq_along(x)) {
-    stop("'time' must be a number corresponding to the time point for which to display the distribution of weights.", call. = FALSE)
+    .err("`time` must be a number corresponding to the time point for which to display the distribution of weights")
   }
   p <- plot.summary.weightit(x[[time]], binwidth = binwidth, bins = bins, ...)
   p + labs(subtitle = paste0("For Time ", time))

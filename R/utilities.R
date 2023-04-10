@@ -3,18 +3,20 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
 
   if (is.data.frame(mat)) {
     is.mat <- FALSE
-    if (!all(vapply(mat, is.numeric, logical(1L)))) stop("All columns in 'mat' must be numeric.", call. = FALSE)
+    if (!all(vapply(mat, is.numeric, logical(1L)))) {
+      .err("all columns in `mat` must be numeric")
+    }
     mat <- as.matrix(mat)
   }
   else if (is.matrix(mat)) {
+    if (!is.numeric(mat)) .err("`mat` must be a numeric matrix")
     is.mat <- TRUE
-    if (!is.numeric(mat)) stop("'mat' must be a numeric matrix.", call. = FALSE)
   }
   else {
-    stop("'mat' must be a numeric matrix or data.frame.", call. = FALSE)
+    .err("`mat` must be a numeric matrix or data.frame")
   }
 
-  if (anyNA(mat)) stop("Missing values are not allowed in 'mat'.", call. = FALSE)
+  chk::chk_not_any_na(mat)
 
   keep <- rep(TRUE, ncol(mat))
 
@@ -29,8 +31,8 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
   }
 
   if (is.mat) return(mat[, keep, drop = FALSE])
-  else return(as.data.frame(mat[, keep, drop = FALSE]))
 
+  as.data.frame(mat[, keep, drop = FALSE])
 }
 
 get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL, subclass = NULL, stabilize = FALSE) {
@@ -40,7 +42,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   treat.type <- get.treat.type(treat)
 
   if (treat.type == "continuous") {
-    stop("get_w_from_ps() can only be used with binary or multinomial treatments.", call. = FALSE)
+    .err("`get_w_from_ps()` can only be used with binary or multinomial treatments")
   }
 
   estimand <- process.estimand(estimand, method = "glm", treat.type = treat.type)
@@ -53,7 +55,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   ps_mat <- ps_to_ps_mat(ps, treat, assumed.treated, treat.type, treated, estimand)
 
   if (nrow(ps_mat) != length(treat)) {
-    stop("'ps' and 'treat' must have the same number of units.", call. = FALSE)
+    .err("`ps` and `treat` must have the same number of units")
   }
 
   w <- rep(0, nrow(ps_mat))
@@ -100,12 +102,11 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 
   if (stabilize) w <- stabilize_w(w, treat)
 
-
   names(w) <- if_null_then(rownames(ps_mat), names(treat), NULL)
 
   attr(w, "subclass") <- attr(ps_mat, "sub_mat")
   if (toupper(estimand) == "ATOS") attr(w, "alpha") <- alpha.opt
 
-  return(w)
+  w
 }
 

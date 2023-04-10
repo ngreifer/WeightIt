@@ -1,16 +1,13 @@
 #This document is shared across cobalt, WeightIt, and optweight
 
 #Strings
-word_list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE, quotes = FALSE) {
+word_list <- function(word.list = NULL, and.or = "and", is.are = FALSE, quotes = FALSE) {
   #When given a vector of strings, creates a string of the form "a and b"
   #or "a, b, and c"
   #If is.are, adds "is" or "are" appropriately
   L <- length(word.list)
-  if (quotes) {
-    if (as.integer(quotes) == 2) word.list <- vapply(word.list, function(x) paste0("\"", x, "\""), character(1L))
-    else if (as.integer(quotes) == 1) word.list <- vapply(word.list, function(x) paste0("\'", x, "\'"), character(1L))
-    else stop("'quotes' must be boolean, 1, or 2.")
-  }
+  word.list <- add_quotes(word.list, quotes)
+
   if (L == 0) {
     out <- ""
     attr(out, "plural") <- FALSE
@@ -28,22 +25,39 @@ word_list <- function(word.list = NULL, and.or = c("and", "or"), is.are = FALSE,
       attr(out, "plural") <- FALSE
     }
     else {
-      and.or <- match_arg(and.or)
+      and.or <- match_arg(and.or, c("and", "or"))
       if (L == 2) {
-        out <- paste(word.list, collapse = paste0(" ", and.or," "))
+        out <- paste(word.list, collapse = paste0(" ", and.or, " "))
       }
       else {
-        out <- paste(paste(word.list[seq_len(L-1)], collapse = ", "),
-                     word.list[L], sep = paste0(", ", and.or," "))
+        out <- paste(paste(word.list[seq_len(L - 1)], collapse = ", "),
+                     word.list[L], sep = paste0(", ", and.or, " "))
 
       }
       if (is.are) out <- paste(out, "are")
       attr(out, "plural") <- TRUE
     }
 
-
   }
-  return(out)
+  out
+}
+add_quotes <- function(x, quotes = 2L) {
+  if (isFALSE(quotes)) return(x)
+
+  if (isTRUE(quotes)) quotes <- 2
+
+  if (chk::vld_string(quotes)) x <- paste0(quotes, x, quotes)
+  else if (chk::vld_whole_number(quotes)) {
+    if (as.integer(quotes) == 0) return(x)
+    else if (as.integer(quotes) == 1) x <- paste0("\'", x, "\'")
+    else if (as.integer(quotes) == 2) x <- paste0("\"", x, "\"")
+    else stop("`quotes` must be boolean, 1, 2, or a string.")
+  }
+  else {
+    stop("`quotes` must be boolean, 1, 2, or a string.")
+  }
+
+  x
 }
 firstup <- function(x) {
   #Capitalize first letter
@@ -67,23 +81,22 @@ num_to_superscript <- function(x) {
                    as.character(0:9))
   x <- as.character(x)
   splitx <- strsplit(x, "", fixed = TRUE)
-  supx <- vapply(splitx, function(y) paste0(nums[y], collapse = ""), character(1L))
-  return(supx)
+
+  vapply(splitx, function(y) paste0(nums[y], collapse = ""), character(1L))
 }
 ordinal <- function(x) {
   if (!is.numeric(x) || !is.vector(x) || is_null(x)) stop("'x' must be a numeric vector.")
   if (length(x) > 1) return(vapply(x, ordinal, character(1L)))
-  else {
-    x0 <- abs(x)
-    out <- paste0(x0, switch(substring(x0, nchar(x0), nchar(x0)),
-                             "1" = "st",
-                             "2" = "nd",
-                             "3" = "rd",
-                             "th"))
-    if (sign(x) == -1) out <- paste0("-", out)
 
-    return(out)
-  }
+  x0 <- abs(x)
+  out <- paste0(x0, switch(substring(x0, nchar(x0), nchar(x0)),
+                           "1" = "st",
+                           "2" = "nd",
+                           "3" = "rd",
+                           "th"))
+  if (sign(x) == -1) out <- paste0("-", out)
+
+  out
 }
 round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   if (NROW(df) == 0 || NCOL(df) == 0) return(df)
@@ -133,7 +146,7 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   if (length(rn) > 0) rownames(df) <- rn
   if (length(cn) > 0) names(df) <- cn
 
-  return(df)
+  df
 }
 text_box_plot <- function(range.list, width = 12) {
   full.range <- range(unlist(range.list))
@@ -154,7 +167,8 @@ text_box_plot <- function(range.list, width = 12) {
 
     d[i, 2] <- paste0(paste(rep(" ", spaces1), collapse = ""), "|", paste(rep("-", dashes), collapse = ""), "|", paste(rep(" ", spaces2), collapse = ""))
   }
-  return(d)
+
+  d
 }
 equivalent.factors <- function(f1, f2) {
   nu1 <- nunique(f1)
@@ -162,9 +176,7 @@ equivalent.factors <- function(f1, f2) {
   if (nu1 == nu2) {
     return(nu1 == nunique(paste.(f1, f2)))
   }
-  else {
-    return(FALSE)
-  }
+  FALSE
 }
 equivalent.factors2 <- function(f1, f2) {
   return(qr(cbind(1, as.numeric(f1), as.numeric(f2)))$rank == 2)
@@ -200,7 +212,7 @@ str2num <- function(x) {
   if (!is_(x, c("numeric", "logical"))) x <- as.character(x)
   suppressWarnings(x_num <- as.numeric(x))
   is.na(x_num[nas]) <- TRUE
-  return(x_num)
+  x_num
 }
 trim_string <- function(x, char = " ", symmetrical = TRUE, recursive = TRUE) {
   sw <- startsWith(x, char)
@@ -244,7 +256,7 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
   if (inclusive) out <- ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
   else out <- ifelse(is.na(x), na.action, x > range[1] & x < range[2])
 
-  return(out)
+  out
 }
 max_ <- function(..., na.rm = TRUE) {
   if (!any(is.finite(unlist(list(...))))) NA_real_
@@ -317,9 +329,11 @@ center <- function(x, at = NULL, na.rm = TRUE) {
   if (is_null(at)) at <- colMeans(x, na.rm = na.rm)
   else if (length(at) %nin% c(1, ncol(x))) stop("'at' is not the right length.")
   out <- x - matrix(at, byrow = TRUE, ncol = ncol(x), nrow = nrow(x))
+
   if (type == "df") out <- as.data.frame.matrix(out)
   else if (type == "vec") out <- drop(out)
-  return(out)
+
+  out
 }
 w.m <- function(x, w = NULL, na.rm = TRUE) {
   if (is_null(w)) w <- rep(1, length(x))
@@ -392,7 +406,8 @@ col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
       var[bin.vars] <- means * (1 - means)
     }
   }
-  return(var)
+
+  var
 }
 col.w.cov <- function(mat, y, w = NULL, na.rm = TRUE) {
   if (!is.matrix(mat)) {
@@ -522,57 +537,6 @@ nobars <- function(term) {
   }
   nb
 }
-form2random <- function(term) {
-  if (!hasbar(term)) return(NULL)
-  if ("||" %in% all.names(term)) stop("|| in formulas are not accepted.", call. = FALSE)
-
-  fb <- function(term) {
-    if (is.name(term) || !is.language(term))
-      return(NULL)
-    if (term[[1]] == as.name("("))
-      return(fb(term[[2]]))
-    stopifnot(is.call(term))
-    if (term[[1]] == as.name("|"))
-      return(term)
-    if (length(term) == 2)
-      return(fb(term[[2]]))
-    c(fb(term[[2]]), fb(term[[3]]))
-  }
-  expandSlash <- function(bb) {
-    makeInteraction <- function(x) {
-      if (length(x) < 2)
-        return(x)
-      trm1 <- makeInteraction(x[[1]])
-      trm11 <- if (is.list(trm1))
-        trm1[[1]]
-      else trm1
-      list(substitute(foo:bar, list(foo = x[[2]], bar = trm11)),
-           trm1)
-    }
-    slashTerms <- function(x) {
-      if (!("/" %in% all.names(x)))
-        return(x)
-      if (x[[1]] != as.name("/"))
-        stop("unparseable formula for grouping factor",
-             call. = FALSE)
-      list(slashTerms(x[[2]]), slashTerms(x[[3]]))
-    }
-    if (!is.list(bb))
-      expandSlash(list(bb))
-    else unlist(lapply(bb, function(x) {
-      if (length(x) > 2 && is.list(trms <- slashTerms(x[[3]])))
-        lapply(unlist(makeInteraction(trms)), function(trm) substitute(foo |
-                                                                         bar, list(foo = x[[2]], bar = trm)))
-      else x
-    }))
-  }
-  findbars <- function(term) {
-    modterm <- (if (is.formula(term)) term[[length(term)]] else term)
-    expandSlash(fb(modterm))
-  }
-
-  as.formula(paste("~", do.call(paste, c(lapply(findbars(term), deparse1), list(sep = " + ")))))
-}
 
 #treat/covs
 get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep = "", ...) {
@@ -596,7 +560,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
 
   env <- environment(f)
 
-  if (!is.formula(f)) stop("'f' must be a formula.")
+  if (!rlang::is_formula(f)) stop("'f' must be a formula.")
 
   eval.model.matrx <- !hasbar(f)
 
@@ -609,7 +573,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
            })
 
   #Check if response exists
-  if (is.formula(tt, 2)) {
+  if (rlang::is_formula(tt, lhs = TRUE)) {
     resp.var.mentioned <- attr(tt, "variables")[[2]]
     resp.var.mentioned.char <- deparse1(resp.var.mentioned)
 
@@ -1063,12 +1027,14 @@ probably.a.bug <- function() {
   !is.na(charmatch(x, table))
 }
 null_or_error <- function(x) {is_null(x) || inherits(x, "try-error")}
+
+#More informative and cleaner version of base::match.arg(). Uses chk.
 match_arg <- function(arg, choices, several.ok = FALSE) {
   #Replaces match.arg() but gives cleaner error message and processing
   #of arg.
   if (missing(arg))
-    stop("No argument was supplied to match_arg.", call. = FALSE)
-  arg.name <- deparse1(substitute(arg))
+    stop("No argument was supplied to match_arg.")
+  arg.name <- deparse1(substitute(arg), width.cutoff = 500L)
 
   if (missing(choices)) {
     formal.args <- formals(sys.function(sysP <- sys.parent()))
@@ -1076,29 +1042,26 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
                     envir = sys.frame(sysP))
   }
 
-  if (is.null(arg))
-    return(choices[1L])
-  else if (!is.character(arg))
-    stop(paste0("The argument to '", arg.name, "' must be NULL or a character vector"), call. = FALSE)
-  if (!several.ok) {
-    if (identical(arg, choices))
-      return(arg[1L])
-    if (length(arg) > 1L)
-      stop(paste0("The argument to '", arg.name, "' must be of length 1"), call. = FALSE)
+  if (length(arg) == 0) return(choices[1L])
+
+  if (several.ok) {
+    chk::chk_character(arg, add_quotes(arg.name, "`"))
   }
-  else if (is_null(arg))
-    stop(paste0("The argument to '", arg.name, "' must be of length >= 1"), call. = FALSE)
+  else {
+    chk::chk_string(arg, add_quotes(arg.name, "`"))
+    if (identical(arg, choices)) return(arg[1L])
+  }
 
   i <- pmatch(arg, choices, nomatch = 0L, duplicates.ok = TRUE)
   if (all(i == 0L))
-    stop(paste0("The argument to '", arg.name, "' should be ", if (length(choices) > 1) {if (several.ok) "at least one of " else "one of "} else "",
-                word_list(choices, and.or = "or", quotes = 2), "."),
-         call. = FALSE)
+    .err(sprintf("the argument to `%s` should be %s%s.",
+                 arg.name, ngettext(length(choices), "", if (several.ok) "at least one of " else "one of "),
+                 word_list(choices, and.or = "or", quotes = 2)))
   i <- i[i > 0L]
-  if (!several.ok && length(i) > 1)
-    stop("There is more than one match in 'match_arg'")
+
   choices[i]
 }
+
 last <- function(x) {
   x[[length(x)]]
 }
@@ -1128,22 +1091,6 @@ na.rem <- function(x) {
 anyNA_col <- function(x) {
   colSums(is.na(x)) > 0
 }
-check.package <- function(package.name, alternative = FALSE) {
-  packages.not.installed <- package.name[!vapply(package.name, requireNamespace, logical(1L),
-                                                 quietly = TRUE)]
-  if (is_not_null(packages.not.installed)) {
-    if (alternative) return(FALSE)
-    else {
-      plural <- length(packages.not.installed) > 1
-      stop(paste0("Package", if (plural) "s " else " ",
-                  word_list(packages.not.installed, quotes = 1, is.are = TRUE),
-                  " needed for this function to work. Please install ",
-                  if (plural) "them" else "it","."),
-           call. = FALSE)
-    }
-  }
-  else return(invisible(TRUE))
-}
 check_if_call_from_fun <- function(fun) {
   # Check if called from within function f
   if (missing(fun) || !exists(deparse1(substitute(fun)), mode = "function")) return(FALSE)
@@ -1153,15 +1100,4 @@ check_if_call_from_fun <- function(fun) {
     if (identical(fun, x)) return(TRUE)
   }
   FALSE
-}
-
-#Not used cobalt; replaced with rlang
-is.formula <- function(f, sides = NULL) {
-  #Replaced by rlang::is_formula
-  res <- inherits(f, "formula") && is.name(f[[1]]) && deparse1(f[[1]]) %in% c( '~', '!') &&
-    length(f) >= 2
-  if (is_not_null(sides) && is.numeric(sides) && sides %in% c(1,2)) {
-    res <- res && length(f) == sides + 1
-  }
-  return(res)
 }
