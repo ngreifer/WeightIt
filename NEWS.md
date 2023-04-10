@@ -1,13 +1,15 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# WeightIt 0.14.0
 
 * Added energy balancing for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2021)](http://arxiv.org/abs/2107.07086). These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
 
-* Added a new `stop.method` for continuous treatments, `"distance.cov"`, which finds weights that minimize the distance covariance between the treatment and covariates.
+* Added a new vignette on estimating effects after weighting, accessible using `vignette("estimating-effects", package = "WeightIt")`. The new workflow relies on the `marginaleffects` package. The main vignette (`vignette("WeightIt")`) has been modernized as well.
 
-* Added new `stop.method`s for binary and continuous treatments: `"r2.2"` and `"r2.3"`, which find weights that minimize the R2 from a weighted model with covariates plus their squares or squares and cubes, respectively, as the predictors.
+* Added a new dataset, `msmdata`, to demonstrate capabilities for longitudinal treatments. `twang` is no longer a dependency.
+
+* Methods that use a balance criterion to select a tuning parameter, in particular GBM and balance Super Learner, now rely on `cobalt`'s `bal.init()` and `bal.compute()` functionality, which adds new balance criteria. The `stop.method` argument for these functions has been renamed to `criterion` and `help("stop.method")` has been removed; the same page is now available at `help("bal.compute", package = "cobalt")`, which describes the additional statistics available. This also fixes some bugs that were present in some balance criteria.
 
 * Renamed `method = "ps"` to `method = "glm"`. `"ps"` continues to work as it always had for back compatibility. `"glm"` is a more descriptive name since many methods use propensity scores; what distinguishes this method is that it uses generalized linear models.
 
@@ -22,8 +24,6 @@ WeightIt News and Updates
 * Fixed a bug when using `method = "energy"` with `by`.
 
 * With `method = "energy"`, setting `int = TRUE` automatically sets `moments = 1` if unspecified.
-
-* Previously, `stop.method = "r2"` would fail to include an intercept in the weighted model used to compute the R2. Now the intercept is included.
 
 # WeightIt 0.13.1
 

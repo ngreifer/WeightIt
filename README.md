@@ -148,7 +148,7 @@ these packages.
 | \-              | Entropy Balancing (`"ebal"`)                        | \-             |
 | \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
 | \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
-| \-              | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
+| \-              | Bayesian Additive Regression Trees PS (`"bart"`)    | `dbarts`       |
 | \-              | Energy Balancing (`"energy"`)                       | \-             |
 | **Multinomial** | Multinomial regression PS (`"glm"`)                 | various        |
 | \-              | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
@@ -157,7 +157,7 @@ these packages.
 | \-              | Entropy Balancing (`"ebal"`)                        | \-             |
 | \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
 | \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
-| \-              | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
+| \-              | Bayesian Additive Regression Trees PS (`"bart"`)    | `dbarts`       |
 | \-              | Energy Balancing (`"energy"`)                       | \-             |
 | **Continuous**  | Generalized linear model GPS (`"glm"`)              | \-             |
 | \-              | Generalized boosted modeling GPS (`"gbm"`)          | `gbm`          |
@@ -166,8 +166,8 @@ these packages.
 | \-              | Entropy Balancing (`"ebal"`)                        | \-             |
 | \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
 | \-              | SuperLearner GPS (`"super"`)                        | `SuperLearner` |
-| \-              | Bayesian additive regression trees GPS (`"bart"`)   | `dbarts`       |
-| \-              | Energy Balancing (`"energy"`)                       | \-             |
+| \-              | Bayesian Additive Regression Trees GPS (`"bart"`)   | `dbarts`       |
+| \-              | Distance Covariance Optimal Weighting (`"energy"`)  | \-             |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are

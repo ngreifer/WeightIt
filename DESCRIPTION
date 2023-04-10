@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.13.1.9004
+Version: 0.14.0
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -12,30 +12,32 @@ Description: Generates balancing weights for causal effect estimation in observa
              extending the functionality of several R packages and providing in-house estimation methods.
              Available methods include propensity score weighting using generalized linear models, gradient
              boosting machines, the covariate balancing propensity score algorithm, Bayesian additive regression trees, and
-             SuperLearner, and directly estimating balancing weights using entropy balancing, empirical
-             balancing calibration weights, energy balancing, and optimization-based weights. Also
+             SuperLearner, and directly estimating balancing weights using entropy balancing, energy balancing, and optimization-based weights. Also
              allows for assessment of weights and checking of covariate balance by interfacing directly
              with the 'cobalt' package. See the vignette "Installing Supporting Packages" for instructions on how
              to install any package 'WeightIt' uses, including those that may not be on CRAN.
 Depends:
     R (>= 3.3.0)
 Imports:
-    cobalt (>= 4.3.0),
+    cobalt (>= 4.5.0),
     ggplot2 (>= 3.3.0),
+    chk (>= 0.8.1), rlang (>= 1.1.0),
     crayon,
     backports (>= 1.4.1)
 Suggests:
-    twang (>= 1.5),
     CBPS (>= 0.18),
     optweight (>= 0.2.4),
     SuperLearner (>= 2.0-25),
     mlogit (>= 1.1.0),
     mclogit,
-    MNP (>= 3.1-0),
+    MNP (>= 3.1-4),
     brglm2 (>= 0.5.2),
     osqp (>= 0.6.0.5),
     survey,
+    survival,
     boot,
+    marginaleffects (>= 0.11.0),
+    sandwich,
     MASS,
     gbm (>= 2.1.3),
     dbarts (>= 0.9-20),
@@ -48,3 +50,4 @@ URL: https://ngreifer.github.io/WeightIt/,
     https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr
+LazyData: true

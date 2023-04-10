@@ -4,10 +4,11 @@
 ^README\.Rmd$
 ^README-.*\.png$
 ^CRANlogs$
-^do_not_include$
+^_dev
 ^_pkgdown\.yml$
 ^docs$
 ^pkgdown$
 ^\.github$
 ^.DS_Store$
 ^revdep$
+^data-raw$
