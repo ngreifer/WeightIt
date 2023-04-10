@@ -15,7 +15,11 @@ link-citations: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warnings = FALSE, messages = FALSE)
+knitr::opts_chunk$set(echo = TRUE, eval=T)
+options(width = 200, digits= 4)
+
+me_ok <- requireNamespace("marginaleffects", quietly = TRUE) &&
+  requireNamespace("sandwich", quietly = TRUE)
 set.seed(1000)
 ```
 
@@ -25,11 +29,12 @@ set.seed(1000)
 
 Typically, the analysis of an observation study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through all these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a definitive guide, but rather an introduction to the relevant issues.
 
-## Estimating the Effect of a Point Treatment
+## Balancing Weights for a Point Treatment
 
 First we will use the Lalonde dataset to estimate the effect of a point treatment. We'll use the version of the data set that resides within the `cobalt` package, which we will use later on as well. Here, we are interested in the average treatment effect on the treated (ATT).
 
 ```{r}
+library("cobalt")
 data("lalonde", package = "cobalt")
 head(lalonde)
 ```
@@ -37,7 +42,6 @@ head(lalonde)
 We have our outcome (`re78`), our treatment (`treat`), and the covariates for which balance is desired (`age`, `educ`, `race`, `married`, `nodegree`, `re74`, and `re75`). Using `cobalt`, we can examine the initial imbalance on the covariates:
 
 ```{r}
-library("cobalt")
 bal.tab(treat ~ age + educ + race + married + nodegree + re74 + re75,
         data = lalonde, estimand = "ATT", thresholds = c(m = .05))
 ```
@@ -83,80 +87,60 @@ Indeed, we have achieved perfect balance on the means of the covariates. However
 
 Now that we have our weights stored in `W.out`, let's extract them and estimate our treatment effect.
 
-```{r, include=FALSE}
-knitr::opts_chunk$set(eval = requireNamespace("survey", quietly = TRUE))
-```
-```{r, message=FALSE}
-library(survey)
-d.w <- svydesign(~1, weights = W.out$weights, data = lalonde)
-fit <- svyglm(re78 ~ treat, design = d.w)
-coef(fit)
+```{r, message=FALSE, eval = me_ok}
+# Attach weights to dataset
+lalonde$weights <- W.out$weights
+
+# Fit outcome model
+fit <- lm(re78 ~ treat * (age + educ + race + married +
+                            nodegree + re74 + re75),
+          data = lalonde, weights = weights)
+
+# G-computation for the treatment effect
+library("marginaleffects")
+avg_comparisons(fit, variables = "treat",
+                vcov = "HC3",
+                newdata = subset(lalonde, treat == 1),
+                wts = "weights")
 ```
 
-Now let's do some inference. Although some authors recommend using "robust" sandwich standard errors to adjust for the weights [@robinsMarginalStructuralModels2000; @hainmuellerEntropyBalancingCausal2012], others believe these can misleading and recommend bootstrapping instead [@reifeisVarianceTreatmentEffect2020; @chanGloballyEfficientNonparametric2016]. We'll examine both approaches.
+Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`. Although some authors recommend using "robust" sandwich standard errors to adjust for the weights [@robinsMarginalStructuralModels2000; @hainmuellerEntropyBalancingCausal2012] as we did above, others believe these can misleading and recommend bootstrapping instead [@reifeisVarianceTreatmentEffect2020; @chanGloballyEfficientNonparametric2016]. Both methods are described in detail at `vignette("estimating-effects")`.
 
-`svyglm()` in the survey package produces robust standard errors, so we can use `summary()` to view the standard error of the effect estimate.
+## Balancing Weights for a Longitudinal Treatment
+
+`WeightIt` can estimate weights for longitudinal treatment marginal structural models as well. This time, we'll use the sample data set `msmdata` to estimate our weights. Data must be in "wide" format, with one row per unit.
 
 ```{r}
-#Robust standard errors and confidence intervals
-summary(fit)
-confint(fit)
+data("msmdata")
+head(msmdata)
 ```
 
-Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`.
-
-Next let's use bootstrapping to estimate confidence intervals. We don't need to use `svyglm()` and can simply use `glm()` (or `lm()`) to compute the effect estimates in each bootstrapped sample because we are not computing standard errors, and the treatment effect estimates will be the same.
-```{r, include=FALSE, eval=TRUE}
-knitr::opts_chunk$set(eval = requireNamespace("boot", quietly = TRUE))
-```
-```{r, warning=FALSE, message=FALSE}
-#Bootstrapping
-library("boot")
-est.fun <- function(data, index) {
-  W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
-                    data = data[index,], estimand = "ATT", method = "ebal")
-  fit <- glm(re78 ~ treat, data = data[index,], weights = W.out$weights)
-  return(coef(fit)["treat"])
-}
-boot.out <- boot(est.fun, data = lalonde, R = 999)
-boot.ci(boot.out, type = "bca") #type shouldn't matter so much
-```
-
-In this case, our confidence intervals were similar. Bootstrapping can take some time, especially with weight estimation methods that take longer, such as SuperLearner (`method = "super"`), covariate balancing propensity score estimation (`method = "cbps"`), or generalized boosted modeling (`method = "gbm"`).
-
-If we wanted to produce a "doubly-robust" treatment effect estimate, we could add baseline covariates to the `glm()` (or `svyglm()`) model (in both the original effect estimation and the confidence interval estimation).
-
-## Estimating the Effect of a Longitudinal Treatment
-```{r, include=FALSE, eval=TRUE}
-knitr::opts_chunk$set(eval = all(sapply(c("twang", "survey"), requireNamespace, quietly = TRUE)))
-```
-`WeightIt` can estimate weights for longitudinal treatment marginal structural models as well. This time, we'll use the sample data set from `twang` to estimate our weights. Data must be in "wide" format; to go from long to wide, see the example at `?weightitMSM`.
-
-```{r}
-data("iptwExWide", package = "twang")
-head(iptwExWide)
-```
-
-We have our outcome variable (`outcome`), our time-stable baseline variables (`gender` and `age`), our pre-treatment time-varying variables (`use0`, measured before the first treatment, `use1`, and `use2`), and our three time-varying treatment variables (`tx1`, `tx2`, and `tx3`). We are interested in the joint, unique, causal effects of each treatment period on the outcome. At each treatment time point, we need to achieve balance on all variables measured prior to that treatment, including previous treatments.
+We have a binary outcome variable (`Y_B`), pre-treatment time-varying variables (`X1_0` and `X2_0`, measured before the first treatment, `X1_1` and `X2_1` measured between the first and second treatments, and `X1_2` and `X2_2` measured between the second and third treatments), and three time-varying binary treatment variables (`A_1`, `A_2`, and `A_3`). We are interested in the joint, unique, causal effects of each treatment period on the outcome. At each treatment time point, we need to achieve balance on all variables measured prior to that treatment, including previous treatments.
 
 Using `cobalt`, we can examine the initial imbalance at each time point and overall:
 
 ```{r}
 library("cobalt") #if not already attached
-bal.tab(list(tx1 ~ age + gender + use0,
-             tx2 ~ tx1 + use1 + age + gender + use0,
-             tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-        data = iptwExWide, stats = c("m", "ks"), thresholds = c(m = .05),
+bal.tab(list(A_1 ~ X1_0 + X2_0,
+             A_2 ~ X1_1 + X2_1 +
+               A_1 + X1_0 + X2_0,
+             A_3 ~ X1_2 + X2_2 +
+               A_2 + X1_1 + X2_1 +
+               A_1 + X1_0 + X2_0),
+        data = msmdata, stats = c("m", "ks"),
         which.time = .all)
 ```
 
 `bal.tab()` indicates significant imbalance on most covariates at most time points, so we need to do some work to eliminate that imbalance in our weighted data set. We'll use the `weightitMSM()` function to specify our weight models. The syntax is similar both to that of `weightit()` for point treatments and to that of `bal.tab()` for longitudinal treatments. We'll use `method = "glm"` and `stabilize = TRUE` for stabilized propensity score weights estimated using logistic regression.
 
 ```{r}
-Wmsm.out <- weightitMSM(list(tx1 ~ age + gender + use0,
-                             tx2 ~ tx1 + use1 + age + gender + use0,
-                             tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-                        data = iptwExWide, method = "glm",
+Wmsm.out <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                             A_2 ~ X1_1 + X2_1 +
+                               A_1 + X1_0 + X2_0,
+                             A_3 ~ X1_2 + X2_2 +
+                               A_2 + X1_1 + X2_1 +
+                               A_1 + X1_0 + X2_0),
+                        data = msmdata, method = "glm",
                         stabilize = TRUE)
 Wmsm.out
 ```
@@ -170,40 +154,42 @@ summary(Wmsm.out)
 Displayed are summaries of how the weights perform at each time point with respect to variability. Next, we'll examine how well they perform with respect to covariate balance.
 
 ```{r}
-bal.tab(Wmsm.out, stats = c("m", "ks"), thresholds = c(m = .05),
-        which.time = .none)
+bal.tab(Wmsm.out, stats = c("m", "ks"), which.time = .none)
 ```
 
-By setting `which.time = .none` in `bal.tab()`, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and variances. Now we can estimate our treatment effects. We'll sequentially simplify our model by checking whether interaction terms are needed (implying that specific patterns of treatment yield different outcomes), then by checking whether different coefficients are needed for the treatments (implying that outcomes depend on which treatments are received).
+By setting `which.time = .none` in `bal.tab()`, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and KS statistics. Now we can estimate our treatment effects.
 
-```{r, message=FALSE}
-library("survey")
-d.w.msm <- svydesign(~1, weights = Wmsm.out$weights,
-                     data = iptwExWide)
-full.fit <- svyglm(outcome ~ tx1*tx2*tx3, design = d.w.msm)
-main.effects.fit <- svyglm(outcome ~ tx1 + tx2 + tx3, design = d.w.msm)
-anova(full.fit, main.effects.fit)
-```
-
-Based on the non-significant p-value, we don't have to assume specific treatment patterns yield different outcomes, but rather only that which treatments received or the number of treatments received are sufficient to explain variation in the outcome. Next we'll narrow down these options by comparing the main effects fit to one that constrains the coefficients to be equal (implying that the cumulative number of treatments received is what matters), as @robinsMarginalStructuralModels2000 describe.
+First, we fit a marginal structural model for the outcome using `glm()` with the weights included:
 
 ```{r}
-cum.fit <- svyglm(outcome ~ I(tx1+tx2+tx3), design = d.w.msm)
-anova(main.effects.fit, cum.fit)
-anova(full.fit, cum.fit)
+# Attach weights to dataset
+msmdata$weights <- Wmsm.out$weights
+
+# Fit outcome model
+fit <- glm(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
+           data = msmdata, weights = weights,
+           family = quasibinomial)
+
 ```
 
-Based on the non-significant p-value, we can assume the effects of each treatment are close enough to be treated as the same, indicating that the number of treatments received is the relevant predictor of the outcome. Now we can examine what that treatment effect is with `summary()`.
+Then, we compute the average expected potential outcomes under each treatment regime using `marginaleffects::avg_predictions()`:
 
-```{r}
-summary(cum.fit)
-confint(cum.fit)
+```{r, eval = me_ok}
+library("marginaleffects")
+(p <- avg_predictions(fit,
+                      vcov = "HC3",
+                      newdata = datagridcf(A_1 = 0:1, A_2 = 0:1, A_3 = 0:1),
+                      by = c("A_1", "A_2", "A_3"),
+                      wts = "weights",
+                      type = "response"))
 ```
 
-For each additional treatment received, the outcome is expected to decrease by 0.15 points. The confidence interval excludes 0, so there is evidence of a treatment effect in the population.
+We can compare the expected potential outcomes under each regime using `marginaleffects::hypotheses()`. To get all pairwise comparisons, supply the `avg_predictions()` output to `hypotheses(., "pairwise")`. To compare individual regimes, we can use `hypotheses()`, identifying the rows of the `avg_predictions()` output. For example, to compare the regimes with no treatment for all three time points vs. the regime with treatment for all three time points, we would run
 
-There is more we can do, as well. We could have fit different types of models to estimate the weights, and we could have stabilized the weights with `stabilize = TRUE` or by including stabilization factors in our weights using `num.formula` (see @coleConstructingInverseProbability2008 for more details on doing so). There are other ways of computing confidence intervals for our effect estimates (although model comparison is the most straightforward with the method we used).
-```{r, include=FALSE, eval=TRUE}
-knitr::opts_chunk$set(eval = TRUE)
+```{r, eval = me_ok}
+hypotheses(p, "b8 - b1 = 0")
 ```
+
+These results indicate that receive treatment at all time points reduces the risk of the outcome relative to not receiving treatment at all.
+
 ## References

@@ -1,0 +1,559 @@
+---
+title: "Estimating Effects After Weighting"
+author: "Noah Greifer"
+date: "`r Sys.Date()`"
+output: 
+    html_vignette:
+        toc: true
+vignette: >
+  %\VignetteIndexEntry{Estimating Effects After Weighting}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+bibliography: references.bib
+link-citations: true
+---
+
+```{=html}
+<style>
+pre {
+  overflow-x: auto;
+}
+pre code {
+  word-wrap: normal;
+  white-space: pre;
+}
+</style>
+```
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=T)
+options(width = 200, digits= 4)
+
+me_ok <- requireNamespace("marginaleffects", quietly = TRUE) &&
+  requireNamespace("sandwich", quietly = TRUE)
+su_ok <- requireNamespace("survival", quietly = TRUE)
+boot_ok <- requireNamespace("boot", quietly = TRUE)
+
+#Generating data similar to Austin (2009) for demonstrating treatment effect estimation
+gen_X <- function(n) {
+  X <- matrix(rnorm(9 * n), nrow = n, ncol = 9)
+  X[,5] <- as.numeric(X[,5] < .5)
+  X
+}
+
+#~20% treated
+gen_A <- function(X) {
+  LP_A <- - 1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] - log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
+  P_A <- plogis(LP_A)
+  rbinom(nrow(X), 1, P_A)
+}
+
+# Continuous outcome
+gen_Y_C <- function(A, X) {
+  2*A + 2*X[,1] + 2*X[,2] + 2*X[,3] + 1*X[,4] + 2*X[,5] + 1*X[,6] + rnorm(length(A), 0, 5)
+}
+#Conditional:
+#  MD: 2
+#Marginal:
+#  MD: 2
+
+# Binary outcome
+gen_Y_B <- function(A, X) {
+  LP_B <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] + log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
+  P_B <- plogis(LP_B)
+  rbinom(length(A), 1, P_B)
+}
+#Conditional:
+#  OR:   2.4
+#  logOR: .875
+#Marginal:
+#  RD:    .144
+#  RR:   1.54
+#  logRR: .433
+#  OR:   1.92
+#  logOR  .655
+
+# Survival outcome
+gen_Y_S <- function(A, X) {
+  LP_S <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] + log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
+  sqrt(-log(runif(length(A)))*2e4*exp(-LP_S))
+}
+#Conditional:
+#  HR:   2.4
+#  logHR: .875
+#Marginal:
+#  HR:   1.57
+#  logHR: .452
+
+set.seed(19599)
+
+n <- 2000
+X <- gen_X(n)
+A <- gen_A(X)
+
+Y_C <- gen_Y_C(A, X)
+Y_B <- gen_Y_B(A, X)
+Y_S <- gen_Y_S(A, X)
+
+d <- data.frame(A, X, Y_C, Y_B, Y_S)
+```
+
+## Introduction
+
+After assessing balance and deciding on a weighting specification, it comes time to estimate the effect of the treatment in the weighted sample. How the effect is estimated and interpreted depends on the desired estimand and the type of model used (if any). In addition to estimating effects, estimating the uncertainty of the effects is critical in communicating them and assessing whether the observed effect is compatible with there being no effect in the population. This guide explains how to estimate effects after weighting for point and longitudinal treatments and with various outcome types.
+
+This guide is structured as follows: first, information on the concepts related to effect and standard error (SE) estimation is presented below. Then, instructions for how to estimate effects and SEs are described for the standard case (weighting for the ATE with a continuous outcome) and some other common circumstances. Finally, recommendations for reporting results and tips to avoid making common mistakes are presented.
+
+(Note: much of this vignette is copied from `vignette("estimating-effects", package = "MatchIt")` and adapt to the context of weighting.)
+
+### Identifying the estimand
+
+Before an effect is estimated, the estimand must be specified and clarified. Although some aspects of the estimand depend not only on how the effect is estimated after weighting but also on the weighting method itself, other aspects must be considered at the time of effect estimation and interpretation. Here, we consider three aspects of the estimand: the population the effect is meant to generalize to (the target population), the effect measure, and whether the effect is marginal or conditional.
+
+**The target population.** Different weighting methods allow you to estimate effects that can generalize to different target populations. The most common estimand in weighting is the average treatment effect in the population (ATE), which is the average effect of treatment for the population from which the sample is a random sample. Other common estimands include the average treatment effect in the treated (ATT), the average treatment effect in the control (ATC), and the average treatment effect in the overlap (ATO). These are defined and explained in @greiferChoosingEstimandWhen2021. The estimand for weighting is controlled by the `estimand` argument in the call to `weightit()`. Other allowable estimands for some weighting methods include the average treatment effect in the matched sample (ATM) and the average treatment effect in the optimal subset (ATOS). These are treated just like the ATO and will not be differentiated further.
+
+**Marginal and conditional effects.** A marginal effect is a comparison between the expected potential outcome under treatment and the expected potential outcome under control. This is the same quantity estimated in randomized trials without blocking or covariate adjustment and is particularly useful for quantifying the overall effect of a policy or population-wide intervention. A conditional effect is the comparison between the expected potential outcomes in the treatment groups within strata. This is useful for identifying the effect of a treatment for an individual patient or a subset of the population.
+
+**Effect measures.** The outcome types we consider here are continuous, with the effect measured by the mean difference; binary, with the effect measured by the risk difference (RD), risk ratio (RR), or odds ratio (OR); and time-to-event (i.e., survival), with the effect measured by the hazard ratio (HR). The RR, OR, and HR are *noncollapsible* effect measures, which means the marginal effect on that scale is not a (possibly) weighted average of the conditional effects within strata, even if the stratum-specific effects are of the same magnitude. For these effect measures, it is critical to distinguish between marginal and conditional effects because different statistical methods target different types of effects. The mean difference and RD are *collapsible* effect measures, so the same methods can be used to estimate marginal and conditional effects.
+
+Our primary focus will be on marginal effects, which are appropriate for all effect measures, easily interpretable, and require few modeling assumptions. The "Common Mistakes" section includes examples of commonly used methods that estimate conditional rather than marginal effects and should not be used when marginal effects are desired.
+
+### G-computation
+
+To estimate marginal effects, we use a method known as g-computation [@snowdenImplementationGComputationSimulated2011] or regression estimation [@schaferAverageCausalEffects2008]. This involves first specifying a model for the outcome as a function of the treatment and covariates. Then, for each unit, we compute their predicted values of the outcome setting their treatment status to treated, and then again for control, leaving us with two predicted outcome values for each unit, which are estimates of the potential outcomes under each treatment level. We compute the mean of each of the estimated potential outcomes across the entire sample, which leaves us with two average estimated potential outcomes. Finally, the contrast of these average estimated potential outcomes (e.g., their difference or ratio, depending on the effect measure desired) is the estimate of the treatment effect.
+
+When doing g-computation after weighting, a few additional considerations are required. First, the outcome model should be fit incorproating the estimated weights (e.g., using weighted least squares or weighted maximum liklihood estimation). Second, when we take the average of the estimated potential outcomes under each treatment level, this must be a weighted average that incorporates the estimated weights. Third, if we want to target the ATT or ATC, we only estimate potential outcomes for the treated or control group, respectively (though we still generate predicted values under both treatment and control).
+
+G-computation as a framework for estimating effects after weighting has a number of advantages over other approaches. It works the same regardless of the form of the outcome model or type of outcome (e.g., whether a linear model is used for a continuous outcome or a logistic model is used for a binary outcome); the only difference might be how the average expected potential outcomes are contrasted in the final step. In simple cases, the estimated effect is numerically identical to effects estimated using other methods; for example, if no covariates are included in the outcome model, the g-computation estimate is equal to the difference in means from a t-test or coefficient of the treatment in a linear model for the outcome. There are analytic and bootstrap approximations to the SEs of the g-computation estimate. The analytic approximation is computed using the delta method, a technique for compute the SE of a quantity derived from the regression model parameters, such as the g-computation estimate.
+
+For the reasons above, we use g-computation when possible for all effect estimates, even if there are simpler methods that would yield the same estimates. Using a single workflow (with some slight modifications depending on the context; see below) facilitates implementing best practices regardless of what choices a user makes.
+
+There are other methods to incorporate the outcome model into estimation of the treatment effect, the best studied of which is augmented inverse probability weighting (AIPW), which also involves a g-computation step. We only describe g-computation here because of its conceptual simplicity, ease of implementation, and connection with best practices for estimating effects after weighting.
+
+### Modeling the Outcome
+
+The goal of the outcome model is to generate good predictions for use in the g-computation procedure described above. The type and form of the outcome model should depend on the outcome type. For continuous outcomes, one can use a linear model regressing the outcome on the treatment; for binary outcomes, one can use a generalized linear model with, e.g., a logistic link; for time-to-event outcomes, one can use a Cox proportional hazards model.
+
+An additional decision to make is whether (and how) to include covariates in the outcome model. One may ask, why use weighting at all if you are going to model the outcome with covariates anyway? Weighting reduces the dependence of the effect estimate on correct specification of the outcome model; this is the central thesis of @ho2007 (though applied to matching in their case). Including covariates in the outcome model after weighting has several functions: it can increase precision in the effect estimate, reduce the bias due to residual imbalance, and make the effect estimate "doubly robust", which means it is consistent if either the weighting reduces sufficient imbalance in the covariates or if the outcome model is correct. For these reasons, we recommend covariate adjustment after weighting when possible. There is some evidence that covariate adjustment is most helpful for covariates with standardized mean differences greater than .1 [@nguyen2017], so these covariates and covariates thought to be highly predictive of the outcome should be prioritized in treatment effect models if not all can be included due to sample size constraints.
+
+Although there are many possible ways to include covariates (e.g., not just main effects but interactions, smoothing terms like splines, or other nonlinear transformations), it is important not to engage in specification search (i.e., trying many outcomes models in search of the "best" one). Doing so can invalidate results and yield a conclusion that fails to replicate. For this reason, we recommend only including the same terms included in the weighting model unless there is a strong *a priori* and justifiable reason to model the outcome differently.
+
+It is important not to interpret the coefficients and tests of covariates in the outcome model. These are not causal effects and their estimates may be severely confounded. Only the treatment effect estimate can be interpreted as causal assuming the relevant assumptions about unconfoundedness are met. Inappropriately interpreting the coefficients of covariates in the outcome model is known as the Table 2 fallacy [@westreich2013]. To avoid this, we only display the results of the g-computation procedure and do not examine or interpret the outcome models themselves.
+
+### Estimating Standard Errors and Confidence Intervals
+
+Uncertainty estimation (i.e., of SEs, confidence intervals, and p-values) may consider the variety of sources of uncertainty present in the analysis, including (but not limited to!) estimation of the propensity score (if used) and estimation of the treatment effect (i.e., because of sampling error). For some methods, methods for analytically computing the correct asymptotic SE have been described. These often require custom coding or are limited to specific weighting methods and estimands[^1]. Instead, we consider two approximations to the analytic SE: robust SEs and the bootstrap, described below.
+
+[^1]: These can be computed with M-estimation using the `geex` package or automatically using the `PSweight` package.
+
+#### Robust and Cluster-Robust Standard Errors
+
+**Robust standard errors.** Also known as sandwich SEs (due to the form of the formula for computing them), heteroscedasticity-consistent SEs, or Huber-White SEs, robust SEs are an adjustment to the usual maximum likelihood or ordinary least squares SEs that are robust to violations of some of the assumptions required for usual SEs to be valid [@mackinnon1985]. Robust SEs have been shown to be conservative (i.e., yield overly large SEs and wide confidence intervals) for estimating the ATE after some forms of weighting [@robinsMarginalStructuralModels2000], though they can be either conservative or not for other weighting methods and estimands, such as for the ATT [@reifeisVarianceTreatmentEffect2020] or for entropy balancing [@chanGloballyEfficientNonparametric2016]. Robust SEs treated the estimated weights as if they were fixed and known, ignoring uncertainty in their estimation. Although they are quick and simple to estimate using functionality in the `sandwich` and `survey` packages, they should be used with caution, and the bootstrap (described below) should be preferred in most cases.
+
+#### Bootstrapping
+
+Some problems with robust SEs include that they fail to take into account the estimation fo the weights and are only an approximation when used to compute derived quantities from nonlinear models, which is often true when using g-computation to estimate effects. One solution to these problems is bootstrapping, which is a technique used to simulate the sampling distribution of an estimator by repeatedly drawing samples with replacement and estimating the effect in each bootstrap sample [@efron1993]. From the bootstrap distribution, SEs and confidence intervals can be computed in several ways, including using the standard deviation of the bootstrap estimates as the SE estimate or using the 2.5 and 97.5 percentiles as 95% confidence interval bounds. Bootstrapping tends to be most useful when no analytic estimator of a SE is possible or has been derived yet. Bootstrapping has been found to be effective at estimating SEs and confidence after weighting, often performing better even than the analytic asymptotic formula when it is available [@austin2022].
+
+Typically, bootstrapping involves performing the entire estimation process in each bootstrap sample, including estimation both of the weights and the effect. With bootstrapping, more bootstrap replications are always better but can take time and increase the chances that at least one error will occur within the bootstrap analysis (e.g., a bootstrap sample with zero treated units or zero units with an event). In general, numbers of replications upwards of 999 are recommended, with values one less than a multiple of 100 preferred to avoid interpolation when using the percentiles as confidence interval limits [@mackinnon2006]. There are several methods of computing bootstrap confidence intervals, but the bias-corrected accelerated (BCa) bootstrap confidence interval often performs well and is easy to implement, simply by setting `type = "bca"` in the call to `boot::boot.ci()` after running `boot::boot()`[^2].
+
+[^2]: Sometimes, an error will occur with this method, which usually means more bootstrap replications are required. The number of replicates must be greater than the original sample size.
+
+## Estimating Treatment Effects and Standard Errors After Weighting
+
+Below, we describe effect estimation after weighting. The focus here is not on evaluating the methods but simply on demonstrating them. In all cases, the correct propensity score model is used. We will present both the faster and simpler method that uses robust SEs and the more complicated but accurate method using bootstrapping.
+
+We'll be using a simulated toy dataset `d` with several outcome types. Code to generate the dataset is at the end of this document. Below we display the first six rows of `d`:
+
+```{r}
+head(d)
+```
+
+`A` is the treatment variable, `X1` through `X9` are covariates, `Y_C` is a continuous outcome, `Y_B` is a binary outcome, and `Y_S` is a survival outcome.
+
+We will need to the following packages to perform the analyses:
+
+-   `marginaleffects` provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
+-   `sandwich` is used internally by `marginaleffects` to compute robust and cluster-robust SEs
+-   `survival` provides `coxph()` to estimate the coefficients in a Cox-proportional hazards model for the marginal hazard ratio, which we will use for survival outcomes
+-   `boot` provides `boot()` and `boot.ci()` for performing bootstrapping and computing bootstrap confidence intervals
+
+Of course, we also need `WeightIt` to perform the weighting.
+
+```{r,message=FALSE,warning=FALSE}
+library("WeightIt")
+```
+
+```{r,message=FALSE,warning=FALSE, eval=me_ok}
+library("marginaleffects")
+```
+
+All effect estimates will be computed using `marginaleffects::avg_comparions()`, even when its use may be superfluous (e.g., for comparing the weighted difference in means). As previously mentioned, this is because it is useful to have a single workflow that works no matter the situation, perhaps with very slight modifications to accommodate different contexts. Using ``` avg_comparions``() ``` has several advantages, even when the alternatives are simple: it only provides the effect estimate, and not other coefficients; it automatically incorporates robust SEs if requested; and it always produces average marginal effects for the correct population if requested.
+
+Other packages may be of use but are not used here. There are alternatives to the `marginaleffects` package for computing average marginal effects, including `margins` and `stdReg`. The `survey` package can be used to estimate robust SEs incorporating weights and provides functions for survey-weighted generalized linear models and Cox-proportional hazards models. Much of the code here can be adapted to be used with `survey`, and we will demonstrate that as well.
+
+### The Standard Case using Robust SEs
+
+For most weighting methods, estimating the effect after weighting is straightforward and involves fitting a model for the outcome that incorporates the estimated weights, then estimating the treatment effect using g-computation (i.e., using `marginaleffects::avg_comparisons()`) with a robust SE to account for pair membership. This procedure is the same for continuous and binary outcomes with and without covariates.
+
+There are a few adjustments that need to be made for certain scenarios, which we describe in the section "Adjustments to the Standard Case". These adjustments include for the following cases: when weighting for the ATT or ATC, for estimating effects with binary outcomes, and for estimating effects with survival outcomes. Estimation for all estimands other than the ATT and ATC proceeds as it does for the ATE. You must read the Standard Case to understand the basic procedure before reading about these special scenarios.
+
+Here, we demonstrate the faster analytic approach to estimating confidence intervals; for the bootstrap approach, see the section "Using Bootstrapping to Estimate Confidence Intervals" below.
+
+First, we will perform propensity score weighting for the ATE. Remember, all weighting methods use this exact procedure or a slight variation, so this section is critical even if you are using a different weighting method.
+
+```{r}
+#PS weighting for the ATE with a logistic regression PS
+W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
+                X6 + X7 + X8 + X9, data = d,
+              method = "glm", estimand = "ATE")
+W
+```
+
+Typically one would assess balance and ensure that this weighting specification works, but we will skip that step here to focus on effect estimation. See `vignette("WeightIt")` and `vignette("cobalt", package = "cobalt")` for more information on this necessary step.
+
+First, we fit a model for the outcome given the treatment and (optionally) the covariates. It's usually a good idea to include treatment-covariate interactions, which we do below, but this is not always necessary, especially when excellent balance has been achieved.
+
+```{r}
+#Bring weights into the dataset
+d$weights <- W$weights
+
+#Linear model with covariates
+fit <- lm(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + 
+                        X6 + X7 + X8 + X9),
+           data = d, weights = weights)
+```
+
+Next, we use `marginaleffects::avg_comparisons()` to estimate the ATE.
+
+```{r, eval=me_ok}
+avg_comparisons(fit,
+                variables = "A",
+                vcov = "HC3",
+                wts = "weights")
+```
+
+Let's break down the call to `avg_comparisons()`: to the first argument, we supply the model fit, `fit`; to the `variables` argument, the name of the treatment (`"A"`); to the `vcov` argument, the name of the robust SE we want to request (in this case, HC3, which perform well relative to other robust SEs); and to the `wts` argument, the names of the variable in `d` containing the matching weights (`"weights"`) to ensure they are included in the analysis. Some of these arguments differ depending on the specifics of the outcome type; see the sections below for information.
+
+If, in addition to the effect estimate, we want the average estimated potential outcomes, we can use `marginaleffects::avg_predictions()`, which we demonstrate below. Note the interpretation of the resulting estimates as the expected potential outcomes is only valid if all covariates present in the outcome model (if any) are interacted with the treatment.
+
+```{r, eval=me_ok}
+avg_predictions(fit,
+                variables = "A",
+                vcov = "HC3",
+                wts = "weights")
+```
+
+We can see that the difference in potential outcome means is equal to the average treatment effect computed previously[^3]. All of the arguments to `avg_predictions()` are the same as those to `avg_comparisons()`.
+
+[^3]: To verify that they are equal, supply the output of `avg_predictions()` to `hypotheses()`, e.g., `avg_predictions(…) |> hypotheses("revpairwise")`; this explicitly compares the average potential outcomes and should yield identical estimates to the `avg_comparisons()` call.
+
+### Adjustments to the Standard Case
+
+This section explains how the procedure might differ if any of the following special circumstances occur.
+
+#### Weighting for the ATT or ATC
+
+When weighting for the ATT, everything is identical to the Standard Case except that in the calls to `avg_comparisons()` and `avg_predictions()`, the `newdata` argument must additionally be supplied to `avg_comparisons()` and `avg_predictions()` as
+
+``` r
+newdata = subset(d, A == 1)
+```
+
+This requests that g-computation be done only for the treated units. For the ATC, replace `1` with `0`.
+
+#### Binary outcomes
+
+Estimating effects on binary outcomes is essentially the same as for continuous outcomes. The main difference is that there are several measures of the effect one can consider, which include the odds ratio (OR), risk ratio/relative risk (RR), and risk difference (RD), and the syntax to `avg_comparisons()` depends on which one is desired. The outcome model should be one appropriate for binary outcomes (e.g., logistic regression) but is unrelated to the desired effect measure because we can compute any of the above effect measures using `avg_comparisons()` after the logistic regression.
+
+To fit a logistic regression model, change `lm()` to `glm()` and set `family = quasibinomial`[^4]. To compute the marginal RD, we can use exactly the same syntax as in the Standard Case; nothing needs to change[^5].
+
+[^4]: We use `quasibinomial()` instead of `binomial()` simply to avoid a spurious warning; the results will be identical regardless.
+
+[^5]: Note that for low or high average expected risks computed with `predictions()`, the confidence intervals may go below 0 or above 1; this is because an approximation is used. To avoid this problem, bootstrapping or simulation-based inference can be used instead.
+
+To compute the marginal RR, we need to add `comparison = "lnratioavg"` to `avg_comparisons()`; this computes the marginal log RR. To get the marginal RR, we need to add `transform = "exp"` to `avg_comparisons()`, which exponentiates the marginal log RR and its confidence interval. The code below computes the effects and displays the statistics of interest:
+
+```{r, eval=me_ok}
+#Logistic regression model with covariates
+fit <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + 
+                        X6 + X7 + X8 + X9),
+           data = d, weights = weights,
+           family = quasibinomial)
+
+#Compute effects; RR and confidence interval
+avg_comparisons(fit,
+                variables = "A",
+                vcov = "HC3",
+                wts = "weights",
+                comparison = "lnratioavg",
+                transform = "exp")
+```
+
+The output displays the marginal RR, its Z-value, the p-value for the Z-test of the log RR against 0, and its confidence interval. (Note that even though the `Contrast` label still suggests the log RR, the RR is actually displayed.) To view the log RR and its standard error, omit the `transform` argument.
+
+For the marginal OR, the only thing that needs to change is that `comparison` should be set to `"lnoravg"`.
+
+#### Survival outcomes
+
+There are several measures of effect size for survival outcomes, some of which are described by @mao2018. When using the Cox proportional hazards model, the quantity of interest is the hazard ratio (HR) between the treated and control groups. As with the OR, the HR is non-collapsible, which means the estimated HR will only be a valid estimate of the marginal HR when no other covariates are included in the model. Other effect measures, such as the difference in mean survival times or probability of survival after a given time, can be treated just like continuous and binary outcomes as previously described.
+
+For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph()` from the `survival` package. (See `help("coxph", package = "survival")` for more information on this model.) Robust SEs for HRs were studied by @austin2016 and were found to be conservative; they are requested automatically when weights are supplied to `coxph()`. Other formulas have been developed for estimating standard errors more accurately [@mao2018, @hajage2018], though @austin2016 also found the bootstrap to be adequate.
+
+```{r, eval=su_ok}
+library("survival")
+
+#Cox Regression for marginal HR
+coxph(Surv(Y_S) ~ A, data = d, weights = weights)
+```
+
+The `coef` column contains the log HR, and `exp(coef)` contains the HR. Remember to always use the `robust se` for the SE of the log HR. The displayed z-test p-value results from using the robust SE.
+
+#### Multi-category treatments
+
+Multi-category treatments work essentially the same way as binary treatments. The main practical differences are in choosing the estimand and estimating the weights. The ATE and ATO are straightforward. The ATT requires choosing one group to be the treated or "focal" group. Effects are the estimated for members of that group. The contrast in the focal group between the expected potential outcomes under a non-focal treatment and the expected potential outcomes for the focal (actual) treatment can be interpreted similarly to how ATTs are interpreted for binary treatments. The contrasts in the focal group between expected potential outcomes under a pair of non-focal treatments can be interpreted as the contrast between the ATTs of the non-focal treatments. Weights may be estimated differently for multi-category treatments from binary treatments; see the individual methods pages for how they differ.
+
+Below, we'll estimate the ATTs of a constructed multi-category treatment for a focal level. Our new treatment `Am` is constructed as follows:
+
+```{r}
+d$Am <- factor(ifelse(d$A == 1, "T", sample(c("C1", "C2"), nrow(d), TRUE)))
+
+table(d$Am)
+```
+
+We have a focal treatment group, `"T"`, and two control groups `"C1"` and `"C2"`. We expect the ATTs for the two control groups to be the same since we assigned them randomly from within the original control group.
+
+First, we estimate our weights using entropy balancing, identifying the focal group using `focal`:
+
+```{r}
+W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + 
+                X6 + X7 + X8 + X9, data = d,
+              method = "ebal", estimand = "ATT",
+              focal = "T")
+W
+```
+
+Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model and perform g-computation. We use `avg_predictions()` first to compute the expected potential outcome under each treatment for the focal group, and the use `hypotheses()` to test all pairwise comparisons.
+
+```{r, eval=me_ok}
+#Bring weights into the dataset
+d$weights <- W$weights
+
+#Fit the outcome model
+fit <- lm(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 + 
+                        X6 + X7 + X8 + X9),
+          data = d, weights = weights)
+
+#G-computation
+p <- avg_predictions(fit,
+                     variables = "Am",
+                     vcov = "HC3",
+                     newdata = subset(boot_data, A == 1),
+                     wts = "weights")
+p
+
+hypotheses(p, "revpairwise")
+```
+
+We find significant ATTs between the focal treatment and control levels (`T - C1` and `T - C2`), but the difference between control levels (`C2 - C1`), which can be interpreted as the difference between these ATTs, is nonsignificant, as expected. Remember, for the ATT, bootstrapping usually provides more valid inference than the robust SEs used here.
+
+#### Continuous treatments
+
+Coming soon!
+
+#### Using the `survey` package
+
+The `survey` package has often been recommended for use in estimating treatment effects after propensity score weighting. When combined with `marginaleffects` functions, it yields identical estimates and similar standard errors to the methods described above that use `lm()` or `glm()` and manually request a robust SE. The main benefits of using `survey` are that you don't need to request robust SEs in the call to `avg_comparisons()` and you can incorporate other survey design information, e.g., if your study comes from a complex survey.
+
+Below is how you would adjust the standard case to use `survey` instead:
+
+```{r, eval = requireNamespace("survey", quietly = TRUE)}
+library("survey")
+
+#Declare a survey design using the estimated weights
+des <- svydesign(~1, weights = ~weights, data = d)
+
+#Fit the outcome model
+fit <- svyglm(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + 
+                           X6 + X7 + X8 + X9),
+              design = des)
+
+#G-computation for the difference in means
+avg_comparisons(fit,
+                variables = "A",
+                wts = "(weights)")
+```
+
+Note that we need to supply `"(weights)"` to the `wts` argument for them to be correctly incorporated. You might notice that the standard errors computed using `survey` are different from those using `lm()` or `glm()` and HC3 robust SEs; to get similar SEs using `lm()` or `glm()`, set `vcov = "HC0"` in the call to `avg_comparisons()`. This approach is not recommended since HC3 standard errors tend to perform better, which is one reason to avoid using `survey`. In many cases, though, the results will be similar.
+
+### Using Bootstrapping to Estimate Confidence Intervals
+
+The bootstrap is an alternative to the delta method for estimating confidence intervals for estimated effects. See the section Bootstrapping above for details. Here, we'll demonstrate the standard bootstrap, which involves resampling units and estimating the weights and treatment effect within each bootstrap sample. For both, we will use functionality in the `boot` package. It is critical to set a seed using `set.seed()` prior to performing the bootstrap in order for results to be replicable.
+
+For the standard bootstrap, we need a function that takes in the original dataset and a vector of sampled unit indices and returns the estimated quantity of interest. This function should estimate the weights in the bootstrap sample, fit the outcome model, and estimate the treatment effect using g-computation. We'll consider the marginal RR ATT of `A` on the binary outcome `Y_B`.
+
+The first step is to write the estimation function, we call `boot_fun`. This function returns the marginal RR. In it, we estimate the weights and the effect and return the estimate of interest.
+
+```{r}
+boot_fun <- function(data, i) {
+  boot_data <- data[i,]
+  
+  #PS weighting for the ATE
+  W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
+                 X6 + X7 + X8 + X9,
+               data = boot_data,
+               method = "glm", estimand = "ATT")
+  
+  #Bring weights into the dataset
+  boot_data$weights <- W$weights
+  
+  #Fit outcome model
+  fit <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + 
+                 X6 + X7 + X8 + X9),
+             data = boot_data, weights = weights,
+             family = quasibinomial)
+  
+  #G-computation
+  comp <- avg_comparisons(fit,
+                          variables = "A",
+                          vcov = FALSE,
+                          newdata = subset(boot_data, A == 1),
+                          wts = "weights",
+                          comparison = "lnratioavg",
+                          transform = "exp")
+  
+  comp$estimate
+}
+```
+
+Next, we call `boot::boot()` with this function and the original dataset supplied to perform the bootstrapping. We'll request 199 bootstrap replications here, but in practice you should use many more, upwards of 999. More is always better. Using more also allows you to use the bias-corrected and accelerated (BCa) bootstrap confidence intervals (which you can request by setting `type = "bca"` in the call to `boot.ci()`), which are known to be the most accurate. See `?boot.ci` for details. Here, we'll just use a percentile confidence interval.
+
+```{r, eval = boot_ok, message=F, warning=F}
+library("boot")
+set.seed(54321)
+boot_out <- boot(d, boot_fun, R = 199)
+
+boot_out
+boot.ci(boot_out, type = "perc")
+```
+
+```{r, include = FALSE}
+b <- {
+  if (boot_ok) boot.ci(boot_out, type = "perc")
+  else list(t0 = 1.522, percent = c(0, 0, 0, 1.305, 1.800))
+}
+```
+
+We find a RR of `r round(b$t0, 3)` with a confidence interval of (`r round(b$percent[4], 3)`, `r round(b$percent[5], 3)`). If we had wanted a risk difference, we could have adjusted the arguments to `avg_comparisons()` (i.e., by removing the `comparison` and `transform` arguments).
+
+To estimate the bootstrap confidence for the HR, we can do the same as above except our `boot_fun` will look like the following:
+
+```{r, eval=su_ok}
+boot_fun <- function(data, i) {
+  boot_data <- data[i,]
+  
+  #PS weighting for the ATE
+  W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
+                 X6 + X7 + X8 + X9,
+               data = boot_data,
+               method = "glm", estimand = "ATT")
+  
+  #Bring weights into the dataset
+  boot_data$weights <- W$weights
+  
+  #Fit outcome model
+  fit <- coxph(Surv(Y_S) ~ A, data = boot_data,
+               weights = weights)
+  
+  #Return the coefficient on treatment
+  coef(fit)["A"]
+}
+```
+
+(Remember that you will need to load in the `survival` package before doing so.)
+
+### Longitudinal Treatments
+
+Coming soon! For now see the example at `vignette("WeightIt")`.
+
+## Reporting Results
+
+It is important to be as thorough and complete as possible when describing the methods of estimating the treatment effect and the results of the analysis. This improves transparency and replicability of the analysis. Results should at least include the following:
+
+-   a description of the outcome model used (e.g., logistic regression, a linear model with treatment-covariate interactions and covariates, a Cox proportional hazards model with the propensity score weights applied)
+-   the way the effect was estimated (e.g., using g-computation or as the coefficient in the outcome model)
+-   the way SEs and confidence intervals were estimated (e.g., using robust SEs, using the BCa bootstrap with 4999 bootstrap replications and the entire process of weighting and effect estimation included in each replication)
+-   R packages and functions used in estimating the effect and its SE (e.g., `glm()` in base R, `avg_comparisons()` in `marginaleffects`, `boot()` and `boot.ci()` in `boot`)
+-   The effect and its SE and confidence interval
+
+All this is in addition to information about the weighting method, estimand, propensity score estimation procedure (if used), balance assessment, etc.
+
+## References
+
+::: {#refs}
+:::
+
+## Code to Generate Data used in Examples
+
+```{r, eval = FALSE}
+#Generating data similar to Austin (2009) for demonstrating treatment effect estimation
+gen_X <- function(n) {
+  X <- matrix(rnorm(9 * n), nrow = n, ncol = 9)
+  X[,5] <- as.numeric(X[,5] < .5)
+  X
+}
+
+#~20% treated
+gen_A <- function(X) {
+  LP_A <- - 1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] - log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
+  P_A <- plogis(LP_A)
+  rbinom(nrow(X), 1, P_A)
+}
+
+# Continuous outcome
+gen_Y_C <- function(A, X) {
+  2*A + 2*X[,1] + 2*X[,2] + 2*X[,3] + 1*X[,4] + 2*X[,5] + 1*X[,6] + rnorm(length(A), 0, 5)
+}
+#Conditional:
+#  MD: 2
+#Marginal:
+#  MD: 2
+
+# Binary outcome
+gen_Y_B <- function(A, X) {
+  LP_B <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] + log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
+  P_B <- plogis(LP_B)
+  rbinom(length(A), 1, P_B)
+}
+#Conditional:
+#  OR:   2.4
+#  logOR: .875
+#Marginal:
+#  RD:    .144
+#  RR:   1.54
+#  logRR: .433
+#  OR:   1.92
+#  logOR  .655
+
+# Survival outcome
+gen_Y_S <- function(A, X) {
+  LP_S <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] + log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
+  sqrt(-log(runif(length(A)))*2e4*exp(-LP_S))
+}
+#Conditional:
+#  HR:   2.4
+#  logHR: .875
+#Marginal:
+#  HR:   1.57
+#  logHR: .452
+
+set.seed(19599)
+
+n <- 2000
+X <- gen_X(n)
+A <- gen_A(X)
+
+Y_C <- gen_Y_C(A, X)
+Y_B <- gen_Y_B(A, X)
+Y_S <- gen_Y_S(A, X)
+
+d <- data.frame(A, X, Y_C, Y_B, Y_S)
+```
