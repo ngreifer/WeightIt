@@ -182,19 +182,19 @@ should not be used when marginal effects are desired.</p>
 <h3 id="g-computation">G-computation<a class="anchor" aria-label="anchor" href="#g-computation"></a>
 </h3>
 <p>To estimate marginal effects, we use a method known as g-computation
-<span class="citation">(<a href="#ref-snowdenImplementationGComputationSimulated2011" role="doc-biblioref"><strong>snowdenImplementationGComputationSimulated2011?</strong></a>)</span>
-or regression estimation <span class="citation">(<a href="#ref-schaferAverageCausalEffects2008" role="doc-biblioref"><strong>schaferAverageCausalEffects2008?</strong></a>)</span>.
-This involves first specifying a model for the outcome as a function of
-the treatment and covariates. Then, for each unit, we compute their
-predicted values of the outcome setting their treatment status to
-treated, and then again for control, leaving us with two predicted
-outcome values for each unit, which are estimates of the potential
-outcomes under each treatment level. We compute the mean of each of the
-estimated potential outcomes across the entire sample, which leaves us
-with two average estimated potential outcomes. Finally, the contrast of
-these average estimated potential outcomes (e.g., their difference or
-ratio, depending on the effect measure desired) is the estimate of the
-treatment effect.</p>
+<span class="citation">(<a href="#ref-snowdenImplementationGComputationSimulated2011" role="doc-biblioref">Snowden, Rose, and Mortimer 2011</a>)</span> or
+regression estimation <span class="citation">(<a href="#ref-schaferAverageCausalEffects2008" role="doc-biblioref">Schafer
+and Kang 2008</a>)</span>. This involves first specifying a model for
+the outcome as a function of the treatment and covariates. Then, for
+each unit, we compute their predicted values of the outcome setting
+their treatment status to treated, and then again for control, leaving
+us with two predicted outcome values for each unit, which are estimates
+of the potential outcomes under each treatment level. We compute the
+mean of each of the estimated potential outcomes across the entire
+sample, which leaves us with two average estimated potential outcomes.
+Finally, the contrast of these average estimated potential outcomes
+(e.g., their difference or ratio, depending on the effect measure
+desired) is the estimate of the treatment effect.</p>
 <p>When doing g-computation after weighting, a few additional
 considerations are required. First, the outcome model should be fit
 incorporating the estimated weights (e.g., using weighted least squares
@@ -245,19 +245,19 @@ Cox proportional hazards model.</p>
 covariates in the outcome model. One may ask, why use weighting at all
 if you are going to model the outcome with covariates anyway? Weighting
 reduces the dependence of the effect estimate on correct specification
-of the outcome model; this is the central thesis of <span class="citation">(<a href="#ref-ho2007" role="doc-biblioref"><strong>ho2007?</strong></a>)</span> (though
-applied to matching in their case). Including covariates in the outcome
-model after weighting has several functions: it can increase precision
-in the effect estimate, reduce the bias due to residual imbalance, and
-make the effect estimate “doubly robust”, which means it is consistent
-if either the weighting reduces sufficient imbalance in the covariates
-or if the outcome model is correct. For these reasons, we recommend
-covariate adjustment after weighting when possible. There is some
-evidence that covariate adjustment is most helpful for covariates with
-standardized mean differences greater than .1 <span class="citation">(<a href="#ref-nguyen2017" role="doc-biblioref"><strong>nguyen2017?</strong></a>)</span>, so these
-covariates and covariates thought to be highly predictive of the outcome
-should be prioritized in treatment effect models if not all can be
-included due to sample size constraints.</p>
+of the outcome model; this is the central thesis of <span class="citation">Ho et al. (<a href="#ref-hoMatchingNonparametricPreprocessing2007" role="doc-biblioref">2007</a>)</span> (though applied to matching in
+their case). Including covariates in the outcome model after weighting
+has several functions: it can increase precision in the effect estimate,
+reduce the bias due to residual imbalance, and make the effect estimate
+“doubly robust”, which means it is consistent if either the weighting
+reduces sufficient imbalance in the covariates or if the outcome model
+is correct. For these reasons, we recommend covariate adjustment after
+weighting when possible. There is some evidence that covariate
+adjustment is most helpful for covariates with standardized mean
+differences greater than .1 <span class="citation">(<a href="#ref-nguyenDoubleadjustmentPropensityScore2017" role="doc-biblioref">Nguyen et al. 2017</a>)</span>, so these covariates
+and covariates thought to be highly predictive of the outcome should be
+prioritized in treatment effect models if not all can be included due to
+sample size constraints.</p>
 <p>Although there are many possible ways to include covariates (e.g.,
 not just main effects but interactions, smoothing terms like splines, or
 other nonlinear transformations), it is important not to engage in
@@ -272,9 +272,9 @@ covariates in the outcome model. These are not causal effects and their
 estimates may be severely confounded. Only the treatment effect estimate
 can be interpreted as causal assuming the relevant assumptions about
 unconfoundedness are met. Inappropriately interpreting the coefficients
-of covariates in the outcome model is known as the Table 2 fallacy <span class="citation">(<a href="#ref-westreich2013" role="doc-biblioref"><strong>westreich2013?</strong></a>)</span>. To
-avoid this, we only display the results of the g-computation procedure
-and do not examine or interpret the outcome models themselves.</p>
+of covariates in the outcome model is known as the Table 2 fallacy <span class="citation">(<a href="#ref-westreichTableFallacyPresenting2013" role="doc-biblioref">Westreich and Greenland 2013</a>)</span>. To avoid
+this, we only display the results of the g-computation procedure and do
+not examine or interpret the outcome models themselves.</p>
 </div>
 <div class="section level3">
 <h3 id="estimating-standard-errors-and-confidence-intervals">Estimating Standard Errors and Confidence Intervals<a class="anchor" aria-label="anchor" href="#estimating-standard-errors-and-confidence-intervals"></a>
@@ -298,8 +298,8 @@ the analytic SE: robust SEs and the bootstrap, described below.</p>
 heteroscedasticity-consistent SEs, or Huber-White SEs, robust SEs are an
 adjustment to the usual maximum likelihood or ordinary least squares SEs
 that are robust to violations of some of the assumptions required for
-usual SEs to be valid <span class="citation">(<a href="#ref-mackinnon1985" role="doc-biblioref"><strong>mackinnon1985?</strong></a>)</span>. Robust
-SEs have been shown to be conservative (i.e., yield overly large SEs and
+usual SEs to be valid <span class="citation">(<a href="#ref-mackinnonHeteroskedasticityconsistentCovarianceMatrix1985" role="doc-biblioref">MacKinnon and White 1985</a>)</span>. Robust SEs
+have been shown to be conservative (i.e., yield overly large SEs and
 wide confidence intervals) for estimating the ATE after some forms of
 weighting <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000" role="doc-biblioref">Robins, Hernán, and Brumback 2000</a>)</span>,
 though they can be either conservative or not for other weighting
@@ -320,7 +320,7 @@ used to compute derived quantities from nonlinear models, which is often
 true when using g-computation to estimate effects. One solution to these
 problems is bootstrapping, which is a technique used to simulate the
 sampling distribution of an estimator by repeatedly drawing samples with
-replacement and estimating the effect in each bootstrap sample <span class="citation">(<a href="#ref-efron1993" role="doc-biblioref"><strong>efron1993?</strong></a>)</span>. From the
+replacement and estimating the effect in each bootstrap sample <span class="citation">(<a href="#ref-efronBootstrapMethodsStandard1986" role="doc-biblioref">Efron and Tibshirani 1986</a>)</span>. From the
 bootstrap distribution, SEs and confidence intervals can be computed in
 several ways, including using the standard deviation of the bootstrap
 estimates as the SE estimate or using the 2.5 and 97.5 percentiles as
@@ -338,8 +338,8 @@ least one error will occur within the bootstrap analysis (e.g., a
 bootstrap sample with zero treated units or zero units with an event).
 In general, numbers of replications upwards of 999 are recommended, with
 values one less than a multiple of 100 preferred to avoid interpolation
-when using the percentiles as confidence interval limits <span class="citation">(<a href="#ref-mackinnon2006" role="doc-biblioref"><strong>mackinnon2006?</strong></a>)</span>. There
-are several methods of computing bootstrap confidence intervals, but the
+when using the percentiles as confidence interval limits <span class="citation">(<a href="#ref-mackinnonBootstrapMethodsEconometrics2006" role="doc-biblioref">MacKinnon 2006</a>)</span>. There are several
+methods of computing bootstrap confidence intervals, but the
 bias-corrected accelerated (BCa) bootstrap confidence interval often
 performs well and is easy to implement, simply by setting
 <code>type = "bca"</code> in the call to <code><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">boot::boot.ci()</a></code>
@@ -406,7 +406,7 @@ superfluous (e.g., for comparing the weighted difference in means). As
 previously mentioned, this is because it is useful to have a single
 workflow that works no matter the situation, perhaps with very slight
 modifications to accommodate different contexts. Using
-<code>avg_comparions``()</code> has several advantages, even when the
+<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> has several advantages, even when the
 alternatives are simple: it only provides the effect estimate, and not
 other coefficients; it automatically incorporates robust SEs if
 requested; and it always produces average marginal effects for the
@@ -751,16 +751,9 @@ design information, e.g., if your study comes from a complex survey.</p>
 <p>Below is how you would adjust the standard case to use
 <code>survey</code> instead:</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="http://r-survey.r-forge.r-project.org/survey/" class="external-link">"survey"</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Loading required package: grid</span></span></code></pre>
-<pre><code><span><span class="co">## Loading required package: Matrix</span></span></code></pre>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">## Attaching package: 'survey'</span></span></code></pre>
-<pre><code><span><span class="co">## The following object is masked from 'package:graphics':</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">##     dotchart</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co">#Declare a survey design using the estimated weights</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="http://r-survey.r-forge.r-project.org/survey/" class="external-link">"survey"</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#Declare a survey design using the estimated weights</span></span>
 <span><span class="va">des</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svydesign.html" class="external-link">svydesign</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span>, weights <span class="op">=</span> <span class="op">~</span><span class="va">weights</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#Fit the outcome model</span></span>
@@ -810,7 +803,7 @@ of <code>A</code> on the binary outcome <code>Y_B</code>.</p>
 <code>boot_fun</code>. This function returns the marginal RR. In it, we
 estimate the weights and the effect and return the estimate of
 interest.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">boot_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">boot_data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span></span>
 <span>  </span>
@@ -849,7 +842,7 @@ intervals (which you can request by setting <code>type = "bca"</code> in
 the call to <code><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">boot.ci()</a></code>), which are known to be the most
 accurate. See <code><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">?boot.ci</a></code> for details. Here, we’ll just use a
 percentile confidence interval.</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"boot"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">54321</span><span class="op">)</span></span>
 <span><span class="va">boot_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/boot/man/boot.html" class="external-link">boot</a></span><span class="op">(</span><span class="va">d</span>, <span class="va">boot_fun</span>, R <span class="op">=</span> <span class="fl">199</span><span class="op">)</span></span>
@@ -866,7 +859,7 @@ percentile confidence interval.</p>
 <span><span class="co">## Bootstrap Statistics :</span></span>
 <span><span class="co">##     original    bias    std. error</span></span>
 <span><span class="co">## t1*    1.522 0.0004574       0.119</span></span></code></pre>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">boot.ci</a></span><span class="op">(</span><span class="va">boot_out</span>, type <span class="op">=</span> <span class="st">"perc"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS</span></span>
 <span><span class="co">## Based on 199 bootstrap replicates</span></span>
@@ -886,7 +879,7 @@ we had wanted a risk difference, we could have adjusted the arguments to
 <p>To estimate the bootstrap confidence for the HR, we can do the same
 as above except our <code>boot_fun</code> will look like the
 following:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">boot_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">boot_data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span></span>
 <span>  </span>
@@ -965,6 +958,11 @@ Effects by Empirical Balancing Calibration Weighting.”</span>
 <em>Journal of the Royal Statistical Society: Series B (Statistical
 Methodology)</em> 78 (3): 673–700. <a href="https://doi.org/10.1111/rssb.12129" class="external-link">https://doi.org/10.1111/rssb.12129</a>.
 </div>
+<div id="ref-efronBootstrapMethodsStandard1986" class="csl-entry">
+Efron, B., and R. Tibshirani. 1986. <span>“Bootstrap Methods for
+Standard Errors, Confidence Intervals, and Other Measures of Statistical
+Accuracy.”</span> <em>Statistical Science</em> 1 (1): 54–75. <a href="https://www.jstor.org/stable/2245500" class="external-link">https://www.jstor.org/stable/2245500</a>.
+</div>
 <div id="ref-greiferChoosingEstimandWhen2021" class="csl-entry">
 Greifer, Noah, and Elizabeth A. Stuart. 2021. <span>“Choosing the
 Estimand When Matching or Weighting in Observational Studies.”</span>
@@ -976,11 +974,34 @@ Florence Tubach, and Yann De Rycke. 2018. <span>“Closed-Form Variance
 Estimator for Weighted Propensity Score Estimators with Survival
 Outcome.”</span> <em>Biometrical Journal</em> 60 (6): 1151–63. <a href="https://doi.org/10.1002/bimj.201700330" class="external-link">https://doi.org/10.1002/bimj.201700330</a>.
 </div>
+<div id="ref-hoMatchingNonparametricPreprocessing2007" class="csl-entry">
+Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.
+<span>“Matching as Nonparametric Preprocessing for Reducing Model
+Dependence in Parametric Causal Inference.”</span> <em>Political
+Analysis</em> 15 (3): 199–236. <a href="https://doi.org/10.1093/pan/mpl013" class="external-link">https://doi.org/10.1093/pan/mpl013</a>.
+</div>
+<div id="ref-mackinnonBootstrapMethodsEconometrics2006" class="csl-entry">
+MacKinnon, James G. 2006. <span>“Bootstrap Methods in
+Econometrics.”</span> <em>Economic Record</em> 82 (s1): S2–18. <a href="https://doi.org/10.1111/j.1475-4932.2006.00328.x" class="external-link">https://doi.org/10.1111/j.1475-4932.2006.00328.x</a>.
+</div>
+<div id="ref-mackinnonHeteroskedasticityconsistentCovarianceMatrix1985" class="csl-entry">
+MacKinnon, James G, and Halbert White. 1985. <span>“Some
+Heteroskedasticity-Consistent Covariance Matrix Estimators with Improved
+Finite Sample Properties.”</span> <em>Journal of Econometrics</em> 29
+(3): 305–25. <a href="https://doi.org/10.1016/0304-4076(85)90158-7" class="external-link">https://doi.org/10.1016/0304-4076(85)90158-7</a>.
+</div>
 <div id="ref-mao2018" class="csl-entry">
 Mao, Huzhang, Liang Li, Wei Yang, and Yu Shen. 2018. <span>“On the
 Propensity Score Weighting Analysis with Survival Outcome: Estimands,
 Estimation, and Inference.”</span> <em>Statistics in Medicine</em> 37
 (26): 3745–63. <a href="https://doi.org/10.1002/sim.7839" class="external-link">https://doi.org/10.1002/sim.7839</a>.
+</div>
+<div id="ref-nguyenDoubleadjustmentPropensityScore2017" class="csl-entry">
+Nguyen, Tri-Long, Gary S. Collins, Jessica Spence, Jean-Pierre Daurès,
+P. J. Devereaux, Paul Landais, and Yannick Le Manach. 2017.
+<span>“Double-Adjustment in Propensity Score Matching Analysis: Choosing
+a Threshold for Considering Residual Imbalance.”</span> <em>BMC Medical
+Research Methodology</em> 17: 78. <a href="https://doi.org/10.1186/s12874-017-0338-0" class="external-link">https://doi.org/10.1186/s12874-017-0338-0</a>.
 </div>
 <div id="ref-reifeisVarianceTreatmentEffect2020" class="csl-entry">
 Reifeis, Sarah A., and Michael G. Hudgens. 2020. <span>“On Variance of
@@ -992,12 +1013,29 @@ Robins, James M., Miguel Ángel Hernán, and Babette Brumback. 2000.
 <span>“Marginal Structural Models and Causal Inference in
 Epidemiology.”</span> <em>Epidemiology</em> 11 (5): 550–60. <a href="https://doi.org/10.1097/00001648-200009000-00011" class="external-link">https://doi.org/10.1097/00001648-200009000-00011</a>.
 </div>
+<div id="ref-schaferAverageCausalEffects2008" class="csl-entry">
+Schafer, Joseph L., and Joseph Kang. 2008. <span>“Average Causal Effects
+from Nonrandomized Studies: A Practical Guide and Simulated
+Example.”</span> <em>Psychological Methods</em> 13 (4): 279–313. <a href="https://doi.org/10.1037/a0014268" class="external-link">https://doi.org/10.1037/a0014268</a>.
+</div>
+<div id="ref-snowdenImplementationGComputationSimulated2011" class="csl-entry">
+Snowden, Jonathan M., Sherri Rose, and Kathleen M. Mortimer. 2011.
+<span>“Implementation of G-Computation on a Simulated Data Set:
+Demonstration of a Causal Inference Technique.”</span> <em>American
+Journal of Epidemiology</em> 173 (7): 731–38. <a href="https://doi.org/10.1093/aje/kwq472" class="external-link">https://doi.org/10.1093/aje/kwq472</a>.
+</div>
+<div id="ref-westreichTableFallacyPresenting2013" class="csl-entry">
+Westreich, Daniel, and Sander Greenland. 2013. <span>“The Table 2
+Fallacy: Presenting and Interpreting Confounder and Modifier
+Coefficients.”</span> <em>American Journal of Epidemiology</em> 177 (4):
+292–98. <a href="https://doi.org/10.1093/aje/kws412" class="external-link">https://doi.org/10.1093/aje/kws412</a>.
+</div>
 </div>
 </div>
 <div class="section level2">
 <h2 id="code-to-generate-data-used-in-examples">Code to Generate Data used in Examples<a class="anchor" aria-label="anchor" href="#code-to-generate-data-used-in-examples"></a>
 </h2>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Generating data similar to Austin (2009) for demonstrating treatment effect estimation</span></span>
 <span><span class="va">gen_X</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">9</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="va">n</span>, ncol <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
