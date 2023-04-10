@@ -60,19 +60,20 @@ my.ps <- function(treat, covs, estimand, focal = NULL) {
                 method = my.ps, estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
-\dontshow{if (requireNamespace("twang", quietly = TRUE)) force(\{ # examplesIf}
-#Balancing covariates for longitudinal treatments
-# my.ps is used at each time point.
-library("twang")
-data("iptwExWide", package = "twang")
-(W2 <- weightitMSM(list(tx1 ~ age + gender + use0,
-                        tx2 ~ tx1 + use1 + age + gender + use0,
-                        tx3 ~ tx2 + use2 + tx1 + use1 + age + gender + use0),
-                   data = iptwExWide,
+
+data("msmdata")
+(W2 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                        A_2 ~ X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0,
+                        A_3 ~ X1_2 + X2_2 +
+                          A_2 + X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0),
+                   data = msmdata,
                    method = my.ps))
+
 summary(W2)
 bal.tab(W2)
-\dontshow{\}) # examplesIf}
+
 # Kernel balancing using the KBAL package, available
 # using devtools::install_github("chadhazlett/KBAL").
 # Only the ATT and ATC are available. Use 'kbal.method'

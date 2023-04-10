@@ -23,7 +23,8 @@ Imports:
     ggplot2 (>= 3.3.0),
     chk (>= 0.8.1), rlang (>= 1.1.0),
     crayon,
-    backports (>= 1.4.1)
+    backports (>= 1.4.1),
+    stats, utils
 Suggests:
     CBPS (>= 0.18),
     optweight (>= 0.2.4),
