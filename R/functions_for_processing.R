@@ -1,49 +1,42 @@
+allowable.methods <- function() {
+  c("glm" = "glm", "ps" = "glm",
+    "gbm" = "gbm", "gbr" = "gbm",
+    "cbps" = "cbps",
+    "npcbps" = "npcbps",
+    "ebal" = "ebal", "entropy" = "ebal", "ebalance" = "ebal",
+    # "ebcw" = "ebcw", "ate" = "ebcw",
+    "optweight" = "optweight", "sbw" = "optweight",
+    "super" = "super", "superlearner" = "super",
+    "bart" = "bart",
+    "energy" = "energy")
+}
 method.to.proper.method <- function(method) {
   method <- tolower(method)
-  if      (method %in% c("glm", "ps")) return("glm")
-  else if (method %in% c("gbm", "gbr")) return("gbm")
-  else if (method %in% c("cbps", "cbgps")) return("cbps")
-  else if (method %in% c("npcbps", "npcbgps")) return("npcbps")
-  else if (method %in% c("entropy", "ebal", "ebalance")) return("ebal")
-  # else if (method %in% c("ebcw", "ate")) return("ebcw")
-  else if (method %in% c("optweight", "opt", "sbw")) return("optweight")
-  else if (method %in% c("super", "superlearner")) return("super")
-  else if (method %in% c("bart")) return("bart")
-  else if (method %in% c("energy")) return("energy")
-  # else if (method %in% c("kbal")) return("kbal")
-  else return(method)
+  allowable.methods()[method]
 }
 check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
-  acceptable.methods <- c(  "glm", "ps"
-                          , "gbm", "gbr"
-                          , "cbps", "cbgps"
-                          , "npcbps", "npcbgps"
-                          , "ebal", "entropy", "ebalance"
-                          # , "ebcw", "ate"
-                          , "optweight", "opt", "sbw"
-                          , "super", "superlearner"
-                          , "energy"
-                          , "bart"
-                          # "kbal",
-  )
 
   if (missing(method)) method <- "glm"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (is.character(method)) {
-    if (tolower(method) %nin% acceptable.methods) bad.method <- TRUE
+    if (tolower(method) %nin% names(allowable.methods())) bad.method <- TRUE
   }
   else if (!is.function(method)) bad.method <- TRUE
 
   if (bad.method) {
-    if (identical(method, "twang")) stop('"twang" is no longer an acceptable argument to \'method\'. Please use "gmb" for generalized boosted modeling.', call. = FALSE)
-    stop("'method' must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights.", call. = FALSE)
+    if (identical(method, "twang")) {
+      .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
+    }
+
+    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting\n\tmethod or a function that produces weights. Allowable methods:\n", paste(add_quotes(unique(allowable.methods())), collapse = ", ")), tidy = FALSE)
   }
 
   if (msm && !force && is.character(method)) {
     m <- method.to.proper.method(method)
     if (m %in% c("nbcbps", "ebal", "ebcw", "optweight", "energy", "kbal")) {
-      stop(paste0("The use of ", method.to.phrase(m), " with longitudinal treatments has not been validated. Set weightit.force = TRUE to bypass this error."), call. = FALSE)
+      .err(sprintf("the use of %s with longitudinal treatments has not been validated. Set `weightit.force = TRUE` to bypass this error",
+                   method.to.phrase(m)))
     }
   }
 }
@@ -54,121 +47,130 @@ check.user.method <- function(method) {
   # else if (all(c("covs.list", "treat.list") %in% names(formals(method)))) {
   # }
   else {
-    stop("The user-provided function to 'method' must contain \"covs\" and \"treat\" as named parameters.", call. = FALSE)
+    .err("the user-provided function to `method` must contain `covs` and `treat` as named parameters")
   }
 }
 method.to.phrase <- function(method) {
 
   if (is.function(method)) return("a user-defined method")
-  else {
-    method <- method.to.proper.method(method)
-    if      (method %in% c("glm")) return("propensity score weighting with GLM")
-    else if (method %in% c("gbm")) return("propensity score weighting with GBM")
-    else if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
-    else if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
-    else if (method %in% c("ebal")) return("entropy balancing")
-    # else if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
-    else if (method %in% c("optweight")) return("targeted stable balancing weights")
-    else if (method %in% c("super")) return("propensity score weighting with SuperLearner")
-    else if (method %in% c("bart")) return("propensity score weighting with BART")
-    else if (method %in% c("energy")) return("energy balancing")
-    # else if (method %in% c("kbal")) return("kernel balancing")
-    else return("the chosen method of weighting")
-  }
+
+  method <- method.to.proper.method(method)
+  if (method %in% c("glm")) return("propensity score weighting with GLM")
+  if (method %in% c("gbm")) return("propensity score weighting with GBM")
+  if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
+  if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
+  if (method %in% c("ebal")) return("entropy balancing")
+  # if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
+  if (method %in% c("optweight")) return("targeted stable balancing weights")
+  if (method %in% c("super")) return("propensity score weighting with SuperLearner")
+  if (method %in% c("bart")) return("propensity score weighting with BART")
+  if (method %in% c("energy")) return("energy balancing")
+  # if (method %in% c("kbal")) return("kernel balancing")
+
+  "the chosen method of weighting"
 }
 process.estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
   AE <- list(
     binary = list(  glm = c("ATT", "ATC", "ATE", "ATO", "ATM", "ATOS")
-                  , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                  , cbps = c("ATT", "ATC", "ATE")
-                  , npcbps = c("ATE")
-                  , ebal = c("ATT", "ATC", "ATE")
-                  # , ebcw = c("ATT", "ATC", "ATE")
-                  , optweight = c("ATT", "ATC", "ATE")
-                  , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                  , energy = c("ATT", "ATC", "ATE")
-                  , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                  # , kbal = c("ATT", "ATC", "ATE")
+                    , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                    , cbps = c("ATT", "ATC", "ATE")
+                    , npcbps = c("ATE")
+                    , ebal = c("ATT", "ATC", "ATE")
+                    # , ebcw = c("ATT", "ATC", "ATE")
+                    , optweight = c("ATT", "ATC", "ATE")
+                    , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                    , energy = c("ATT", "ATC", "ATE")
+                    , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                    # , kbal = c("ATT", "ATC", "ATE")
     ),
     multinomial = list(  glm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                       , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                       , cbps = c("ATT", "ATC", "ATE")
-                       , npcbps = c("ATE")
-                       , ebal = c("ATT", "ATC", "ATE")
-                       # , ebcw = c("ATT", "ATC", "ATE")
-                       , optweight = c("ATT", "ATC", "ATE")
-                       , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                       , energy = c("ATT", "ATC", "ATE")
-                       , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                       # , kbal = c("ATT", "ATE")
+                         , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                         , cbps = c("ATT", "ATC", "ATE")
+                         , npcbps = c("ATE")
+                         , ebal = c("ATT", "ATC", "ATE")
+                         # , ebcw = c("ATT", "ATC", "ATE")
+                         , optweight = c("ATT", "ATC", "ATE")
+                         , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                         , energy = c("ATT", "ATC", "ATE")
+                         , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
+                         # , kbal = c("ATT", "ATE")
     ))
 
-  if (treat.type != "continuous" && !is.function(method)) {
-    if (is_null(estimand)) stop(paste0("estimand must be one of ", word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "or"), "."), call. = FALSE)
-    else if (toupper(estimand) %nin% AE[[treat.type]][[method]]) {
-      stop(paste0("\"", estimand, "\" is not an allowable estimand for ", method.to.phrase(method),
-                  " with ", treat.type, " treatments. Only ", word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE),
-                  " allowed."), call. = FALSE)
-    }
+
+  if (treat.type == "continuous" || is.function(method)) {
+    .chk_null_or(estimand, chk::chk_string)
+    return(toupper(estimand))
   }
-  return(toupper(estimand))
+
+  chk::chk_string(estimand)
+  estimand <- toupper(estimand)
+
+  if (estimand %nin% AE[[treat.type]][[method]]) {
+    .err(sprintf("%s is not an allowable estimand for %s with %s treatments. Only %s allowed",
+                 add_quotes(estimand), method.to.phrase(method), treat.type,
+                 word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE)))
+  }
+
+  estimand
 }
 check.subclass <- function(method, treat.type) {
   #Allowable estimands
   AE <- list(
     binary = list(  glm = TRUE
-                  , gbm = TRUE
-                  , cbps = TRUE
-                  , npcbps = FALSE
-                  , ebal = FALSE
-                  # , ebcw = FALSE
-                  , optweight = FALSE
-                  , super = TRUE
-                  , energy = FALSE
-                  , bart = TRUE
-                  # , kbal = FALSE
+                    , gbm = TRUE
+                    , cbps = TRUE
+                    , npcbps = FALSE
+                    , ebal = FALSE
+                    # , ebcw = FALSE
+                    , optweight = FALSE
+                    , super = TRUE
+                    , energy = FALSE
+                    , bart = TRUE
+                    # , kbal = FALSE
     ),
     multinomial = list(  glm = TRUE
-                       , gbm = TRUE
-                       , cbps = FALSE
-                       , npcbps = FALSE
-                       , ebal = FALSE
-                       # , ebcw = FALSE
-                       , optweight = FALSE
-                       , super = TRUE
-                       , energy = FALSE
-                       , bart = TRUE
+                         , gbm = TRUE
+                         , cbps = FALSE
+                         , npcbps = FALSE
+                         , ebal = FALSE
+                         # , ebcw = FALSE
+                         , optweight = FALSE
+                         , super = TRUE
+                         , energy = FALSE
+                         , bart = TRUE
     ))
 
   if (treat.type != "continuous" && !is.function(method) &&
       !AE[[treat.type]][[method]]) {
-    stop(paste0("subclasses are not compatible with ", method.to.phrase(method),
-                " with ", treat.type, " treatments."), call. = FALSE)
+    .err(sprintf("subclasses are not compatible with %s with %s treatments",
+                 method.to.phrase(method), treat.type))
   }
 }
 process.ps <- function(ps, data = NULL, treat) {
-  if (is_not_null(ps)) {
-    if (is.character(ps) && length(ps)==1) {
-      if (is_null(data)) {
-        stop("'ps' was specified as a string but there was no argument to 'data'.", call. = FALSE)
-      }
-      else if (ps %in% names(data)) {
-        ps <- data[[ps]]
-      }
-      else stop("The name supplied to 'ps' is not the name of a variable in 'ps'.", call. = FALSE)
+  if (is_null(ps)) return(NULL)
+
+  if (is.character(ps) && length(ps) == 1L) {
+    if (is_null(data)) {
+      .err("`ps` was specified as a string but there was no argument to `data`")
     }
-    else if (is.numeric(ps)) {
-      if (length(ps) != length(treat)) {
-        stop("'ps' must have the same number of units as the treatment.", call. = FALSE)
-      }
+    else if (ps %in% names(data)) {
+      ps <- data[[ps]]
     }
     else {
-      stop("The argument to 'ps' must be a vector of propensity scores or the (quoted) names of the variable in 'data' that contains sampling weights.", call. = FALSE)
+      .err("the name supplied to `ps` is not the name of a variable in `data`")
     }
   }
-  else ps <- NULL
-  return(ps)
+  else if (is.numeric(ps)) {
+    if (length(ps) != length(treat)) {
+      .err("`ps` must have the same number of units as the treatment")
+    }
+  }
+  else {
+    .err("the argument to `ps` must be a vector of propensity scores or the (quoted) name of the variable in `data` that contains propensity scores")
+  }
+
+  ps
 }
 process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
   reported.estimand <- estimand
@@ -180,34 +182,36 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
 
   #Check focal
   if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
-    stop("The argument supplied to 'focal' must be the name of a level of treatment.", call. = FALSE)
+    .err("the argument supplied to `focal` must be the name of a level of treatment")
   }
 
   if (treat.type == "multinomial") {
 
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE, immediate. = TRUE)
+      .wrn(sprintf("`estimand = %s` is not compatible with `focal`. Setting `estimand` to \"ATT\"",
+                   add_quotes(estimand)))
       reported.estimand <- estimand <- "ATT"
     }
 
     if (estimand == "ATT") {
       if (is_null(focal)) {
         if (is_null(treated) || treated %nin% unique.treat) {
-          stop("When estimand = \"ATT\" for multinomial treatments, an argument must be supplied to 'focal'.", call. = FALSE)
+          .err("when `estimand = \"ATT\"` for multi-category treatments, an argument must be supplied to `focal`")
         }
         focal <- treated
       }
     }
     else if (estimand == "ATC") {
       if (is_null(focal)) {
-        stop("When estimand = \"ATC\" for multinomial treatments, an argument must be supplied to 'focal'.", call. = FALSE)
+        .err("when `estimand = \"ATC\"` for multi-category treatments, an argument must be supplied to `focal`")
       }
     }
   }
   else if (treat.type == "binary") {
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      warning(paste(estimand, "is not compatible with 'focal'. Setting 'estimand' to \"ATT\"."), call. = FALSE, immediate. = TRUE)
+      .wrn(sprintf("`estimand = %s` is not compatible with `focal`. Setting `estimand` to \"ATT\"",
+                   add_quotes(estimand)))
       reported.estimand <- estimand <- "ATT"
     }
 
@@ -221,16 +225,17 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
           else treated <- unique.treat[unique.treat.bin == 1]
 
           if (estimand == "ATT") {
-            message(paste0("Assuming ", word_list(treated, quotes = !is.numeric(treat), is.are = TRUE),
-                           " the treated level. If not, supply an argument to 'focal'."))
+            .msg(sprintf("assuming %s the treated level. If not, supply an argument to `focal`",
+                         word_list(treated, quotes = !is.numeric(treat), is.are = TRUE)))
 
           }
           else if (estimand == "ATC") {
-            message(paste0("Assuming ", word_list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE),
-                           " the control level. If not, supply an argument to 'focal'."))
+            .msg(sprintf("assuming %s the control level. If not, supply an argument to `focal`",
+                         word_list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE)))
           }
 
         }
+
         if (estimand == "ATT")
           focal <- treated
         else if (estimand == "ATC")
@@ -255,10 +260,10 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
     }
   }
 
-  return(list(focal = as.character(focal),
-              estimand = estimand,
-              reported.estimand = reported.estimand,
-              treated = if (is.factor(treated)) as.character(treated) else treated))
+  list(focal = as.character(focal),
+       estimand = estimand,
+       reported.estimand = reported.estimand,
+       treated = if (is.factor(treated)) as.character(treated) else treated)
 }
 process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
@@ -284,11 +289,14 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     by.name <- colnames(by)[1]
     by <- drop(by[, 1])
   }
-  else if (is.formula(by, 1)) {
+  else if (rlang::is_formula(by, lhs = FALSE)) {
     t.c <- get.covs.and.treat.from.formula(by, data)
     by <- t.c[["reported.covs"]]
-    if (NCOL(by) != 1) stop(paste0("Only one variable can be on the right-hand side of the formula for '", by.arg, "'."), call. = FALSE)
-    else by.name <- colnames(by)
+    if (NCOL(by) != 1) {
+      .err(sprintf("only one variable can be on the right-hand side of the formula for `%s`",
+                   by.arg))
+    }
+    by.name <- colnames(by)
   }
   else bad.by <- TRUE
 
@@ -304,94 +312,103 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
   }
   else {
-    stop(paste0("'",by.arg, "' must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side."), call. = FALSE)
+    .err(sprintf("`%s` must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side",
+                 by.arg))
   }
 
   if (treat.type != "continuous" && any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
-    stop(paste0("Not all the groups formed by '", by.arg, "' contain all treatment levels", if (is_not_null(treat.name)) paste("in", treat.name) else "", ". Consider coarsening ", by.arg, "."), call. = FALSE)
+    .err(sprintf("Not all the groups formed by `%s` contain all treatment levels%s. Consider coarsening `%s`",
+                 by.arg, if (is_not_null(treat.name)) paste(" in", treat.name) else "", by.arg))
   }
   attr(by.components, "by.factor") <- by.factor
-  return(by.components)
+
+  by.components
 }
 process.moments.int <- function(moments, int, method) {
 
   if (is.function(method) || method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
-    if (length(int) != 1 || !is.logical(int)) {
-      stop("int must be a logical (TRUE/FALSE) of length 1.", call. = FALSE)
-    }
+    chk::chk_flag(int)
+
     if (is_not_null(moments)) {
       if (length(moments) != 1 || !is.numeric(moments) ||
           !check_if_zero(moments - round(moments))) {
+        chk::chk_whole_number(moments)
         if (method == "energy") {
-          if (moments < 0) stop("'moments' must be a nonnegative integer of length 1.", call. = FALSE)
+          chk::chk_gte(moments, 0)
         }
         else if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
-          if (moments < 1) stop("'moments' must be a positive integer of length 1.", call. = FALSE)
+          chk::chk_gt(moments, 0)
         }
         moments <- as.integer(moments)
       }
     }
     else {
-      if (!is.function(method) && method == "energy" && !int) moments <- 0L
-      else moments <- 1L
+      moments <- {
+        if (!is.function(method) && method == "energy" && !int) 0L
+        else 1L
+      }
     }
   }
   else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
-    warning(paste0(word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = 1),
-                   " not compatible with ", method.to.phrase(method), ". Ignoring ", word_list(c("moments", "int")[mi0], and.or = "and", quotes = 1), "."), call. = FALSE, immediate. = TRUE)
+    .wrn(sprintf("%s not compatible with %s. Ignoring %s",
+                 word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
+                 method.to.phrase(method),
+                 word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`")))
     moments <- NULL
     int <- FALSE
   }
   moments <- as.integer(moments)
 
-  return(list(moments = moments, int = int))
+  list(moments = moments, int = int)
 }
 process.MSM.method <- function(is.MSM.method, method) {
   methods.with.MSM <- c("optweight")
   if (is.function(method)) {
-    if (isTRUE(is.MSM.method)) stop("Currently, only user-defined methods that work with is.MSM.method = FALSE are allowed.", call. = FALSE)
+    if (isTRUE(is.MSM.method)) .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
     is.MSM.method <- FALSE
   }
   else if (method %in% methods.with.MSM) {
     if (is_null(is.MSM.method)) is.MSM.method <- TRUE
     else if (!isTRUE(is.MSM.method)) {
-      message(paste0(method.to.phrase(method), " can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set 'is.MSM.method' to TRUE."))
+      .msg(paste0("%s can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
+                 method.to.phrase(method)))
     }
   }
   else {
-    if (isTRUE(is.MSM.method)) warning(paste0(method.to.phrase(method), " cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point."),
-                                       call. = FALSE, immediate. = TRUE)
+    if (isTRUE(is.MSM.method)) {
+      .wrn(sprintf("%s cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point",
+                   method.to.phrase(method)))
+    }
     is.MSM.method <- FALSE
   }
 
-  return(is.MSM.method)
-
+  is.MSM.method
 }
 process.missing <- function(missing, method, treat.type) {
   #Allowable estimands
   AE <- list(binary = list(  glm = c("ind", "saem")
-                           , gbm = c("ind", "surr")
-                           , cbps = c("ind")
-                           , npcbps = c("ind")
-                           , ebal = c("ind")
-                           # , ebcw = c("ind")
-                           , optweight = c("ind")
-                           , super = c("ind")
-                           , bart = c("ind")
-                           , energy = c("ind")
-                           # , kbal = c("ind")
+                             , gbm = c("ind", "surr")
+                             , cbps = c("ind")
+                             , npcbps = c("ind")
+                             , ebal = c("ind")
+                             # , ebcw = c("ind")
+                             , optweight = c("ind")
+                             , super = c("ind")
+                             , bart = c("ind")
+                             , energy = c("ind")
+                             # , kbal = c("ind")
   ),
   multinomial = list(  glm = c("ind")
-                     , gbm = c("ind", "surr")
-                     , cbps = c("ind")
-                     , npcbps = c("ind")
-                     , ebal = c("ind")
-                     # , ebcw = c("ind")
-                     , optweight = c("ind")
-                     , super = c("ind")
-                     , bart = c("ind")
-                     , energy = c("ind")
-                     # , kbal = c("ind")
+                       , gbm = c("ind", "surr")
+                       , cbps = c("ind")
+                       , npcbps = c("ind")
+                       , ebal = c("ind")
+                       # , ebcw = c("ind")
+                       , optweight = c("ind")
+                       , super = c("ind")
+                       , bart = c("ind")
+                       , energy = c("ind")
+                       # , kbal = c("ind")
   ),
   continuous = list(  glm = c("ind", "saem")
                       , gbm = c("ind", "surr")
@@ -407,60 +424,34 @@ process.missing <- function(missing, method, treat.type) {
   ))
 
   allowable.missings <- AE[[treat.type]][[method]]
+
   if (is_null(missing)) {
-    missing <- allowable.missings[1]
-    warning(paste0("Missing values are present in the covariates. See ?WeightIt::method_",
-                   method, " for information on how these are handled."), call. = FALSE, immediate. = TRUE)
+    .wrn(sprintf("missing values are present in the covariates. See `?WeightIt::method_%s` for information on how these are handled",
+                 method))
+    return(allowable.missings[1])
   }
-  else {
-    if (!is.character(missing) || length(missing) != 1) stop("'missing' must be a string of length 1.", call. = FALSE)
-    if (missing %pin% allowable.missings) {
-      missing <- allowable.missings[pmatch(missing, allowable.missings)]
-    }
-    else {
-      missing <- allowable.missings[1]
-      warning(paste0("Only ", word_list(allowable.missings, quotes = 2, is.are = TRUE), " allowed for 'missing' with ",
-                     treat.type,
-                     " treatments. Using link = ", word_list(allowable.missings[1], quotes = 2), "."),
-              call. = FALSE, immediate. = TRUE)
-    }
+
+  chk::chk_string(missing)
+  if (!missing %pin% allowable.missings) {
+    .wrn(sprintf("only %s allowed for `missing` with %s treatments. Using %s",
+                 word_list(allowable.missings, quotes = 2, is.are = TRUE),
+                 treat.type,
+                 word_list(allowable.missings[1], quotes = 2)))
+    return(allowable.missings[1])
   }
-  return(missing)
-}
-process.bin.vars <- function(bin.vars, mat) {
-  if (missing(bin.vars)) bin.vars <- is_binary_col(mat)
-  else if (is_null(bin.vars)) bin.vars <- rep(FALSE, ncol(mat))
-  else {
-    if (is.logical(bin.vars)) {
-      bin.vars[is.na(bin.vars)] <- FALSE
-      if (length(bin.vars) != ncol(mat)) stop("If 'bin.vars' is logical, it must have length equal to the number of columns of 'mat'.")
-    }
-    else if (is.numeric(bin.vars)) {
-      bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != 0]
-      if (any(bin.vars < 0) && any(bin.vars > 0)) stop("Positive and negative indices cannot be mixed with 'bin.vars'.")
-      if (any(abs(bin.vars) > ncol(mat))) stop("If 'bin.vars' is numeric, none of its values can exceed the number of columns of 'mat'.")
-      logical.bin.vars <- rep(any(bin.vars < 0), ncol(mat))
-      logical.bin.vars[abs(bin.vars)] <- !logical.bin.vars[abs(bin.vars)]
-      bin.vars <- logical.bin.vars
-    }
-    else if (is.character(bin.vars)) {
-      bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != ""]
-      if (is_null(colnames(mat))) stop("If 'bin.vars' is character, 'mat' must have column names.")
-      if (any(bin.vars %nin% colnames(mat))) stop("If 'bin.vars' is character, all its values must be column names of 'mat'.")
-      bin.vars <- colnames(mat) %in% bin.vars
-    }
-    else stop("'bin.vars' must be a logical, numeric, or character vector.")
-  }
-  return(bin.vars)
+
+  allowable.missings[pmatch(missing, allowable.missings)]
 }
 make.closer.to.1 <- function(x) {
-  if (is_(x, c("factor", "character")) || all_the_same(x)) return(x)
-  else if (is_binary(x)) {
+  if (chk::vld_character_or_factor(x) || all_the_same(x)) {
+    return(x)
+  }
+
+  if (is_binary(x)) {
     return(as.numeric(x == x[!is.na(x)][1]))
   }
-  else {
-    (x - mean_fast(x, TRUE))/sd(x, na.rm = TRUE)
-  }
+
+  (x - mean_fast(x, TRUE))/sd(x, na.rm = TRUE)
 }
 int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, orthogonal_poly = TRUE) {
   #Adds to data frame interactions and polynomial terms
@@ -582,145 +573,33 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
     }
   }
 
-  return(s.d.denom)
+  s.d.denom
 }
 get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   s.d.denom.specified <- is_not_null(s.d.denom)
 
-  if (s.d.denom.specified) {
-    allowable.s.d.denoms <- c("all", "weighted")
-
-    try.s.d.denom <- tryCatch(match_arg(s.d.denom, allowable.s.d.denoms),
-                              error = function(cond) NA_character_)
-    if (anyNA(try.s.d.denom)) {
-      s.d.denom <- "all"
-    }
-    else {
-      s.d.denom <- try.s.d.denom
-    }
-  }
-  else {
-    s.d.denom <- "all"
+  if (!s.d.denom.specified) {
+    return("all")
   }
 
-  return(s.d.denom)
-}
-compute_s.d.denom <- function(mat, treat, s.d.denom = "pooled", s.weights = NULL, bin.vars = NULL, subset = NULL, weighted.weights = NULL, to.sd = rep(TRUE, ncol(mat)), na.rm = TRUE) {
-  denoms <- setNames(rep(1, ncol(mat)), colnames(mat))
-  if (is.character(s.d.denom) && length(s.d.denom) == 1L) {
-    if (is_null(bin.vars)) {
-      bin.vars <- rep(FALSE, ncol(mat))
-      bin.vars[to.sd] <- is_binary_col(mat[subset, to.sd,drop = FALSE])
-    }
-    else if (!is.atomic(bin.vars) || length(bin.vars) != ncol(mat) ||
-             anyNA(as.logical(bin.vars))) {
-      stop("'bin.vars' must be a logical vector with length equal to the number of columns of 'mat'.")
-    }
+  allowable.s.d.denoms <- c("all", "weighted")
 
-    possibly.supplied <- c("mat", "treat", "weighted.weights", "s.weights", "subset")
-    lengths <- setNames(vapply(mget(possibly.supplied), len, integer(1L)),
-                        possibly.supplied)
-    supplied <- lengths > 0
-    if (!all_the_same(lengths[supplied])) {
-      stop(paste(word_list(possibly.supplied[supplied], quotes = 1), "must have the same number of units."))
-    }
-
-    if (lengths["weighted.weights"] == 0) weighted.weights <- rep(1, NROW(mat))
-    if (lengths["s.weights"] == 0) s.weights <- rep(1, NROW(mat))
-    if (lengths["subset"] == 0) subset <- rep(TRUE, NROW(mat))
-    else if (anyNA(as.logical(subset))) stop("'subset' must be a logical vector.")
-
-    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-    cont.treat <- get.treat.type(treat) == "continuous"
-
-    if (!cont.treat) {
-      treat <- as.character(treat)
-      unique.treats <- unique(treat)
-    }
-    else unique.treats <- NULL
-
-    if (s.d.denom %in% unique.treats)
-      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                            unique.treats, na.rm) {
-        sqrt(col.w.v(mat[treat == s.d.denom, , drop = FALSE],
-                     w = s.weights[treat == s.d.denom],
-                     bin.vars = bin.vars, na.rm = na.rm))
-      }
-
-    else if (s.d.denom == "pooled")
-      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                            unique.treats, na.rm) {
-        sqrt(Reduce("+", lapply(unique.treats,
-                                function(t) col.w.v(mat[treat == t, , drop = FALSE],
-                                                    w = s.weights[treat == t],
-                                                    bin.vars = bin.vars, na.rm = na.rm))) / length(unique.treats))
-      }
-    else if (s.d.denom == "all")
-      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                            unique.treats, na.rm) {
-        sqrt(col.w.v(mat, w = s.weights, bin.vars = bin.vars, na.rm = na.rm))
-      }
-    else if (s.d.denom == "weighted")
-      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                            unique.treats, na.rm) {
-        sqrt(col.w.v(mat, w = weighted.weights * s.weights, bin.vars = bin.vars, na.rm = na.rm))
-      }
-    else if (s.d.denom == "hedges")
-      denom.fun <- function(mat, treat, s.weights, weighted.weights, bin.vars,
-                            unique.treats, na.rm) {
-        (1 - 3/(4*length(treat) - 9))^-1 * sqrt(Reduce("+", lapply(unique.treats,
-                                                                   function(t) (sum(treat == t) - 1) * col.w.v(mat[treat == t, , drop = FALSE],
-                                                                                                               w = s.weights[treat == t],
-                                                                                                               bin.vars = bin.vars, na.rm = na.rm))) / (length(treat) - 2))
-      }
-    else stop("s.d.denom is not an allowed value.")
-
-    denoms[to.sd] <- denom.fun(mat = mat[, to.sd, drop = FALSE], treat = treat, s.weights = s.weights,
-                               weighted.weights = weighted.weights, bin.vars = bin.vars[to.sd],
-                               unique.treats = unique.treats, na.rm = na.rm)
-
-    if (any(zero_sds <- check_if_zero(denoms[to.sd]))) {
-      denoms[to.sd][zero_sds] <- sqrt(col.w.v(mat[, to.sd, drop = FALSE][, zero_sds, drop = FALSE],
-                                              w = s.weights,
-                                              bin.vars = bin.vars[to.sd][zero_sds], na.rm = na.rm))
-    }
-
-    if (cont.treat) {
-      treat.sd <- denom.fun(mat = treat, s.weights = s.weights,
-                            weighted.weights = weighted.weights, bin.vars = FALSE,
-                            na.rm = na.rm)
-      denoms[to.sd] <- denoms[to.sd]*treat.sd
-    }
+  try.s.d.denom <- tryCatch(match_arg(s.d.denom, allowable.s.d.denoms),
+                            error = function(cond) NA_character_)
+  if (anyNA(try.s.d.denom)) {
+    return("all")
   }
-  else {
-    if (is.numeric(s.d.denom)) {
-      if (is_not_null(names(s.d.denom)) && any(colnames(mat) %in% names(s.d.denom))) {
-        denoms[colnames(mat)[colnames(mat) %in% names(s.d.denom)]] <- s.d.denom[names(s.d.denom)[names(s.d.denom) %in% colnames(mat)]]
-      }
-      else if (length(s.d.denom) == sum(to.sd)) {
-        denoms[to.sd] <- s.d.denom
-      }
-      else if (length(s.d.denom) == ncol(mat)) {
-        denoms[] <- s.d.denom
-      }
-      else {
-        stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?cobalt::col_w_smd for allowable values.")
-      }
-    }
-    else {
-      stop("'s.d.denom' must be an allowable value or a numeric vector of with length equal to the number of columns of 'mat'. See ?cobalt::col_w_smd for allowable values.")
-    }
-  }
-  return(denoms)
+
+  try.s.d.denom
 }
 check_estimated_weights <- function(w, treat, treat.type, s.weights) {
 
-  tw <- w*s.weights
+  tw <- w * s.weights
 
   extreme.warn <- FALSE
   if (treat.type == "continuous") {
     if (all_the_same(w)) {
-      warning(sprintf("All weights are %s, possibly indicating an estimation failure.", w[1]), call. = FALSE)
+      .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1]))
     }
     else {
       w.cv <- sd(tw, na.rm = TRUE)/mean(tw, na.rm = TRUE)
@@ -729,7 +608,7 @@ check_estimated_weights <- function(w, treat, treat.type, s.weights) {
   }
   else {
     if (all_the_same(w)) {
-      warning(sprintf("All weights are %s, possibly indicating an estimation failure.", w[1]), call. = FALSE)
+      .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1]))
     }
     else {
       t.levels <- unique(treat)
@@ -745,15 +624,16 @@ check_estimated_weights <- function(w, treat, treat.type, s.weights) {
 
       if (any(bad.treat.groups)) {
         n <- sum(bad.treat.groups)
-        warning(sprintf("All weights are NA or 0 in treatment %s %s.",
+        .wrn(sprintf("all weights are `NA` or 0 in treatment %s %s",
                         ngettext(n, "group", "groups"),
-                        word_list(t.levels[bad.treat.groups], quotes = TRUE)), call. = FALSE)
+                        word_list(t.levels[bad.treat.groups], quotes = TRUE)))
       }
     }
   }
 
-  if (extreme.warn) warning("Some extreme weights were generated. Examine them with summary() and maybe trim them with trim().", call. = FALSE)
-
+  if (extreme.warn) {
+    .wrn("some extreme weights were generated. Examine them with `summary()` and maybe trim them with `trim()`")
+  }
 }
 ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
   if (is_(ps, c("matrix", "data.frame"))) {
@@ -768,79 +648,82 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
   else t.levels <- unique(treat, nmax = length(treat)/4)
 
   if (treat.type == "binary") {
-    if ((is.matrix(ps) && is.numeric(ps)) ||
-        (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
-      if (ncol(ps) == 1) {
-        if (can_str2num(treat) &&
-            all(check_if_zero(binarize(treat) - str2num(treat)))) treated.level <- 1
-        else if (is_not_null(treated)) {
-          if (treated %in% treat) treated.level <- treated
-          else stop("The argument to 'treated' must be a value in treat.", call. = FALSE)
-        }
-        else if (is_not_null(assumed.treated)) {
-          treated.level <- assumed.treated
-        }
-        else if (is_not_null(colnames(ps)) && colnames(ps) %in% as.character(t.levels)) {
-          treated.level <- colnames(ps)
-        }
-        else {
-          stop("If the treatment has two non-0/1 levels and 'ps' is a vector or has only one column, an argument to 'treated' must be supplied.", call. = FALSE)
-        }
+    if ((!is.matrix(ps) || !is.numeric(ps)) &&
+        (!is.data.frame(ps) || !all(vapply(ps, is.numeric, logical(1L))))) {
+      .err("`ps` must be a matrix, data frame, or vector of propensity scores")
+    }
 
-        t.levels <- c(treated.level, t.levels[t.levels != treated.level])
-        ps <- matrix(c(ps[,1], 1-ps[,1]), ncol = 2, dimnames = list(ps.names, as.character(t.levels)))
+    if (ncol(ps) == 1) {
+      if (can_str2num(treat) &&
+          all(check_if_zero(binarize(treat) - str2num(treat)))) {
+        treated.level <- 1
       }
-      else if (ncol(ps) == 2) {
-        if (!all(as.character(t.levels) %in% colnames(ps))) {
-          stop("If 'ps' has two columns, they must be named with the treatment levels.", call. = FALSE)
+      else if (is_not_null(treated)) {
+        if (!treated %in% treat) {
+          .err("the argument to `treated` must be a value in `treat`")
         }
-        # else ps <- ps
+        treated.level <- treated
+      }
+      else if (is_not_null(assumed.treated)) {
+        treated.level <- assumed.treated
+      }
+      else if (is_not_null(colnames(ps)) && colnames(ps) %in% as.character(t.levels)) {
+        treated.level <- colnames(ps)
       }
       else {
-        stop("'ps' cannot have more than two columns if the treatment is binary.", call. = FALSE)
+        .err("if the treatment has two non-0/1 levels and `ps` is a vector or has only one column, an argument to `treated` must be supplied")
+      }
+
+      t.levels <- c(treated.level, t.levels[t.levels != treated.level])
+      ps <- matrix(c(ps[, 1], 1 - ps[, 1]), ncol = 2, dimnames = list(ps.names, as.character(t.levels)))
+    }
+    else if (ncol(ps) == 2) {
+      if (!all(as.character(t.levels) %in% colnames(ps))) {
+        .err("if `ps` has two columns, they must be named with the treatment levels")
       }
     }
     else {
-      stop("'ps' must be a matrix, data frame, or vector of propensity scores.", call. = FALSE)
+      .err("`ps` cannot have more than two columns if the treatment is binary")
     }
+
   }
   else if (treat.type == "multinomial") {
-    if ((is.matrix(ps) && is.numeric(ps)) ||
-        (is.data.frame(ps) && all(vapply(ps, is.numeric, logical(1L))))) {
-      if (ncol(ps) == 1) {
-        if (toupper(estimand) == "ATE") {
-          ps <- matrix(rep(ps, nunique(treat)), nrow = length(treat), dimnames = list(ps.names, t.levels))
-        }
-        else {
-          stop("With multinomial treatments, 'ps' can be a vector or have only one column only if the estimand is the ATE.", call. = FALSE)
-        }
+    if ((!is.matrix(ps) || !is.numeric(ps)) &&
+        (!is.data.frame(ps) || !all(vapply(ps, is.numeric, logical(1L))))) {
+      .err("`ps` must be a matrix or data frame of propensity scores")
+    }
+
+    if (ncol(ps) == 1) {
+      if (toupper(estimand) != "ATE") {
+        .err("with multinomial treatments, `ps` can be a vector or have only one column only if the estimand is the ATE")
       }
-      else if (ncol(ps) == nunique(treat)) {
-        if (!all(t.levels %in% colnames(ps))) {
-          stop("The columns of 'ps' must be named with the treatment levels.", call. = FALSE)
-        }
-        else ps <- ps
-      }
-      else {
-        stop("'ps' must have as many columns as there are treatment levels.", call. = FALSE)
+
+      ps <- matrix(rep(ps, nunique(treat)), nrow = length(treat), dimnames = list(ps.names, t.levels))
+    }
+    else if (ncol(ps) == nunique(treat)) {
+      if (!all(t.levels %in% colnames(ps))) {
+        .err("the columns of `ps` must be named with the treatment levels")
       }
     }
     else {
-      stop("'ps' must be a matrix or data frame of propensity scores.", call. = FALSE)
+      .err("`ps` must have as many columns as there are treatment levels")
     }
+
   }
-  return(ps)
+
+  ps
 }
 subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
-  if (length(subclass) != 1 || !is.numeric(subclass)) {
-    stop("'subclass' must be a single number.", call. = FALSE)
-  }
-  else if (round(subclass) <= 1) {
-    stop("'subclass' must be greater than 1.", call. = FALSE)
-  }
+  chk::chk_count(subclass)
   subclass <- round(subclass)
 
-  if (is_not_null(focal)) ps_mat <- ps_mat[,c(focal, setdiff(colnames(ps_mat), focal))]
+  if (!toupper(estimand) %in% c("ATE", "ATT")) {
+    .err("only the ATE, ATT, and ATC are compatible with stratification weights")
+  }
+
+  if (is_not_null(focal)) {
+    ps_mat <- ps_mat[,c(focal, setdiff(colnames(ps_mat), focal))]
+  }
 
   ps_sub <- sub_mat <- ps_mat * 0
 
@@ -858,14 +741,11 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
                                               seq(0, 1, length.out = subclass + 1)),
                                      all.inside = TRUE))
     }
-    else {
-      stop("Only the ATE, ATT, and ATC are compatible with stratification weights.")
-    }
 
     sub.tab <- table(treat, sub)
 
     if (any(sub.tab == 0)) {
-      # stop("Too many subclasses were requested.", call. = FALSE)
+      # .err("Too many subclasses were requested")
       sub <- subclass_scoot(sub, treat, ps_mat[,i])
       sub.tab <- table(treat, sub)
     }
@@ -887,7 +767,8 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
   }
 
   attr(ps_sub, "sub_mat") <- sub_mat
-  return(ps_sub)
+
+  ps_sub
 }
 subclass_scoot <- function(sub, treat, x, min.n = 1) {
   #Reassigns subclasses so there are no empty subclasses
@@ -907,7 +788,7 @@ subclass_scoot <- function(sub, treat, x, min.n = 1) {
                   original.order)
 
   if (any(table(treat) < nsub * min.n)) {
-    stop("Too many subclasses were requested.", call. = FALSE)
+    .err("too many subclasses were requested")
   }
 
   for (t in unique.treat) {
@@ -961,22 +842,24 @@ subclass_scoot <- function(sub, treat, x, min.n = 1) {
     sub <- sub[names(sub)]
   }
 
-  return(sub)
+  sub
 }
 stabilize_w <- function(weights, treat) {
   if (is.factor(treat)) t.levels <- levels(treat)
   else t.levels <- unique(treat)
+
   w.names <- names(weights)
   tab <- setNames(vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L)), t.levels)
-  return(setNames(weights * tab[as.character(treat)], w.names))
+
+  setNames(weights * tab[as.character(treat)], w.names)
 }
 `%+%` <- function(...) {
-  if (is_(..1, "atomic") && is_(..2, "atomic")) crayon::`%+%`(as.character(..1), as.character(..2))
+  if (is.atomic(..1) && is.atomic(..2)) crayon::`%+%`(as.character(..1), as.character(..2))
   else ggplot2::`%+%`(...)
 }
 
 get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, use.kernel = FALSE,
-                             densControl = list(bw = "nrd0", n = 10*length(treat),
+                             densControl = list(bw = "nrd0", n = 10 * length(treat),
                                                 adjust = 1, kernel = "gaussian")) {
 
   if (!is.matrix(ps)) ps <- matrix(ps, ncol = 1)
@@ -996,17 +879,15 @@ get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, us
   else {
     dens.denom <- densfun(mat_div(p.denom, sqrt(col.w.v(p.denom))))
     if (is_null(dens.denom) || !is.numeric(dens.denom) || anyNA(dens.denom)) {
-      stop("There was a problem with the output of 'density.' Try another density function or leave it blank to use the normal density.", call. = FALSE)
+      .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the normal density")
     }
-    else if (any(dens.denom <= 0)) {
-      stop("The input to 'density' may not accept the full range of standardized residuals of the treatment model.", call. = FALSE)
+    if (any(dens.denom <= 0)) {
+      .err("the input to `density` may not accept the full range of standardized residuals of the treatment model")
     }
 
   }
 
-  w <- drop(dens.num/dens.denom)
-
-  return(w)
+  drop(dens.num/dens.denom)
 }
 
 get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = NULL, stabilize = FALSE) {
@@ -1017,6 +898,7 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
   }
 
   if (length(dim(ps)) == 2) {
+    #Binary treatment, vector ps
     if (is_not_null(focal)) focal <- "1"
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
@@ -1026,28 +908,28 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
       }
     }
 
-    if (toupper(estimand) == "ATE") {
+    if (estimand == "ATE") {
       w <- treat/ps + (1-treat)/(1-ps)
     }
-    else if (toupper(estimand) == "ATT") {
+    else if (estimand == "ATT") {
       w <- treat + (1-treat)*ps/(1-ps)
     }
-    else if (toupper(estimand) == "ATO") {
+    else if (estimand == "ATO") {
       w <- ps * (1-ps)
     }
-    else if (toupper(estimand) == "ATM") {
+    else if (estimand == "ATM") {
       w <- (treat/ps + (1-treat)/(1-ps))
-      w[ps < .5] <- ps * w
-      w[ps >= .5] <- (1-ps) * w
+      w <- w * pmin(ps, 1 - ps)
     }
 
     if (stabilize) {
       for (i in 0:1) {
-        w[treat == i] <- mean_fast(treat == i)*w[treat == i]
+        w[treat == i] <- mean_fast(treat == i) * w[treat == i]
       }
     }
   }
   else if (length(dim(ps)) == 3) {
+    #Multi-category treatment, matrix PS
 
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
@@ -1059,15 +941,15 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
     t.levs <- unique(treat)
     for (i in t.levs) w[treat == i,] <- 1/ps[treat == i, as.character(i),]
 
-    if (toupper(estimand) == "ATE") {
+    if (estimand == "ATE") {
     }
-    else if (toupper(estimand) == "ATT") {
+    else if (estimand == "ATT") {
       w <- w * ps[, as.character(focal),]
     }
-    else if (toupper(estimand) == "ATO") {
+    else if (estimand == "ATO") {
       w <- w / colSums(aperm(1/ps, c(2,1,3)))
     }
-    else if (toupper(estimand) == "ATM") {
+    else if (estimand == "ATM") {
       for (p in seq_len(dim(ps)[3])) {
         w[,p] <- w[,p] * do.call("pmin", lapply(seq_len(dim(ps)[2]), function(i) ps[,i,p]))
       }
@@ -1079,9 +961,9 @@ get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = 
       }
     }
   }
-  else stop("Don't know how to process more than 3 dims.")
+  else .err("don't know how to process more than 3 dims (likely a bug)")
 
-  return(w)
+  w
 }
 
 plot_density <- function(d.n, d.d) {
@@ -1107,26 +989,20 @@ neg_ent <- function(w) {
   mean(w*log(w))
 }
 
-#Mahalanobis distance matrix
-mah_dist <- function(X, Y = X, Sinv) {
-  do.call("rbind", lapply(seq_len(nrow(X)), function(i) {
-    sqrt(mahalanobis(Y, X[i,], Sinv, inverted = TRUE))
-  }))
-}
-
 #Generalized matrix inverse (port of MASS::ginv)
 generalized_inverse <- function(sigma) {
   sigmasvd <- svd(sigma)
   pos <- sigmasvd$d > max(1e-9 * sigmasvd$d[1L], 0)
   sigma_inv <- sigmasvd$v[, pos, drop = FALSE] %*% (sigmasvd$d[pos]^-1 * t(sigmasvd$u[, pos, drop = FALSE]))
-  return(sigma_inv)
+
+  sigma_inv
 }
 
 #Choleski decomp for non-negative definite matrices
 chol2 <- function(Sinv) {
   ch <- suppressWarnings(chol(Sinv, pivot = TRUE))
   p <- order(attr(ch, "pivot"))
-  return(ch[,p])
+  ch[, p, drop = FALSE]
 }
 
 #For balance SuperLearner
@@ -1157,25 +1033,23 @@ method.balance <- function() {
       loss <- function(coefs) {
         ps <- crossprod(t(Z), coefs/sum(coefs))
         w <- get_w_from_ps(ps, Y, estimand)
-        out <- cobalt::bal.compute(init, weights = w)
-        out
+        cobalt::bal.compute(init, weights = w)
       }
       fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
       coef <- fit$par
-      out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
-      return(out)
+
+      list(cvRisk = cvRisk, coef = coef/sum(coef))
     },
 
     # computePred is a function that takes the weights and the predicted values
     # from each algorithm in the library and combines them based on the model to
     # output the super learner predicted values
     computePred = function(predY, coef, control, ...) {
-      out <- crossprod(t(predY), coef/sum(coef))
-      return(out)
+      crossprod(t(predY), coef/sum(coef))
     }
   )
 
-  return(out)
+  out
 }
 
 method.balance.cont <- function() {
@@ -1207,25 +1081,23 @@ method.balance.cont <- function() {
                               dens.num = dens.num, densfun = densfun,
                               use.kernel = use.kernel,
                               densControl = densControl)
-        out <- cobalt::bal.compute(init, weights = w)
-        out
+        cobalt::bal.compute(init, weights = w)
       }
       fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
       coef <- fit$par
-      out <- list(cvRisk = cvRisk, coef = coef/sum(coef))
-      return(out)
+
+      list(cvRisk = cvRisk, coef = coef/sum(coef))
     },
 
     # computePred is a function that takes the weights and the predicted values
     # from each algorithm in the library and combines them based on the model to
     # output the super learner predicted values
     computePred = function(predY, coef, control, ...) {
-      out <- crossprod(t(predY), coef/sum(coef))
-      return(out)
+      crossprod(t(predY), coef/sum(coef))
     }
   )
 
-  return(out)
+  out
 }
 
 .onLoad <- function(libname, pkgname) {

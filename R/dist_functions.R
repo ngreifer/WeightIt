@@ -148,7 +148,7 @@ get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
 
   attr(X, "treat") <-  model.response(mf)
 
-  return(X)
+  X
 }
 check_X <- function(X) {
   if (isTRUE(attr(X, "checked"))) return(X)
