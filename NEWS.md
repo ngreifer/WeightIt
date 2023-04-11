@@ -17,7 +17,7 @@ WeightIt News and Updates
 
 * Updated the `trim()` documentation to clarify the form of trimming that is implemented (i.e., winsorizing). Suggested by David Novgorodsky.
 
-* Fixed bugs when some `s.weights` are equal to zero with `method = "ebal"`, "`cbps"`, and `"energy"`. Suggested by @statzhero.
+* Fixed bugs when some `s.weights` are equal to zero with `method = "ebal"`, "`cbps"`, and `"energy"`. Suggested by @statzhero. (#41)
 
 * Improved performance of `method = "energy"` for the ATT.
 
