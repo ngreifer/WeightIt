@@ -25,6 +25,10 @@ WeightIt News and Updates
 
 * With `method = "energy"`, setting `int = TRUE` automatically sets `moments = 1` if unspecified.
 
+* Errors and warnings have been updated to use `chk`.
+
+* The missingness indicator approach now imputes the variable median rather than 0 for missing values. This will not change the performance of most methods, but change others, and doesn't affect balance assessment.
+
 # WeightIt 0.13.1
 
 * For ordinal multi-category treatments, setting `link = "br.logit"` now uses `brglm2::bracl()` to fit a bias-reduced ordinal regression model.
