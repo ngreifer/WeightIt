@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.1.9010</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,6 +67,8 @@
 <li><p>Improved performance of <code>method = "energy"</code> for the ATT.</p></li>
 <li><p>Fixed a bug when using <code>method = "energy"</code> with <code>by</code>.</p></li>
 <li><p>With <code>method = "energy"</code>, setting <code>int = TRUE</code> automatically sets <code>moments = 1</code> if unspecified.</p></li>
+<li><p>Errors and warnings have been updated to use <code>chk</code>.</p></li>
+<li><p>The missingness indicator approach now imputes the variable median rather than 0 for missing values. This will not change the performance of most methods, but change others, and doesn’t affect balance assessment.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.13.1" id="weightit-0131">WeightIt 0.13.1<a class="anchor" aria-label="anchor" href="#weightit-0131"></a></h2><p class="text-muted">CRAN release: 2022-06-28</p>
