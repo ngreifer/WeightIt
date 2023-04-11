@@ -1,5 +1,5 @@
 #User-defined weighting function
-weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, moments, int, ...) {
+weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, moments, int, verbose, ...) {
   A <- list(...)
   if (is_not_null(covs)) {
     covs <- covs[subset, , drop = FALSE]
@@ -54,7 +54,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal, 
 
   obj
 }
-weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize, missing, moments, int, ...) {
+weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize, missing, moments, int, verbose, ...) {
   A <- list(...)
   if (is_not_null(covs.list)) {
     covs.list <- covs <- lapply(covs.list, function(c) c[subset, , drop = FALSE])
@@ -107,7 +107,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 }
 
 #Propensity score estimation with regression
-weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, .data, ...) {
+weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ps, .data, verbose, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -122,11 +122,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
     ord.treat <- is.ordered(treat_sub)
 
     if (missing == "ind") {
-      missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-      if (is_not_null(missing.ind)) {
-        covs[is.na(covs)] <- 0
-        covs <- cbind(covs, missing.ind)
-      }
+      covs <- add_missing_indicators(covs)
     }
 
     for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
@@ -182,10 +178,12 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         data <- data.frame(treat, covs)
 
         withCallingHandlers({
-          fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
+          verbosely({
+            fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
+          }, verbose = verbose)
         },
         warning = function(w) {
-          if (conditionMessage(w) != "one argument not used by format '%i '") .wrn(w, tidy = FALSE)
+          if (conditionMessage(w) != "one argument not used by format '%i '") .wrn("(from misaem) ", w, tidy = FALSE)
           invokeRestart("muffleWarning")
         })
 
@@ -223,7 +221,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
           mustart <- .25 + .5*treat
         }
 
-        withCallingHandlers({
+        withCallingHandlers({verbosely({
           if (isTRUE(A[["quick"]])) {
             fit <- do.call(glm_method, list(y = treat,
                                             x = cbind(`(Intercept)` = 1, covs),
@@ -244,9 +242,9 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                             method = glm_method,
                                             control = control), quote = TRUE)
           }
-        },
+        }, verbose = verbose)},
         warning = function(w) {
-          if (conditionMessage(w) != "non-integer #successes in a binomial glm!") .wrn(w, tidy = FALSE)
+          if (conditionMessage(w) != "non-integer #successes in a binomial glm!") .wrn("(from `glm()`) ", w, tidy = FALSE)
           invokeRestart("muffleWarning")
         })
 
@@ -269,13 +267,17 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         data <- data.frame(treat_sub, covs)
         formula <- formula(data)
 
-        tryCatch({fit <- do.call(brglm2::bracl, list(formula,
-                                                     data = data,
-                                                     weights = s.weights,
-                                                     control = control,
-                                                     parallel = if_null_then(A[["parallel"]], FALSE)),
-                                 quote = TRUE)},
-                 error = function(e) .err("there was a problem with the bias-reduced ordinal logit regression. Try a different link"))
+        tryCatch({verbosely({
+          fit <- do.call(brglm2::bracl, list(formula,
+                                             data = data,
+                                             weights = s.weights,
+                                             control = control,
+                                             parallel = if_null_then(A[["parallel"]], FALSE)),
+                         quote = TRUE)
+        }, verbose = verbose)},
+        error = function(e) {
+          .err(sprintf("there was a problem with the bias-reduced ordinal logit regression.\n       Try a different link.\n       Error message: %s", conditionMessage(e)), tidy = FALSE)
+        })
       }
       else {
         if (A[["link"]] == "logit") A[["link"]] <- "logistic"
@@ -284,19 +286,20 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         data <- data.frame(treat_sub, covs)
         formula <- formula(data)
 
-        tryCatch({fit <- do.call(MASS::polr,
-                                 list(formula,
-                                      data = data,
-                                      weights = s.weights,
-                                      Hess = FALSE,
-                                      model = FALSE,
-                                      method = A[["link"]],
-                                      contrasts = NULL), quote = TRUE)},
-                 error = function(e) {.err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.",
-                                                   "\n       Error message: %s",
-                                                   A$link, conditionMessage(e)), tidy = FALSE)})
+        tryCatch({verbosely({
+          fit <- do.call(MASS::polr,
+                         list(formula,
+                              data = data,
+                              weights = s.weights,
+                              Hess = FALSE,
+                              model = FALSE,
+                              method = A[["link"]],
+                              contrasts = NULL), quote = TRUE)
+        }, verbose = verbose)},
+        error = function(e) {
+          .err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.\n       Error message: (from `MASS::polr()`) %s",
+                       A$link, conditionMessage(e)), tidy = FALSE)})
       }
-
 
       ps <- fit$fitted.values
       fit.obj <- fit
@@ -311,11 +314,15 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         control <- do.call(ctrl_fun, c(A[["control"]],
                                        A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
                                                  names(A[["control"]]))]))
-        tryCatch({fit <- do.call(brglm2::brmultinom,
-                                 list(formula, data,
-                                      weights = s.weights,
-                                      control = control), quote = TRUE)},
-                 error = function(e) .err("there was a problem with the bias-reduced multinomial logit regression. Try a different link"))
+        tryCatch({verbosely({
+          fit <- do.call(brglm2::brmultinom,
+                         list(formula, data,
+                              weights = s.weights,
+                              control = control), quote = TRUE)
+        }, verbose = verbose)},
+        error = function(e) {
+          .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different link.\n       Error message: (from brglm2) %s", conditionMessage(e)), tidy = FALSE)
+        })
 
         ps <- fit$fitted.values
         fit.obj <- fit
@@ -342,7 +349,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
           control <- do.call(ctrl_fun, c(A[["control"]],
                                          A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
                                                    names(A[["control"]]))]))
-          tryCatch({
+          tryCatch({verbose({
             fit <- do.call(mclogit::mblogit, list(form,
                                                   data = data,
                                                   weights = quote(.s.weights),
@@ -353,9 +360,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                                   groups = A[["groups"]],
                                                   control = control))
 
-          },
-          error = function(e) {.err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try again with `use.mclogit = FALSE`.\nError message (from mclogit):\n       %s",
-                                            A$link, conditionMessage(e)), tidy = FALSE)}
+          }, verbose = verbose)},
+          error = function(e) {
+            .err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try again with `use.mclogit = FALSE`.\nError message: (from `mclogit::mblogit()`) %s",
+                         A$link, conditionMessage(e)), tidy = FALSE)
+          }
           )
 
           ps <- fitted(fit)
@@ -367,7 +376,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
 
           data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
           covnames <- names(data)[-c(1,2)]
-          tryCatch({
+          tryCatch({verbosely({
             fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "))),
                                   data = data,
                                   estimate = TRUE,
@@ -378,9 +387,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
                                   sep = "",
                                   choice = "treat",
                                   ...)
-          },
-          error = function(e) {.err(sprintf("There was a problem fitting the multinomial %s regression with mlogit().\n       Try again with use.mlogit = FALSE.\nError message (from mlogit):\n       %s",
-                                            A$link, conditionMessage(e)), tidy = FALSE)}
+          }, verbose = verbose)},
+          error = function(e) {
+            .err(sprintf("There was a problem fitting the multinomial %s regression with `mlogit()`.\n       Try again with `use.mlogit = FALSE`.\nError message: (from `mlogit::mlogit()`) %s",
+                         A$link, conditionMessage(e)), tidy = FALSE)
+          }
           )
 
           ps <- fitted(fit, outcome = FALSE)
@@ -404,10 +415,12 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
             }
             t_i <- as.numeric(treat_sub == i)
             data_i <- data.frame(t_i, covs)
-            fit.list[[i]] <- do.call(stats::glm, list(formula(data_i), data = data_i,
-                                                      family = quasibinomial(link = A$link),
-                                                      weights = s.weights,
-                                                      control = control), quote = TRUE)
+            verbosely({
+              fit.list[[i]] <- do.call(stats::glm, list(formula(data_i), data = data_i,
+                                                        family = quasibinomial(link = A$link),
+                                                        weights = s.weights,
+                                                        control = control), quote = TRUE)
+            }, verbose = verbose)
             ps[[i]] <- fit.list[[i]]$fitted.values
           }
           if (isTRUE(A[["test2"]])) ps <- ps/rowSums(ps)
@@ -418,8 +431,13 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
         rlang::check_installed("MNP")
         data <- data.frame(treat_sub, covs)
         formula <- formula(data)
-        tryCatch({fit <- MNP::mnp(formula, data, verbose = TRUE)},
-                 error = function(e) .err("there was a problem with the Bayes probit regression. Try a different link"))
+        tryCatch({verbosely({
+          fit <- MNP::mnp(formula, data, verbose = TRUE)
+        }, verbose = verbose)},
+        error = function(e) {
+          .err(sprintf("There was a problem fitting the Bayes probit regression with `MNP()`.\n       Try a different link.\nError message: (from `MNP::MNP()`) %s",
+                       A$link, conditionMessage(e)), tidy = FALSE)
+        })
         ps <- predict(fit, type = "prob")$p
         fit.obj <- fit
       }
@@ -517,7 +535,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal, stabil
 
   list(w = w, ps = p.score, fit.obj = fit.obj)
 }
-weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -527,12 +545,9 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
+
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (ncol(covs) > 1) {
@@ -606,11 +621,13 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     if (missing == "saem") {
       rlang::check_installed("misaem")
 
-      withCallingHandlers({
+      withCallingHandlers({verbosely({
         fit <- misaem::miss.lm(formula, data, control = as.list(A[["control"]]))
-      },
+      }, verbose = verbose)},
       warning = function(w) {
-        if (conditionMessage(w) != "one argument not used by format '%i '") .wrn(w, tidy = FALSE)
+        if (conditionMessage(w) != "one argument not used by format '%i '") {
+          .wrn("(from `misaem::miss.lm()`) ", w, tidy = FALSE)
+        }
         invokeRestart("muffleWarning")
       })
 
@@ -634,11 +651,13 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
         A[["link"]] <- which.link
       }
 
-      fit <- do.call("glm", c(list(formula, data = data,
-                                   weights = s.weights,
-                                   family = gaussian(link = A[["link"]]),
-                                   control = as.list(A$control))),
-                     quote = TRUE)
+      verbosely({
+        fit <- do.call("glm", c(list(formula, data = data,
+                                     weights = s.weights,
+                                     family = gaussian(link = A[["link"]]),
+                                     control = as.list(A$control))),
+                       quote = TRUE)
+      }, verbose = verbose)
 
       gp.score <- fit$fitted.values
     }
@@ -663,7 +682,7 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
 }
 
 #MABW with optweight
-weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, verbose, ...) {
   A <- list(...)
 
   rlang::check_installed("optweight")
@@ -676,11 +695,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   new.data <- data.frame(treat, covs)
@@ -704,11 +719,13 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   A[["focal"]] <- focal
   A[["verbose"]] <- TRUE
 
-  out <- do.call(optweight::optweight, A, quote = TRUE)
+  verbosely({
+    out <- do.call(optweight::optweight, A, quote = TRUE)
+  }, verbose = verbose)
 
   list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
 }
-weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   A <- list(...)
   rlang::check_installed("optweight")
 
@@ -720,11 +737,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   new.data <- data.frame(treat, covs)
@@ -746,11 +759,13 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   A[["s.weights"]] <- s.weights
   A[["verbose"]] <- TRUE
 
-  out <- do.call(optweight::optweight, A, quote = TRUE)
+  verbosely({
+    out <- do.call(optweight::optweight, A, quote = TRUE)
+  }, verbose = verbose)
 
   list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
 }
-weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, ...) {
+weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, verbose, ...) {
   A <- list(...)
   rlang::check_installed("optweight")
   if (is_not_null(covs.list)) {
@@ -760,13 +775,10 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
       for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
       if (missing == "ind") {
-        missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-        if (is_not_null(missing.ind)) {
-          covs[is.na(covs)] <- 0
-          covs <- cbind(covs, missing.ind)
-        }
+        covs <- add_missing_indicators(covs)
       }
-      return(covs)
+
+      covs
     })
   }
   if (is_not_null(treat.list)) {
@@ -788,16 +800,19 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
     A[["targets"]] <- NULL
   }
 
-  out <- do.call(optweight::optweight.fit, c(list(treat = treat.list,
-                                                  covs = covs.list,
-                                                  s.weights = s.weights,
-                                                  verbose = TRUE),
-                                             A), quote = TRUE)
+  verbosely({
+    out <- do.call(optweight::optweight.fit, c(list(treat = treat.list,
+                                                    covs = covs.list,
+                                                    s.weights = s.weights,
+                                                    verbose = TRUE),
+                                               A), quote = TRUE)
+  }, verbose = verbose)
+
   list(w = out$w, fit.obj = out)
 }
 
 #Generalized boosted modeling with gbm and cobalt
-weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, verbose, ...) {
 
   rlang::check_installed("gbm")
 
@@ -813,11 +828,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      colnames(missing.ind) <- paste0(colnames(missing.ind), ":<NA>")
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
   if (is_null(A[["criterion"]])) {
@@ -893,16 +904,20 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
   if (cv == 0) {
     start.tree <- if_null_then(A[["start.tree"]], 1)
-    if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*(A[["n.trees"]]-start.tree+1)))
+    if (is_null(A[["n.grid"]])) n.grid <- round(1 + sqrt(2 * (A[["n.trees"]] - start.tree + 1)))
     else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
              !between(A[["n.grid"]], c(2, A[["n.trees"]]))) {
       .err("`n.grid` must be a numeric value between 2 and `n.trees`")
     }
     else n.grid <- round(A[["n.grid"]])
 
-    init <- bal.init(covs, treat = treat, stat = criterion,
-                     estimand = estimand, s.weights = s.weights,
-                     focal = focal, ...)
+    init <- bal.init(
+      if (!anyNA(covs)) covs
+      else if (missing == "surr") add_missing_indicators(covs)
+      else replace_na_with(covs),
+      treat = treat, stat = criterion,
+      estimand = estimand, s.weights = s.weights,
+      focal = focal, ...)
   }
 
   A[["x"]] <- covs
@@ -923,7 +938,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     A[["distribution"]] <- list(name = tune[["distribution"]][i])
     tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
 
-    fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))], tune_args), quote = TRUE)
+    verbosely({
+      fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))], tune_args),
+                     quote = TRUE)
+    }, verbose = verbose)
 
     if (cv == 0) {
 
@@ -1005,9 +1023,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       A[["w"]] <- s.weights
 
       tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
-      cv.results <- do.call(gbm::gbmCrossVal,
-                            c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
-                              tune_args), quote = TRUE)
+      verbosely({
+        cv.results <- do.call(gbm::gbmCrossVal,
+                              c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
+                                tune_args), quote = TRUE)
+      }, verbose = verbose)
+
       best.tree.index <- which.min(cv.results$error)
       best.loss <- cv.results$error[best.tree.index]
       best.tree <- best.tree.index
@@ -1049,7 +1070,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
   list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
 }
-weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, verbose, ...) {
 
   rlang::check_installed("gbm")
 
@@ -1062,11 +1083,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      colnames(missing.ind) <- paste0(colnames(missing.ind), ":<NA>")
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
   if (is_null(A[["criterion"]])) {
@@ -1120,15 +1137,19 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 
   if (cv == 0) {
     start.tree <- if_null_then(A[["start.tree"]], 1)
-    if (is_null(A[["n.grid"]])) n.grid <- round(1+sqrt(2*(A[["n.trees"]]-start.tree+1)))
+    if (is_null(A[["n.grid"]])) n.grid <- round(1 + sqrt(2 * (A[["n.trees"]] - start.tree + 1)))
     else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
              !between(A[["n.grid"]], c(2, A[["n.trees"]]))) {
       .err("`n.grid` must be a numeric value between 2 and `n.trees`")
     }
     else n.grid <- round(A[["n.grid"]])
 
-    init <- bal.init(covs, treat = treat, stat = criterion,
-                     s.weights = s.weights, ...)
+    init <- bal.init(
+      if (!anyNA(covs)) covs
+      else if (missing == "surr") add_missing_indicators(covs)
+      else replace_na_with(covs),
+      treat = treat, stat = criterion,
+      s.weights = s.weights, ...)
   }
 
   A[["x"]] <- covs
@@ -1203,8 +1224,11 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 
   for (i in seq_row(tune)) {
 
-    fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)],
-                                   tune[i, tunable[tunable %in% names(formals(gbm::gbm.fit))]]), quote = TRUE)
+    verbosely({
+      fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)],
+                                     tune[i, tunable[tunable %in% names(formals(gbm::gbm.fit))]]),
+                     quote = TRUE)
+    }, verbose = verbose)
 
     if (cv == 0) {
 
@@ -1286,9 +1310,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
       A[["x"]] <- covs
       A[["distribution"]] <- list(name = A[["distribution"]])
       A[["w"]] <- s.weights
-      cv.results <- do.call(gbm::gbmCrossVal,
-                            c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), tunable)],
-                              tune[i, tunable[tunable %in% names(formals(gbm::gbmCrossVal))]]), quote = TRUE)
+
+      verbosely({
+        cv.results <- do.call(gbm::gbmCrossVal,
+                              c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), tunable)],
+                                tune[i, tunable[tunable %in% names(formals(gbm::gbmCrossVal))]]), quote = TRUE)
+      }, verbose = verbose)
+
       best.tree.index <- which.min(cv.results$error)
       best.loss <- cv.results$error[best.tree.index]
       best.tree <- best.tree.index
@@ -1335,7 +1363,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
 }
 
 #CBPS
-weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, ...) {
+weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabilize, subclass, missing, verbose, ...) {
 
   rlang::check_installed("CBPS")
 
@@ -1349,12 +1377,9 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   treat.type <- get.treat.type(treat)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
+
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
@@ -1374,20 +1399,20 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
       covs_ <- covs[treat.in.i.focal, , drop = FALSE]
       new.data <- as.data.frame(cbind(treat_, covs_))
 
-      tryCatch({fit.list[[i]] <- CBPS::CBPS(formula(new.data),
-                                            data = new.data[!sw0[treat.in.i.focal],],
-                                            method = if (is_not_null(A$over) && A$over == FALSE) "exact" else "over",
-                                            standardize = FALSE,
-                                            sample.weights = s.weights[!sw0 & treat.in.i.focal],
-                                            ATT = 1,
-                                            ...)},
-               error = function(e) {
-                 e. <- conditionMessage(e)
-                 e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
-                 .err(e., tidy = FALSE)
-               }
-
-      )
+      tryCatch({verbosely({
+        fit.list[[i]] <- CBPS::CBPS(formula(new.data),
+                                    data = new.data[!sw0[treat.in.i.focal],],
+                                    method = if (is_not_null(A$over) && A$over == FALSE) "exact" else "over",
+                                    standardize = FALSE,
+                                    sample.weights = s.weights[!sw0 & treat.in.i.focal],
+                                    ATT = 1,
+                                    ...)
+      }, verbose = verbose)},
+      error = function(e) {
+        e. <- conditionMessage(e)
+        e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
+        .err("(from `CBPS::CBPS()`) ", e., tidy = FALSE)
+      })
 
       if (!any(sw0[treat.in.i.focal])) {
         ps[[focal]][treat.in.i.focal] <- fit.list[[i]][["fitted.values"]]
@@ -1402,19 +1427,20 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   else {
     new.data <- cbind(treat, as.data.frame(covs))
     if (treat.type == "binary" || !nunique.gt(treat, 4)) {
-      tryCatch({fit.list <- CBPS::CBPS(formula(new.data),
-                                       data = new.data[!sw0,],
-                                       method = if (isFALSE(A$over)) "exact" else "over",
-                                       standardize = FALSE,
-                                       sample.weights = s.weights[!sw0],
-                                       ATT = 0,
-                                       ...)},
-               error = function(e) {
-                 e. <- conditionMessage(e)
-                 e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
-                 .err(e., tidy = FALSE)
-               }
-      )
+      tryCatch({verbosely({
+        fit.list <- CBPS::CBPS(formula(new.data),
+                               data = new.data[!sw0,],
+                               method = if (isFALSE(A$over)) "exact" else "over",
+                               standardize = FALSE,
+                               sample.weights = s.weights[!sw0],
+                               ATT = 0,
+                               ...)
+      }, verbose = verbose)},
+      error = function(e) {
+        e. <- conditionMessage(e)
+        e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
+        .err("(from `CBPS::CBPS()`) ", e., tidy = FALSE)
+      })
 
       if (!any(sw0)) {
         ps <- fit.list[["fitted.values"]]
@@ -1439,11 +1465,19 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
 
       for (i in levels(treat)) {
         new.data[[1]] <- as.integer(treat == i)
-        fit.list[[i]] <- CBPS::CBPS(formula(new.data), data = new.data[!sw0,],
-                                    method = if (isFALSE(A$over)) "exact" else "over",
-                                    standardize = FALSE,
-                                    sample.weights = s.weights[!sw0],
-                                    ATT = 0, ...)
+
+        tryCatch({verbosely({
+          fit.list[[i]] <- CBPS::CBPS(formula(new.data), data = new.data[!sw0,],
+                                      method = if (isFALSE(A$over)) "exact" else "over",
+                                      standardize = FALSE,
+                                      sample.weights = s.weights[!sw0],
+                                      ATT = 0, ...)
+        }, verbose = verbose)},
+        error = function(e) {
+          e. <- conditionMessage(e)
+          e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
+          .err("(from `CBPS::CBPS()`) ", e., tidy = FALSE)
+        })
 
         if (!any(sw0)) {
           ps[, i] <- fit.list[[i]][["fitted.values"]]
@@ -1468,7 +1502,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
 
   list(w = w, ps = p.score, fit.obj = fit.list)
 }
-weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
+weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
   rlang::check_installed("CBPS")
 
   A <- list(...)
@@ -1478,12 +1512,9 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
+
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
@@ -1495,30 +1526,32 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, ...) {
 
   w <- rep(0, length(treat))
 
-  tryCatch({fit <- CBPS::CBPS(formula(new.data),
-                              data = new.data[!sw0,],
-                              method = if (isFALSE(A$over)) "exact" else "over",
-                              standardize = FALSE,
-                              sample.weights = s.weights[!sw0],
-                              ...)},
-           error = function(e) {
-             e. <- conditionMessage(e)
-             e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
-             .err(e., tidy = FALSE)
-           }
-  )
+  tryCatch({verbosely({
+    fit <- CBPS::CBPS(formula(new.data),
+                      data = new.data[!sw0,],
+                      method = if (isFALSE(A$over)) "exact" else "over",
+                      standardize = FALSE,
+                      sample.weights = s.weights[!sw0],
+                      ...)
+  }, verbose = verbose)},
+  error = function(e) {
+    e. <- conditionMessage(e)
+    e. <- gsub("method = \"exact\"", "`over = FALSE`", e., fixed = TRUE)
+    .err("(from `CBPS::CBPS()`) ", e., tidy = FALSE)
+  })
 
   w[!sw0] <- fit$weights / s.weights[!sw0]
 
   list(w = w, fit.obj = fit)
 }
-weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, ...) {
+weightit2cbps.msm <- function(covs.list, treat.list, s.weights, subset, missing, verbose, ...) {
   .err("CBMSM doesn't work yet")
 }
-weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("CBPS")
 
   A <- list(...)
+
   if (!all_the_same(s.weights)) {
     .err("sampling weights cannot be used with `method = \"npcbps\"`")
   }
@@ -1527,11 +1560,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
   treat <- factor(treat[subset])
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
@@ -1543,8 +1572,14 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
 
   new.data <- data.frame(treat = treat, covs)
 
-  fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
-                 quote = TRUE)
+  tryCatch({verbosely({
+    fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
+                   quote = TRUE)
+  }, verbose = verbose)},
+  error = function(e) {
+    e. <- conditionMessage(e)
+    .err("(from `CBPS::npCBPS()`) ", e., tidy = FALSE)
+  })
 
   w <- fit$weights
 
@@ -1552,7 +1587,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
 
   list(w = w, fit.obj = fit)
 }
-weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("CBPS")
 
   A <- list(...)
@@ -1565,11 +1600,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
   treat <- treat[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
@@ -1581,8 +1612,14 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   new.data <- data.frame(treat = treat, covs)
 
-  fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
-                 quote = TRUE)
+  tryCatch({verbosely({
+    fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
+                   quote = TRUE)
+  }, verbose = verbose)},
+  error = function(e) {
+    e. <- conditionMessage(e)
+    .err("(from `CBPS::npCBPS()`) ", e., tidy = FALSE)
+  })
 
   w <- fit$weights
 
@@ -1592,7 +1629,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
 }
 
 #Entropy balancing
-weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, ...) {
+weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, missing, moments, int, verbose, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1600,11 +1637,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
@@ -1679,16 +1712,17 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   fit.list <- make_list(groups_to_weight)
   for (i in groups_to_weight) {
-
-    fit.list[[i]] <- eb(covs[treat == i & !sw0,,drop = FALSE], s.weights[treat == i & !sw0],
-                        bw[treat == i & !sw0])
+    verbosely({
+      fit.list[[i]] <- eb(covs[treat == i & !sw0,,drop = FALSE], s.weights[treat == i & !sw0],
+                          bw[treat == i & !sw0])
+    }, verbose = verbose)
 
     w[treat == i & !sw0] <- fit.list[[i]]$w
   }
 
   list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
 }
-weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1696,11 +1730,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   if (is_not_null(A[["base.weights"]])) A[["base.weight"]] <- A[["base.weights"]]
@@ -1802,7 +1832,9 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
   w <- rep(0, length(treat))
   sw0 <- check_if_zero(s.weights)
 
-  fit <- eb(C[!sw0,, drop = FALSE], s.weights[!sw0], bw[!sw0])
+  verbosely({
+    fit <- eb(C[!sw0,, drop = FALSE], s.weights[!sw0], bw[!sw0])
+  }, verbose = verbose)
 
   w[!sw0] <- fit$w
 
@@ -1810,7 +1842,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 }
 
 #PS weights using SuperLearner
-weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
+weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, verbose, ...) {
   A <- list(...)
 
   rlang::check_installed("SuperLearner")
@@ -1823,12 +1855,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   treat.type <- get.treat.type(treat)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
+
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
   covs <- as.data.frame(covs)
@@ -1902,24 +1931,29 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     }
 
     treat_i <- as.numeric(treat == i)
+    tryCatch({verbosely({
+      fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = treat_i,
+                                                                X = as.data.frame(covs),
+                                                                family = binomial(),
+                                                                SL.library = A[["SL.library"]],
+                                                                verbose = FALSE,
+                                                                method = A[["SL.method"]],
+                                                                id = NULL,
+                                                                obsWeights = s.weights,
+                                                                control = A[["control"]],
+                                                                cvControl = A[["cvControl"]],
+                                                                env = A[["env"]]))
+    }, verbose = verbose)},
+    error = function(e) {
+      e. <- conditionMessage(e)
+      .err("(from `SuperLearner::SuperLearner()`) ", e., tidy = FALSE)
+    })
 
-    fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = treat_i,
-                                                              X = as.data.frame(covs),
-                                                              family = binomial(),
-                                                              SL.library = A[["SL.library"]],
-                                                              verbose = FALSE,
-                                                              method = A[["SL.method"]],
-                                                              id = NULL,
-                                                              obsWeights = s.weights,
-                                                              control = A[["control"]],
-                                                              cvControl = A[["cvControl"]],
-                                                              env = A[["env"]]))
     if (discrete) ps[[i]] <- fit.list[[i]]$library.predict[,which.min(fit.list[[i]]$cvRisk)]
     else ps[[i]] <- fit.list[[i]]$SL.predict
 
     info[[i]] <- list(coef = fit.list[[i]]$coef,
                       cvRisk = fit.list[[i]]$cvRisk)
-
   }
 
   #ps should be matrix of probs for each treat
@@ -1930,7 +1964,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
 
   list(w = w, ps = p.score, info = info, fit.obj = fit.list)
 }
-weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
   A <- B <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
@@ -1938,11 +1972,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
@@ -2048,17 +2078,25 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     B[["SL.method"]] <- method.balance.cont()
   }
 
-  fit <- do.call(SuperLearner::SuperLearner, list(Y = treat,
-                                                  X = as.data.frame(covs),
-                                                  family = gaussian(),
-                                                  SL.library = B[["SL.library"]],
-                                                  verbose = FALSE,
-                                                  method = B[["SL.method"]],
-                                                  id = NULL,
-                                                  obsWeights = s.weights,
-                                                  control = B[["control"]],
-                                                  cvControl = B[["cvControl"]],
-                                                  env = B[["env"]]))
+  tryCatch({verbosely({
+    fit <- do.call(SuperLearner::SuperLearner,
+                   list(Y = treat,
+                        X = as.data.frame(covs),
+                        family = gaussian(),
+                        SL.library = B[["SL.library"]],
+                        verbose = FALSE,
+                        method = B[["SL.method"]],
+                        id = NULL,
+                        obsWeights = s.weights,
+                        control = B[["control"]],
+                        cvControl = B[["cvControl"]],
+                        env = B[["env"]]))
+  }, verbose = verbose)},
+  error = function(e) {
+    e. <- conditionMessage(e)
+    .err("(from `SuperLearner::SuperLearner()`) ", e., tidy = FALSE)
+  })
+
 
   if (discrete) gp.score <- fit$library.predict[,which.min(fit$cvRisk)]
   else gp.score <- fit$SL.predict
@@ -2083,7 +2121,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 }
 
 #PS weights using BART
-weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, ...) {
+weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, verbose, ...) {
   A <- list(...)
 
   rlang::check_installed("dbarts")
@@ -2100,11 +2138,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   treat.type <- get.treat.type(treat)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   if (ncol(covs) > 1) {
@@ -2132,10 +2166,17 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     }
 
     A[["data"]] <- as.integer(treat == i)
-    fit.list[[i]] <- do.call(dbarts::bart2, A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                                                      names(formals(dbarts::dbartsControl))),
-                                                                    c("offset.test", "weights", "subset", "test"))],
-                             quote = TRUE)
+    tryCatch({verbosely({
+      fit.list[[i]] <- do.call(dbarts::bart2,
+                               A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
+                                                         names(formals(dbarts::dbartsControl))),
+                                                       c("offset.test", "weights", "subset", "test"))],
+                               quote = TRUE)
+    }, verbose = verbose)},
+    error = function(e) {
+      e. <- conditionMessage(e)
+      .err("(from `dbarts::bart2()`) ", e., tidy = FALSE)
+    })
 
     ps[[i]] <- fitted(fit.list[[i]])
 
@@ -2151,7 +2192,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   list(w = w, ps = p.score, info = info, fit.obj = fit.list)
 }
-weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, ...) {
+weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
   A <- list(...)
 
   rlang::check_installed("dbarts")
@@ -2165,11 +2206,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   }
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
@@ -2234,10 +2271,17 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 
   #Estimate GPS
 
-  fit <- do.call(dbarts::bart2, A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                                          names(formals(dbarts::dbartsControl))),
-                                                        c("offset.test", "weights", "subset", "test"))],
-                 quote = TRUE)
+  tryCatch({verbosely({
+    fit <- do.call(dbarts::bart2,
+                   A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
+                                             names(formals(dbarts::dbartsControl))),
+                                           c("offset.test", "weights", "subset", "test"))],
+                   quote = TRUE)
+  }, verbose = verbose)},
+  error = function(e) {
+    e. <- conditionMessage(e)
+    .err("(from `dbarts::bart2()`) ", e., tidy = FALSE)
+  })
 
   gp.score <- fitted(fit)
 
@@ -2260,17 +2304,13 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 }
 
 #Energy balancing
-weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, ...) {
+weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, verbose, ...) {
   rlang::check_installed("osqp")
 
   A <- list(...)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[subset, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   d <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
@@ -2403,8 +2443,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   options.list <- do.call(osqp::osqpSettings, A)
 
-  opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
-                              pars = options.list)
+  verbosely({
+    opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
+                                pars = options.list)
+  }, verbose = verbose)
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
     .wrn("the optimization failed to converge. See Notes section at `?method_energy` for information")
@@ -2424,17 +2466,13 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   list(w = w, fit.obj = opt.out)
 }
-weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, ...) {
+weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("osqp")
 
   A <- list(...)
 
   if (missing == "ind") {
-    missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
-    if (is_not_null(missing.ind)) {
-      covs[is.na(covs)] <- 0
-      covs <- cbind(covs, missing.ind)
-    }
+    covs <- add_missing_indicators(covs)
   }
 
   Xdist <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
@@ -2585,8 +2623,10 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   A[["verbose"]] <- TRUE
   options.list <- do.call(osqp::osqpSettings, A)
 
-  opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
-                              pars = options.list)
+  verbosely({
+    opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
+                                pars = options.list)
+  }, verbose = verbose)
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
     .wrn("the optimization failed to converge. See Notes section at `?method_energy` for information")

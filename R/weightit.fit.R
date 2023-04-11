@@ -92,10 +92,6 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
   obj <- NULL
 
-  if (verbose) eval.verbose <- base::eval
-  else eval.verbose <- utils::capture.output
-
-  eval.verbose({
   for (i in levels(by.factor)) {
     #Run method
     if (is.function(method)) {
@@ -107,6 +103,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                 subset = by.factor == i,
                                 stabilize = stabilize,
                                 missing = missing,
+                                verbose = verbose,
                                 ...)
       }
       else {
@@ -123,32 +120,34 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                              missing = missing,
                              moments = moments,
                              int = int,
+                             verbose = verbose,
                              ...)
       }
-
     }
     else if (method == "glm") {
       if (treat.type %in% c("binary", "multinomial")) {
         obj <- weightit2glm(covs = covs,
-                           treat = treat,
-                           s.weights = s.weights,
-                           subset = by.factor == i,
-                           estimand = estimand,
-                           focal = focal,
-                           stabilize = stabilize,
-                           subclass = subclass,
-                           ps = ps,
-                           missing = missing,
-                           ...)
+                            treat = treat,
+                            s.weights = s.weights,
+                            subset = by.factor == i,
+                            estimand = estimand,
+                            focal = focal,
+                            stabilize = stabilize,
+                            subclass = subclass,
+                            ps = ps,
+                            missing = missing,
+                            verbose = verbose,
+                            ...)
       }
       else if (treat.type == "continuous") {
         obj <- weightit2glm.cont(covs = covs,
-                                treat = treat,
-                                s.weights = s.weights,
-                                subset = by.factor == i,
-                                ps = ps,
-                                missing = missing,
-                                ...)
+                                 treat = treat,
+                                 s.weights = s.weights,
+                                 subset = by.factor == i,
+                                 ps = ps,
+                                 missing = missing,
+                                 verbose = verbose,
+                                 ...)
       }
     }
     else if (method == "optweight") {
@@ -160,6 +159,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                       moments = moments,
                                       int = int,
                                       missing = missing,
+                                      verbose = verbose,
                                       ...)
       }
       else {
@@ -172,7 +172,9 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                     focal = focal,
                                     moments = moments,
                                     int = int,
-                                    missing = missing, ...)
+                                    missing = missing,
+                                    verbose = verbose,
+                                    ...)
         }
         else if (treat.type == "continuous") {
           obj <- weightit2optweight.cont(covs = covs,
@@ -182,6 +184,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                          moments = moments,
                                          int = int,
                                          missing = missing,
+                                         verbose = verbose,
                                          ...)
 
         }
@@ -198,6 +201,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                             stabilize = stabilize,
                             subclass = subclass,
                             missing = missing,
+                            verbose = verbose,
                             ...)
       }
       else {
@@ -206,6 +210,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                  s.weights = s.weights,
                                  subset = by.factor == i,
                                  missing = missing,
+                                 verbose = verbose,
                                  ...)
       }
 
@@ -225,6 +230,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                estimand = estimand,
                                focal = focal,
                                missing = missing,
+                               verbose = verbose,
                                ...)
         }
         else if (treat.type == "continuous") {
@@ -233,6 +239,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                     subset = by.factor == i,
                                     s.weights = s.weights,
                                     missing = missing,
+                                    verbose = verbose,
                                     ...)
 
         }
@@ -248,6 +255,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                moments = moments,
                                int = int,
                                missing = missing,
+                               verbose = verbose,
                                ...)
       }
       else if (treat.type == "continuous") {
@@ -258,6 +266,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                     moments = moments,
                                     int = int,
                                     missing = missing,
+                                    verbose = verbose,
                                     ...)
       }
 
@@ -274,6 +283,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                              moments = moments,
                              int = int,
                              missing = missing,
+                             verbose = verbose,
                              ...)
       }
       else {
@@ -284,6 +294,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                   moments = moments,
                                   int = int,
                                   missing = missing,
+                                  verbose = verbose,
                                   ...)
       }
     }
@@ -298,6 +309,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                               stabilize = stabilize,
                               subclass = subclass,
                               missing = missing,
+                              verbose = verbose,
                               ...)
       }
       else if (treat.type == "continuous") {
@@ -307,6 +319,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                    subset = by.factor == i,
                                    stabilize = stabilize,
                                    missing = missing,
+                                   verbose = verbose,
                                    ...)
       }
     }
@@ -340,6 +353,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                missing = missing,
                                moments = moments,
                                int = int,
+                               verbose = verbose,
                                ...)
       }
       else {
@@ -350,6 +364,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                     missing = missing,
                                     moments = moments,
                                     int = int,
+                                    verbose = verbose,
                                     ...)
       }
     }
@@ -364,6 +379,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                              stabilize = stabilize,
                              subclass = subclass,
                              missing = missing,
+                             verbose = verbose,
                              ...)
       }
       else if (treat.type == "continuous") {
@@ -373,6 +389,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                                   subset = by.factor == i,
                                   stabilize = stabilize,
                                   missing = missing,
+                                  verbose = verbose,
                                   ...)
       }
     }
@@ -413,7 +430,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     info[[i]] <- obj$info
 
   }
-  })
+
 
   if (include.obj) {
     if (nlevels(by.factor) == 1) fit.obj <- fit.obj[[1]]

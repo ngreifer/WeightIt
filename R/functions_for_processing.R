@@ -353,7 +353,7 @@ process.moments.int <- function(moments, int, method) {
     .wrn(sprintf("%s not compatible with %s. Ignoring %s",
                  word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
                  method.to.phrase(method),
-                 word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`")))
+                 word_list(c("moments", "int")[mi0], and.or = "and", quotes = "`")))
     moments <- NULL
     int <- FALSE
   }
@@ -371,7 +371,7 @@ process.MSM.method <- function(is.MSM.method, method) {
     if (is_null(is.MSM.method)) is.MSM.method <- TRUE
     else if (!isTRUE(is.MSM.method)) {
       .msg(paste0("%s can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
-                 method.to.phrase(method)))
+                  method.to.phrase(method)))
     }
   }
   else {
@@ -386,41 +386,41 @@ process.MSM.method <- function(is.MSM.method, method) {
 }
 process.missing <- function(missing, method, treat.type) {
   #Allowable estimands
-  AE <- list(binary = list(  glm = c("ind", "saem")
-                             , gbm = c("ind", "surr")
-                             , cbps = c("ind")
-                             , npcbps = c("ind")
-                             , ebal = c("ind")
-                             # , ebcw = c("ind")
-                             , optweight = c("ind")
-                             , super = c("ind")
-                             , bart = c("ind")
-                             , energy = c("ind")
-                             # , kbal = c("ind")
+  AE <- list(binary = list(glm = c("ind", "saem")
+                           , gbm = c("ind", "surr")
+                           , cbps = c("ind")
+                           , npcbps = c("ind")
+                           , ebal = c("ind")
+                           # , ebcw = c("ind")
+                           , optweight = c("ind")
+                           , super = c("ind")
+                           , bart = c("ind")
+                           , energy = c("ind")
+                           # , kbal = c("ind")
   ),
-  multinomial = list(  glm = c("ind")
-                       , gbm = c("ind", "surr")
-                       , cbps = c("ind")
-                       , npcbps = c("ind")
-                       , ebal = c("ind")
-                       # , ebcw = c("ind")
-                       , optweight = c("ind")
-                       , super = c("ind")
-                       , bart = c("ind")
-                       , energy = c("ind")
-                       # , kbal = c("ind")
+  multinomial = list(glm = c("ind")
+                     , gbm = c("ind", "surr")
+                     , cbps = c("ind")
+                     , npcbps = c("ind")
+                     , ebal = c("ind")
+                     # , ebcw = c("ind")
+                     , optweight = c("ind")
+                     , super = c("ind")
+                     , bart = c("ind")
+                     , energy = c("ind")
+                     # , kbal = c("ind")
   ),
-  continuous = list(  glm = c("ind", "saem")
-                      , gbm = c("ind", "surr")
-                      , cbps = c("ind")
-                      , npcbps = c("ind")
-                      , ebal = c("ind")
-                      # , ebcw = c("ind")
-                      , optweight = c("ind")
-                      , super = c("ind")
-                      , bart = c("ind")
-                      , energy = c("ind")
-                      # , kbal = c("ind")
+  continuous = list(glm = c("ind", "saem")
+                    , gbm = c("ind", "surr")
+                    , cbps = c("ind")
+                    , npcbps = c("ind")
+                    , ebal = c("ind")
+                    # , ebcw = c("ind")
+                    , optweight = c("ind")
+                    , super = c("ind")
+                    , bart = c("ind")
+                    , energy = c("ind")
+                    # , kbal = c("ind")
   ))
 
   allowable.missings <- AE[[treat.type]][[method]]
@@ -433,10 +433,10 @@ process.missing <- function(missing, method, treat.type) {
 
   chk::chk_string(missing)
   if (!missing %pin% allowable.missings) {
-    .wrn(sprintf("only %s allowed for `missing` with %s treatments. Using %s",
+    .err(sprintf("only %s allowed for `missing` with `method = %s` for %s treatments",
                  word_list(allowable.missings, quotes = 2, is.are = TRUE),
-                 treat.type,
-                 word_list(allowable.missings[1], quotes = 2)))
+                 add_quotes(method),
+                 treat.type))
     return(allowable.missings[1])
   }
 
@@ -625,8 +625,8 @@ check_estimated_weights <- function(w, treat, treat.type, s.weights) {
       if (any(bad.treat.groups)) {
         n <- sum(bad.treat.groups)
         .wrn(sprintf("all weights are `NA` or 0 in treatment %s %s",
-                        ngettext(n, "group", "groups"),
-                        word_list(t.levels[bad.treat.groups], quotes = TRUE)))
+                     ngettext(n, "group", "groups"),
+                     word_list(t.levels[bad.treat.groups], quotes = TRUE)))
       }
     }
   }
@@ -987,6 +987,46 @@ neg_ent <- function(w) {
   w <- w[w > 0]
   w <- w/mean_fast(w)
   mean(w*log(w))
+}
+
+replace_na_with <- function(covs, with = "median") {
+  if (is.na(with) || !anyNA(covs)) return(covs)
+
+  if (is.character(with)) {
+    for (i in colnames(covs)[anyNA_col(covs)]) {
+      if (all(is.na(covs[,i]))) covs <- covs[, colnames(covs) != i, drop = FALSE]
+      else covs[is.na(covs[,i]),i] <- match.fun(with)(covs[,i], na.rm = TRUE)
+    }
+    return(covs)
+  }
+
+  covs[is.na(covs)] <- with
+
+  covs
+}
+
+add_missing_indicators <- function(covs, replace_with = "median") {
+  covs_w_missing <- which(anyNA_col(covs))
+  if (is_null(covs_w_missing)) return(covs)
+
+  missing_ind <- apply(covs[, covs_w_missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+
+  colnames(missing_ind) <- paste0(colnames(missing_ind), ":<NA>")
+  covs <- cbind(covs, missing_ind)
+
+  if (is_null(replace_with) || is.na(replace_with)) return(covs)
+
+  replace_na_with(covs, replace_with)
+}
+
+verbosely <- function(expr, verbose = TRUE) {
+  if (verbose) return(expr)
+
+  void <- utils::capture.output({
+    out <- invisible(expr)
+  })
+
+  out
 }
 
 #Generalized matrix inverse (port of MASS::ginv)
