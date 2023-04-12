@@ -55,7 +55,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.14.0" id="weightit-0140">WeightIt 0.14.0<a class="anchor" aria-label="anchor" href="#weightit-0140"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.14.0" id="weightit-0140">WeightIt 0.14.0<a class="anchor" aria-label="anchor" href="#weightit-0140"></a></h2><p class="text-muted">CRAN release: 2023-04-12</p>
 <ul><li><p>Added energy balancing for continuous treatments, requested using <code>method = "energy"</code>, as described in <a href="https://arxiv.org/abs/2107.07086" class="external-link">Huling et al. (2021)</a>. These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the <code>independenceWeights</code> package. See <code><a href="../reference/method_energy.html">?method_energy</a></code> for details.</p></li>
 <li><p>Added a new vignette on estimating effects after weighting, accessible using <code><a href="../articles/estimating-effects.html">vignette("estimating-effects", package = "WeightIt")</a></code>. The new workflow relies on the <code>marginaleffects</code> package. The main vignette (<code><a href="../articles/WeightIt.html">vignette("WeightIt")</a></code>) has been modernized as well.</p></li>
 <li><p>Added a new dataset, <code>msmdata</code>, to demonstrate capabilities for longitudinal treatments. <code>twang</code> is no longer a dependency.</p></li>
