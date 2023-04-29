@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,8 +55,14 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.14.1" id="weightit-0141">WeightIt 0.14.1<a class="anchor" aria-label="anchor" href="#weightit-0141"></a></h2>
+<ul><li><p><code>cobalt</code> version 4.5.1 or greater is now required.</p></li>
+<li><p>Fixed a bug when using balance Super Learner with <code>cobalt</code> 4.5.1.</p></li>
+<li><p>Added a section to the Estimating Effects vignette (<code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>) on estimating the effect of a continuous treatment after weighting.</p></li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.0" id="weightit-0140">WeightIt 0.14.0<a class="anchor" aria-label="anchor" href="#weightit-0140"></a></h2><p class="text-muted">CRAN release: 2023-04-12</p>
-<ul><li><p>Added energy balancing for continuous treatments, requested using <code>method = "energy"</code>, as described in <a href="https://arxiv.org/abs/2107.07086" class="external-link">Huling et al. (2021)</a>. These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the <code>independenceWeights</code> package. See <code><a href="../reference/method_energy.html">?method_energy</a></code> for details.</p></li>
+<ul><li><p>Added energy balancing for continuous treatments, requested using <code>method = "energy"</code>, as described in <a href="https://arxiv.org/abs/2107.07086" class="external-link">Huling et al. (2023)</a>. These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the <code>independenceWeights</code> package. See <code><a href="../reference/method_energy.html">?method_energy</a></code> for details.</p></li>
 <li><p>Added a new vignette on estimating effects after weighting, accessible using <code><a href="../articles/estimating-effects.html">vignette("estimating-effects", package = "WeightIt")</a></code>. The new workflow relies on the <code>marginaleffects</code> package. The main vignette (<code><a href="../articles/WeightIt.html">vignette("WeightIt")</a></code>) has been modernized as well.</p></li>
 <li><p>Added a new dataset, <code>msmdata</code>, to demonstrate capabilities for longitudinal treatments. <code>twang</code> is no longer a dependency.</p></li>
 <li><p>Methods that use a balance criterion to select a tuning parameter, in particular GBM and balance Super Learner, now rely on <code>cobalt</code>’s <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">bal.init()</a></code> and <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">bal.compute()</a></code> functionality, which adds new balance criteria. The <code>stop.method</code> argument for these functions has been renamed to <code>criterion</code> and <code>help("stop.method")</code> has been removed; the same page is now available at <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">help("bal.compute", package = "cobalt")</a></code>, which describes the additional statistics available. This also fixes some bugs that were present in some balance criteria.</p></li>

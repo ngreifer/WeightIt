@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2023-04-12</h4>
+            <h4 data-toc-skip class="date">2023-04-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -198,7 +198,7 @@ desired) is the estimate of the treatment effect.</p>
 <p>When doing g-computation after weighting, a few additional
 considerations are required. First, the outcome model should be fit
 incorporating the estimated weights (e.g., using weighted least squares
-or weighted maximum liklihood estimation). Second, when we take the
+or weighted maximum likelihood estimation). Second, when we take the
 average of the estimated potential outcomes under each treatment level,
 this must be a weighted average that incorporates the estimated weights.
 Third, if we want to target the ATT or ATC, we only estimate potential
@@ -217,19 +217,19 @@ the difference in means from a t-test or coefficient of the treatment in
 a linear model for the outcome. There are analytic and bootstrap
 approximations to the SEs of the g-computation estimate. The analytic
 approximation is computed using the delta method, a technique for
-compute the SE of a quantity derived from the regression model
+computing the SE of a quantity derived from the regression model
 parameters, such as the g-computation estimate.</p>
-<p>For the reasons above, we use g-computation when possible for all
-effect estimates, even if there are simpler methods that would yield the
-same estimates. Using a single workflow (with some slight modifications
-depending on the context; see below) facilitates implementing best
-practices regardless of what choices a user makes.</p>
+<p>For the reasons above, we use weighted g-computation when possible
+for all effect estimates, even if there are simpler methods that would
+yield the same estimates. Using a single workflow (with some slight
+modifications depending on the context; see below) facilitates
+implementing best practices regardless of what choices a user makes.</p>
 <p>There are other methods to incorporate the outcome model into
 estimation of the treatment effect, the best studied of which is
 augmented inverse probability weighting (AIPW), which also involves a
-g-computation step. We only describe g-computation here because of its
-conceptual simplicity, ease of implementation, and connection with best
-practices for estimating effects after weighting.</p>
+g-computation step. We only describe weighted g-computation here because
+of its conceptual simplicity, ease of implementation, and connection
+with best practices for estimating effects after matching.</p>
 </div>
 <div class="section level3">
 <h3 id="modeling-the-outcome">Modeling the Outcome<a class="anchor" aria-label="anchor" href="#modeling-the-outcome"></a>
@@ -359,21 +359,23 @@ all cases, the correct propensity score model is used. We will present
 both the faster and simpler method that uses robust SEs and the more
 complicated but accurate method using bootstrapping.</p>
 <p>We’ll be using a simulated toy dataset <code>d</code> with several
-outcome types. Code to generate the dataset is at the end of this
-document. Below we display the first six rows of <code>d</code>:</p>
+outcome and treatment types. Code to generate the dataset is at the end
+of this document. Below we display the first six rows of
+<code>d</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   A      X1      X2      X3       X4 X5      X6      X7      X8       X9      Y_C Y_B     Y_S</span></span>
-<span><span class="co">## 1 0  0.1725 -1.4283 -0.4103 -2.36059  1 -1.1199  0.6398 -0.4840 -0.59385  0.07104   0  278.46</span></span>
-<span><span class="co">## 2 0 -1.0959  0.8463  0.2456 -0.12333  1 -2.2687 -1.4491 -0.5514 -0.31439  0.15619   0  330.63</span></span>
-<span><span class="co">## 3 0  0.1768  0.7905 -0.8436  0.82366  1 -0.2221  0.2971 -0.6966 -0.69516 -0.85180   1  369.94</span></span>
-<span><span class="co">## 4 0 -0.4595  0.1726  1.9542 -0.62661  1 -0.4019 -0.8294 -0.5384  0.20729 -2.35184   0   91.06</span></span>
-<span><span class="co">## 5 1  0.3563 -1.8121  0.8135 -0.67189  1 -0.8297  1.7297 -0.6439 -0.02648  0.68058   0  182.73</span></span>
-<span><span class="co">## 6 0 -2.4313 -1.7984 -1.2940  0.04609  1 -1.2419 -1.1252 -1.8659 -0.56513 -5.62260   0 2563.73</span></span></code></pre>
-<p><code>A</code> is the treatment variable, <code>X1</code> through
-<code>X9</code> are covariates, <code>Y_C</code> is a continuous
+<pre><code><span><span class="co">##   A Am      Ac      X1      X2      X3       X4 X5      X6      X7      X8       X9      Y_C Y_B     Y_S</span></span>
+<span><span class="co">## 1 0  0 -2.2185  0.1725 -1.4283 -0.4103 -2.36059  1 -1.1199  0.6398 -0.4840 -0.59385  0.07104   0  278.46</span></span>
+<span><span class="co">## 2 0  0 -2.2837 -1.0959  0.8463  0.2456 -0.12333  1 -2.2687 -1.4491 -0.5514 -0.31439  0.15619   0  330.63</span></span>
+<span><span class="co">## 3 0  0 -1.1362  0.1768  0.7905 -0.8436  0.82366  1 -0.2221  0.2971 -0.6966 -0.69516 -0.85180   1  369.94</span></span>
+<span><span class="co">## 4 0  0 -0.8865 -0.4595  0.1726  1.9542 -0.62661  1 -0.4019 -0.8294 -0.5384  0.20729 -2.35184   0   91.06</span></span>
+<span><span class="co">## 5 1  1  0.8613  0.3563 -1.8121  0.8135 -0.67189  1 -0.8297  1.7297 -0.6439 -0.02648  0.68058   0  182.73</span></span>
+<span><span class="co">## 6 0  0 -2.1697 -2.4313 -1.7984 -1.2940  0.04609  1 -1.2419 -1.1252 -1.8659 -0.56513 -5.62260   0 2563.73</span></span></code></pre>
+<p><code>A</code> is a binary treatment variable, <code>X1</code>
+through <code>X9</code> are covariates, <code>Y_C</code> is a continuous
 outcome, <code>Y_B</code> is a binary outcome, and <code>Y_S</code> is a
-survival outcome.</p>
+survival outcome. <code>Am</code> and <code>Ac</code> are multi-category
+and continuous treatment variables, respectively.</p>
 <p>We will need to the following packages to perform the analyses:</p>
 <ul>
 <li>
@@ -400,7 +402,7 @@ weighting.</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/">"WeightIt"</a></span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://vincentarelbundock.github.io/marginaleffects/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span></code></pre></div>
-<p>All effect estimates will be computed using
+<p>Effect estimates will be computed using
 <code>marginaleffects::avg_comparions()</code>, even when its use may be
 superfluous (e.g., for comparing the weighted difference in means). As
 previously mentioned, this is because it is useful to have a single
@@ -420,7 +422,7 @@ survey-weighted generalized linear models and Cox-proportional hazards
 models. Much of the code here can be adapted to be used with
 <code>survey</code>, and we will demonstrate that as well.</p>
 <div class="section level3">
-<h3 id="the-standard-case-using-robust-ses">The Standard Case using Robust SEs<a class="anchor" aria-label="anchor" href="#the-standard-case-using-robust-ses"></a>
+<h3 id="the-standard-case-binary-treatment-with-robust-ses">The Standard Case: Binary Treatment with Robust SEs<a class="anchor" aria-label="anchor" href="#the-standard-case-binary-treatment-with-robust-ses"></a>
 </h3>
 <p>For most weighting methods, estimating the effect after weighting is
 straightforward and involves fitting a model for the outcome that
@@ -436,7 +438,8 @@ for the ATT or ATC, for estimating effects with binary outcomes, and for
 estimating effects with survival outcomes. Estimation for all estimands
 other than the ATT and ATC proceeds as it does for the ATE. You must
 read the Standard Case to understand the basic procedure before reading
-about these special scenarios.</p>
+about these special scenarios. We also demonstrate how to estimate
+effects for multi-category and continuous treatments.</p>
 <p>Here, we demonstrate the faster analytic approach to estimating
 confidence intervals; for the bootstrap approach, see the section “Using
 Bootstrapping to Estimate Confidence Intervals” below.</p>
@@ -484,7 +487,7 @@ estimate the ATE.</p>
 <span>                wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Term Contrast Estimate Std. Error    z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A    1 - 0        2       0.62 3.23  0.00124 0.787   3.22</span></span>
+<span><span class="co">##     A    1 - 0     1.91      0.586 3.26  0.00112 0.761   3.06</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <p>Let’s break down the call to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>: to the
@@ -510,8 +513,8 @@ the outcome model (if any) are interacted with the treatment.</p>
 <span>                wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  A Estimate Std. Error     z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##  0     1.34      0.128 10.46   &lt;0.001  1.09   1.59</span></span>
-<span><span class="co">##  1     3.31      0.433  7.64   &lt;0.001  2.46   4.15</span></span>
+<span><span class="co">##  0     1.42      0.134 10.63   &lt;0.001  1.16   1.68</span></span>
+<span><span class="co">##  1     3.26      0.426  7.66   &lt;0.001  2.43   4.10</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: A, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <p>We can see that the difference in potential outcome means is equal to
@@ -586,7 +589,7 @@ displays the statistics of interest:</p>
 <span>                transform <span class="op">=</span> <span class="st">"exp"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Term              Contrast Estimate Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A ln(mean(1) / mean(0))     1.47  0.00348  1.14    1.9</span></span>
+<span><span class="co">##     A ln(mean(1) / mean(0))     1.44  0.00321  1.13   1.84</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: term, contrast, estimate, p.value, conf.low, conf.high, predicted, predicted_hi, predicted_lo</span></span></code></pre>
 <p>The output displays the marginal RR, its Z-value, the p-value for the
@@ -631,9 +634,9 @@ adequate.</p>
 <span><span class="co">## coxph(formula = Surv(Y_S) ~ A, data = d, weights = weights)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##   coef exp(coef) se(coef) robust se z     p</span></span>
-<span><span class="co">## A 0.43      1.53     0.03      0.07 6 5e-09</span></span>
+<span><span class="co">## A 0.42      1.52     0.03      0.08 6 4e-08</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Likelihood ratio test=184  on 1 df, p=&lt;2e-16</span></span>
+<span><span class="co">## Likelihood ratio test=177  on 1 df, p=&lt;2e-16</span></span>
 <span><span class="co">## n= 2000, number of events= 2000</span></span></code></pre>
 <p>The <code>coef</code> column contains the log HR, and
 <code>exp(coef)</code> contains the HR. Remember to always use the
@@ -641,8 +644,54 @@ adequate.</p>
 p-value results from using the robust SE.</p>
 </div>
 <div class="section level4">
-<h4 id="multi-category-treatments">Multi-category treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments"></a>
+<h4 id="using-the-survey-package">Using the <code>survey</code> package<a class="anchor" aria-label="anchor" href="#using-the-survey-package"></a>
 </h4>
+<p>The <code>survey</code> package has often been recommended for use in
+estimating treatment effects after propensity score weighting. When
+combined with <code>marginaleffects</code> functions, it yields
+identical estimates and similar standard errors to the methods described
+above that use <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and manually
+request a robust SE. The main benefits of using <code>survey</code> are
+that you don’t need to request robust SEs in the call to
+<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> and you can incorporate other survey
+design information, e.g., if your study comes from a complex survey.</p>
+<p>Below is how you would adjust the standard case to use
+<code>survey</code> instead:</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="http://r-survey.r-forge.r-project.org/survey/" class="external-link">"survey"</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#Declare a survey design using the estimated weights</span></span>
+<span><span class="va">des</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svydesign.html" class="external-link">svydesign</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span>, weights <span class="op">=</span> <span class="op">~</span><span class="va">weights</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#Fit the outcome model</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svyglm.html" class="external-link">svyglm</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
+<span>                           <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span><span class="op">)</span>,</span>
+<span>              design <span class="op">=</span> <span class="va">des</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co">#G-computation for the difference in means</span></span>
+<span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span>                variables <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                wts <span class="op">=</span> <span class="st">"(weights)"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">##  Term Contrast Estimate Std. Error    z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
+<span><span class="co">##     A    1 - 0     1.91      0.383 4.99   &lt;0.001  1.16   2.66</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
+<p>Note that we need to supply <code>"(weights)"</code> to the
+<code>wts</code> argument for them to be correctly incorporated. You
+might notice that the standard errors computed using <code>survey</code>
+are different from those using <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>
+and HC3 robust SEs; to get similar SEs using <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or
+<code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, set <code>vcov = "HC0"</code> in the call to
+<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>. This approach is not recommended since
+HC3 standard errors tend to perform better, which is one reason to avoid
+using <code>survey</code>. In many cases, though, the results will be
+similar.</p>
+</div>
+</div>
+<div class="section level3">
+<h3 id="multi-category-treatments">Multi-Category Treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments"></a>
+</h3>
 <p>Multi-category treatments work essentially the same way as binary
 treatments. The main practical differences are in choosing the estimand
 and estimating the weights. The ATE and ATO are straightforward. The ATT
@@ -660,20 +709,20 @@ how they differ.</p>
 <p>Below, we’ll estimate the ATTs of a constructed multi-category
 treatment for a focal level. Our new treatment <code>Am</code> is
 constructed as follows:</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span><span class="op">$</span><span class="va">Am</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">A</span> <span class="op">==</span> <span class="fl">1</span>, <span class="st">"T"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C1"</span>, <span class="st">"C2"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">Am</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  C1  C2   T </span></span>
-<span><span class="co">## 769 790 441</span></span></code></pre>
+<span><span class="co">## 768 784 448</span></span></code></pre>
 <p>We have a focal treatment group, <code>"T"</code>, and two control
 groups <code>"C1"</code> and <code>"C2"</code>. We expect the ATTs for
 the two control groups to be the same since we assigned them randomly
 from within the original control group.</p>
-<p>First, we estimate our weights using entropy balancing, identifying
-the focal group using <code>focal</code>:</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<p>First, we estimate our weights using entropy balancing <span class="citation">(<a href="#ref-hainmuellerEntropyBalancingCausal2012" role="doc-biblioref">Hainmueller 2012</a>)</span>, identifying the focal
+group using <code>focal</code>:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">Am</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
 <span>                <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
 <span>              method <span class="op">=</span> <span class="st">"ebal"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>,</span>
@@ -688,11 +737,11 @@ the focal group using <code>focal</code>:</p>
 <span><span class="co">##  - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span></code></pre>
 <p>Typically one would assess the performance of the weights (balance
 and effective sample size) but we will skip that for now. Next, we fit
-the outcome model and perform g-computation. We use
+the outcome model and perform weighted g-computation. We use
 <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions()</a></code> first to compute the expected potential
 outcome under each treatment for the focal group, and the use
 <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/hypotheses.html" class="external-link">hypotheses()</a></code> to test all pairwise comparisons.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Bring weights into the dataset</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">weights</span> <span class="op">&lt;-</span> <span class="va">W</span><span class="op">$</span><span class="va">weights</span></span>
 <span></span>
@@ -710,18 +759,18 @@ outcome under each treatment for the focal group, and the use
 <span><span class="va">p</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Am Estimate Std. Error     z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##  C1     1.26      0.252  5.01   &lt;0.001 0.768   1.75</span></span>
-<span><span class="co">##  C2     1.16      0.260  4.46   &lt;0.001 0.651   1.67</span></span>
-<span><span class="co">##  T      3.52      0.322 10.91   &lt;0.001 2.884   4.15</span></span>
+<span><span class="co">##  C1     1.05      0.254  4.14   &lt;0.001 0.554   1.55</span></span>
+<span><span class="co">##  C2     1.40      0.259  5.42   &lt;0.001 0.897   1.91</span></span>
+<span><span class="co">##  T      3.50      0.323 10.82   &lt;0.001 2.865   4.13</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: Am, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"revpairwise"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##     Term Estimate Std. Error      z Pr(&gt;|z|)  2.5 % 97.5 %</span></span>
-<span><span class="co">##  C2 - C1    -0.10      0.342 -0.293    0.769 -0.771   0.57</span></span>
-<span><span class="co">##  T - C1      2.25      0.388  5.815   &lt;0.001  1.495   3.02</span></span>
-<span><span class="co">##  T - C2      2.36      0.382  6.166   &lt;0.001  1.607   3.10</span></span>
+<span><span class="co">##     Term Estimate Std. Error    z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
+<span><span class="co">##  C2 - C1    0.352      0.343 1.03    0.305 -0.32   1.02</span></span>
+<span><span class="co">##  T - C1     2.447      0.387 6.32   &lt;0.001  1.69   3.21</span></span>
+<span><span class="co">##  T - C2     2.095      0.397 5.28   &lt;0.001  1.32   2.87</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <p>We find significant ATTs between the focal treatment and control
@@ -731,56 +780,121 @@ as the difference between these ATTs, is nonsignificant, as expected.
 Remember, for the ATT, bootstrapping usually provides more valid
 inference than the robust SEs used here.</p>
 </div>
-<div class="section level4">
-<h4 id="continuous-treatments">Continuous treatments<a class="anchor" aria-label="anchor" href="#continuous-treatments"></a>
-</h4>
-<p>Coming soon!</p>
-</div>
-<div class="section level4">
-<h4 id="using-the-survey-package">Using the <code>survey</code> package<a class="anchor" aria-label="anchor" href="#using-the-survey-package"></a>
-</h4>
-<p>The <code>survey</code> package has often been recommended for use in
-estimating treatment effects after propensity score weighting. When
-combined with <code>marginaleffects</code> functions, it yields
-identical estimates and similar standard errors to the methods described
-above that use <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and manually
-request a robust SE. The main benefits of using <code>survey</code> are
-that you don’t need to request robust SEs in the call to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> and you can incorporate other survey
-design information, e.g., if your study comes from a complex survey.</p>
-<p>Below is how you would adjust the standard case to use
-<code>survey</code> instead:</p>
-<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="http://r-survey.r-forge.r-project.org/survey/" class="external-link">"survey"</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="co">#Declare a survey design using the estimated weights</span></span>
-<span><span class="va">des</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svydesign.html" class="external-link">svydesign</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span>, weights <span class="op">=</span> <span class="op">~</span><span class="va">weights</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
+<div class="section level3">
+<h3 id="continuous-treatments">Continuous Treatments<a class="anchor" aria-label="anchor" href="#continuous-treatments"></a>
+</h3>
+<p>For continuous treatments, one estimand of interest is the average
+dose-response function (ADRF), which links the value of the treatment to
+the expected potential outcome under that treatment value across the
+full sample. We do not provide a detailed account of the ADRF but will
+demonstrate how to estimate weights that balance covariates with respect
+to a continuous treatment and how to estimate and plot the ADRF in the
+weighted sample. We’ll use the continuous treatment <code>Ac</code>,
+which ranges from -10.37 to 6.26, and estimate its effect on the
+continuous outcome <code>Y_C</code>.</p>
+<p>First, we’ll estimate distance covariance optimal weights <span class="citation">(<a href="#ref-hulingIndependenceWeightsCausal2023" role="doc-biblioref">Huling, Greifer, and Chen 2023</a>)</span> using
+<code><a href="../reference/weightit.html">weightit()</a></code>.</p>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">Ac</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
+<span>                <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
+<span>              method <span class="op">=</span> <span class="st">"energy"</span><span class="op">)</span></span>
+<span><span class="va">W</span></span></code></pre></div>
+<pre><code><span><span class="co">## A <span style="font-style: italic;">weightit</span> object</span></span>
+<span><span class="co">##  - method: "energy" (energy balancing)</span></span>
+<span><span class="co">##  - number of obs.: 2000</span></span>
+<span><span class="co">##  - sampling weights: none</span></span>
+<span><span class="co">##  - treatment: continuous</span></span>
+<span><span class="co">##  - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span></code></pre>
+<p>Typically one would assess the performance of the weights (balance
+and effective sample size) but we will skip that for now. Next, we fit
+the outcome model and perform weighted g-computation. For the outcome
+model, we will use a natural cubic spline on <code>Ac</code> with 4 df.
+You can use any transformation of the treatment, e.g., a polynomial
+transformation using <code><a href="https://rdrr.io/r/stats/poly.html" class="external-link">poly()</a></code>, as long as it is flexible
+enough to capture any possible ADRF; purely nonparametric methods like
+kernel regression can be used as well, but inference for them is more
+challenging. Covariates can be included in the model, but with many
+covariates, many basis functions for the treatment, and a full set of
+treatment-covariate interactions, the resulting estimates may be
+imprecise.</p>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#Bring weights into the dataset</span></span>
+<span><span class="va">d</span><span class="op">$</span><span class="va">weights</span> <span class="op">&lt;-</span> <span class="va">W</span><span class="op">$</span><span class="va">weights</span></span>
 <span></span>
 <span><span class="co">#Fit the outcome model</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svyglm.html" class="external-link">svyglm</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
-<span>                           <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span><span class="op">)</span>,</span>
-<span>              design <span class="op">=</span> <span class="va">des</span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="fu">splines</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/splines/ns.html" class="external-link">ns</a></span><span class="op">(</span><span class="va">Ac</span>, df <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">*</span></span>
+<span>            <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
+<span>               <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span><span class="op">)</span>,</span>
+<span>          data <span class="op">=</span> <span class="va">d</span>, weights <span class="op">=</span> <span class="va">weights</span><span class="op">)</span></span></code></pre></div>
+<p>Next we use <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions()</a></code> first to compute the
+expected potential outcome under a representative set of treatment
+values. We’ll examine 51 treatment values from the 10th to 90th
+percentiles of <code>Ac</code> because estimates outside those ranges
+tend to be imprecise.</p>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">#Represenative values of Ac:</span></span>
+<span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">Ac</span>, <span class="fl">.1</span><span class="op">)</span>,</span>
+<span>                      <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">Ac</span>, <span class="fl">.9</span><span class="op">)</span>,</span>
+<span>                      length.out <span class="op">=</span> <span class="fl">51</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="co">#G-computation for the difference in means</span></span>
-<span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
-<span>                variables <span class="op">=</span> <span class="st">"A"</span>,</span>
-<span>                wts <span class="op">=</span> <span class="st">"(weights)"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term Contrast Estimate Std. Error    z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A    1 - 0     1.96      0.311 6.31   &lt;0.001  1.35   2.57</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
-<p>Note that we need to supply <code>"(weights)"</code> to the
-<code>wts</code> argument for them to be correctly incorporated. You
-might notice that the standard errors computed using <code>survey</code>
-are different from those using <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>
-and HC3 robust SEs; to get similar SEs using <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or
-<code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, set <code>vcov = "HC0"</code> in the call to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>. This approach is not recommended since
-HC3 standard errors tend to perform better, which is one reason to avoid
-using <code>survey</code>. In many cases, though, the results will be
-similar.</p>
+<span><span class="co">#G-computation</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span>                     variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Ac <span class="op">=</span> <span class="va">values</span><span class="op">)</span>,</span>
+<span>                     vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
+<span>                     wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
+<p>Although one can examine the expected potential outcomes, it is often
+more useful to see them plotted. We can generate a plot of the ADRF and
+its pointwise confidence band using <code>ggplot2</code>:</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ggplot2.tidyverse.org" class="external-link">"ggplot2"</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Ac</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">estimate</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">conf.low</span>, ymax <span class="op">=</span> <span class="va">conf.high</span><span class="op">)</span>,</span>
+<span>              alpha <span class="op">=</span> <span class="fl">.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Ac"</span>, y <span class="op">=</span> <span class="st">"E[Y|A]"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="estimating-effects_files/figure-html/unnamed-chunk-19-1.png" width="672"></p>
+<p>We can see that the ADRF has an elbow-shape, with a zone of no
+evidence of treatment effect followed a zone of increasing values of the
+outcome as the treatment increases.</p>
+<p>Another way to characterize the effect of continuous treatments is to
+examine the average marginal effect function (AMEF), which is a function
+that relates the value of treatment to the derivative of the ADRF. When
+this derivative is different from zero, there is evidence of a treatment
+effect at the corresponding value of treatment. Below, we use
+<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/slopes.html" class="external-link">avg_slopes()</a></code> to compute the pointwise derivatives of the
+ADRF across levels of <code>Ac</code> and then plot it.</p>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Estimate the pointwise derivatives at representative</span></span>
+<span><span class="co"># values of Ac</span></span>
+<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/slopes.html" class="external-link">avg_slopes</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span>                variables <span class="op">=</span> <span class="st">"Ac"</span>,</span>
+<span>                newdata <span class="op">=</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/datagrid.html" class="external-link">datagridcf</a></span><span class="op">(</span>Ac <span class="op">=</span> <span class="va">values</span><span class="op">)</span>,</span>
+<span>                by <span class="op">=</span> <span class="st">"Ac"</span>,</span>
+<span>                vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
+<span>                wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Plot the AMEF</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">s</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Ac</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">estimate</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_ribbon.html" class="external-link">geom_ribbon</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">conf.low</span>, ymax <span class="op">=</span> <span class="va">conf.high</span><span class="op">)</span>,</span>
+<span>              alpha <span class="op">=</span> <span class="fl">.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Ac"</span>, y <span class="op">=</span> <span class="st">"dE[Y|A]/dA"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p><img src="estimating-effects_files/figure-html/unnamed-chunk-20-1.png" width="672"></p>
+<p>We can see that between values of -1 and .5, there is evidence of a
+positive effect of <code>Ac</code> on <code>Y_C</code> (i.e., because
+the confidence intervals for the slope of the ADRF at those values of
+<code>Ac</code> exclude 0). This is in line with our observation above
+that the treatment only appears to have an effect at higher values of
+<code>Ac</code>.</p>
 </div>
+<div class="section level3">
+<h3 id="longitudinal-treatments">Longitudinal Treatments<a class="anchor" aria-label="anchor" href="#longitudinal-treatments"></a>
+</h3>
+<p>Coming soon! For now see the example at
+<code><a href="../articles/WeightIt.html">vignette("WeightIt")</a></code>.</p>
 </div>
 <div class="section level3">
 <h3 id="using-bootstrapping-to-estimate-confidence-intervals">Using Bootstrapping to Estimate Confidence Intervals<a class="anchor" aria-label="anchor" href="#using-bootstrapping-to-estimate-confidence-intervals"></a>
@@ -803,7 +917,7 @@ of <code>A</code> on the binary outcome <code>Y_B</code>.</p>
 <code>boot_fun</code>. This function returns the marginal RR. In it, we
 estimate the weights and the effect and return the estimate of
 interest.</p>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">boot_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">boot_data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span></span>
 <span>  </span>
@@ -842,7 +956,7 @@ intervals (which you can request by setting <code>type = "bca"</code> in
 the call to <code><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">boot.ci()</a></code>), which are known to be the most
 accurate. See <code><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">?boot.ci</a></code> for details. Here, we’ll just use a
 percentile confidence interval.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st">"boot"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">54321</span><span class="op">)</span></span>
 <span><span class="va">boot_out</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/boot/man/boot.html" class="external-link">boot</a></span><span class="op">(</span><span class="va">d</span>, <span class="va">boot_fun</span>, R <span class="op">=</span> <span class="fl">199</span><span class="op">)</span></span>
@@ -857,9 +971,9 @@ percentile confidence interval.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Bootstrap Statistics :</span></span>
-<span><span class="co">##     original    bias    std. error</span></span>
-<span><span class="co">## t1*    1.522 0.0004574       0.119</span></span></code></pre>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<span><span class="co">##     original   bias    std. error</span></span>
+<span><span class="co">## t1*    1.519 0.004179       0.131</span></span></code></pre>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">boot.ci</a></span><span class="op">(</span><span class="va">boot_out</span>, type <span class="op">=</span> <span class="st">"perc"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## BOOTSTRAP CONFIDENCE INTERVAL CALCULATIONS</span></span>
 <span><span class="co">## Based on 199 bootstrap replicates</span></span>
@@ -869,17 +983,17 @@ percentile confidence interval.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Intervals : </span></span>
 <span><span class="co">## Level     Percentile     </span></span>
-<span><span class="co">## 95%   ( 1.305,  1.800 )  </span></span>
+<span><span class="co">## 95%   ( 1.302,  1.817 )  </span></span>
 <span><span class="co">## Calculations and Intervals on Original Scale</span></span>
 <span><span class="co">## Some percentile intervals may be unstable</span></span></code></pre>
-<p>We find a RR of 1.522 with a confidence interval of (1.305, 1.8). If
-we had wanted a risk difference, we could have adjusted the arguments to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> (i.e., by removing the
+<p>We find a RR of 1.519 with a confidence interval of (1.302, 1.817).
+If we had wanted a risk difference, we could have adjusted the arguments
+to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> (i.e., by removing the
 <code>comparison</code> and <code>transform</code> arguments).</p>
 <p>To estimate the bootstrap confidence for the HR, we can do the same
 as above except our <code>boot_fun</code> will look like the
 following:</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">boot_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">boot_data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span></span>
 <span>  </span>
@@ -901,12 +1015,6 @@ following:</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p>(Remember that you will need to load in the <code>survival</code>
 package before doing so.)</p>
-</div>
-<div class="section level3">
-<h3 id="longitudinal-treatments">Longitudinal Treatments<a class="anchor" aria-label="anchor" href="#longitudinal-treatments"></a>
-</h3>
-<p>Coming soon! For now see the example at
-<code><a href="../articles/WeightIt.html">vignette("WeightIt")</a></code>.</p>
 </div>
 </div>
 <div class="section level2">
@@ -968,6 +1076,12 @@ Greifer, Noah, and Elizabeth A. Stuart. 2021. <span>“Choosing the
 Estimand When Matching or Weighting in Observational Studies.”</span>
 <em>arXiv:2106.10577 [Stat]</em>, June. <a href="https://arxiv.org/abs/2106.10577" class="external-link">https://arxiv.org/abs/2106.10577</a>.
 </div>
+<div id="ref-hainmuellerEntropyBalancingCausal2012" class="csl-entry">
+Hainmueller, J. 2012. <span>“Entropy Balancing for Causal Effects:
+<span>A</span> Multivariate Reweighting Method to Produce Balanced
+Samples in Observational Studies.”</span> <em>Political Analysis</em> 20
+(1): 25–46. <a href="https://doi.org/10.1093/pan/mpr025" class="external-link">https://doi.org/10.1093/pan/mpr025</a>.
+</div>
 <div id="ref-hajage2018" class="csl-entry">
 Hajage, David, Guillaume Chauvet, Lisa Belin, Alexandre Lafourcade,
 Florence Tubach, and Yann De Rycke. 2018. <span>“Closed-Form Variance
@@ -979,6 +1093,11 @@ Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.
 <span>“Matching as Nonparametric Preprocessing for Reducing Model
 Dependence in Parametric Causal Inference.”</span> <em>Political
 Analysis</em> 15 (3): 199–236. <a href="https://doi.org/10.1093/pan/mpl013" class="external-link">https://doi.org/10.1093/pan/mpl013</a>.
+</div>
+<div id="ref-hulingIndependenceWeightsCausal2023" class="csl-entry">
+Huling, Jared D., Noah Greifer, and Guanhua Chen. 2023.
+<span>“Independence Weights for Causal Inference with Continuous
+Treatments.”</span> <span>arXiv</span>. <a href="https://doi.org/10.48550/arXiv.2107.07086" class="external-link">https://doi.org/10.48550/arXiv.2107.07086</a>.
 </div>
 <div id="ref-mackinnonBootstrapMethodsEconometrics2006" class="csl-entry">
 MacKinnon, James G. 2006. <span>“Bootstrap Methods in
@@ -1035,7 +1154,7 @@ Coefficients.”</span> <em>American Journal of Epidemiology</em> 177 (4):
 <div class="section level2">
 <h2 id="code-to-generate-data-used-in-examples">Code to Generate Data used in Examples<a class="anchor" aria-label="anchor" href="#code-to-generate-data-used-in-examples"></a>
 </h2>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Generating data similar to Austin (2009) for demonstrating treatment effect estimation</span></span>
 <span><span class="va">gen_X</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">9</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="va">n</span>, ncol <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
@@ -1043,11 +1162,18 @@ Coefficients.”</span> <em>American Journal of Epidemiology</em> 177 (4):
 <span>  <span class="va">X</span></span>
 <span><span class="op">}</span></span>
 <span></span>
+<span><span class="va">gen_Ac</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">LP_A</span> <span class="op">&lt;-</span> <span class="op">-</span><span class="fl">1.2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2.4</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">7</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">8</span><span class="op">]</span></span>
+<span>  <span class="va">LP_A</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">rlogis</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
 <span><span class="co">#~20% treated</span></span>
-<span><span class="va">gen_A</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">LP_A</span> <span class="op">&lt;-</span> <span class="op">-</span> <span class="fl">1.2</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2.4</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">5</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">7</span><span class="op">]</span> <span class="op">-</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">1.5</span><span class="op">)</span><span class="op">*</span><span class="va">X</span><span class="op">[</span>,<span class="fl">8</span><span class="op">]</span></span>
-<span>  <span class="va">P_A</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="va">LP_A</span><span class="op">)</span></span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span>, <span class="fl">1</span>, <span class="va">P_A</span><span class="op">)</span></span>
+<span><span class="va">gen_A</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">Ac</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fl">1</span> <span class="op">*</span> <span class="op">(</span><span class="va">Ac</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">gen_Am</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">A</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">A</span> <span class="op">==</span> <span class="fl">1</span>, <span class="st">"T"</span>, <span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"C1"</span>, <span class="st">"C2"</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">A</span><span class="op">)</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
 <span></span>
 <span><span class="co"># Continuous outcome</span></span>
@@ -1091,13 +1217,15 @@ Coefficients.”</span> <em>American Journal of Epidemiology</em> 177 (4):
 <span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">2000</span></span>
 <span><span class="va">X</span> <span class="op">&lt;-</span> <span class="fu">gen_X</span><span class="op">(</span><span class="va">n</span><span class="op">)</span></span>
-<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu">gen_A</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="va">Ac</span> <span class="op">&lt;-</span> <span class="fu">gen_Ac</span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
+<span><span class="va">A</span> <span class="op">&lt;-</span> <span class="fu">gen_A</span><span class="op">(</span><span class="va">Ac</span><span class="op">)</span></span>
+<span><span class="va">Am</span> <span class="op">&lt;-</span> <span class="fu">gen_A</span><span class="op">(</span><span class="va">A</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">Y_C</span> <span class="op">&lt;-</span> <span class="fu">gen_Y_C</span><span class="op">(</span><span class="va">A</span>, <span class="va">X</span><span class="op">)</span></span>
 <span><span class="va">Y_B</span> <span class="op">&lt;-</span> <span class="fu">gen_Y_B</span><span class="op">(</span><span class="va">A</span>, <span class="va">X</span><span class="op">)</span></span>
 <span><span class="va">Y_S</span> <span class="op">&lt;-</span> <span class="fu">gen_Y_S</span><span class="op">(</span><span class="va">A</span>, <span class="va">X</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">X</span>, <span class="va">Y_C</span>, <span class="va">Y_B</span>, <span class="va">Y_S</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">A</span>, <span class="va">Am</span>, <span class="va">Ac</span>, <span class="va">X</span>, <span class="va">Y_C</span>, <span class="va">Y_B</span>, <span class="va">Y_S</span><span class="op">)</span></span></code></pre></div>
 </div>
 
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
