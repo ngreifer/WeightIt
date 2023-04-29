@@ -32,7 +32,9 @@ me_ok <- requireNamespace("marginaleffects", quietly = TRUE) &&
   requireNamespace("sandwich", quietly = TRUE)
 su_ok <- requireNamespace("survival", quietly = TRUE)
 boot_ok <- requireNamespace("boot", quietly = TRUE)
+```
 
+```{r, include = FALSE}
 #Generating data similar to Austin (2009) for demonstrating treatment effect estimation
 gen_X <- function(n) {
   X <- matrix(rnorm(9 * n), nrow = n, ncol = 9)
@@ -40,11 +42,18 @@ gen_X <- function(n) {
   X
 }
 
+gen_Ac <- function(X) {
+  LP_A <- -1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] - log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
+  LP_A + rlogis(nrow(X))
+}
+
 #~20% treated
-gen_A <- function(X) {
-  LP_A <- - 1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] - log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
-  P_A <- plogis(LP_A)
-  rbinom(nrow(X), 1, P_A)
+gen_A <- function(Ac) {
+  1 * (Ac > 0)
+}
+
+gen_Am <- function(A) {
+  factor(ifelse(A == 1, "T", sample(c("C1", "C2"), length(A), TRUE)))
 }
 
 # Continuous outcome
@@ -88,13 +97,15 @@ set.seed(19599)
 
 n <- 2000
 X <- gen_X(n)
-A <- gen_A(X)
+Ac <- gen_Ac(X)
+A <- gen_A(Ac)
+Am <- gen_A(A)
 
 Y_C <- gen_Y_C(A, X)
 Y_B <- gen_Y_B(A, X)
 Y_S <- gen_Y_S(A, X)
 
-d <- data.frame(A, X, Y_C, Y_B, Y_S)
+d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S)
 ```
 
 ## Introduction
@@ -121,13 +132,13 @@ Our primary focus will be on marginal effects, which are appropriate for all eff
 
 To estimate marginal effects, we use a method known as g-computation [@snowdenImplementationGComputationSimulated2011] or regression estimation [@schaferAverageCausalEffects2008]. This involves first specifying a model for the outcome as a function of the treatment and covariates. Then, for each unit, we compute their predicted values of the outcome setting their treatment status to treated, and then again for control, leaving us with two predicted outcome values for each unit, which are estimates of the potential outcomes under each treatment level. We compute the mean of each of the estimated potential outcomes across the entire sample, which leaves us with two average estimated potential outcomes. Finally, the contrast of these average estimated potential outcomes (e.g., their difference or ratio, depending on the effect measure desired) is the estimate of the treatment effect.
 
-When doing g-computation after weighting, a few additional considerations are required. First, the outcome model should be fit incorporating the estimated weights (e.g., using weighted least squares or weighted maximum liklihood estimation). Second, when we take the average of the estimated potential outcomes under each treatment level, this must be a weighted average that incorporates the estimated weights. Third, if we want to target the ATT or ATC, we only estimate potential outcomes for the treated or control group, respectively (though we still generate predicted values under both treatment and control).
+When doing g-computation after weighting, a few additional considerations are required. First, the outcome model should be fit incorporating the estimated weights (e.g., using weighted least squares or weighted maximum likelihood estimation). Second, when we take the average of the estimated potential outcomes under each treatment level, this must be a weighted average that incorporates the estimated weights. Third, if we want to target the ATT or ATC, we only estimate potential outcomes for the treated or control group, respectively (though we still generate predicted values under both treatment and control).
 
-G-computation as a framework for estimating effects after weighting has a number of advantages over other approaches. It works the same regardless of the form of the outcome model or type of outcome (e.g., whether a linear model is used for a continuous outcome or a logistic model is used for a binary outcome); the only difference might be how the average expected potential outcomes are contrasted in the final step. In simple cases, the estimated effect is numerically identical to effects estimated using other methods; for example, if no covariates are included in the outcome model, the g-computation estimate is equal to the difference in means from a t-test or coefficient of the treatment in a linear model for the outcome. There are analytic and bootstrap approximations to the SEs of the g-computation estimate. The analytic approximation is computed using the delta method, a technique for compute the SE of a quantity derived from the regression model parameters, such as the g-computation estimate.
+G-computation as a framework for estimating effects after weighting has a number of advantages over other approaches. It works the same regardless of the form of the outcome model or type of outcome (e.g., whether a linear model is used for a continuous outcome or a logistic model is used for a binary outcome); the only difference might be how the average expected potential outcomes are contrasted in the final step. In simple cases, the estimated effect is numerically identical to effects estimated using other methods; for example, if no covariates are included in the outcome model, the g-computation estimate is equal to the difference in means from a t-test or coefficient of the treatment in a linear model for the outcome. There are analytic and bootstrap approximations to the SEs of the g-computation estimate. The analytic approximation is computed using the delta method, a technique for computing the SE of a quantity derived from the regression model parameters, such as the g-computation estimate.
 
-For the reasons above, we use g-computation when possible for all effect estimates, even if there are simpler methods that would yield the same estimates. Using a single workflow (with some slight modifications depending on the context; see below) facilitates implementing best practices regardless of what choices a user makes.
+For the reasons above, we use weighted g-computation when possible for all effect estimates, even if there are simpler methods that would yield the same estimates. Using a single workflow (with some slight modifications depending on the context; see below) facilitates implementing best practices regardless of what choices a user makes.
 
-There are other methods to incorporate the outcome model into estimation of the treatment effect, the best studied of which is augmented inverse probability weighting (AIPW), which also involves a g-computation step. We only describe g-computation here because of its conceptual simplicity, ease of implementation, and connection with best practices for estimating effects after weighting.
+There are other methods to incorporate the outcome model into estimation of the treatment effect, the best studied of which is augmented inverse probability weighting (AIPW), which also involves a g-computation step. We only describe weighted g-computation here because of its conceptual simplicity, ease of implementation, and connection with best practices for estimating effects after matching.
 
 ### Modeling the Outcome
 
@@ -161,13 +172,13 @@ Typically, bootstrapping involves performing the entire estimation process in ea
 
 Below, we describe effect estimation after weighting. The focus here is not on evaluating the methods but simply on demonstrating them. In all cases, the correct propensity score model is used. We will present both the faster and simpler method that uses robust SEs and the more complicated but accurate method using bootstrapping.
 
-We'll be using a simulated toy dataset `d` with several outcome types. Code to generate the dataset is at the end of this document. Below we display the first six rows of `d`:
+We'll be using a simulated toy dataset `d` with several outcome and treatment types. Code to generate the dataset is at the end of this document. Below we display the first six rows of `d`:
 
 ```{r}
 head(d)
 ```
 
-`A` is the treatment variable, `X1` through `X9` are covariates, `Y_C` is a continuous outcome, `Y_B` is a binary outcome, and `Y_S` is a survival outcome.
+`A` is a binary treatment variable, `X1` through `X9` are covariates, `Y_C` is a continuous outcome, `Y_B` is a binary outcome, and `Y_S` is a survival outcome. `Am` and `Ac` are multi-category and continuous treatment variables, respectively.
 
 We will need to the following packages to perform the analyses:
 
@@ -186,15 +197,15 @@ library("WeightIt")
 library("marginaleffects")
 ```
 
-All effect estimates will be computed using `marginaleffects::avg_comparions()`, even when its use may be superfluous (e.g., for comparing the weighted difference in means). As previously mentioned, this is because it is useful to have a single workflow that works no matter the situation, perhaps with very slight modifications to accommodate different contexts. Using `avg_comparisons()` has several advantages, even when the alternatives are simple: it only provides the effect estimate, and not other coefficients; it automatically incorporates robust SEs if requested; and it always produces average marginal effects for the correct population if requested.
+Effect estimates will be computed using `marginaleffects::avg_comparions()`, even when its use may be superfluous (e.g., for comparing the weighted difference in means). As previously mentioned, this is because it is useful to have a single workflow that works no matter the situation, perhaps with very slight modifications to accommodate different contexts. Using `avg_comparisons()` has several advantages, even when the alternatives are simple: it only provides the effect estimate, and not other coefficients; it automatically incorporates robust SEs if requested; and it always produces average marginal effects for the correct population if requested.
 
 Other packages may be of use but are not used here. There are alternatives to the `marginaleffects` package for computing average marginal effects, including `margins` and `stdReg`. The `survey` package can be used to estimate robust SEs incorporating weights and provides functions for survey-weighted generalized linear models and Cox-proportional hazards models. Much of the code here can be adapted to be used with `survey`, and we will demonstrate that as well.
 
-### The Standard Case using Robust SEs
+### The Standard Case: Binary Treatment with Robust SEs
 
 For most weighting methods, estimating the effect after weighting is straightforward and involves fitting a model for the outcome that incorporates the estimated weights, then estimating the treatment effect using g-computation (i.e., using `marginaleffects::avg_comparisons()`) with a robust SE to account for pair membership. This procedure is the same for continuous and binary outcomes with and without covariates.
 
-There are a few adjustments that need to be made for certain scenarios, which we describe in the section "Adjustments to the Standard Case". These adjustments include for the following cases: when weighting for the ATT or ATC, for estimating effects with binary outcomes, and for estimating effects with survival outcomes. Estimation for all estimands other than the ATT and ATC proceeds as it does for the ATE. You must read the Standard Case to understand the basic procedure before reading about these special scenarios.
+There are a few adjustments that need to be made for certain scenarios, which we describe in the section "Adjustments to the Standard Case". These adjustments include for the following cases: when weighting for the ATT or ATC, for estimating effects with binary outcomes, and for estimating effects with survival outcomes. Estimation for all estimands other than the ATT and ATC proceeds as it does for the ATE. You must read the Standard Case to understand the basic procedure before reading about these special scenarios. We also demonstrate how to estimate effects for multi-category and continuous treatments.
 
 Here, we demonstrate the faster analytic approach to estimating confidence intervals; for the bootstrap approach, see the section "Using Bootstrapping to Estimate Confidence Intervals" below.
 
@@ -307,58 +318,6 @@ coxph(Surv(Y_S) ~ A, data = d, weights = weights)
 
 The `coef` column contains the log HR, and `exp(coef)` contains the HR. Remember to always use the `robust se` for the SE of the log HR. The displayed z-test p-value results from using the robust SE.
 
-#### Multi-category treatments
-
-Multi-category treatments work essentially the same way as binary treatments. The main practical differences are in choosing the estimand and estimating the weights. The ATE and ATO are straightforward. The ATT requires choosing one group to be the treated or "focal" group. Effects are the estimated for members of that group. The contrast in the focal group between the expected potential outcomes under a non-focal treatment and the expected potential outcomes for the focal (actual) treatment can be interpreted similarly to how ATTs are interpreted for binary treatments. The contrasts in the focal group between expected potential outcomes under a pair of non-focal treatments can be interpreted as the contrast between the ATTs of the non-focal treatments. Weights may be estimated differently for multi-category treatments from binary treatments; see the individual methods pages for how they differ.
-
-Below, we'll estimate the ATTs of a constructed multi-category treatment for a focal level. Our new treatment `Am` is constructed as follows:
-
-```{r}
-d$Am <- factor(ifelse(d$A == 1, "T", sample(c("C1", "C2"), nrow(d), TRUE)))
-
-table(d$Am)
-```
-
-We have a focal treatment group, `"T"`, and two control groups `"C1"` and `"C2"`. We expect the ATTs for the two control groups to be the same since we assigned them randomly from within the original control group.
-
-First, we estimate our weights using entropy balancing, identifying the focal group using `focal`:
-
-```{r}
-W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + 
-                X6 + X7 + X8 + X9, data = d,
-              method = "ebal", estimand = "ATT",
-              focal = "T")
-W
-```
-
-Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model and perform g-computation. We use `avg_predictions()` first to compute the expected potential outcome under each treatment for the focal group, and the use `hypotheses()` to test all pairwise comparisons.
-
-```{r, eval=me_ok}
-#Bring weights into the dataset
-d$weights <- W$weights
-
-#Fit the outcome model
-fit <- lm(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 + 
-                        X6 + X7 + X8 + X9),
-          data = d, weights = weights)
-
-#G-computation
-p <- avg_predictions(fit,
-                     variables = "Am",
-                     vcov = "HC3",
-                     newdata = subset(boot_data, A == 1),
-                     wts = "weights")
-p
-
-hypotheses(p, "revpairwise")
-```
-
-We find significant ATTs between the focal treatment and control levels (`T - C1` and `T - C2`), but the difference between control levels (`C2 - C1`), which can be interpreted as the difference between these ATTs, is nonsignificant, as expected. Remember, for the ATT, bootstrapping usually provides more valid inference than the robust SEs used here.
-
-#### Continuous treatments
-
-Coming soon!
-
 #### Using the `survey` package
 
 The `survey` package has often been recommended for use in estimating treatment effects after propensity score weighting. When combined with `marginaleffects` functions, it yields identical estimates and similar standard errors to the methods described above that use `lm()` or `glm()` and manually request a robust SE. The main benefits of using `survey` are that you don't need to request robust SEs in the call to `avg_comparisons()` and you can incorporate other survey design information, e.g., if your study comes from a complex survey.
@@ -383,6 +342,137 @@ avg_comparisons(fit,
 ```
 
 Note that we need to supply `"(weights)"` to the `wts` argument for them to be correctly incorporated. You might notice that the standard errors computed using `survey` are different from those using `lm()` or `glm()` and HC3 robust SEs; to get similar SEs using `lm()` or `glm()`, set `vcov = "HC0"` in the call to `avg_comparisons()`. This approach is not recommended since HC3 standard errors tend to perform better, which is one reason to avoid using `survey`. In many cases, though, the results will be similar.
+
+### Multi-Category Treatments
+
+Multi-category treatments work essentially the same way as binary treatments. The main practical differences are in choosing the estimand and estimating the weights. The ATE and ATO are straightforward. The ATT requires choosing one group to be the treated or "focal" group. Effects are the estimated for members of that group. The contrast in the focal group between the expected potential outcomes under a non-focal treatment and the expected potential outcomes for the focal (actual) treatment can be interpreted similarly to how ATTs are interpreted for binary treatments. The contrasts in the focal group between expected potential outcomes under a pair of non-focal treatments can be interpreted as the contrast between the ATTs of the non-focal treatments. Weights may be estimated differently for multi-category treatments from binary treatments; see the individual methods pages for how they differ.
+
+Below, we'll estimate the ATTs of a constructed multi-category treatment for a focal level. Our new treatment `Am` is constructed as follows:
+
+```{r}
+d$Am <- factor(ifelse(d$A == 1, "T", sample(c("C1", "C2"), nrow(d), TRUE)))
+
+table(d$Am)
+```
+
+We have a focal treatment group, `"T"`, and two control groups `"C1"` and `"C2"`. We expect the ATTs for the two control groups to be the same since we assigned them randomly from within the original control group.
+
+First, we estimate our weights using entropy balancing [@hainmuellerEntropyBalancingCausal2012], identifying the focal group using `focal`:
+
+```{r}
+W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + 
+                X6 + X7 + X8 + X9, data = d,
+              method = "ebal", estimand = "ATT",
+              focal = "T")
+W
+```
+
+Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model and perform weighted g-computation. We use `avg_predictions()` first to compute the expected potential outcome under each treatment for the focal group, and the use `hypotheses()` to test all pairwise comparisons.
+
+```{r, eval=me_ok}
+#Bring weights into the dataset
+d$weights <- W$weights
+
+#Fit the outcome model
+fit <- lm(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 + 
+                        X6 + X7 + X8 + X9),
+          data = d, weights = weights)
+
+#G-computation
+p <- avg_predictions(fit,
+                     variables = "Am",
+                     vcov = "HC3",
+                     newdata = subset(boot_data, A == 1),
+                     wts = "weights")
+p
+
+hypotheses(p, "revpairwise")
+```
+
+We find significant ATTs between the focal treatment and control levels (`T - C1` and `T - C2`), but the difference between control levels (`C2 - C1`), which can be interpreted as the difference between these ATTs, is nonsignificant, as expected. Remember, for the ATT, bootstrapping usually provides more valid inference than the robust SEs used here.
+
+### Continuous Treatments
+
+For continuous treatments, one estimand of interest is the average dose-response function (ADRF), which links the value of the treatment to the expected potential outcome under that treatment value across the full sample. We do not provide a detailed account of the ADRF but will demonstrate how to estimate weights that balance covariates with respect to a continuous treatment and how to estimate and plot the ADRF in the weighted sample. We'll use the continuous treatment `Ac`, which ranges from -10.37 to 6.26, and estimate its effect on the continuous outcome `Y_C`.
+
+First, we'll estimate distance covariance optimal weights [@hulingIndependenceWeightsCausal2023] using `weightit()`.
+
+```{r}
+W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + 
+                X6 + X7 + X8 + X9, data = d,
+              method = "energy")
+W
+```
+
+Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model and perform weighted g-computation. For the outcome model, we will use a natural cubic spline on `Ac` with 4 df. You can use any transformation of the treatment, e.g., a polynomial transformation using `poly()`, as long as it is flexible enough to capture any possible ADRF; purely nonparametric methods like kernel regression can be used as well, but inference for them is more challenging. Covariates can be included in the model, but with many covariates, many basis functions for the treatment, and a full set of treatment-covariate interactions, the resulting estimates may be imprecise.
+
+```{r}
+#Bring weights into the dataset
+d$weights <- W$weights
+
+#Fit the outcome model
+fit <- lm(Y_C ~ splines::ns(Ac, df = 4) *
+            (X1 + X2 + X3 + X4 + X5 + 
+               X6 + X7 + X8 + X9),
+          data = d, weights = weights)
+```
+
+Next we use `avg_predictions()` first to compute the expected potential outcome under a representative set of treatment values. We'll examine 51 treatment values from the 10th to 90th percentiles of `Ac` because estimates outside those ranges tend to be imprecise.
+
+```{r}
+#Represenative values of Ac:
+values <- with(d, seq(quantile(Ac, .1),
+                      quantile(Ac, .9),
+                      length.out = 51))
+
+#G-computation
+p <- avg_predictions(fit,
+                     variables = list(Ac = values),
+                     vcov = "HC3",
+                     wts = "weights")
+```
+
+Although one can examine the expected potential outcomes, it is often more useful to see them plotted. We can generate a plot of the ADRF and its pointwise confidence band using `ggplot2`:
+
+```{r, fig.height=3.5, fig.width=7}
+library("ggplot2")
+ggplot(p, aes(x = Ac)) +
+  geom_line(aes(y = estimate)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
+              alpha = .3) +
+  labs(x = "Ac", y = "E[Y|A]") +
+  theme_bw()
+```
+
+We can see that the ADRF has an elbow-shape, with a zone of no evidence of treatment effect followed a zone of increasing values of the outcome as the treatment increases.
+
+Another way to characterize the effect of continuous treatments is to examine the average marginal effect function (AMEF), which is a function that relates the value of treatment to the derivative of the ADRF. When this derivative is different from zero, there is evidence of a treatment effect at the corresponding value of treatment. Below, we use `avg_slopes()` to compute the pointwise derivatives of the ADRF across levels of `Ac` and then plot it.
+
+```{r, fig.height=3.5, fig.width=7}
+# Estimate the pointwise derivatives at representative
+# values of Ac
+s <- avg_slopes(fit,
+                variables = "Ac",
+                newdata = datagridcf(Ac = values),
+                by = "Ac",
+                vcov = "HC3",
+                wts = "weights")
+
+# Plot the AMEF
+ggplot(s, aes(x = Ac)) +
+  geom_line(aes(y = estimate)) +
+  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
+              alpha = .3) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Ac", y = "dE[Y|A]/dA") +
+  theme_bw()
+```
+
+We can see that between values of -1 and .5, there is evidence of a positive effect of `Ac` on `Y_C` (i.e., because the confidence intervals for the slope of the ADRF at those values of `Ac` exclude 0). This is in line with our observation above that the treatment only appears to have an effect at higher values of `Ac`.
+
+### Longitudinal Treatments
+
+Coming soon! For now see the example at `vignette("WeightIt")`.
 
 ### Using Bootstrapping to Estimate Confidence Intervals
 
@@ -470,10 +560,6 @@ boot_fun <- function(data, i) {
 
 (Remember that you will need to load in the `survival` package before doing so.)
 
-### Longitudinal Treatments
-
-Coming soon! For now see the example at `vignette("WeightIt")`.
-
 ## Reporting Results
 
 It is important to be as thorough and complete as possible when describing the methods of estimating the treatment effect and the results of the analysis. This improves transparency and replicability of the analysis. Results should at least include the following:
@@ -501,11 +587,18 @@ gen_X <- function(n) {
   X
 }
 
+gen_Ac <- function(X) {
+  LP_A <- -1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] - log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
+  LP_A + rlogis(nrow(X))
+}
+
 #~20% treated
-gen_A <- function(X) {
-  LP_A <- - 1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] - log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
-  P_A <- plogis(LP_A)
-  rbinom(nrow(X), 1, P_A)
+gen_A <- function(Ac) {
+  1 * (Ac > 0)
+}
+
+gen_Am <- function(A) {
+  factor(ifelse(A == 1, "T", sample(c("C1", "C2"), length(A), TRUE)))
 }
 
 # Continuous outcome
@@ -549,11 +642,13 @@ set.seed(19599)
 
 n <- 2000
 X <- gen_X(n)
-A <- gen_A(X)
+Ac <- gen_Ac(X)
+A <- gen_A(Ac)
+Am <- gen_A(A)
 
 Y_C <- gen_Y_C(A, X)
 Y_B <- gen_Y_B(A, X)
 Y_S <- gen_Y_S(A, X)
 
-d <- data.frame(A, X, Y_C, Y_B, Y_S)
+d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S)
 ```
