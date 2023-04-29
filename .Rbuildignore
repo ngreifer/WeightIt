@@ -12,3 +12,4 @@
 ^.DS_Store$
 ^revdep$
 ^data-raw$
+^CRAN-SUBMISSION$

@@ -1,9 +1,17 @@
 WeightIt News and Updates
 ======
 
+# WeightIt 0.14.1
+
+* `cobalt` version 4.5.1 or greater is now required.
+
+* Fixed a bug when using balance Super Learner with `cobalt` 4.5.1.
+
+* Added a section to the Estimating Effects vignette (`vignette("estimating-effects")`) on estimating the effect of a continuous treatment after weighting.
+
 # WeightIt 0.14.0
 
-* Added energy balancing for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2021)](https://arxiv.org/abs/2107.07086). These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
+* Added energy balancing for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2023)](https://arxiv.org/abs/2107.07086). These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
 
 * Added a new vignette on estimating effects after weighting, accessible using `vignette("estimating-effects", package = "WeightIt")`. The new workflow relies on the `marginaleffects` package. The main vignette (`vignette("WeightIt")`) has been modernized as well.
 

@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.14.0
+Version: 0.14.0.9000
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -19,7 +19,7 @@ Description: Generates balancing weights for causal effect estimation in observa
 Depends:
     R (>= 3.3.0)
 Imports:
-    cobalt (>= 4.5.0),
+    cobalt (>= 4.5.1),
     ggplot2 (>= 3.3.0),
     chk (>= 0.8.1), rlang (>= 1.1.0),
     crayon,
@@ -37,6 +37,7 @@ Suggests:
     survey,
     survival,
     boot,
+    splines,
     marginaleffects (>= 0.11.0),
     sandwich,
     MASS,
