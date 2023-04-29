@@ -1066,7 +1066,7 @@ method.balance <- function() {
         Z[Z[,i] > 1-tol, i] <- 1-tol
       }
       w_mat <- get.w.from.ps(Z, treat = Y, estimand = estimand)
-      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, init = init)
+      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
 
       names(cvRisk) <- libraryNames
 
@@ -1112,7 +1112,7 @@ method.balance.cont <- function() {
       w_mat<- get_cont_weights(Z, treat = Y, s.weights = obsWeights,
                                dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
                                densControl = densControl)
-      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, init = init)
+      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
       names(cvRisk) <- libraryNames
 
       loss <- function(coefs) {
