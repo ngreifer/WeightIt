@@ -845,7 +845,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     A[["criterion"]] <- A[["criterion"]][1]
   }
 
-  available.criteria <- available.stats(treat.type)
+  available.criteria <- cobalt::available.stats(treat.type)
 
   if (is.character(A[["criterion"]]) &&
       startsWith(A[["criterion"]], "es.")) {
@@ -911,7 +911,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
     }
     else n.grid <- round(A[["n.grid"]])
 
-    init <- bal.init(
+    init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
       else if (missing == "surr") add_missing_indicators(covs)
       else replace_na_with(covs),
@@ -957,7 +957,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
       w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-      iter.grid.balance <- apply(w, 2, bal.compute, x = init)
+      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -981,7 +981,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
         w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-        iter.grid.balance.fine <- apply(w, 2, bal.compute, x = init)
+        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
@@ -1098,7 +1098,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     A[["criterion"]] <- A[["criterion"]][1]
   }
 
-  available.criteria <- available.stats("continuous")
+  available.criteria <- cobalt::available.stats("continuous")
 
   cv <- 0
 
@@ -1144,7 +1144,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     }
     else n.grid <- round(A[["n.grid"]])
 
-    init <- bal.init(
+    init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
       else if (missing == "surr") add_missing_indicators(covs)
       else replace_na_with(covs),
@@ -1245,7 +1245,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
                             densfun = densfun, use.kernel = use.kernel, densControl = A)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-      iter.grid.balance <- apply(w, 2, bal.compute, x = init)
+      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -1270,7 +1270,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
                               densfun = densfun, use.kernel = use.kernel, densControl = A)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
-        iter.grid.balance.fine <- apply(w, 2, bal.compute, x = init)
+        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
@@ -1893,7 +1893,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
       A[["criterion"]] <- A[["criterion"]][1]
     }
 
-    available.criteria <- available.stats(treat.type)
+    available.criteria <- cobalt::available.stats(treat.type)
 
     if (is.character(A[["criterion"]]) &&
         startsWith(A[["criterion"]], "es.")) {
@@ -1907,9 +1907,13 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
     criterion <- A[["criterion"]]
     criterion <- match_arg(criterion, available.criteria)
 
-    init <- bal.init(covs, treat = treat, stat = criterion,
-                     estimand = estimand, s.weights = s.weights,
-                     focal = focal, ...)
+    init <- cobalt::bal.init(covs,
+                             treat = treat,
+                             stat = criterion,
+                             estimand = estimand,
+                             s.weights = s.weights,
+                             focal = focal,
+                             ...)
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init, estimand = estimand)
@@ -2059,13 +2063,16 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
       A[["criterion"]] <- A[["criterion"]][1]
     }
 
-    available.criteria <- available.stats("continuous")
+    available.criteria <- cobalt::available.stats("continuous")
 
     criterion <- A[["criterion"]]
     criterion <- match_arg(criterion, available.criteria)
 
-    init <- bal.init(covs, treat = treat, stat = criterion,
-                     s.weights = s.weights, ...)
+    init <- cobalt::bal.init(covs,
+                             treat = treat,
+                             stat = criterion,
+                             s.weights = s.weights,
+                             ...)
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init,
