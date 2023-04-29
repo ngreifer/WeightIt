@@ -1,7 +1,28 @@
 # A version of cobalt::bal.init() and cobalt::bal.compute() so that WeightIt
 # can be a standalone package before cobalt is updated
 
-bal.compute <- function(x,
+bal.compute <- function(...) {
+  if (packageVersion("cobalt") >= "4.5.1")
+    cobalt::bal.compute(...)
+  else
+    .bal.compute(...)
+}
+
+bal.init <- function(...) {
+  if (packageVersion("cobalt") >= "4.5.1")
+    cobalt::bal.init(...)
+  else
+    .bal.init(...)
+}
+
+available.stats <- function(...) {
+  if (packageVersion("cobalt") >= "4.5.1")
+    cobalt::available.stats(...)
+  else
+    .available.stats(...)
+}
+
+.bal.compute <- function(x,
                         weights = NULL,
                         ...) {
   fun <- attr(x, "fun")
@@ -9,7 +30,7 @@ bal.compute <- function(x,
   fun(init = x, weights = weights)
 }
 
-bal.init <- function(x,
+.bal.init <- function(x,
                      treat,
                      stat,
                      s.weights = NULL,
@@ -41,7 +62,7 @@ bal.init <- function(x,
   out
 }
 
-available.stats <- function(treat.type = "binary") {
+.available.stats <- function(treat.type = "binary") {
   chk::chk_string(treat.type)
   treat.type <- match_arg(treat.type, c("binary", "multinomial", "continuous"))
 
