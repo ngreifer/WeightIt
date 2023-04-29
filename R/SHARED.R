@@ -65,7 +65,7 @@ firstup <- function(x) {
   x
 }
 expand.grid_string <- function(..., collapse = "") {
-  return(do.call("paste", c(expand.grid(...), sep = collapse)))
+  do.call("paste", c(expand.grid(...), sep = collapse))
 }
 num_to_superscript <- function(x) {
   nums <- setNames(c("\u2070",
@@ -1062,6 +1062,9 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
   choices[i]
 }
 
+grab <- function(x, what) {
+  lapply(x, function(z) z[[what]])
+}
 last <- function(x) {
   x[[length(x)]]
 }
