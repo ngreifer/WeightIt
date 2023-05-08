@@ -99,7 +99,7 @@ n <- 2000
 X <- gen_X(n)
 Ac <- gen_Ac(X)
 A <- gen_A(Ac)
-Am <- gen_A(A)
+Am <- gen_Am(A)
 
 Y_C <- gen_Y_C(A, X)
 Y_B <- gen_Y_B(A, X)
@@ -110,11 +110,11 @@ d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S)
 
 ## Introduction
 
-After assessing balance and deciding on a weighting specification, it comes time to estimate the effect of the treatment in the weighted sample. How the effect is estimated and interpreted depends on the desired estimand and the type of model used (if any). In addition to estimating effects, estimating the uncertainty of the effects is critical in communicating them and assessing whether the observed effect is compatible with there being no effect in the population. This guide explains how to estimate effects after weighting for point and longitudinal treatments and with various outcome types.
+After assessing balance and deciding on a weighting specification, it comes time to estimate the effect of the treatment in the weighted sample. How the effect is estimated and interpreted depends on the desired estimand and the effect measure used. In addition to estimating effects, estimating the uncertainty of the effects is critical in communicating them and assessing whether the observed effect is compatible with there being no effect in the population. This guide explains how to estimate effects after weighting for point and longitudinal treatments and with various outcome types.
 
-This guide is structured as follows: first, information on the concepts related to effect and standard error (SE) estimation is presented below. Then, instructions for how to estimate effects and SEs are described for the standard case (weighting for the ATE with a continuous outcome) and some other common circumstances. Finally, recommendations for reporting results and tips to avoid making common mistakes are presented.
+This guide is structured as follows: first, information on the concepts related to effect and standard error (SE) estimation is presented below. Then, instructions for how to estimate effects and SEs are described for the standard case (weighting for the ATE with a binary treatment and continuous outcome) and some other common circumstances. Finally, recommendations for reporting results and tips to avoid making common mistakes are presented.
 
-(Note: much of this vignette is copied from `vignette("estimating-effects", package = "MatchIt")` and adapt to the context of weighting.)
+(Note: much of this vignette is copied from `vignette("estimating-effects", package = "MatchIt")` and adapted to the context of weighting.)
 
 ### Identifying the estimand
 
@@ -126,7 +126,7 @@ Before an effect is estimated, the estimand must be specified and clarified. Alt
 
 **Effect measures.** The outcome types we consider here are continuous, with the effect measured by the mean difference; binary, with the effect measured by the risk difference (RD), risk ratio (RR), or odds ratio (OR); and time-to-event (i.e., survival), with the effect measured by the hazard ratio (HR). The RR, OR, and HR are *noncollapsible* effect measures, which means the marginal effect on that scale is not a (possibly) weighted average of the conditional effects within strata, even if the stratum-specific effects are of the same magnitude. For these effect measures, it is critical to distinguish between marginal and conditional effects because different statistical methods target different types of effects. The mean difference and RD are *collapsible* effect measures, so the same methods can be used to estimate marginal and conditional effects.
 
-Our primary focus will be on marginal effects, which are appropriate for all effect measures, easily interpretable, and require few modeling assumptions. The "Common Mistakes" section includes examples of commonly used methods that estimate conditional rather than marginal effects and should not be used when marginal effects are desired.
+Our primary focus will be on marginal effects, which are appropriate for all effect measures, easily interpretable, and require few modeling assumptions.
 
 ### G-computation
 
@@ -158,11 +158,11 @@ Uncertainty estimation (i.e., of SEs, confidence intervals, and p-values) may co
 
 #### Robust and Cluster-Robust Standard Errors
 
-**Robust standard errors.** Also known as sandwich SEs (due to the form of the formula for computing them), heteroscedasticity-consistent SEs, or Huber-White SEs, robust SEs are an adjustment to the usual maximum likelihood or ordinary least squares SEs that are robust to violations of some of the assumptions required for usual SEs to be valid [@mackinnonHeteroskedasticityconsistentCovarianceMatrix1985]. Robust SEs have been shown to be conservative (i.e., yield overly large SEs and wide confidence intervals) for estimating the ATE after some forms of weighting [@robinsMarginalStructuralModels2000], though they can be either conservative or not for other weighting methods and estimands, such as for the ATT [@reifeisVarianceTreatmentEffect2020] or for entropy balancing [@chanGloballyEfficientNonparametric2016]. Robust SEs treated the estimated weights as if they were fixed and known, ignoring uncertainty in their estimation. Although they are quick and simple to estimate using functionality in the `sandwich` and `survey` packages, they should be used with caution, and the bootstrap (described below) should be preferred in most cases.
+**Robust standard errors.** Also known as sandwich SEs (due to the form of the formula for computing them), heteroscedasticity-consistent SEs, or Huber-White SEs, robust SEs are an adjustment to the usual maximum likelihood or ordinary least squares SEs that are robust to violations of some of the assumptions required for usual SEs to be valid [@mackinnonHeteroskedasticityconsistentCovarianceMatrix1985]. Robust SEs have been shown to be conservative (i.e., yield overly large SEs and wide confidence intervals) for estimating the ATE after some forms of weighting [@robinsMarginalStructuralModels2000], though they can be either conservative or not for other weighting methods and estimands, such as for the ATT [@reifeisVarianceTreatmentEffect2020] or for entropy balancing [@chanGloballyEfficientNonparametric2016]. Robust SEs treat the estimated weights as if they were fixed and known, ignoring uncertainty in their estimation. Although they are quick and simple to estimate using functionality in the `sandwich` and `survey` packages, they should be used with caution, and the bootstrap (described below) should be preferred in most cases.
 
 #### Bootstrapping
 
-Some problems with robust SEs include that they fail to take into account the estimation fo the weights and are only an approximation when used to compute derived quantities from nonlinear models, which is often true when using g-computation to estimate effects. One solution to these problems is bootstrapping, which is a technique used to simulate the sampling distribution of an estimator by repeatedly drawing samples with replacement and estimating the effect in each bootstrap sample [@efronBootstrapMethodsStandard1986]. From the bootstrap distribution, SEs and confidence intervals can be computed in several ways, including using the standard deviation of the bootstrap estimates as the SE estimate or using the 2.5 and 97.5 percentiles as 95% confidence interval bounds. Bootstrapping tends to be most useful when no analytic estimator of a SE is possible or has been derived yet. Bootstrapping has been found to be effective at estimating SEs and confidence after weighting, often performing better even than the analytic asymptotic formula when it is available [@austin2022].
+Some problems with robust SEs include that they fail to take into account the estimation of the weights and are only an approximation when used to compute derived quantities from nonlinear models, which is often true when using g-computation to estimate effects. One solution to these problems is bootstrapping, which is a technique used to simulate the sampling distribution of an estimator by repeatedly drawing samples with replacement and estimating the effect in each bootstrap sample [@efronBootstrapMethodsStandard1986]. From the bootstrap distribution, SEs and confidence intervals can be computed in several ways, including using the standard deviation of the bootstrap estimates as the SE estimate or using the 2.5 and 97.5 percentiles as 95% confidence interval bounds. Bootstrapping tends to be most useful when no analytic estimator of a SE is possible or has been derived yet. Bootstrapping has been found to be effective at estimating SEs and confidence intervals after weighting, often performing better even than the analytic asymptotic formula when it is available [@austin2022].
 
 Typically, bootstrapping involves performing the entire estimation process in each bootstrap sample, including estimation both of the weights and the effect. With bootstrapping, more bootstrap replications are always better but can take time and increase the chances that at least one error will occur within the bootstrap analysis (e.g., a bootstrap sample with zero treated units or zero units with an event). In general, numbers of replications upwards of 999 are recommended, with values one less than a multiple of 100 preferred to avoid interpolation when using the percentiles as confidence interval limits [@mackinnonBootstrapMethodsEconometrics2006]. There are several methods of computing bootstrap confidence intervals, but the bias-corrected accelerated (BCa) bootstrap confidence interval often performs well and is easy to implement, simply by setting `type = "bca"` in the call to `boot::boot.ci()` after running `boot::boot()`[^2].
 
@@ -189,11 +189,12 @@ We will need to the following packages to perform the analyses:
 
 Of course, we also need `WeightIt` to perform the weighting.
 
-```{r,message=FALSE,warning=FALSE}
+```{r,message=FALSE,warning=FALSE, include=FALSE, eval=!me_ok}
 library("WeightIt")
 ```
 
 ```{r,message=FALSE,warning=FALSE, eval=me_ok}
+library("WeightIt")
 library("marginaleffects")
 ```
 
@@ -307,7 +308,7 @@ For the marginal OR, the only thing that needs to change is that `comparison` sh
 
 There are several measures of effect size for survival outcomes, some of which are described by @mao2018. When using the Cox proportional hazards model, the quantity of interest is the hazard ratio (HR) between the treated and control groups. As with the OR, the HR is non-collapsible, which means the estimated HR will only be a valid estimate of the marginal HR when no other covariates are included in the model. Other effect measures, such as the difference in mean survival times or probability of survival after a given time, can be treated just like continuous and binary outcomes as previously described.
 
-For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph()` from the `survival` package. (See `help("coxph", package = "survival")` for more information on this model.) Robust SEs for HRs were studied by @austin2016 and were found to be conservative; they are requested automatically when weights are supplied to `coxph()`. Other formulas have been developed for estimating standard errors more accurately [@mao2018, @hajage2018], though @austin2016 also found the bootstrap to be adequate.
+For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph()` from the `survival` package. (See `help("coxph", package = "survival")` for more information on this model.) Robust SEs for HRs were studied by @austin2016 and were found to be conservative; they are requested automatically when weights are supplied to `coxph()`. Other formulas have been developed for estimating standard errors more accurately [@mao2018; @hajage2018], though @austin2016 also found the bootstrap to be adequate.
 
 ```{r, eval=su_ok, message=F}
 library("survival")
@@ -341,17 +342,15 @@ avg_comparisons(fit,
                 wts = "(weights)")
 ```
 
-Note that we need to supply `"(weights)"` to the `wts` argument for them to be correctly incorporated. You might notice that the standard errors computed using `survey` are different from those using `lm()` or `glm()` and HC3 robust SEs; to get similar SEs using `lm()` or `glm()`, set `vcov = "HC0"` in the call to `avg_comparisons()`. This approach is not recommended since HC3 standard errors tend to perform better, which is one reason to avoid using `survey`. In many cases, though, the results will be similar.
+Note that we need to supply `"(weights)"` to the `wts` argument for them to be correctly incorporated. You might notice that the standard errors computed using `survey` are different from those using `lm()` or `glm()` and HC3 robust SEs; to get similar SEs using `lm()` or `glm()`, set `vcov = "HC0"` in the call to `avg_comparisons()`. This approach is not recommended because HC3 standard errors tend to perform better, which is one reason to avoid using `survey`. In many cases, though, the results will be similar.
 
 ### Multi-Category Treatments
 
 Multi-category treatments work essentially the same way as binary treatments. The main practical differences are in choosing the estimand and estimating the weights. The ATE and ATO are straightforward. The ATT requires choosing one group to be the treated or "focal" group. Effects are the estimated for members of that group. The contrast in the focal group between the expected potential outcomes under a non-focal treatment and the expected potential outcomes for the focal (actual) treatment can be interpreted similarly to how ATTs are interpreted for binary treatments. The contrasts in the focal group between expected potential outcomes under a pair of non-focal treatments can be interpreted as the contrast between the ATTs of the non-focal treatments. Weights may be estimated differently for multi-category treatments from binary treatments; see the individual methods pages for how they differ.
 
-Below, we'll estimate the ATTs of a constructed multi-category treatment for a focal level. Our new treatment `Am` is constructed as follows:
+Below, we'll estimate the ATTs of the multi-category treatment `Am` for a focal level.
 
 ```{r}
-d$Am <- factor(ifelse(d$A == 1, "T", sample(c("C1", "C2"), nrow(d), TRUE)))
-
 table(d$Am)
 ```
 
@@ -644,7 +643,7 @@ n <- 2000
 X <- gen_X(n)
 Ac <- gen_Ac(X)
 A <- gen_A(Ac)
-Am <- gen_A(A)
+Am <- gen_Am(A)
 
 Y_C <- gen_Y_C(A, X)
 Y_B <- gen_Y_B(A, X)
