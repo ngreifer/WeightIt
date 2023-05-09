@@ -11,7 +11,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   }
 
   treat <- obj[["treat"]]
-  treat.type <- get.treat.type(treat)
+  treat.type <- get_treat_type(treat)
 
   focal <- obj[["focal"]]
   estimand <- obj[["estimand"]]
@@ -67,7 +67,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   }
   formula <- delete.response(terms(formula))
 
-  t.c <- get.covs.and.treat.from.formula(formula, combined.data)
+  t.c <- get_covs_and_treat_from_formula(formula, combined.data)
   if (is_null(t.c[["reported.covs"]])) {
     .err("No covariates were found")
   }
@@ -362,7 +362,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 }
 
 print.weightit.sbps <- function(x, ...) {
-  treat.type <- get.treat.type(x[["treat"]])
+  treat.type <- get_treat_type(x[["treat"]])
   trim <- attr(x[["weights"]], "trim")
 
   cat("A weightit.sbps object\n")
@@ -400,7 +400,7 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
   mod <- object$moderator
   mod_factor <- attr(mod, "by.factor")
   mod_levels <- levels(mod_factor)
-  treat.type <- get.treat.type(object[["treat"]])
+  treat.type <- get_treat_type(object[["treat"]])
 
   out.list <- lapply(mod_levels, function(i) {
     outnames <- c("weight.range", "weight.top","weight.ratio",
@@ -418,7 +418,7 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
       out$weight.ratio <- c(all = out$weight.range[["all"]][2]/out$weight.range[["all"]][1])
       top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
       out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
-      out$coef.of.var <- c(all = sd(w)/mean(w))
+      out$coef.of.var <- c(all = sd(w)/mean_fast(w))
 
       nn <- make_df("Total", c("Unweighted", "Weighted"))
       nn["Unweighted", ] <- ESS(sw)
@@ -440,9 +440,9 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
       out$weight.top <- setNames(lapply(names(top.weights), function(x) sort(setNames(top.weights[[x]], which(w %in% top.weights[[x]] & t == {if (x == "control") 0 else 1})[seq_len(top0[x])]))),
                                  names(top.weights))
 
-      out$coef.of.var <- c(treated = sd(w[t==1])/mean(w[t==1]),
-                           control = sd(w[t==0])/mean(w[t==0]),
-                           overall = sd(w)/mean(w))
+      out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
+                           control = sd(w[t==0])/mean_fast(w[t==0]),
+                           overall = sd(w)/mean_fast(w))
 
       #dc <- weightit$discarded
 

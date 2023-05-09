@@ -38,8 +38,8 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
 get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL, subclass = NULL, stabilize = FALSE) {
   #ps must be a matrix/df with columns named after treat levels
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (treat.type == "continuous") {
     .err("`get_w_from_ps()` can only be used with binary or multinomial treatments")

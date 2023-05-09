@@ -23,10 +23,10 @@ trim.weightit <- function(w, at = 0, lower = FALSE, ...) {
 
 trim.numeric <- function(w, at = 0, lower = FALSE, treat = NULL, ...) {
   if (is_not_null(treat)) {
-    if (!has.treat.type(treat)) {
-      treat <- assign.treat.type(treat)
+    if (!has_treat_type(treat)) {
+      treat <- assign_treat_type(treat)
     }
-    treat.type <- get.treat.type(treat)
+    treat.type <- get_treat_type(treat)
   }
 
   groups.not.to.trim <- NULL

@@ -12,7 +12,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   #Process treat and covs from formula and data
-  t.c <- get.covs.and.treat.from.formula(formula, data)
+  t.c <- get_covs_and_treat_from_formula(formula, data)
   reported.covs <- t.c[["reported.covs"]]
   covs <- t.c[["model.covs"]]
   treat <- t.c[["treat"]]
@@ -35,8 +35,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   #Get treat type
-  treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   #Process ps
   ps <- process.ps(ps, data, treat)
@@ -52,7 +52,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     attr(method, "name") <- method
   }
   else if (is.function(method)) {
-    method.name <- paste(deparse(substitute(method)))
+    method.name <- deparse1(substitute(method))
     check.user.method(method)
     attr(method, "name") <- method.name
   }
@@ -145,7 +145,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 }
 
 print.weightit <- function(x, ...) {
-  treat.type <- get.treat.type(x[["treat"]])
+  treat.type <- get_treat_type(x[["treat"]])
   trim <- attr(x[["weights"]], "trim")
 
   cat("A " %+% italic("weightit") %+% " object\n")
@@ -180,7 +180,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   else sw <- object$s.weights
   w <- setNames(object$weights*sw, seq_along(sw))
   t <- object$treat
-  treat.type <- get.treat.type(object[["treat"]])
+  treat.type <- get_treat_type(object[["treat"]])
   stabilized <- is_not_null(object[["stabilization"]])
 
   attr(out, "weights") <- w
@@ -191,7 +191,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                                      max(w[w != 0])))
     out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
     out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-    out$scaled.mad <- c(all = mean.abs.dev(w/mean_fast(w)))
+    out$scaled.mad <- c(all = mean_abs_dev(w/mean_fast(w)))
     out$negative.entropy <- c(all = neg_ent(w))
     out$num.zeros <- c(overall = sum(check_if_zero(w)))
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
@@ -202,7 +202,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 
   }
   else if (treat.type == "binary" && !is_(t, c("factor", "character"))) {
-    treated <- get.treated.level(t)
+    treated <- get_treated_level(t)
     t <- as.integer(t == treated)
 
     top0 <- c(treated = min(top, sum(t == 1)),
@@ -215,8 +215,8 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                            control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
     out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
                          control = sd(w[t==0])/mean_fast(w[t==0]))
-    out$scaled.mad <- c(treated = mean.abs.dev(w[t==1]/mean_fast(w[t==1])),
-                        control = mean.abs.dev(w[t==0]/mean_fast(w[t==0])))
+    out$scaled.mad <- c(treated = mean_abs_dev(w[t==1]/mean_fast(w[t==1])),
+                        control = mean_abs_dev(w[t==0]/mean_fast(w[t==0])))
     out$negative.entropy <- c(treated = neg_ent(w[t==1]),
                               control = neg_ent(w[t==0]))
     out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
@@ -241,7 +241,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     out$weight.top <- setNames(lapply(levels(t), function(x) rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])),
                             levels(t))
     out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
-    out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
+    out$scaled.mad <- c(vapply(levels(t), function(x) mean_abs_dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
     out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)))
     out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)))
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
@@ -297,7 +297,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
   w <- attr(x, "weights")
   t <- attr(x, "treat")
   focal <- attr(w, "focal")
-  treat.type <- get.treat.type(t)
+  treat.type <- get_treat_type(t)
 
   A <- list(...)
   if (is_not_null(A[["breaks"]])) {

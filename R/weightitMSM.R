@@ -101,7 +101,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   for (i in seq_along(formula.list)) {
 
     #Process treat and covs from formula and data
-    t.c <- get.covs.and.treat.from.formula(formula.list[[i]], data)
+    t.c <- get_covs_and_treat_from_formula(formula.list[[i]], data)
     reported.covs.list[[i]] <- t.c[["reported.covs"]]
     covs.list[[i]] <- t.c[["model.covs"]]
     treat.list[[i]] <- t.c[["treat"]]
@@ -124,7 +124,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
       .wrn("missing values are present in the covariates. See `?weightit` for information on how these are handled")
     }
 
-    treat.list[[i]] <- assign.treat.type(treat.list[[i]])
+    treat.list[[i]] <- assign_treat_type(treat.list[[i]])
 
     #By is processed each for each time, but only last time is used for by.factor.
     processed.by <- process.by(by, data = data,
@@ -134,7 +134,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
     #Process missing
     if (anyNA(reported.covs.list[[i]])) {
-      missing <- process.missing(missing, method, get.treat.type(treat.list[[i]]))
+      missing <- process.missing(missing, method, get_treat_type(treat.list[[i]]))
     }
     else if (i == length(formula.list)) missing <- ""
 
@@ -198,7 +198,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
       A_i[["covs"]] <- covs.list[[i]]
       A_i[["treat"]] <- treat.list[[i]]
-      A_i[["treat.type"]] <- get.treat.type(treat.list[[i]])
+      A_i[["treat.type"]] <- get_treat_type(treat.list[[i]])
       A_i[[".data"]] <- data
       A_i[[".covs"]] <- reported.covs.list[[i]]
 
@@ -232,7 +232,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
             stab.f <- as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * ")))
           }
         }
-        stab.t.c_i <- get.covs.and.treat.from.formula(stab.f, data)
+        stab.t.c_i <- get_covs_and_treat_from_formula(stab.f, data)
 
         A_i[["covs"]] <- stab.t.c_i[["model.covs"]]
         A_i[["method"]] <- "glm"
@@ -292,7 +292,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 }
 
 print.weightitMSM <- function(x, ...) {
-  treat.types <- vapply(x[["treat.list"]], get.treat.type, character(1L))
+  treat.types <- vapply(x[["treat.list"]], get_treat_type, character(1L))
   trim <- attr(x[["weights"]], "trim")
 
   cat("A " %+% italic("weightitMSM") %+% " object\n")
@@ -360,7 +360,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
   else sw <- object$s.weights
   w <- setNames(object$weights*sw, seq_along(sw))
-  treat.types <- vapply(object[["treat.list"]], get.treat.type, character(1L))
+  treat.types <- vapply(object[["treat.list"]], get_treat_type, character(1L))
   stabilized <- is_not_null(object[["stabilization"]])
 
   for (ti in seq_along(object$treat.list)) {
@@ -370,7 +370,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                                        max(w[w != 0])))
       out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
       out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(all = mean.abs.dev(w/mean_fast(w)))
+      out$scaled.mad <- c(all = mean_abs_dev(w/mean_fast(w)))
       out$negative.entropy <- c(all = neg_ent(w))
       out$num.zeros <- c(overall = sum(check_if_zero(w)))
       out$weight.mean <- if (stabilized) mean_fast(w) else NULL
@@ -396,8 +396,8 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                              control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
       out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
                            control = sd(w[t==0])/mean_fast(w[t==0]))
-      out$scaled.mad <- c(treated = mean.abs.dev(w[t==1]/mean_fast(w[t==1])),
-                          control = mean.abs.dev(w[t==0]/mean_fast(w[t==0])))
+      out$scaled.mad <- c(treated = mean_abs_dev(w[t==1]/mean_fast(w[t==1])),
+                          control = mean_abs_dev(w[t==0]/mean_fast(w[t==0])))
       out$negative.entropy <- c(treated = neg_ent(w[t==1]),
                                 control = neg_ent(w[t==0]))
       out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
@@ -424,8 +424,8 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
                                  levels(t))
       out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
                            overall = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(vapply(levels(t), function(x) mean.abs.dev(w[t==x]/mean_fast(w[t==x])), numeric(1L)),
-                          overall = mean.abs.dev(w)/mean_fast(w))
+      out$scaled.mad <- c(vapply(levels(t), function(x) mean_abs_dev(w[t==x]/mean_fast(w[t==x])), numeric(1L)),
+                          overall = mean_abs_dev(w)/mean_fast(w))
       out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)),
                                 overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
       out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),

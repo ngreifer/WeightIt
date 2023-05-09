@@ -61,8 +61,7 @@ add_quotes <- function(x, quotes = 2L) {
 }
 firstup <- function(x) {
   #Capitalize first letter
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
+  `substr<-`(x, 1, 1, toupper(substr(x, 1, 1)))
 }
 expand.grid_string <- function(..., collapse = "") {
   do.call("paste", c(expand.grid(...), sep = collapse))
@@ -197,9 +196,9 @@ strsplits <- function(x, splits, fixed = TRUE, ...) {
   for (split in splits) x <- unlist(strsplit(x, split, fixed = TRUE, ...))
   return(x[x != ""]) # Remove empty values
 }
-c.factor <- function(..., recursive=TRUE) {
+c.factor <- function(..., recursive = TRUE) {
   #c() for factors
-  unlist(list(...), recursive=recursive)
+  unlist(list(...), recursive = recursive)
 }
 can_str2num <- function(x) {
   if (is.numeric(x) || is.logical(x)) return(TRUE)
@@ -447,18 +446,11 @@ col.w.r <- function(mat, y, w = NULL, s.weights = NULL, bin.vars = NULL, na.rm =
     return(cov/den)
   }
 }
-coef.of.var <- function(x, pop = TRUE) {
-  if (pop) sqrt(mean_fast((x-mean_fast(x, TRUE))^2, TRUE))/mean_fast(x, TRUE)
-  else sd(x)/mean_fast(x, TRUE)
-}
-mean.abs.dev <- function(x) {
+mean_abs_dev <- function(x) {
   mean_fast(abs(x - mean_fast(x, TRUE)), TRUE)
 }
 rms <- function(x) {
   sqrt(mean_fast(x^2))
-}
-geom.mean <- function(y) {
-  exp(mean_fast(log(y[is.finite(log(y))]), TRUE))
 }
 mat_div <- function(mat, vec) {
   mat/vec[col(mat)]
@@ -539,7 +531,7 @@ nobars <- function(term) {
 }
 
 #treat/covs
-get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep = "", ...) {
+get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep = "", ...) {
   A <- list(...)
 
   #Check if data exists
@@ -730,7 +722,7 @@ get.covs.and.treat.from.formula <- function(f, data = NULL, terms = FALSE, sep =
               treat = treat,
               treat.name = treat.name))
 }
-assign.treat.type <- function(treat, use.multi = FALSE) {
+assign_treat_type <- function(treat, use.multi = FALSE) {
   #Returns treat with treat.type attribute
   nunique.treat <- nunique(treat)
 
@@ -750,13 +742,13 @@ assign.treat.type <- function(treat, use.multi = FALSE) {
   attr(treat, "treat.type") <- treat.type
   return(treat)
 }
-get.treat.type <- function(treat) {
+get_treat_type <- function(treat) {
   return(attr(treat, "treat.type"))
 }
-has.treat.type <- function(treat) {
-  is_not_null(get.treat.type(treat))
+has_treat_type <- function(treat) {
+  is_not_null(get_treat_type(treat))
 }
-get.treated.level <- function(treat) {
+get_treated_level <- function(treat) {
   if (!is_binary(treat)) stop("'treat' must be a binary variable.")
   if (is.character(treat) || is.factor(treat)) {
     treat <- factor(treat, nmax = 2)

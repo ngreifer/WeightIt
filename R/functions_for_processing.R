@@ -1,18 +1,16 @@
-allowable.methods <- function() {
-  c("glm" = "glm", "ps" = "glm",
-    "gbm" = "gbm", "gbr" = "gbm",
-    "cbps" = "cbps",
-    "npcbps" = "npcbps",
-    "ebal" = "ebal", "entropy" = "ebal", "ebalance" = "ebal",
-    # "ebcw" = "ebcw", "ate" = "ebcw",
-    "optweight" = "optweight", "sbw" = "optweight",
-    "super" = "super", "superlearner" = "super",
-    "bart" = "bart",
-    "energy" = "energy")
-}
+allowable.methods <- c("glm" = "glm", "ps" = "glm",
+                       "gbm" = "gbm", "gbr" = "gbm",
+                       "cbps" = "cbps",
+                       "npcbps" = "npcbps",
+                       "ebal" = "ebal", "entropy" = "ebal", "ebalance" = "ebal",
+                       # "ebcw" = "ebcw", "ate" = "ebcw",
+                       "optweight" = "optweight", "sbw" = "optweight",
+                       "super" = "super", "superlearner" = "super",
+                       "bart" = "bart",
+                       "energy" = "energy")
 method.to.proper.method <- function(method) {
   method <- tolower(method)
-  allowable.methods()[method]
+  unname(allowable.methods[method])
 }
 check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
@@ -20,7 +18,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   if (missing(method)) method <- "glm"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (is.character(method)) {
-    if (tolower(method) %nin% names(allowable.methods())) bad.method <- TRUE
+    if (tolower(method) %nin% names(allowable.methods)) bad.method <- TRUE
   }
   else if (!is.function(method)) bad.method <- TRUE
 
@@ -29,7 +27,7 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
       .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
     }
 
-    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting\n\tmethod or a function that produces weights. Allowable methods:\n", paste(add_quotes(unique(allowable.methods())), collapse = ", ")), tidy = FALSE)
+    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting\n\tmethod or a function that produces weights. Allowable methods:\n", paste(add_quotes(unique(allowable.methods)), collapse = ", ")), tidy = FALSE)
   }
 
   if (msm && !force && is.character(method)) {
@@ -175,8 +173,8 @@ process.ps <- function(ps, data = NULL, treat) {
 process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
   reported.estimand <- estimand
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multinomial" = length(treat)/4))
 
@@ -271,8 +269,8 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
   bad.by <- FALSE
   n <- length(treat)
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (missing(by)) {
     bad.by <- TRUE
@@ -290,7 +288,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     by <- drop(by[, 1])
   }
   else if (rlang::is_formula(by, lhs = FALSE)) {
-    t.c <- get.covs.and.treat.from.formula(by, data)
+    t.c <- get_covs_and_treat_from_formula(by, data)
     by <- t.c[["reported.covs"]]
     if (NCOL(by) != 1) {
       .err(sprintf("only one variable can be on the right-hand side of the formula for `%s`",

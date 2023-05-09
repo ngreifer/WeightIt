@@ -20,8 +20,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       .err("`treat` and `'covs` must contain the same number of units")
     }
 
-    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-    treat.type <- get.treat.type(treat)
+    if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+    treat.type <- get_treat_type(treat)
 
     check.acceptable.method(method, msm = FALSE, force = FALSE)
 
@@ -80,8 +80,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
   }
   else {
-    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-    treat.type <- get.treat.type(treat)
+    if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+    treat.type <- get_treat_type(treat)
   }
 
   out <- make_list(c("weights", "ps", "fit.obj", "info"))

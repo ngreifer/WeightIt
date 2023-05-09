@@ -13,7 +13,7 @@ as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.
     .err("`weights` and `treat` must be the same length")
   }
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
 
   if (is_not_null(covs)) {
     if (!is.data.frame(covs) && !is.matrix(covs)) {
@@ -42,7 +42,7 @@ as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.
   }
 
   w.list <- list(weights = weights,
-                 treat = assign.treat.type(treat),
+                 treat = assign_treat_type(treat),
                  covs = covs,
                  estimand = estimand,
                  s.weights = s.weights,
@@ -56,77 +56,6 @@ as.weightit.default <- function(weights, treat, covs = NULL, estimand = NULL, s.
     w.list <- c(w.list, A)
   }
 
-  class(w.list) <- "weightit"
-
-  w.list
-}
-
-as.weightit.CBPS <- function(cbps, s.weights = NULL, ...) {
-
-  treat <- model.response(model.frame(cbps$terms, cbps$data))
-  treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
-  covs <- cbps$data[names(cbps$data) %in% attributes(terms(cbps))$term.labels]
-  weights <- cbps$weights
-  c.data <- cbps$data
-
-  if (is_not_null(s.weights)) {
-    if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
-      .err("the argument to s.weights must be a vector or data frame of sampling weights or the (quoted) names of variables in data that contain sampling weights")
-    }
-    if (is.character(s.weights) && length(s.weights)==1) {
-      if (any(names(data) == s.weights)) {
-        s.weights <- data[[s.weights]]
-      }
-      else if (any(names(c.data) == s.weights)) {
-        s.weights <- data[[s.weights]]
-      }
-      else {
-        .err("the name supplied to `s.weights` is not the name of a variable in `data`")
-      }
-    }
-  }
-  else s.weights <- rep(1, length(treat))
-
-  weights <- weights/s.weights #Because CBPS weights contain s.weights in them
-
-  if (is_binary(treat)) {
-    if (all_the_same(weights[treat==1 & !check_if_zero(weights)]) &&
-        !all_the_same(weights[treat==0 & !check_if_zero(weights)])
-    ) { #if treated weights are the same and control weights differ; ATT
-      estimand <- "att"
-    }
-    else if (all_the_same(weights[treat==0 & !check_if_zero(weights)]) &&
-             !all_the_same(weights[treat==1 & !check_if_zero(weights)])
-    ) { #if control weights are the same and treated weights differ; ATC
-      estimand <- "ATC"
-    }
-    else {
-      estimand <- "ATE"
-    }
-  }
-  else {
-    estimand <- "ATE"
-  }
-
-  method <- "cbps"
-  attr(method, "name") <- "cbps"
-
-  if (treat.type != "continuous") {
-    ps <- cbps$fitted.values
-  }
-  else ps <- NULL
-
-  call <- cbps$call
-
-  w.list <- list(weights = weights,
-                 treat = treat,
-                 covs = covs,
-                 estimand = estimand,
-                 method = method,
-                 ps = ps,
-                 s.weights = s.weights,
-                 call = call)
   class(w.list) <- "weightit"
 
   w.list
@@ -156,8 +85,8 @@ as.weightitMSM.default <- function(weights, treat.list, covs.list = NULL, estima
   }
 
   for (i in seq_along(treat.list)) {
-    if (!has.treat.type(treat.list[[i]])) {
-      treat.list[[i]] <- assign.treat.type(treat.list[[i]])
+    if (!has_treat_type(treat.list[[i]])) {
+      treat.list[[i]] <- assign_treat_type(treat.list[[i]])
     }
   }
 
