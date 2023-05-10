@@ -443,7 +443,7 @@ ggplot(p, aes(x = Ac)) +
   theme_bw()
 ```
 
-We can see that the ADRF has an elbow-shape, with a zone of no evidence of treatment effect followed a zone of increasing values of the outcome as the treatment increases.
+We can see that the ADRF has an elbow-shape, with a zone of no evidence of treatment effect followed by a zone of increasing values of the outcome as the treatment increases.
 
 Another way to characterize the effect of continuous treatments is to examine the average marginal effect function (AMEF), which is a function that relates the value of treatment to the derivative of the ADRF. When this derivative is different from zero, there is evidence of a treatment effect at the corresponding value of treatment. Below, we use `avg_slopes()` to compute the pointwise derivatives of the ADRF across levels of `Ac` and then plot it.
 
@@ -467,7 +467,7 @@ ggplot(s, aes(x = Ac)) +
   theme_bw()
 ```
 
-We can see that between values of -1 and .5, there is evidence of a positive effect of `Ac` on `Y_C` (i.e., because the confidence intervals for the slope of the ADRF at those values of `Ac` exclude 0). This is in line with our observation above that the treatment only appears to have an effect at higher values of `Ac`.
+We can see that between values of -1.5 and .5, there is evidence of a positive effect of `Ac` on `Y_C` (i.e., because the confidence intervals for the slope of the ADRF at those values of `Ac` exclude 0). This is in line with our observation above that the treatment only appears to have an effect at higher values of `Ac`.
 
 ### Longitudinal Treatments
 
