@@ -381,7 +381,7 @@ fit <- lm(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 +
 p <- avg_predictions(fit,
                      variables = "Am",
                      vcov = "HC3",
-                     newdata = subset(boot_data, A == 1),
+                     newdata = subset(d, Am == "T"),
                      wts = "weights")
 p
 

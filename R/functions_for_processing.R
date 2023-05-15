@@ -203,6 +203,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
       if (is_null(focal)) {
         .err("when `estimand = \"ATC\"` for multi-category treatments, an argument must be supplied to `focal`")
       }
+      estimand <- "ATT"
     }
   }
   else if (treat.type == "binary") {

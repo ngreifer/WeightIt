@@ -1,6 +1,12 @@
 WeightIt News and Updates
 ======
 
+# WeightIt 0.14.2
+
+* Fixed a bug when using `estimand = "ATC"` with multi-category treatments. (#47)
+
+* Fixed a bug in the Estimating Effects vignette. (#46)
+
 # WeightIt 0.14.1
 
 * `cobalt` version 4.5.1 or greater is now required.
