@@ -74,7 +74,7 @@ First, for each variable with missingness, a new missingness indicator variable 
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.1.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -206,7 +206,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 <p><strong>Binary and Multinomial treatments</strong></p>
 <p>Huling, J. D., &amp; Mak, S. (2022). Energy Balancing of Covariate Distributions (arXiv:2004.13962). arXiv. <a href="https://doi.org/10.48550/arXiv.2004.13962" class="external-link">doi:10.48550/arXiv.2004.13962</a></p>
 <p><strong>Continuous treatments</strong></p>
-<p>Huling, J. D., Greifer, N., &amp; Chen, G. (2021). Independence weights for causal inference with continuous exposures (arXiv:2107.07086). arXiv. <a href="https://doi.org/10.48550/arXiv.2107.07086" class="external-link">doi:10.48550/arXiv.2107.07086</a></p>
+<p>Huling, J. D., Greifer, N., &amp; Chen, G. (2023). Independence weights for causal inference with continuous treatments. Journal of the American Statistical Association, 0(ja), 1–25. <a href="https://doi.org/10.1080/01621459.2023.2213485" class="external-link">doi:10.1080/01621459.2023.2213485</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -234,7 +234,6 @@ First, for each variable with missingness, a new missingness indicator variable 
 <span class="r-in"><span>                focal <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W3</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>

@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.1.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2023-05-15</h4>
+            <h4 data-toc-skip class="date">2023-05-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -196,12 +196,17 @@ desired) is the estimate of the treatment effect.</p>
 <p>When doing g-computation after weighting, a few additional
 considerations are required. First, the outcome model should be fit
 incorporating the estimated weights (e.g., using weighted least squares
-or weighted maximum likelihood estimation). Second, when we take the
-average of the estimated potential outcomes under each treatment level,
-this must be a weighted average that incorporates the estimated weights.
+or weighted maximum likelihood estimation) <span class="citation">(<a href="#ref-vansteelandtInvitedCommentaryGComputation2011" role="doc-biblioref">Vansteelandt and Keiding 2011</a>)</span>. Second,
+when we take the average of the estimated potential outcomes under each
+treatment level, this must be a weighted average that incorporates the
+estimated weights^[Note: For the ATE, this is actually optional. For the
+ATT and ATC, this is unnecessary but causes no harm if done. For other
+estimands or when sampling weights are used, this is necessary. Given
+that there is no harm to computing the weighted means when it is
+unnecessary and it is often necessary, we always recommend it here.].
 Third, if we want to target the ATT or ATC, we only estimate potential
 outcomes for the treated or control group, respectively (though we still
-generate predicted values under both treatment and control).</p>
+generate predicted values under both treatment and control) <span class="citation">(<a href="#ref-wangGcomputationAverageTreatment2017" role="doc-biblioref">Wang, Nianogo, and Arah 2017</a>)</span>.</p>
 <p>G-computation as a framework for estimating effects after weighting
 has a number of advantages over other approaches. It works the same
 regardless of the form of the outcome model or type of outcome (e.g.,
@@ -362,13 +367,13 @@ of this document. Below we display the first six rows of
 <code>d</code>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##   A Am      Ac      X1      X2      X3       X4 X5      X6      X7      X8       X9     Y_C Y_B    Y_S</span></span>
-<span><span class="co">## 1 0 C1 -2.2185  0.1725 -1.4283 -0.4103 -2.36059  1 -1.1199  0.6398 -0.4840 -0.59385 -3.5907   0  857.7</span></span>
-<span><span class="co">## 2 0 C2 -2.2837 -1.0959  0.8463  0.2456 -0.12333  1 -2.2687 -1.4491 -0.5514 -0.31439 -1.5481   0  311.6</span></span>
-<span><span class="co">## 3 0 C1 -1.1362  0.1768  0.7905 -0.8436  0.82366  1 -0.2221  0.2971 -0.6966 -0.69516  6.0714   0  241.2</span></span>
-<span><span class="co">## 4 0 C1 -0.8865 -0.4595  0.1726  1.9542 -0.62661  1 -0.4019 -0.8294 -0.5384  0.20729  2.4906   1  142.4</span></span>
-<span><span class="co">## 5 1  T  0.8613  0.3563 -1.8121  0.8135 -0.67189  1 -0.8297  1.7297 -0.6439 -0.02648 -0.6687   0  206.8</span></span>
-<span><span class="co">## 6 0 C2 -2.1697 -2.4313 -1.7984 -1.2940  0.04609  1 -1.2419 -1.1252 -1.8659 -0.56513 -9.8504   0 1962.9</span></span></code></pre>
+<pre><code><span><span class="co">##   A Am      Ac      X1      X2      X3       X4 X5      X6      X7      X8       X9    Y_C Y_B    Y_S</span></span>
+<span><span class="co">## 1 0 C1 -2.2185  0.1725 -1.4283 -0.4103 -2.36059  1 -1.1199  0.6398 -0.4840 -0.59385 -3.591   0  857.7</span></span>
+<span><span class="co">## 2 0 C2 -2.2837 -1.0959  0.8463  0.2456 -0.12333  1 -2.2687 -1.4491 -0.5514 -0.31439 -1.548   0  311.6</span></span>
+<span><span class="co">## 3 0 C1 -1.1362  0.1768  0.7905 -0.8436  0.82366  1 -0.2221  0.2971 -0.6966 -0.69516  6.071   0  241.2</span></span>
+<span><span class="co">## 4 0 C1 -0.8865 -0.4595  0.1726  1.9542 -0.62661  1 -0.4019 -0.8294 -0.5384  0.20729  2.491   1  142.4</span></span>
+<span><span class="co">## 5 1  T  0.8613  0.3563 -1.8121  0.8135 -0.67189  1 -0.8297  1.7297 -0.6439 -0.02648 -1.100   0  206.8</span></span>
+<span><span class="co">## 6 0 C2 -2.1697 -2.4313 -1.7984 -1.2940  0.04609  1 -1.2419 -1.1252 -1.8659 -0.56513 -9.850   0 1962.9</span></span></code></pre>
 <p><code>A</code> is a binary treatment variable, <code>X1</code>
 through <code>X9</code> are covariates, <code>Y_C</code> is a continuous
 outcome, <code>Y_B</code> is a binary outcome, and <code>Y_S</code> is a
@@ -400,9 +405,9 @@ weighting.</p>
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/">"WeightIt"</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://vincentarelbundock.github.io/marginaleffects/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span></code></pre></div>
 <p>Effect estimates will be computed using
-<code>marginaleffects::avg_comparions()</code>, even when its use may be
-superfluous (e.g., for comparing the weighted difference in means). As
-previously mentioned, this is because it is useful to have a single
+<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">marginaleffects::avg_comparisons()</a></code>, even when its use may
+be superfluous (e.g., for comparing the weighted difference in means).
+As previously mentioned, this is because it is useful to have a single
 workflow that works no matter the situation, perhaps with very slight
 modifications to accommodate different contexts. Using
 <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> has several advantages, even when the
@@ -484,7 +489,7 @@ estimate the ATE.</p>
 <span>                wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Term Contrast Estimate Std. Error   z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A    1 - 0     1.81      0.477 3.8   &lt;0.001 0.875   2.74</span></span>
+<span><span class="co">##     A    1 - 0     2.05      0.477 4.3   &lt;0.001  1.12   2.98</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <p>Let’s break down the call to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>: to the
@@ -511,7 +516,7 @@ the outcome model (if any) are interacted with the treatment.</p>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  A Estimate Std. Error     z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
 <span><span class="co">##  0     1.47      0.131 11.23   &lt;0.001  1.22   1.73</span></span>
-<span><span class="co">##  1     3.28      0.458  7.17   &lt;0.001  2.39   4.18</span></span>
+<span><span class="co">##  1     3.52      0.458  7.69   &lt;0.001  2.63   4.42</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: A, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <p>We can see that the difference in potential outcome means is equal to
@@ -671,7 +676,7 @@ design information, e.g., if your study comes from a complex survey.</p>
 <span>                wts <span class="op">=</span> <span class="st">"(weights)"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Term Contrast Estimate Std. Error    z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A    1 - 0     1.81      0.356 5.08   &lt;0.001  1.11   2.51</span></span>
+<span><span class="co">##     A    1 - 0     2.05      0.356 5.75   &lt;0.001  1.35   2.75</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <p>Note that we need to supply <code>"(weights)"</code> to the
@@ -684,6 +689,10 @@ and HC3 robust SEs; to get similar SEs using <code><a href="https://rdrr.io/r/st
 HC3 standard errors tend to perform better, which is one reason to avoid
 using <code>survey</code>. In many cases, though, the results will be
 similar.</p>
+<p>Remember that if sampling weights are used in the estimation of the
+balancing weights, the balancing weights and sampling weights must be
+multiplied together prior to inclusion in the call to
+<code><a href="https://rdrr.io/pkg/survey/man/svydesign.html" class="external-link">svydesign()</a></code>.</p>
 </div>
 </div>
 <div class="section level3">
@@ -755,7 +764,7 @@ outcome under each treatment for the focal group, and the use
 <span><span class="co">##  Am Estimate Std. Error     z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
 <span><span class="co">##  C1     1.64      0.390  4.21   &lt;0.001 0.876   2.41</span></span>
 <span><span class="co">##  C2     1.84      0.324  5.68   &lt;0.001 1.206   2.48</span></span>
-<span><span class="co">##  T      3.59      0.222 16.15   &lt;0.001 3.152   4.02</span></span>
+<span><span class="co">##  T      3.75      0.222 16.88   &lt;0.001 3.314   4.18</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: Am, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
@@ -763,8 +772,8 @@ outcome under each treatment for the focal group, and the use
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##     Term Estimate Std. Error     z Pr(&gt;|z|)  2.5 % 97.5 %</span></span>
 <span><span class="co">##  C2 - C1     0.20      0.251 0.799    0.424 -0.291  0.692</span></span>
-<span><span class="co">##  T - C1      1.95      0.295 6.601   &lt;0.001  1.368  2.523</span></span>
-<span><span class="co">##  T - C2      1.75      0.291 5.991   &lt;0.001  1.174  2.316</span></span>
+<span><span class="co">##  T - C1      2.11      0.295 7.152   &lt;0.001  1.531  2.686</span></span>
+<span><span class="co">##  T - C2      1.91      0.291 6.549   &lt;0.001  1.337  2.479</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
 <p>We find significant ATTs between the focal treatment and control
@@ -786,8 +795,8 @@ to a continuous treatment and how to estimate and plot the ADRF in the
 weighted sample. We’ll use the continuous treatment <code>Ac</code>,
 which ranges from -10.37 to 6.26, and estimate its effect on the
 continuous outcome <code>Y_C</code>.</p>
-<p>First, we’ll estimate distance covariance optimal weights <span class="citation">(<a href="#ref-hulingIndependenceWeightsCausal2023" role="doc-biblioref">Huling, Greifer, and Chen 2023</a>)</span> using
-<code><a href="../reference/weightit.html">weightit()</a></code>.</p>
+<p>First, we’ll estimate distance covariance optimal weights <span class="citation">(<a href="#ref-huling2023" role="doc-biblioref">Huling,
+Greifer, and Chen 2023</a>)</span> using <code><a href="../reference/weightit.html">weightit()</a></code>.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">Ac</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
 <span>                <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
@@ -838,7 +847,10 @@ tend to be imprecise.</p>
 <span>                     wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
 <p>Although one can examine the expected potential outcomes, it is often
 more useful to see them plotted. We can generate a plot of the ADRF and
-its pointwise confidence band using <code>ggplot2</code>:</p>
+its pointwise confidence band using <code>ggplot2</code>^[You can also
+use <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/plot_predictions.html" class="external-link">plot_predictions()</a></code>, though after requesting the
+predictions in the prior step it is quicker to use
+<code><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot()</a></code>.]:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ggplot2.tidyverse.org" class="external-link">"ggplot2"</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Ac</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -857,7 +869,8 @@ that relates the value of treatment to the derivative of the ADRF. When
 this derivative is different from zero, there is evidence of a treatment
 effect at the corresponding value of treatment. Below, we use
 <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/slopes.html" class="external-link">avg_slopes()</a></code> to compute the pointwise derivatives of the
-ADRF across levels of <code>Ac</code> and then plot it.</p>
+ADRF across levels of <code>Ac</code> and then plot it^[You can also use
+<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/plot_slopes.html" class="external-link">plot_slopes()</a></code>.].</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimate the pointwise derivatives at representative</span></span>
 <span><span class="co"># values of Ac</span></span>
@@ -915,7 +928,7 @@ interest.</p>
 <code class="sourceCode R"><span><span class="va">boot_fun</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">i</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">boot_data</span> <span class="op">&lt;-</span> <span class="va">data</span><span class="op">[</span><span class="va">i</span>,<span class="op">]</span></span>
 <span>  </span>
-<span>  <span class="co">#PS weighting for the ATE</span></span>
+<span>  <span class="co">#PS weighting for the ATT</span></span>
 <span>  <span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">A</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
 <span>                 <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span>,</span>
 <span>               data <span class="op">=</span> <span class="va">boot_data</span>,</span>
@@ -1088,10 +1101,11 @@ Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.
 Dependence in Parametric Causal Inference.”</span> <em>Political
 Analysis</em> 15 (3): 199–236. <a href="https://doi.org/10.1093/pan/mpl013" class="external-link">https://doi.org/10.1093/pan/mpl013</a>.
 </div>
-<div id="ref-hulingIndependenceWeightsCausal2023" class="csl-entry">
+<div id="ref-huling2023" class="csl-entry">
 Huling, Jared D., Noah Greifer, and Guanhua Chen. 2023.
 <span>“Independence Weights for Causal Inference with Continuous
-Treatments.”</span> <span>arXiv</span>. <a href="https://doi.org/10.48550/arXiv.2107.07086" class="external-link">https://doi.org/10.48550/arXiv.2107.07086</a>.
+Treatments.”</span> <em>Journal of the American Statistical
+Association</em>, May, 1–25. <a href="https://doi.org/10.1080/01621459.2023.2213485" class="external-link">https://doi.org/10.1080/01621459.2023.2213485</a>.
 </div>
 <div id="ref-mackinnonBootstrapMethodsEconometrics2006" class="csl-entry">
 MacKinnon, James G. 2006. <span>“Bootstrap Methods in
@@ -1136,6 +1150,17 @@ Snowden, Jonathan M., Sherri Rose, and Kathleen M. Mortimer. 2011.
 <span>“Implementation of G-Computation on a Simulated Data Set:
 Demonstration of a Causal Inference Technique.”</span> <em>American
 Journal of Epidemiology</em> 173 (7): 731–38. <a href="https://doi.org/10.1093/aje/kwq472" class="external-link">https://doi.org/10.1093/aje/kwq472</a>.
+</div>
+<div id="ref-vansteelandtInvitedCommentaryGComputation2011" class="csl-entry">
+Vansteelandt, Stijn, and Niels Keiding. 2011. <span>“Invited Commentary:
+G-Computation<span></span>lost in Translation?”</span> <em>American
+Journal of Epidemiology</em> 173 (7): 739–42. <a href="https://doi.org/10.1093/aje/kwq474" class="external-link">https://doi.org/10.1093/aje/kwq474</a>.
+</div>
+<div id="ref-wangGcomputationAverageTreatment2017" class="csl-entry">
+Wang, Aolin, Roch A. Nianogo, and Onyebuchi A. Arah. 2017.
+<span>“G-Computation of Average Treatment Effects on the Treated and the
+Untreated.”</span> <em>BMC Medical Research Methodology</em> 17 (1): 3.
+<a href="https://doi.org/10.1186/s12874-016-0282-4" class="external-link">https://doi.org/10.1186/s12874-016-0282-4</a>.
 </div>
 <div id="ref-westreichTableFallacyPresenting2013" class="csl-entry">
 Westreich, Daniel, and Sander Greenland. 2013. <span>“The Table 2
