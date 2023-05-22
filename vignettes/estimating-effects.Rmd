@@ -4,6 +4,7 @@ author: "Noah Greifer"
 date: "`r Sys.Date()`"
 output: 
     html_vignette:
+        df_print: kable
         toc: true
 vignette: >
   %\VignetteIndexEntry{Estimating Effects After Weighting}
@@ -58,7 +59,9 @@ gen_Am <- function(A) {
 
 # Continuous outcome
 gen_Y_C <- function(A, X) {
-  2*A + 2*X[,1] + 2*X[,2] + 2*X[,3] + 1*X[,4] + 2*X[,5] + 1*X[,6] + rnorm(length(A), 0, 5)
+  2*A + 2*X[,1] + 2*X[,2] + 2*X[,3] + 1*X[,4] + 2*X[,5] + 1*X[,6] + 
+    .5*A*X[,1] + .5*A*X[,2] - .25*A*X[,3] + A*(X[,5] - .5) +
+    rnorm(length(A), 0, 5)
 }
 #Conditional:
 #  MD: 2
@@ -132,7 +135,7 @@ Our primary focus will be on marginal effects, which are appropriate for all eff
 
 To estimate marginal effects, we use a method known as g-computation [@snowdenImplementationGComputationSimulated2011] or regression estimation [@schaferAverageCausalEffects2008]. This involves first specifying a model for the outcome as a function of the treatment and covariates. Then, for each unit, we compute their predicted values of the outcome setting their treatment status to treated, and then again for control, leaving us with two predicted outcome values for each unit, which are estimates of the potential outcomes under each treatment level. We compute the mean of each of the estimated potential outcomes across the entire sample, which leaves us with two average estimated potential outcomes. Finally, the contrast of these average estimated potential outcomes (e.g., their difference or ratio, depending on the effect measure desired) is the estimate of the treatment effect.
 
-When doing g-computation after weighting, a few additional considerations are required. First, the outcome model should be fit incorporating the estimated weights (e.g., using weighted least squares or weighted maximum likelihood estimation). Second, when we take the average of the estimated potential outcomes under each treatment level, this must be a weighted average that incorporates the estimated weights. Third, if we want to target the ATT or ATC, we only estimate potential outcomes for the treated or control group, respectively (though we still generate predicted values under both treatment and control).
+When doing g-computation after weighting, a few additional considerations are required. First, the outcome model should be fit incorporating the estimated weights (e.g., using weighted least squares or weighted maximum likelihood estimation) [@vansteelandtInvitedCommentaryGComputation2011]. Second, when we take the average of the estimated potential outcomes under each treatment level, this must be a weighted average that incorporates the estimated weights\^[Note: For the ATE, this is actually optional. For the ATT and ATC, this is unnecessary but causes no harm if done. For other estimands or when sampling weights are used, this is necessary. Given that there is no harm to computing the weighted means when it is unnecessary and it is often necessary, we always recommend it here.]. Third, if we want to target the ATT or ATC, we only estimate potential outcomes for the treated or control group, respectively (though we still generate predicted values under both treatment and control) [@wangGcomputationAverageTreatment2017].
 
 G-computation as a framework for estimating effects after weighting has a number of advantages over other approaches. It works the same regardless of the form of the outcome model or type of outcome (e.g., whether a linear model is used for a continuous outcome or a logistic model is used for a binary outcome); the only difference might be how the average expected potential outcomes are contrasted in the final step. In simple cases, the estimated effect is numerically identical to effects estimated using other methods; for example, if no covariates are included in the outcome model, the g-computation estimate is equal to the difference in means from a t-test or coefficient of the treatment in a linear model for the outcome. There are analytic and bootstrap approximations to the SEs of the g-computation estimate. The analytic approximation is computed using the delta method, a technique for computing the SE of a quantity derived from the regression model parameters, such as the g-computation estimate.
 
@@ -198,7 +201,7 @@ library("WeightIt")
 library("marginaleffects")
 ```
 
-Effect estimates will be computed using `marginaleffects::avg_comparions()`, even when its use may be superfluous (e.g., for comparing the weighted difference in means). As previously mentioned, this is because it is useful to have a single workflow that works no matter the situation, perhaps with very slight modifications to accommodate different contexts. Using `avg_comparisons()` has several advantages, even when the alternatives are simple: it only provides the effect estimate, and not other coefficients; it automatically incorporates robust SEs if requested; and it always produces average marginal effects for the correct population if requested.
+Effect estimates will be computed using `marginaleffects::avg_comparisons()`, even when its use may be superfluous (e.g., for comparing the weighted difference in means). As previously mentioned, this is because it is useful to have a single workflow that works no matter the situation, perhaps with very slight modifications to accommodate different contexts. Using `avg_comparisons()` has several advantages, even when the alternatives are simple: it only provides the effect estimate, and not other coefficients; it automatically incorporates robust SEs if requested; and it always produces average marginal effects for the correct population if requested.
 
 Other packages may be of use but are not used here. There are alternatives to the `marginaleffects` package for computing average marginal effects, including `margins` and `stdReg`. The `survey` package can be used to estimate robust SEs incorporating weights and provides functions for survey-weighted generalized linear models and Cox-proportional hazards models. Much of the code here can be adapted to be used with `survey`, and we will demonstrate that as well.
 
@@ -344,6 +347,8 @@ avg_comparisons(fit,
 
 Note that we need to supply `"(weights)"` to the `wts` argument for them to be correctly incorporated. You might notice that the standard errors computed using `survey` are different from those using `lm()` or `glm()` and HC3 robust SEs; to get similar SEs using `lm()` or `glm()`, set `vcov = "HC0"` in the call to `avg_comparisons()`. This approach is not recommended because HC3 standard errors tend to perform better, which is one reason to avoid using `survey`. In many cases, though, the results will be similar.
 
+Remember that if sampling weights are used in the estimation of the balancing weights, the balancing weights and sampling weights must be multiplied together prior to inclusion in the call to `svydesign()`.
+
 ### Multi-Category Treatments
 
 Multi-category treatments work essentially the same way as binary treatments. The main practical differences are in choosing the estimand and estimating the weights. The ATE and ATO are straightforward. The ATT requires choosing one group to be the treated or "focal" group. Effects are the estimated for members of that group. The contrast in the focal group between the expected potential outcomes under a non-focal treatment and the expected potential outcomes for the focal (actual) treatment can be interpreted similarly to how ATTs are interpreted for binary treatments. The contrasts in the focal group between expected potential outcomes under a pair of non-focal treatments can be interpreted as the contrast between the ATTs of the non-focal treatments. Weights may be estimated differently for multi-category treatments from binary treatments; see the individual methods pages for how they differ.
@@ -394,7 +399,7 @@ We find significant ATTs between the focal treatment and control levels (`T - C1
 
 For continuous treatments, one estimand of interest is the average dose-response function (ADRF), which links the value of the treatment to the expected potential outcome under that treatment value across the full sample. We do not provide a detailed account of the ADRF but will demonstrate how to estimate weights that balance covariates with respect to a continuous treatment and how to estimate and plot the ADRF in the weighted sample. We'll use the continuous treatment `Ac`, which ranges from -10.37 to 6.26, and estimate its effect on the continuous outcome `Y_C`.
 
-First, we'll estimate distance covariance optimal weights [@hulingIndependenceWeightsCausal2023] using `weightit()`.
+First, we'll estimate distance covariance optimal weights [@huling2023] using `weightit()`.
 
 ```{r}
 W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + 
@@ -431,7 +436,7 @@ p <- avg_predictions(fit,
                      wts = "weights")
 ```
 
-Although one can examine the expected potential outcomes, it is often more useful to see them plotted. We can generate a plot of the ADRF and its pointwise confidence band using `ggplot2`:
+Although one can examine the expected potential outcomes, it is often more useful to see them plotted. We can generate a plot of the ADRF and its pointwise confidence band using `ggplot2`\^[You can also use `plot_predictions()`, though after requesting the predictions in the prior step it is quicker to use `ggplot()`.]:
 
 ```{r, fig.height=3.5, fig.width=7}
 library("ggplot2")
@@ -445,7 +450,7 @@ ggplot(p, aes(x = Ac)) +
 
 We can see that the ADRF has an elbow-shape, with a zone of no evidence of treatment effect followed by a zone of increasing values of the outcome as the treatment increases.
 
-Another way to characterize the effect of continuous treatments is to examine the average marginal effect function (AMEF), which is a function that relates the value of treatment to the derivative of the ADRF. When this derivative is different from zero, there is evidence of a treatment effect at the corresponding value of treatment. Below, we use `avg_slopes()` to compute the pointwise derivatives of the ADRF across levels of `Ac` and then plot it.
+Another way to characterize the effect of continuous treatments is to examine the average marginal effect function (AMEF), which is a function that relates the value of treatment to the derivative of the ADRF. When this derivative is different from zero, there is evidence of a treatment effect at the corresponding value of treatment. Below, we use `avg_slopes()` to compute the pointwise derivatives of the ADRF across levels of `Ac` and then plot it\^[You can also use `plot_slopes()`.].
 
 ```{r, fig.height=3.5, fig.width=7}
 # Estimate the pointwise derivatives at representative
@@ -485,7 +490,7 @@ The first step is to write the estimation function, we call `boot_fun`. This fun
 boot_fun <- function(data, i) {
   boot_data <- data[i,]
   
-  #PS weighting for the ATE
+  #PS weighting for the ATT
   W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
                  X6 + X7 + X8 + X9,
                data = boot_data,

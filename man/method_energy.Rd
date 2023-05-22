@@ -93,7 +93,7 @@ Huling, J. D., & Mak, S. (2022). Energy Balancing of Covariate Distributions (ar
 
 \strong{Continuous treatments}
 
-Huling, J. D., Greifer, N., & Chen, G. (2021). Independence weights for causal inference with continuous exposures (arXiv:2107.07086). arXiv. \doi{10.48550/arXiv.2107.07086}
+Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. Journal of the American Statistical Association, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 
 }
 \seealso{
@@ -120,7 +120,6 @@ bal.tab(W1)
                 focal = "black"))
 summary(W2)
 bal.tab(W2)
-
 
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
