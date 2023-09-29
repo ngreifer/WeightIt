@@ -836,8 +836,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   }
 
   if (is_null(A[["criterion"]])) {
-    .wrn("no `criterion` was provided. Using \"smd.mean\"",
-         call. = FALSE, immediate. = TRUE)
+    .wrn("no `criterion` was provided. Using \"smd.mean\"")
     A[["criterion"]] <- "smd.mean"
   }
   else if (length(A[["criterion"]]) > 1) {
@@ -1090,7 +1089,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset, s
     A[["criterion"]] <- A[["stop.method"]]
   }
   if (is_null(A[["criterion"]])) {
-    .err("no `criterion` was provided. Using \"p.mean\"")
+    .wrn("no `criterion` was provided. Using \"p.mean\"")
     A[["criterion"]] <- "p.mean"
   }
   else if (length(A[["criterion"]]) > 1) {
@@ -2358,7 +2357,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
   lambda <- if_null_then(A[["lambda"]], 1e-4)
   if (!chk::vld_number(lambda)) {
-    .wrn("`lambda` must be a single number. Setting lambda = 1e-4.")
+    .wrn("`lambda` must be a single number. Setting lambda = 1e-4")
     lambda <- 1e-4
   }
 

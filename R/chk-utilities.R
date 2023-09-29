@@ -16,7 +16,11 @@ pkg_caller_call <- function(start = 1) {
 .err <- function(...) {
   chk::err(..., call = pkg_caller_call(start = 2))
 }
-.wrn <- function(...) {
+.wrn <- function(..., immediate = TRUE) {
+  if (immediate && isTRUE(all.equal(getOption("warn"), 0))) {
+    op <- options(warn = 1)
+    on.exit(options(op))
+  }
   chk::wrn(...)
 }
 .msg <- function(...) {

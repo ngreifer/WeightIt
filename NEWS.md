@@ -1,6 +1,12 @@
 WeightIt News and Updates
 ======
 
+# WeightIt (development version)
+
+* Fixed a bug when `criterion` was not specified when using `method = "gbm"`.
+
+* Warning messages now display immediately rather than at the end of evaluation.
+
 # WeightIt 0.14.2
 
 * Fixed a bug when using `estimand = "ATC"` with multi-category treatments. (#47)
