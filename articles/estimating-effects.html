@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9000</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2023-05-22</h4>
+            <h4 data-toc-skip class="date">2023-09-29</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -383,7 +383,7 @@ and continuous treatment variables, respectively.</p>
 <ul>
 <li>
 <code>marginaleffects</code> provides the
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> function for performing g-computation and
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> function for performing g-computation and
 estimating the SEs and confidence intervals of the average estimate
 potential outcomes and treatment effects</li>
 <li>
@@ -403,14 +403,14 @@ bootstrap confidence intervals</li>
 weighting.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/">"WeightIt"</a></span><span class="op">)</span></span>
-<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://vincentarelbundock.github.io/marginaleffects/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span></code></pre></div>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://marginaleffects.com/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span></code></pre></div>
 <p>Effect estimates will be computed using
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">marginaleffects::avg_comparisons()</a></code>, even when its use may
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">marginaleffects::avg_comparisons()</a></code>, even when its use may
 be superfluous (e.g., for comparing the weighted difference in means).
 As previously mentioned, this is because it is useful to have a single
 workflow that works no matter the situation, perhaps with very slight
 modifications to accommodate different contexts. Using
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> has several advantages, even when the
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> has several advantages, even when the
 alternatives are simple: it only provides the effect estimate, and not
 other coefficients; it automatically incorporates robust SEs if
 requested; and it always produces average marginal effects for the
@@ -430,7 +430,7 @@ models. Much of the code here can be adapted to be used with
 straightforward and involves fitting a model for the outcome that
 incorporates the estimated weights, then estimating the treatment effect
 using g-computation (i.e., using
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">marginaleffects::avg_comparisons()</a></code>) with a robust SE to
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">marginaleffects::avg_comparisons()</a></code>) with a robust SE to
 account for pair membership. This procedure is the same for continuous
 and binary outcomes with and without covariates.</p>
 <p>There are a few adjustments that need to be made for certain
@@ -480,19 +480,20 @@ achieved.</p>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
 <span>                        <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span><span class="op">)</span>,</span>
 <span>           data <span class="op">=</span> <span class="va">d</span>, weights <span class="op">=</span> <span class="va">weights</span><span class="op">)</span></span></code></pre></div>
-<p>Next, we use <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">marginaleffects::avg_comparisons()</a></code> to
+<p>Next, we use <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">marginaleffects::avg_comparisons()</a></code> to
 estimate the ATE.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
 <span>                wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term Contrast Estimate Std. Error   z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A    1 - 0     2.05      0.477 4.3   &lt;0.001  1.12   2.98</span></span>
+<span><span class="co">##  Term Contrast Estimate Std. Error   z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##     A    1 - 0     2.05      0.477 4.3   &lt;0.001 15.8  1.12   2.98</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
-<p>Let’s break down the call to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>: to the
+<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
+<p>Let’s break down the call to <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>: to the
 first argument, we supply the model fit, <code>fit</code>; to the
 <code>variables</code> argument, the name of the treatment
 (<code>"A"</code>); to the <code>vcov</code> argument, the name of the
@@ -504,29 +505,30 @@ Some of these arguments differ depending on the specifics of the outcome
 type; see the sections below for information.</p>
 <p>If, in addition to the effect estimate, we want the average estimated
 potential outcomes, we can use
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>, which we demonstrate
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>, which we demonstrate
 below. Note the interpretation of the resulting estimates as the
 expected potential outcomes is only valid if all covariates present in
 the outcome model (if any) are interacted with the treatment.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
 <span>                wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  A Estimate Std. Error     z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##  0     1.47      0.131 11.23   &lt;0.001  1.22   1.73</span></span>
-<span><span class="co">##  1     3.52      0.458  7.69   &lt;0.001  2.63   4.42</span></span>
+<span><span class="co">##  A Estimate Std. Error     z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##  0     1.47      0.131 11.23   &lt;0.001 94.8  1.22   1.73</span></span>
+<span><span class="co">##  1     3.52      0.458  7.69   &lt;0.001 46.0  2.63   4.42</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: A, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Columns: A, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
 <p>We can see that the difference in potential outcome means is equal to
 the average treatment effect computed previously<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;To verify that they are equal, supply the output of
-&lt;code&gt;&lt;a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link"&gt;avg_predictions()&lt;/a&gt;&lt;/code&gt; to &lt;code&gt;&lt;a href="https://vincentarelbundock.github.io/marginaleffects/reference/hypotheses.html" class="external-link"&gt;hypotheses()&lt;/a&gt;&lt;/code&gt;, e.g.,
+&lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link"&gt;avg_predictions()&lt;/a&gt;&lt;/code&gt; to &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link"&gt;hypotheses()&lt;/a&gt;&lt;/code&gt;, e.g.,
 &lt;code&gt;avg_predictions(…) |&amp;gt; hypotheses("revpairwise")&lt;/code&gt;; this
 explicitly compares the average potential outcomes and should yield
-identical estimates to the &lt;code&gt;&lt;a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link"&gt;avg_comparisons()&lt;/a&gt;&lt;/code&gt; call.&lt;/p&gt;'><sup>3</sup></a>. All of the arguments
-to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions()</a></code> are the same as those to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>.</p>
+identical estimates to the &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link"&gt;avg_comparisons()&lt;/a&gt;&lt;/code&gt; call.&lt;/p&gt;'><sup>3</sup></a>. All of the arguments
+to <code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> are the same as those to
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>.</p>
 </div>
 <div class="section level3">
 <h3 id="adjustments-to-the-standard-case">Adjustments to the Standard Case<a class="anchor" aria-label="anchor" href="#adjustments-to-the-standard-case"></a>
@@ -537,10 +539,10 @@ following special circumstances occur.</p>
 <h4 id="weighting-for-the-att-or-atc">Weighting for the ATT or ATC<a class="anchor" aria-label="anchor" href="#weighting-for-the-att-or-atc"></a>
 </h4>
 <p>When weighting for the ATT, everything is identical to the Standard
-Case except that in the calls to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> and
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions()</a></code>, the <code>newdata</code> argument must
-additionally be supplied to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> and
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions()</a></code> as</p>
+Case except that in the calls to <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> and
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code>, the <code>newdata</code> argument must
+additionally be supplied to <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> and
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> as</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">newdata</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">d</span>, <span class="va">A</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span></span></code></pre></div>
 <p>This requests that g-computation be done only for the treated units.
@@ -553,26 +555,26 @@ For the ATC, replace <code>1</code> with <code>0</code>.</p>
 continuous outcomes. The main difference is that there are several
 measures of the effect one can consider, which include the odds ratio
 (OR), risk ratio/relative risk (RR), and risk difference (RD), and the
-syntax to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> depends on which one is
+syntax to <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> depends on which one is
 desired. The outcome model should be one appropriate for binary outcomes
 (e.g., logistic regression) but is unrelated to the desired effect
 measure because we can compute any of the above effect measures using
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> after the logistic regression.</p>
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> after the logistic regression.</p>
 <p>To fit a logistic regression model, change <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> to
 <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and set <code>family = quasibinomial</code><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;We use &lt;code&gt;&lt;a href="https://rdrr.io/r/stats/family.html" class="external-link"&gt;quasibinomial()&lt;/a&gt;&lt;/code&gt; instead of
 &lt;code&gt;&lt;a href="https://rdrr.io/r/stats/family.html" class="external-link"&gt;binomial()&lt;/a&gt;&lt;/code&gt; simply to avoid a spurious warning; the results
 will be identical regardless.&lt;/p&gt;'><sup>4</sup></a>. To
 compute the marginal RD, we can use exactly the same syntax as in the
 Standard Case; nothing needs to change<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Note that for low or high average expected risks
-computed with &lt;code&gt;&lt;a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link"&gt;predictions()&lt;/a&gt;&lt;/code&gt;, the confidence intervals may
+computed with &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link"&gt;predictions()&lt;/a&gt;&lt;/code&gt;, the confidence intervals may
 go below 0 or above 1; this is because an approximation is used. To
 avoid this problem, bootstrapping or simulation-based inference can be
 used instead.&lt;/p&gt;'><sup>5</sup></a>.</p>
 <p>To compute the marginal RR, we need to add
 <code>comparison = "lnratioavg"</code> to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>; this computes the marginal log RR. To
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>; this computes the marginal log RR. To
 get the marginal RR, we need to add <code>transform = "exp"</code> to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>, which exponentiates the marginal log RR
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, which exponentiates the marginal log RR
 and its confidence interval. The code below computes the effects and
 displays the statistics of interest:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
@@ -583,17 +585,18 @@ displays the statistics of interest:</p>
 <span>           family <span class="op">=</span> <span class="va">quasibinomial</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#Compute effects; RR and confidence interval</span></span>
-<span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
 <span>                wts <span class="op">=</span> <span class="st">"weights"</span>,</span>
 <span>                comparison <span class="op">=</span> <span class="st">"lnratioavg"</span>,</span>
 <span>                transform <span class="op">=</span> <span class="st">"exp"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term              Contrast Estimate Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A ln(mean(1) / mean(0))     1.71   &lt;0.001  1.42   2.05</span></span>
+<span><span class="co">##  Term              Contrast Estimate Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##     A ln(mean(1) / mean(0))     1.71   &lt;0.001 26.6  1.42   2.05</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, contrast, estimate, p.value, conf.low, conf.high, predicted, predicted_hi, predicted_lo</span></span></code></pre>
+<span><span class="co">## Columns: term, contrast, estimate, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
 <p>The output displays the marginal RR, its Z-value, the p-value for the
 Z-test of the log RR against 0, and its confidence interval. (Note that
 even though the <code>Contrast</code> label still suggests the log RR,
@@ -655,7 +658,7 @@ identical estimates and similar standard errors to the methods described
 above that use <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> and manually
 request a robust SE. The main benefits of using <code>survey</code> are
 that you don’t need to request robust SEs in the call to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> and you can incorporate other survey
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> and you can incorporate other survey
 design information, e.g., if your study comes from a complex survey.</p>
 <p>Below is how you would adjust the standard case to use
 <code>survey</code> instead:</p>
@@ -671,21 +674,22 @@ design information, e.g., if your study comes from a complex survey.</p>
 <span>              design <span class="op">=</span> <span class="va">des</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#G-computation for the difference in means</span></span>
-<span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                wts <span class="op">=</span> <span class="st">"(weights)"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term Contrast Estimate Std. Error    z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A    1 - 0     2.05      0.356 5.75   &lt;0.001  1.35   2.75</span></span>
+<span><span class="co">##  Term Contrast Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##     A    1 - 0     2.05      0.356 5.75   &lt;0.001 26.8  1.35   2.75</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
 <p>Note that we need to supply <code>"(weights)"</code> to the
 <code>wts</code> argument for them to be correctly incorporated. You
 might notice that the standard errors computed using <code>survey</code>
 are different from those using <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>
 and HC3 robust SEs; to get similar SEs using <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> or
 <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, set <code>vcov = "HC0"</code> in the call to
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code>. This approach is not recommended because
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>. This approach is not recommended because
 HC3 standard errors tend to perform better, which is one reason to avoid
 using <code>survey</code>. In many cases, though, the results will be
 similar.</p>
@@ -741,9 +745,9 @@ group using <code>focal</code>:</p>
 <p>Typically one would assess the performance of the weights (balance
 and effective sample size) but we will skip that for now. Next, we fit
 the outcome model and perform weighted g-computation. We use
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions()</a></code> first to compute the expected potential
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> first to compute the expected potential
 outcome under each treatment for the focal group, and the use
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/hypotheses.html" class="external-link">hypotheses()</a></code> to test all pairwise comparisons.</p>
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses()</a></code> to test all pairwise comparisons.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Bring weights into the dataset</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">weights</span> <span class="op">&lt;-</span> <span class="va">W</span><span class="op">$</span><span class="va">weights</span></span>
@@ -754,28 +758,30 @@ outcome under each treatment for the focal group, and the use
 <span>          data <span class="op">=</span> <span class="va">d</span>, weights <span class="op">=</span> <span class="va">weights</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#G-computation</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                     variables <span class="op">=</span> <span class="st">"Am"</span>,</span>
 <span>                     vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
 <span>                     newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">d</span>, <span class="va">Am</span> <span class="op">==</span> <span class="st">"T"</span><span class="op">)</span>,</span>
 <span>                     wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span>
 <span><span class="va">p</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Am Estimate Std. Error     z Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">##  C1     1.64      0.390  4.21   &lt;0.001 0.876   2.41</span></span>
-<span><span class="co">##  C2     1.84      0.324  5.68   &lt;0.001 1.206   2.48</span></span>
-<span><span class="co">##  T      3.75      0.222 16.88   &lt;0.001 3.314   4.18</span></span>
+<span><span class="co">##  Am Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %</span></span>
+<span><span class="co">##  C1     1.64      0.390  4.21   &lt;0.001  15.2 0.876   2.41</span></span>
+<span><span class="co">##  C2     1.84      0.324  5.68   &lt;0.001  26.2 1.206   2.48</span></span>
+<span><span class="co">##  T      3.75      0.222 16.88   &lt;0.001 210.1 3.314   4.18</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: Am, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Columns: Am, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"revpairwise"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"revpairwise"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##     Term Estimate Std. Error     z Pr(&gt;|z|)  2.5 % 97.5 %</span></span>
-<span><span class="co">##  C2 - C1     0.20      0.251 0.799    0.424 -0.291  0.692</span></span>
-<span><span class="co">##  T - C1      2.11      0.295 7.152   &lt;0.001  1.531  2.686</span></span>
-<span><span class="co">##  T - C2      1.91      0.291 6.549   &lt;0.001  1.337  2.479</span></span>
+<span><span class="co">##     Term Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
+<span><span class="co">##  C2 - C1     0.20      0.251 0.799    0.424  1.2 -0.291  0.692</span></span>
+<span><span class="co">##  T - C1      2.11      0.295 7.152   &lt;0.001 40.1  1.531  2.686</span></span>
+<span><span class="co">##  T - C2      1.91      0.291 6.549   &lt;0.001 34.0  1.337  2.479</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
 <p>We find significant ATTs between the focal treatment and control
 levels (<code>T - C1</code> and <code>T - C2</code>), but the difference
 between control levels (<code>C2 - C1</code>), which can be interpreted
@@ -829,7 +835,7 @@ imprecise.</p>
 <span>            <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
 <span>               <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span><span class="op">)</span>,</span>
 <span>          data <span class="op">=</span> <span class="va">d</span>, weights <span class="op">=</span> <span class="va">weights</span><span class="op">)</span></span></code></pre></div>
-<p>Next we use <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions()</a></code> first to compute the
+<p>Next we use <code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> first to compute the
 expected potential outcome under a representative set of treatment
 values. We’ll examine 51 treatment values from the 10th to 90th
 percentiles of <code>Ac</code> because estimates outside those ranges
@@ -841,14 +847,14 @@ tend to be imprecise.</p>
 <span>                      length.out <span class="op">=</span> <span class="fl">51</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#G-computation</span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                     variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Ac <span class="op">=</span> <span class="va">values</span><span class="op">)</span>,</span>
 <span>                     vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
 <span>                     wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span></code></pre></div>
 <p>Although one can examine the expected potential outcomes, it is often
 more useful to see them plotted. We can generate a plot of the ADRF and
 its pointwise confidence band using <code>ggplot2</code>^[You can also
-use <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/plot_predictions.html" class="external-link">plot_predictions()</a></code>, though after requesting the
+use <code><a href="https://rdrr.io/pkg/marginaleffects/man/plot_predictions.html" class="external-link">plot_predictions()</a></code>, though after requesting the
 predictions in the prior step it is quicker to use
 <code><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot()</a></code>.]:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
@@ -868,15 +874,15 @@ examine the average marginal effect function (AMEF), which is a function
 that relates the value of treatment to the derivative of the ADRF. When
 this derivative is different from zero, there is evidence of a treatment
 effect at the corresponding value of treatment. Below, we use
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/slopes.html" class="external-link">avg_slopes()</a></code> to compute the pointwise derivatives of the
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/slopes.html" class="external-link">avg_slopes()</a></code> to compute the pointwise derivatives of the
 ADRF across levels of <code>Ac</code> and then plot it^[You can also use
-<code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/plot_slopes.html" class="external-link">plot_slopes()</a></code>.].</p>
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/plot_slopes.html" class="external-link">plot_slopes()</a></code>.].</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimate the pointwise derivatives at representative</span></span>
 <span><span class="co"># values of Ac</span></span>
-<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/slopes.html" class="external-link">avg_slopes</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/slopes.html" class="external-link">avg_slopes</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                variables <span class="op">=</span> <span class="st">"Ac"</span>,</span>
-<span>                newdata <span class="op">=</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/datagrid.html" class="external-link">datagridcf</a></span><span class="op">(</span>Ac <span class="op">=</span> <span class="va">values</span><span class="op">)</span>,</span>
+<span>                newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/datagrid.html" class="external-link">datagridcf</a></span><span class="op">(</span>Ac <span class="op">=</span> <span class="va">values</span><span class="op">)</span>,</span>
 <span>                by <span class="op">=</span> <span class="st">"Ac"</span>,</span>
 <span>                vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
 <span>                wts <span class="op">=</span> <span class="st">"weights"</span><span class="op">)</span></span>
@@ -944,7 +950,7 @@ interest.</p>
 <span>             family <span class="op">=</span> <span class="va">quasibinomial</span><span class="op">)</span></span>
 <span>  </span>
 <span>  <span class="co">#G-computation</span></span>
-<span>  <span class="va">comp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span>  <span class="va">comp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                          variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                          vcov <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>                          newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">boot_data</span>, <span class="va">A</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span>,</span>
@@ -995,7 +1001,7 @@ percentile confidence interval.</p>
 <span><span class="co">## Some percentile intervals may be unstable</span></span></code></pre>
 <p>We find a RR of 1.477 with a confidence interval of (1.274, 1.693).
 If we had wanted a risk difference, we could have adjusted the arguments
-to <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> (i.e., by removing the
+to <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> (i.e., by removing the
 <code>comparison</code> and <code>transform</code> arguments).</p>
 <p>To estimate the bootstrap confidence for the HR, we can do the same
 as above except our <code>boot_fun</code> will look like the
@@ -1043,7 +1049,7 @@ robust SEs, using the BCa bootstrap with 4999 bootstrap replications and
 the entire process of weighting and effect estimation included in each
 replication)</li>
 <li>R packages and functions used in estimating the effect and its SE
-(e.g., <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> in base R, <code><a href="https://vincentarelbundock.github.io/marginaleffects/reference/comparisons.html" class="external-link">avg_comparisons()</a></code> in
+(e.g., <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> in base R, <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code> in
 <code>marginaleffects</code>, <code><a href="https://rdrr.io/pkg/boot/man/boot.html" class="external-link">boot()</a></code> and
 <code><a href="https://rdrr.io/pkg/boot/man/boot.ci.html" class="external-link">boot.ci()</a></code> in <code>boot</code>)</li>
 <li>The effect and its SE and confidence interval</li>
