@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,8 +56,16 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">WeightIt (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
-<ul><li><p>Fixed a bug when <code>criterion</code> was not specified when using <code>method = "gbm"</code>.</p></li>
+<ul><li><p>New function <code><a href="../reference/calibrate.html">calibrate()</a></code> to apply Platt scaling to calibrate propensity scores as recommended by <a href="http://arxiv.org/abs/2211.01221" class="external-link">Gutman et al. (2022)</a>.</p></li>
+<li><p>A new argument <code>quantile</code> can be supplied to <code><a href="../reference/weightit.html">weightit()</a></code> with all the methods that accept <code>moments</code> and <code>int</code> (<code>"ebal"</code>, <code>"npcbps"</code>, <code>"optweight"</code>, and <code>"energy"</code>). This allows one to request balance on the quantiles of the covariates, which can add some robustness as demonstrated by <a href="https://arxiv.org/abs/2310.11969" class="external-link">Beręsewicz (2023)</a>.</p></li>
+<li><p><code><a href="../reference/as.weightit.html">as.weightit()</a></code> now has a method for <code>weightit.fit</code> objects, which now have additional components included in the output.</p></li>
+<li><p><code><a href="../reference/trim.html">trim()</a></code> now has a <code>drop</code> argument; setting to <code>TRUE</code> sets the weights of all trimmed units to 0 (effectively dropping them).</p></li>
+<li><p>When using <code><a href="../reference/weightit.html">weightit()</a></code> with a continuous treatment and a <code>method</code> that estimates the generalized propensity score (e.g., <code>"glm"</code>, <code>"gbm"</code>, <code>"super"</code>), sampling weights are now be incorporated into the density when <code>use.kernel = FALSE</code> (the default) when supplied to <code>s.weights</code>. Previously they were ignored in calculating the density, but have always been and remain used in the modeling the treatment (when allowed).</p></li>
+<li><p>Fixed a bug when <code>criterion</code> was not specified when using <code>method = "gbm"</code>.</p></li>
+<li><p>Fixed a bug when <code>ps</code> was supplied for continuous treatments. Thanks to <a href="https://github.com/taylordunn" class="external-link">@taylordunn</a>. (<a href="https://github.com/ngreifer/WeightIt/issues/53" class="external-link">#53</a>)</p></li>
 <li><p>Warning messages now display immediately rather than at the end of evaluation.</p></li>
+<li><p>Transferred all help files to Roxygen and reorganized package scripts.</p></li>
+<li><p>Reorganization of some functions.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.2" id="weightit-0142">WeightIt 0.14.2<a class="anchor" aria-label="anchor" href="#weightit-0142"></a></h2><p class="text-muted">CRAN release: 2023-05-23</p>

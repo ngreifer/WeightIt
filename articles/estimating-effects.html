@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2023-09-29</h4>
+            <h4 data-toc-skip class="date">2023-10-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -647,6 +647,10 @@ the bootstrap to be adequate.</p>
 <code>exp(coef)</code> contains the HR. Remember to always use the
 <code>robust se</code> for the SE of the log HR. The displayed z-test
 p-value results from using the robust SE.</p>
+<p>The <code>adjustedCurves</code> package provides integration with
+<code>WeightIt</code> to estimate adjusted survival estimands. We
+strongly recommend using this package to estimate effects after
+weighting.</p>
 </div>
 <div class="section level4">
 <h4 id="using-the-survey-package">Using the <code>survey</code> package<a class="anchor" aria-label="anchor" href="#using-the-survey-package"></a>

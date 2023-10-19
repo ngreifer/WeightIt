@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2023-09-29</h4>
+            <h4 data-toc-skip class="date">2023-10-19</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -503,9 +503,7 @@ take a look at the quality of the weights with <code><a href="https://rdrr.io/r/
 just as we could for point treatments.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">Wmsm.out</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##                  <span style="text-decoration: underline;">Summary of weights</span></span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 1 </span><span style="text-decoration: line-through;">                      </span></span></span>
+<pre><code><span><span class="co">## $A_1</span></span>
 <span><span class="co">##                  <span style="text-decoration: underline;">Summary of weights</span></span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
@@ -535,7 +533,7 @@ just as we could for point treatments.</p>
 <span><span class="co">## Unweighted    3306    4194</span></span>
 <span><span class="co">## Weighted      1193    1007</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 2 </span><span style="text-decoration: line-through;">                      </span></span></span>
+<span><span class="co">## $A_2</span></span>
 <span><span class="co">##                  <span style="text-decoration: underline;">Summary of weights</span></span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
@@ -565,7 +563,7 @@ just as we could for point treatments.</p>
 <span><span class="co">## Unweighted    3701  3799. </span></span>
 <span><span class="co">## Weighted      1300   898.2</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## <span style="text-decoration: line-through;">                      </span><span style="font-style: italic;"> Time 3 </span><span style="text-decoration: line-through;">                      </span></span></span>
+<span><span class="co">## $A_3</span></span>
 <span><span class="co">##                  <span style="text-decoration: underline;">Summary of weights</span></span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
@@ -593,7 +591,10 @@ just as we could for point treatments.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">##            Control Treated</span></span>
 <span><span class="co">## Unweighted    4886  2614. </span></span>
-<span><span class="co">## Weighted      1871   519.8</span></span></code></pre>
+<span><span class="co">## Weighted      1871   519.8</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## attr(,"class")</span></span>
+<span><span class="co">## [1] "summary.weightitMSM"</span></span></code></pre>
 <p>Displayed are summaries of how the weights perform at each time point
 with respect to variability. Next, we’ll examine how well they perform
 with respect to covariate balance.</p>
