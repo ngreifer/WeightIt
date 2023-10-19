@@ -15,6 +15,7 @@ reference:
 - contents:
   - get_w_from_ps
   - trim
+  - calibrate
   - sbps
   - ESS
   - weightit.fit
