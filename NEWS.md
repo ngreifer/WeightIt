@@ -3,9 +3,25 @@ WeightIt News and Updates
 
 # WeightIt (development version)
 
+* New function `calibrate()` to apply Platt scaling to calibrate propensity scores as recommended by [Gutman et al. (2022)](http://arxiv.org/abs/2211.01221).
+
+* A new argument `quantile` can be supplied to `weightit()` with all the methods that accept `moments` and `int` (`"ebal"`, `"npcbps"`, `"optweight"`, and `"energy"`). This allows one to request balance on the quantiles of the covariates, which can add some robustness as demonstrated by [Beręsewicz (2023)](https://arxiv.org/abs/2310.11969).
+
+* `as.weightit()` now has a method for `weightit.fit` objects, which now have additional components included in the output.
+
+* `trim()` now has a `drop` argument; setting to `TRUE` sets the weights of all trimmed units to 0 (effectively dropping them).
+
+* When using `weightit()` with a continuous treatment and a `method` that estimates the generalized propensity score (e.g., `"glm"`, `"gbm"`, `"super"`), sampling weights are now be incorporated into the density when `use.kernel = FALSE` (the default) when supplied to `s.weights`. Previously they were ignored in calculating the density, but have always been and remain used in the modeling the treatment (when allowed).
+
 * Fixed a bug when `criterion` was not specified when using `method = "gbm"`.
 
+* Fixed a bug when `ps` was supplied for continuous treatments. Thanks to @taylordunn. (#53)
+
 * Warning messages now display immediately rather than at the end of evaluation.
+
+* Transferred all help files to Roxygen and reorganized package scripts.
+
+* Reorganization of some functions.
 
 # WeightIt 0.14.2
 
