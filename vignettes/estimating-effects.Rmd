@@ -322,6 +322,8 @@ coxph(Surv(Y_S) ~ A, data = d, weights = weights)
 
 The `coef` column contains the log HR, and `exp(coef)` contains the HR. Remember to always use the `robust se` for the SE of the log HR. The displayed z-test p-value results from using the robust SE.
 
+The `adjustedCurves` package provides integration with `WeightIt` to estimate adjusted survival estimands. We strongly recommend using this package to estimate effects after weighting.
+
 #### Using the `survey` package
 
 The `survey` package has often been recommended for use in estimating treatment effects after propensity score weighting. When combined with `marginaleffects` functions, it yields identical estimates and similar standard errors to the methods described above that use `lm()` or `glm()` and manually request a robust SE. The main benefits of using `survey` are that you don't need to request robust SEs in the call to `avg_comparisons()` and you can incorporate other survey design information, e.g., if your study comes from a complex survey.
