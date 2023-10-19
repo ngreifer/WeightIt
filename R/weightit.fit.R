@@ -1,6 +1,140 @@
+#' Generate Balancing Weights with Minimal Input Processing
+#'
+#' @description
+#' `weightit.fit()` dispatches one of the weight estimation methods
+#' determined by `method`. It is an internal function called by
+#' [weightit()] and should probably not be used except in special cases. Unlike
+#' `weightit()`, `weightit.fit()` does not accept a formula and data
+#' frame interface and instead requires the covariates and treatment to be
+#' supplied as a numeric matrix and atomic vector, respectively. In this way,
+#' `weightit.fit()` is to `weightit()` what [lm.fit()] is to [lm()] -
+#' a thinner, slightly faster interface that performs minimal argument
+#' checking.
+#'
+#' @param covs a numeric matrix of covariates.
+#' @param treat a vector of treatment statuses.
+#' @param method a string of length 1 containing the name of the method that
+#' will be used to estimate weights. See [weightit()] for allowable options.
+#' The default is `"glm"` for propensity score weighting using a
+#' generalized linear model to estimate the propensity score.
+#' @param s.weights a numeric vector of sampling weights. See the individual
+#' pages for each method for information on whether sampling weights can be
+#' supplied.
+#' @param by.factor a factor variable for which weighting is to be done within
+#' levels. Corresponds to the `by` argument in [weightit()].
+#' @param estimand the desired estimand. For binary and multi-category
+#' treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO", "ATM",
+#' or "ATOS". The default for both is "ATE". This argument is ignored for
+#' continuous treatments. See the individual pages for each method for more
+#' information on which estimands are allowed with each method and what
+#' literature to read to interpret these estimands.
+#' @param stabilize `logical`; whether or not to stabilize the weights.
+#' For the methods that involve estimating propensity scores, this involves
+#' multiplying each unit's weight by the proportion of units in their treatment
+#' group. Default is `FALSE`.
+#' @param focal when multi-category treatments are used and ATT weights are
+#' requested, which group to consider the "treated" or focal group. This group
+#' will not be weighted, and the other groups will be weighted to be more like
+#' the focal group. Must be non-`NULL` if `estimand = "ATT"` or
+#' `"ATC"`.
+#' @param ps a vector of propensity scores. If specified, `method` will be
+#' ignored and set to `"glm"`.
+#' @param moments,int,subclass arguments to customize the weight estimation.
+#' See [weightit()] for details.
+#' @param is.MSM.method see [weightitMSM()]. Typically can be ignored.
+#' @param missing `character`; how missing data should be handled. The
+#' options depend on the `method` used. If `NULL`, `covs` covs
+#' will be checked for `NA` values, and if present, `missing` will be
+#' set to `"ind"`. If `""`, `covs` covs will not be checked for
+#' `NA` values; this can be faster when it is known there are none.
+#' @param verbose whether to print additional information output by the fitting
+#' function.
+#' @param include.obj whether to include in the output any fit objects created
+#' in the process of estimating the weights. For example, with `method = "glm"`, the `glm` objects containing the propensity score model will be
+#' included. See the individual pages for each method for information on what
+#' object will be included if `TRUE`.
+#' @param ... other arguments for functions called by `weightit.fit()`
+#' that control aspects of fitting that are not covered by the above arguments.
+#'
+#' @returns
+#' A `weightit.fit` object with the following elements:
+#' \item{weights}{The estimated weights, one for each unit.}
+#' \item{treat}{The values of the treatment variable.}
+#' \item{estimand}{The estimand requested. ATC is recoded as ATT.}
+#' \item{method}{The weight estimation method specified.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"super"`, or `"bart"`.}
+#' \item{s.weights}{The provided sampling weights.}
+#' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
+#' \item{fit.obj}{When `include.obj = TRUE`, the fit object.}
+#' \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
+#'
+#' The `weightit.fit` object does not have specialized `print()`,
+#' `summary()`, or `plot()` methods. It is simply a list containing
+#' the above components. Use [as.weightit()] to convert it to a `weightit` object, which does have these methods. See Examples.
+#'
+#' @details
+#' `weightit.fit()` is called by [weightit()] after the arguments to
+#' `weightit()` have been checked and processed. `weightit.fit()`
+#' dispatches the function used to actually estimate the weights, passing on
+#' the supplied arguments directly. `weightit.fit()` is not meant to be
+#' used by anyone other than experienced users who have a specific use case in
+#' mind. The returned object contains limited information about the supplied
+#' arguments or details of the estimation method; all that is processed by
+#' `weightit()`.
+#'
+#' Less argument checking or processing occurs in `weightit.fit()` than
+#' does in `weightit()`, which means supplying incorrect arguments can
+#' result in errors, crashes, and invalid weights, and error and warning
+#' messages may not be helpful in diagnosing the problem. `weightit.fit()`
+#' does check to make sure weights were actually estimated, though.
+#'
+#' `weightit.fit()` may be most useful in speeding up simulation
+#' simulation studies that use `weightit()` because the covariates can be
+#' supplied as a numeric matrix, which is often how they are generated in
+#' simulations, without having to go through the potentially slow process of
+#' extracting the covariates and treatment from a formula and data frame. If
+#' the user is certain the arguments are valid (e.g., by ensuring the estimated
+#' weights are consistent with those estimated from `weightit()` with the
+#' same arguments), less time needs to be spent on processing the arguments.
+#' Also, the returned object is much smaller than a `weightit` object
+#' because the covariates are not returned alongside the weights.
+#'
+#' @seealso
+#' [weightit()], which you should use for estimating weights unless
+#' you know better.
+#'
+#' [as.weightit()] for converting a `weightit.fit` object to a `weightit` object.
+#'
+#' @examples
+#'
+#' library("cobalt")
+#' data("lalonde", package = "cobalt")
+#'
+#' # Balancing covariates between treatment groups (binary)
+#' covs <- lalonde[c("age", "educ", "race", "married",
+#'                    "nodegree", "re74", "re75")]
+#' ## Create covs matrix, splitting any factors using
+#' ## cobalt::splitfactor()
+#' covs_mat <- as.matrix(splitfactor(covs))
+#'
+#' WF1 <- weightit.fit(covs_mat, treat = lalonde$treat,
+#'                     method = "glm", estimand = "ATT")
+#' str(WF1)
+#'
+#' # Converting to a weightit object for use with
+#' # summary() and bal.tab()
+#' W1 <- as.weightit(WF1, covs = covs)
+#' W1
+#' summary(W1)
+#' bal.tab(W1)
+#'
+
+#' @export
 weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.factor = NULL,
-                         estimand = "ATE", focal = NULL, stabilize = FALSE, ps = NULL, moments = NULL, int = FALSE,
-                         subclass = NULL, is.MSM.method = FALSE, missing = NULL, verbose = FALSE, include.obj = FALSE, ...){
+                         estimand = "ATE", focal = NULL, stabilize = FALSE,
+                         ps = NULL, moments = NULL, int = FALSE,
+                         subclass = NULL, is.MSM.method = FALSE, missing = NULL,
+                         verbose = FALSE, include.obj = FALSE, ...) {
 
   #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
 
@@ -36,7 +170,9 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       method <- "glm"
     }
 
-    if (is_null(s.weights)) s.weights <- rep(1, length(treat))
+    if (is_null(s.weights)) {
+      s.weights <- rep(1, length(treat))
+    }
     else {
       chk::chk_vector(s.weights)
       chk::chk_numeric(s.weights)
@@ -46,7 +182,9 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       }
     }
 
-    if (is_null(by.factor)) by.factor <- factor(rep(1, length(treat)), levels = 1)
+    if (is_null(by.factor)) {
+      by.factor <- factor(rep(1, length(treat)), levels = 1)
+    }
     else {
       chk::chk_factor(by.factor)
 
@@ -77,337 +215,81 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     #Process moments and int
     moments.int <- process.moments.int(moments, int, method)
-    moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
+    moments <- moments.int[["moments"]]
+    int <- moments.int[["int"]]
   }
   else {
     if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
     treat.type <- get_treat_type(treat)
   }
 
-  out <- make_list(c("weights", "ps", "fit.obj", "info"))
+  out <- make_list(c("weights", "treat", "estimand", "method", "ps", "s.weights",
+                     "focal", "fit.obj", "info"))
   out$weights <- out$ps <- rep(NA_real_, length(treat))
 
-  if (include.obj) fit.obj <- make_list(levels(by.factor))
+  if (include.obj) {
+    fit.obj <- make_list(levels(by.factor))
+  }
   info <- make_list(levels(by.factor))
 
   obj <- NULL
 
+  if (!is.function(method)) {
+    fun <- "weightit"
+    if (is.MSM.method) fun <- paste0(fun, "MSM")
+    fun <- paste0(fun, "2", method)
+    fun <- switch(treat.type,
+                  "multinomial" = paste.(fun, "multi"),
+                  "continuous" = paste.(fun, "cont"),
+                  fun)
+    fun <- get1(fun, mode = "function")
+  }
+
   for (i in levels(by.factor)) {
     #Run method
-    if (is.function(method)) {
-      if (is.MSM.method) {
-        obj <- weightitMSM2user(Fun = method,
-                                covs.list = covs,
-                                treat.list = treat,
-                                s.weights = s.weights,
-                                subset = by.factor == i,
-                                stabilize = stabilize,
-                                missing = missing,
-                                verbose = verbose,
-                                ...)
-      }
-      else {
-        obj <- weightit2user(Fun = method,
-                             covs = covs,
-                             treat = treat,
-                             s.weights = s.weights,
-                             subset = by.factor == i,
-                             estimand = estimand,
-                             focal = focal,
-                             stabilize = stabilize,
-                             subclass = subclass,
-                             ps = ps,
-                             missing = missing,
-                             moments = moments,
-                             int = int,
-                             verbose = verbose,
-                             ...)
-      }
+    if (!is.function(method)) {
+      obj <- fun(covs = covs,
+                 treat = treat,
+                 s.weights = s.weights,
+                 subset = by.factor == i,
+                 estimand = estimand,
+                 focal = focal,
+                 stabilize = stabilize,
+                 subclass = subclass,
+                 ps = ps,
+                 moments = moments,
+                 int = int,
+                 missing = missing,
+                 verbose = verbose,
+                 ...)
     }
-    else if (method == "glm") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2glm(covs = covs,
-                            treat = treat,
-                            s.weights = s.weights,
-                            subset = by.factor == i,
-                            estimand = estimand,
-                            focal = focal,
-                            stabilize = stabilize,
-                            subclass = subclass,
-                            ps = ps,
-                            missing = missing,
-                            verbose = verbose,
-                            ...)
-      }
-      else if (treat.type == "continuous") {
-        obj <- weightit2glm.cont(covs = covs,
-                                 treat = treat,
-                                 s.weights = s.weights,
-                                 subset = by.factor == i,
-                                 ps = ps,
-                                 missing = missing,
-                                 verbose = verbose,
-                                 ...)
-      }
-    }
-    else if (method == "optweight") {
-      if (is.MSM.method) {
-        obj <- weightit2optweight.msm(covs.list = covs,
-                                      treat.list = treat,
-                                      s.weights = s.weights,
-                                      subset = by.factor == i,
-                                      moments = moments,
-                                      int = int,
-                                      missing = missing,
-                                      verbose = verbose,
-                                      ...)
-      }
-      else {
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2optweight(covs = covs,
-                                    treat = treat,
-                                    s.weights = s.weights,
-                                    subset = by.factor ==i,
-                                    estimand = estimand,
-                                    focal = focal,
-                                    moments = moments,
-                                    int = int,
-                                    missing = missing,
-                                    verbose = verbose,
-                                    ...)
-        }
-        else if (treat.type == "continuous") {
-          obj <- weightit2optweight.cont(covs = covs,
-                                         treat = treat,
-                                         subset = by.factor == i,
-                                         s.weights = s.weights,
-                                         moments = moments,
-                                         int = int,
-                                         missing = missing,
-                                         verbose = verbose,
-                                         ...)
-
-        }
-      }
-    }
-    else if (method == "gbm") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2gbm(covs = covs,
-                            treat = treat,
-                            s.weights = s.weights,
-                            estimand = estimand,
-                            focal = focal,
-                            subset = by.factor == i,
-                            stabilize = stabilize,
-                            subclass = subclass,
-                            missing = missing,
-                            verbose = verbose,
-                            ...)
-      }
-      else {
-        obj <- weightit2gbm.cont(covs = covs,
-                                 treat = treat,
-                                 s.weights = s.weights,
-                                 subset = by.factor == i,
-                                 missing = missing,
-                                 verbose = verbose,
-                                 ...)
-      }
-
-    }
-    else if (method == "cbps") {
-      if (is.MSM.method) {
-        # obj <- weightit2cbps.msm()
-      }
-      else {
-        if (treat.type %in% c("binary", "multinomial")) {
-          obj <- weightit2cbps(covs = covs,
-                               treat = treat,
-                               subset = by.factor == i,
-                               s.weights = s.weights,
-                               stabilize = stabilize,
-                               subclass = subclass,
-                               estimand = estimand,
-                               focal = focal,
-                               missing = missing,
-                               verbose = verbose,
-                               ...)
-        }
-        else if (treat.type == "continuous") {
-          obj <- weightit2cbps.cont(covs = covs,
-                                    treat = treat,
-                                    subset = by.factor == i,
-                                    s.weights = s.weights,
-                                    missing = missing,
-                                    verbose = verbose,
-                                    ...)
-
-        }
-      }
-
-    }
-    else if (method == "npcbps") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2npcbps(covs = covs,
-                               treat = treat,
-                               subset = by.factor == i,
-                               s.weights = s.weights,
-                               moments = moments,
-                               int = int,
-                               missing = missing,
-                               verbose = verbose,
-                               ...)
-      }
-      else if (treat.type == "continuous") {
-        obj <- weightit2npcbps.cont(covs = covs,
-                                    treat = treat,
-                                    subset = by.factor == i,
-                                    s.weights = s.weights,
-                                    moments = moments,
-                                    int = int,
-                                    missing = missing,
-                                    verbose = verbose,
-                                    ...)
-      }
-
-    }
-    else if (method == "ebal") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2ebal(covs = covs,
-                             treat = treat,
-                             s.weights = s.weights,
-                             subset = by.factor == i,
-                             estimand = estimand,
-                             focal = focal,
-                             stabilize = stabilize,
-                             moments = moments,
-                             int = int,
-                             missing = missing,
-                             verbose = verbose,
-                             ...)
-      }
-      else {
-        obj <- weightit2ebal.cont(covs = covs,
-                                  treat = treat,
-                                  subset = by.factor == i,
-                                  s.weights = s.weights,
-                                  moments = moments,
-                                  int = int,
-                                  missing = missing,
-                                  verbose = verbose,
-                                  ...)
-      }
-    }
-    else if (method == "super") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2super(covs = covs,
-                              treat = treat,
+    else if (is.MSM.method) {
+      obj <- weightitMSM2user(Fun = method,
+                              covs.list = covs,
+                              treat.list = treat,
                               s.weights = s.weights,
                               subset = by.factor == i,
-                              estimand = estimand,
-                              focal = focal,
                               stabilize = stabilize,
-                              subclass = subclass,
                               missing = missing,
                               verbose = verbose,
                               ...)
-      }
-      else if (treat.type == "continuous") {
-        obj <- weightit2super.cont(covs = covs,
-                                   treat = treat,
-                                   s.weights = s.weights,
-                                   subset = by.factor == i,
-                                   stabilize = stabilize,
-                                   missing = missing,
-                                   verbose = verbose,
-                                   ...)
-      }
     }
-    # else if (method == "ebcw") {
-    #   if (treat.type %in% c("binary", "multinomial")) {
-    #     obj <- weightit2ebcw(covs = covs,
-    #                          treat = treat,
-    #                          s.weights = s.weights,
-    #                          subset = by.factor == i,
-    #                          estimand = estimand,
-    #                          focal = focal,
-    #                          #stabilize = stabilize,
-    #                          moments = moments,
-    #                          int = int,
-    #                          missing = missing,
-    #                          ...)
-    #   }
-    #   else {
-    #     stop("Empirical balancing calibration weights are not compatible with continuous treatments")
-    #   }
-    # }
-    else if (method == "energy") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2energy(covs = covs,
-                               treat = treat,
-                               s.weights = s.weights,
-                               subset = by.factor == i,
-                               estimand = estimand,
-                               focal = focal,
-                               stabilize = stabilize,
-                               missing = missing,
-                               moments = moments,
-                               int = int,
-                               verbose = verbose,
-                               ...)
-      }
-      else {
-        obj <- weightit2energy.cont(covs = covs,
-                                    treat = treat,
-                                    subset = by.factor == i,
-                                    s.weights = s.weights,
-                                    missing = missing,
-                                    moments = moments,
-                                    int = int,
-                                    verbose = verbose,
-                                    ...)
-      }
-    }
-    else if (method == "bart") {
-      if (treat.type %in% c("binary", "multinomial")) {
-        obj <- weightit2bart(covs = covs,
-                             treat = treat,
-                             s.weights = s.weights,
-                             subset = by.factor == i,
-                             estimand = estimand,
-                             focal = focal,
-                             stabilize = stabilize,
-                             subclass = subclass,
-                             missing = missing,
-                             verbose = verbose,
-                             ...)
-      }
-      else if (treat.type == "continuous") {
-        obj <- weightit2bart.cont(covs = covs,
-                                  treat = treat,
-                                  s.weights = s.weights,
-                                  subset = by.factor == i,
-                                  stabilize = stabilize,
-                                  missing = missing,
-                                  verbose = verbose,
-                                  ...)
-      }
-    }
-    # else if (method == "kbal") {
-    #   if (treat.type %in% c("binary", "multinomial")) {
-    #     obj <- weightit2kbal(covs = covs,
-    #                          treat = treat,
-    #                          s.weights = s.weights,
-    #                          subset = by.factor == i,
-    #                          estimand = estimand,
-    #                          focal = focal,
-    #                          missing = missing,
-    #                          ...)
-    #   }
-    #   else stop("Kernel balancing is not compatible with continuous treatments")
-    # }
     else {
-      .err("invalid argument to `method`")
+      obj <- weightit2user(Fun = method,
+                           covs = covs,
+                           treat = treat,
+                           s.weights = s.weights,
+                           subset = by.factor == i,
+                           estimand = estimand,
+                           focal = focal,
+                           stabilize = stabilize,
+                           subclass = subclass,
+                           ps = ps,
+                           missing = missing,
+                           moments = moments,
+                           int = int,
+                           verbose = verbose,
+                           ...)
     }
 
     #Extract weights
@@ -424,23 +306,37 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     # else if (any(!is.finite(obj$w))) probably.a.bug()
 
     out$weights[by.factor == i] <- obj$w
-    if (is_not_null(obj$ps)) out$ps[by.factor == i] <- obj$ps
+    if (is_not_null(obj$ps)) {
+      out$ps[by.factor == i] <- obj$ps
+    }
 
-    if (include.obj) fit.obj[[i]] <- obj$fit.obj
+    if (include.obj) {
+      fit.obj[[i]] <- obj$fit.obj
+    }
     info[[i]] <- obj$info
-
   }
 
-
   if (include.obj) {
-    if (nlevels(by.factor) == 1) fit.obj <- fit.obj[[1]]
+    if (nlevels(by.factor) == 1) {
+      fit.obj <- fit.obj[[1]]
+    }
     out$fit.obj <- fit.obj
   }
 
-  if (is_not_null(info) && nlevels(by.factor) == 1) info <- info[[1]]
+  if (is_not_null(info) && nlevels(by.factor) == 1) {
+    info <- info[[1]]
+  }
   out$info <- info
 
-  if (all(is.na(out$ps))) out$ps <- NULL
+  if (all(is.na(out$ps))) {
+    out$ps <- NULL
+  }
+
+  out$treat <- treat
+  out$estimand <- estimand
+  out$method <- method
+  out$s.weights <- s.weights
+  out$focal <- focal
 
   class(out) <- "weightit.fit"
 
