@@ -1,4 +1,4 @@
-allowable.methods <- c("glm" = "glm", "ps" = "glm",
+allowable.methods <- {c("glm" = "glm", "ps" = "glm",
                        "gbm" = "gbm", "gbr" = "gbm",
                        "cbps" = "cbps",
                        "npcbps" = "npcbps",
@@ -7,7 +7,7 @@ allowable.methods <- c("glm" = "glm", "ps" = "glm",
                        "optweight" = "optweight", "sbw" = "optweight",
                        "super" = "super", "superlearner" = "super",
                        "bart" = "bart",
-                       "energy" = "energy")
+                       "energy" = "energy")}
 method.to.proper.method <- function(method) {
   method <- tolower(method)
   unname(allowable.methods[method])
@@ -152,12 +152,11 @@ process.ps <- function(ps, data = NULL, treat) {
     if (is_null(data)) {
       .err("`ps` was specified as a string but there was no argument to `data`")
     }
-    else if (ps %in% names(data)) {
-      ps <- data[[ps]]
-    }
-    else {
+    if (ps %nin% names(data)) {
       .err("the name supplied to `ps` is not the name of a variable in `data`")
     }
+
+    ps <- data[[ps]]
   }
   else if (is.numeric(ps)) {
     if (length(ps) != length(treat)) {
@@ -493,23 +492,82 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
   }
   else int_terms <- int_co.names <- list()
 
-  if (is_not_null(poly_terms) || is_not_null(int_terms)) {
-    out <- do.call("cbind", c(poly_terms, int_terms))
-    out_co.names <- c(do.call("c", poly_co.names), do.call("c", int_co.names))
+  if (is_null(poly_terms) && is_null(int_terms)) {
+    return(matrix(ncol = 0, nrow = nrow(d), dimnames = list(rownames(d), NULL)))
+  }
 
-    colnames(out) <- unlist(out_co.names)
+  out <- do.call("cbind", c(poly_terms, int_terms))
+  out_co.names <- c(do.call("c", poly_co.names), do.call("c", int_co.names))
 
-    #Remove single values
-    if (is_not_null(out)) {
-      single_value <- apply(out, 2, all_the_same)
-      out <- out[, !single_value, drop = FALSE]
+  colnames(out) <- unlist(out_co.names)
+
+  #Remove single values
+  if (is_not_null(out)) {
+    single_value <- apply(out, 2, all_the_same)
+    out <- out[, !single_value, drop = FALSE]
+  }
+
+  out
+}
+quantile.f <- function(d, qu = NULL, s.weights = NULL, focal = NULL, treat = NULL, const = 2000) {
+  # Creates new variables for use in balance quantiles. `qu` is a list of quantiles for each
+  # continuous variable in `d`, and returns a matrix with a column for each requested quantile
+  # of each variable, taking on 0 for values less than the quantile, .5 for values at the quantile,
+  # and 1 for values greater than the quantile. The mean of each variable is equal to the quantile.
+
+  if (is_null(qu)) {
+    return(matrix(ncol = 0, nrow = nrow(d), dimnames = list(rownames(d), NULL)))
+  }
+
+  vld_qu <- function(x) {
+    is.numeric(x) && all(x >= 0) && all(x <= 1)
+  }
+
+  binary.vars <- is_binary_col(d)
+
+  if (is.numeric(qu) && vld_qu(qu)) {
+    if (is_null(names(qu))) {
+      if (length(qu) != 1) {
+        .err("`quantile` must be a number between 0 and 1, a named list thereof, a named vector thereof, or a named list of lists thereof")
+      }
+      qu <- setNames(rep(qu, sum(!binary.vars)),
+                     colnames(d)[!binary.vars])
+    }
+    qu <- as.list(qu)
+  }
+
+  if (!is.list(qu)) {
+    .err("`quantile` must be a number between 0 and 1, a named list or vector of such values, or a named list of vectors of such values")
+  }
+
+  if (length(qu) == 1 && is_null(names(qu))) {
+    qu <- setNames(lapply(seq_len(sum(!binary.vars)), function(i) qu[[1]]),
+                   colnames(d)[!binary.vars])
+  }
+
+  if (!all(names(qu) %in% colnames(d)[!binary.vars])) {
+    .err("all names of `quantile` must refer to continuous covariates")
+  }
+
+  for (i in qu) {
+    if (!vld_qu(i)) {
+      .err("`quantile` must be a number between 0 and 1 or a named list thereof")
     }
   }
-  else {
-    out <- matrix(ncol = 0, nrow = nrow(d), dimnames = list(rownames(d), NULL))
+
+  if (is_not_null(focal) && is_not_null(s.weights)) {
+    s.weights <- s.weights[treat == focal]
   }
 
-  return(out)
+  do.call("cbind", lapply(names(qu), function(i) {
+    target <- if (is_null(focal)) d[,i] else d[treat == focal, i]
+    out <- do.call("cbind", lapply(qu[[i]], function(q) {
+      plogis(const * (d[,i] - quantile.w(target, q, s.weights)))
+    }))
+
+    colnames(out) <- paste0(i, "_", qu[[i]])
+    out
+  }))
 }
 get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
   check.estimand <- check.weights <- check.focal <- FALSE
@@ -857,36 +915,67 @@ stabilize_w <- function(weights, treat) {
   else ggplot2::`%+%`(...)
 }
 
-get_cont_weights <- function(ps, treat, s.weights, dens.num, densfun = dnorm, use.kernel = FALSE,
-                             densControl = list(bw = "nrd0", n = 10 * length(treat),
-                                                adjust = 1, kernel = "gaussian")) {
-
-  if (!is.matrix(ps)) ps <- matrix(ps, ncol = 1)
-
-  p.denom <- treat - ps
+get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = NULL,
+                         n = NULL, treat = NULL, density = NULL) {
+  if (is_null(n)) n <- 10 * length(treat)
+  if (is_null(adjust)) adjust <- 1
 
   if (use.kernel) {
-    s.weights <- s.weights/sum(s.weights)
-    dens.denom <- apply(p.denom, 2, function(p) {
-      d.d <- density(p, n = densControl[["n"]],
-                     weights = s.weights, give.Rkern = FALSE,
-                     bw = densControl[["bw"]], adjust = densControl[["adjust"]],
-                     kernel = densControl[["kernel"]])
-      with(d.d, approxfun(x = x, y = y))(p)
-    })
+    if (is_null(bw)) bw <- "nrd0"
+    if (is_null(kernel)) kernel <- "gaussian"
+
+    densfun <- function(p, s.weights) {
+      d <- density(p, n = n,
+                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   bw = bw, adjust = adjust, kernel = kernel)
+      out <- with(d, approxfun(x = x, y = y))(p)
+      attr(out, "density") <- d
+      out
+    }
   }
   else {
-    dens.denom <- densfun(mat_div(p.denom, sqrt(col.w.v(p.denom))))
-    if (is_null(dens.denom) || !is.numeric(dens.denom) || anyNA(dens.denom)) {
-      .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the normal density")
+    if (is_null(density)) density <- dnorm
+    else if (is.function(density)) density <- density
+    else if (is.character(density) && length(density == 1)) {
+      splitdens <- strsplit(density, "_", fixed = TRUE)[[1]]
+      if (is_not_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
+        if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
+          .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
+                       density, word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
+        }
+        density <- function(x) {
+          tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
+                   error = function(e) .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE))
+        }
+      }
+      else {
+        .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
+                     density, splitdens[1]))
+      }
     }
-    if (any(dens.denom <= 0)) {
-      .err("the input to `density` may not accept the full range of standardized residuals of the treatment model")
-    }
+    else .err("the argument to `density` cannot be evaluated as a density function")
 
+    densfun <- function(p, s.weights) {
+      # sd <- sd(p)
+      sd <- sqrt(col.w.v(p, s.weights))
+      dens <- density(p/sd)
+      if (is_null(dens) || !is.numeric(dens) || anyNA(dens)) {
+        .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the Gaussian density")
+      }
+      if (any(dens <= 0)) {
+        .err("the input to density may not accept the full range of standardized treatment values or residuals")
+      }
+
+      x <- seq.int(min(p) - 3 * adjust * bw.nrd0(p),
+                   max(p) + 3 * adjust * bw.nrd0(p),
+                   length.out = n)
+      attr(dens, "density") <- data.frame(x = x,
+                                          y = density(x/sd))
+      dens
+    }
   }
 
-  drop(dens.num/dens.denom)
+  densfun
 }
 
 get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = NULL, stabilize = FALSE) {
@@ -1042,101 +1131,6 @@ chol2 <- function(Sinv) {
   ch <- suppressWarnings(chol(Sinv, pivot = TRUE))
   p <- order(attr(ch, "pivot"))
   ch[, p, drop = FALSE]
-}
-
-#For balance SuperLearner
-method.balance <- function() {
-
-  out <- list(
-    # require allows you to pass a character vector with required packages
-    # use NULL if no required packages
-    require = "cobalt",
-
-    # computeCoef is a function that returns a list with two elements:
-    # 1) coef: the weights (coefficients) for each algorithm
-    # 2) cvRisk: the V-fold CV risk for each algorithm
-    computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      estimand <- attr(control$trimLogit, "vals")$estimand
-      init <- attr(control$trimLogit, "vals")$init
-
-      tol <- .001
-      for (i in seq_col(Z)) {
-        Z[Z[,i] < tol, i] <- tol
-        Z[Z[,i] > 1-tol, i] <- 1-tol
-      }
-      w_mat <- get.w.from.ps(Z, treat = Y, estimand = estimand)
-      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
-
-      names(cvRisk) <- libraryNames
-
-      loss <- function(coefs) {
-        ps <- crossprod(t(Z), coefs/sum(coefs))
-        w <- get_w_from_ps(ps, Y, estimand)
-        cobalt::bal.compute(init, weights = w)
-      }
-      fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
-      coef <- fit$par
-
-      list(cvRisk = cvRisk, coef = coef/sum(coef))
-    },
-
-    # computePred is a function that takes the weights and the predicted values
-    # from each algorithm in the library and combines them based on the model to
-    # output the super learner predicted values
-    computePred = function(predY, coef, control, ...) {
-      crossprod(t(predY), coef/sum(coef))
-    }
-  )
-
-  out
-}
-
-method.balance.cont <- function() {
-
-  out <- list(
-    # require allows you to pass a character vector with required packages
-    # use NULL if no required packages
-    require = "cobalt",
-
-    # computeCoef is a function that returns a list with two elements:
-    # 1) coef: the weights (coefficients) for each algorithm
-    # 2) cvRisk: the V-fold CV risk for each algorithm
-    computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      dens.num <- attr(control$trimLogit, "vals")$dens.num
-      densfun <- attr(control$trimLogit, "vals")$densfun
-      use.kernel <- attr(control$trimLogit, "vals")$use.kernel
-      densControl <- attr(control$trimLogit, "vals")$densControl
-      init <- attr(control$trimLogit, "vals")$init
-
-      w_mat<- get_cont_weights(Z, treat = Y, s.weights = obsWeights,
-                               dens.num = dens.num, densfun = densfun, use.kernel = use.kernel,
-                               densControl = densControl)
-      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
-      names(cvRisk) <- libraryNames
-
-      loss <- function(coefs) {
-        ps <- crossprod(t(Z), coefs/sum(coefs))
-        w <- get_cont_weights(ps, treat = Y, s.weights = obsWeights,
-                              dens.num = dens.num, densfun = densfun,
-                              use.kernel = use.kernel,
-                              densControl = densControl)
-        cobalt::bal.compute(init, weights = w)
-      }
-      fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
-      coef <- fit$par
-
-      list(cvRisk = cvRisk, coef = coef/sum(coef))
-    },
-
-    # computePred is a function that takes the weights and the predicted values
-    # from each algorithm in the library and combines them based on the model to
-    # output the super learner predicted values
-    computePred = function(predY, coef, control, ...) {
-      crossprod(t(predY), coef/sum(coef))
-    }
-  )
-
-  out
 }
 
 .onLoad <- function(libname, pkgname) {
