@@ -1,3 +1,180 @@
+#' Estimate Balancing Weights
+#'
+#' @description
+#' `weightit()` allows for the easy generation of balancing weights using
+#' a variety of available methods for binary, continuous, and multi-category
+#' treatments. Many of these methods exist in other packages, which
+#' `weightit()` calls; these packages must be installed to use the desired
+#' method.
+#'
+#' @param formula a formula with a treatment variable on the left hand side and
+#' the covariates to be balanced on the right hand side. See [glm()] for more
+#' details. Interactions and functions of covariates are allowed.
+#' @param data an optional data set in the form of a data frame that contains
+#' the variables in `formula`.
+#' @param method a string of length 1 containing the name of the method that
+#' will be used to estimate weights. See Details below for allowable options.
+#' The default is `"glm"` for propensity score weighting using a
+#' generalized linear model to estimate the propensity score.
+#' @param estimand the desired estimand. For binary and multi-category
+#' treatments, can be `"ATE"`, `"ATT"`, `"ATC"`, and, for some
+#' methods, `"ATO"`, `"ATM"`, or `"ATOS"`. The default for both
+#' is `"ATE"`. This argument is ignored for continuous treatments. See the
+#' individual pages for each method for more information on which estimands are
+#' allowed with each method and what literature to read to interpret these
+#' estimands.
+#' @param stabilize `logical`; whether or not to stabilize the weights.
+#' For the methods that involve estimating propensity scores, this involves
+#' multiplying each unit's weight by the proportion of units in their treatment
+#' group. Default is `FALSE`.
+#' @param focal when multi-category treatments are used and ATT weights are
+#' requested, which group to consider the "treated" or focal group. This group
+#' will not be weighted, and the other groups will be weighted to be more like
+#' the focal group. If specified, `estimand` will automatically be set to
+#' `"ATT"`.
+#' @param by a string containing the name of the variable in `data` for
+#' which weighting is to be done within categories or a one-sided formula with
+#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, weights will be generated separately
+#' within each level of the variable `"gender"`. (The argument used to be
+#' called `exact`, which will still work but with a message.) Only one
+#' `by` variable is allowed; to stratify by multiply variables
+#' simultaneously, create a new variable that is a full cross of those
+#' variables using [interaction()].
+#' @param s.weights A vector of sampling weights or the name of a variable in
+#' `data` that contains sampling weights. These can also be matching
+#' weights if weighting is to be used on matched data. See the individual pages
+#' for each method for information on whether sampling weights can be supplied.
+#' @param ps A vector of propensity scores or the name of a variable in
+#' `data` containing propensity scores. If not `NULL`, `method`
+#' is ignored unless it is a user-supplied function, and the propensity scores will be used to create weights.
+#' `formula` must include the treatment variable in `data`, but the
+#' listed covariates will play no role in the weight estimation. Using
+#' `ps` is similar to calling [get_w_from_ps()] directly, but produces a
+#' full `weightit` object rather than just producing weights.
+#' @param moments `numeric`; for some methods, the greatest power of each
+#' covariate to be balanced. For example, if `moments = 3`, for each
+#' non-categorical covariate, the covariate, its square, and its cube will be
+#' balanced. This argument is ignored for other methods; to balance powers of
+#' the covariates, appropriate functions must be entered in `formula`. See
+#' the individual pages for each method for information on whether they accept
+#' `moments`.
+#' @param int `logical`; for some methods, whether first-order
+#' interactions of the covariates are to be balanced. This argument is ignored
+#' for other methods; to balance interactions between the variables,
+#' appropriate functions must be entered in `formula`. See the individual
+#' pages for each method for information on whether they accept `int`.
+#' @param subclass `numeric`; the number of subclasses to use for
+#' computing weights using marginal mean weighting with subclasses (MMWS). If
+#' `NULL`, standard inverse probability weights (and their extensions)
+#' will be computed; if a number greater than 1, subclasses will be formed and
+#' weights will be computed based on subclass membership. Attempting to set a
+#' non-`NULL` value for methods that don't compute a propensity score will
+#' result in an error; see each method's help page for information on whether
+#' MMWS weights are compatible with the method. See [get_w_from_ps()] for
+#' details and references.
+#' @param missing `character`; how missing data should be handled. The
+#' options and defaults depend on the `method` used. Ignored if no missing
+#' data is present. It should be noted that multiple imputation outperforms all
+#' available missingness methods available in `weightit()` and should
+#' probably be used instead. Consider the \CRANpkg{MatchThem}
+#' package for the use of `weightit()` with multiply imputed data.
+#' @param verbose `logical`; whether to print additional information
+#' output by the fitting function.
+#' @param include.obj `logical`; whether to include in the output any fit
+#' objects created in the process of estimating the weights. For example, with
+#' `method = "glm"`, the `glm` objects containing the propensity
+#' score model will be included. See the individual pages for each method for
+#' information on what object will be included if `TRUE`.
+#' @param ...  other arguments for functions called by `weightit()` that
+#' control aspects of fitting that are not covered by the above arguments. See Details.
+#'
+#' @returns
+#' A `weightit` object with the following elements:
+#' \item{weights}{The estimated weights, one for each unit.}
+#' \item{treat}{The values of the treatment variable.}
+#' \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
+#' the fitting process.}
+#' \item{estimand}{The estimand requested.}
+#' \item{method}{The weight estimation method specified.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
+#' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"super"`, or `"bart"`.}
+#' \item{s.weights}{The provided sampling weights.}
+#' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
+#' \item{by}{A data.frame containing the `by` variable when specified.}
+#' \item{obj}{When `include.obj = TRUE`, the fit object.}
+#' \item{info}{Additional information about the fitting. See the individual
+#' methods pages for what is included.}
+#'
+#' @details
+#' The primary purpose of `weightit()` is as a dispatcher to functions
+#' that perform the estimation of balancing weights using the requested
+#' `method`. Below are the methods allowed and links to pages containing
+#' more information about them, including additional arguments and outputs
+#' (e.g., when `include.obj = TRUE`), how missing values are treated,
+#' which estimands are allowed, and whether sampling weights are allowed.
+#'
+#' | [`"glm"`][method_glm] | Propensity score weighting using generalized linear models |
+#' | :---- | :---- |
+#' | [`"gbm"`][method_gbm] | Propensity score weighting using generalized boosted modeling |
+#' | [`"cbps"`][method_cbps]|Covariate Balancing Propensity Score weighting |
+#' | [`"npcbps"`][method_npcbps]|Non-parametric Covariate Balancing Propensity Score weighting |
+#' | [`"ebal"`][method_ebal] | Entropy balancing |
+# \item [`"ebcw"`][method_ebcw] - Empirical balancing calibration weighting |
+#' | [`"optweight"`][method_optweight] | Optimization-based weighting |
+#' | [`"super"`][method_super] | Propensity score weighting using SuperLearner |
+#' | [`"bart"`][method_bart] | Propensity score weighting using Bayesian additive regression trees (BART) |
+#' | [`"energy"`][method_energy] | Energy balancing |
+#'
+#'
+#' `method` can also be supplied as a user-defined function; see
+#' [`method_user`] for instructions and examples.
+#'
+#' When using `weightit()`, please cite both the \pkg{WeightIt} package
+#' (using `citation("WeightIt")`) and the paper(s) in the references
+#' section of the method used.
+#'
+#' @seealso
+#' [weightitMSM()] for estimating weights with sequential (i.e.,
+#' longitudinal) treatments for use in estimating marginal structural models
+#' (MSMs).
+#'
+#' [weightit.fit()], which is a lower-level dispatcher function that accepts a
+#' matrix of covariates and a vector of treatment statuses rather than a
+#' formula and data frame and performs minimal argument checking and
+#' processing. It may be useful for speeding up simulation studies for which
+#' the correct arguments are known. In general `weightit()` should be
+#' used.
+#'
+#' [summary.weightit()] for summarizing the weights
+#'
+#' @examples
+#'
+#' library("cobalt")
+#' data("lalonde", package = "cobalt")
+#'
+#' #Balancing covariates between treatment groups (binary)
+#' (W1 <- weightit(treat ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "glm", estimand = "ATT"))
+#' summary(W1)
+#' bal.tab(W1)
+#' @examplesIf requireNamespace("osqp", quietly = TRUE)
+#' #Balancing covariates with respect to race (multi-category)
+#' (W2 <- weightit(race ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "ebal", estimand = "ATE"))
+#' summary(W2)
+#' bal.tab(W2)
+#'
+#' @examplesIf requireNamespace("CBPS", quietly = TRUE)
+#' #Balancing covariates with respect to re75 (continuous)
+#' (W3 <- weightit(re75 ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "cbps", over = FALSE))
+#' summary(W3)
+#' bal.tab(W3)
+
+#' @export
 weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", stabilize = FALSE, focal = NULL,
                      by = NULL, s.weights = NULL, ps = NULL, moments = NULL, int = FALSE, subclass = NULL,
                      missing = NULL, verbose = FALSE, include.obj = FALSE, ...) {
@@ -40,7 +217,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   #Process ps
   ps <- process.ps(ps, data, treat)
-  if (is_not_null(ps)) {
+  if (is_not_null(ps) && !identical(method, "glm") && !is.function(method)) {
+    .wrn("`ps` is supplied, so `method` will be ignored")
     method <- "glm"
   }
 
@@ -65,10 +243,10 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   reported.estimand <- f.e.r[["reported.estimand"]]
 
   #Process missing
-  if (anyNA(reported.covs)) {
-    missing <- process.missing(missing, method, treat.type)
+  missing <- {
+    if (!anyNA(reported.covs)) ""
+    else process.missing(missing, method, treat.type)
   }
-  else missing <- ""
 
   #Check subclass
   if (is_not_null(subclass)) check.subclass(method, treat.type)
@@ -91,7 +269,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   #Process moments and int
   moments.int <- process.moments.int(moments, int, method)
-  moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
 
   call <- match.call()
   # args <- list(...)
@@ -107,8 +284,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A[["focal"]] <- focal
   A[["stabilize"]] <- stabilize
   A[["method"]] <- method
-  A[["moments"]] <- moments
-  A[["int"]] <- int
+  A[["moments"]] <- moments.int[["moments"]]
+  A[["int"]] <- moments.int[["int"]]
   A[["subclass"]] <- subclass
   A[["ps"]] <- ps
   A[["missing"]] <- missing
@@ -130,7 +307,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               ps = if (is_null(obj$ps) || all(is.na(obj$ps))) NULL else obj$ps,
               s.weights = s.weights,
               #discarded = NULL,
-              focal = if (reported.estimand == "ATT") focal else NULL,
+              focal = if (reported.estimand %in% c("ATT", "ATC")) focal else NULL,
               by = processed.by,
               call = call,
               info = obj$info,
@@ -144,6 +321,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   ####----
 }
 
+#' @exportS3Method print weightit
 print.weightit <- function(x, ...) {
   treat.type <- get_treat_type(x[["treat"]])
   trim <- attr(x[["weights"]], "trim")
@@ -169,181 +347,4 @@ print.weightit <- function(x, ...) {
     }
   }
   invisible(x)
-}
-summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
-  outnames <- c("weight.range", "weight.top", "weight.mean",
-                "coef.of.var", "scaled.mad", "negative.entropy",
-                "effective.sample.size")
-  out <- make_list(outnames)
-
-  if (ignore.s.weights  || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
-  else sw <- object$s.weights
-  w <- setNames(object$weights*sw, seq_along(sw))
-  t <- object$treat
-  treat.type <- get_treat_type(object[["treat"]])
-  stabilized <- is_not_null(object[["stabilization"]])
-
-  attr(out, "weights") <- w
-  attr(out, "treat") <- t
-
-  if (treat.type == "continuous") {
-    out$weight.range <- list(all = c(min(w[w != 0]),
-                                     max(w[w != 0])))
-    out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
-    out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-    out$scaled.mad <- c(all = mean_abs_dev(w/mean_fast(w)))
-    out$negative.entropy <- c(all = neg_ent(w))
-    out$num.zeros <- c(overall = sum(check_if_zero(w)))
-    out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-    nn <- make_df("Total", c("Unweighted", "Weighted"))
-    nn["Unweighted", ] <- ESS(sw)
-    nn["Weighted", ] <- ESS(w)
-
-  }
-  else if (treat.type == "binary" && !is_(t, c("factor", "character"))) {
-    treated <- get_treated_level(t)
-    t <- as.integer(t == treated)
-
-    top0 <- c(treated = min(top, sum(t == 1)),
-              control = min(top, sum(t == 0)))
-    out$weight.range <- list(treated = c(min(w[w != 0 & t == 1]),
-                                         max(w[w != 0 & t == 1])),
-                             control = c(min(w[w != 0 & t == 0]),
-                                         max(w[w != 0 & t == 0])))
-    out$weight.top <- list(treated = rev(w[t == 1][order(abs(w[t == 1]), decreasing = TRUE)][seq_len(top0["treated"])]),
-                           control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
-    out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
-                         control = sd(w[t==0])/mean_fast(w[t==0]))
-    out$scaled.mad <- c(treated = mean_abs_dev(w[t==1]/mean_fast(w[t==1])),
-                        control = mean_abs_dev(w[t==0]/mean_fast(w[t==0])))
-    out$negative.entropy <- c(treated = neg_ent(w[t==1]),
-                              control = neg_ent(w[t==0]))
-    out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
-                       control = sum(check_if_zero(w[t==0])))
-    out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-    #dc <- weightit$discarded
-
-    nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
-    nn["Unweighted", ] <- c(ESS(sw[t==0]),
-                            ESS(sw[t==1]))
-    nn["Weighted", ] <- c(ESS(w[t==0]),
-                          ESS(w[t==1]))
-  }
-  else if (treat.type == "multinomial" || is_(t, c("factor", "character"))) {
-    t <- as.factor(t)
-
-    top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
-    out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w != 0 & t == x]),
-                                                                 max(w[w != 0 & t == x]))),
-                                 levels(t))
-    out$weight.top <- setNames(lapply(levels(t), function(x) rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])),
-                            levels(t))
-    out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
-    out$scaled.mad <- c(vapply(levels(t), function(x) mean_abs_dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
-    out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)))
-    out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)))
-    out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-    nn <- make_df(levels(t), c("Unweighted", "Weighted"))
-    for (i in levels(t)) {
-      nn["Unweighted", i] <- ESS(sw[t==i])
-      nn["Weighted", i] <- ESS(w[t==i])
-    }
-  }
-  else if (treat.type == "ordinal") {
-    .err("Sneaky, sneaky! Ordinal coming one day :)", tidy = FALSE)
-  }
-
-  out$effective.sample.size <- nn
-
-  if (is_not_null(object$focal)) {
-    attr(w, "focal") <- object$focal
-  }
-
-  class(out) <- "summary.weightit"
-  return(out)
-}
-print.summary.weightit <- function(x, ...) {
-  top <- max(lengths(x$weight.top))
-  cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
-
-  tryCatch({
-    cat("- " %+% italic("Weight ranges") %+% ":\n\n")
-    print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
-  })
-  df <- setNames(data.frame(do.call("c", lapply(names(x$weight.top), function(x) c(" ", x))),
-                            matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), rep("", top - length(x)), round(x, 4), rep("", top - length(x))))),
-                                   byrow = TRUE, nrow = 2*length(x$weight.top))),
-                 rep("", 1 + top))
-  cat("\n- " %+% italic(sprintf("Units with the %s most extreme weights%s",
-                        top, ngettext(length(x$weight.top), "",
-                                      " by group"))) %+% ":\n")
-  print.data.frame(df, row.names = FALSE)
-  cat("\n- " %+% italic("Weight statistics") %+% ":\n\n")
-  print.data.frame(round_df_char(setNames(as.data.frame(cbind(x$coef.of.var,
-                                                              x$scaled.mad,
-                                                              x$negative.entropy,
-                                                              x$num.zeros)),
-                                          c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
-  if (is_not_null(x$weight.mean)) cat("\n- " %+% italic("Mean of Weights") %+% " = " %+% round(x$weight.mean, 2) %+% "\n")
-
-  cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
-  print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
-  invisible(x)
-}
-plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
-  w <- attr(x, "weights")
-  t <- attr(x, "treat")
-  focal <- attr(w, "focal")
-  treat.type <- get_treat_type(t)
-
-  A <- list(...)
-  if (is_not_null(A[["breaks"]])) {
-    breaks <- hist(w, breaks = A[["breaks"]], plot = FALSE)$breaks
-    bins <- binwidth <- NULL
-  }
-  else {
-    breaks <- NULL
-    if (is_null(bins)) bins <- 20
-  }
-
-  if (is_not_null(focal)) subtitle <- paste0("For Units Not in Treatment Group \"", focal, "\"")
-  else subtitle <- NULL
-
-  if (treat.type == "continuous") {
-  p <- ggplot(data = data.frame(w), mapping = aes(x = w)) +
-    geom_histogram(binwidth = binwidth,
-                   bins = bins,
-                   breaks = breaks,
-                   center = mean(w),
-                   color = "gray70",
-                   fill = "gray70", alpha = 1) +
-    scale_y_continuous(expand = expansion(c(0, .05))) +
-    geom_vline(xintercept = mean(w), linetype = "12", color = "blue", size = .75) +
-    labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
-    theme_bw()
-  }
-  else {
-    d <- data.frame(w, t = factor(t))
-    if (is_not_null(focal)) d <- d[t != focal,]
-
-    levels(d$t) <- paste("Treat =", levels(d$t))
-    w_means <- aggregate(w ~ t, data = d, FUN = mean)
-
-    p <- ggplot(data = d, mapping = aes(x = w)) +
-      geom_histogram(binwidth = binwidth,
-                     bins = bins,
-                     breaks = breaks,
-                     # center = mean(w),
-                     color = "gray70",
-                     fill = "gray70", alpha = 1) +
-      scale_y_continuous(expand = expansion(c(0, .05))) +
-      geom_vline(data = w_means, aes(xintercept = w), linetype = "12", color = "red") +
-      labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
-      theme_bw() + facet_wrap(vars(t), ncol = 1, scales = "free") +
-      theme(panel.background = element_blank(), panel.border = element_rect(fill = NA, color = "black", size = .25))
-  }
-  p
 }
