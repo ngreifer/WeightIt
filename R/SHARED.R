@@ -310,9 +310,7 @@ binarize <- function(variable, zero = NULL, one = NULL) {
     else stop("The argument to 'zero' is not the name of a level of variable.", call. = FALSE)
   }
 }
-ESS <- function(w) {
-  sum(w)^2/sum(w^2)
-}
+## ESS
 center <- function(x, at = NULL, na.rm = TRUE) {
   if (is.data.frame(x)) {
     x <- as.matrix.data.frame(x)
@@ -474,6 +472,46 @@ mean_fast <- function(x, nas.possible = FALSE) {
 bw.nrd <- function(x) {
   #R's bw.nrd doesn't always work, but bw.nrd0 does
   bw.nrd0(x)*1.06/.9
+}
+quantile.w <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...) {
+
+  n <- length(x)
+  if (n == 0 || (!isTRUE(na.rm) && anyNA(x))) {
+    return(rep(NA_real_, length(probs)))
+  }
+
+  if (!is.null(w)) {
+    if (all(w == 0)) {
+      return(rep(0, length(probs)))
+    }
+  }
+
+  if (isTRUE(na.rm)) {
+    indices <- !is.na(x)
+    x <- x[indices]
+    if (!is.null(w))
+      w <- w[indices]
+  }
+
+  order <- order(x)
+  x <- x[order]
+  w <- w[order]
+
+  rw <- {
+    if (is.null(w)) (1:n)/n
+    else cumsum(w)/sum(w)
+  }
+
+  q <- vapply(probs, function(p) {
+    if (p == 0) return(x[1])
+    if (p == 1) return(x[n])
+    select <- min(which(rw > p))
+    if (rw[select] == p)
+      mean(x[c(select, select + 1)])
+    else x[select]
+  }, x[1])
+
+  unname(q)
 }
 
 #Formulas
@@ -800,22 +838,22 @@ process.bin.vars <- function(bin.vars, mat) {
 }
 process.s.weights <- function(s.weights, data = NULL) {
   #Process s.weights
-  if (is_not_null(s.weights)) {
-    if (!(is.character(s.weights) && length(s.weights) == 1) && !is.numeric(s.weights)) {
-      stop("The argument to 's.weights' must be a vector or data frame of sampling weights or the (quoted) names of the variable in 'data' that contains sampling weights.", call. = FALSE)
-    }
-    if (is.character(s.weights) && length(s.weights)==1) {
-      if (is_null(data)) {
-        stop("'s.weights' was specified as a string but there was no argument to 'data'.", call. = FALSE)
-      }
-      else if (s.weights %in% names(data)) {
-        s.weights <- data[[s.weights]]
-      }
-      else stop("The name supplied to 's.weights' is not the name of a variable in 'data'.", call. = FALSE)
-    }
+  if (is_null(s.weights)) return(NULL)
+
+  if (is.numeric(s.weights)) return(s.weights)
+
+  if (!is.character(s.weights) || length(s.weights) != 1) {
+    .err("the argument to `s.weights` must be a vector or data frame of sampling weights or the (quoted) names of the variable in `data` that contains sampling weights")
   }
-  else s.weights <- NULL
-  return(s.weights)
+
+  if (is_null(data)) {
+    .err("`s.weights` was specified as a string but there was no argument to `data`")
+  }
+  if (!s.weights %in% names(data)) {
+    .err("the name supplied to `s.weights` is not the name of a variable in `data`")
+  }
+
+  data[[s.weights]]
 }
 
 #Uniqueness
