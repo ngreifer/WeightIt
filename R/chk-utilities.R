@@ -45,3 +45,12 @@ pkg_caller_call <- function(start = 1) {
              .err(msg, .subclass = "chk_error")
            })
 }
+
+.chk_basic_vector <- function(x, x_name = NULL) {
+  if (is.atomic(x) && is.null(dim(x))) {
+    return(invisible(x))
+  }
+  if (is.null(x_name))
+    x_name <- chk::deparse_backtick_chk((substitute(x)))
+  chk::abort_chk(x_name, " must be an atomic, non-matrix vector", x = x)
+}
