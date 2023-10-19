@@ -1,3 +1,182 @@
+#' Generate Balancing Weights for Longitudinal Treatments
+#'
+#' @description
+#' `weightitMSM()` allows for the easy generation of balancing weights for
+#' marginal structural models for time-varying treatments using a variety of
+#' available methods for binary, continuous, and multinomial treatments. Many
+#' of these methods exist in other packages, which [weightit()] calls; these
+#' packages must be installed to use the desired method.
+#'
+#' @param formula.list a list of formulas corresponding to each time point with
+#' the time-specific treatment variable on the left hand side and pre-treatment
+#' covariates to be balanced on the right hand side. The formulas must be in
+#' temporal order, and must contain all covariates to be balanced at that time
+#' point (i.e., treatments and covariates featured in early formulas should
+#' appear in later ones). Interactions and functions of covariates are allowed.
+#' @param data an optional data set in the form of a data frame that contains
+#' the variables in the formulas in `formula.list`. This must be a wide
+#' data set with exactly one row per unit.
+#' @param method a string of length 1 containing the name of the method that
+#' will be used to estimate weights. See [weightit()] for allowable options.
+#' The default is `"glm"`, which estimates the weights using generalized
+#' linear models.
+#' @param stabilize `logical`; whether or not to stabilize the weights.
+#' Stabilizing the weights involves fitting a model predicting treatment at
+#' each time point from treatment status at prior time points. If `TRUE`,
+#' a fully saturated model will be fit (i.e., all interactions between all
+#' treatments up to each time point), essentially using the observed treatment
+#' probabilities in the numerator (for binary and multinomial treatments). This
+#' may yield an error if some combinations are not observed. Default is
+#' `FALSE`. To manually specify stabilization model formulas, e.g., to
+#' specify non-saturated models, use `num.formula`. With many time points,
+#' saturated models may be time-consuming or impossible to fit.
+#' @param num.formula optional; a one-sided formula with the stabilization
+#' factors (other than the previous treatments) on the right hand side, which
+#' adds, for each time point, the stabilization factors to a model saturated
+#' with previous treatments. See Cole & Hernán (2008) for a discussion of how
+#' to specify this model; including stabilization factors can change the
+#' estimand without proper adjustment, and should be done with caution. Can
+#' also be a list of one-sided formulas, one for each time point. Unless you
+#' know what you are doing, we recommend setting `stabilize = TRUE` and
+#' ignoring `num.formula`.
+#' @param by a string containing the name of the variable in `data` for
+#' which weighting is to be done within categories or a one-sided formula with
+#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~ gender`, weights will be generated separately
+#' within each level of the variable `"gender"`. The argument used to be
+#' called `exact`, which will still work but with a message. Only one
+#' `by` variable is allowed.
+#' @param s.weights a vector of sampling weights or the name of a variable in
+#' `data` that contains sampling weights. These are ignored for some
+#' methods.
+#' @param moments `numeric`; for some methods, the greatest power of each
+#' covariate to be balanced. For example, if `moments = 3`, for each
+#' non-categorical covariate, the covariate, its square, and its cube will be
+#' balanced. This argument is ignored for other methods; to balance powers of
+#' the covariates, appropriate functions must be entered in `formula`. See
+#' the specific methods help pages for information on whether they accept
+#' `moments`.
+#' @param int `logical`; for some methods, whether first-order
+#' interactions of the covariates are to be balanced. This argument is ignored
+#' for other methods; to balance interactions between the variables,
+#' appropriate functions must be entered in `formula`. See the specific
+#' methods help pages for information on whether they accept `int`.
+#' @param missing `character`; how missing data should be handled. The
+#' options and defaults depend on the `method` used. Ignored if no missing
+#' data is present. It should be noted that multiple imputation outperforms all
+#' available missingness methods available in `weightit()` and should
+#' probably be used instead. See the \CRANpkg{MatchThem}
+#' package for the use of `weightit()` with multiply imputed data.
+#' @param verbose whether to print additional information output by the fitting
+#' function.
+#' @param include.obj whether to include in the output a list of the fit
+#' objects created in the process of estimating the weights at each time point.
+#' For example, with `method = "glm"`, a list of the `glm` objects
+#' containing the propensity score models at each time point will be included.
+#' See the help pages for each method for information on what object will be
+#' included if `TRUE`.
+#' @param is.MSM.method whether the method estimates weights for multiple time
+#' points all at once (`TRUE`) or by estimating weights at each time point
+#' and then multiplying them together (`FALSE`). This is only relevant for
+#' `method = "optweight")`, which estimates weights for longitudinal
+#' treatments all at once, and for user-specified functions.
+#' @param weightit.force several methods are not valid for estimating weights
+#' with longitudinal treatments, and will produce an error message if
+#' attempted. Set to `TRUE` to bypass this error message.
+#' @param ...  other arguments for functions called by `weightit()` that
+#' control aspects of fitting that are not covered by the above arguments. See
+#' Details at [weightit()].
+#'
+#' @returns
+#' A `weightitMSM` object with the following elements:
+#' \item{weights}{The estimated weights, one for each unit.}
+#' \item{treat.list}{A list of the values of the time-varying treatment variables.}
+#' \item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
+#' \item{data}{The data.frame originally entered to `weightitMSM()`.}
+#' \item{estimand}{"ATE", currently the only estimand for MSMs with binary or multinomial treatments.}
+#' \item{method}{The weight estimation method specified.}
+#' \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
+#' \item{s.weights}{The provided sampling weights.}
+#' \item{by}{A data.frame containing the `by` variable when specified.}
+#' \item{stabilization}{The stabilization factors, if any.}
+#'
+#' @details
+#' Currently only "wide" data sets, where each row corresponds to a unit's
+#' entire variable history, are supported. You can use [reshape()] or other
+#' functions to transform your data into this format; see example below.
+#'
+#' In general, `weightitMSM()` works by separating the estimation of
+#' weights into separate procedures for each time period based on the formulas
+#' provided. For each formula, `weightitMSM()` simply calls
+#' `weightit()` to that formula, collects the weights for each time
+#' period, and multiplies them together to arrive at longitudinal balancing
+#' weights.
+#'
+#' Each formula should contain all the covariates to be balanced on. For
+#' example, the formula corresponding to the second time period should contain
+#' all the baseline covariates, the treatment variable at the first time
+#' period, and the time-varying covariates that took on values after the first
+#' treatment and before the second. Currently, only wide data sets are
+#' supported, where each unit is represented by exactly one row that contains
+#' the covariate and treatment history encoded in separate variables.
+#'
+#' The `"cbps"` method, which calls `CBPS()` in \pkg{CBPS}, will
+#' yield different results from `CBMSM()` in \pkg{CBPS} because
+#' `CBMSM()` takes a different approach to generating weights than simply
+#' estimating several time-specific models.
+#'
+#' @seealso
+#' [weightit()] for information on the allowable methods
+#'
+#' [summary.weightitMSM()] for summarizing the weights
+#'
+#' @references
+#' Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse
+#' Probability Weights for Marginal Structural Models. American Journal of
+#' Epidemiology, 168(6), 656–664. \doi{10.1093/aje/kwn164}
+#'
+#' @examples
+#'
+#' library("cobalt")
+#'
+#' data("msmdata")
+#' (W1 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+#'                         A_2 ~ X1_1 + X2_1 +
+#'                           A_1 + X1_0 + X2_0,
+#'                         A_3 ~ X1_2 + X2_2 +
+#'                           A_2 + X1_1 + X2_1 +
+#'                           A_1 + X1_0 + X2_0),
+#'                    data = msmdata,
+#'                    method = "glm"))
+#' summary(W1)
+#' bal.tab(W1)
+#'
+#' #Using stabilization factors
+#' W2 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+#'                         A_2 ~ X1_1 + X2_1 +
+#'                           A_1 + X1_0 + X2_0,
+#'                         A_3 ~ X1_2 + X2_2 +
+#'                           A_2 + X1_1 + X2_1 +
+#'                           A_1 + X1_0 + X2_0),
+#'                    data = msmdata,
+#'                    method = "glm",
+#'                    stabilize = TRUE,
+#'                    num.formula = list(~ 1,
+#'                                       ~ A_1,
+#'                                       ~ A_1 + A_2))
+#'
+#' #Same as above but with fully saturated stabilization factors
+#' #(i.e., making the last entry in 'num.formula' A_1*A_2)
+#' W3 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+#'                         A_2 ~ X1_1 + X2_1 +
+#'                           A_1 + X1_0 + X2_0,
+#'                         A_3 ~ X1_2 + X2_2 +
+#'                           A_2 + X1_1 + X2_1 +
+#'                           A_1 + X1_0 + X2_0),
+#'                    data = msmdata,
+#'                    method = "glm",
+#'                    stabilize = TRUE)
+
+#' @export
 weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = FALSE, by = NULL, s.weights = NULL,
                         num.formula = NULL, moments = NULL, int = FALSE, missing = NULL,
                         verbose = FALSE, include.obj = FALSE, is.MSM.method, weightit.force = FALSE, ...) {
@@ -74,7 +253,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
           .err(paste0(c("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: ",
                         paste(rhs.vars.mentioned[rhs.vars.failed], collapse=", "))), tidy = FALSE)
         }
-
       }
       else {
         .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
@@ -89,7 +267,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     by <- A[["exact"]]
     by.arg <- "exact"
   }
-  else by.arg <- "by"
+  else {
+    by.arg <- "by"
+  }
 
   reported.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
     stabout <- sw.list <- make_list(length(formula.list))
@@ -120,9 +300,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     if (anyNA(treat.list[[i]])) {
       .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s", treat.name))
     }
-    if (anyNA(reported.covs.list[[i]])) {
-      .wrn("missing values are present in the covariates. See `?weightit` for information on how these are handled")
-    }
 
     treat.list[[i]] <- assign_treat_type(treat.list[[i]])
 
@@ -136,8 +313,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     if (anyNA(reported.covs.list[[i]])) {
       missing <- process.missing(missing, method, get_treat_type(treat.list[[i]]))
     }
-    else if (i == length(formula.list)) missing <- ""
-
+    else if (i == length(formula.list)) {
+      missing <- ""
+    }
   }
 
   if (is_null(s.weights)) s.weights <- rep(1, n)
@@ -171,7 +349,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     if (length(A[["link"]]) %nin% c(0, 1, length(formula.list))) {
       .err(sprintf("the argument to `link` must have length 1 or %s", length(formula.list)))
     }
-    if (length(A[["link"]]) == 1) A[["link"]] <- rep(A[["link"]], length(formula.list))
+    if (length(A[["link"]]) == 1) {
+      A[["link"]] <- rep(A[["link"]], length(formula.list))
+    }
     # if (length(A[["family"]]) %nin% c(0, 1, length(formula.list))) stop(paste0("The argument to link must have length 1 or ", length(formula.list), "."), call. = FALSE)
     # if (length(A[["family"]]) == 1) A[["family"]] <- rep(A[["family"]], length(formula.list))
 
@@ -194,7 +374,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
     for (i in seq_along(formula.list)) {
       A_i <- A
-      if (length(A[["link"]]) == length(formula.list)) A_i[["link"]] <- A[["link"]][[i]]
+      if (length(A[["link"]]) == length(formula.list)) {
+        A_i[["link"]] <- A[["link"]][[i]]
+      }
 
       A_i[["covs"]] <- covs.list[[i]]
       A_i[["treat"]] <- treat.list[[i]]
@@ -232,6 +414,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
             stab.f <- as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * ")))
           }
         }
+
         stab.t.c_i <- get_covs_and_treat_from_formula(stab.f, data)
 
         A_i[["covs"]] <- stab.t.c_i[["model.covs"]]
@@ -243,7 +426,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
         sw.list[[i]] <- 1/sw_obj[["weights"]]
         stabout[[i]] <- stab.f[-2]
-
       }
 
     }
@@ -257,12 +439,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
       unique.stabout <- unique(stabout)
       if (length(unique.stabout) <= 1) stabout <- unique.stabout
     }
-    else stabout <- NULL
+    else {
+      stabout <- NULL
+    }
   }
 
+  if (all_the_same(w)) .err(sprintf("all weights are %s", w[1]))
 
-  if (all_the_same(w)) .err(sprintf("All weights are %s", w[1]))
-  if (all(vapply(ps.list, is_null, logical(1L)))) ps.list <- NULL
+  if (all(lengths(ps.list) == 0)) ps.list <- NULL
   else names(ps.list) <- names(treat.list)
 
   if (include.obj) names(obj.list) <- names(treat.list)
@@ -288,9 +472,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   class(out) <- c("weightitMSM", "weightit")
 
   out
-  ####----
 }
 
+#' @exportS3Method print weightitMSM
 print.weightitMSM <- function(x, ...) {
   treat.types <- vapply(x[["treat.list"]], get_treat_type, character(1L))
   trim <- attr(x[["weights"]], "trim")
@@ -348,142 +532,4 @@ print.weightitMSM <- function(x, ...) {
     }
   }
   invisible(x)
-}
-summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
-  outnames <- c("weight.range", "weight.top",
-                "coef.of.var", "scaled.mad", "negative.entropy",
-                "weight.mean",
-                "effective.sample.size")
-
-  out.list <- make_list(names(object$treat.list))
-
-  if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
-  else sw <- object$s.weights
-  w <- setNames(object$weights*sw, seq_along(sw))
-  treat.types <- vapply(object[["treat.list"]], get_treat_type, character(1L))
-  stabilized <- is_not_null(object[["stabilization"]])
-
-  for (ti in seq_along(object$treat.list)) {
-    out <- make_list(outnames)
-    if (treat.types[ti] == "continuous") {
-      out$weight.range <- list(all = c(min(w[w != 0]),
-                                       max(w[w != 0])))
-      out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
-      out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(all = mean_abs_dev(w/mean_fast(w)))
-      out$negative.entropy <- c(all = neg_ent(w))
-      out$num.zeros <- c(overall = sum(check_if_zero(w)))
-      out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-      nn <- make_df("Total", c("Unweighted", "Weighted"))
-      nn["Unweighted", ] <- ESS(sw)
-      nn["Weighted", ] <- ESS(w)
-
-      out$effective.sample.size <- nn
-
-      out.list[[ti]] <- out
-
-    }
-    else if (treat.types[ti] == "binary") {
-      t <- object$treat.list[[ti]]
-      top0 <- c(treated = min(top, sum(t == 1)),
-                control = min(top, sum(t == 0)))
-      out$weight.range <- list(treated = c(min(w[w != 0 & t == 1]),
-                                           max(w[w != 0 & t == 1])),
-                               control = c(min(w[w != 0 & t == 0]),
-                                           max(w[w != 0 & t == 0])))
-      out$weight.top <- list(treated = rev(w[t == 1][order(abs(w[t == 1]), decreasing = TRUE)][seq_len(top0["treated"])]),
-                             control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
-      out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
-                           control = sd(w[t==0])/mean_fast(w[t==0]))
-      out$scaled.mad <- c(treated = mean_abs_dev(w[t==1]/mean_fast(w[t==1])),
-                          control = mean_abs_dev(w[t==0]/mean_fast(w[t==0])))
-      out$negative.entropy <- c(treated = neg_ent(w[t==1]),
-                                control = neg_ent(w[t==0]))
-      out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
-                         control = sum(check_if_zero(w[t==0])))
-      out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-      nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
-      nn["Unweighted", ] <- c(ESS(sw[t==0]),
-                              ESS(sw[t==1]))
-      nn["Weighted", ] <- c(ESS(w[t==0]),
-                            ESS(w[t==1]))
-
-      out$effective.sample.size <- nn
-      out.list[[ti]] <- out
-
-    }
-    else if (treat.types[ti] == "multinomial") {
-      t <- object$treat.list[[ti]]
-      top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
-      out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w != 0 & t == x]),
-                                                                   max(w[w != 0 & t == x]))),
-                                   levels(t))
-      out$weight.top <- setNames(lapply(levels(t), function(x) rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])),
-                                 levels(t))
-      out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
-                           overall = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(vapply(levels(t), function(x) mean_abs_dev(w[t==x]/mean_fast(w[t==x])), numeric(1L)),
-                          overall = mean_abs_dev(w)/mean_fast(w))
-      out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)),
-                                overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
-      out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
-                         overall = sum(check_if_zero(w)))
-      out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-      nn <- make_df(levels(t), c("Unweighted", "Weighted"))
-      for (i in levels(t)) {
-        nn["Unweighted", i] <- ESS(sw[t==i])
-        nn["Weighted", i] <- ESS(w[t==i])
-      }
-
-      out$effective.sample.size <- nn
-      out.list[[ti]] <- out
-    }
-    else if (treat.types[ti] == "ordinal") {
-      .wrn("Sneaky, sneaky! Ordinal coming soon :)", tidy = FALSE)
-    }
-  }
-
-  class(out.list) <- "summary.weightitMSM"
-  attr(out.list, "weights") <- w
-
-  out.list
-}
-summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
-  out.list <- make_list(names(object$treat.list))
-
-  if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
-  else sw <- object$s.weights
-
-  for (ti in seq_along(object$treat.list)) {
-    obj <- as.weightit(weights = object$weights, treat = object$treat.list[[ti]],
-                       s.weights = sw, stabilization = object$stabilization)
-    out.list[[ti]] <- summary.weightit(obj, top = top, ignore.s.weights = ignore.s.weights, ...)
-  }
-
-  class(out.list) <- "summary.weightitMSM"
-
-  out.list
-}
-print.summary.weightitMSM <- function(x, ...) {
-  only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))
-
-  cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
-  for (ti in seq_along(x)) {
-    if (!only.one) cat(strikethrough(paste(rep(" ", 22), collapse = "")) %+% italic(" Time " %+% ti %+% " ") %+% strikethrough(paste(rep(" ", 22), collapse = "")) %+% "\n")
-    print(x[[ti]])
-    cat("\n")
-    if (only.one) break
-  }
-
-  invisible(x)
-}
-plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1, ...) {
-  if (!is.numeric(time) || length(time) != 1 || time %nin% seq_along(x)) {
-    .err("`time` must be a number corresponding to the time point for which to display the distribution of weights")
-  }
-  p <- plot.summary.weightit(x[[time]], binwidth = binwidth, bins = bins, ...)
-  p + labs(subtitle = paste0("For Time ", time))
 }
