@@ -163,195 +163,147 @@
 NULL
 
 weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
-                         stabilize, subclass, missing, ps, .data, verbose, ...) {
+                         stabilize, subclass, missing, .data, verbose, ...) {
   A <- list(...)
 
   fit.obj <- NULL
 
-  if (is_null(ps)) {
+  covs <- covs[subset, , drop = FALSE]
+  treat_sub <- factor(treat[subset])
+  s.weights <- s.weights[subset]
 
-    covs <- covs[subset, , drop = FALSE]
-    treat_sub <- factor(treat[subset])
-    s.weights <- s.weights[subset]
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
 
-    if (missing == "ind") {
-      covs <- add_missing_indicators(covs)
-    }
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
-    for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
-
-    if (ncol(covs) > 1) {
-      if (missing == "saem") {
-        covs0 <- covs
-        for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
-        colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
-      }
-      else colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
-      covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-    }
-
-    #Process link
-    acceptable.links <- {
-      if (missing == "saem") "logit"
-      else expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
-    }
-
-    if (is_null(A[["link"]])) A$link <- acceptable.links[1]
-    else {
-      which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
-      if (is.na(which.link)) {
-        .err(sprintf("Only %s allowed as the link for binary treatments%",
-                     word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
-                     if (missing == "saem") ' with `missing = "saem"`' else ""))
-      }
-
-      A[["link"]] <- which.link
-    }
-
-    use.br <- startsWith(A[["link"]], "br.")
-    # use.bayes <- startsWith(A$link, "bayes.")
-    if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
-    # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
-
+  if (ncol(covs) > 1) {
     if (missing == "saem") {
-      rlang::check_installed("misaem")
-      if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-      if (is_null(A[["control"]])) A[["control"]] <- list()
-      if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
-      if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
+      covs0 <- covs
+      for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
+      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
+    }
+    else colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  }
+
+  #Process link
+  acceptable.links <- {
+    if (missing == "saem") "logit"
+    else expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
+  }
+
+  if (is_null(A[["link"]])) A$link <- acceptable.links[1]
+  else {
+    which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
+    if (is.na(which.link)) {
+      .err(sprintf("Only %s allowed as the link for binary treatments%",
+                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
+                   if (missing == "saem") ' with `missing = "saem"`' else ""))
     }
 
-    t.lev <- get_treated_level(treat_sub)
-    c.lev <- setdiff(levels(treat_sub), t.lev)
+    A[["link"]] <- which.link
+  }
 
-    ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
+  use.br <- startsWith(A[["link"]], "br.")
+  # use.bayes <- startsWith(A$link, "bayes.")
+  if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
+  # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
 
-    treat <- binarize(treat_sub, one = t.lev)
+  if (missing == "saem") {
+    rlang::check_installed("misaem")
+    if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+    if (is_null(A[["control"]])) A[["control"]] <- list()
+    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
+    if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
+  }
 
-    if (missing == "saem") {
-      data <- data.frame(treat, covs)
+  t.lev <- get_treated_level(treat_sub)
+  c.lev <- setdiff(levels(treat_sub), t.lev)
 
-      withCallingHandlers({
-        verbosely({
-          fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
-        }, verbose = verbose)
-      },
-      warning = function(w) {
-        if (conditionMessage(w) != "one argument not used by format '%i '") .wrn("(from misaem) ", w, tidy = FALSE)
-        invokeRestart("muffleWarning")
-      })
+  ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
 
-      ps[[t.lev]] <- p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
-      ps[[c.lev]] <- 1 - ps[[t.lev]]
-    }
-    else {
-      if (use.br) {
-        rlang::check_installed("brglm2")
-        ctrl_fun <- brglm2::brglmControl
-        glm_method <- brglm2::brglmFit
-        family <- binomial(link = A[["link"]])
-      }
-      else {
-        ctrl_fun <- stats::glm.control
-        glm_method <- if_null_then(A[["glm.method"]], stats::glm.fit)
-        family <- quasibinomial(link = A[["link"]])
-      }
+  treat <- binarize(treat_sub, one = t.lev)
 
-      control <- do.call(ctrl_fun, c(A[["control"]],
-                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                               names(A[["control"]]))]))
+  if (missing == "saem") {
+    data <- data.frame(treat, covs)
 
-      start <- mustart <- NULL
+    withCallingHandlers({
+      verbosely({
+        fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
+      }, verbose = verbose)
+    },
+    warning = function(w) {
+      if (conditionMessage(w) != "one argument not used by format '%i '") .wrn("(from misaem) ", w, tidy = FALSE)
+      invokeRestart("muffleWarning")
+    })
 
-      if (family$link %in% c("log", "identity")) {
-        #Need starting values because links are unbounded
-        start <- c(family$linkfun(w.m(treat, s.weights)), rep(0, ncol(covs)))
-      }
-      else {
-        #Default starting values from glm.fit() without weights; these
-        #work better with s.weights than usual default.
-        mustart <- .25 + .5*treat
-      }
-
-      withCallingHandlers({verbosely({
-        if (isTRUE(A[["quick"]])) {
-          fit <- do.call(glm_method, list(y = treat,
-                                          x = cbind(`(Intercept)` = 1, covs),
-                                          mustart = mustart,
-                                          start = start,
-                                          weights = s.weights,
-                                          family = family,
-                                          control = control), quote = TRUE)
-        }
-        else {
-          data <- data.frame(treat, covs)
-          formula <- formula(data)
-          fit <- do.call(stats::glm, list(formula, data = data,
-                                          weights = s.weights,
-                                          mustart = mustart,
-                                          start = start,
-                                          family = family,
-                                          method = glm_method,
-                                          control = control), quote = TRUE)
-        }
-      }, verbose = verbose)},
-      warning = function(w) {
-        if (conditionMessage(w) != "non-integer #successes in a binomial glm!") .wrn("(from `glm()`) ", w, tidy = FALSE)
-        invokeRestart("muffleWarning")
-      })
-
-      ps[[t.lev]] <- p.score <- fit$fitted.values
-      ps[[c.lev]] <- 1 - ps[[t.lev]]
-    }
-
-    fit[["call"]] <- NULL
-    fit.obj <- fit
-
+    ps[[t.lev]] <- p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
+    ps[[c.lev]] <- 1 - ps[[t.lev]]
   }
   else {
-    n <- length(treat)
-    p.score <- NULL
-    treat <- factor(treat)
-    treat_sub <- factor(treat[subset])
-
-    t.lev <- get_treated_level(treat)
-    c.lev <- setdiff(levels(treat_sub), t.lev)
-
-    if (is_(ps, c("matrix", "data.frame"))) {
-      if (all(dim(ps) == c(n, 2))) {
-
-        if (all(colnames(ps) %in% levels(treat_sub))) {
-          ps <- as.data.frame(ps[subset, , drop = FALSE])
-        }
-        else {
-          ps <- as.data.frame(ps[subset, , drop = FALSE])
-          names(ps) <- levels(treat_sub)
-        }
-
-        p.score <- ps[[t.lev]]
-      }
-      else if (all(dim(ps) == c(length(treat), 1))) {
-
-        ps <- data.frame(ps[subset,1], 1-ps[subset,1])
-
-        names(ps) <- c(t.lev, c.lev)
-
-        p.score <- ps[[t.lev]]
-      }
+    if (use.br) {
+      rlang::check_installed("brglm2")
+      ctrl_fun <- brglm2::brglmControl
+      glm_method <- brglm2::brglmFit
+      family <- binomial(link = A[["link"]])
     }
-    else if (is.numeric(ps)) {
-      if (length(ps) == n) {
-        ps <- data.frame(ps[subset], 1-ps[subset])
-
-        names(ps) <- c(t.lev, c.lev)
-
-        p.score <- ps[[t.lev]]
-      }
+    else {
+      ctrl_fun <- stats::glm.control
+      glm_method <- if_null_then(A[["glm.method"]], stats::glm.fit)
+      family <- quasibinomial(link = A[["link"]])
     }
 
-    if (is_null(p.score)) .err("`ps` must be a numeric vector with a propensity score for each unit")
+    control <- do.call(ctrl_fun, c(A[["control"]],
+                                   A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                             names(A[["control"]]))]))
 
+    start <- mustart <- NULL
+
+    if (family$link %in% c("log", "identity")) {
+      #Need starting values because links are unbounded
+      start <- c(family$linkfun(w.m(treat, s.weights)), rep(0, ncol(covs)))
+    }
+    else {
+      #Default starting values from glm.fit() without weights; these
+      #work better with s.weights than usual default.
+      mustart <- .25 + .5*treat
+    }
+
+    withCallingHandlers({verbosely({
+      if (isTRUE(A[["quick"]])) {
+        fit <- do.call(glm_method, list(y = treat,
+                                        x = cbind(`(Intercept)` = 1, covs),
+                                        mustart = mustart,
+                                        start = start,
+                                        weights = s.weights,
+                                        family = family,
+                                        control = control), quote = TRUE)
+      }
+      else {
+        data <- data.frame(treat, covs)
+        formula <- formula(data)
+        fit <- do.call(stats::glm, list(formula, data = data,
+                                        weights = s.weights,
+                                        mustart = mustart,
+                                        start = start,
+                                        family = family,
+                                        method = glm_method,
+                                        control = control), quote = TRUE)
+      }
+    }, verbose = verbose)},
+    warning = function(w) {
+      if (conditionMessage(w) != "non-integer #successes in a binomial glm!") .wrn("(from `glm()`) ", w, tidy = FALSE)
+      invokeRestart("muffleWarning")
+    })
+
+    ps[[t.lev]] <- p.score <- fit$fitted.values
+    ps[[c.lev]] <- 1 - ps[[t.lev]]
   }
+
+  fit[["call"]] <- NULL
+  fit.obj <- fit
 
   #ps should be matrix of probs for each treat
   #Computing weights
@@ -362,324 +314,282 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                               stabilize, subclass, missing, ps, .data, verbose, ...) {
+                               stabilize, subclass, missing, .data, verbose, ...) {
   A <- list(...)
 
   fit.obj <- NULL
 
-  if (is_null(ps)) {
+  covs <- covs[subset, , drop = FALSE]
+  treat_sub <- factor(treat[subset])
+  s.weights <- s.weights[subset]
 
-    covs <- covs[subset, , drop = FALSE]
-    treat_sub <- factor(treat[subset])
-    s.weights <- s.weights[subset]
+  ord.treat <- is.ordered(treat_sub)
 
-    ord.treat <- is.ordered(treat_sub)
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
 
-    if (missing == "ind") {
-      covs <- add_missing_indicators(covs)
-    }
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
-    for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
-
-    if (ncol(covs) > 1) {
-      if (missing == "saem") {
-        covs0 <- covs
-        for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
-        colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
-      }
-      else colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
-      covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-    }
-
-    #Process link
-    acceptable.links <- {
-      if (ord.treat) c("logit", "probit", "loglog", "cloglog", "cauchit", "br.logit")
-      else if (!isFALSE(A$use.mlogit)) c("logit", "probit", "bayes.probit", "br.logit")
-      else if (missing == "saem") "logit"
-      else expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
-    }
-
-    if (is_null(A[["link"]])) A$link <- acceptable.links[1]
-    else {
-      which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
-      if (is.na(which.link)) {
-        .err(sprintf("Only %s allowed as the link for %s treatments%",
-                     word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
-                     if (ord.treat) "ordinal" else "multinomial",
-                     if (missing == "saem") ' with `missing = "saem"`' else ""))
-      }
-
-      A[["link"]] <- which.link
-    }
-
-    use.br <- startsWith(A[["link"]], "br.")
-    # use.bayes <- startsWith(A$link, "bayes.")
-    if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
-    # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
-
+  if (ncol(covs) > 1) {
     if (missing == "saem") {
-      rlang::check_installed("misaem")
-      if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-      if (is_null(A[["control"]])) A[["control"]] <- list()
-      if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
-      if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
+      covs0 <- covs
+      for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[,i]),i] <- covs0[!is.na(covs0[,i]),i][1]
+      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
+    }
+    else colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  }
+
+  #Process link
+  acceptable.links <- {
+    if (ord.treat) c("logit", "probit", "loglog", "cloglog", "cauchit", "br.logit")
+    else if (!isFALSE(A$use.mlogit)) c("logit", "probit", "bayes.probit", "br.logit")
+    else if (missing == "saem") "logit"
+    else expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
+  }
+
+  if (is_null(A[["link"]])) A$link <- acceptable.links[1]
+  else {
+    which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
+    if (is.na(which.link)) {
+      .err(sprintf("Only %s allowed as the link for %s treatments%",
+                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
+                   if (ord.treat) "ordinal" else "multinomial",
+                   if (missing == "saem") ' with `missing = "saem"`' else ""))
     }
 
-    if (ord.treat) {
-      if (use.br) {
-        rlang::check_installed("brglm2")
+    A[["link"]] <- which.link
+  }
 
-        ctrl_fun <- brglm2::brglmControl
-        control <- do.call(ctrl_fun, c(A[["control"]],
-                                       A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                                 names(A[["control"]]))]))
+  use.br <- startsWith(A[["link"]], "br.")
+  # use.bayes <- startsWith(A$link, "bayes.")
+  if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
+  # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
 
-        data <- data.frame(treat_sub, covs)
-        formula <- formula(data)
+  if (missing == "saem") {
+    rlang::check_installed("misaem")
+    if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+    if (is_null(A[["control"]])) A[["control"]] <- list()
+    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
+    if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
+  }
 
-        tryCatch({verbosely({
-          fit <- do.call(brglm2::bracl,
-                         list(formula,
-                              data = data,
-                              weights = s.weights,
-                              control = control,
-                              parallel = if_null_then(A[["parallel"]], FALSE)),
-                         quote = TRUE)
-        }, verbose = verbose)},
-        error = function(e) {
-          .err(sprintf("there was a problem with the bias-reduced ordinal logit regression.\n       Try a different link.\n       Error message: %s", conditionMessage(e)), tidy = FALSE)
-        })
-      }
-      else {
-        if (A[["link"]] == "logit") A[["link"]] <- "logistic"
-        rlang::check_installed("MASS")
-        # message(paste("Using ordinal", A$link, "regression."))
-        data <- data.frame(treat_sub, covs)
-        formula <- formula(data)
+  if (ord.treat) {
+    if (use.br) {
+      rlang::check_installed("brglm2")
 
-        tryCatch({verbosely({
-          fit <- do.call(MASS::polr,
-                         list(formula,
-                              data = data,
-                              weights = s.weights,
-                              Hess = FALSE,
-                              model = FALSE,
-                              method = A[["link"]],
-                              contrasts = NULL), quote = TRUE)
-        }, verbose = verbose)},
-        error = function(e) {
-          .err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.\n       Error message: (from `MASS::polr()`) %s",
-                       A$link, conditionMessage(e)), tidy = FALSE)})
-      }
+      ctrl_fun <- brglm2::brglmControl
+      control <- do.call(ctrl_fun, c(A[["control"]],
+                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                               names(A[["control"]]))]))
+
+      data <- data.frame(treat_sub, covs)
+      formula <- formula(data)
+
+      tryCatch({verbosely({
+        fit <- do.call(brglm2::bracl,
+                       list(formula,
+                            data = data,
+                            weights = s.weights,
+                            control = control,
+                            parallel = if_null_then(A[["parallel"]], FALSE)),
+                       quote = TRUE)
+      }, verbose = verbose)},
+      error = function(e) {
+        .err(sprintf("there was a problem with the bias-reduced ordinal logit regression.\n       Try a different link.\n       Error message: %s", conditionMessage(e)), tidy = FALSE)
+      })
+    }
+    else {
+      if (A[["link"]] == "logit") A[["link"]] <- "logistic"
+      rlang::check_installed("MASS")
+      # message(paste("Using ordinal", A$link, "regression."))
+      data <- data.frame(treat_sub, covs)
+      formula <- formula(data)
+
+      tryCatch({verbosely({
+        fit <- do.call(MASS::polr,
+                       list(formula,
+                            data = data,
+                            weights = s.weights,
+                            Hess = FALSE,
+                            model = FALSE,
+                            method = A[["link"]],
+                            contrasts = NULL), quote = TRUE)
+      }, verbose = verbose)},
+      error = function(e) {
+        .err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.\n       Error message: (from `MASS::polr()`) %s",
+                     A$link, conditionMessage(e)), tidy = FALSE)})
+    }
+
+    ps <- fit$fitted.values
+    fit.obj <- fit
+  }
+  else {
+    if (use.br) {
+      rlang::check_installed("brglm2")
+      data <- data.frame(treat_sub, covs)
+      formula <- formula(data)
+      ctrl_fun <- brglm2::brglmControl
+      control <- do.call(ctrl_fun, c(A[["control"]],
+                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                               names(A[["control"]]))]))
+      tryCatch({verbosely({
+        fit <- do.call(brglm2::brmultinom,
+                       list(formula, data,
+                            weights = s.weights,
+                            control = control), quote = TRUE)
+      }, verbose = verbose)},
+      error = function(e) {
+        .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different link.\n       Error message: (from brglm2) %s", conditionMessage(e)), tidy = FALSE)
+      })
 
       ps <- fit$fitted.values
       fit.obj <- fit
     }
-    else {
-      if (use.br) {
-        rlang::check_installed("brglm2")
-        data <- data.frame(treat_sub, covs)
-        formula <- formula(data)
-        ctrl_fun <- brglm2::brglmControl
-        control <- do.call(ctrl_fun, c(A[["control"]],
-                                       A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                                 names(A[["control"]]))]))
-        tryCatch({verbosely({
-          fit <- do.call(brglm2::brmultinom,
-                         list(formula, data,
-                              weights = s.weights,
-                              control = control), quote = TRUE)
-        }, verbose = verbose)},
-        error = function(e) {
-          .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different link.\n       Error message: (from brglm2) %s", conditionMessage(e)), tidy = FALSE)
+    else if (A$link == "bayes.probit") {
+      rlang::check_installed("MNP")
+      data <- data.frame(treat_sub, covs)
+      formula <- formula(data)
+      tryCatch({verbosely({
+        fit <- MNP::mnp(formula, data, verbose = TRUE)
+      }, verbose = verbose)},
+      error = function(e) {
+        .err(sprintf("There was a problem fitting the Bayes probit regression with `MNP()`.\n       Try a different link.\nError message: (from `MNP::MNP()`) %s",
+                     A$link, conditionMessage(e)), tidy = FALSE)
+      })
+      ps <- predict(fit, type = "prob")$p
+      fit.obj <- fit
+    }
+    else if (missing == "saem") {
+      ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
+
+      fit.list <- make_list(levels(treat_sub))
+
+      for (i in levels(treat_sub)) {
+        t_i <- as.numeric(treat_sub == i)
+        data_i <- data.frame(t_i, covs)
+
+        withCallingHandlers({
+          verbosely({
+            fit.list[[i]] <- misaem::miss.glm(formula(data_i), data = data_i,
+                                              control = A[["control"]])
+          }, verbose = verbose)
+        },
+        warning = function(w) {
+          if (conditionMessage(w) != "one argument not used by format '%i '") .wrn("(from misaem) ", w, tidy = FALSE)
+          invokeRestart("muffleWarning")
         })
 
-        ps <- fit$fitted.values
-        fit.obj <- fit
+        ps[[i]] <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
       }
-      else if (A$link == "bayes.probit") {
-        rlang::check_installed("MNP")
-        data <- data.frame(treat_sub, covs)
-        formula <- formula(data)
-        tryCatch({verbosely({
-          fit <- MNP::mnp(formula, data, verbose = TRUE)
-        }, verbose = verbose)},
-        error = function(e) {
-          .err(sprintf("There was a problem fitting the Bayes probit regression with `MNP()`.\n       Try a different link.\nError message: (from `MNP::MNP()`) %s",
-                       A$link, conditionMessage(e)), tidy = FALSE)
-        })
-        ps <- predict(fit, type = "prob")$p
-        fit.obj <- fit
+      fit.obj <- fit.list
+    }
+    else if (isTRUE(A$use.mclogit)) {
+      rlang::check_installed("mclogit")
+
+      if (is_not_null(A$random)) {
+        random <- get_covs_and_treat_from_formula(A$random, data = .data)$reported.covs[subset,,drop = FALSE]
+        data <- cbind(data.frame(random), data.frame(treat = treat_sub, .s.weights = s.weights, covs))
+        covnames <- names(data)[-c(seq_col(random), ncol(random) + (1:2))]
+        tname <- names(data)[ncol(random) + 1]
+        ctrl_fun <- mclogit::mmclogit.control
       }
-      else if (missing == "saem") {
-        ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
-
-        fit.list <- make_list(levels(treat_sub))
-
-        for (i in levels(treat_sub)) {
-          t_i <- as.numeric(treat_sub == i)
-          data_i <- data.frame(t_i, covs)
-
-          withCallingHandlers({
-            verbosely({
-              fit.list[[i]] <- misaem::miss.glm(formula(data_i), data = data_i,
-                                                control = A[["control"]])
-            }, verbose = verbose)
-          },
-          warning = function(w) {
-            if (conditionMessage(w) != "one argument not used by format '%i '") .wrn("(from misaem) ", w, tidy = FALSE)
-            invokeRestart("muffleWarning")
-          })
-
-          ps[[i]] <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
-        }
-        fit.obj <- fit.list
-      }
-      else if (isTRUE(A$use.mclogit)) {
-        rlang::check_installed("mclogit")
-
-        if (is_not_null(A$random)) {
-          random <- get_covs_and_treat_from_formula(A$random, data = .data)$reported.covs[subset,,drop = FALSE]
-          data <- cbind(data.frame(random), data.frame(treat = treat_sub, .s.weights = s.weights, covs))
-          covnames <- names(data)[-c(seq_col(random), ncol(random) + (1:2))]
-          tname <- names(data)[ncol(random) + 1]
-          ctrl_fun <- mclogit::mmclogit.control
-        }
-        else {
-          data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
-          covnames <- names(data)[-c(1,2)]
-          tname <- names(data)[1]
-          ctrl_fun <- mclogit::mclogit.control
-        }
-        form <- reformulate(covnames, tname)
-
-        control <- do.call(ctrl_fun, c(A[["control"]],
-                                       A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                                 names(A[["control"]]))]))
-        tryCatch({verbose({
-          fit <- do.call(mclogit::mblogit, list(form,
-                                                data = data,
-                                                weights = quote(.s.weights),
-                                                random = A[["random"]],
-                                                method = A[["mclogit.method"]],
-                                                estimator = if_null_then(A[["estimator"]], eval(formals(mclogit::mclogit)[["estimator"]])),
-                                                dispersion = if_null_then(A[["dispersion"]], eval(formals(mclogit::mclogit)[["dispersion"]])),
-                                                groups = A[["groups"]],
-                                                control = control))
-
-        }, verbose = verbose)},
-        error = function(e) {
-          .err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try again with `use.mclogit = FALSE`.\nError message: (from `mclogit::mblogit()`) %s",
-                       A$link, conditionMessage(e)), tidy = FALSE)
-        }
-        )
-
-        ps <- fitted(fit)
-        colnames(ps) <- levels(treat_sub)
-        fit.obj <- fit
-      }
-      else if (!isFALSE(A$use.mlogit)) {
-        rlang::check_installed("mlogit")
-
+      else {
         data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
         covnames <- names(data)[-c(1,2)]
-        tryCatch({verbosely({
-          fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "))),
-                                data = data,
-                                estimate = TRUE,
-                                probit = A$link[1] == "probit",
-                                weights = .s.weights,
-                                varying = NULL,
-                                shape = "wide",
-                                sep = "",
-                                choice = "treat",
-                                ...)
-        }, verbose = verbose)},
-        error = function(e) {
-          .err(sprintf("There was a problem fitting the multinomial %s regression with `mlogit()`.\n       Try again with `use.mlogit = FALSE`.\nError message: (from `mlogit::mlogit()`) %s",
-                       A$link, conditionMessage(e)), tidy = FALSE)
-        }
-        )
-
-        ps <- fitted(fit, outcome = FALSE)
-        fit.obj <- fit
+        tname <- names(data)[1]
+        ctrl_fun <- mclogit::mclogit.control
       }
-      else {
-        ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
+      form <- reformulate(covnames, tname)
 
-        ctrl_fun <- stats::glm.control
-        control <- do.call(ctrl_fun, c(A[["control"]],
-                                       A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                                 names(A[["control"]]))]))
-        fit.list <- make_list(levels(treat_sub))
+      control <- do.call(ctrl_fun, c(A[["control"]],
+                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                               names(A[["control"]]))]))
+      tryCatch({verbose({
+        fit <- do.call(mclogit::mblogit, list(form,
+                                              data = data,
+                                              weights = quote(.s.weights),
+                                              random = A[["random"]],
+                                              method = A[["mclogit.method"]],
+                                              estimator = if_null_then(A[["estimator"]], eval(formals(mclogit::mclogit)[["estimator"]])),
+                                              dispersion = if_null_then(A[["dispersion"]], eval(formals(mclogit::mclogit)[["dispersion"]])),
+                                              groups = A[["groups"]],
+                                              control = control))
 
-        for (i in levels(treat_sub)) {
-          if (isTRUE(A[["test1"]])) {
-            if (i == last(levels(treat_sub))) {
-              ps[[i]] <- 1 - rowSums(ps[names(ps) != i])
-              next
-            }
+      }, verbose = verbose)},
+      error = function(e) {
+        .err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try again with `use.mclogit = FALSE`.\nError message: (from `mclogit::mblogit()`) %s",
+                     A$link, conditionMessage(e)), tidy = FALSE)
+      }
+      )
+
+      ps <- fitted(fit)
+      colnames(ps) <- levels(treat_sub)
+      fit.obj <- fit
+    }
+    else if (!isFALSE(A$use.mlogit)) {
+      rlang::check_installed("mlogit")
+
+      data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
+      covnames <- names(data)[-c(1,2)]
+      tryCatch({verbosely({
+        fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "))),
+                              data = data,
+                              estimate = TRUE,
+                              probit = A$link[1] == "probit",
+                              weights = .s.weights,
+                              varying = NULL,
+                              shape = "wide",
+                              sep = "",
+                              choice = "treat",
+                              ...)
+      }, verbose = verbose)},
+      error = function(e) {
+        .err(sprintf("There was a problem fitting the multinomial %s regression with `mlogit()`.\n       Try again with `use.mlogit = FALSE`.\nError message: (from `mlogit::mlogit()`) %s",
+                     A$link, conditionMessage(e)), tidy = FALSE)
+      }
+      )
+
+      ps <- fitted(fit, outcome = FALSE)
+      fit.obj <- fit
+    }
+    else {
+      ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
+
+      ctrl_fun <- stats::glm.control
+      control <- do.call(ctrl_fun, c(A[["control"]],
+                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                               names(A[["control"]]))]))
+      fit.list <- make_list(levels(treat_sub))
+
+      for (i in levels(treat_sub)) {
+        if (isTRUE(A[["test1"]])) {
+          if (i == last(levels(treat_sub))) {
+            ps[[i]] <- 1 - rowSums(ps[names(ps) != i])
+            next
           }
-
-          t_i <- as.numeric(treat_sub == i)
-          data_i <- data.frame(t_i, covs)
-
-          verbosely({
-            fit.list[[i]] <- do.call(stats::glm, list(formula(data_i), data = data_i,
-                                                      family = quasibinomial(link = A$link),
-                                                      weights = s.weights,
-                                                      control = control), quote = TRUE)
-          }, verbose = verbose)
-
-          ps[[i]] <- fit.list[[i]]$fitted.values
-
         }
-        if (isTRUE(A[["test2"]])) ps <- ps/rowSums(ps)
-        fit.obj <- fit.list
+
+        t_i <- as.numeric(treat_sub == i)
+        data_i <- data.frame(t_i, covs)
+
+        verbosely({
+          fit.list[[i]] <- do.call(stats::glm, list(formula(data_i), data = data_i,
+                                                    family = quasibinomial(link = A$link),
+                                                    weights = s.weights,
+                                                    control = control), quote = TRUE)
+        }, verbose = verbose)
+
+        ps[[i]] <- fit.list[[i]]$fitted.values
+
       }
+      if (isTRUE(A[["test2"]])) ps <- ps/rowSums(ps)
+      fit.obj <- fit.list
     }
-    p.score <- NULL
   }
-  else {
-    n <- length(treat)
-    p.score <- NULL
-    treat <- factor(treat)
-    treat_sub <- factor(treat[subset])
-    bin.treat <- is_binary(treat_sub)
+  p.score <- NULL
 
-    bad.ps <- FALSE
-    if (is_(ps, c("matrix", "data.frame"))) {
-      if (all(dim(ps) == c(n, nunique(treat)))) {
-        ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
-      }
-      else if (all(dim(ps) == c(n, 1))) {
-        ps <- setNames(list2DF(lapply(levels(treat), function(x) {
-          p_ <- rep(1, length(treat))
-          p_[treat == x] <- ps[treat == x, 1]
-          p_
-        })), levels(treat))[subset, , drop = FALSE]
-      }
-      else {
-        bad.ps <- TRUE
-      }
-    }
-    else if (is.numeric(ps)) {
-      if (length(ps) == n) {
-        ps <- setNames(list2DF(lapply(levels(treat), function(x) {
-          p_ <- rep(1, length(treat))
-          p_[treat == x] <- ps[treat == x]
-          p_
-        })), levels(treat))[subset, , drop = FALSE]
-      }
-      else {
-        bad.ps <- TRUE
-      }
-    }
-    else bad.ps <- TRUE
-
-    if (bad.ps) .err("`ps` must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit")
-
-  }
 
   #ps should be matrix of probs for each treat
   #Computing weights
@@ -689,7 +599,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   list(w = w, ps = p.score, fit.obj = fit.obj)
 }
 
-weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
+weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, verbose, ...) {
   A <- list(...)
 
   fit.obj <- NULL
@@ -730,57 +640,56 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   dens.num <- densfun(treat - mean(treat), s.weights)
 
   #Estimate GPS
-  if (is_null(ps)) {
+  if (is_null(A[["link"]])) A[["link"]] <- "identity"
 
-    if (missing == "saem") {
-      rlang::check_installed("misaem")
+  if (missing == "saem") {
+    rlang::check_installed("misaem")
 
-      withCallingHandlers({verbosely({
-        fit <- misaem::miss.lm(formula, data, control = as.list(A[["control"]]))
-      }, verbose = verbose)},
-      warning = function(w) {
-        if (conditionMessage(w) != "one argument not used by format '%i '") {
-          .wrn("(from `misaem::miss.lm()`) ", w, tidy = FALSE)
-        }
-        invokeRestart("muffleWarning")
-      })
+    acceptable.links <- "identity"
+    which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
 
-      if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-
-      gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
+    if (is.na(which.link)) {
+      .err(sprintf("only %s allowed as the link for continuous treatments with missing = \"saem\"",
+                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE)))
     }
-    else {
-      if (is_null(A[["link"]])) A[["link"]] <- "identity"
-      else {
-        if (missing == "saem") acceptable.links <- "identity"
-        else acceptable.links <- c("identity", "log", "inverse")
 
-        which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
-        if (is.na(which.link)) {
-          .err(sprintf("Only %s allowed as the link for continuous treatments%s",
-                       word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
-                       if (missing == "saem") ' with missing = "saem"' else ""))
-        }
-
-        A[["link"]] <- which.link
+    withCallingHandlers({verbosely({
+      fit <- misaem::miss.lm(formula, data, control = as.list(A[["control"]]))
+    }, verbose = verbose)},
+    warning = function(w) {
+      if (conditionMessage(w) != "one argument not used by format '%i '") {
+        .wrn("(from `misaem::miss.lm()`) ", w, tidy = FALSE)
       }
+      invokeRestart("muffleWarning")
+    })
 
-      verbosely({
-        fit <- do.call("glm", c(list(formula, data = data,
-                                     weights = s.weights,
-                                     family = gaussian(link = A[["link"]]),
-                                     control = as.list(A$control))),
-                       quote = TRUE)
-      }, verbose = verbose)
+    if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
 
-      gp.score <- fit$fitted.values
-    }
-
-    fit.obj <- fit
+    gp.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
   }
   else {
-    gp.score <- ps
+    acceptable.links <- c("identity", "log", "inverse")
+
+    which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
+    if (is.na(which.link)) {
+      .err(sprintf("only %s allowed as the link for continuous treatments",
+                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE)))
+    }
+
+    A[["link"]] <- which.link
+
+    verbosely({
+      fit <- do.call("glm", c(list(formula, data = data,
+                                   weights = s.weights,
+                                   family = gaussian(link = A[["link"]]),
+                                   control = as.list(A$control))),
+                     quote = TRUE)
+    }, verbose = verbose)
+
+    gp.score <- fit$fitted.values
   }
+
+  fit.obj <- fit
 
   #Get weights
   dens.denom <- densfun(treat - gp.score, s.weights)

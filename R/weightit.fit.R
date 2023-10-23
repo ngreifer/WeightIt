@@ -237,7 +237,12 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   if (!is.function(method)) {
     fun <- "weightit"
     if (is.MSM.method) fun <- paste0(fun, "MSM")
-    fun <- paste0(fun, "2", method)
+
+    if (is_null(ps))
+      fun <- paste0(fun, "2", method)
+    else
+      fun <- paste0(fun, "2ps")
+
     fun <- switch(treat.type,
                   "multinomial" = paste.(fun, "multi"),
                   "continuous" = paste.(fun, "cont"),
