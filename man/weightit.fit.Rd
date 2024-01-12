@@ -145,7 +145,7 @@ data("lalonde", package = "cobalt")
 
 # Balancing covariates between treatment groups (binary)
 covs <- lalonde[c("age", "educ", "race", "married",
-                   "nodegree", "re74", "re75")]
+                  "nodegree", "re74", "re75")]
 ## Create covs matrix, splitting any factors using
 ## cobalt::splitfactor()
 covs_mat <- as.matrix(splitfactor(covs))
