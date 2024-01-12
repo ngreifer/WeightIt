@@ -211,14 +211,6 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
   # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
 
-  if (missing == "saem") {
-    rlang::check_installed("misaem")
-    if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-    if (is_null(A[["control"]])) A[["control"]] <- list()
-    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
-    if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
-  }
-
   t.lev <- get_treated_level(treat_sub)
   c.lev <- setdiff(levels(treat_sub), t.lev)
 
@@ -227,6 +219,12 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- binarize(treat_sub, one = t.lev)
 
   if (missing == "saem") {
+    rlang::check_installed("misaem")
+    if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+    if (is_null(A[["control"]])) A[["control"]] <- list()
+    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
+    if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
+
     data <- data.frame(treat, covs)
 
     withCallingHandlers({
@@ -367,14 +365,6 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
   # else if (use.bayes) A$link <- substr(A$link, 7, nchar(A$link))
 
-  if (missing == "saem") {
-    rlang::check_installed("misaem")
-    if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
-    if (is_null(A[["control"]])) A[["control"]] <- list()
-    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
-    if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
-  }
-
   if (ord.treat) {
     if (use.br) {
       rlang::check_installed("brglm2")
@@ -425,171 +415,176 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     ps <- fit$fitted.values
     fit.obj <- fit
   }
-  else {
-    if (use.br) {
-      rlang::check_installed("brglm2")
-      data <- data.frame(treat_sub, covs)
-      formula <- formula(data)
-      ctrl_fun <- brglm2::brglmControl
-      control <- do.call(ctrl_fun, c(A[["control"]],
-                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                               names(A[["control"]]))]))
-      tryCatch({verbosely({
-        fit <- do.call(brglm2::brmultinom,
-                       list(formula, data,
-                            weights = s.weights,
-                            control = control), quote = TRUE)
-      }, verbose = verbose)},
-      error = function(e) {
-        .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different link.\n       Error message: (from brglm2) %s", conditionMessage(e)), tidy = FALSE)
+  else if (use.br) {
+    rlang::check_installed("brglm2")
+    data <- data.frame(treat_sub, covs)
+    formula <- formula(data)
+    ctrl_fun <- brglm2::brglmControl
+    control <- do.call(ctrl_fun, c(A[["control"]],
+                                   A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                             names(A[["control"]]))]))
+    tryCatch({verbosely({
+      fit <- do.call(brglm2::brmultinom,
+                     list(formula, data,
+                          weights = s.weights,
+                          control = control), quote = TRUE)
+    }, verbose = verbose)},
+    error = function(e) {
+      .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different link.\n       Error message: (from brglm2) %s", conditionMessage(e)), tidy = FALSE)
+    })
+
+    ps <- fit$fitted.values
+    fit.obj <- fit
+  }
+  else if (A$link == "bayes.probit") {
+    rlang::check_installed("MNP")
+    data <- data.frame(treat_sub, covs)
+    formula <- formula(data)
+    tryCatch({verbosely({
+      fit <- MNP::mnp(formula, data, verbose = TRUE)
+    }, verbose = verbose)},
+    error = function(e) {
+      .err(sprintf("There was a problem fitting the Bayes probit regression with `MNP()`.\n       Try a different link.\nError message: (from `MNP::mnp()`) %s",
+                   A$link, conditionMessage(e)), tidy = FALSE)
+    })
+    ps <- predict(fit, type = "prob")$p
+    fit.obj <- fit
+  }
+  else if (missing == "saem") {
+    rlang::check_installed("misaem")
+    if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
+    if (is_null(A[["control"]])) A[["control"]] <- list()
+    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
+    if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
+
+    ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
+
+    fit.list <- make_list(levels(treat_sub))
+
+    for (i in levels(treat_sub)) {
+      t_i <- as.numeric(treat_sub == i)
+      data_i <- data.frame(t_i, covs)
+
+      withCallingHandlers({
+        verbosely({
+          fit.list[[i]] <- misaem::miss.glm(formula(data_i), data = data_i,
+                                            control = A[["control"]])
+        }, verbose = verbose)
+      },
+      warning = function(w) {
+        if (conditionMessage(w) != "one argument not used by format '%i '") .wrn("(from misaem) ", w, tidy = FALSE)
+        invokeRestart("muffleWarning")
       })
 
-      ps <- fit$fitted.values
-      fit.obj <- fit
+      ps[[i]] <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
     }
-    else if (A$link == "bayes.probit") {
-      rlang::check_installed("MNP")
-      data <- data.frame(treat_sub, covs)
-      formula <- formula(data)
-      tryCatch({verbosely({
-        fit <- MNP::mnp(formula, data, verbose = TRUE)
-      }, verbose = verbose)},
-      error = function(e) {
-        .err(sprintf("There was a problem fitting the Bayes probit regression with `MNP()`.\n       Try a different link.\nError message: (from `MNP::MNP()`) %s",
-                     A$link, conditionMessage(e)), tidy = FALSE)
-      })
-      ps <- predict(fit, type = "prob")$p
-      fit.obj <- fit
-    }
-    else if (missing == "saem") {
-      ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
+    fit.obj <- fit.list
+  }
+  else if (isTRUE(A$use.mclogit)) {
+    rlang::check_installed("mclogit")
 
-      fit.list <- make_list(levels(treat_sub))
-
-      for (i in levels(treat_sub)) {
-        t_i <- as.numeric(treat_sub == i)
-        data_i <- data.frame(t_i, covs)
-
-        withCallingHandlers({
-          verbosely({
-            fit.list[[i]] <- misaem::miss.glm(formula(data_i), data = data_i,
-                                              control = A[["control"]])
-          }, verbose = verbose)
-        },
-        warning = function(w) {
-          if (conditionMessage(w) != "one argument not used by format '%i '") .wrn("(from misaem) ", w, tidy = FALSE)
-          invokeRestart("muffleWarning")
-        })
-
-        ps[[i]] <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
-      }
-      fit.obj <- fit.list
-    }
-    else if (isTRUE(A$use.mclogit)) {
-      rlang::check_installed("mclogit")
-
-      if (is_not_null(A$random)) {
-        random <- get_covs_and_treat_from_formula(A$random, data = .data)$reported.covs[subset,,drop = FALSE]
-        data <- cbind(data.frame(random), data.frame(treat = treat_sub, .s.weights = s.weights, covs))
-        covnames <- names(data)[-c(seq_col(random), ncol(random) + (1:2))]
-        tname <- names(data)[ncol(random) + 1]
-        ctrl_fun <- mclogit::mmclogit.control
-      }
-      else {
-        data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
-        covnames <- names(data)[-c(1,2)]
-        tname <- names(data)[1]
-        ctrl_fun <- mclogit::mclogit.control
-      }
-      form <- reformulate(covnames, tname)
-
-      control <- do.call(ctrl_fun, c(A[["control"]],
-                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                               names(A[["control"]]))]))
-      tryCatch({verbose({
-        fit <- do.call(mclogit::mblogit, list(form,
-                                              data = data,
-                                              weights = quote(.s.weights),
-                                              random = A[["random"]],
-                                              method = A[["mclogit.method"]],
-                                              estimator = if_null_then(A[["estimator"]], eval(formals(mclogit::mclogit)[["estimator"]])),
-                                              dispersion = if_null_then(A[["dispersion"]], eval(formals(mclogit::mclogit)[["dispersion"]])),
-                                              groups = A[["groups"]],
-                                              control = control))
-
-      }, verbose = verbose)},
-      error = function(e) {
-        .err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try again with `use.mclogit = FALSE`.\nError message: (from `mclogit::mblogit()`) %s",
-                     A$link, conditionMessage(e)), tidy = FALSE)
-      }
-      )
-
-      ps <- fitted(fit)
-      colnames(ps) <- levels(treat_sub)
-      fit.obj <- fit
-    }
-    else if (!isFALSE(A$use.mlogit)) {
-      rlang::check_installed("mlogit")
-
-      data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
-      covnames <- names(data)[-c(1,2)]
-      tryCatch({verbosely({
-        fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "))),
-                              data = data,
-                              estimate = TRUE,
-                              probit = A$link[1] == "probit",
-                              weights = .s.weights,
-                              varying = NULL,
-                              shape = "wide",
-                              sep = "",
-                              choice = "treat",
-                              ...)
-      }, verbose = verbose)},
-      error = function(e) {
-        .err(sprintf("There was a problem fitting the multinomial %s regression with `mlogit()`.\n       Try again with `use.mlogit = FALSE`.\nError message: (from `mlogit::mlogit()`) %s",
-                     A$link, conditionMessage(e)), tidy = FALSE)
-      }
-      )
-
-      ps <- fitted(fit, outcome = FALSE)
-      fit.obj <- fit
+    if (is_not_null(A$random)) {
+      random <- get_covs_and_treat_from_formula(A$random, data = .data)$reported.covs[subset,,drop = FALSE]
+      data <- cbind(data.frame(random), data.frame(treat = treat_sub, .s.weights = s.weights, covs))
+      covnames <- names(data)[-c(seq_col(random), ncol(random) + (1:2))]
+      tname <- names(data)[ncol(random) + 1]
+      ctrl_fun <- mclogit::mmclogit.control
     }
     else {
-      ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
-
-      ctrl_fun <- stats::glm.control
-      control <- do.call(ctrl_fun, c(A[["control"]],
-                                     A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
-                                               names(A[["control"]]))]))
-      fit.list <- make_list(levels(treat_sub))
-
-      for (i in levels(treat_sub)) {
-        if (isTRUE(A[["test1"]])) {
-          if (i == last(levels(treat_sub))) {
-            ps[[i]] <- 1 - rowSums(ps[names(ps) != i])
-            next
-          }
-        }
-
-        t_i <- as.numeric(treat_sub == i)
-        data_i <- data.frame(t_i, covs)
-
-        verbosely({
-          fit.list[[i]] <- do.call(stats::glm, list(formula(data_i), data = data_i,
-                                                    family = quasibinomial(link = A$link),
-                                                    weights = s.weights,
-                                                    control = control), quote = TRUE)
-        }, verbose = verbose)
-
-        ps[[i]] <- fit.list[[i]]$fitted.values
-
-      }
-      if (isTRUE(A[["test2"]])) ps <- ps/rowSums(ps)
-      fit.obj <- fit.list
+      data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
+      covnames <- names(data)[-c(1,2)]
+      tname <- names(data)[1]
+      ctrl_fun <- mclogit::mclogit.control
     }
-  }
-  p.score <- NULL
+    form <- reformulate(covnames, tname)
 
+    control <- do.call(ctrl_fun, c(A[["control"]],
+                                   A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                             names(A[["control"]]))]))
+    tryCatch({verbosely({
+      fit <- do.call(mclogit::mblogit,
+                     list(form,
+                          data = data,
+                          weights = quote(.s.weights),
+                          random = A[["random"]],
+                          method = A[["mclogit.method"]],
+                          estimator = if_null_then(A[["estimator"]], eval(formals(mclogit::mclogit)[["estimator"]])),
+                          dispersion = if_null_then(A[["dispersion"]], eval(formals(mclogit::mclogit)[["dispersion"]])),
+                          groups = A[["groups"]],
+                          control = control))
+
+    }, verbose = verbose)},
+    error = function(e) {
+      .err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try again with `use.mclogit = FALSE`.\nError message: (from `mclogit::mblogit()`) %s",
+                   A$link, conditionMessage(e)), tidy = FALSE)
+    }
+    )
+
+    ps <- fitted(fit)
+    colnames(ps) <- levels(treat_sub)
+    fit.obj <- fit
+  }
+  else if (!isFALSE(A$use.mlogit)) {
+    rlang::check_installed("mlogit")
+
+    data <- data.frame(treat = treat_sub, .s.weights = s.weights, covs)
+    covnames <- names(data)[-c(1,2)]
+    tryCatch({verbosely({
+      fit <- mlogit::mlogit(as.formula(paste0("treat ~ 1 | ", paste(covnames, collapse = " + "))),
+                            data = data,
+                            estimate = TRUE,
+                            probit = A$link[1] == "probit",
+                            weights = .s.weights,
+                            varying = NULL,
+                            shape = "wide",
+                            sep = "",
+                            choice = "treat",
+                            ...)
+    }, verbose = verbose)},
+    error = function(e) {
+      .err(sprintf("There was a problem fitting the multinomial %s regression with `mlogit()`.\n       Try again with `use.mlogit = FALSE`.\nError message: (from `mlogit::mlogit()`) %s",
+                   A$link, conditionMessage(e)), tidy = FALSE)
+    }
+    )
+
+    ps <- fitted(fit, outcome = FALSE)
+    fit.obj <- fit
+  }
+  else {
+    ps <- make_df(levels(treat_sub), nrow = length(treat_sub))
+
+    ctrl_fun <- stats::glm.control
+    control <- do.call(ctrl_fun, c(A[["control"]],
+                                   A[setdiff(names(formals(ctrl_fun))[pmatch(names(A), names(formals(ctrl_fun)), 0)],
+                                             names(A[["control"]]))]))
+    fit.list <- make_list(levels(treat_sub))
+
+    for (i in levels(treat_sub)) {
+      if (isTRUE(A[["test1"]])) {
+        if (i == last(levels(treat_sub))) {
+          ps[[i]] <- 1 - rowSums(ps[names(ps) != i])
+          next
+        }
+      }
+
+      t_i <- as.numeric(treat_sub == i)
+      data_i <- data.frame(t_i, covs)
+
+      verbosely({
+        fit.list[[i]] <- do.call(stats::glm, list(formula(data_i), data = data_i,
+                                                  family = quasibinomial(link = A$link),
+                                                  weights = s.weights,
+                                                  control = control), quote = TRUE)
+      }, verbose = verbose)
+
+      ps[[i]] <- fit.list[[i]]$fitted.values
+
+    }
+    if (isTRUE(A[["test2"]])) ps <- ps/rowSums(ps)
+    fit.obj <- fit.list
+  }
+
+  p.score <- NULL
 
   #ps should be matrix of probs for each treat
   #Computing weights

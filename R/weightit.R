@@ -292,6 +292,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A[["verbose"]] <- verbose
   A[["include.obj"]] <- include.obj
   A[[".data"]] <- data
+  A[[".formula"]] <- formula
   A[[".covs"]] <- reported.covs
 
   obj <- do.call("weightit.fit", A)

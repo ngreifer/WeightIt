@@ -112,7 +112,7 @@
 #'
 #' # Balancing covariates between treatment groups (binary)
 #' covs <- lalonde[c("age", "educ", "race", "married",
-#'                    "nodegree", "re74", "re75")]
+#'                   "nodegree", "re74", "re75")]
 #' ## Create covs matrix, splitting any factors using
 #' ## cobalt::splitfactor()
 #' covs_mat <- as.matrix(splitfactor(covs))
@@ -135,8 +135,6 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                          ps = NULL, moments = NULL, int = FALSE,
                          subclass = NULL, is.MSM.method = FALSE, missing = NULL,
                          verbose = FALSE, include.obj = FALSE, ...) {
-
-  #main function of weightit that dispatches to weightit2method and returns object containing weights and ps
 
   #Checks
   if (!check_if_call_from_fun(weightit) && !check_if_call_from_fun(weightitMSM)) {
@@ -247,26 +245,27 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                   "multinomial" = paste.(fun, "multi"),
                   "continuous" = paste.(fun, "cont"),
                   fun)
-    fun <- get1(fun, mode = "function")
+    # fun <- get1(fun, mode = "function")
   }
 
   for (i in levels(by.factor)) {
     #Run method
     if (!is.function(method)) {
-      obj <- fun(covs = covs,
-                 treat = treat,
-                 s.weights = s.weights,
-                 subset = by.factor == i,
-                 estimand = estimand,
-                 focal = focal,
-                 stabilize = stabilize,
-                 subclass = subclass,
-                 ps = ps,
-                 moments = moments,
-                 int = int,
-                 missing = missing,
-                 verbose = verbose,
-                 ...)
+      obj <- do.call(fun,
+                     alist(covs = covs,
+                           treat = treat,
+                           s.weights = s.weights,
+                           subset = by.factor == i,
+                           estimand = estimand,
+                           focal = focal,
+                           stabilize = stabilize,
+                           subclass = subclass,
+                           ps = ps,
+                           moments = moments,
+                           int = int,
+                           missing = missing,
+                           verbose = verbose,
+                           ...))
     }
     else if (is.MSM.method) {
       obj <- weightitMSM2user(Fun = method,
@@ -302,10 +301,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       .err("no object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues")
     }
     if (is_null(obj$w) || all(is.na(obj$w))) {
-      .wrn("No weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues")
+      .wrn("no weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues")
     }
     if (any(!is.finite(obj$w))) {
-      .wrn("Some weights were estimated as `NA`, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
+      .wrn("some weights were estimated as `NA`, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
       obj$w[!is.finite(obj$w)] <- 0
     }
     # else if (any(!is.finite(obj$w))) probably.a.bug()
@@ -318,6 +317,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     if (include.obj) {
       fit.obj[[i]] <- obj$fit.obj
     }
+
     info[[i]] <- obj$info
   }
 

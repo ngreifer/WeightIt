@@ -42,12 +42,46 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
       stop("If 'var' is not NULL, it must be a covariance matrix with as many entries as supplied variables.", call. = FALSE)
     }
 
-    inv_var <- try(solve(var), silent = TRUE)
-    if (inherits(inv_var, "try-error")) {
+    inv_var <- NULL
+    d <- det(var)
+    if (d > 1e-8) {
+      inv_var <- try(solve(var), silent = TRUE)
+    }
+
+    if (d <= 1e-8 || inherits(inv_var, "try-error")) {
       inv_var <- generalized_inverse(var)
     }
 
     X <- mahalanobize(X, inv_var)
+  }
+  else if (method == "robust_mahalanobis") {
+    #Rosenbaum (2010, ch8)
+    X_r <- matrix(0, nrow = sum(!discarded), ncol = ncol(X),
+                  dimnames = list(rownames(X)[!discarded], colnames(X)))
+    for (i in seq_len(ncol(X_r))) X_r[,i] <- rank(X[!discarded, i])
+
+    if (is.null(s.weights)) var_r <- cov(X_r)
+    else var_r <- cov.wt(X_r, s.weights[!discarded])$cov
+
+    multiplier <- sd(seq_len(sum(!discarded)))/sqrt(diag(var_r))
+    var_r <- var_r * outer(multiplier, multiplier, "*")
+
+    inv_var <- NULL
+    d <- det(var_r)
+    if (d > 1e-8) {
+      inv_var <- try(solve(var_r), silent = TRUE)
+    }
+
+    if (d <= 1e-8 || inherits(inv_var, "try-error")) {
+      inv_var <- generalized_inverse(var_r)
+    }
+
+    if (any(discarded)) {
+      X_r <- array(0, dim = dim(X), dimnames = dimnames(X))
+      for (i in seq_len(ncol(X_r))) X_r[!discarded,i] <- rank(X[!discarded,i])
+    }
+
+    X <- mahalanobize(X_r, inv_var)
   }
   else if (method == "euclidean") {
     #Do nothing
@@ -180,7 +214,7 @@ is.cov_like <- function(var, X) {
     all(diag(var) >= 0)
 }
 weightit_distances <- function() {
-  c("mahalanobis", "euclidean", "scaled_euclidean")
+  c("mahalanobis", "robust_mahalanobis", "euclidean", "scaled_euclidean")
 }
 mahalanobize <- function(X, inv_var) {
   ## Mahalanobize covariates by computing cholesky decomp,
