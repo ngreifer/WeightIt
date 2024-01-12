@@ -135,7 +135,7 @@ Our primary focus will be on marginal effects, which are appropriate for all eff
 
 To estimate marginal effects, we use a method known as g-computation [@snowdenImplementationGComputationSimulated2011] or regression estimation [@schaferAverageCausalEffects2008]. This involves first specifying a model for the outcome as a function of the treatment and covariates. Then, for each unit, we compute their predicted values of the outcome setting their treatment status to treated, and then again for control, leaving us with two predicted outcome values for each unit, which are estimates of the potential outcomes under each treatment level. We compute the mean of each of the estimated potential outcomes across the entire sample, which leaves us with two average estimated potential outcomes. Finally, the contrast of these average estimated potential outcomes (e.g., their difference or ratio, depending on the effect measure desired) is the estimate of the treatment effect.
 
-When doing g-computation after weighting, a few additional considerations are required. First, the outcome model should be fit incorporating the estimated weights (e.g., using weighted least squares or weighted maximum likelihood estimation) [@vansteelandtInvitedCommentaryGComputation2011]. Second, when we take the average of the estimated potential outcomes under each treatment level, this must be a weighted average that incorporates the estimated weights\^[Note: For the ATE, this is actually optional. For the ATT and ATC, this is unnecessary but causes no harm if done. For other estimands or when sampling weights are used, this is necessary. Given that there is no harm to computing the weighted means when it is unnecessary and it is often necessary, we always recommend it here.]. Third, if we want to target the ATT or ATC, we only estimate potential outcomes for the treated or control group, respectively (though we still generate predicted values under both treatment and control) [@wangGcomputationAverageTreatment2017].
+When doing g-computation after weighting, a few additional considerations are required. First, the outcome model should be fit incorporating the estimated weights (e.g., using weighted least squares or weighted maximum likelihood estimation) [@vansteelandtInvitedCommentaryGComputation2011]. Second, when we take the average of the estimated potential outcomes under each treatment level, if an estimand other than the ATT, ATC, or ATE is used or sampling weights are included, this must be a weighted average that incorporates the weights\^[Note: Previously, this guide recommended always including the weights. We believe best practice is to omit them, though this does not mean previous analyses using weighted averages are invalid.]. Third, if we want to target the ATT or ATC, we only estimate potential outcomes for the treated or control group, respectively (though we still generate predicted values under both treatment and control) [@wangGcomputationAverageTreatment2017].
 
 G-computation as a framework for estimating effects after weighting has a number of advantages over other approaches. It works the same regardless of the form of the outcome model or type of outcome (e.g., whether a linear model is used for a continuous outcome or a logistic model is used for a binary outcome); the only difference might be how the average expected potential outcomes are contrasted in the final step. In simple cases, the estimated effect is numerically identical to effects estimated using other methods; for example, if no covariates are included in the outcome model, the g-computation estimate is equal to the difference in means from a t-test or coefficient of the treatment in a linear model for the outcome. There are analytic and bootstrap approximations to the SEs of the g-computation estimate. The analytic approximation is computed using the delta method, a technique for computing the SE of a quantity derived from the regression model parameters, such as the g-computation estimate.
 
@@ -145,7 +145,7 @@ There are other methods to incorporate the outcome model into estimation of the 
 
 ### Modeling the Outcome
 
-The goal of the outcome model is to generate good predictions for use in the g-computation procedure described above. The type and form of the outcome model should depend on the outcome type. For continuous outcomes, one can use a linear model regressing the outcome on the treatment; for binary outcomes, one can use a generalized linear model with, e.g., a logistic link; for time-to-event outcomes, one can use a Cox proportional hazards model.
+The goal of the outcome model is to generate good predictions for use in the g-computation procedure described above. The type and form of the outcome model should depend on the outcome type. For continuous outcomes, one can use a linear model regressing the outcome on the treatment; for binary outcomes, one can use a generalized linear model with, e.g., a logistic link; for time-to-event outcomes, one can use a Cox proportional hazards model. Note that the purpose of including the outcome model is not arrive at a doubly robust estimator (i.e., one that is consistent if either the outcome or propensity score model is correct); rather, it is simply to increase the precision of the weighted estimate essentially for free. To take advantage of this feature, it is important to use a canonical link (i.e., the default link for a given family), as recommended by @gabrielInverseProbabilityTreatment2023.
 
 An additional decision to make is whether (and how) to include covariates in the outcome model. One may ask, why use weighting at all if you are going to model the outcome with covariates anyway? Weighting reduces the dependence of the effect estimate on correct specification of the outcome model; this is the central thesis of @hoMatchingNonparametricPreprocessing2007 (though applied to matching in their case). Including covariates in the outcome model after weighting has several functions: it can increase precision in the effect estimate, reduce the bias due to residual imbalance, and make the effect estimate "doubly robust", which means it is consistent if either the weighting reduces sufficient imbalance in the covariates or if the outcome model is correct. For these reasons, we recommend covariate adjustment after weighting when possible. There is some evidence that covariate adjustment is most helpful for covariates with standardized mean differences greater than .1 [@nguyenDoubleadjustmentPropensityScore2017], so these covariates and covariates thought to be highly predictive of the outcome should be prioritized in treatment effect models if not all can be included due to sample size constraints.
 
@@ -242,19 +242,17 @@ Next, we use `marginaleffects::avg_comparisons()` to estimate the ATE.
 ```{r, eval=me_ok}
 avg_comparisons(fit,
                 variables = "A",
-                vcov = "HC3",
-                wts = "weights")
+                vcov = "HC3")
 ```
 
-Let's break down the call to `avg_comparisons()`: to the first argument, we supply the model fit, `fit`; to the `variables` argument, the name of the treatment (`"A"`); to the `vcov` argument, the name of the robust SE we want to request (in this case, HC3, which perform well relative to other robust SEs); and to the `wts` argument, the names of the variable in `d` containing the matching weights (`"weights"`) to ensure they are included in the analysis. Some of these arguments differ depending on the specifics of the outcome type; see the sections below for information.
+Let's break down the call to `avg_comparisons()`: to the first argument, we supply the model fit, `fit`; to the `variables` argument, the name of the treatment (`"A"`); and to the `vcov` argument, the name of the robust SE we want to request (in this case, HC3, which perform well relative to other robust SEs). Some of these arguments differ depending on the specifics of the outcome type; see the sections below for information.
 
 If, in addition to the effect estimate, we want the average estimated potential outcomes, we can use `marginaleffects::avg_predictions()`, which we demonstrate below. Note the interpretation of the resulting estimates as the expected potential outcomes is only valid if all covariates present in the outcome model (if any) are interacted with the treatment.
 
 ```{r, eval=me_ok}
 avg_predictions(fit,
                 variables = "A",
-                vcov = "HC3",
-                wts = "weights")
+                vcov = "HC3")
 ```
 
 We can see that the difference in potential outcome means is equal to the average treatment effect computed previously[^3]. All of the arguments to `avg_predictions()` are the same as those to `avg_comparisons()`.
@@ -274,6 +272,20 @@ newdata = subset(d, A == 1)
 ```
 
 This requests that g-computation be done only for the treated units. For the ATC, replace `1` with `0`.
+
+#### Weighting for estimands other than the ATT, ATC, or ATE
+
+When weighting for an estimand that changes the target population away from one naturally defined by the data, e.g., for the ATO, ATM, or ATOS, or when trimming weights in such a way that trimmed units are dropped from the sample (i.e., receive a weight of 0), an adjustment needs to be made to the call to `avg_comparisons()` and `avg_predictions()`. For the estimands listed, we need to supply the name of the estimated weights to the `wts` argument. For example, after weighting for the ATO, we need to specify the following:
+
+``` r
+wts = "weights"
+```
+
+To restrict the analysis to just the units with a nonzero weight (e.g., after using `trim(., drop = TRUE)`), we need to supply a version of the dataset with just those units:
+
+``` r
+newdata = subset(d, weights != 0)
+```
 
 #### Binary outcomes
 
@@ -298,7 +310,6 @@ fit <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 +
 avg_comparisons(fit,
                 variables = "A",
                 vcov = "HC3",
-                wts = "weights",
                 comparison = "lnratioavg",
                 transform = "exp")
 ```
@@ -343,13 +354,42 @@ fit <- svyglm(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 +
 
 #G-computation for the difference in means
 avg_comparisons(fit,
-                variables = "A",
-                wts = "(weights)")
+                variables = "A")
 ```
 
-Note that we need to supply `"(weights)"` to the `wts` argument for them to be correctly incorporated. You might notice that the standard errors computed using `survey` are different from those using `lm()` or `glm()` and HC3 robust SEs; to get similar SEs using `lm()` or `glm()`, set `vcov = "HC0"` in the call to `avg_comparisons()`. This approach is not recommended because HC3 standard errors tend to perform better, which is one reason to avoid using `survey`. In many cases, though, the results will be similar.
+You might notice that the standard errors computed using `survey` are different from those using `lm()` or `glm()` and HC3 robust SEs; to get similar SEs using `lm()` or `glm()`, set `vcov = "HC0"` in the call to `avg_comparisons()`. This approach is not recommended because HC3 standard errors tend to perform better, which is one reason to avoid using `survey`. In many cases, though, the results will be similar.
 
-Remember that if sampling weights are used in the estimation of the balancing weights, the balancing weights and sampling weights must be multiplied together prior to inclusion in the call to `svydesign()`.
+##### Using sampling weights
+
+When sampling weights are required to generalize to the correct population, they must be included in the call to `weightit()` to estimate the balancing weights, in the outcome model, and in the call to `avg_comparisons()`, etc. The balancing weights and sampling weights must be multiplied together prior to inclusion in the call to `svydesign()`, but only the sampling weights are to be supplied to the `wts` argument[^6]. That is, the calls will look like the following:
+
+[^6]: It is not sufficient to supply the name of the weights variable; one must supply the vector of sampling weights directly. This can be a bit complicated for estimands other than the ATE. For the ATT or ATC, the weights should be subset to include only the treated or control units, respectively. For other estimands, the combined weights can be supplied (i.e., the product of the estimated weights and the sampling weights, which are the same weights supplied to `svydesign()`).
+
+```{r, eval= FALSE}
+#Estimate the balancing weights, with sampling weights called "sw"
+W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
+                X6 + X7 + X8 + X9, data = d,
+              method = "glm", estimand = "ATE",
+              s.weights = "sw")
+
+#Multiply sampling weights and estimated weights
+d$weights <- W$weights * d$sw
+
+#Declare a survey design using the combined weights
+des <- svydesign(~1, weights = ~weights, data = d)
+
+#Fit the outcome model
+fit <- svyglm(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + 
+                           X6 + X7 + X8 + X9),
+              design = des)
+
+#G-computation for the difference in means, including sampling weights
+avg_comparisons(fit,
+                variables = "A",
+                wts = d$sw)
+```
+
+This correctly incorporates the sampling weights at all steps.
 
 ### Multi-Category Treatments
 
@@ -388,8 +428,7 @@ fit <- lm(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 +
 p <- avg_predictions(fit,
                      variables = "Am",
                      vcov = "HC3",
-                     newdata = subset(d, Am == "T"),
-                     wts = "weights")
+                     newdata = subset(d, Am == "T"))
 p
 
 hypotheses(p, "revpairwise")
@@ -434,8 +473,7 @@ values <- with(d, seq(quantile(Ac, .1),
 #G-computation
 p <- avg_predictions(fit,
                      variables = list(Ac = values),
-                     vcov = "HC3",
-                     wts = "weights")
+                     vcov = "HC3")
 ```
 
 Although one can examine the expected potential outcomes, it is often more useful to see them plotted. We can generate a plot of the ADRF and its pointwise confidence band using `ggplot2`\^[You can also use `plot_predictions()`, though after requesting the predictions in the prior step it is quicker to use `ggplot()`.]:
@@ -461,8 +499,7 @@ s <- avg_slopes(fit,
                 variables = "Ac",
                 newdata = datagridcf(Ac = values),
                 by = "Ac",
-                vcov = "HC3",
-                wts = "weights")
+                vcov = "HC3")
 
 # Plot the AMEF
 ggplot(s, aes(x = Ac)) +
@@ -512,7 +549,6 @@ boot_fun <- function(data, i) {
                           variables = "A",
                           vcov = FALSE,
                           newdata = subset(boot_data, A == 1),
-                          wts = "weights",
                           comparison = "lnratioavg",
                           transform = "exp")
   

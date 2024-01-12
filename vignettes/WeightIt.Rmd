@@ -100,8 +100,7 @@ fit <- lm(re78 ~ treat * (age + educ + race + married +
 library("marginaleffects")
 avg_comparisons(fit, variables = "treat",
                 vcov = "HC3",
-                newdata = subset(lalonde, treat == 1),
-                wts = "weights")
+                newdata = subset(lalonde, treat == 1))
 ```
 
 Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`. Although some authors recommend using "robust" sandwich standard errors to adjust for the weights [@robinsMarginalStructuralModels2000; @hainmuellerEntropyBalancingCausal2012] as we did above, others believe these can misleading and recommend bootstrapping instead [@reifeisVarianceTreatmentEffect2020; @chanGloballyEfficientNonparametric2016]. Both methods are described in detail at `vignette("estimating-effects")`.
@@ -180,7 +179,6 @@ library("marginaleffects")
                       vcov = "HC3",
                       newdata = datagridcf(A_1 = 0:1, A_2 = 0:1, A_3 = 0:1),
                       by = c("A_1", "A_2", "A_3"),
-                      wts = "weights",
                       type = "response"))
 ```
 
