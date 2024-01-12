@@ -19,6 +19,8 @@ WeightIt News and Updates
 
 * Warning messages now display immediately rather than at the end of evaluation.
 
+* The vignettes have been changed to use a slightly different estimator for weighted g-computation. The estimated weights are no longer to be included in the call to `avg_comparisons()`, etc.; that is, they are only used to fit the outcome model. This makes the estimators more consistent with other software, including `teffects ipwra` in Stata, and most of the literature on weighted g-computation. Note this will not effect any estimates for the ATT or ATC and will only yield at most minor changes for the ATE. For other estimands, the weights are still included.
+
 * Transferred all help files to Roxygen and reorganized package scripts.
 
 * Reorganization of some functions.
