@@ -5,7 +5,7 @@ information from the overall sample and subgroups (Dong, Zhang, Zeng, &amp;amp; 
 2020; DZZL). Each subgroup can use either weights estimated using the whole
 sample, weights estimated using just that subgroup, or a combination of the
 two. The optimal combination is chosen as that which minimizes an imbalance
-criterion that includes subgroup as well as overall balance."><title>Subgroup Balancing Propensity Score — sbps • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.2.2/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.2.2/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Subgroup Balancing Propensity Score — sbps"><meta property="og:description" content="Implements the subgroup balancing propensity score (SBPS), which is an
+criterion that includes subgroup as well as overall balance."><title>Subgroup Balancing Propensity Score — sbps • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Subgroup Balancing Propensity Score — sbps"><meta property="og:description" content="Implements the subgroup balancing propensity score (SBPS), which is an
 algorithm that attempts to achieve balance in subgroups by sharing
 information from the overall sample and subgroups (Dong, Zhang, Zeng, &amp;amp; Li,
 2020; DZZL). Each subgroup can use either weights estimated using the whole
@@ -22,7 +22,7 @@ criterion that includes subgroup as well as overall balance."><meta property="og
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9002</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -284,7 +284,7 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4      6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      5      6</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              56     54     49     48     47</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.4117 0.4767 0.4835 0.4968 0.5046</span>
@@ -307,7 +307,7 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      4      5     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             289    287    285    280   267</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.2393 0.2699 0.2937 0.2956 0.385</span>
@@ -326,16 +326,13 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - - - <span style="font-style: italic;">Cluster: black</span> - - - </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score  Distance   0.0016</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age          Contin.   0.0126</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ         Contin.  -0.0332</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married       Binary   0.0030</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree      Binary   0.0062</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_black    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_hispan   Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_white    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74         Contin.  -0.0826</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0016</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0126</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0332</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary   0.0030</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0062</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0826</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                0   1</span>
@@ -344,16 +341,13 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - - - <span style="font-style: italic;">Cluster: hispan</span> - - - </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score  Distance  -0.2678</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age          Contin.   0.1196</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ         Contin.  -0.0756</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married       Binary   0.0217</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree      Binary   0.0018</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_black    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_hispan   Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_white    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74         Contin.   0.0114</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance  -0.2678</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.1196</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0756</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary   0.0217</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0018</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.   0.0114</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                0  1</span>
@@ -362,16 +356,13 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - - - <span style="font-style: italic;">Cluster: white</span> - - - </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score  Distance   0.0652</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age          Contin.   0.0191</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ         Contin.  -0.0185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married       Binary  -0.0015</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree      Binary   0.0039</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_black    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_hispan   Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_white    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74         Contin.  -0.0117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0652</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0191</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0039</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0117</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 0  1</span>
@@ -409,7 +400,7 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4      7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               1      3      4      6      7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             221    228    188    185    174</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.9787 2.9787 3.0338 3.0899 3.5703</span>
@@ -432,7 +423,7 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4      6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4      7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              56     54     48     47     28</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.3908 0.4496 0.4557 0.4704 0.4743</span>
@@ -455,7 +446,7 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      4      5     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             289    287    285    280   267</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.2393 0.2699 0.2937 0.2956 0.385</span>
@@ -474,16 +465,13 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - - - <span style="font-style: italic;">Cluster: black</span> - - - </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score  Distance   0.0019</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age          Contin.   0.0388</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ         Contin.  -0.0305</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married       Binary   0.0096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree      Binary   0.0086</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_black    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_hispan   Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_white    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74         Contin.  -0.0561</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0019</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0388</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0305</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary   0.0096</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0086</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0561</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                0   1</span>
@@ -492,16 +480,13 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - - - <span style="font-style: italic;">Cluster: hispan</span> - - - </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score  Distance  -0.1909</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age          Contin.   0.0167</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ         Contin.  -0.0654</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married       Binary   0.0314</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree      Binary   0.0084</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_black    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_hispan   Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_white    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74         Contin.  -0.0175</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance  -0.1909</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0167</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0654</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary   0.0314</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0084</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0175</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                0  1</span>
@@ -510,16 +495,13 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - - - <span style="font-style: italic;">Cluster: white</span> - - - </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                 Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score  Distance   0.0652</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age          Contin.   0.0191</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ         Contin.  -0.0185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married       Binary  -0.0015</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree      Binary   0.0039</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_black    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_hispan   Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> race_white    Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74         Contin.  -0.0117</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.0652</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0191</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0015</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0039</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0117</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                 0  1</span>
