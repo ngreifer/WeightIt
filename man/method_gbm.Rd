@@ -4,7 +4,7 @@
 \alias{method_gbm}
 \title{Propensity Score Weighting Using Generalized Boosted Models}
 \description{
-This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting \code{method = "gbm"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multinomial, and continuous treatments.
+This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting \code{method = "gbm"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
 
 In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). The method relies on the \CRANpkg{gbm} package.
 
@@ -14,7 +14,7 @@ This method mimics the functionality of functions in the \pkg{twang} package, bu
 For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link[=get_w_from_ps]{get_w_from_ps()}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
-\subsection{Multinomial Treatments}{
+\subsection{Multi-Category Treatments}{
 
 For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link[=get_w_from_ps]{get_w_from_ps()}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
@@ -46,7 +46,7 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 \details{
 Generalized boosted modeling (GBM, also known as gradient boosting machines) is a machine learning method that generates predicted values from a flexible regression of the treatment on the covariates, which are treated as propensity scores and used to compute weights. It does this by building a series of regression trees, each fit to the residuals of the last, minimizing a loss function that depends on the distribution chosen. The optimal number of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004) were innovative in using covariate balance to select this value rather than traditional machine learning performance metrics such as cross-validation accuracy. GBM is particularly effective for fitting nonlinear treatment models characterized by curves and interactions, but performs worse for simpler treatment models. It is unclear which balance measure should be used to select the number of trees, though research has indicated that balance measures tend to perform better than cross-validation accuracy for estimating effective propensity score weights.
 
-\pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multinomial treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multinomial treatments.
+\pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multi-category treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multi-category treatments.
 }
 \note{
 The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{es.mean}, \code{es.max}, and \code{es.rms} have been renamed to \code{smd.mean}, \code{smd.max}, and \code{smd.rms}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
@@ -55,19 +55,19 @@ The \code{criterion} argument used to be called \code{stop.method}, which is its
 
 The following additional arguments can be specified:
 \describe{
-\item{\code{criterion}}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, \code{criterion} can be set as \verb{"cv\{#\}}", where \verb{\{#\}} is replaced by a number representing the number of cross-validation folds used (e.g., \code{"cv5"} for 5-fold cross-validation). For binary and multinomial treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+\item{\code{criterion}}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, \code{criterion} can be set as \verb{"cv\{#\}}", where \verb{\{#\}} is replaced by a number representing the number of cross-validation folds used (e.g., \code{"cv5"} for 5-fold cross-validation). For binary and multi-category treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
 \item{\code{trim.at}}{A number supplied to \code{at} in \code{\link[=trim]{trim()}} which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
 }
-\item{\code{distribution}}{A string with the distribution used in the loss function of the boosted model. This is supplied to the \code{distribution} argument in \pkgfun{gbm}{gbm.fit}. For binary treatments, \code{"bernoulli"} and \code{"adaboost"} are available, with \code{"bernoulli"} the default. For multinomial treatments, only \code{"multinomial"} is allowed. For continuous treatments \code{"gaussian"}, \code{"laplace"}, and \code{"tdist"} are available, with \code{"gaussian"} the default. This argument is tunable.
+\item{\code{distribution}}{A string with the distribution used in the loss function of the boosted model. This is supplied to the \code{distribution} argument in \pkgfun{gbm}{gbm.fit}. For binary treatments, \code{"bernoulli"} and \code{"adaboost"} are available, with \code{"bernoulli"} the default. For multi-category treatments, only \code{"multinomial"} is allowed. For continuous treatments \code{"gaussian"}, \code{"laplace"}, and \code{"tdist"} are available, with \code{"gaussian"} the default. This argument is tunable.
 }
-\item{\code{n.trees}}{The maximum number of trees used. This is passed onto the \code{n.trees} argument in \code{gbm.fit()}. The default is 10000 for binary and multinomial treatments and 20000 for continuous treatments.
+\item{\code{n.trees}}{The maximum number of trees used. This is passed onto the \code{n.trees} argument in \code{gbm.fit()}. The default is 10000 for binary and multi-category treatments and 20000 for continuous treatments.
 }
 \item{\code{start.tree}}{The tree at which to start balance checking. If you know the best balance isn't in the first 100 trees, for example, you can set \code{start.tree = 101} so that balance statistics are not computed on the first 100 trees. This can save some time since balance checking takes up the bulk of the run time for some balance-based stopping methods, and is especially useful when running the same model adding more and more trees. The default is 1, i.e., to start from the very first tree in assessing balance.
 }
-\item{\code{interaction.depth}}{The depth of the trees. This is passed onto the \code{interaction.depth} argument in \code{gbm.fit()}. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multinomial treatments and 4 for continuous treatments. This argument is tunable.
+\item{\code{interaction.depth}}{The depth of the trees. This is passed onto the \code{interaction.depth} argument in \code{gbm.fit()}. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multi-category treatments and 4 for continuous treatments. This argument is tunable.
 }
-\item{\code{shrinkage}}{The shrinkage parameter applied to the trees. This is passed onto the \code{shrinkage} argument in \code{gbm.fit()}. The default is .01 for binary and multinomial treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
+\item{\code{shrinkage}}{The shrinkage parameter applied to the trees. This is passed onto the \code{shrinkage} argument in \code{gbm.fit()}. The default is .01 for binary and multi-category treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
 }
 \item{\code{bag.fraction}}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the \code{bag.fraction} argument in \code{gbm.fit()}. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using \code{\link[=set.seed]{set.seed()}} to ensure replicability of results.
 }
@@ -135,7 +135,7 @@ summary(W1)
 bal.tab(W1)
 
 \dontrun{
-  #Balancing covariates with respect to race (multinomial)
+  #Balancing covariates with respect to race (multi-category)
   (W2 <- weightit(race ~ age + educ + married +
                     nodegree + re74, data = lalonde,
                   method = "gbm", estimand = "ATT",
@@ -196,7 +196,7 @@ bal.tab(W1)
 McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. Psychological Methods, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 }
 
-\subsection{Multinomial Treatments}{
+\subsection{Multi-Category Treatments}{
 
 McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 }

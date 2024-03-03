@@ -220,7 +220,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     }
 
     if (is_not_null(A[["quantile"]])) {
-      qu <- quantile.f(covs, qu = A[["quantile"]], s.weights = s.weights)
+      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
 
       targets <- col.w.m(qu, s.weights)
 
@@ -256,7 +256,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     }
 
     if (is_not_null(A[["quantile"]])) {
-      qu <- quantile.f(covs, qu = A[["quantile"]], s.weights = s.weights,
+      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                        focal = focal, treat = treat)
 
       targets <- col.w.m(qu[in_focal,, drop = FALSE], s.weights[in_focal])

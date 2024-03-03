@@ -5,17 +5,17 @@
 \alias{method_ps}
 \title{Propensity Score Weighting Using Generalized Linear Models}
 \description{
-This page explains the details of estimating weights from generalized linear model-based propensity scores by setting \code{method = "glm"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multinomial, and continuous treatments. (This method used to be requested with \code{method = "ps"}, and this still works.)
+This page explains the details of estimating weights from generalized linear model-based propensity scores by setting \code{method = "glm"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments. (This method used to be requested with \code{method = "ps"}, and this still works.)
 
-In general, this method relies on estimating propensity scores with a parametric generalized linear model and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multinomial treatments, a binomial or multinomial regression model is used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For ordinal treatments, an ordinal regression model is used to estimate generalized propensity scores. For continuous treatments, a generalized linear model is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
+In general, this method relies on estimating propensity scores with a parametric generalized linear model and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multi-category treatments, a binomial or multinomial regression model is used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For ordinal treatments, an ordinal regression model is used to estimate generalized propensity scores. For continuous treatments, a generalized linear model is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 \subsection{Binary Treatments}{
 
 For binary treatments, this method estimates the propensity scores using \code{\link[=glm]{glm()}}. An additional argument is \code{link}, which uses the same options as \code{link} in \code{\link[=family]{family()}}. The default link is "logit", but others, including "probit", are allowed. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
-\subsection{Multinomial Treatments}{
+\subsection{Multi-Category Treatments}{
 
-For multinomial treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \pkgfun{mlogit}{mlogit} is used; for the Bayesian probit (\code{"bayes.probit"}) link, \pkgfun{MNP}{mnp} is used; and for the biased-reduced multinomial logistic regression (\code{"br.logit"}), \pkgfun{brglm2}{brmultinom} is used. If the treatment variable is an ordered factor, \pkgfun{MASS}{polr} is used to fit ordinal regression unless \code{link = "br.logit"}, in which case \pkgfun{brglm2}{bracl} is used. Any of the methods allowed in the \code{method} argument of \code{polr()} can be supplied to \code{link}. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (\code{"logit"}) and probit (\code{"probit"}) links, \pkgfun{mlogit}{mlogit} is used; for the Bayesian probit (\code{"bayes.probit"}) link, \pkgfun{MNP}{mnp} is used; and for the biased-reduced multinomial logistic regression (\code{"br.logit"}), \pkgfun{brglm2}{brmultinom} is used. If the treatment variable is an ordered factor, \pkgfun{MASS}{polr} is used to fit ordinal regression unless \code{link = "br.logit"}, in which case \pkgfun{brglm2}{bracl} is used. Any of the methods allowed in the \code{method} argument of \code{polr()} can be supplied to \code{link}. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Continuous Treatments}{
@@ -30,7 +30,7 @@ For longitudinal treatments, the weights are the product of the weights estimate
 
 \subsection{Sampling Weights}{
 
-Sampling weights are supported through \code{s.weights} in all scenarios except for multinomial treatments with \code{link = "bayes.probit"} and for binary and continuous treatments with \code{missing = "saem"} (see below). Warning messages may appear otherwise about non-integer successes, and these can be ignored.
+Sampling weights are supported through \code{s.weights} in all scenarios except for multi-category treatments with \code{link = "bayes.probit"} and for binary and continuous treatments with \code{missing = "saem"} (see below). Warning messages may appear otherwise about non-integer successes, and these can be ignored.
 }
 
 \subsection{Missing Data}{
@@ -73,7 +73,7 @@ For continuous treatments in the presence of missing data with \code{missing = "
 \section{Additional Outputs}{
 
 \describe{
-\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}}. For ordinal treatments, the output of the call to \pkgfun{MASS}{polr}. For multinomial treatments with \code{link = "logit"} or \code{"probit"} and \code{use.mlogit = TRUE}, the output of the call to \pkgfun{mlogit}{mlogit}. For multinomial treatments with \code{use.mlogit = FALSE}, a list of the \code{glm()} fits. For multinomial treatments with \code{link = "br.logit"}, the output of the call to \pkgfun{brglm2}{brmultinom}. For multinomial treatments with \code{link = "bayes.probit"}, the output of the call to \pkgfun{MNP}{mnp}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
+\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}}. For ordinal treatments, the output of the call to \pkgfun{MASS}{polr}. For multi-category treatments with \code{link = "logit"} or \code{"probit"} and \code{use.mlogit = TRUE}, the output of the call to \pkgfun{mlogit}{mlogit}. For multi-category treatments with \code{use.mlogit = FALSE}, a list of the \code{glm()} fits. For multi-category treatments with \code{link = "br.logit"}, the output of the call to \pkgfun{brglm2}{brmultinom}. For multi-category treatments with \code{link = "bayes.probit"}, the output of the call to \pkgfun{MNP}{mnp}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
 }
 }
 }
@@ -90,7 +90,7 @@ data("lalonde", package = "cobalt")
 summary(W1)
 bal.tab(W1)
 
-#Balancing covariates with respect to race (multinomial)
+#Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "glm", estimand = "ATE",
@@ -144,7 +144,7 @@ See references for the \pkg{brglm2} \pkgfun2{brglm2}{brglm2}{package}.
 Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. Computational Statistics & Data Analysis, 106907. \doi{10.1016/j.csda.2019.106907}
 }
 
-\subsection{Multinomial Treatments}{
+\subsection{Multi-Category Treatments}{
 \itemize{
 \item \code{estimand = "ATO"}
 }

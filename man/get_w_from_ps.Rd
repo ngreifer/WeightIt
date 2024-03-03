@@ -201,7 +201,7 @@ Approach for Confounding Adjustment When Exposure Is Infrequent:
 Epidemiology, 28(2), 249–257. \doi{10.1097/EDE.0000000000000595}
 }
 
-\subsection{Multinomial Treatments}{
+\subsection{Multi-Category Treatments}{
 \itemize{
 \item \code{estimand = "ATO"}
 }

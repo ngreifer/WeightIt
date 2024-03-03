@@ -196,10 +196,6 @@ strsplits <- function(x, splits, fixed = TRUE, ...) {
   for (split in splits) x <- unlist(strsplit(x, split, fixed = TRUE, ...))
   return(x[x != ""]) # Remove empty values
 }
-c.factor <- function(..., recursive = TRUE) {
-  #c() for factors
-  unlist(list(...), recursive = recursive)
-}
 can_str2num <- function(x) {
   if (is.numeric(x) || is.logical(x)) return(TRUE)
   nas <- is.na(x)
@@ -208,7 +204,7 @@ can_str2num <- function(x) {
 }
 str2num <- function(x) {
   nas <- is.na(x)
-  if (!is_(x, c("numeric", "logical"))) x <- as.character(x)
+  if (!is.numeric(x) && !is.logical(x)) x <- as.character(x)
   suppressWarnings(x_num <- as.numeric(x))
   is.na(x_num[nas]) <- TRUE
   x_num
@@ -473,7 +469,7 @@ bw.nrd <- function(x) {
   #R's bw.nrd doesn't always work, but bw.nrd0 does
   bw.nrd0(x)*1.06/.9
 }
-quantile.w <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...) {
+w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...) {
 
   n <- length(x)
   if (n == 0 || (!isTRUE(na.rm) && anyNA(x))) {

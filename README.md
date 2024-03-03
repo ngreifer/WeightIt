@@ -21,10 +21,11 @@ weights. The value of `WeightIt` is in its unified and familiar syntax
 used to generate the weights, as each of these other packages have their
 own, often challenging to navigate, syntax. `WeightIt` extends the
 capabilities of these packages to generate weights used to estimate the
-ATE, ATT, ATC, and other estimands for binary or multinomial treatments,
-and treatment effects for continuous treatments when available. In these
-ways, `WeightIt` does for weighting what `MatchIt` has done for
-matching, and `MatchIt` users will find the syntax familiar.
+ATE, ATT, ATC, and other estimands for binary or multi-category
+treatments, and treatment effects for continuous treatments when
+available. In these ways, `WeightIt` does for weighting what `MatchIt`
+has done for matching, and `MatchIt` users will find the syntax
+familiar.
 
 For a complete vignette, see the
 [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html)
@@ -139,35 +140,38 @@ using various methods and functions from various packages. See
 `vignette("installing-packages")` for information on how to install
 these packages.
 
-| Treatment type  | Method (`method =`)                                 | Package        |
-|-----------------|-----------------------------------------------------|----------------|
-| **Binary**      | Binary regression PS (`"glm"`)                      | various        |
-| \-              | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
-| \-              | Covariate Balancing PS (`"cbps"`)                   | `CBPS`         |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)  | `CBPS`         |
-| \-              | Entropy Balancing (`"ebal"`)                        | \-             |
-| \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
-| \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
-| \-              | Bayesian Additive Regression Trees PS (`"bart"`)    | `dbarts`       |
-| \-              | Energy Balancing (`"energy"`)                       | \-             |
-| **Multinomial** | Multinomial regression PS (`"glm"`)                 | various        |
-| \-              | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
-| \-              | Covariate Balancing PS (`"cbps"`)                   | `CBPS`         |
-| \-              | Non-Parametric Covariate Balancing PS (`"npcbps"`)  | `CBPS`         |
-| \-              | Entropy Balancing (`"ebal"`)                        | \-             |
-| \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
-| \-              | SuperLearner PS (`"super"`)                         | `SuperLearner` |
-| \-              | Bayesian Additive Regression Trees PS (`"bart"`)    | `dbarts`       |
-| \-              | Energy Balancing (`"energy"`)                       | \-             |
-| **Continuous**  | Generalized linear model GPS (`"glm"`)              | \-             |
-| \-              | Generalized boosted modeling GPS (`"gbm"`)          | `gbm`          |
-| \-              | Covariate Balancing GPS (`"cbps"`)                  | `CBPS`         |
-| \-              | Non-Parametric Covariate Balancing GPS (`"npcbps"`) | `CBPS`         |
-| \-              | Entropy Balancing (`"ebal"`)                        | \-             |
-| \-              | Optimization-Based Weights (`"optweight"`)          | `optweight`    |
-| \-              | SuperLearner GPS (`"super"`)                        | `SuperLearner` |
-| \-              | Bayesian Additive Regression Trees GPS (`"bart"`)   | `dbarts`       |
-| \-              | Distance Covariance Optimal Weighting (`"energy"`)  | \-             |
+| Treatment type      | Method (`method =`)                                 | Package        |
+|---------------------|-----------------------------------------------------|----------------|
+| **Binary**          | Binary regression PS (`"glm"`)                      | various        |
+| \-                  | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
+| \-                  | Covariate balancing PS (`"cbps"`)                   | `CBPS`         |
+| \-                  | Non-parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
+| \-                  | Entropy Balancing (`"ebal"`)                        | \-             |
+| \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
+| \-                  | Optimization-based Weights (`"optweight"`)          | `optweight`    |
+| \-                  | SuperLearner PS (`"super"`)                         | `SuperLearner` |
+| \-                  | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
+| \-                  | Energy balancing (`"energy"`)                       | \-             |
+| **Multi-categoryl** | Multinomial regression PS (`"glm"`)                 | various        |
+| \-                  | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
+| \-                  | Covariate balancing PS (`"cbps"`)                   | `CBPS`         |
+| \-                  | Non-Parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
+| \-                  | Entropy balancing (`"ebal"`)                        | \-             |
+| \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
+| \-                  | Optimization-based weights (`"optweight"`)          | `optweight`    |
+| \-                  | SuperLearner PS (`"super"`)                         | `SuperLearner` |
+| \-                  | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
+| \-                  | Energy balancing (`"energy"`)                       | \-             |
+| **Continuous**      | Generalized linear model GPS (`"glm"`)              | \-             |
+| \-                  | Generalized boosted modeling GPS (`"gbm"`)          | `gbm`          |
+| \-                  | Covariate balancing GPS (`"cbps"`)                  | `CBPS`         |
+| \-                  | Non-Parametric covariate balancing GPS (`"npcbps"`) | `CBPS`         |
+| \-                  | Entropy balancing (`"ebal"`)                        | \-             |
+| \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
+| \-                  | Optimization-based weights (`"optweight"`)          | `optweight`    |
+| \-                  | SuperLearner GPS (`"super"`)                        | `SuperLearner` |
+| \-                  | Bayesian additive regression trees GPS (`"bart"`)   | `dbarts`       |
+| \-                  | Distance covariance optimal weighting (`"energy"`)  | \-             |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are

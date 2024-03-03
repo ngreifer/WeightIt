@@ -57,8 +57,7 @@ the focal group. If specified, \code{estimand} will automatically be set to
 
 \item{by}{a string containing the name of the variable in \code{data} for
 which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, weights will be generated separately
-within each level of the variable \code{"gender"}. (The argument used to be
+the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. (The argument used to be
 called \code{exact}, which will still work but with a message.) Only one
 \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
@@ -129,7 +128,7 @@ the fitting process.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
 \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
-returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"super"}, or \code{"bart"}.}
+returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}.}
 \item{s.weights}{The provided sampling weights.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{by}{A data.frame containing the \code{by} variable when specified.}
@@ -156,6 +155,7 @@ which estimands are allowed, and whether sampling weights are allowed.\tabular{l
    \code{\link[=method_cbps]{"cbps"}} \tab Covariate Balancing Propensity Score weighting \cr
    \code{\link[=method_npcbps]{"npcbps"}} \tab Non-parametric Covariate Balancing Propensity Score weighting \cr
    \code{\link[=method_ebal]{"ebal"}} \tab Entropy balancing \cr
+   \code{\link[=method_ipt]{"ipt"}} \tab Inverse probability tilting \cr
    \code{\link[=method_optweight]{"optweight"}} \tab Optimization-based weighting \cr
    \code{\link[=method_super]{"super"}} \tab Propensity score weighting using SuperLearner \cr
    \code{\link[=method_bart]{"bart"}} \tab Propensity score weighting using Bayesian additive regression trees (BART) \cr

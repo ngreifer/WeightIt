@@ -524,7 +524,7 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
 
   out
 }
-quantile.f <- function(d, qu = NULL, s.weights = NULL, focal = NULL, treat = NULL, const = 2000) {
+quantile_f <- function(d, qu = NULL, s.weights = NULL, focal = NULL, treat = NULL, const = 2000) {
   # Creates new variables for use in balance quantiles. `qu` is a list of quantiles for each
   # continuous variable in `d`, and returns a matrix with a column for each requested quantile
   # of each variable, taking on 0 for values less than the quantile, .5 for values at the quantile,
@@ -577,7 +577,7 @@ quantile.f <- function(d, qu = NULL, s.weights = NULL, focal = NULL, treat = NUL
   do.call("cbind", lapply(names(qu), function(i) {
     target <- if (is_null(focal)) d[,i] else d[treat == focal, i]
     out <- do.call("cbind", lapply(qu[[i]], function(q) {
-      plogis(const * (d[,i] - quantile.w(target, q, s.weights)))
+      plogis(const * (d[,i] - w.quantile(target, q, s.weights)))
     }))
 
     colnames(out) <- paste0(i, "_", qu[[i]])
@@ -993,7 +993,7 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
   densfun
 }
 
-get.w.from.ps <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = NULL, stabilize = FALSE) {
+.get_w_from_ps_internal <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = NULL, stabilize = FALSE) {
   #Batch turn PS into weights; primarily for output of predict.gbm
   # Assumes a (0,1) treatment if binary, with ATT already processed
   if (is_null(dim(ps))) {

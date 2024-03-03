@@ -3,6 +3,8 @@ WeightIt News and Updates
 
 # WeightIt (development version)
 
+* Added inverse probability tilting (IPT) as described by Graham, Pinto, and Egel (2012), which can be requested by setting `method = "ipt"`. Thus is similar to entropy balancing and CBPS in that it enforces exact balance and yields a propensity score, but has some theoretical advantages to both methods. A version is available for continuous treatments, but it should be used with caution (it is essentially the same as CBPS in this case). IPT does not rely on any other packages and runs very quickly.
+
 * New function `calibrate()` to apply Platt scaling to calibrate propensity scores as recommended by [Gutman et al. (2022)](http://arxiv.org/abs/2211.01221).
 
 * A new argument `quantile` can be supplied to `weightit()` with all the methods that accept `moments` and `int` (`"ebal"`, `"npcbps"`, `"optweight"`, and `"energy"`). This allows one to request balance on the quantiles of the covariates, which can add some robustness as demonstrated by [Beręsewicz (2023)](https://arxiv.org/abs/2310.11969).
@@ -19,7 +21,9 @@ WeightIt News and Updates
 
 * Warning messages now display immediately rather than at the end of evaluation.
 
-* The vignettes have been changed to use a slightly different estimator for weighted g-computation. The estimated weights are no longer to be included in the call to `avg_comparisons()`, etc.; that is, they are only used to fit the outcome model. This makes the estimators more consistent with other software, including `teffects ipwra` in Stata, and most of the literature on weighted g-computation. Note this will not effect any estimates for the ATT or ATC and will only yield at most minor changes for the ATE. For other estimands, the weights are still included.
+* The vignettes have been changed to use a slightly different estimator for weighted g-computation. The estimated weights are no longer to be included in the call to `avg_comparisons()`, etc.; that is, they are only used to fit the outcome model. This makes the estimators more consistent with other software, including `teffects ipwra` in Stata, and most of the literature on weighted g-computation. Note this will not effect any estimates for the ATT or ATC and will only yield at most minor changes for the ATE. For other estimands (e.g., ATO), the weights are still to be included.
+
+* The word "multinomial" to describe treatments with more than two categories has been replaced with "multi-category" in all documentation and messages.
 
 * Transferred all help files to Roxygen and reorganized package scripts.
 

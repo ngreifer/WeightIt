@@ -80,7 +80,7 @@ estimated in the subgroup. There are 2^R permutations of overall and
 subgroup weights, where R is the number of subgroups. The optimal
 permutation is chosen as that which minimizes a balance criterion as
 described in DZZL. The balance criterion used here is, for binary and
-multinomial treatments, the sum of the squared standardized mean differences
+multi-category treatments, the sum of the squared standardized mean differences
 within subgroups and overall, which are computed using
 \code{\link[cobalt:balance-summary]{cobalt::col_w_smd()}}, and for continuous treatments, the
 sum of the squared correlations between each covariate and treatment within

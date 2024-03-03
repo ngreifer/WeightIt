@@ -341,7 +341,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       }
 
       ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
-      w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
+      w <- .get_w_from_ps_internal(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
       iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
@@ -365,7 +365,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         }
 
         ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
-        w <- get.w.from.ps(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
+        w <- .get_w_from_ps_internal(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
         iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
@@ -426,7 +426,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       if (best.loss < current.best.loss) {
         best.fit <- fit
         best.ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
-        best.w <- drop(get.w.from.ps(best.ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass))
+        best.w <- drop(.get_w_from_ps_internal(best.ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass))
         # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
         current.best.loss <- best.loss
         best.tune.index <- i

@@ -488,7 +488,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
         Z[Z[,i] < tol, i] <- tol
         Z[Z[,i] > 1-tol, i] <- 1-tol
       }
-      w_mat <- get.w.from.ps(Z, treat = Y, estimand = estimand)
+      w_mat <- .get_w_from_ps_internal(Z, treat = Y, estimand = estimand)
       cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
 
       names(cvRisk) <- libraryNames

@@ -130,7 +130,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
   covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
 
-  covs <- cbind(covs, quantile.f(covs, qu = A[["quantile"]], s.weights = s.weights,
+  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                                  focal = focal, treat = treat))
 
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
