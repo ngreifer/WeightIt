@@ -4,7 +4,7 @@
 #' @usage NULL
 #'
 #' @description
-#'This page explains the details of estimating optimization-based weights (also known as stable balancing weights) by setting `method = "optweight"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multinomial, and continuous treatments.
+#'This page explains the details of estimating optimization-based weights (also known as stable balancing weights) by setting `method = "optweight"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \pkgfun{optweight}{optweight} from the \CRANpkg{optweight} package.
 #'
@@ -14,9 +14,9 @@
 #'
 #' For binary treatments, this method estimates the weights using \pkgfun{optweight}{optweight}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the `optweight` fit object.
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
-#' For multinomial treatments, this method estimates the weights using \pkgfun{optweight}{optweight}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the `optweight` fit object.
+#' For multi-category treatments, this method estimates the weights using \pkgfun{optweight}{optweight}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the `optweight` fit object.
 #'
 #' ## Continuous Treatments
 #'
@@ -84,7 +84,7 @@
 #'
 #' Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. Journal of the American Statistical Association, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
 #' de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight adjustment in non-experimental studies with multivalued treatments: Analysis of the effect of an earthquake on post-traumatic stress. Journal of the Royal Statistical Society: Series A (Statistics in Society), n/a(n/a). \doi{10.1111/rssa.12561}
 #'
@@ -103,7 +103,7 @@
 #' summary(W1)
 #' cobalt::bal.tab(W1)
 #'
-#' #Balancing covariates with respect to race (multinomial)
+#' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "optweight", estimand = "ATE",

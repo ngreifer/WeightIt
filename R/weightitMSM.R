@@ -3,7 +3,7 @@
 #' @description
 #' `weightitMSM()` allows for the easy generation of balancing weights for
 #' marginal structural models for time-varying treatments using a variety of
-#' available methods for binary, continuous, and multinomial treatments. Many
+#' available methods for binary, continuous, and multi-category treatments. Many
 #' of these methods exist in other packages, which [weightit()] calls; these
 #' packages must be installed to use the desired method.
 #'
@@ -25,7 +25,7 @@
 #' each time point from treatment status at prior time points. If `TRUE`,
 #' a fully saturated model will be fit (i.e., all interactions between all
 #' treatments up to each time point), essentially using the observed treatment
-#' probabilities in the numerator (for binary and multinomial treatments). This
+#' probabilities in the numerator (for binary and multi-category treatments). This
 #' may yield an error if some combinations are not observed. Default is
 #' `FALSE`. To manually specify stabilization model formulas, e.g., to
 #' specify non-saturated models, use `num.formula`. With many time points,
@@ -92,7 +92,7 @@
 #' \item{treat.list}{A list of the values of the time-varying treatment variables.}
 #' \item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
 #' \item{data}{The data.frame originally entered to `weightitMSM()`.}
-#' \item{estimand}{"ATE", currently the only estimand for MSMs with binary or multinomial treatments.}
+#' \item{estimand}{"ATE", currently the only estimand for MSMs with binary or multi-category treatments.}
 #' \item{method}{The weight estimation method specified.}
 #' \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
 #' \item{s.weights}{The provided sampling weights.}

@@ -139,7 +139,7 @@
 #' Approach for Confounding Adjustment When Exposure Is Infrequent:
 #' Epidemiology, 28(2), 249–257. \doi{10.1097/EDE.0000000000000595}
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
 #' - `estimand = "ATO"`
 #'
@@ -213,7 +213,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   treat.type <- get_treat_type(treat)
 
   if (treat.type == "continuous") {
-    .err("`get_w_from_ps()` can only be used with binary or multinomial treatments")
+    .err("`get_w_from_ps()` can only be used with binary or multi-category treatments")
   }
 
   estimand <- process.estimand(estimand, method = "glm", treat.type = treat.type)

@@ -4,7 +4,7 @@
 #' @usage NULL
 #'
 #' @description
-#' This page explains the details of estimating weights using entropy balancing by setting `method = "ebal"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multinomial, and continuous treatments.
+#' This page explains the details of estimating weights using entropy balancing by setting `method = "ebal"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating weights by minimizing the negative entropy of the weights subject to exact moment balancing constraints. This method relies on code written for \pkg{WeightIt} using [optim()].
 #'
@@ -12,9 +12,9 @@
 #'
 #' For binary treatments, this method estimates the weights using `optim()` using formulas described by Hainmueller (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
-#' For multinomial treatments, this method estimates the weights using `optim()`. The following estimands are allowed: ATE and ATT. When the ATE is requested, `optim()` is run once for each treatment group. When the ATT is requested, `optim()` is run once for each non-focal (i.e., control) group.
+#' For multi-category treatments, this method estimates the weights using `optim()`. The following estimands are allowed: ATE and ATT. When the ATE is requested, `optim()` is run once for each treatment group. When the ATT is requested, `optim()` is run once for each non-focal (i.e., control) group.
 #'
 #' ## Continuous Treatments
 #'
@@ -58,15 +58,17 @@
 #'
 #' @section Additional Outputs:
 #' \describe{
-#'   \item{`obj`}{When `include.obj = TRUE`, the output of the call to [optim()], which contains the dual variables and convergence information. For ATE fits or with multinomial treatments, a list of `optim()` outputs, one for each weighted group.
+#'   \item{`obj`}{When `include.obj = TRUE`, the output of the call to [optim()], which contains the dual variables and convergence information. For ATE fits or with multi-category treatments, a list of `optim()` outputs, one for each weighted group.
 #'   }
 #' }
 #'
 #' @details
-#' Entropy balancing involves the specification of an optimization problem, the solution to which is then used to compute the weights. The constraints of the primal optimization problem correspond to covariate balance on the means (for binary and multinomial treatments) or treatment-covariate covariances (for continuous treatments), positivity of the weights, and that the weights sum to a certain value. It turns out that the dual optimization problem is much easier to solve because it is over only as many variables as there are balance constraints rather than over the weights for each unit and it is unconstrained. Zhao and Percival (2017) found that entropy balancing for the ATT of a binary treatment actually involves the estimation of the coefficients of a logistic regression propensity score model but using a specialized loss function different from that optimized with maximum likelihood. Entropy balancing is doubly robust (for the ATT) in the sense that it is consistent either when the true propensity score model is a logistic regression of the treatment on the covariates or when the true outcome model for the control units is a linear regression of the outcome on the covariates, and it attains a semi-parametric efficiency bound when both are true. Entropy balancing will always yield exact mean balance on the included terms.
+#' Entropy balancing involves the specification of an optimization problem, the solution to which is then used to compute the weights. The constraints of the primal optimization problem correspond to covariate balance on the means (for binary and multi-category treatments) or treatment-covariate covariances (for continuous treatments), positivity of the weights, and that the weights sum to a certain value. It turns out that the dual optimization problem is much easier to solve because it is over only as many variables as there are balance constraints rather than over the weights for each unit and it is unconstrained. Zhao and Percival (2017) found that entropy balancing for the ATT of a binary treatment actually involves the estimation of the coefficients of a logistic regression propensity score model but using a specialized loss function different from that optimized with maximum likelihood. Entropy balancing is doubly robust (for the ATT) in the sense that it is consistent either when the true propensity score model is a logistic regression of the treatment on the covariates or when the true outcome model for the control units is a linear regression of the outcome on the covariates, and it attains a semi-parametric efficiency bound when both are true. Entropy balancing will always yield exact mean balance on the included terms.
 #'
 #' @seealso
 #' [weightit()], [weightitMSM()]
+#'
+#' [method_ipt] and [method_cbps] for inverse probability tilting and CBPS, which work similarly.
 #'
 #' @references
 #' ## Binary Treatments
@@ -93,7 +95,7 @@
 #' summary(W1)
 #' cobalt::bal.tab(W1)
 #'
-#' #Balancing covariates with respect to race (multinomial)
+#' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "ebal", estimand = "ATE"))

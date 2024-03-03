@@ -4,7 +4,7 @@
 #' @usage NULL
 #'
 #' @description
-#' This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting `method = "npcbps"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multinomial, and continuous treatments.
+#' This page explains the details of estimating weights from nonparametric covariate balancing propensity scores by setting `method = "npcbps"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating weights by maximizing the empirical likelihood of the data subject to balance constraints. This method relies on \pkgfun{CBPS}{npCBPS} from the \CRANpkg{CBPS} package.
 #'
@@ -12,9 +12,9 @@
 #'
 #' For binary treatments, this method estimates the weights using \pkgfun{CBPS}{npCBPS}. The ATE is the only estimand allowed. The weights are taken from the output of the `npCBPS` fit object.
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
-#' For multinomial treatments, this method estimates the weights using \pkgfun{CBPS}{npCBPS}. The ATE is the only estimand allowed. The weights are taken from the output of the `npCBPS` fit object.
+#' For multi-category treatments, this method estimates the weights using \pkgfun{CBPS}{npCBPS}. The ATE is the only estimand allowed. The weights are taken from the output of the `npCBPS` fit object.
 #'
 #' ## Continuous Treatments
 #'
@@ -81,7 +81,7 @@
 #'   summary(W1)
 #'   bal.tab(W1)
 #'
-#'   #Balancing covariates with respect to race (multinomial)
+#'   #Balancing covariates with respect to race (multi-category)
 #'   (W2 <- weightit(race ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
 #'                   method = "npcbps", estimand = "ATE"))

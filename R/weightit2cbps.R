@@ -5,7 +5,7 @@
 #'
 #' @description
 #'
-#' This page explains the details of estimating weights from covariate balancing propensity scores by setting `method = "cbps"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multinomial, and continuous treatments.
+#' This page explains the details of estimating weights from covariate balancing propensity scores by setting `method = "cbps"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating propensity scores using generalized method of moments and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on \pkgfun{CBPS}{CBPS} from the \CRANpkg{CBPS} package.
 #'
@@ -13,9 +13,9 @@
 #'
 #' For binary treatments, this method estimates the propensity scores and weights using \pkgfun{CBPS}{CBPS}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the `CBPS` fit object. When the estimand is the ATE, the return propensity score is the probability of being in the "second" treatment group, i.e., `levels(factor(treat))[2]`; when the estimand is the ATC, the returned propensity score is the probability of being in the control (i.e., non-focal) group.
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
-#' For multinomial treatments with three or four categories and when the estimand is the ATE, this method estimates the propensity scores and weights using one call to \pkgfun{CBPS}{CBPS}. For multinomial treatments with three or four categories or when the estimand is the ATT, this method estimates the propensity scores and weights using multiple calls to \pkgfun{CBPS}{CBPS}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the `CBPS` fit objects.
+#' For multi-category treatments with three or four categories and when the estimand is the ATE, this method estimates the propensity scores and weights using one call to \pkgfun{CBPS}{CBPS}. For multi-category treatments with three or four categories or when the estimand is the ATT, this method estimates the propensity scores and weights using multiple calls to \pkgfun{CBPS}{CBPS}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the `CBPS` fit objects.
 #'
 #' ## Continuous Treatments
 #'
@@ -48,12 +48,14 @@
 #'
 #' @section Additional Outputs:
 #' \describe{
-#'   \item{`obj`}{When `include.obj = TRUE`, the CB(G)PS model fit. For binary treatments, multinomial treatments with `estimand = "ATE"` and four or fewer treatment levels, and continuous treatments, the output of the call to \pkgfun{CBPS}{CBPS}. For multinomial treatments with `estimand = "ATT"` or with more than four treatment levels, a list of `CBPS` fit objects.
+#'   \item{`obj`}{When `include.obj = TRUE`, the CB(G)PS model fit. For binary treatments, multi-category treatments with `estimand = "ATE"` and four or fewer treatment levels, and continuous treatments, the output of the call to \pkgfun{CBPS}{CBPS}. For multi-category treatments with `estimand = "ATT"` or with more than four treatment levels, a list of `CBPS` fit objects.
 #'   }
 #' }
 #'
 #' @details
-#' CBPS estimates the coefficients of a logistic regression model (for binary treatments), multinomial logistic regression model (form multinomial treatments), or linear regression model (for continuous treatments) that is used to compute (generalized) propensity scores, from which the weights are computed. It involves augmenting the standard regression score equations with the balance constraints in an over-identified generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with `exact = FALSE`) does away with the score equations for the coefficients so that only the balance constraints (and the score equation for the variance of the error with a continuous treatment) are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multinomial treatments and linear terms for continuous treatments than will the over-identified version.
+#' CBPS estimates the coefficients of a logistic regression model (for binary treatments), multinomial logistic regression model (form multi-category treatments), or linear regression model (for continuous treatments) that is used to compute (generalized) propensity scores, from which the weights are computed. It involves augmenting the standard regression score equations with the balance constraints in an over-identified generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with `exact = FALSE`) does away with the score equations for the coefficients so that only the balance constraints (and the score equation for the variance of the error with a continuous treatment) are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multi-category treatments and linear terms for continuous treatments than will the over-identified version.
+#'
+#' Just-identified CBPS is very similar to entropy balancing and inverse probability tilting. For the ATT, all three methods will yield identical estimates. For other estimands, the results will differ.
 #'
 #' Note that \pkg{WeightIt} provides less functionality than does the \pkg{CBPS} package in terms of the versions of CBPS available; for extensions to CBPS, the \pkg{CBPS} package may be preferred.
 #'
@@ -63,6 +65,8 @@
 #' @seealso
 #' [weightit()], [weightitMSM()]
 #'
+#' [method_ebal] and [method_ipt] for entropy balancing and inverse probability tilting, which work similarly.
+#'
 #' \pkgfun{CBPS}{CBPS} for the fitting function.
 #'
 #' @references
@@ -70,10 +74,9 @@
 #'
 #' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 76(1), 243–263.
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
 #' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 76(1), 243–263.
-#'
 #'
 #' ## Continuous treatments
 #'
@@ -91,7 +94,7 @@
 #' bal.tab(W1)
 #'
 #' \dontrun{
-#'   #Balancing covariates with respect to race (multinomial)
+#'   #Balancing covariates with respect to race (multi-category)
 #'   (W2 <- weightit(race ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
 #'                   method = "cbps", estimand = "ATE"))
@@ -160,12 +163,12 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
     tryCatch({verbosely({
       fit <- CBPS::CBPS(formula(new.data),
-                             data = new.data[!sw0,],
-                             method = if (isFALSE(A$over)) "exact" else "over",
-                             standardize = FALSE,
-                             sample.weights = s.weights[!sw0],
-                             ATT = 0,
-                             ...)
+                        data = new.data[!sw0,],
+                        method = if (isFALSE(A$over)) "exact" else "over",
+                        standardize = FALSE,
+                        sample.weights = s.weights[!sw0],
+                        ATT = 0,
+                        ...)
     }, verbose = verbose)},
     error = function(e) {
       e. <- conditionMessage(e)
@@ -184,12 +187,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   w <- get_w_from_ps(ps, treat, estimand = estimand, subclass = subclass,
                      focal = focal, stabilize = stabilize)
 
-  p.score <- {
-    if (is_null(dim(ps)) || length(dim(ps)) != 2) ps
-    else ps[[get_treated_level(treat)]]
-  }
-
-  list(w = w, ps = p.score, fit.obj = fit)
+  list(w = w, ps = ps, fit.obj = fit)
 }
 
 weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,

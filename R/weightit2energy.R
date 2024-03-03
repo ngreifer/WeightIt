@@ -4,17 +4,17 @@
 #' @usage NULL
 #'
 #' @description
-#' This page explains the details of estimating weights using energy balancing by setting `method = "energy"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multinomial, and continuous treatments.
+#' This page explains the details of estimating weights using energy balancing by setting `method = "energy"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
-#' In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multinomial treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups. For continuous treatments, this is the sum of the distance covariance between the treatment variable and the covariates and the energy distances between the treatment and covariates in the weighted sample and their distributions in the original sample. This method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp} from the \CRANpkg{osqp} package to perform the optimization. This method may be slow or memory-intensive for large datasets.
+#' In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multi-category treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups. For continuous treatments, this is the sum of the distance covariance between the treatment variable and the covariates and the energy distances between the treatment and covariates in the weighted sample and their distributions in the original sample. This method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp} from the \CRANpkg{osqp} package to perform the optimization. This method may be slow or memory-intensive for large datasets.
 #'
 #' ## Binary Treatments
 #'
 #' For binary treatments, this method estimates the weights using `osqp()` using formulas described by Huling and Mak (2022). The following estimands are allowed: ATE, ATT, and ATC.
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
-#' For multinomial treatments, this method estimates the weights using `osqp()` using formulas described by Huling and Mak (2022). The following estimands are allowed: ATE and ATT.
+#' For multi-category treatments, this method estimates the weights using `osqp()` using formulas described by Huling and Mak (2022). The following estimands are allowed: ATE and ATT.
 #'
 #' ## Continuous Treatments
 #'
@@ -45,7 +45,7 @@
 #'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2022), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2021). Default is .0001, which is essentially 0.
 #'   }
 #' }
-#' For binary and multinomial treatments, the following additional arguments can be specified:
+#' For binary and multi-category treatments, the following additional arguments can be specified:
 #'   \describe{
 #'     \item{`improved`}{`logical`; whether to use the improved energy balancing weights as described by Huling and Mak (2022) when `estimand = "ATE"`. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2022) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is `TRUE`; set to `FALSE` to use the standard energy balancing weights instead (not recommended).
 #'     }
@@ -64,7 +64,7 @@
 #'     }
 #'   }
 #'
-#' The `moments` argument functions differently for `method = "energy"` from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2022) for binary and multi-category treatments or by Huling et al. (2023) for continuous treatments. When `moments` is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multinomial treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
+#' The `moments` argument functions differently for `method = "energy"` from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2022) for binary and multi-category treatments or by Huling et al. (2023) for continuous treatments. When `moments` is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multi-category treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
 #'
 #' @section Additional Outputs:
 #' \describe{
@@ -93,7 +93,7 @@
 #' [weightit()], [weightitMSM()]
 #'
 #' @references
-#' ## Binary and Multinomial treatments
+#' ## Binary and multi-category treatments
 #'
 #' Huling, J. D., & Mak, S. (2022). Energy Balancing of Covariate Distributions (arXiv:2004.13962). arXiv. \doi{10.48550/arXiv.2004.13962}
 #'
@@ -114,7 +114,7 @@
 #'   summary(W1)
 #'   bal.tab(W1)
 #'
-#'   #Balancing covariates with respect to race (multinomial)
+#'   #Balancing covariates with respect to race (multi-category)
 #'   (W2 <- weightit(race ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
 #'                   method = "energy", estimand = "ATT",
@@ -197,7 +197,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     q <- ((s.weights * 2 / n) %*% d) * Reduce("+", s.weights_n_t)
 
     if (!isFALSE(A[["improved"]])) {
-      all_pairs <- combn(levels_treat, 2, simplify = FALSE)
+      all_pairs <- utils::combn(levels_treat, 2, simplify = FALSE)
       P <- P - d * Reduce("+", lapply(all_pairs, function(p) {
         tcrossprod(s.weights_n_t[[p[1]]] - s.weights_n_t[[p[2]]])
       }))

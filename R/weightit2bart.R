@@ -4,7 +4,7 @@
 #' @usage NULL
 #'
 #' @description
-#' This page explains the details of estimating weights from Bayesian additive regression trees (BART)-based propensity scores by setting `method = "bart"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multinomial, and continuous treatments.
+#' This page explains the details of estimating weights from Bayesian additive regression trees (BART)-based propensity scores by setting `method = "bart"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on \pkgfun2{dbarts}{bart}{dbarts::bart2} from the \CRANpkg{dbarts} package.
 #'
@@ -12,9 +12,9 @@
 #'
 #' For binary treatments, this method estimates the propensity scores using \pkgfun2{dbarts}{bart}{dbarts::bart2}. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
-#' ## Multinomial Treatments
+#' ## Multi-Category Treatments
 #'
-#' For multinomial treatments, the propensity scores are estimated using several calls to \pkgfun2{dbarts}{bart}{dbarts::bart2}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
+#' For multi-category treatments, the propensity scores are estimated using several calls to \pkgfun2{dbarts}{bart}{dbarts::bart2}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
 #' ## Continuous Treatments
 #'
@@ -60,7 +60,7 @@
 #' @section Additional Outputs:
 #' \describe{
 #'   \item{`obj`}{
-#'     When `include.obj = TRUE`, the `bart2` fit(s) used to generate the predicted values. With multinomial treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
+#'     When `include.obj = TRUE`, the `bart2` fit(s) used to generate the predicted values. With multi-category treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
 #'   }
 #' }
 #'
@@ -92,7 +92,7 @@
 #' summary(W1)
 #' bal.tab(W1)
 #' \donttest{
-#' #Balancing covariates with respect to race (multinomial)
+#' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                 nodegree + re74, data = lalonde,
 #'                 method = "bart", estimand = "ATE"))
