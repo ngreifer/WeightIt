@@ -1,13 +1,14 @@
 allowable.methods <- {c("glm" = "glm", "ps" = "glm",
-                       "gbm" = "gbm", "gbr" = "gbm",
-                       "cbps" = "cbps",
-                       "npcbps" = "npcbps",
-                       "ebal" = "ebal", "entropy" = "ebal", "ebalance" = "ebal",
-                       # "ebcw" = "ebcw", "ate" = "ebcw",
-                       "optweight" = "optweight", "sbw" = "optweight",
-                       "super" = "super", "superlearner" = "super",
-                       "bart" = "bart",
-                       "energy" = "energy")}
+                        "gbm" = "gbm", "gbr" = "gbm",
+                        "cbps" = "cbps",
+                        "npcbps" = "npcbps",
+                        "ebal" = "ebal", "entropy" = "ebal", "ebalance" = "ebal",
+                        "ipt" = "ipt",
+                        # "ebcw" = "ebcw", "ate" = "ebcw",
+                        "optweight" = "optweight", "sbw" = "optweight",
+                        "super" = "super", "superlearner" = "super",
+                        "bart" = "bart",
+                        "energy" = "energy")}
 method.to.proper.method <- function(method) {
   method <- tolower(method)
   unname(allowable.methods[method])
@@ -58,6 +59,7 @@ method.to.phrase <- function(method) {
   if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
   if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
   if (method %in% c("ebal")) return("entropy balancing")
+  if (method %in% c("ipt")) return("inverse probability tilting")
   # if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
   if (method %in% c("optweight")) return("targeted stable balancing weights")
   if (method %in% c("super")) return("propensity score weighting with SuperLearner")
@@ -75,6 +77,7 @@ process.estimand <- function(estimand, method, treat.type) {
                     , cbps = c("ATT", "ATC", "ATE")
                     , npcbps = c("ATE")
                     , ebal = c("ATT", "ATC", "ATE")
+                    , ipt = c("ATT", "ATC", "ATE")
                     # , ebcw = c("ATT", "ATC", "ATE")
                     , optweight = c("ATT", "ATC", "ATE")
                     , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
@@ -87,6 +90,7 @@ process.estimand <- function(estimand, method, treat.type) {
                          , cbps = c("ATT", "ATC", "ATE")
                          , npcbps = c("ATE")
                          , ebal = c("ATT", "ATC", "ATE")
+                         , ipt = c("ATT", "ATC", "ATE")
                          # , ebcw = c("ATT", "ATC", "ATE")
                          , optweight = c("ATT", "ATC", "ATE")
                          , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
@@ -120,6 +124,7 @@ check.subclass <- function(method, treat.type) {
                     , cbps = TRUE
                     , npcbps = FALSE
                     , ebal = FALSE
+                    , ipt = FALSE
                     # , ebcw = FALSE
                     , optweight = FALSE
                     , super = TRUE
@@ -132,6 +137,7 @@ check.subclass <- function(method, treat.type) {
                          , cbps = FALSE
                          , npcbps = FALSE
                          , ebal = FALSE
+                         , ipt = FALSE
                          # , ebcw = FALSE
                          , optweight = FALSE
                          , super = TRUE
@@ -330,7 +336,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 }
 process.moments.int <- function(moments, int, method) {
 
-  if (is.function(method) || method %in% c("npcbps", "ebal", "ebcw", "optweight", "energy")) {
+  if (is.function(method) || method %in% c("npcbps", "ebal", "ipt", "ebcw", "optweight", "energy")) {
     chk::chk_flag(int)
 
     if (is_not_null(moments)) {
@@ -340,7 +346,7 @@ process.moments.int <- function(moments, int, method) {
         if (method == "energy") {
           chk::chk_gte(moments, 0)
         }
-        else if (method %in% c("npcbps", "ebal", "ebcw", "optweight")) {
+        else if (method %in% c("npcbps", "ebal", "ipt", "ebcw", "optweight")) {
           chk::chk_gt(moments, 0)
         }
         moments <- as.integer(moments)
@@ -395,6 +401,7 @@ process.missing <- function(missing, method, treat.type) {
                            , cbps = c("ind")
                            , npcbps = c("ind")
                            , ebal = c("ind")
+                           , ipt = c("ind")
                            # , ebcw = c("ind")
                            , optweight = c("ind")
                            , super = c("ind")
@@ -407,6 +414,7 @@ process.missing <- function(missing, method, treat.type) {
                      , cbps = c("ind")
                      , npcbps = c("ind")
                      , ebal = c("ind")
+                     , ipt = c("ind")
                      # , ebcw = c("ind")
                      , optweight = c("ind")
                      , super = c("ind")
@@ -419,6 +427,7 @@ process.missing <- function(missing, method, treat.type) {
                     , cbps = c("ind")
                     , npcbps = c("ind")
                     , ebal = c("ind")
+                    , ipt = c("ind")
                     # , ebcw = c("ind")
                     , optweight = c("ind")
                     , super = c("ind")
@@ -488,7 +497,7 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
 
   if (int && nd > 1) {
     int_terms <- int_co.names <- make_list(1)
-    ints_to_make <- combn(colnames(d)[!ex], 2, simplify = FALSE)
+    ints_to_make <- utils::combn(colnames(d)[!ex], 2, simplify = FALSE)
 
     if (is_not_null(ints_to_make)) {
       int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]]*d[,i[2]]))
@@ -758,7 +767,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
 
     if (ncol(ps) == 1) {
       if (toupper(estimand) != "ATE") {
-        .err("with multinomial treatments, `ps` can be a vector or have only one column only if the estimand is the ATE")
+        .err("with multi-category treatments, `ps` can be a vector or have only one column only if the estimand is the ATE")
       }
 
       ps <- matrix(rep(ps, nunique(treat)), nrow = length(treat), dimnames = list(ps.names, t.levels))
@@ -1065,7 +1074,7 @@ plot_density <- function(d.n, d.d) {
   d.n_ <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
   d.all <- rbind(d.d_, d.n_)
   d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
-  pl <- ggplot(d.all, aes(x = x, y = y)) + geom_line() +
+  pl <- ggplot(d.all, aes(x = d.all$x, y = d.all$y)) + geom_line() +
     labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
     facet_grid(rows = vars(dens)) + theme(panel.background = element_rect(fill = "white"),
                                           panel.border = element_rect(fill = NA, color = "black"),
@@ -1089,7 +1098,7 @@ replace_na_with <- function(covs, with = "median") {
   if (is.character(with)) {
     for (i in colnames(covs)[anyNA_col(covs)]) {
       if (all(is.na(covs[,i]))) covs <- covs[, colnames(covs) != i, drop = FALSE]
-      else covs[is.na(covs[,i]),i] <- match.fun(with)(covs[,i], na.rm = TRUE)
+      else covs[is.na(covs[,i]), i] <- match.fun(with)(covs[, i], na.rm = TRUE)
     }
     return(covs)
   }
@@ -1144,4 +1153,4 @@ chol2 <- function(Sinv) {
 }
 
 #To pass CRAN checks:
-utils::globalVariables(c(".s.weights", "dens", "x", "y"))
+utils::globalVariables(c(".s.weights", "dens"))

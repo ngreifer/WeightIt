@@ -145,6 +145,10 @@ remotes::install_github("kosukeimai/CBPS")
 
 `WeightIt` uses code written for `WeightIt`, so no additional packages need to be installed to use entropy balancing.
 
+## Inverse probability tilting (`method = "ipt"`)
+
+`WeightIt` uses code written for `WeightIt`, so no additional packages need to be installed to use inverse probability tilting.
+
 ## Empirical balancing calibration weighting (`method = "ebcw"`)
 
 Empirical balancing calibration weighting is no longer available with `WeightIt`. Use entropy balancing, which in most cases is mathematically identical. 

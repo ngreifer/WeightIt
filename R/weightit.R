@@ -34,8 +34,7 @@
 #' `"ATT"`.
 #' @param by a string containing the name of the variable in `data` for
 #' which weighting is to be done within categories or a one-sided formula with
-#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, weights will be generated separately
-#' within each level of the variable `"gender"`. (The argument used to be
+#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, a separate propensity score model or optimization will occur within each level of the variable `"gender"`. (The argument used to be
 #' called `exact`, which will still work but with a message.) Only one
 #' `by` variable is allowed; to stratify by multiply variables
 #' simultaneously, create a new variable that is a full cross of those
@@ -97,7 +96,7 @@
 #' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
 #' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
-#' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"super"`, or `"bart"`.}
+#' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 #' \item{by}{A data.frame containing the `by` variable when specified.}
@@ -119,6 +118,7 @@
 #' | [`"cbps"`][method_cbps]|Covariate Balancing Propensity Score weighting |
 #' | [`"npcbps"`][method_npcbps]|Non-parametric Covariate Balancing Propensity Score weighting |
 #' | [`"ebal"`][method_ebal] | Entropy balancing |
+#' | [`"ipt"`][method_ipt] | Inverse probability tilting |
 # \item [`"ebcw"`][method_ebcw] - Empirical balancing calibration weighting |
 #' | [`"optweight"`][method_optweight] | Optimization-based weighting |
 #' | [`"super"`][method_super] | Propensity score weighting using SuperLearner |
