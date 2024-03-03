@@ -930,7 +930,7 @@ make_list <- function(n) {
   if (length(n) == 1L && is.numeric(n)) {
     vector("list", as.integer(n))
   }
-  else if (is_(n, "atomic")) {
+  else if (length(n) > 0L && is.atomic(n)) {
     setNames(vector("list", length(n)), as.character(n))
   }
   else stop("'n' must be an integer(ish) scalar or an atomic variable.")
