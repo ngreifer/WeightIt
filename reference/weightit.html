@@ -18,7 +18,7 @@ method."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9003</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -141,8 +141,7 @@ the focal group. If specified, <code>estimand</code> will automatically be set t
 <dt>by</dt>
 <dd><p>a string containing the name of the variable in <code>data</code> for
 which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>, weights will be generated separately
-within each level of the variable <code>"gender"</code>. (The argument used to be
+the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>, a separate propensity score model or optimization will occur within each level of the variable <code>"gender"</code>. (The argument used to be
 called <code>exact</code>, which will still work but with a message.) Only one
 <code>by</code> variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
@@ -246,7 +245,7 @@ the fitting process.</p></dd>
 
 <dt>ps</dt>
 <dd><p>The estimated or provided propensity scores. Estimated propensity scores are
-returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
+returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"ipt"</code>, <code>"super"</code>, or <code>"bart"</code>.</p></dd>
 
 <dt>s.weights</dt>
 <dd><p>The provided sampling weights.</p></dd>
@@ -272,7 +271,7 @@ that perform the estimation of balancing weights using the requested
 <code>method</code>. Below are the methods allowed and links to pages containing
 more information about them, including additional arguments and outputs
 (e.g., when <code>include.obj = TRUE</code>), how missing values are treated,
-which estimands are allowed, and whether sampling weights are allowed.</p><table class="table table"><tr><td><code><a href="method_glm.html">"glm"</a></code></td><td>Propensity score weighting using generalized linear models</td></tr><tr><td><code><a href="method_gbm.html">"gbm"</a></code></td><td>Propensity score weighting using generalized boosted modeling</td></tr><tr><td><code><a href="method_cbps.html">"cbps"</a></code></td><td>Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_npcbps.html">"npcbps"</a></code></td><td>Non-parametric Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_ebal.html">"ebal"</a></code></td><td>Entropy balancing</td></tr><tr><td><code><a href="method_optweight.html">"optweight"</a></code></td><td>Optimization-based weighting</td></tr><tr><td><code><a href="method_super.html">"super"</a></code></td><td>Propensity score weighting using SuperLearner</td></tr><tr><td><code><a href="method_bart.html">"bart"</a></code></td><td>Propensity score weighting using Bayesian additive regression trees (BART)</td></tr><tr><td><code><a href="method_energy.html">"energy"</a></code></td><td>Energy balancing</td></tr></table><p><code>method</code> can also be supplied as a user-defined function; see
+which estimands are allowed, and whether sampling weights are allowed.</p><table class="table table"><tr><td><code><a href="method_glm.html">"glm"</a></code></td><td>Propensity score weighting using generalized linear models</td></tr><tr><td><code><a href="method_gbm.html">"gbm"</a></code></td><td>Propensity score weighting using generalized boosted modeling</td></tr><tr><td><code><a href="method_cbps.html">"cbps"</a></code></td><td>Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_npcbps.html">"npcbps"</a></code></td><td>Non-parametric Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_ebal.html">"ebal"</a></code></td><td>Entropy balancing</td></tr><tr><td><code><a href="method_ipt.html">"ipt"</a></code></td><td>Inverse probability tilting</td></tr><tr><td><code><a href="method_optweight.html">"optweight"</a></code></td><td>Optimization-based weighting</td></tr><tr><td><code><a href="method_super.html">"super"</a></code></td><td>Propensity score weighting using SuperLearner</td></tr><tr><td><code><a href="method_bart.html">"bart"</a></code></td><td>Propensity score weighting using Bayesian additive regression trees (BART)</td></tr><tr><td><code><a href="method_energy.html">"energy"</a></code></td><td>Energy balancing</td></tr></table><p><code>method</code> can also be supplied as a user-defined function; see
 <code><a href="method_user.html">method_user</a></code> for instructions and examples.</p>
 <p>When using <code>weightit()</code>, please cite both the <span class="pkg">WeightIt</span> package
 (using <code>citation("WeightIt")</code>) and the paper(s) in the references

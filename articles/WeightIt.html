@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9003</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-01-14</h4>
+            <h4 data-toc-skip class="date">2024-03-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -101,9 +101,9 @@ Greifer</h4>
 assessing balancing weights for observational studies. These weights can
 be used to estimate the causal parameters of marginal structural models.
 I will not go into the basics of causal inference methods here. For good
-introductory articles, see <span class="citation">Austin (<a href="#ref-austinIntroductionPropensityScore2011" role="doc-biblioref">2011</a>)</span>, <span class="citation">Austin and
-Stuart (<a href="#ref-austinMovingBestPractice2015" role="doc-biblioref">2015</a>)</span>, <span class="citation">Robins,
-Hernán, and Brumback (<a href="#ref-robinsMarginalStructuralModels2000" role="doc-biblioref">2000</a>)</span>, or <span class="citation">Thoemmes and Ong (<a href="#ref-thoemmesPrimerInverseProbability2016" role="doc-biblioref">2016</a>)</span>.</p>
+introductory articles, see <span class="citation">Austin (<a href="#ref-austinIntroductionPropensityScore2011">2011</a>)</span>,
+<span class="citation">Austin and Stuart (<a href="#ref-austinMovingBestPractice2015">2015</a>)</span>, <span class="citation">Robins, Hernán, and Brumback (<a href="#ref-robinsMarginalStructuralModels2000">2000</a>)</span>, or
+<span class="citation">Thoemmes and Ong (<a href="#ref-thoemmesPrimerInverseProbability2016">2016</a>)</span>.</p>
 <p>Typically, the analysis of an observation study might proceed as
 follows: identify the covariates for which balance is required; assess
 the quality of the data available, including missingness and measurement
@@ -126,7 +126,7 @@ well. Here, we are interested in the average treatment effect on the
 treated (ATT).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##  cobalt (Version 4.5.3, Build Date: 2024-01-09)</span></span></code></pre>
+<pre><code><span><span class="co">##  cobalt (Version 4.5.4, Build Date: 2024-02-26)</span></span></code></pre>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lalonde</span><span class="op">)</span></span></code></pre></div>
@@ -273,9 +273,10 @@ balance on our covariates.</p>
 balance. Only <code>age</code> remained imbalanced, with a standardized
 mean difference greater than .05 and a variance ratio greater than 2.
 Let’s see if we can do better. We’ll choose a different method: entropy
-balancing <span class="citation">(<a href="#ref-hainmuellerEntropyBalancingCausal2012" role="doc-biblioref">Hainmueller 2012</a>)</span>, which guarantees
-perfect balance on specified moments of the covariates while minimizing
-the entropy (a measure of dispersion) of the weights.</p>
+balancing <span class="citation">(<a href="#ref-hainmuellerEntropyBalancingCausal2012">Hainmueller
+2012</a>)</span>, which guarantees perfect balance on specified moments
+of the covariates while minimizing the entropy (a measure of dispersion)
+of the weights.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
 <span>                  data <span class="op">=</span> <span class="va">lalonde</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>, method <span class="op">=</span> <span class="st">"ebal"</span><span class="op">)</span></span>
@@ -366,10 +367,12 @@ extract them and estimate our treatment effect.</p>
 <p>Our confidence interval for <code>treat</code> contains 0, so there
 isn’t evidence that <code>treat</code> has an effect on
 <code>re78</code>. Although some authors recommend using “robust”
-sandwich standard errors to adjust for the weights <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000" role="doc-biblioref">Robins, Hernán, and Brumback 2000</a>; <a href="#ref-hainmuellerEntropyBalancingCausal2012" role="doc-biblioref">Hainmueller 2012</a>)</span> as we did above,
-others believe these can misleading and recommend bootstrapping instead
-<span class="citation">(<a href="#ref-reifeisVarianceTreatmentEffect2020" role="doc-biblioref">Reifeis and Hudgens 2020</a>; <a href="#ref-chanGloballyEfficientNonparametric2016" role="doc-biblioref">Chan, Yam, and Zhang 2016</a>)</span>. Both methods
-are described in detail at
+sandwich standard errors to adjust for the weights <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins, Hernán, and
+Brumback 2000</a>; <a href="#ref-hainmuellerEntropyBalancingCausal2012">Hainmueller
+2012</a>)</span> as we did above, others believe these can misleading
+and recommend bootstrapping instead <span class="citation">(<a href="#ref-reifeisVarianceTreatmentEffect2020">Reifeis and Hudgens
+2020</a>; <a href="#ref-chanGloballyEfficientNonparametric2016">Chan,
+Yam, and Zhang 2016</a>)</span>. Both methods are described in detail at
 <code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>.</p>
 </div>
 <div class="section level2">
@@ -643,9 +646,12 @@ treatment regime using
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://marginaleffects.com/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span>
 <span><span class="op">(</span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                      vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
-<span>                      newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/datagrid.html" class="external-link">datagridcf</a></span><span class="op">(</span>A_1 <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, A_2 <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, A_3 <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span>,</span>
+<span>                      newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/datagridcf.html" class="external-link">datagridcf</a></span><span class="op">(</span>A_1 <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, A_2 <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span>, A_3 <span class="op">=</span> <span class="fl">0</span><span class="op">:</span><span class="fl">1</span><span class="op">)</span>,</span>
 <span>                      by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span>,</span>
 <span>                      type <span class="op">=</span> <span class="st">"response"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: 'datagridcf' is deprecated.</span></span>
+<span><span class="co">## Use 'datagrid(x = 1:2, grid_type = "counterfactual")' instead.</span></span>
+<span><span class="co">## See help("Deprecated")</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  A_1 A_2 A_3 Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %</span></span>
 <span><span class="co">##    0   0   0    0.687     0.0168 40.8   &lt;0.001   Inf 0.654  0.720</span></span>
@@ -667,7 +673,7 @@ we can use <code><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.htm
 <code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> output. For example, to compare the
 regimes with no treatment for all three time points vs. the regime with
 treatment for all three time points, we would run</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"b8 - b1 = 0"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##     Term Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %</span></span>
@@ -682,7 +688,7 @@ all.</p>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-austinIntroductionPropensityScore2011" class="csl-entry">
 Austin, Peter C. 2011. <span>“An Introduction to Propensity Score
 Methods for Reducing the Effects of Confounding in Observational
