@@ -4,21 +4,21 @@
 #' @usage NULL
 #'
 #' @description
-#' This page explains the details of estimating weights using inverse probability tilting by setting `method = "ipt"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
+#' This page explains the details of estimating weights using inverse probability tilting by setting `method = "ipt"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary and multi-category treatments.
 #'
-#' In general, this method relies on estimating propensity scores using a modification of the usual regression score equations to enforce balance and the converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on code written for \pkg{WeightIt} using [optim()].
+#' In general, this method relies on estimating propensity scores using a modification of the usual generalized linear model score equations to enforce balance and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on code written for \pkg{WeightIt} using \pkgfun{rootSolve}{multiroot}.
 #'
 #' ## Binary Treatments
 #'
-#' For binary treatments, this method estimates the weights using `optim()` using formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group, and the return propensity score is the probability of being in the "second" treatment group, i.e., `levels(factor(treat))[2]`.
+#' For binary treatments, this method estimates the weights using formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
 #'
 #' ## Multi-Category Treatments
 #'
-#' For multi-category treatments, this method estimates the weights using `optim()`. The following estimands are allowed: ATE and ATT. When the ATE is requested, `optim()` is run once for each treatment group. When the ATT is requested, `optim()` is run once for each non-focal (i.e., control) group.
+#' For multi-category treatments, this method estimates the weights using modifications of the formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE and ATT. When the ATE is requested, estimation is performed once for each treatment group. When the ATT is requested, estimation is performed once for each non-focal (i.e., control) group.
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, this method estimates the weights using `optim()`.
+#' Inverse probability tilting is not compatible with continuous treatments.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -37,31 +37,33 @@
 #'       }
 #'     }
 #'
+#' ## M-estimation
+#'
+#' M-estimation is supported for all scenarios. See [glm_weightit()] and `vignette("estimating-effects")` for details.
+#'
 #' @section Additional Arguments:
 #' `moments` and `int` are accepted. See [weightit()] for details.
 #'
 #' \describe{
 #'   \item{`quantile`}{
-#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75`) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
+#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75`) to request one quantile for each covariate.
+#'   }
+#'   \item{`link`}{`"string"`; the link used to determine the inverse link for computing the (generalized) propensity scores. Default is `"logit"`, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but `"probit"`, `"cauchit"`, and `"cloglog"` are also allowed.
 #'   }
 #' }
-#'
-#' The arguments `maxit` and `reltol` can be supplied and are passed to the `control` argument of [optim()]. The `"BFGS"` method is used, so the defaults correspond to this.
 #'
 #' The `stabilize` argument is ignored.
 #'
 #' @section Additional Outputs:
 #' \describe{
-#'   \item{`obj`}{When `include.obj = TRUE`, the output of the call to [optim()], which contains the coefficient estimates and convergence information. For ATE fits or with multi-category treatments, a list of `optim()` outputs, one for each weighted group.
+#'   \item{`obj`}{When `include.obj = TRUE`, the output of the call to [optim()], which contains the coefficient estimates and convergence information. For ATE fits or with multi-category treatments, a list of `rootSolve::multiroot()` outputs, one for each weighted group.
 #'   }
 #' }
 #'
 #' @details
-#' Inverse probability tilting (IPT) involves specifying estimating equations that fit the parameters of one or more logistic regression models (for binary and multi-category treatments) or a linear regression model (for continuous treatments) with a modification that ensure exact balance on the covariates means. These estimating equations are solved, and the estimated parameters are used in the (generalized) propensity score, which is used to compute the weights. Conceptually and mathematically, IPT is very similar to entropy balancing and just-identified CBPS. For the ATT and ATC, entropy balancing, just-identified CBPS, and IPT will yield identical results. For the ATE, the three methods differ.
+#' Inverse probability tilting (IPT) involves specifying estimating equations that fit the parameters of one or more generalized linear models with a modification that ensures exact balance on the covariate means. These estimating equations are solved, and the estimated parameters are used in the (generalized) propensity score, which is used to compute the weights. Conceptually and mathematically, IPT is very similar to entropy balancing and just-identified CBPS. For the ATT and ATC, entropy balancing, just-identified CBPS, and IPT will yield identical results. For the ATE or when `link` is specified as something other than `"logit"`, the three methods differ.
 #'
-#' Treatment effect estimates for binary treatments are consistent if the true propensity score is a logistic regression or the outcome model is linear in the covariates and their interaction with treatments. For entropy balancing, this is only true for the ATT, and fo just-identified CBPS, this is only true if there is no effect modification by covariates. In this way, IPT provides additional theoretical guarantees over the other two methods, though potentially with some cost in precision.
-#'
-#' IPT for continuous treatments has not been described in the literature; here we use the score equations for CBPS with continuous treatments, which correspond to the score equations for the residual variance of a linear regression for the generalized propensity score and the weighted covariance between the treatment and covariates. This method should be used with caution until it is better understood.
+#' Treatment effect estimates for binary treatments are consistent if the true propensity score is a logistic regression or the outcome model is linear in the covariates and their interaction with treatments. For entropy balancing, this is only true for the ATT, and for just-identified CBPS, this is only true if there is no effect modification by covariates. In this way, IPT provides additional theoretical guarantees over the other two methods, though potentially with some cost in precision.
 #'
 #' @seealso
 #' [weightit()], [weightitMSM()]
@@ -69,11 +71,11 @@
 #' [method_ebal] and [method_cbps] for entropy balancing and CBPS, which work similarly.
 #'
 #' @references
-#' ## ATE
+#' ## `estimand = "ATE"`
 #'
 #' Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability Tilting for Moment Condition Models with Missing Data. *The Review of Economic Studies*, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
 #'
-#' ## ATT
+#' ## `estimand = "ATT"`
 #'
 #' Sant’Anna, P. H. C., & Zhao, J. (2020). Doubly robust difference-in-differences estimators. *Journal of Econometrics*, 219(1), 101–122. \doi{10.1016/j.jeconom.2020.06.003}
 #'
@@ -94,260 +96,13 @@
 #' summary(W2)
 #' cobalt::bal.tab(W2)
 #'
-#' #Balancing covariates and squares with respect to
-#' #re75 (continuous)
-#' (W3 <- weightit(re75 ~ age + educ + married +
-#'                   nodegree + re74, data = lalonde,
-#'                 method = "ipt"))
-#' summary(W3)
-#' cobalt::bal.tab(W3)
 NULL
 
 weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
                          stabilize, missing, moments, int, verbose, ...) {
   A <- list(...)
 
-  covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat[subset])
-  s.weights <- s.weights[subset]
-
-  if (missing == "ind") {
-    covs <- add_missing_indicators(covs)
-  }
-
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
-
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
-
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
-
-  C <- cbind(1, covs)
-
-  if (estimand == "ATT") {
-    groups_to_weight <- levels(treat)[levels(treat) != focal]
-    targets <- cobalt::col_w_mean(C, s.weights = s.weights, subset = treat == focal)
-  }
-  else if (estimand == "ATE") {
-    groups_to_weight <- levels(treat)
-    targets <- cobalt::col_w_mean(C, s.weights = s.weights)
-  }
-
-  reltol <- if_null_then(A[["reltol"]], sqrt(.Machine$double.eps))
-
-  if (estimand == "ATT") {
-    f <- function(theta, C, A, s) {
-      p <- plogis(drop(C %*% theta))
-      colMeans(C * s * (1 - A) * p / (1 - p)) - targets
-    }
-
-    start <- rep(0, ncol(C))
-
-    # out <- rootSolve::multiroot(f, start = start,
-    #                             A = as.numeric(treat == focal),
-    #                             C = C,
-    #                             s = s.weights)
-    # par <- out$root
-    verbosely({
-      fit.list <- optim(par = start,
-                        fn = function(b, ...) sum(f(b, ...)^2),
-                        method = "BFGS",
-                        control = list(trace = 1,
-                                       reltol = reltol,
-                                       maxit = if_null_then(A[["maxit"]], 200)),
-                        A = as.numeric(treat == focal),
-                        C = C,
-                        s = s.weights)
-    }, verbose = verbose)
-
-    par <- fit.list$par
-
-    ps <- plogis(drop(C %*% par))
-  }
-  else {
-    ps <- make_df(levels(treat), length(treat))
-
-    #Version that only balances groups together, not to target; equal to CBPS with over = F
-    # f <- function(theta, C, A, s) {
-    #   p <- plogis(drop(C %*% theta))
-    #   colMeans(s * (A/p - (1 - A)/(1 - p)) * C)
-    # }
-    #
-    # out <- rootSolve::multiroot(f, start = rep(0, ncol(C)),
-    #                             A = as.numeric(treat == levels(treat)[2]),
-    #                             C = C,
-    #                             s = s.weights)
-    #
-    # ps <- plogis(drop(C %*% out$root))
-
-    fit.list <- make_list(levels(treat))
-
-    for (i in levels(treat)) {
-      f <- function(theta, C, A, s) {
-        p <- plogis(drop(C %*% theta))
-        colMeans(C * s * (A/p)) - targets
-      }
-
-      start <- rep(0, ncol(C))
-
-      # out <- rootSolve::multiroot(f, start = start,
-      #                             A = as.numeric(treat == i),
-      #                             C = C,
-      #                             s = s.weights)
-      # par <- out$root
-
-      verbosely({
-        fit.list[[i]] <- optim(par = start,
-                               fn = function(b, ...) sum(f(b, ...)^2),
-                               method = "BFGS",
-                               control = list(trace = 1,
-                                              reltol = reltol,
-                                              maxit = if_null_then(A[["maxit"]], 200)),
-                               A = as.numeric(treat == i),
-                               C = C,
-                               s = s.weights)
-      }, verbose = verbose)
-
-      par <- fit.list[[i]]$par
-
-      ps[[i]] <- plogis(drop(C %*% par))
-    }
-  }
-
-  w <- get_w_from_ps(ps, treat, estimand = estimand,
-                     focal = focal)
-
-  p.score <- {
-    if (is_null(dim(ps)) || length(dim(ps)) != 2) ps
-    else ps[[get_treated_level(treat)]]
-  }
-
-  list(w = w, ps = p.score, fit.obj = fit.list)
-}
-
-weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                               stabilize, missing, moments, int, verbose, ...) {
-  A <- list(...)
-
-  covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat[subset])
-  s.weights <- s.weights[subset]
-
-  if (missing == "ind") {
-    covs <- add_missing_indicators(covs)
-  }
-
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
-
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
-
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
-
-  C <- cbind(1, covs)
-
-  if (estimand == "ATT") {
-    groups_to_weight <- levels(treat)[levels(treat) != focal]
-    targets <- cobalt::col_w_mean(C, s.weights = s.weights, subset = treat == focal)
-  }
-  else if (estimand == "ATE") {
-    groups_to_weight <- levels(treat)
-    targets <- cobalt::col_w_mean(C, s.weights = s.weights)
-  }
-
-  reltol <- if_null_then(A[["reltol"]], sqrt(.Machine$double.eps))
-
-  w <- rep(1, length(treat))
-
-  fit.list <- make_list(groups_to_weight)
-
-  if (estimand == "ATT") {
-
-    for (i in groups_to_weight) {
-      f <- function(theta, C, A, s) {
-        p <- plogis(drop(C %*% theta))
-        colMeans(C * (s * (1 - A) * p / (1 - p))) - targets
-      }
-
-      start <- rep(0, ncol(C))
-
-      # out <- rootSolve::multiroot(f, start = start,
-      #                             A = as.numeric(treat[treat %in% c(i, focal)] == focal),
-      #                             C = C[treat %in% c(i, focal),, drop = FALSE],
-      #                             s = s.weights[treat %in% c(i, focal)])
-      # par <- out$root
-      verbosely({
-        fit.list[[i]] <- optim(par = start,
-                               fn = function(b, ...) sum(f(b, ...)^2),
-                               A = as.numeric(treat[treat %in% c(i, focal)] == focal),
-                               method = "BFGS",
-                               control = list(trace = 1,
-                                              reltol = reltol,
-                                              maxit = if_null_then(A[["maxit"]], 200)),
-                               C = C[treat %in% c(i, focal),, drop = FALSE],
-                               s = s.weights[treat %in% c(i, focal)])
-      }, verbose = verbose)
-
-      par <- fit.list[[i]]$par
-
-      ps_i <- plogis(drop(C[treat  == i,, drop = FALSE] %*% par))
-      w[treat == i] <- ps_i / (1 - ps_i)
-    }
-
-  }
-  else {
-    #Version that only balances groups together, not to target; equal to CBPS with over = F
-    # f <- function(theta, C, A, s) {
-    #   p <- plogis(drop(C %*% theta))
-    #   colMeans(s * (A/p - (1 - A)/(1 - p)) * C)
-    # }
-    #
-    # out <- rootSolve::multiroot(f, start = rep(0, ncol(C)),
-    #                             A = as.numeric(treat == levels(treat)[2]),
-    #                             C = C,
-    #                             s = s.weights)
-    #
-    # ps <- plogis(drop(C %*% out$root))
-
-    for (i in groups_to_weight) {
-      f <- function(theta, C, A, s) {
-        p <- plogis(drop(C %*% theta))
-        colMeans(C * (s * A / p)) - targets
-      }
-
-      start <- rep(0, ncol(C))
-
-      # out <- rootSolve::multiroot(f, start = start,
-      #                             A = as.numeric(treat == i),
-      #                             C = C,
-      #                             s = s.weights)
-      # par <- out$root
-
-      verbosely({
-        fit.list[[i]] <- optim(par = start,
-                               fn = function(b, ...) sum(f(b, ...)^2),
-                               method = "BFGS",
-                               control = list(trace = 1,
-                                              reltol = reltol,
-                                              maxit = if_null_then(A[["maxit"]], 200)),
-                               A = as.numeric(treat == i),
-                               C = C,
-                               s = s.weights)
-      }, verbose = verbose)
-
-      par <- fit.list[[i]]$par
-
-      ps_i <- plogis(drop(C[treat == i,, drop = FALSE] %*% par))
-
-      w[treat == i] <- 1 / ps_i
-    }
-  }
-
-  list(w = w, fit.obj = fit.list)
-}
-
-weightit2ipt.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
-  A <- list(...)
+  rlang::check_installed("rootSolve")
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -357,66 +112,332 @@ weightit2ipt.cont <- function(covs, treat, s.weights, subset, missing, moments, 
     covs <- add_missing_indicators(covs)
   }
 
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+
+  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                                 focal = focal, treat = treat))
+
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
-  colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
-  treat_c <- (treat - w.m(treat, s.weights)) / sqrt(col.w.v(treat, s.weights))
-  covs_c <- cbind(1, scale(covs,
-                           center = col.w.m(covs, s.weights),
-                           scale = sqrt(col.w.v(covs, s.weights))))
+  C <- cbind(`(Intercept)` = 1, covs)
 
-  reltol <- if_null_then(A[["reltol"]], sqrt(.Machine$double.eps))
+  t.lev <- get_treated_level(treat)
+  treat <- binarize(treat, one = t.lev)
 
-  #Stabilization - get dens.num
-  dens.num <- dnorm(treat_c, log = TRUE)
+  if (is_null(A$link)) A$link <- "logit"
+  link <- A$link
+  chk::chk_string(link)
+  link <- match_arg(link, c("logit", "probit", "cauchit", "cloglog"))
 
-  f <- function(theta, C, A, sw) {
-    s2 <- exp(theta[1])
-    b <- theta[1 + 1:ncol(C)]
+  .fam <- quasibinomial(link)
 
-    p <- drop(C %*% b)
+  groups_to_weight <- switch(estimand,
+                             "ATT" = 0,
+                             "ATC" = 1,
+                             0:1)
 
-    dens.denom <- dnorm(treat_c, p, sqrt(s2), log = TRUE)
+  fit.list <- make_list(groups_to_weight)
 
-    w <- exp(dens.num - dens.denom)
+  n <- length(treat)
+  k <- ncol(C)
 
-    c(mean(sw * (A - p)^2/s2 - 1),
-      colMeans(w * sw * A * C))
+  if (estimand == "ATE") {
+    ps <- rep(0, n)
+
+    psi0 <- function(B, X, A, SW) {
+      p <- .fam$linkinv(drop(X %*% B))
+      SW * ((1 - A)/(1 - p) - 1) * X
+    }
+
+    f0 <- function(B, X, A, SW) {
+      .colMeans(psi(B, X, A, SW), n, k)
+    }
+
+    psi1 <- function(B, X, A, SW) {
+      p <- .fam$linkinv(drop(X %*% B))
+      SW * (A/p - 1) * X
+    }
+
+    f1 <- function(B, X, A, SW) {
+      .colMeans(psi(B, X, A, SW), n, k)
+    }
+
+    start <- rep(0, ncol(C))
+
+    # Control weights
+    verbosely({
+      fit.list[[1]] <- rootSolve::multiroot(f0, start = start,
+                                            A = treat,
+                                            X = C,
+                                            SW = s.weights,
+                                            rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
+                                            verbose = TRUE)
+    }, verbose = verbose)
+
+    par0 <- fit.list[[1]]$root
+
+    ps[treat == 0] <- .fam$linkinv(drop(C[treat == 0,, drop = FALSE] %*% par0))
+
+    #Treated weights
+    verbosely({
+      fit.list[[2]] <- rootSolve::multiroot(f1, start = -par0,
+                                            A = treat,
+                                            X = C,
+                                            SW = s.weights,
+                                            rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
+                                            verbose = TRUE)
+    }, verbose = verbose)
+
+    par1 <- fit.list[[2]]$root
+
+    ps[treat == 1] <- .fam$linkinv(drop(C[treat == 1,, drop = FALSE] %*% par1))
+
+    par <- c(par0, par1)
+  }
+  else {
+    psi <- switch(estimand,
+                  "ATT" = function(B, X, A, SW) {
+                    p <- .fam$linkinv(drop(X %*% B))
+                    SW * (A - (1 - A) * p / (1 - p)) * X
+                  },
+                  "ATC" = function(B, X, A, SW) {
+                    p <- .fam$linkinv(drop(X %*% B))
+                    SW * (A * (1 - p) / p - (1 - A)) * X
+                  })
+
+    f <- function(B, X, A, SW) {
+      .colMeans(psi(B, X, A, SW), n, k)
+    }
+
+    start <- rep(0, ncol(C))
+
+    verbosely({
+      fit.list[[1]] <- rootSolve::multiroot(f, start = start,
+                                            A = treat,
+                                            X = C,
+                                            SW = s.weights,
+                                            rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
+                                            verbose = TRUE)
+    }, verbose = verbose)
+
+    par <- fit.list[[1]]$root
+
+    ps <- .fam$linkinv(drop(C %*% par))
   }
 
-  start <- rep(0, 1 + ncol(covs_c))
+  w <- .get_w_from_ps_internal_bin(ps, treat, estimand = estimand)
 
-  verbosely({
-    fit.list <- optim(par = start,
-                      fn = function(b, ...) sum(f(b, ...)^2),
-                      method = "BFGS",
-                      control = list(trace = 1,
-                                     reltol = reltol,
-                                     maxit = if_null_then(A[["maxit"]], 200)),
-                      A = treat_c,
-                      C = covs_c,
-                      sw = s.weights)
-  }, verbose = verbose)
+  Mparts <- list(
+    psi_treat = switch(
+      estimand,
+      "ATT" = function(Btreat, A, Xtreat, SW) {
+        psi(Btreat, Xtreat, A, SW)
+      },
+      "ATE" = function(Btreat, A, Xtreat, SW) {
+        p0 <- seq_len(length(Btreat) / 2)
+        cbind(psi0(Btreat[p0], Xtreat, A, SW),
+              psi1(Btreat[-p0], Xtreat, A, SW))
+      }),
+    wfun = switch(
+      estimand,
+      "ATE" = function(Btreat, Xtreat, A) {
+        p0 <- seq_len(length(Btreat) / 2)
 
-  par <- fit.list$par
+        ps <- numeric(length(A))
+        ps[A == 0] <- .fam$linkinv(drop(Xtreat[A == 0,, drop = FALSE] %*% Btreat[p0]))
+        ps[A == 1] <- .fam$linkinv(drop(Xtreat[A == 1,, drop = FALSE] %*% Btreat[-p0]))
 
-  # initfit <- lm.wfit(covs_c, treat_c, s.weights)
-  # start <- c(log(var(initfit$residuals)), initfit$coefficients)
-  #
-  # out <- rootSolve::multiroot(f, start = start,
-  #                             A = treat_c,
-  #                             C = covs_c,
-  #                             sw = s.weights)
-  # par <- out$root
+        .get_w_from_ps_internal_bin(ps, A, estimand = estimand)
+      },
+      function(Btreat, Xtreat, A) {
+        ps <- .fam$linkinv(drop(Xtreat %*% Btreat))
+        .get_w_from_ps_internal_bin(ps, A, estimand = estimand)
+      }),
+    Xtreat = C,
+    A = treat,
+    btreat = par
+  )
 
-  s2 <- exp(par[1])
-  b <- par[1 + 1:ncol(covs_c)]
-  p <- drop(covs_c %*% b)
-  dens.denom <- dnorm(treat_c, p, sqrt(s2), log = TRUE)
+  list(w = w, ps = ps, fit.obj = fit.list,
+       Mparts = Mparts)
+}
 
-  w <- exp(dens.num - dens.denom)
+weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
+                               stabilize, missing, moments, int, verbose, ...) {
+  A <- list(...)
 
-  list(w = w/mean_fast(w), fit.obj = fit.list)
+  rlang::check_installed("rootSolve")
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+
+  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                                 focal = focal, treat = treat))
+
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
+  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+
+  C <- cbind(`(Intercept)` = 1, covs)
+
+  if (is_null(A$link)) A$link <- "logit"
+  link <- A$link
+  chk::chk_string(link)
+  link <- match_arg(link, c("logit", "probit", "cauchit", "cloglog"))
+
+  .fam <- quasibinomial(link)
+
+  if (estimand == "ATE") {
+    groups_to_weight <- levels(treat)
+  }
+  else {
+    groups_to_weight <- setdiff(levels(treat), focal)
+  }
+
+  k <- ncol(C)
+
+  w <- rep(1, length(treat))
+
+  fit.list <- make_list(groups_to_weight)
+  par.list <- make_list(groups_to_weight)
+
+  if (estimand == "ATT") {
+
+    psi <- function(B, X, A, SW) {
+      p <- .fam$linkinv(drop(X %*% B))
+      SW * (A - (1 - A) * p / (1 - p)) * X
+    }
+
+    f <- function(B, X, A, SW) {
+      .colMeans(psi(B, X, A, SW), length(A), k)
+    }
+
+    start <- rep(0, ncol(C))
+
+    for (i in groups_to_weight) {
+
+      verbosely({
+        fit.list[[i]] <- rootSolve::multiroot(f, start = start,
+                                              A = as.numeric(treat[treat %in% c(i, focal)] == focal),
+                                              X = C[treat %in% c(i, focal),, drop = FALSE],
+                                              SW = s.weights[treat %in% c(i, focal)],
+                                              rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
+                                              verbose = TRUE)
+      }, verbose = verbose)
+      par <- fit.list[[i]]$root
+
+      ps_i <- .fam$linkinv(drop(C[treat == i,, drop = FALSE] %*% par))
+
+      w[treat == i] <- ps_i / (1 - ps_i)
+
+      par.list[[i]] <- par
+    }
+  }
+  else {
+    psi <- function(B, X, A, SW) {
+      p <- .fam$linkinv(drop(X %*% B))
+      SW * (A / p - 1) * X
+    }
+
+    f <- function(B, X, A, SW) {
+      .colMeans(psi(B, X, A, SW), length(A), k)
+    }
+
+    start <- rep(0, ncol(C))
+
+    for (i in groups_to_weight) {
+      verbosely({
+        fit.list[[i]] <- rootSolve::multiroot(f, start = start,
+                                              A = as.numeric(treat == i),
+                                              X = C,
+                                              SW = s.weights,
+                                              rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
+                                              verbose = TRUE)
+      }, verbose = verbose)
+
+      par <- fit.list[[i]]$root
+
+      ps_i <- .fam$linkinv(drop(C[treat == i,, drop = FALSE] %*% par))
+
+      w[treat == i] <- 1 / ps_i
+
+      par.list[[i]] <- par
+    }
+  }
+
+  Mparts <- list(
+    psi_treat = switch(
+      estimand,
+      "ATT" = function(Btreat, A, Xtreat, SW) {
+        coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
+          (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+        }), groups_to_weight)
+
+        do.call("cbind", lapply(groups_to_weight, function(i) {
+          m <- matrix(0, nrow = length(A), ncol = length(Btreat[coef_ind[[i]]]))
+
+          m[A %in% c(i, focal),] <- psi(Btreat[coef_ind[[i]]],
+                                        Xtreat[A %in% c(i, focal),, drop = FALSE],
+                                        as.numeric(A[A %in% c(i, focal)] == focal),
+                                        SW[A %in% c(i, focal)])
+          m
+        }))
+      },
+      "ATE" = function(Btreat, A, Xtreat, SW) {
+        coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
+          (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+        }), groups_to_weight)
+
+        do.call("cbind", lapply(groups_to_weight, function(i) {
+          psi(Btreat[coef_ind[[i]]], Xtreat, as.numeric(A == i), SW)
+        }))
+      }),
+    wfun = switch(
+      estimand,
+      "ATT" = function(Btreat, Xtreat, A) {
+        coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
+          (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+        }), groups_to_weight)
+
+        w <- rep(1, length(A))
+
+        for (i in groups_to_weight) {
+          ps_i <- .fam$linkinv(drop(Xtreat[A == i,, drop = FALSE] %*% Btreat[coef_ind[[i]]]))
+          w[A == i] <- ps_i / (1 - ps_i)
+        }
+      },
+      "ATE" = function(Btreat, Xtreat, A) {
+        coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
+          (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+        }), groups_to_weight)
+
+        w <- rep(1, length(A))
+
+        for (i in groups_to_weight) {
+          ps_i <- .fam$linkinv(drop(Xtreat[A == i,, drop = FALSE] %*% Btreat[coef_ind[[i]]]))
+          w[A == i] <- 1 / ps_i
+        }
+      }),
+    Xtreat = C,
+    A = treat,
+    btreat = unlist(par.list)
+  )
+
+  list(w = w, fit.obj = fit.list,
+       Mparts = Mparts)
+}
+
+weightit2ipt.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
+  .err("`method = \"ipt\"` cannot be used with continuous treatments")
 }
