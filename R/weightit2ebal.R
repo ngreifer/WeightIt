@@ -37,6 +37,10 @@
 #'       }
 #'     }
 #'
+#' ## M-estimation
+#'
+#' M-estimation is supported for all scenarios. See [glm_weightit()] and `vignette("estimating-effects")` for details.
+#'
 #' @section Additional Arguments:
 #' `moments` and `int` are accepted. See [weightit()] for details.
 #'
@@ -132,6 +136,9 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
+  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
+  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+
   if (is_not_null(A[["base.weights"]])) A[["base.weight"]] <- A[["base.weights"]]
   if (is_null(A[["base.weight"]])) {
     bw <- rep(1, length(treat))
@@ -143,21 +150,21 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     else bw <- A[["base.weight"]]
   }
 
-  reltol <- if_null_then(A[["reltol"]], sqrt(.Machine$double.eps))
+  reltol <- if_null_then(A[["reltol"]], 1e-10)
 
   eb <- function(C, s.weights_t, Q) {
     n <- nrow(C)
 
-    W <- function(Z) {
+    W <- function(Z, Q, C) {
       drop(Q * exp(-C %*% Z))
     }
 
-    objective.EB <- function(Z) {
-      log(sum(W(Z)))
+    objective.EB <- function(Z, Q, C) {
+      log(sum(W(Z, Q, C)))
     }
 
-    gradient.EB <- function(Z) {
-      w <- W(Z)
+    gradient.EB <- function(Z, Q, C) {
+      w <- W(Z, Q, C)
       drop(-(w %*% C)/sum(w))
     }
 
@@ -167,10 +174,11 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
                      method = "BFGS",
                      control = list(trace = 1,
                                     reltol = reltol,
-                                    maxit = if_null_then(A[["maxit"]], 200)))
+                                    maxit = if_null_then(A[["maxit"]], 200)),
+                     C = C, Q = Q)
 
-    w <- W(opt.out$par)
-    opt.out$gradient <- gradient.EB(opt.out$par)
+    w <- W(opt.out$par, Q, C)
+    opt.out$gradient <- gradient.EB(opt.out$par, Q, C)
 
     if (opt.out$convergence == 1) {
       .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing `maxit`")
@@ -189,27 +197,68 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   w <- rep(1, length(treat))
   sw0 <- check_if_zero(s.weights)
 
-  if (estimand == "ATT") {
-    groups_to_weight <- levels(treat)[levels(treat) != focal]
-    targets <- cobalt::col_w_mean(covs, s.weights = s.weights, subset = treat == focal)
-  }
-  else if (estimand == "ATE") {
+  if (estimand == "ATE") {
     groups_to_weight <- levels(treat)
     targets <- cobalt::col_w_mean(covs, s.weights = s.weights)
   }
+  else {
+    groups_to_weight <- setdiff(levels(treat), focal)
+    targets <- cobalt::col_w_mean(covs, s.weights = s.weights, subset = treat == focal)
+  }
+
   covs <- sweep(covs, 2, targets, check.margin = FALSE)
 
   fit.list <- make_list(groups_to_weight)
   for (i in groups_to_weight) {
     verbosely({
-      fit.list[[i]] <- eb(covs[treat == i & !sw0,,drop = FALSE], s.weights[treat == i & !sw0],
-                          bw[treat == i & !sw0])
+      fit.list[[i]] <- eb(C = covs[treat == i & !sw0,,drop = FALSE],
+                          s.weights_t = s.weights[treat == i & !sw0],
+                          Q = bw[treat == i & !sw0])
     }, verbose = verbose)
 
     w[treat == i & !sw0] <- fit.list[[i]]$w
   }
 
-  list(w = w, fit.obj = lapply(fit.list, function(x) x[["opt.out"]]))
+  Mparts <- list(
+    psi_treat = function(Btreat, A, Xtreat, SW) {
+      coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
+        (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+      }), groups_to_weight)
+
+      sw0 <- check_if_zero(SW)
+
+      do.call("cbind", lapply(groups_to_weight, function(i) {
+        m <- matrix(0, nrow = length(A), ncol = length(Btreat[coef_ind[[i]]]))
+
+        C <- Xtreat[A == i & !sw0,,drop = FALSE]
+        w <- drop(bw[A == i & !sw0] * exp(-C %*% Btreat[coef_ind[[i]]]))
+
+        m[A == i,] <- -(w * C)/sum(w)
+        m
+      }))
+    },
+    wfun = function(Btreat, Xtreat, A) {
+      coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
+        (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+      }), groups_to_weight)
+
+      sw0 <- check_if_zero(s.weights)
+      w <- rep(1, length(A))
+
+      for (i in groups_to_weight) {
+        C <- Xtreat[A == i & !sw0,,drop = FALSE]
+        w[A == i & !sw0] <- drop(bw[A == i & !sw0] * exp(-C %*% Btreat[coef_ind[[i]]]))
+      }
+      w[!sw0] <- w[!sw0] / s.weights[!sw0]
+      w
+    },
+    Xtreat = covs,
+    A = treat,
+    btreat = unlist(lapply(fit.list, `[[`, "Z"))
+  )
+
+  list(w = w, fit.obj = lapply(fit.list, `[[`, "opt.out"),
+       Mparts = Mparts)
 }
 
 weightit2ebal.multi <- weightit2ebal
@@ -238,7 +287,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   bw <- bw[subset]
 
-  reltol <- if_null_then(A[["reltol"]], sqrt(.Machine$double.eps))
+  reltol <- if_null_then(A[["reltol"]], 1e-10)
 
   d.moments <- max(if_null_then(A[["d.moments"]], 1), moments)
   k <- ncol(covs)
@@ -280,19 +329,22 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
                    paste(colnames(covs_c)[c(covs.ind, int.covs.ind, d.poly.covs.ind)], "(mean)"),
                    colnames(covs_c)[c(covs.ind, int.covs.ind, poly.covs.ind)])
 
+  colinear.covs.to.remove <- setdiff(colnames(C), colnames(make_full_rank(C)))
+  C <- C[, colnames(C) %nin% colinear.covs.to.remove, drop = FALSE]
+
   eb <- function(C, s.weights, Q) {
     n <- nrow(C)
 
-    W <- function(Z) {
+    W <- function(Z, Q, C) {
       drop(Q * exp(-C %*% Z))
     }
 
-    objective.EB <- function(Z) {
-      log(sum(W(Z)))
+    objective.EB <- function(Z, Q, C) {
+      log(sum(W(Z, Q, C)))
     }
 
-    gradient.EB <- function(Z) {
-      w <- W(Z)
+    gradient.EB <- function(Z, Q, C) {
+      w <- W(Z, Q, C)
       drop(-(w %*% C)/sum(w))
     }
 
@@ -302,10 +354,11 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
                      method = "BFGS",
                      control = list(trace = 0,
                                     reltol = reltol,
-                                    maxit = if_null_then(A[["maxit"]], 200)))
+                                    maxit = if_null_then(A[["maxit"]], 200)),
+                     Q = Q, C = C)
 
-    w <- W(opt.out$par)
-    opt.out$gradient <- gradient.EB(opt.out$par)
+    w <- W(opt.out$par, Q, C)
+    opt.out$gradient <- gradient.EB(opt.out$par, Q, C)
 
     if (opt.out$convergence == 1) {
       .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing `maxit`")
@@ -321,7 +374,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
          opt.out = opt.out)
   }
 
-  w <- rep(0, length(treat))
+  w <- rep(1, length(treat))
   sw0 <- check_if_zero(s.weights)
 
   verbosely({
@@ -330,5 +383,30 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   w[!sw0] <- fit$w
 
-  list(w = w, fit.obj = fit$opt.out)
+  Mparts <- list(
+    psi_treat = function(Btreat, A, Xtreat, SW) {
+      sw0 <- check_if_zero(SW)
+
+      C <- Xtreat[!sw0,,drop = FALSE]
+      w <- drop(bw[!sw0] * exp(-C %*% Btreat))
+
+      -(w * C)/sum(w)
+
+    },
+    wfun = function(Btreat, Xtreat, A) {
+      sw0 <- check_if_zero(s.weights)
+      w <- rep(1, length(A))
+
+      C <- Xtreat[!sw0,,drop = FALSE]
+      w[!sw0] <- drop(bw[!sw0] * exp(-C %*% Btreat)) / s.weights[!sw0]
+
+      w
+    },
+    Xtreat = C,
+    A = treat,
+    btreat = fit$Z
+  )
+
+  list(w = w, fit.obj = fit$opt.out,
+       Mparts = Mparts)
 }
