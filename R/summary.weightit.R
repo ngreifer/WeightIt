@@ -134,9 +134,6 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
       nn["Weighted", i] <- ESS(w[t==i])
     }
   }
-  else if (treat.type == "ordinal") {
-    .err("Sneaky, sneaky! Ordinal coming one day :)", tidy = FALSE)
-  }
 
   out$effective.sample.size <- nn
 
@@ -197,8 +194,10 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
     if (is_null(bins)) bins <- 20
   }
 
-  if (is_not_null(focal)) subtitle <- paste0("For Units Not in Treatment Group \"", focal, "\"")
-  else subtitle <- NULL
+  subtitle <- {
+    if (is_not_null(focal))  paste0("For Units Not in Treatment Group \"", focal, "\"")
+    else NULL
+  }
 
   if (treat.type == "continuous") {
     p <- ggplot(data = data.frame(w), mapping = aes(x = w)) +

@@ -267,6 +267,9 @@ check_if_int <- function(x) {
   else if (is.numeric(x)) check_if_zero(x - round(x))
   else rep(FALSE, length(x))
 }
+squish <- function(p, tol = 1e-6) {
+  pmax(pmin(p, 1 - tol), tol)
+}
 
 #Statistics
 binarize <- function(variable, zero = NULL, one = NULL) {
@@ -686,12 +689,12 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
   }
 
   if (is_null(rhs.term.labels)) {
-    new.form <- as.formula("~ 1")
+    new.form <- as.formula("~ 0")
     tt.covs <- terms(new.form)
-    covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))
-    if (is_not_null(treat.name) && treat.name == "Intercept") {
-      names(covs) <- "Intercept_"
-    }
+    covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))[,-1, drop = FALSE]
+    # if (is_not_null(treat.name) && treat.name == "Intercept") {
+    #   names(covs) <- "Intercept_"
+    # }
   }
   else {
     new.form.char <- paste("~", paste(vapply(names(rhs.term.labels.list), function(x) {
@@ -705,8 +708,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     } , character(1L)), collapse = " + "))
 
     new.form <- as.formula(new.form.char)
-    tt.covs <- terms(new.form)
-    attr(tt.covs, "intercept") <- 0
+    tt.covs <- terms(update(new.form,  ~ . - 1))
 
     #Get model.frame, report error
     mf.covs <- quote(stats::model.frame(tt.covs, data,
@@ -716,7 +718,9 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     tryCatch({covs <- eval(mf.covs)},
              error = function(e) {stop(conditionMessage(e), call. = FALSE)})
 
-    if (is_not_null(treat.name) && treat.name %in% names(covs)) stop("The variable on the left side of the formula appears on the right side too.", call. = FALSE)
+    if (is_not_null(treat.name) && treat.name %in% names(covs)) {
+      .err("the variable on the left side of the formula appears on the right side too")
+    }
   }
 
   if (eval.model.matrx) {
@@ -737,7 +741,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     #Get full model matrix with interactions too
     covs.matrix <- model.matrix(tt.covs, data = covs,
                                 contrasts.arg = lapply(Filter(is.factor, covs),
-                                                       contrasts, contrasts=FALSE))
+                                                       contrasts, contrasts = FALSE))
 
     if (s) {
       for (i in names(covs)[vapply(covs, is.factor, logical(1L))]) {
@@ -751,10 +755,10 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
 
   if (!terms) attr(covs, "terms") <- NULL
 
-  return(list(reported.covs = covs,
-              model.covs = covs.matrix,
-              treat = treat,
-              treat.name = treat.name))
+  list(reported.covs = covs,
+       model.covs = covs.matrix,
+       treat = treat,
+       treat.name = treat.name)
 }
 assign_treat_type <- function(treat, use.multi = FALSE) {
   #Returns treat with treat.type attribute

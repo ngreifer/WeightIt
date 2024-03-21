@@ -36,6 +36,10 @@
 #'       }
 #'     }
 #'
+#' ## M-estimation
+#'
+#' M-estimation is not supported.
+#'
 #' @section Additional Arguments:
 #' \describe{
 #'   \item{`discrete`}{if `TRUE`, uses discrete SuperLearner, which simply selects the best performing method. Default `FALSE`, which finds the optimal combination of predictions for the libraries using `SL.method`.}
@@ -240,7 +244,6 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   t.lev <- get_treated_level(treat)
-
   treat <- binarize(treat, one = t.lev)
 
   tryCatch({verbosely({
@@ -271,8 +274,8 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal,
-                     stabilize = stabilize, subclass = subclass)
+  w <- .get_w_from_ps_internal_bin(ps = ps, treat = treat, estimand,
+                                   stabilize = stabilize, subclass = subclass)
 
   list(w = w, ps = ps, info = info, fit.obj = fit)
 }
@@ -488,7 +491,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
         Z[Z[,i] < tol, i] <- tol
         Z[Z[,i] > 1-tol, i] <- 1-tol
       }
-      w_mat <- .get_w_from_ps_internal(Z, treat = Y, estimand = estimand)
+      w_mat <- .get_w_from_ps_internal_array(Z, treat = Y, estimand = estimand)
       cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
 
       names(cvRisk) <- libraryNames

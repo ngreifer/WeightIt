@@ -38,6 +38,10 @@
 #'       \item{`"surr"`}{Surrogate splitting is used to process `NA`s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.}
 #'     }
 #'
+#' ## M-estimation
+#'
+#' M-estimation is not supported.
+#'
 #' @section Additional Arguments:
 #' The following additional arguments can be specified:
 #'   \describe{
@@ -325,9 +329,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     A[["distribution"]] <- list(name = tune[["distribution"]][i])
     tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
 
+    gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
+                          A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))],
+                          tune_args))
     verbosely({
-      fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))], tune_args),
-                     quote = TRUE)
+      fit <- eval(gbm.call)
     }, verbose = verbose)
 
     if (cv == 0) {
@@ -341,7 +347,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       }
 
       ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
-      w <- .get_w_from_ps_internal(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
+      w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
+                                         focal = focal, stabilize = stabilize, subclass = subclass)
       if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
       iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
@@ -365,7 +372,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         }
 
         ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
-        w <- .get_w_from_ps_internal(ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass)
+        w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
+                                           focal = focal, stabilize = stabilize, subclass = subclass)
         if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
 
         iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
@@ -410,10 +418,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       A[["w"]] <- s.weights
 
       tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
+
+      gbmCrossVal.call <- as.call(c(list(quote(gbm::gbmCrossVal)),
+                                    A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
+                                    tune_args))
+
       verbosely({
-        cv.results <- do.call(gbm::gbmCrossVal,
-                              c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
-                                tune_args), quote = TRUE)
+        cv.results <- eval(gbmCrossVal.call)
       }, verbose = verbose)
 
       best.tree.index <- which.min(cv.results$error)
@@ -426,7 +437,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       if (best.loss < current.best.loss) {
         best.fit <- fit
         best.ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
-        best.w <- drop(.get_w_from_ps_internal(best.ps, treat = treat, estimand = estimand, focal = focal, stabilize = stabilize, subclass = subclass))
+        best.w <- drop(.get_w_from_ps_internal_array(best.ps, treat = treat, estimand = estimand,
+                                                     focal = focal, stabilize = stabilize, subclass = subclass))
         # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
         current.best.loss <- best.loss
         best.tune.index <- i
@@ -570,11 +582,11 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   current.best.loss <- Inf
 
   for (i in seq_row(tune)) {
-
+    gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
+                          A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)],
+                          tune[i, tunable[tunable %in% names(formals(gbm::gbm.fit))]]))
     verbosely({
-      fit <- do.call(gbm::gbm.fit, c(A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), tunable)],
-                                     tune[i, tunable[tunable %in% names(formals(gbm::gbm.fit))]]),
-                     quote = TRUE)
+      fit <- eval(gbm.call)
     }, verbose = verbose)
 
     if (cv == 0) {
@@ -663,10 +675,12 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       A[["distribution"]] <- list(name = A[["distribution"]])
       A[["w"]] <- s.weights
 
+      gbmCrossVal.call <- as.call(c(list(quote(gbm::gbmCrossVal)),
+                                    A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), tunable)],
+                                    tune[i, tunable[tunable %in% names(formals(gbm::gbmCrossVal))]]))
+
       verbosely({
-        cv.results <- do.call(gbm::gbmCrossVal,
-                              c(A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), tunable)],
-                                tune[i, tunable[tunable %in% names(formals(gbm::gbmCrossVal))]]), quote = TRUE)
+        cv.results <- eval(gbmCrossVal.call)
       }, verbose = verbose)
 
       best.tree.index <- which.min(cv.results$error)

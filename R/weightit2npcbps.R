@@ -36,6 +36,10 @@
 #'       }
 #'     }
 #'
+#' ## M-estimation
+#'
+#' M-estimation is not supported.
+#'
 #' @section Additional Arguments:
 #' `moments` and `int` are accepted. See [weightit()] for details.
 #'

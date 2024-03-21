@@ -37,6 +37,10 @@
 #'       }
 #'     }
 #'
+#' ## M-estimation
+#'
+#' M-estimation is not supported.
+#'
 #' @section Additional Arguments:
 #' The following following additional arguments can be specified:
 #' \describe{

@@ -206,7 +206,8 @@
 #' w <- get_w_from_ps(ps.multi, T3, estimand = "ATE")
 
 #' @export
-get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL, subclass = NULL, stabilize = FALSE) {
+get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL,
+                          subclass = NULL, stabilize = FALSE) {
   #ps must be a matrix/df with columns named after treat levels
 
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
@@ -233,7 +234,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 
   if (is_not_null(subclass)) {
     #Get MMW subclass propensity scores
-    ps_mat <- subclass_ps(ps_mat, treat, estimand, focal, subclass)
+    ps_mat <- .subclass_ps_multi(ps_mat, treat, estimand, focal, subclass)
   }
 
   for (i in colnames(ps_mat)) {

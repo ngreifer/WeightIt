@@ -2,7 +2,7 @@
 #' @name calibrate
 #'
 #' @description
-#' `calibrate()` performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2022). This involes fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
+#' `calibrate()` performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2022). This involves fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
 #'
 #' @param x A `weightit` object or a vector of propensity scores. Only binary treatments are supported.
 #' @param treat A vector of treatment status for each unit. Only binary treatments are supported.
@@ -78,11 +78,13 @@ calibrate.weightit <- function(x, ...) {
   }
 
   x$ps[] <- calibrate.default(x[["ps"]], treat = x[["treat"]],
-                            s.weights = x[["s.weights"]])
+                              s.weights = x[["s.weights"]])
 
   x$weights[] <- get_w_from_ps(x$ps, x[["treat"]],
-                             estimand = x[["estimand"]],
-                             focal = x[["focal"]])
+                               estimand = x[["estimand"]],
+                               focal = x[["focal"]])
+
+  attr(x, "Mparts") <- NULL
 
   x
 }

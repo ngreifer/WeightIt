@@ -133,7 +133,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   estimand <- obj[["estimand"]]
 
   data.list <- list(data, obj2[["covs"]], obj[["covs"]])
-  combined.data <- do.call(data.frame, clear_null(data.list))
+  combined.data <- do.call("data.frame", clear_null(data.list))
   processed.moderator <- process.by(moderator, data = clear_null(combined.data),
                                     treat = obj[["treat"]], treat.name = NULL,
                                     by.arg = "moderator")
@@ -395,7 +395,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     }
 
     if (full.search) {
-      S <- as.matrix(setNames(do.call(expand.grid, replicate(length(R), c(0, 1), simplify = FALSE)),
+      S <- as.matrix(setNames(do.call("expand.grid", replicate(length(R), c(0, 1), simplify = FALSE)),
                               R))
 
       F_min <- Inf
