@@ -84,7 +84,8 @@
 #' `method = "glm"`, the `glm` objects containing the propensity
 #' score model will be included. See the individual pages for each method for
 #' information on what object will be included if `TRUE`.
-#' @param ...  other arguments for functions called by `weightit()` that
+#' @param keep.mparts `logical`; whether to include in the output components necessary to estimate standard errors that account for estimation of the weights in [glm_weightit()]. Default is `TRUE` if such parts are present. See the individual pages for each method for whether these components are produced. Set to `FALSE` to keep the output object smaller, e.g., if standard errors will not be computed using `glm_weightit()`.
+#' @param ... other arguments for functions called by `weightit()` that
 #' control aspects of fitting that are not covered by the above arguments. See Details.
 #'
 #' @returns
@@ -103,6 +104,8 @@
 #' \item{obj}{When `include.obj = TRUE`, the fit object.}
 #' \item{info}{Additional information about the fitting. See the individual
 #' methods pages for what is included.}
+#'
+#' When `keep.mparts` is `TRUE` (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in [glm_weightit()] are stored in the `"Mparts"` attribute. When `by` is specified, `keep.mparts` is set to `FALSE`.
 #'
 #' @details
 #' The primary purpose of `weightit()` is as a dispatcher to functions
@@ -177,7 +180,7 @@
 #' @export
 weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", stabilize = FALSE, focal = NULL,
                      by = NULL, s.weights = NULL, ps = NULL, moments = NULL, int = FALSE, subclass = NULL,
-                     missing = NULL, verbose = FALSE, include.obj = FALSE, ...) {
+                     missing = NULL, verbose = FALSE, include.obj = FALSE, keep.mparts = TRUE, ...) {
 
   ## Checks and processing ----
 
@@ -196,7 +199,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   # treat.name <- t.c[["treat.name"]]
 
   if (is_null(covs)) {
-    .err("no covariates were specified")
+    # .err("no covariates were specified")
   }
   if (is_null(treat)) {
     .err("no treatment variable was specified")
@@ -214,6 +217,11 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   #Get treat type
   treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
+
+  chk::chk_flag(stabilize)
+  chk::chk_flag(verbose)
+  chk::chk_flag(include.obj)
+  chk::chk_flag(keep.mparts)
 
   #Process ps
   ps <- process.ps(ps, data, treat)
@@ -239,7 +247,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   estimand <- process.estimand(estimand, method, treat.type)
   f.e.r <- process.focal.and.estimand(focal, estimand, treat)
   focal <- f.e.r[["focal"]]
-  estimand <- f.e.r[["estimand"]]
+  # estimand <- f.e.r[["estimand"]]
+  estimand <- f.e.r[["reported.estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
 
   #Process missing
@@ -311,10 +320,15 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               focal = if (reported.estimand %in% c("ATT", "ATC")) focal else NULL,
               by = processed.by,
               call = call,
+              formula = formula,
               info = obj$info,
               obj = obj$fit.obj)
 
   out <- clear_null(out)
+
+  if (keep.mparts) {
+    attr(out, "Mparts") <- attr(obj, "Mparts")
+  }
 
   class(out) <- "weightit"
 
