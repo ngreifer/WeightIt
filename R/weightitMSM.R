@@ -7,6 +7,7 @@
 #' of these methods exist in other packages, which [weightit()] calls; these
 #' packages must be installed to use the desired method.
 #'
+#' @inheritParams weightit
 #' @param formula.list a list of formulas corresponding to each time point with
 #' the time-specific treatment variable on the left hand side and pre-treatment
 #' covariates to be balanced on the right hand side. The formulas must be in
@@ -39,35 +40,6 @@
 #' also be a list of one-sided formulas, one for each time point. Unless you
 #' know what you are doing, we recommend setting `stabilize = TRUE` and
 #' ignoring `num.formula`.
-#' @param by a string containing the name of the variable in `data` for
-#' which weighting is to be done within categories or a one-sided formula with
-#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~ gender`, weights will be generated separately
-#' within each level of the variable `"gender"`. The argument used to be
-#' called `exact`, which will still work but with a message. Only one
-#' `by` variable is allowed.
-#' @param s.weights a vector of sampling weights or the name of a variable in
-#' `data` that contains sampling weights. These are ignored for some
-#' methods.
-#' @param moments `numeric`; for some methods, the greatest power of each
-#' covariate to be balanced. For example, if `moments = 3`, for each
-#' non-categorical covariate, the covariate, its square, and its cube will be
-#' balanced. This argument is ignored for other methods; to balance powers of
-#' the covariates, appropriate functions must be entered in `formula`. See
-#' the specific methods help pages for information on whether they accept
-#' `moments`.
-#' @param int `logical`; for some methods, whether first-order
-#' interactions of the covariates are to be balanced. This argument is ignored
-#' for other methods; to balance interactions between the variables,
-#' appropriate functions must be entered in `formula`. See the specific
-#' methods help pages for information on whether they accept `int`.
-#' @param missing `character`; how missing data should be handled. The
-#' options and defaults depend on the `method` used. Ignored if no missing
-#' data is present. It should be noted that multiple imputation outperforms all
-#' available missingness methods available in `weightit()` and should
-#' probably be used instead. See the \CRANpkg{MatchThem}
-#' package for the use of `weightit()` with multiply imputed data.
-#' @param verbose whether to print additional information output by the fitting
-#' function.
 #' @param include.obj whether to include in the output a list of the fit
 #' objects created in the process of estimating the weights at each time point.
 #' For example, with `method = "glm"`, a list of the `glm` objects
@@ -77,7 +49,7 @@
 #' @param is.MSM.method whether the method estimates weights for multiple time
 #' points all at once (`TRUE`) or by estimating weights at each time point
 #' and then multiplying them together (`FALSE`). This is only relevant for
-#' `method = "optweight")`, which estimates weights for longitudinal
+#' `method = "optweight"`, which estimates weights for longitudinal
 #' treatments all at once, and for user-specified functions.
 #' @param weightit.force several methods are not valid for estimating weights
 #' with longitudinal treatments, and will produce an error message if
@@ -98,6 +70,8 @@
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{by}{A data.frame containing the `by` variable when specified.}
 #' \item{stabilization}{The stabilization factors, if any.}
+#'
+#' When `keep.mparts` is `TRUE` (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in [glm_weightit()] are stored in the `"Mparts.list"` attribute. When `by` is specified, `keep.mparts` is set to `FALSE`.
 #'
 #' @details
 #' Currently only "wide" data sets, where each row corresponds to a unit's
@@ -177,9 +151,11 @@
 #'                    stabilize = TRUE)
 
 #' @export
-weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = FALSE, by = NULL, s.weights = NULL,
+weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = FALSE, by = NULL,
+                        s.weights = NULL,
                         num.formula = NULL, moments = NULL, int = FALSE, missing = NULL,
-                        verbose = FALSE, include.obj = FALSE, is.MSM.method, weightit.force = FALSE, ...) {
+                        verbose = FALSE, include.obj = FALSE, keep.mparts = TRUE,
+                        is.MSM.method, weightit.force = FALSE, ...) {
 
   A <- list(...)
 
@@ -272,9 +248,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   }
 
   reported.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
-    stabout <- sw.list <- make_list(length(formula.list))
+    stabout <- sw.list <- Mparts.list <- stab.Mparts.list <- make_list(length(formula.list))
 
-  if (is_null(formula.list) || !is.list(formula.list) || !all(vapply(formula.list, rlang::is_formula, logical(1L), lhs = TRUE))) {
+  if (is_null(formula.list) || !is.list(formula.list) ||
+      !all(vapply(formula.list, rlang::is_formula, logical(1L), lhs = TRUE))) {
     .err("`formula.list` must be a list of formulas")
   }
 
@@ -344,6 +321,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     w <- obj[["weights"]]
     stabout <- NULL
     obj.list <- obj[["fit.obj"]]
+    Mparts.list <- attr(obj, "Mparts")
   }
   else {
     if (length(A[["link"]]) %nin% c(0, 1, length(formula.list))) {
@@ -392,6 +370,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
       w.list[[i]] <- obj[["weights"]]
       ps.list[[i]] <- obj[["ps"]]
       obj.list[[i]] <- obj[["fit.obj"]]
+      Mparts.list[[i]] <- attr(obj, "Mparts")
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
@@ -426,14 +405,16 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
         sw.list[[i]] <- 1/sw_obj[["weights"]]
         stabout[[i]] <- stab.f[-2]
+
+        stab.Mparts.list[[i]] <- attr(sw_obj, "Mparts")
       }
 
     }
 
-    w <- Reduce("*", w.list)
+    w <- Reduce("*", w.list, init = 1)
 
     if (stabilize) {
-      sw <- Reduce("*", sw.list)
+      sw <- Reduce("*", sw.list, init = 1)
       w <- w*sw
 
       unique.stabout <- unique(stabout)
@@ -468,6 +449,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   )
 
   out <- clear_null(out)
+
+  if (keep.mparts && all(lengths(Mparts.list) > 0)) {
+    attr(out, "Mparts.list") <- clear_null(c(Mparts.list, stab.Mparts.list))
+  }
 
   class(out) <- c("weightitMSM", "weightit")
 
