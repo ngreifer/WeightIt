@@ -36,6 +36,9 @@
 #'         First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.
 #'       }
 #'     }
+#' ## M-estimation
+#'
+#' M-estimation is not supported.
 #'
 #' @section Additional Arguments:
 #'
@@ -79,7 +82,7 @@
 #'
 #' Note that many references that deal with BART for causal inference focus on estimating potential outcomes with BART, not the propensity scores, and so are not directly relevant when using BART to estimate propensity scores for weights.
 #'
-#' See [`method_ps`] for additional references on propensity score weighting more generally.
+#' See [`method_glm`] for additional references on propensity score weighting more generally.
 #'
 #' @examplesIf requireNamespace("dbarts", quietly = TRUE)
 #' library("cobalt")
@@ -115,7 +118,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   rlang::check_installed("dbarts", version = "0.9-23")
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat[subset])
+  treat <- treat[subset]
   s.weights <- s.weights[subset]
 
   if (!all_the_same(s.weights)) {
@@ -124,6 +127,59 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  if (ncol(covs) > 1) {
+    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  }
+
+  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+
+  t.lev <- get_treated_level(treat)
+  treat <- binarize(treat, one = t.lev)
+
+  A[["formula"]] <- covs
+  A[["keepCall"]] <- FALSE
+  A[["combineChains"]] <- TRUE
+  A[["verbose"]] <- FALSE #necessary to prevent crash
+  A[["data"]] <- treat
+
+  bart.call <- as.call(c(list(quote(dbarts::bart2)),
+                         A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
+                                                   names(formals(dbarts::dbartsControl))),
+                                                 c("offset.test", "weights", "subset", "test"))]))
+  tryCatch({verbosely({
+    fit <- eval(bart.call)
+  }, verbose = verbose)},
+  error = function(e) {
+    e. <- conditionMessage(e)
+    .err("(from `dbarts::bart2()`) ", e., tidy = FALSE)
+  })
+
+  p.score <- fitted(fit)
+
+  w <- .get_w_from_ps_internal_bin(ps = p.score, treat = treat, estimand,
+                                   stabilize = stabilize, subclass = subclass)
+
+  list(w = w, ps = p.score, fit.obj = fit)
+}
+
+weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, verbose, ...) {
+  A <- list(...)
+
+  rlang::check_installed("dbarts", version = "0.9-23")
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- factor(treat[subset])
+  s.weights <- s.weights[subset]
+
+  if (!all_the_same(s.weights)) {
+    .err("sampling weights cannot be used with `method = \"bart\"`")
+  }
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -146,20 +202,13 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   fit.list <- make_list(levels(treat))
 
   for (i in levels(treat)) {
-
-    if (treat.type == "binary" && i == last(levels(treat))) {
-      ps[[i]] <- 1 - ps[[1]]
-      fit.list <- fit.list[[1]]
-      next
-    }
-
     A[["data"]] <- as.integer(treat == i)
+    bart.call <- as.call(c(list(quote(dbarts::bart2)),
+                           A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
+                                                     names(formals(dbarts::dbartsControl))),
+                                                   c("offset.test", "weights", "subset", "test"))]))
     tryCatch({verbosely({
-      fit.list[[i]] <- do.call(dbarts::bart2,
-                               A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                                         names(formals(dbarts::dbartsControl))),
-                                                       c("offset.test", "weights", "subset", "test"))],
-                               quote = TRUE)
+      fit.list[[i]] <- eval(bart.call)
     }, verbose = verbose)},
     error = function(e) {
       e. <- conditionMessage(e)
@@ -167,21 +216,15 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     })
 
     ps[[i]] <- fitted(fit.list[[i]])
-
   }
-
-  info <- list()
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
+  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal,
+                     stabilize = stabilize, subclass = subclass)
 
-  p.score <- if (treat.type == "binary") ps[[get_treated_level(treat)]] else NULL
-
-  list(w = w, ps = p.score, info = info, fit.obj = fit.list)
+  list(w = w, fit.obj = fit.list)
 }
-
-weightit2bart.multi <- weightit2bart
 
 weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
   A <- list(...)
@@ -216,14 +259,14 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   A[["combineChains"]] <- TRUE
   A[["verbose"]] <- FALSE #necessary to prevent crash
 
+  bart.call <- as.call(c(list(quote(dbarts::bart2)),
+                         A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
+                                                   names(formals(dbarts::dbartsControl))),
+                                                 c("offset.test", "weights", "subset", "test"))]))
   #Estimate GPS
 
   tryCatch({verbosely({
-    fit <- do.call(dbarts::bart2,
-                   A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                             names(formals(dbarts::dbartsControl))),
-                                           c("offset.test", "weights", "subset", "test"))],
-                   quote = TRUE)
+    fit <- eval(bart.call)
   }, verbose = verbose)},
   error = function(e) {
     e. <- conditionMessage(e)
