@@ -213,6 +213,7 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
   }
   else if (treat.type == "binary") {
     unique.treat.bin <- unique(binarize(treat), nmax = 2)
+
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
       .wrn(sprintf("`estimand = %s` is not compatible with `focal`. Setting `estimand` to \"ATT\"",
                    add_quotes(estimand)))
@@ -235,32 +236,27 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
           }
           else if (estimand == "ATC") {
             .msg(sprintf("assuming %s the control level. If not, supply an argument to `focal`",
-                         word_list(unique.treat[unique.treat %nin% treated], quotes = !is.numeric(treat), is.are = TRUE)))
+                         word_list(setdiff(unique.treat, treated), quotes = !is.numeric(treat), is.are = TRUE)))
           }
 
         }
 
-        if (estimand == "ATT")
-          focal <- treated
-        else if (estimand == "ATC")
-          focal <- unique.treat[unique.treat %nin% treated]
+        focal <- switch(estimand, "ATT" = treated,
+                        "ATC" = setdiff(unique.treat, treated))
       }
       else {
-        if (estimand == "ATT")
-          treated <- focal
-        else if (estimand == "ATC")
-          treated <- unique.treat[unique.treat %nin% focal]
+        treated <- switch(estimand, "ATT" = focal,
+                        "ATC" = setdiff(unique.treat, focal))
       }
-      if (estimand == "ATC") estimand <- "ATT"
+
+      # if (estimand == "ATC") estimand <- "ATT"
     }
     else {
       if (is_null(focal)) {
-        if (estimand == "ATT")
-          focal <- treated
-        else if (estimand == "ATC")
-          focal <- unique.treat[unique.treat %nin% treated]
+        focal <- switch(estimand, "ATT" = treated,
+                        "ATC" = setdiff(unique.treat, treated))
       }
-      if (estimand == "ATC") estimand <- "ATT"
+      # if (estimand == "ATC") estimand <- "ATT"
     }
   }
 
@@ -336,7 +332,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 }
 process.moments.int <- function(moments, int, method) {
 
-  if (is.function(method) || method %in% c("npcbps", "ebal", "ipt", "ebcw", "optweight", "energy")) {
+  if (is.function(method) || method %in% c("npcbps", "ebal", "cbps", "ipt", "ebcw", "optweight", "energy")) {
     chk::chk_flag(int)
 
     if (is_not_null(moments)) {
@@ -346,7 +342,7 @@ process.moments.int <- function(moments, int, method) {
         if (method == "energy") {
           chk::chk_gte(moments, 0)
         }
-        else if (method %in% c("npcbps", "ebal", "ipt", "ebcw", "optweight")) {
+        else if (method %in% c("npcbps", "ebal", "cbps", "ipt", "ebcw", "optweight")) {
           chk::chk_gt(moments, 0)
         }
         moments <- as.integer(moments)
@@ -706,8 +702,13 @@ check_estimated_weights <- function(w, treat, treat.type, s.weights) {
   if (extreme.warn) {
     .wrn("some extreme weights were generated. Examine them with `summary()` and maybe trim them with `trim()`")
   }
+
+  if (any(tw < 0)) {
+    .wrn("some weights are negative; these cannot be used in most model fitting functions, including `(g)lm_weightit()`")
+  }
 }
-ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, treated = NULL, estimand = NULL) {
+ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
+                         treated = NULL, estimand = NULL) {
   if (is_(ps, c("matrix", "data.frame"))) {
     ps.names <- rownames(ps)
   }
@@ -785,7 +786,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL, t
 
   ps
 }
-subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
+.subclass_ps_multi <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
   chk::chk_count(subclass)
   subclass <- round(subclass)
 
@@ -841,6 +842,41 @@ subclass_ps <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass)
   attr(ps_sub, "sub_mat") <- sub_mat
 
   ps_sub
+}
+.subclass_ps_bin <- function(ps, treat, estimand = "ATE", subclass) {
+  chk::chk_count(subclass)
+  subclass <- round(subclass)
+
+  if (!toupper(estimand) %in% c("ATE", "ATT", "ATC")) {
+    .err("only the ATE, ATT, and ATC are compatible with stratification weights")
+  }
+
+  sub <- as.integer(findInterval(ps,
+                                 quantile(switch(estimand,
+                                                 "ATE" = ps,
+                                                 "ATT" = ps[treat == 1],
+                                                 "ATC" = ps[treat == 0]),
+                                          seq(0, 1, length.out = subclass + 1)),
+                                 all.inside = TRUE))
+
+  max_sub <- max(sub)
+  sub.tab1 <- tabulate(sub[treat == 1], max_sub)
+  sub.tab0 <- tabulate(sub[treat == 0], max_sub)
+
+  if (any(sub.tab1 == 0) || any(sub.tab0 == 0)) {
+    sub <- subclass_scoot(sub, treat, ps)
+    sub.tab1 <- tabulate(sub[treat == 1], max_sub)
+    sub.tab0 <- tabulate(sub[treat == 0], max_sub)
+  }
+
+  sub.totals <- sub.tab1 + sub.tab0
+  sub1_prop <- sub.tab1/sub.totals
+
+  sub.ps <- sub1_prop[sub]
+
+  attr(sub.ps, "sub") <- sub
+
+  sub.ps
 }
 subclass_scoot <- function(sub, treat, x, min.n = 1) {
   #Reassigns subclasses so there are no empty subclasses
@@ -993,7 +1029,123 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
   densfun
 }
 
-.get_w_from_ps_internal <- function(ps, treat, estimand = "ATE", focal = NULL, subclass = NULL, stabilize = FALSE) {
+.get_w_from_ps_internal_bin <- function(ps, treat, estimand = "ATE",
+                                        subclass = NULL, stabilize = FALSE) {
+
+  estimand <- toupper(estimand)
+  w <- rep(1, length(treat))
+
+  #Assume treat is binary
+  if (is_not_null(subclass)) {
+    #Get MMW subclass propensity scores
+    ps <- .subclass_ps_bin(ps, treat, estimand, subclass)
+  }
+
+  i0 <- which(treat == 0)
+  i1 <- which(treat == 1)
+
+  if (estimand == "ATE") {
+    w[i0] <- 1 / (1 - ps[i0])
+    w[i1] <- 1 / ps[i1]
+  }
+  else if (estimand == "ATT") {
+    w[i0] <- ps[i0] / (1 - ps[i0])
+  }
+  else if (estimand == "ATC") {
+    w[i1] <- (1 - ps[i1]) / ps[i1]
+  }
+  else if (estimand == "ATO") {
+    w[i0] <- ps[i0]
+    w[i1] <- (1 - ps[i1])
+  }
+  else if (estimand == "ATM") {
+    w[i0] <- pmin(ps[i0], 1 - ps[i0]) / (1 - ps[i0])
+    w[i1] <- pmin(ps[i1], 1 - ps[i1]) / ps[i1]
+  }
+  else if (estimand == "ATOS") {
+    w[i0] <- 1 / (1 - ps[i0])
+    w[i1] <- 1 / ps[i1]
+
+    ps.sorted <- sort(c(ps, 1 - ps))
+    q <- ps * (1 - ps)
+    alpha.opt <- 0
+    for (i in seq_len(sum(ps < .5))) {
+      if (i == 1 || !check_if_zero(ps.sorted[i] - ps.sorted[i-1])) {
+        alpha <- ps.sorted[i]
+        a <- alpha * (1 - alpha)
+        if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
+          alpha.opt <- alpha
+          break
+        }
+      }
+    }
+    w[!between(ps, c(alpha.opt, 1 - alpha.opt))] <- 0
+  }
+
+  names(w) <- if_null_then(names(treat), NULL)
+
+  if (stabilize) w <- stabilize_w(w, treat)
+
+  w
+}
+
+.get_w_from_ps_internal_multi <- function(ps, treat, estimand = "ATE", focal = NULL,
+                                          subclass = NULL, stabilize = FALSE) {
+
+  estimand <- toupper(estimand)
+  w <- rep(0, length(treat))
+
+  ps_mat <- ps
+
+  if (is_not_null(subclass)) {
+    #Get MMW subclass propensity scores
+    ps_mat <- .subclass_ps_multi(ps_mat, treat, estimand, focal, subclass)
+  }
+
+  for (i in colnames(ps_mat)) {
+    w[treat == i] <- 1/ps_mat[treat == i, i]
+  }
+
+  if (estimand == "ATE") {
+    # w <- w
+  }
+  else if (estimand %in% c("ATT", "ATC")) {
+    w <- w * ps_mat[, as.character(focal)]
+  }
+  else if (estimand == "ATO") {
+    w <- w / rowSums(1 / ps_mat) #Li & Li (2019)
+  }
+  else if (estimand == "ATM") {
+    w <- w * do.call("pmin", lapply(seq_col(ps_mat), function(x) ps_mat[,x]), quote = TRUE)
+  }
+  else if (estimand == "ATOS") {
+    #Crump et al. (2009)
+    ps.sorted <- sort(c(ps_mat[,2], 1 - ps_mat[,2]))
+    q <- ps_mat[,2]*(1-ps_mat[,2])
+    alpha.opt <- 0
+    for (i in 1:sum(ps_mat[,2] < .5)) {
+      if (i == 1 || !check_if_zero(ps.sorted[i] - ps.sorted[i-1])) {
+        alpha <- ps.sorted[i]
+        a <- alpha*(1-alpha)
+        if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
+          alpha.opt <- alpha
+          break
+        }
+      }
+    }
+    w[!between(ps_mat[,2], c(alpha.opt, 1 - alpha.opt))] <- 0
+  }
+  else return(numeric(0))
+
+  if (stabilize) w <- stabilize_w(w, treat)
+
+  names(w) <- if_null_then(rownames(ps_mat), names(treat), NULL)
+
+  w
+}
+
+.get_w_from_ps_internal_array <- function(ps, treat, estimand = "ATE", focal = NULL,
+                                    subclass = NULL, stabilize = FALSE) {
   #Batch turn PS into weights; primarily for output of predict.gbm
   # Assumes a (0,1) treatment if binary, with ATT already processed
   if (is_null(dim(ps))) {
@@ -1002,12 +1154,10 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
 
   if (length(dim(ps)) == 2) {
     #Binary treatment, vector ps
-    if (is_not_null(focal)) focal <- "1"
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
       for (p in seq_col(ps)) {
-        ps_mat <- matrix(c(1 - ps[,p], ps[,p]), ncol = 2, dimnames = list(rownames(ps), c("0", "1")))
-        ps[,p] <- subclass_ps(ps_mat, treat, estimand, focal, subclass)[, 2]
+        ps[,p] <- .subclass_ps_bin(ps[,p], treat, estimand, subclass)
       }
     }
 
@@ -1037,7 +1187,7 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
       for (p in seq_len(last(dim(ps))))
-        ps[,,p] <- subclass_ps(ps[,,p], treat, estimand, focal, subclass)
+        ps[,,p] <- .subclass_ps_multi(ps[,,p], treat, estimand, focal, subclass)
     }
 
     w <- matrix(0, ncol = dim(ps)[3], nrow = dim(ps)[1])
@@ -1148,9 +1298,38 @@ chol2 <- function(Sinv) {
   ch[, p, drop = FALSE]
 }
 
-.onLoad <- function(libname, pkgname) {
-  backports::import(pkgname)
+#Compute gradient numerically using centered difference
+gradient <- function(.f, .x, .eps = 1e-8, ...) {
+
+  .x0 <- .x
+
+  .eps <- pmax(abs(.x) * .eps, .eps)
+
+  for (j in seq_along(.x)) {
+    # forward
+    .x[j] <- .x0[j] + .eps[j]/2
+
+    # recalculate model function value
+    f_new_forward <- .f(.x, ...)
+
+    if (j == 1L) {
+      jacob <- matrix(0, nrow = length(f_new_forward), ncol = length(.x),
+                      dimnames = list(names(f_new_forward), names(.x)))
+    }
+
+    # backward
+    .x[j] <- .x0[j] - .eps[j]/2
+
+    # recalculate model function value
+    f_new_backward  <- .f(.x, ...)
+
+    jacob[,j] <- (f_new_forward - f_new_backward) / .eps[j]
+
+    .x[j] <- .x0[j]
+  }
+
+  jacob
 }
 
 #To pass CRAN checks:
-utils::globalVariables(c(".s.weights", "dens"))
+utils::globalVariables(c("dens"))
