@@ -13,25 +13,27 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
   c.lev <- setdiff(levels(treat_sub), t.lev)
 
   if (is.matrix(ps) || is.data.frame(ps)) {
-    if (all(dim(ps) == c(n, 2))) {
+    if (nrow(ps) == n) {
+      if (ncol(ps) == 1) {
 
-      if (all(colnames(ps) %in% levels(treat_sub))) {
-        ps <- as.data.frame(ps[subset, , drop = FALSE])
+        ps <- data.frame(ps[subset,1], 1-ps[subset,1])
+
+        names(ps) <- c(t.lev, c.lev)
+
+        p.score <- ps[[t.lev]]
       }
-      else {
-        ps <- as.data.frame(ps[subset, , drop = FALSE])
-        names(ps) <- levels(treat_sub)
+      else if (ncol(ps) == 2) {
+
+        if (all(colnames(ps) %in% levels(treat_sub))) {
+          ps <- as.data.frame(ps[subset, , drop = FALSE])
+        }
+        else {
+          ps <- as.data.frame(ps[subset, , drop = FALSE])
+          names(ps) <- levels(treat_sub)
+        }
+
+        p.score <- ps[[t.lev]]
       }
-
-      p.score <- ps[[t.lev]]
-    }
-    else if (all(dim(ps) == c(length(treat), 1))) {
-
-      ps <- data.frame(ps[subset,1], 1-ps[subset,1])
-
-      names(ps) <- c(t.lev, c.lev)
-
-      p.score <- ps[[t.lev]]
     }
   }
   else if (is.numeric(ps)) {
@@ -48,20 +50,16 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat_sub, estimand, focal = focal,
-                     stabilize = stabilize, subclass = subclass)
+  w <- .get_w_from_ps_internal_bin(ps = p.score, treat = as.numeric(treat_sub == t.lev), estimand,
+                                   stabilize = stabilize, subclass = subclass)
 
   list(w = w, ps = p.score, fit.obj = fit.obj)
 }
 
 weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                               stabilize, subclass, missing, ps, .data, verbose, ...) {
-  A <- list(...)
-
-  fit.obj <- NULL
 
   n <- length(treat)
-  p.score <- NULL
   treat <- factor(treat)
   treat_sub <- factor(treat[subset])
 
@@ -99,16 +97,14 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat_sub, estimand, focal = focal,
-                     stabilize = stabilize, subclass = subclass)
+  w <- .get_w_from_ps_internal_multi(ps = ps, treat = treat_sub, estimand, focal = focal,
+                                     stabilize = stabilize, subclass = subclass)
 
-  list(w = w, ps = p.score, fit.obj = fit.obj)
+  list(w = w)
 }
 
 weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
   A <- list(...)
-
-  fit.obj <- NULL
 
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -134,5 +130,5 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
     plot_density(d.n, d.d)
   }
 
-  list(w = w, fit.obj = fit.obj)
+  list(w = w)
 }
