@@ -27,7 +27,7 @@ Below we note each method (by name and by the input to the `method` argument of 
 
 ## Propensity score weighting using GLMs (`method = "glm"`)
 
-Several options are available for estimating propensity score weights using GLMs depending on the treatment type and other features of the desired model. For binary treatments, `weightit()` uses `stats::glm()` by default, and for continuous treatments, `weightit()` uses `stats::lm()` by default, so no additional packages are required. For multi-category treatments with `use.mlogit = FALSE`, `weightit()` uses `stats::glm()`.
+Several options are available for estimating propensity score weights using GLMs depending on the treatment type and other features of the desired model. For binary treatments, `weightit()` uses `stats::glm()` by default, and for continuous treatments, `weightit()` uses `stats::lm()` by default, so no additional packages are required. For multi-category treatments with `multi.method = "weightit"`, the default, `weightit()` uses internal code.
 
 ### Binary and continuous treatments with `missing = "saem"`
 
@@ -59,9 +59,9 @@ remotes::install_github("ikosmidis/brglm2")
 
 `brglm2` requires compilation, which means you may need additional software installed on your computer to install it from source.
 
-### Multicategory treatments with `use.mlogit = TRUE`
+### Multicategory treatments with `multi.method = "mlogit"`
 
-For multicategory treatments, when `use.mlogit = TRUE` (the default), the `mlogit` package is required for multinomial logistic regression. To install `mlogit` from CRAN, run
+For multi-category treatments, when `multi.method = "mlogit"`, the `mlogit` package is required for multinomial logistic regression. To install `mlogit` from CRAN, run
 
 ```{r}
 install.packages("mlogit")
@@ -73,9 +73,9 @@ If `mlogit` is not on CRAN, or if you want to install the development version fr
 install.packages("mlogit", repos = "http://R-Forge.R-project.org")
 ```
 
-### Multicategory treatments with `use.mclogit = TRUE`
+### Multicategory treatments with `multi.method = "mclogit"`
 
-For multicategory treatments, when `use.mclogit = TRUE`, the `mclogit` package is required for multinomial logistic regression. To install `mclogit` from CRAN, run
+For multicategory treatments, when `multi.method = "mclogit"`, the `mclogit` package is required for multinomial logistic regression. To install `mclogit` from CRAN, run
 
 ```{r}
 install.packages("mclogit")
@@ -87,9 +87,9 @@ If `mclogit` is not on CRAN, or if you want to install the development version f
 remotes::install_github("melff/mclogit")
 ```
 
-### Multicategory treatments with `link = "bayes.probit"`
+### Multicategory treatments with `multi.method = "mnp"`
 
-For multicategory treatments, when `link = "bayes.probit"`, the `MNP` package is required for Bayesian multinomial probit regression. To install `MNP` from CRAN, run
+For multicategory treatments, when `multi.method = "mnp"`, the `MNP` package is required for Bayesian multinomial probit regression. To install `MNP` from CRAN, run
 
 ```{r}
 install.packages("MNP")
@@ -127,9 +127,13 @@ remotes::install_github("gbm-developers/gbm")
 
 `gbm` requires compilation, which means you may need additional software installed on your computer to install it from source.
 
-## Covariate Balancing Propensity Score weighting (`method = "cbps"` and `method = "npcbps"`)
+## Covariate Balancing Propensity Score weighting (`method = "cbps"`)
 
-`WeightIt` uses the R package `CBPS` to perform (nonparametric) covariate balancing propensity score weighting. To install `CBPS` from CRAN, run
+For `method = "cbps"`, `WeightIt` uses code written for `WeightIt`, so no additional packages need to be installed to use CBPS.
+
+## Nonparametric Covariate Balancing Propensity Score weighting (`method = "npcbps"`)
+
+For `method = "npcbps"`, `WeightIt` uses the R package `CBPS` to perform nonparametric covariate balancing propensity score weighting. To install `CBPS` from CRAN, run
 
 ```{r}
 install.packages("CBPS")

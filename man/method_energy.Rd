@@ -41,6 +41,11 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 }
 }
+
+\subsection{M-estimation}{
+
+M-estimation is not supported.
+}
 }
 \details{
 Energy balancing is a method of estimating weights using optimization without a propensity score. The weights are the solution to a constrain quadratic optimization problem where the objective function concerns covariate balance as measured by the energy distance and (for continuous treatments) the distance covariance.

@@ -41,6 +41,11 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 }
 }
+
+\subsection{M-estimation}{
+
+M-estimation is not supported.
+}
 }
 \details{
 BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the \code{n.trees} argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to \code{weightit()} that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun2{dbarts}{bart}{dbarts::bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
@@ -113,7 +118,7 @@ Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian additiv
 
 Note that many references that deal with BART for causal inference focus on estimating potential outcomes with BART, not the propensity scores, and so are not directly relevant when using BART to estimate propensity scores for weights.
 
-See \code{\link{method_ps}} for additional references on propensity score weighting more generally.
+See \code{\link{method_glm}} for additional references on propensity score weighting more generally.
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, \code{\link[=get_w_from_ps]{get_w_from_ps()}}

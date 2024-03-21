@@ -2,10 +2,9 @@
 % Please edit documentation in R/weightit2glm.R
 \name{method_glm}
 \alias{method_glm}
-\alias{method_ps}
 \title{Propensity Score Weighting Using Generalized Linear Models}
 \description{
-This page explains the details of estimating weights from generalized linear model-based propensity scores by setting \code{method = "glm"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments. (This method used to be requested with \code{method = "ps"}, and this still works.)
+This page explains the details of estimating weights from generalized linear model-based propensity scores by setting \code{method = "glm"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
 
 In general, this method relies on estimating propensity scores with a parametric generalized linear model and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multi-category treatments, a binomial or multinomial regression model is used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For ordinal treatments, an ordinal regression model is used to estimate generalized propensity scores. For continuous treatments, a generalized linear model is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 \subsection{Binary Treatments}{
@@ -43,15 +42,26 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 }
 }
 }
+
+\subsection{M-estimation}{
+
+For binary treatments, M-estimation is supported when \code{missing} is not \code{"saem"} and \code{link} does not start with \code{"br."}. For multi-category treatments, M-estimation is supported when \code{missing} is not \code{"saem"} and \code{multi-method} is \code{"weightit"} (the default for non-ordered treatments) or \code{"glm"}. For continuous treatments, M-estimation is not supported. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
+}
 }
 \section{Additional Arguments}{
 
-The following additional arguments can be specified:
+For binary treatments, the following additional argument can be specified:
 \describe{
-\item{\code{link}}{The link used in the generalized linear model for the propensity scores. For binary treatments, \code{link} can be any of those allowed by \code{\link[=binomial]{binomial()}}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the \pkgfun2{brglm2}{brglmFit}{bias-corrected generalized linear models} implemented in the \CRANpkg{brglm2} package. For multicategory treatments, \code{link} can be \code{"logit"}, \code{"probit"}, \code{"bayes.probit"}, or \code{"br.logit"}. For ordered treatments, \code{link} can be any of those allowed by the \code{method} argument of \pkgfun{MASS}{polr} or \code{"br.logit"}. For continuous treatments, \code{link} can be any of those allowed by \code{\link[=gaussian]{gaussian()}}.
+\item{\code{link}}{the link used in the generalized linear model for the propensity scores. \code{link} can be any of those allowed by \code{\link[=binomial]{binomial()}}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the bias-corrected generalized linear models implemented in the \CRANpkg{brglm2} package.}
 }
+
+For multi-category treatments, the following additional arguments can be specified:
+\describe{
+\item{\code{multi.method}}{the method used to estimate the generalized propensity scores. Allowable options include \code{"weightit"} to use an M-estimation-based method of multinomial logistic regression implemented in \pkg{WeightIt}, \code{"glm"} to use a series of binomial models using \code{\link[=glm]{glm()}}, \code{"mclogit"} to use multinomial logistic regression as implemented in \pkgfun{mclogit}{mblogit}, \code{"mnp"} to use Bayesian multinomial probit regression as implemented in \pkgfun{MNP}{MNP}, and \code{"brmultinom"} to use bias-reduced multinomial logistic regression as implemented in \pkgfun{brglm2}{brmultinom}. For ordered treatments, \code{"polr"} can be supplied to use ordinal regression as implemented in \pkgfun{MASS}{polr} unless \code{link} is \code{"br.logit"}, in which case bias-reduce ordinal logistic regression as implemented in \pkgfun{brglm2}{bracl} is used. \code{"weightit"} and \code{"mclogit"} should give near-identical results, the main difference being increased robustness and customizability when using \code{"mclogit"} at the expense of not being able to use M-estimation to compute standard errors after weighting. The default is \code{"weightit"} for un-ordered treatments and \code{"polr"} for ordered treatments. Ignored when \code{missing = "saem"}.}
+\item{\code{link}}{The link used in the multinomial, binomial, or ordered regression model for the generalized propensity scores depending on the argument supplied to \code{multi.method}. When \code{multi.method = "glm"}, \code{link} can be any of those allowed by \code{\link[=binomial]{binomial()}}. When treatment is ordered and \code{multi.method = "polr"}, \code{link} can be any of those allowed by \code{MASS::polr()} or \code{"br.logit"}. Otherwise, \code{link} should be \code{"logit"} or not specified.}
 }
-For continuous treatments only, the following arguments may be supplied:
+
+For continuous treatments, the following additional arguments may be supplied:
 \describe{
 \item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
 }
@@ -61,11 +71,11 @@ For continuous treatments only, the following arguments may be supplied:
 }
 \item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
 }
+\item{\code{link}}{The link used to fit the linear model for the generalzied propensity score. Can be any allowed by \code{\link[=gaussian]{gaussian()}}.
+}
 }
 
-For binary treatments, additional arguments to \code{glm()} can be specified as well. The \code{method} argument in \code{glm()} is renamed to \code{glm.method}. This can be used to supply alternative fitting functions, such as those implemented in the \CRANpkg{glm2} package. Other arguments to \code{weightit()} are passed to \code{...} in \code{glm()}. In the presence of missing data with \code{link = "logit"} and \code{missing = "saem"}, additional arguments are passed to \pkgfun{misaem}{miss.glm} and \pkgfun{misaem}{predict.miss.glm}, except the \code{method} argument in \pkgfun{misaem}{predict.miss.glm} is replaced with \code{saem.method}.
-
-For multi-category treatments with \code{link = "logit"} or \code{"probit"}, the default is to use multinomial logistic or probit regression using the \CRANpkg{mlogit} package. To request that separate binary logistic or probit regressions are run instead, set \code{use.mlogit = FALSE}. This can be helpful when \code{mlogit} is slow or fails to converge. With \code{link = "logit"}, the option \code{use.mclogit = TRUE} can be specified to request that \pkgfun{mclogit}{mblogit} from the \CRANpkg{mclogit} package is used instead, which can be faster and is recommended.
+Additional arguments to \code{glm()} can be specified as well when it is used for fitting. The \code{method} argument in \code{glm()} is renamed to \code{glm.method}. This can be used to supply alternative fitting functions, such as those implemented in the \CRANpkg{glm2} package. Other arguments to \code{weightit()} are passed to \code{...} in \code{glm()}. In the presence of missing data with \code{link = "logit"} and \code{missing = "saem"}, additional arguments are passed to \pkgfun{misaem}{miss.glm} and \pkgfun{misaem}{predict.miss.glm}, except the \code{method} argument in \pkgfun{misaem}{predict.miss.glm} is replaced with \code{saem.method}.
 
 For continuous treatments in the presence of missing data with \code{missing = "saem"}, additional arguments are passed to \pkgfun{misaem}{miss.lm} and \pkgfun{misaem}{predict.miss.lm}.
 }
@@ -73,7 +83,7 @@ For continuous treatments in the presence of missing data with \code{missing = "
 \section{Additional Outputs}{
 
 \describe{
-\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}}. For ordinal treatments, the output of the call to \pkgfun{MASS}{polr}. For multi-category treatments with \code{link = "logit"} or \code{"probit"} and \code{use.mlogit = TRUE}, the output of the call to \pkgfun{mlogit}{mlogit}. For multi-category treatments with \code{use.mlogit = FALSE}, a list of the \code{glm()} fits. For multi-category treatments with \code{link = "br.logit"}, the output of the call to \pkgfun{brglm2}{brmultinom}. For multi-category treatments with \code{link = "bayes.probit"}, the output of the call to \pkgfun{MNP}{mnp}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
+\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}}. For multi-category treatments, the output of the call to the fitting function (or a list therof if \code{multi.method = "glm"}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
 }
 }
 }
@@ -93,8 +103,7 @@ bal.tab(W1)
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "glm", estimand = "ATE",
-                use.mlogit = FALSE))
+                method = "glm", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
 

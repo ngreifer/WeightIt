@@ -40,6 +40,11 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 }
 }
 }
+
+\subsection{M-estimation}{
+
+M-estimation is not supported.
+}
 }
 \details{
 Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical likelihood of the data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the \code{cor.prior} argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.

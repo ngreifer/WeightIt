@@ -4,22 +4,22 @@
 \alias{method_ipt}
 \title{Inverse Probability Tilting}
 \description{
-This page explains the details of estimating weights using inverse probability tilting by setting \code{method = "ipt"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
+This page explains the details of estimating weights using inverse probability tilting by setting \code{method = "ipt"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary and multi-category treatments.
 
-In general, this method relies on estimating propensity scores using a modification of the usual regression score equations to enforce balance and the converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on code written for \pkg{WeightIt} using \code{\link[=optim]{optim()}}.
+In general, this method relies on estimating propensity scores using a modification of the usual generalized linear model score equations to enforce balance and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on code written for \pkg{WeightIt} using \pkgfun{rootSolve}{multiroot}.
 \subsection{Binary Treatments}{
 
-For binary treatments, this method estimates the weights using \code{optim()} using formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group, and the return propensity score is the probability of being in the "second" treatment group, i.e., \code{levels(factor(treat))[2]}.
+For binary treatments, this method estimates the weights using formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, this method estimates the weights using \code{optim()}. The following estimands are allowed: ATE and ATT. When the ATE is requested, \code{optim()} is run once for each treatment group. When the ATT is requested, \code{optim()} is run once for each non-focal (i.e., control) group.
+For multi-category treatments, this method estimates the weights using modifications of the formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE and ATT. When the ATE is requested, estimation is performed once for each treatment group. When the ATT is requested, estimation is performed once for each non-focal (i.e., control) group.
 }
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, this method estimates the weights using \code{optim()}.
+Inverse probability tilting is not compatible with continuous treatments.
 }
 
 \subsection{Longitudinal Treatments}{
@@ -41,13 +41,16 @@ First, for each variable with missingness, a new missingness indicator variable 
 }
 }
 }
+
+\subsection{M-estimation}{
+
+M-estimation is supported for all scenarios. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details.
+}
 }
 \details{
-Inverse probability tilting (IPT) involves specifying estimating equations that fit the parameters of one or more logistic regression models (for binary and multi-category treatments) or a linear regression model (for continuous treatments) with a modification that ensure exact balance on the covariates means. These estimating equations are solved, and the estimated parameters are used in the (generalized) propensity score, which is used to compute the weights. Conceptually and mathematically, IPT is very similar to entropy balancing and just-identified CBPS. For the ATT and ATC, entropy balancing, just-identified CBPS, and IPT will yield identical results. For the ATE, the three methods differ.
+Inverse probability tilting (IPT) involves specifying estimating equations that fit the parameters of one or more generalized linear models with a modification that ensures exact balance on the covariate means. These estimating equations are solved, and the estimated parameters are used in the (generalized) propensity score, which is used to compute the weights. Conceptually and mathematically, IPT is very similar to entropy balancing and just-identified CBPS. For the ATT and ATC, entropy balancing, just-identified CBPS, and IPT will yield identical results. For the ATE or when \code{link} is specified as something other than \code{"logit"}, the three methods differ.
 
-Treatment effect estimates for binary treatments are consistent if the true propensity score is a logistic regression or the outcome model is linear in the covariates and their interaction with treatments. For entropy balancing, this is only true for the ATT, and fo just-identified CBPS, this is only true if there is no effect modification by covariates. In this way, IPT provides additional theoretical guarantees over the other two methods, though potentially with some cost in precision.
-
-IPT for continuous treatments has not been described in the literature; here we use the score equations for CBPS with continuous treatments, which correspond to the score equations for the residual variance of a linear regression for the generalized propensity score and the weighted covariance between the treatment and covariates. This method should be used with caution until it is better understood.
+Treatment effect estimates for binary treatments are consistent if the true propensity score is a logistic regression or the outcome model is linear in the covariates and their interaction with treatments. For entropy balancing, this is only true for the ATT, and for just-identified CBPS, this is only true if there is no effect modification by covariates. In this way, IPT provides additional theoretical guarantees over the other two methods, though potentially with some cost in precision.
 }
 \section{Additional Arguments}{
 
@@ -55,11 +58,11 @@ IPT for continuous treatments has not been described in the literature; here we 
 
 \describe{
 \item{\code{quantile}}{
-A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \verb{c(x1 = .5, x2 = .75}) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
+A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \verb{c(x1 = .5, x2 = .75}) to request one quantile for each covariate.
+}
+\item{\code{link}}{\code{"string"}; the link used to determine the inverse link for computing the (generalized) propensity scores. Default is \code{"logit"}, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but \code{"probit"}, \code{"cauchit"}, and \code{"cloglog"} are also allowed.
 }
 }
-
-The arguments \code{maxit} and \code{reltol} can be supplied and are passed to the \code{control} argument of \code{\link[=optim]{optim()}}. The \code{"BFGS"} method is used, so the defaults correspond to this.
 
 The \code{stabilize} argument is ignored.
 }
@@ -67,7 +70,7 @@ The \code{stabilize} argument is ignored.
 \section{Additional Outputs}{
 
 \describe{
-\item{\code{obj}}{When \code{include.obj = TRUE}, the output of the call to \code{\link[=optim]{optim()}}, which contains the coefficient estimates and convergence information. For ATE fits or with multi-category treatments, a list of \code{optim()} outputs, one for each weighted group.
+\item{\code{obj}}{When \code{include.obj = TRUE}, the output of the call to \code{\link[=optim]{optim()}}, which contains the coefficient estimates and convergence information. For ATE fits or with multi-category treatments, a list of \code{rootSolve::multiroot()} outputs, one for each weighted group.
 }
 }
 }
@@ -89,21 +92,14 @@ cobalt::bal.tab(W1)
 summary(W2)
 cobalt::bal.tab(W2)
 
-#Balancing covariates and squares with respect to
-#re75 (continuous)
-(W3 <- weightit(re75 ~ age + educ + married +
-                  nodegree + re74, data = lalonde,
-                method = "ipt"))
-summary(W3)
-cobalt::bal.tab(W3)
 }
 \references{
-\subsection{ATE}{
+\subsection{\code{estimand = "ATE"}}{
 
 Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability Tilting for Moment Condition Models with Missing Data. \emph{The Review of Economic Studies}, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
 }
 
-\subsection{ATT}{
+\subsection{\code{estimand = "ATT"}}{
 
 Sant’Anna, P. H. C., & Zhao, J. (2020). Doubly robust difference-in-differences estimators. \emph{Journal of Econometrics}, 219(1), 101–122. \doi{10.1016/j.jeconom.2020.06.003}
 }

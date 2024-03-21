@@ -20,6 +20,7 @@ weightit(
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
+  keep.mparts = TRUE,
   ...
 )
 }
@@ -115,6 +116,8 @@ objects created in the process of estimating the weights. For example, with
 \code{method = "glm"}, the \code{glm} objects containing the propensity
 score model will be included. See the individual pages for each method for
 information on what object will be included if \code{TRUE}.}
+
+\item{keep.mparts}{\code{logical}; whether to include in the output components necessary to estimate standard errors that account for estimation of the weights in \code{\link[=glm_weightit]{glm_weightit()}}. Default is \code{TRUE} if such parts are present. See the individual pages for each method for whether these components are produced. Set to \code{FALSE} to keep the output object smaller, e.g., if standard errors will not be computed using \code{glm_weightit()}.}
 
 \item{...}{other arguments for functions called by \code{weightit()} that
 control aspects of fitting that are not covered by the above arguments. See Details.}

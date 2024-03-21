@@ -43,6 +43,11 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 }
 }
 }
+
+\subsection{M-estimation}{
+
+M-estimation is not supported.
+}
 }
 \details{
 Stable balancing weights are weights that solve a constrained optimization problem, where the constraints correspond to covariate balance and the loss function is the variance (or other norm) of the weights. These weights maximize the effective sample size of the weighted sample subject to user-supplied balance constraints. An advantage of this method over entropy balancing is the ability to allow approximate, rather than exact, balance through the \code{tols} argument, which can increase precision even for slight relaxations of the constraints.

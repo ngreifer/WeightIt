@@ -17,6 +17,7 @@ weightitMSM(
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
+  keep.mparts = TRUE,
   is.MSM.method,
   weightit.force = FALSE,
   ...
@@ -57,9 +58,10 @@ within each level of the variable \code{"gender"}. The argument used to be
 called \code{exact}, which will still work but with a message. Only one
 \code{by} variable is allowed.}
 
-\item{s.weights}{a vector of sampling weights or the name of a variable in
-\code{data} that contains sampling weights. These are ignored for some
-methods.}
+\item{s.weights}{A vector of sampling weights or the name of a variable in
+\code{data} that contains sampling weights. These can also be matching
+weights if weighting is to be used on matched data. See the individual pages
+for each method for information on whether sampling weights can be supplied.}
 
 \item{num.formula}{optional; a one-sided formula with the stabilization
 factors (other than the previous treatments) on the right hand side, which
@@ -76,14 +78,14 @@ covariate to be balanced. For example, if \code{moments = 3}, for each
 non-categorical covariate, the covariate, its square, and its cube will be
 balanced. This argument is ignored for other methods; to balance powers of
 the covariates, appropriate functions must be entered in \code{formula}. See
-the specific methods help pages for information on whether they accept
+the individual pages for each method for information on whether they accept
 \code{moments}.}
 
 \item{int}{\code{logical}; for some methods, whether first-order
 interactions of the covariates are to be balanced. This argument is ignored
 for other methods; to balance interactions between the variables,
-appropriate functions must be entered in \code{formula}. See the specific
-methods help pages for information on whether they accept \code{int}.}
+appropriate functions must be entered in \code{formula}. See the individual
+pages for each method for information on whether they accept \code{int}.}
 
 \item{missing}{\code{character}; how missing data should be handled. The
 options and defaults depend on the \code{method} used. Ignored if no missing
@@ -92,8 +94,8 @@ available missingness methods available in \code{weightit()} and should
 probably be used instead. See the \CRANpkg{MatchThem}
 package for the use of \code{weightit()} with multiply imputed data.}
 
-\item{verbose}{whether to print additional information output by the fitting
-function.}
+\item{verbose}{\code{logical}; whether to print additional information
+output by the fitting function.}
 
 \item{include.obj}{whether to include in the output a list of the fit
 objects created in the process of estimating the weights at each time point.
@@ -102,10 +104,12 @@ containing the propensity score models at each time point will be included.
 See the help pages for each method for information on what object will be
 included if \code{TRUE}.}
 
+\item{keep.mparts}{\code{logical}; whether to include in the output components necessary to estimate standard errors that account for estimation of the weights in \code{\link[=glm_weightit]{glm_weightit()}}. Default is \code{TRUE} if such parts are present. See the individual pages for each method for whether these components are produced. Set to \code{FALSE} to keep the output object smaller, e.g., if standard errors will not be computed using \code{glm_weightit()}.}
+
 \item{is.MSM.method}{whether the method estimates weights for multiple time
 points all at once (\code{TRUE}) or by estimating weights at each time point
 and then multiplying them together (\code{FALSE}). This is only relevant for
-\verb{method = "optweight")}, which estimates weights for longitudinal
+\code{method = "optweight"}, which estimates weights for longitudinal
 treatments all at once, and for user-specified functions.}
 
 \item{weightit.force}{several methods are not valid for estimating weights

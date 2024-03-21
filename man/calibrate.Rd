@@ -32,7 +32,7 @@ If the input is a numeric vector of weights, the output will be a numeric
 vector of the calibrated propensity scores.
 }
 \description{
-\code{calibrate()} performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2022). This involes fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
+\code{calibrate()} performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2022). This involves fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
 }
 \examples{
 \dontshow{if (requireNamespace("gbm", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
