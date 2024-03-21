@@ -148,6 +148,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     chk::chk_numeric(treat)
     chk::chk_not_any_na(treat)
 
+    chk::chk_flag(stabilize)
+    chk::chk_flag(verbose)
+    chk::chk_flag(include.obj)
+
     if (length(treat) != nrow(covs)) {
       .err("`treat` and `'covs` must contain the same number of units")
     }
@@ -331,6 +335,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       fit.obj <- fit.obj[[1]]
     }
     out$fit.obj <- fit.obj
+  }
+
+  if (nlevels(by.factor) == 1) {
+    attr(out, "Mparts") <- obj$Mparts
   }
 
   if (is_not_null(info) && nlevels(by.factor) == 1) {
