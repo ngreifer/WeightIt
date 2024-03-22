@@ -11,12 +11,17 @@ reference:
   - summary.weightit
 - title: Specific estimation methods
 - contents: starts_with("method_")
-- title: Other functions
+- title: Estimate treatment effects
 - contents:
-  - get_w_from_ps
+  - glm_weightit
+- title: Modify weights
+- contents:
   - trim
   - calibrate
   - sbps
+- title: Other functions
+- contents:
+  - get_w_from_ps
   - ESS
   - weightit.fit
   - as.weightit
