@@ -17,7 +17,7 @@ status](https://www.r-pkg.org/badges/version/WeightIt?color=00622B)](https://CRA
 `WeightIt` is a one-stop package to generate balancing weights for point
 and longitudinal treatments in observational studies. Support is
 included for binary, multi-category, and continuous treatments, a
-variety fo estimand including the ATE, ATT, ATC, ATO, and others, and
+variety of estimands including the ATE, ATT, ATC, ATO, and others, and
 support for a wide variety of weighting methods, including those that
 rely on parametric modeling, machine learning, or optimization.
 `WeightIt` also provides functionality for fitting regression models in
@@ -133,9 +133,9 @@ summary(W)
 Desirable qualities include small coefficients of variation close to 0
 and large effective sample sizes.
 
-Finally, we can estimate the effect of the treatment usng a weighted
-outcome, accounting for estimation of the weights in the standard error
-of the effect estimate:
+Finally, we can estimate the effect of the treatment using a weighted
+outcome model, accounting for estimation of the weights in the standard
+error of the effect estimate:
 
 ``` r
 fit <- lm_weightit(re78 ~ treat, data = lalonde,
@@ -156,48 +156,46 @@ summary(fit)
 
 The table below contains the available methods in `WeightIt` for
 estimating weights for binary, multinomial, and continuous treatments
-using various methods and functions from various packages. many of these
-methods do not require any other package to use (i.e., those with
-“-”`in the Package column). See`vignette(“installing-packages”)\` for
+using various methods and functions from various packages. Many of these
+methods do not require any other package to use (i.e., those with “-” in
+the Package column). See `vignette("installing-packages")` for
 information on how to install packages that are used.
 
-| Treatment type      | Method (`method =`)                                 | Package        |
-|---------------------|-----------------------------------------------------|----------------|
-| **Binary**          | Binary regression PS (`"glm"`)                      | various        |
-| \-                  | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
-| \-                  | Covariate balancing PS (`"cbps"`)                   | \-             |
-| \-                  | Non-parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
-| \-                  | Entropy Balancing (`"ebal"`)                        | \-             |
-| \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
-| \-                  | Optimization-based Weights (`"optweight"`)          | `optweight`    |
-| \-                  | SuperLearner PS (`"super"`)                         | `SuperLearner` |
-| \-                  | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
-| \-                  | Energy balancing (`"energy"`)                       | \-             |
-| **Multi-categoryl** | Multinomial regression PS (`"glm"`)                 | various        |
-| \-                  | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
-| \-                  | Covariate balancing PS (`"cbps"`)                   | \-             |
-| \-                  | Non-Parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
-| \-                  | Entropy balancing (`"ebal"`)                        | \-             |
-| \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
-| \-                  | Optimization-based weights (`"optweight"`)          | `optweight`    |
-| \-                  | SuperLearner PS (`"super"`)                         | `SuperLearner` |
-| \-                  | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
-| \-                  | Energy balancing (`"energy"`)                       | \-             |
-| **Continuous**      | Generalized linear model GPS (`"glm"`)              | \-             |
-| \-                  | Generalized boosted modeling GPS (`"gbm"`)          | `gbm`          |
-| \-                  | Covariate balancing GPS (`"cbps"`)                  | \-             |
-| \-                  | Non-Parametric covariate balancing GPS (`"npcbps"`) | `CBPS`         |
-| \-                  | Entropy balancing (`"ebal"`)                        | \-             |
-| \-                  | Optimization-based weights (`"optweight"`)          | `optweight`    |
-| \-                  | SuperLearner GPS (`"super"`)                        | `SuperLearner` |
-| \-                  | Bayesian additive regression trees GPS (`"bart"`)   | `dbarts`       |
-| \-                  | Distance covariance optimal weighting (`"energy"`)  | \-             |
+| Treatment type     | Method (`method =`)                                 | Package        |
+|--------------------|-----------------------------------------------------|----------------|
+| **Binary**         | Binary regression PS (`"glm"`)                      | various        |
+| \-                 | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
+| \-                 | Covariate balancing PS (`"cbps"`)                   | \-             |
+| \-                 | Non-parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
+| \-                 | Entropy Balancing (`"ebal"`)                        | \-             |
+| \-                 | Inverse probability tilting (`"ipt"`)               | \-             |
+| \-                 | Optimization-based Weights (`"optweight"`)          | `optweight`    |
+| \-                 | SuperLearner PS (`"super"`)                         | `SuperLearner` |
+| \-                 | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
+| \-                 | Energy balancing (`"energy"`)                       | \-             |
+| **Multi-category** | Multinomial regression PS (`"glm"`)                 | various        |
+| \-                 | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
+| \-                 | Covariate balancing PS (`"cbps"`)                   | \-             |
+| \-                 | Non-Parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
+| \-                 | Entropy balancing (`"ebal"`)                        | \-             |
+| \-                 | Inverse probability tilting (`"ipt"`)               | \-             |
+| \-                 | Optimization-based weights (`"optweight"`)          | `optweight`    |
+| \-                 | SuperLearner PS (`"super"`)                         | `SuperLearner` |
+| \-                 | Bayesian additive regression trees PS (`"bart"`)    | `dbarts`       |
+| \-                 | Energy balancing (`"energy"`)                       | \-             |
+| **Continuous**     | Generalized linear model GPS (`"glm"`)              | \-             |
+| \-                 | Generalized boosted modeling GPS (`"gbm"`)          | `gbm`          |
+| \-                 | Covariate balancing GPS (`"cbps"`)                  | \-             |
+| \-                 | Non-Parametric covariate balancing GPS (`"npcbps"`) | `CBPS`         |
+| \-                 | Entropy balancing (`"ebal"`)                        | \-             |
+| \-                 | Optimization-based weights (`"optweight"`)          | `optweight`    |
+| \-                 | SuperLearner GPS (`"super"`)                        | `SuperLearner` |
+| \-                 | Bayesian additive regression trees GPS (`"bart"`)   | `dbarts`       |
+| \-                 | Distance covariance optimal weighting (`"energy"`)  | \-             |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
-score using the function `sbps()` and the functions `lm_weightit()` and
-`glm_weightit()` for fitting regression models after weighting. Several
-other tools and utilities are available, including `trim()` to trim or
-truncate weights.
+score using the function `sbps()`. Several other tools and utilities are
+available, including `trim()` to trim or truncate weights.
 
 Please submit bug reports, questions, comments, or other issues to
 <https://github.com/ngreifer/WeightIt/issues>. If you would like to see

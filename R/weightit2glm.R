@@ -64,7 +64,7 @@
 #'     }
 #'     \item{`plot`}{If `use.kernel = TRUE` with continuous treatments, whether to plot the estimated density.
 #'     }
-#'     \item{`link`}{The link used to fit the linear model for the generalzied propensity score. Can be any allowed by [gaussian()].
+#'     \item{`link`}{The link used to fit the linear model for the generalized propensity score. Can be any allowed by [gaussian()].
 #'     }
 #'   }
 #'
@@ -74,7 +74,7 @@
 #'
 #' @section Additional Outputs:
 #' \describe{
-#'   \item{`obj`}{When `include.obj = TRUE`, the (generalized) propensity score model fit. For binary treatments, the output of the call to [glm()]. For multi-category treatments, the output of the call to the fitting function (or a list therof if `multi.method = "glm"`. For continuous treatments, the output of the call to `glm()` for the predicted values in the denominator density.
+#'   \item{`obj`}{When `include.obj = TRUE`, the (generalized) propensity score model fit. For binary treatments, the output of the call to [glm()]. For multi-category treatments, the output of the call to the fitting function (or a list thereof if `multi.method = "glm"`. For continuous treatments, the output of the call to `glm()` for the predicted values in the denominator density.
 #'   }
 #' }
 #'

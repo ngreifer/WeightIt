@@ -71,7 +71,7 @@ For continuous treatments, the following additional arguments may be supplied:
 }
 \item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
 }
-\item{\code{link}}{The link used to fit the linear model for the generalzied propensity score. Can be any allowed by \code{\link[=gaussian]{gaussian()}}.
+\item{\code{link}}{The link used to fit the linear model for the generalized propensity score. Can be any allowed by \code{\link[=gaussian]{gaussian()}}.
 }
 }
 
@@ -83,7 +83,7 @@ For continuous treatments in the presence of missing data with \code{missing = "
 \section{Additional Outputs}{
 
 \describe{
-\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}}. For multi-category treatments, the output of the call to the fitting function (or a list therof if \code{multi.method = "glm"}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
+\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}}. For multi-category treatments, the output of the call to the fitting function (or a list thereof if \code{multi.method = "glm"}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
 }
 }
 }
