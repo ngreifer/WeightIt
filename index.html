@@ -104,7 +104,7 @@
 <div class="section level3">
 <h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h3>
-<p><code>WeightIt</code> is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety fo estimand including the ATE, ATT, ATC, ATO, and others, and support for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. <code>WeightIt</code> also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. <code>WeightIt</code> uses a familiar formula interface and is meant to complement <code>MatchIt</code> as a package that provides a unified interface to basic and advanced weighting methods.</p>
+<p><code>WeightIt</code> is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety of estimands including the ATE, ATT, ATC, ATO, and others, and support for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. <code>WeightIt</code> also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. <code>WeightIt</code> uses a familiar formula interface and is meant to complement <code>MatchIt</code> as a package that provides a unified interface to basic and advanced weighting methods.</p>
 <p>For a complete vignette, see the <a href="https://ngreifer.github.io/WeightIt/articles/WeightIt.html">website</a> for <code>WeightIt</code> or <code><a href="articles/WeightIt.html">vignette("WeightIt")</a></code>.</p>
 <p>To install and load <code>WeightIt</code>, use the code below:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -183,7 +183,7 @@
 <span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; Unweighted  429.       185</span></span>
 <span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Weighted     99.82     185</span></span></code></pre></div>
 <p>Desirable qualities include small coefficients of variation close to 0 and large effective sample sizes.</p>
-<p>Finally, we can estimate the effect of the treatment usng a weighted outcome, accounting for estimation of the weights in the standard error of the effect estimate:</p>
+<p>Finally, we can estimate the effect of the treatment using a weighted outcome model, accounting for estimation of the weights in the standard error of the effect estimate:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">treat</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span>
 <span>                   weightit <span class="op">=</span> <span class="va">W</span><span class="op">)</span></span>
@@ -198,11 +198,11 @@
 <span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; (Intercept)     5135      583.8   8.797 1.411e-18 3990.9   6279</span></span>
 <span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; treat           1214      798.2   1.521 1.282e-01 -350.3   2778</span></span>
 <span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; Standard error: HC0 robust (adjusted for estimation of weights)</span></span></code></pre></div>
-<p>The table below contains the available methods in <code>WeightIt</code> for estimating weights for binary, multinomial, and continuous treatments using various methods and functions from various packages. many of these methods do not require any other package to use (i.e., those with “-”<code>in the Package column). See</code>vignette(“installing-packages”)` for information on how to install packages that are used.</p>
+<p>The table below contains the available methods in <code>WeightIt</code> for estimating weights for binary, multinomial, and continuous treatments using various methods and functions from various packages. Many of these methods do not require any other package to use (i.e., those with “-” in the Package column). See <code><a href="articles/installing-packages.html">vignette("installing-packages")</a></code> for information on how to install packages that are used.</p>
 <table class="table">
 <colgroup>
-<col width="23%">
-<col width="58%">
+<col width="22%">
+<col width="59%">
 <col width="17%">
 </colgroup>
 <thead><tr class="header">
@@ -262,7 +262,7 @@
 <td>-</td>
 </tr>
 <tr class="odd">
-<td><strong>Multi-categoryl</strong></td>
+<td><strong>Multi-category</strong></td>
 <td>Multinomial regression PS (<code>"glm"</code>)</td>
 <td>various</td>
 </tr>
@@ -358,7 +358,7 @@
 </tr>
 </tbody>
 </table>
-<p>In addition, <code>WeightIt</code> implements the subgroup balancing propensity score using the function <code><a href="reference/sbps.html">sbps()</a></code> and the functions <code><a href="reference/glm_weightit.html">lm_weightit()</a></code> and <code><a href="reference/glm_weightit.html">glm_weightit()</a></code> for fitting regression models after weighting. Several other tools and utilities are available, including <code><a href="reference/trim.html">trim()</a></code> to trim or truncate weights.</p>
+<p>In addition, <code>WeightIt</code> implements the subgroup balancing propensity score using the function <code><a href="reference/sbps.html">sbps()</a></code>. Several other tools and utilities are available, including <code><a href="reference/trim.html">trim()</a></code> to trim or truncate weights.</p>
 <p>Please submit bug reports, questions, comments, or other issues to <a href="https://github.com/ngreifer/WeightIt/issues" class="external-link uri">https://github.com/ngreifer/WeightIt/issues</a>. If you would like to see your package or method integrated into <code>WeightIt</code>, please contact the author. Fan mail is greatly appreciated.</p>
 </div>
 </div>

@@ -259,7 +259,7 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <dd><p>If <code>use.kernel = TRUE</code> with continuous treatments, whether to plot the estimated density.</p></dd>
 
 <dt><code>link</code></dt>
-<dd><p>The link used to fit the linear model for the generalzied propensity score. Can be any allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian()</a></code>.</p></dd>
+<dd><p>The link used to fit the linear model for the generalized propensity score. Can be any allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian()</a></code>.</p></dd>
 
 
 </dl><p>Additional arguments to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> can be specified as well when it is used for fitting. The <code>method</code> argument in <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> is renamed to <code>glm.method</code>. This can be used to supply alternative fitting functions, such as those implemented in the <a href="https://CRAN.R-project.org/package=glm2" class="external-link"><span class="pkg">glm2</span></a> package. Other arguments to <code><a href="weightit.html">weightit()</a></code> are passed to <code>...</code> in <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. In the presence of missing data with <code>link = "logit"</code> and <code>missing = "saem"</code>, additional arguments are passed to <code><a href="https://rdrr.io/pkg/misaem/man/miss.glm.html" class="external-link">misaem::miss.glm()</a></code> and <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.glm.html" class="external-link">misaem::predict.miss.glm()</a></code>, except the <code>method</code> argument in <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.glm.html" class="external-link">misaem::predict.miss.glm()</a></code> is replaced with <code>saem.method</code>.</p>
@@ -270,7 +270,7 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
     
 
 <dl><dt><code>obj</code></dt>
-<dd><p>When <code>include.obj = TRUE</code>, the (generalized) propensity score model fit. For binary treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. For multi-category treatments, the output of the call to the fitting function (or a list therof if <code>multi.method = "glm"</code>. For continuous treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for the predicted values in the denominator density.</p></dd>
+<dd><p>When <code>include.obj = TRUE</code>, the (generalized) propensity score model fit. For binary treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. For multi-category treatments, the output of the call to the fitting function (or a list thereof if <code>multi.method = "glm"</code>. For continuous treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for the predicted values in the denominator density.</p></dd>
 
 
 </dl></div>
