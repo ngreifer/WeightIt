@@ -591,9 +591,6 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
         nn["Weighted", i] <- ESS(w[t==i])
       }
     }
-    else if (treat.type == "ordinal") {
-      .err("Sneaky, sneaky! Ordinal coming soon :)", tidy = FALSE)
-    }
 
     out$effective.sample.size <- nn
 
@@ -602,7 +599,8 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
       attr(w, "focal") <- object$focal
     }
     attr(out, "weights") <- w
-    return(out)
+
+    out
   })
 
   attr(out.list, "prop.subgroup") <- matrix(c(1 - object$prop.subgroup,
