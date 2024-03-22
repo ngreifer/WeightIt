@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 0.14.2.9004
+Version: 1.0.0
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -38,7 +38,7 @@ Suggests:
     brglm2 (>= 0.5.2),
     osqp (>= 0.6.0.5),
     survival,
-    fwb,
+    fwb (>= 0.2.0),
     splines,
     marginaleffects (>= 0.11.1),
     sandwich,
