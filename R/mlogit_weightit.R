@@ -1,7 +1,5 @@
 # Multinomial logistic regression by finding roots of score equations
 .mlogit_weightit.fit <- function(x, y, weights = NULL, offset = NULL, start = NULL, hess = TRUE, ...) {
-  rlang::check_installed("rootSolve")
-
   chk::chk_atomic(y)
   y <- as.factor(y)
   chk::chk_numeric(x)
@@ -18,7 +16,6 @@
   chk::chk_all_equal(c(length(y), nrow(x), length(weights)))
 
   QR <- qr(x)
-  aliased_X <-
 
   aliased_X <- !colnames(x) %in% colnames(make_full_rank(x, with.intercept = FALSE))
   aliased_B <- rep(aliased_X, nlevels(y) - 1)
@@ -46,6 +43,7 @@
 
   get_pp <- function(B, X, offset = NULL) {
     if (length(offset) == 0) offset <- 0
+
     qq <- lapply(levels(y)[-1], function(i) {
       exp(offset + drop(X %*% B[coef_ind[[i]]]))
     })
@@ -71,38 +69,48 @@
     out
   }
 
-  f <- function(B, X, y, weights, offset) {
+  gr <- function(B, X, y, weights, offset) {
     .colSums(psi(B, X, y, weights, offset), n, k)
   }
 
-  out <- rootSolve::multiroot(f,
-                              start = start[!aliased_B],
-                              X = x_,
-                              y = y,
-                              weights = weights,
-                              offset = offset,
-                              ...)
+  w_y_mat <- weights * do.call("cbind", lapply(levels(y), function(i) y == i))
 
-  grad <- psi(out$root, X = x_, y = y,
+  ll <- function(B, X, y, weights, offset) {
+    pp <- get_pp(B, X, offset)
+
+    sum(w_y_mat * log(pp))
+  }
+
+  out <- optim(par = start[!aliased_B],
+               ll,
+               X = x_,
+               y = y,
+               weights = weights,
+               offset = offset,
+               gr = gr,
+               method = "BFGS",
+               hessian = hess,
+               control = list(fnscale = -1, #maximize likelihood; optim() minimizes by default
+                              maxit = 1e3,
+                              reltol = 1e-14))
+
+  grad <- psi(out$par, X = x_, y = y,
               weights = weights, offset = offset)
 
   hessian <- NULL
   if (hess) {
-    hessian <- gradient(f,
-                        .x = out$root,
-                        X = x_,
-                        y = y, weights = weights, offset = offset)
+    hessian <- out$hessian
     colnames(hessian) <- rownames(hessian) <- nm[!aliased_B]
   }
 
-  pp <- get_pp(out$root, x_, offset)
+  pp <- get_pp(out$par, x_, offset)
   res <- rep(0, length(y))
   for (i in seq_len(nlevels(y))) {
     res[y == levels(y)[i]] <- 1 - pp[y == levels(y)[i], i]
   }
 
   coefs <- setNames(rep(NA_real_, length(start)), names(start))
-  coefs[!aliased_B] <- out$root
+  coefs[!aliased_B] <- out$par
 
   aliased <- rep(TRUE, ncol(x))
   aliased[QR$pivot[seq_len(QR$rank)]] <- FALSE
@@ -115,7 +123,8 @@
        qr = QR,
        solve = out,
        psi = psi,
-       f = f,
+       f = gr,
+       get_p = get_pp,
        df.residual = length(res) - QR$rank,
        x = x,
        y = y,
@@ -125,7 +134,7 @@
 }
 
 .mlogit_weightit <- function(formula, data, weights, subset, start = NULL, na.action,
-                            hess = TRUE, model = TRUE, x = FALSE, y = TRUE, contrasts = NULL, ...) {
+                             hess = TRUE, model = TRUE, x = FALSE, y = TRUE, contrasts = NULL, ...) {
   cal <- match.call()
 
   chk::chk_flag(hess)
