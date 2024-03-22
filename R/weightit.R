@@ -321,6 +321,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               by = processed.by,
               call = call,
               formula = formula,
+              env = parent.frame(),
               info = obj$info,
               obj = obj$fit.obj)
 

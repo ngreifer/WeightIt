@@ -436,7 +436,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   out <- list(weights = w,
               treat.list = treat.list,
               covs.list = reported.covs.list,
-              #data = data,
               estimand = "ATE",
               method = method,
               ps.list = ps.list,
@@ -444,7 +443,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
               #discarded = NULL,
               by = processed.by,
               call = call,
+              formula.list = formula.list,
               stabilization = stabout,
+              env = parent.frame(),
               obj = obj.list
   )
 
