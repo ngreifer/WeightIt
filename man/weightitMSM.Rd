@@ -53,10 +53,11 @@ saturated models may be time-consuming or impossible to fit.}
 
 \item{by}{a string containing the name of the variable in \code{data} for
 which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~ gender}, weights will be generated separately
-within each level of the variable \code{"gender"}. The argument used to be
-called \code{exact}, which will still work but with a message. Only one
-\code{by} variable is allowed.}
+the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. (The argument used to be
+called \code{exact}, which will still work but with a message.) Only one
+\code{by} variable is allowed; to stratify by multiply variables
+simultaneously, create a new variable that is a full cross of those
+variables using \code{\link[=interaction]{interaction()}}.}
 
 \item{s.weights}{A vector of sampling weights or the name of a variable in
 \code{data} that contains sampling weights. These can also be matching
@@ -91,7 +92,7 @@ pages for each method for information on whether they accept \code{int}.}
 options and defaults depend on the \code{method} used. Ignored if no missing
 data is present. It should be noted that multiple imputation outperforms all
 available missingness methods available in \code{weightit()} and should
-probably be used instead. See the \CRANpkg{MatchThem}
+probably be used instead. Consider the \CRANpkg{MatchThem}
 package for the use of \code{weightit()} with multiply imputed data.}
 
 \item{verbose}{\code{logical}; whether to print additional information
@@ -132,6 +133,8 @@ A \code{weightitMSM} object with the following elements:
 \item{s.weights}{The provided sampling weights.}
 \item{by}{A data.frame containing the \code{by} variable when specified.}
 \item{stabilization}{The stabilization factors, if any.}
+
+When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts.list"} attribute. When \code{by} is specified, \code{keep.mparts} is set to \code{FALSE}.
 }
 \description{
 \code{weightitMSM()} allows for the easy generation of balancing weights for

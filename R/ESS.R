@@ -18,7 +18,7 @@
 #' Effects in Observational Studies. Psychological Methods, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 #'
 #' Shook‐Sa, B. E., & Hudgens, M. G. (2020). Power and sample size for
-#' observational studies of point exposure effects. Biometrics, biom.13405. \doi{org/10.1111/biom.13405}
+#' observational studies of point exposure effects. Biometrics, biom.13405. \doi{/10.1111/biom.13405}
 #'
 #' @examples
 #'

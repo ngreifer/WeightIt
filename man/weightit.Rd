@@ -138,6 +138,8 @@ returned for binary treatments and only when \code{method} is \code{"glm"}, \cod
 \item{obj}{When \code{include.obj = TRUE}, the fit object.}
 \item{info}{Additional information about the fitting. See the individual
 methods pages for what is included.}
+
+When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts"} attribute. When \code{by} is specified, \code{keep.mparts} is set to \code{FALSE}.
 }
 \description{
 \code{weightit()} allows for the easy generation of balancing weights using
