@@ -362,10 +362,12 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   if (is_not_null(A$use.mlogit)) {
-    .err("`use.mlogit` is no longer accepted; use `multi.method` instead. See `help(\"method_glm\")` for details")
+    .err("`use.mlogit` is no longer accepted and will be ignored; use `multi.method` instead. See `help(\"method_glm\")` for details")
+    A$use.mlogit <- NULL
   }
   if (is_not_null(A$use.mclogit)) {
-    .err("`use.mclogit` is no longer accepted; use `multi.method` instead. See `help(\"method_glm\")` for details")
+    .wrn("`use.mclogit` is no longer accepted and will be ignored; use `multi.method` instead. See `help(\"method_glm\")` for details")
+    A$use.mclogit <- NULL
   }
 
   if (missing == "saem") {
