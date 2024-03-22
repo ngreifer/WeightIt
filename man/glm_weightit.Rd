@@ -44,7 +44,7 @@ lm_weightit(
   ...
 )
 
-\method{summary}{glm_weightit}(object, ci = TRUE, level = 0.95, ...)
+\method{summary}{glm_weightit}(object, ci = FALSE, level = 0.95, ...)
 }
 \arguments{
 \item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
@@ -79,7 +79,7 @@ lm_weightit(
 
 \item{object}{a \code{glm_weightit} object.}
 
-\item{ci}{\code{logical} whether to display Wald confidence intervals for estimated coefficients. Default is \code{TRUE}.}
+\item{ci}{\code{logical} whether to display Wald confidence intervals for estimated coefficients. Default is \code{FALSE}.}
 
 \item{level}{when \code{ci = TRUE}, the desired confidence level.}
 }
