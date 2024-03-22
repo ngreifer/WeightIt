@@ -141,7 +141,7 @@ error of the effect estimate:
 fit <- lm_weightit(re78 ~ treat, data = lalonde,
                    weightit = W)
 
-summary(fit)
+summary(fit, ci = TRUE)
 ```
 
     #> 
