@@ -18,7 +18,7 @@
 #' @param contrasts an optional list define contrasts for factor variables. See [model.matrix()].
 #' @param fwb.args an optional list of further arguments to supply to \pkgfun{fwb}{fwb} when `vcov = "FWB"`.
 #' @param object a `glm_weightit` object.
-#' @param ci `logical` whether to display Wald confidence intervals for estimated coefficients. Default is `TRUE`.
+#' @param ci `logical` whether to display Wald confidence intervals for estimated coefficients. Default is `FALSE`.
 #' @param level when `ci = TRUE`, the desired confidence level.
 #' @param \dots for `glm_weightit()` and `lm_weightit()`, arguments to be used to form the default control argument if it is not supplied directly. Ignored otherwise.
 #'
@@ -272,7 +272,8 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
 
     if (is_not_null(weightit)) {
       wcall <- weightit$call
-      wenv <- environment(weightit$formula)
+      # wenv <- environment(weightit$formula)
+      wenv <- weightit$env
     }
     else {
       weightit_boot <- list(weights = 1)
@@ -544,7 +545,7 @@ lm_weightit <- function(formula, data, weightit,
                         x = FALSE, y = TRUE,
                         contrasts = NULL, ...) {
   cal <- cal0 <- match.call()
-  cal[[1]] <- quote(glm_weightit)
+  cal[[1]] <- quote(WeightIt::glm_weightit)
   cal$family = quote(stats::gaussian())
   fit <- eval.parent(cal)
   fit$call <- cal0
@@ -563,7 +564,7 @@ vcov.glm_weightit <- function(object, complete = TRUE, ...) {
 
 #' @exportS3Method summary glm_weightit
 #' @name glm_weightit
-summary.glm_weightit <- function(object, ci = TRUE, level = .95, ...) {
+summary.glm_weightit <- function(object, ci = FALSE, level = .95, ...) {
   chk::chk_flag(ci)
 
   df.r <- object$df.residual
