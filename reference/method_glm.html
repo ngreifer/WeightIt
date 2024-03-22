@@ -11,7 +11,7 @@ For binary treatments, this method estimates the propensity scores using glm(). 
 Multi-Category Treatments
 
 
-For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit ("logit") and probit ("probit") links, mlogit::mlogit() is used; for the Bayesian probit ("bayes.probit") link, MNP::mnp() is used; and for the biased-reduced multinomial logistic regression ("br.logit"), brglm2::brmultinom() is used. If the treatment variable is an ordered factor, MASS::polr() is used to fit ordinal regression unless link = "br.logit", in which case brglm2::bracl() is used. Any of the methods allowed in the method argument of polr() can be supplied to link. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the argument supplied to multi.method (see Additional Arguments below). The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 
@@ -69,7 +69,7 @@ For binary treatments, this method estimates the propensity scores using glm(). 
 Multi-Category Treatments
 
 
-For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit ("logit") and probit ("probit") links, mlogit::mlogit() is used; for the Bayesian probit ("bayes.probit") link, MNP::mnp() is used; and for the biased-reduced multinomial logistic regression ("br.logit"), brglm2::brmultinom() is used. If the treatment variable is an ordered factor, MASS::polr() is used to fit ordinal regression unless link = "br.logit", in which case brglm2::bracl() is used. Any of the methods allowed in the method argument of polr() can be supplied to link. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the argument supplied to multi.method (see Additional Arguments below). The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 
@@ -184,7 +184,7 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <h3 id="multi-category-treatments">Multi-Category Treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments"></a></h3>
 
 
-<p>For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (<code>"logit"</code>) and probit (<code>"probit"</code>) links, <code><a href="https://rdrr.io/pkg/mlogit/man/mlogit.html" class="external-link">mlogit::mlogit()</a></code> is used; for the Bayesian probit (<code>"bayes.probit"</code>) link, <code><a href="https://rdrr.io/pkg/MNP/man/mnp.html" class="external-link">MNP::mnp()</a></code> is used; and for the biased-reduced multinomial logistic regression (<code>"br.logit"</code>), <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code> is used. If the treatment variable is an ordered factor, <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code> is used to fit ordinal regression unless <code>link = "br.logit"</code>, in which case <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code> is used. Any of the methods allowed in the <code>method</code> argument of <code>polr()</code> can be supplied to <code>link</code>. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
+<p>For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the argument supplied to <code>multi.method</code> (see Additional Arguments below). The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
 </div>
 
 <div class="section">
@@ -391,44 +391,44 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.4444 |---------------------------| 34.2208</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.4161 |---------------------|       27.5732</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.1063 |--|                           5.1738</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.4528 |---------------------------| 30.8071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.7990  |---------------------|      25.9532</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.1123 |-|                            3.9770</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            226     231     485     181     182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black 7.9679   8.092  8.1384  13.226 34.2208</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            440     345     484     371     269</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 16.798 16.9414 18.0789 24.3266 27.5732</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            437     324     404     599     531</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 4.3371  4.3833  4.4101  5.0312  5.1738</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             226     231    485     181     182</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black   7.532  7.6243 8.5246 12.3509 30.8071</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             392     564    345     269     371</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 15.9922 16.7517 18.784 23.4106 25.9532</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             432     589    437     404     599</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white   3.686  3.6864  3.712  3.7842   3.977</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.937 0.434   0.205       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.638 0.476   0.178       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.417 0.358   0.081       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.890 0.426   0.192       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.541 0.404   0.132       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.382 0.317   0.068       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   129.64  51.38 254.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.   72.   299.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   135.8  55.86 261.02</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0552</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1938</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0316</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.2096</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.2069</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0419</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1276</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0605</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.2023</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.    72.   299. </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   129.64  51.38 254.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.   72.   299.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   135.8  55.86 261.02</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W3</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
