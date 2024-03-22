@@ -72,6 +72,15 @@ summary(W)
 
 Desirable qualities include small coefficients of variation close to 0 and large effective sample sizes.
 
+Finally, we can estimate the effect of the treatment usng a weighted outcome, accounting for estimation of the weights in the standard error of the effect estimate:
+
+```{r}
+fit <- lm_weightit(re78 ~ treat, data = lalonde,
+                   weightit = W)
+
+summary(fit)
+```
+
 The table below contains the available methods in `WeightIt` for estimating weights for binary, multinomial, and continuous treatments using various methods and functions from various packages. many of these methods do not require any other package to use (i.e., those with "-"` in the Package column). See `vignette("installing-packages")` for information on how to install packages that are used.
  
  Treatment type | Method (`method = `) | Package

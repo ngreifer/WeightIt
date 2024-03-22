@@ -15,17 +15,16 @@ status](https://www.r-pkg.org/badges/version/WeightIt?color=00622B)](https://CRA
 ### Overview
 
 `WeightIt` is a one-stop package to generate balancing weights for point
-and longitudinal treatments in observational studies. Contained within
-`WeightIt` are methods that call on other R packages to estimate
-weights. The value of `WeightIt` is in its unified and familiar syntax
-used to generate the weights, as each of these other packages have their
-own, often challenging to navigate, syntax. `WeightIt` extends the
-capabilities of these packages to generate weights used to estimate the
-ATE, ATT, ATC, and other estimands for binary or multi-category
-treatments, and treatment effects for continuous treatments when
-available. In these ways, `WeightIt` does for weighting what `MatchIt`
-has done for matching, and `MatchIt` users will find the syntax
-familiar.
+and longitudinal treatments in observational studies. Support is
+included for binary, multi-category, and continuous treatments, a
+variety fo estimand including the ATE, ATT, ATC, ATO, and others, and
+support for a wide variety of weighting methods, including those that
+rely on parametric modeling, machine learning, or optimization.
+`WeightIt` also provides functionality for fitting regression models in
+weighted samples that account for estimation of the weights in
+quantifying uncertainty. `WeightIt` uses a familiar formula interface
+and is meant to complement `MatchIt` as a package that provides a
+unified interface to basic and advanced weighting methods.
 
 For a complete vignette, see the
 [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html)
@@ -47,7 +46,7 @@ The workhorse function of `WeightIt` is `weightit()`, which generates
 weights from a given formula and data input according to methods and
 other parameters specified by the user. Below is an example of the use
 of `weightit()` to generate propensity score weights for estimating the
-ATE:
+ATT:
 
 ``` r
 data("lalonde", package = "cobalt")
@@ -55,7 +54,7 @@ data("lalonde", package = "cobalt")
 W <- weightit(treat ~ age + educ + nodegree + 
                 married + race + re74 + re75, 
               data = lalonde, method = "glm", 
-              estimand = "ATE")
+              estimand = "ATT")
 W
 ```
 
@@ -64,7 +63,7 @@ W
     #>  - number of obs.: 614
     #>  - sampling weights: none
     #>  - treatment: 2-category
-    #>  - estimand: ATE
+    #>  - estimand: ATT (focal: 1)
     #>  - covariates: age, educ, nodegree, married, race, re74, re75
 
 Evaluating weights has two components: evaluating the covariate balance
@@ -81,21 +80,21 @@ bal.tab(W, un = TRUE)
 
     #> Balance Measures
     #>                 Type Diff.Un Diff.Adj
-    #> prop.score  Distance  1.7569   0.1360
-    #> age          Contin. -0.2419  -0.1676
-    #> educ         Contin.  0.0448   0.1296
-    #> nodegree      Binary  0.1114  -0.0547
-    #> married       Binary -0.3236  -0.0944
-    #> race_black    Binary  0.6404   0.0499
-    #> race_hispan   Binary -0.0827   0.0047
-    #> race_white    Binary -0.5577  -0.0546
-    #> re74         Contin. -0.5958  -0.2740
-    #> re75         Contin. -0.2870  -0.1579
+    #> prop.score  Distance  1.7941  -0.0205
+    #> age          Contin. -0.3094   0.1188
+    #> educ         Contin.  0.0550  -0.0284
+    #> nodegree      Binary  0.1114   0.0184
+    #> married       Binary -0.3236   0.0186
+    #> race_black    Binary  0.6404  -0.0022
+    #> race_hispan   Binary -0.0827   0.0002
+    #> race_white    Binary -0.5577   0.0021
+    #> re74         Contin. -0.7211  -0.0021
+    #> re75         Contin. -0.2903   0.0110
     #> 
     #> Effective sample sizes
     #>            Control Treated
-    #> Unadjusted  429.    185.  
-    #> Adjusted    329.01   58.33
+    #> Unadjusted  429.       185
+    #> Adjusted     99.82     185
 
 For the second goal, qualities of the distributions of weights can be
 assessed using `summary()`, as demonstrated below.
@@ -108,43 +107,65 @@ summary(W)
     #> 
     #> - Weight ranges:
     #> 
-    #>            Min                                   Max
-    #> treated 1.1721 |---------------------------| 40.0773
-    #> control 1.0092 |-|                            4.7432
+    #>            Min                                  Max
+    #> treated 1.0000         ||                    1.0000
+    #> control 0.0092 |---------------------------| 3.7432
     #> 
     #> - Units with the 5 most extreme weights by group:
-    #>                                                 
-    #>               68     116      10     137     124
-    #>  treated 13.5451 15.9884 23.2967 23.3891 40.0773
-    #>              597     573     381     411     303
-    #>  control  4.0301  4.0592  4.2397  4.5231  4.7432
+    #>                                            
+    #>               5      4      3      2      1
+    #>  treated      1      1      1      1      1
+    #>             597    573    381    411    303
+    #>  control 3.0301 3.0592 3.2397 3.5231 3.7432
     #> 
     #> - Weight statistics:
     #> 
     #>         Coef of Var   MAD Entropy # Zeros
-    #> treated       1.478 0.807   0.534       0
-    #> control       0.552 0.391   0.118       0
+    #> treated       0.000 0.000   0.000       0
+    #> control       1.818 1.289   1.098       0
     #> 
     #> - Effective Sample Sizes:
     #> 
     #>            Control Treated
-    #> Unweighted  429.    185.  
-    #> Weighted    329.01   58.33
+    #> Unweighted  429.       185
+    #> Weighted     99.82     185
 
 Desirable qualities include small coefficients of variation close to 0
 and large effective sample sizes.
 
+Finally, we can estimate the effect of the treatment usng a weighted
+outcome, accounting for estimation of the weights in the standard error
+of the effect estimate:
+
+``` r
+fit <- lm_weightit(re78 ~ treat, data = lalonde,
+                   weightit = W)
+
+summary(fit)
+```
+
+    #> 
+    #> Call:
+    #> lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = W)
+    #> 
+    #> Coefficients:
+    #>             Estimate Std. Error z value  Pr(>|z|)  2.5 % 97.5 %
+    #> (Intercept)     5135      583.8   8.797 1.411e-18 3990.9   6279
+    #> treat           1214      798.2   1.521 1.282e-01 -350.3   2778
+    #> Standard error: HC0 robust (adjusted for estimation of weights)
+
 The table below contains the available methods in `WeightIt` for
 estimating weights for binary, multinomial, and continuous treatments
-using various methods and functions from various packages. See
-`vignette("installing-packages")` for information on how to install
-these packages.
+using various methods and functions from various packages. many of these
+methods do not require any other package to use (i.e., those with
+“-”`in the Package column). See`vignette(“installing-packages”)\` for
+information on how to install packages that are used.
 
 | Treatment type      | Method (`method =`)                                 | Package        |
 |---------------------|-----------------------------------------------------|----------------|
 | **Binary**          | Binary regression PS (`"glm"`)                      | various        |
 | \-                  | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
-| \-                  | Covariate balancing PS (`"cbps"`)                   | `CBPS`         |
+| \-                  | Covariate balancing PS (`"cbps"`)                   | \-             |
 | \-                  | Non-parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
 | \-                  | Entropy Balancing (`"ebal"`)                        | \-             |
 | \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
@@ -154,7 +175,7 @@ these packages.
 | \-                  | Energy balancing (`"energy"`)                       | \-             |
 | **Multi-categoryl** | Multinomial regression PS (`"glm"`)                 | various        |
 | \-                  | Generalized boosted modeling PS (`"gbm"`)           | `gbm`          |
-| \-                  | Covariate balancing PS (`"cbps"`)                   | `CBPS`         |
+| \-                  | Covariate balancing PS (`"cbps"`)                   | \-             |
 | \-                  | Non-Parametric covariate balancing PS (`"npcbps"`)  | `CBPS`         |
 | \-                  | Entropy balancing (`"ebal"`)                        | \-             |
 | \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
@@ -164,21 +185,21 @@ these packages.
 | \-                  | Energy balancing (`"energy"`)                       | \-             |
 | **Continuous**      | Generalized linear model GPS (`"glm"`)              | \-             |
 | \-                  | Generalized boosted modeling GPS (`"gbm"`)          | `gbm`          |
-| \-                  | Covariate balancing GPS (`"cbps"`)                  | `CBPS`         |
+| \-                  | Covariate balancing GPS (`"cbps"`)                  | \-             |
 | \-                  | Non-Parametric covariate balancing GPS (`"npcbps"`) | `CBPS`         |
 | \-                  | Entropy balancing (`"ebal"`)                        | \-             |
-| \-                  | Inverse probability tilting (`"ipt"`)               | \-             |
 | \-                  | Optimization-based weights (`"optweight"`)          | `optweight`    |
 | \-                  | SuperLearner GPS (`"super"`)                        | `SuperLearner` |
 | \-                  | Bayesian additive regression trees GPS (`"bart"`)   | `dbarts`       |
 | \-                  | Distance covariance optimal weighting (`"energy"`)  | \-             |
 
 In addition, `WeightIt` implements the subgroup balancing propensity
-score using the function `sbps()`. Several other tools and utilities are
-available.
+score using the function `sbps()` and the functions `lm_weightit()` and
+`glm_weightit()` for fitting regression models after weighting. Several
+other tools and utilities are available, including `trim()` to trim or
+truncate weights.
 
-Please submit bug reports or other issues to
+Please submit bug reports, questions, comments, or other issues to
 <https://github.com/ngreifer/WeightIt/issues>. If you would like to see
-your package or method integrated into `WeightIt`, or for any other
-questions or comments about `WeightIt`, please contact the author. Fan
-mail is greatly appreciated.
+your package or method integrated into `WeightIt`, please contact the
+author. Fan mail is greatly appreciated.
