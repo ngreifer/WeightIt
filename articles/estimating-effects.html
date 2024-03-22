@@ -199,12 +199,13 @@ and Keiding 2011</a>)</span>. Second, when we take the average of the
 estimated potential outcomes under each treatment level, if an estimand
 other than the ATT, ATC, or ATE is used or sampling weights are
 included, this must be a weighted average that incorporates the
-weights^[Note: Previously, this guide recommended always including the
-weights. We believe best practice is to omit them, though this does not
-mean previous analyses using weighted averages are invalid.]. Third, if
-we want to target the ATT or ATC, we only estimate potential outcomes
-for the treated or control group, respectively (though we still generate
-predicted values under both treatment and control) <span class="citation">(<a href="#ref-wangGcomputationAverageTreatment2017">Wang, Nianogo, and Arah
+weights<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;Note: Previously, this guide recommended always
+including the weights. We believe best practice is to omit them, though
+this does not mean previous analyses using weighted averages are
+invalid.&lt;/p&gt;"><sup>1</sup></a>.
+Third, if we want to target the ATT or ATC, we only estimate potential
+outcomes for the treated or control group, respectively (though we still
+generate predicted values under both treatment and control) <span class="citation">(<a href="#ref-wangGcomputationAverageTreatment2017">Wang, Nianogo, and Arah
 2017</a>)</span>.</p>
 <p>G-computation as a framework for estimating effects after weighting
 has a number of advantages over other approaches. It works the same
@@ -248,7 +249,7 @@ that is consistent if either the outcome or propensity score model is
 correct); rather, it is simply to increase the precision of the weighted
 estimate essentially for free. To take advantage of this feature, it is
 important to use a canonical link (i.e., the default link for a given
-family), as recommended by <span class="citation">Gabriel et al. (<a href="#ref-gabrielInverseProbabilityTreatment2023">n.d.</a>)</span>.</p>
+family), as recommended by <span class="citation">Gabriel et al. (<a href="#ref-gabrielInverseProbabilityTreatment2024">2024</a>)</span>.</p>
 <p>An additional decision to make is whether (and how) to include
 covariates in the outcome model. One may ask, why use weighting at all
 if you are going to model the outcome with covariates anyway? Weighting
@@ -330,8 +331,8 @@ introduction.</p>
 correct standard errors for propensity score-weighted treatment effect
 estimates rely on M-estimation theory <span class="citation">(<a href="#ref-luncefordStratificationWeightingPropensity2004">Lunceford and
 Davidian 2004</a>; <a href="#ref-reifeisVarianceTreatmentEffect2020">Reifeis and Hudgens
-2020</a>; <a href="#ref-gabrielInverseProbabilityTreatment2023">Gabriel
-et al., n.d.</a>)</span>. This method can only be used when the model
+2020</a>; <a href="#ref-gabrielInverseProbabilityTreatment2024">Gabriel
+et al. 2024</a>)</span>. This method can only be used when the model
 used to estimate the weights involves estimating equations. Currently,
 only weights estimated using a generalized linear model propensity
 score, entropy balancing, inverse probability tilting, or the
@@ -570,7 +571,7 @@ the average treatment effect computed previously<a class="footnote-ref" tabindex
 &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link"&gt;avg_predictions()&lt;/a&gt;&lt;/code&gt; to &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link"&gt;hypotheses()&lt;/a&gt;&lt;/code&gt;, e.g.,
 &lt;code&gt;avg_predictions(…) |&amp;gt; hypotheses("revpairwise")&lt;/code&gt;; this
 explicitly compares the average potential outcomes and should yield
-identical estimates to the &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link"&gt;avg_comparisons()&lt;/a&gt;&lt;/code&gt; call.&lt;/p&gt;'><sup>1</sup></a>. The arguments to
+identical estimates to the &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link"&gt;avg_comparisons()&lt;/a&gt;&lt;/code&gt; call.&lt;/p&gt;'><sup>2</sup></a>. The arguments to
 <code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> are the same as those to
 <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>.</p>
 </div>
@@ -625,7 +626,7 @@ Standard Case; nothing needs to change<a class="footnote-ref" tabindex="0" data-
 computed with &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link"&gt;predictions()&lt;/a&gt;&lt;/code&gt;, the confidence intervals may
 go below 0 or above 1; this is because an approximation is used. To
 avoid this problem, bootstrapping or simulation-based inference can be
-used instead.&lt;/p&gt;'><sup>2</sup></a>.</p>
+used instead.&lt;/p&gt;'><sup>3</sup></a>.</p>
 <p>To compute the marginal log RR, we need to add
 <code>comparison = "lnratioavg"</code> to
 <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>; this computes the marginal log RR. To
@@ -933,8 +934,7 @@ that relates the value of treatment to the derivative of the ADRF. When
 this derivative is different from zero, there is evidence of a treatment
 effect at the corresponding value of treatment. Below, we use
 <code><a href="https://rdrr.io/pkg/marginaleffects/man/slopes.html" class="external-link">avg_slopes()</a></code> to compute the pointwise derivatives of the
-ADRF across levels of <code>Ac</code> and then plot it^[You can also use
-<code><a href="https://rdrr.io/pkg/marginaleffects/man/plot_slopes.html" class="external-link">plot_slopes()</a></code>.].</p>
+ADRF across levels of <code>Ac</code> and then plot it<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;You can also use &lt;code&gt;&lt;a href="https://rdrr.io/pkg/marginaleffects/man/plot_slopes.html" class="external-link"&gt;plot_slopes()&lt;/a&gt;&lt;/code&gt;&lt;/p&gt;'><sup>4</sup></a>.</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimate the pointwise derivatives at representative</span></span>
 <span><span class="co"># values of Ac</span></span>
@@ -1095,11 +1095,12 @@ Efron, B., and R. Tibshirani. 1986. <span>“Bootstrap Methods for
 Standard Errors, Confidence Intervals, and Other Measures of Statistical
 Accuracy.”</span> <em>Statistical Science</em> 1 (1): 54–75. <a href="https://www.jstor.org/stable/2245500" class="external-link">https://www.jstor.org/stable/2245500</a>.
 </div>
-<div id="ref-gabrielInverseProbabilityTreatment2023" class="csl-entry">
+<div id="ref-gabrielInverseProbabilityTreatment2024" class="csl-entry">
 Gabriel, Erin E., Michael C. Sachs, Torben Martinussen, Ingeborg
 Waernbaum, Els Goetghebeur, Stijn Vansteelandt, and Arvid Sjölander.
-n.d. <span>“Inverse Probability of Treatment Weighting with Generalized
+2024. <span>“Inverse Probability of Treatment Weighting with Generalized
 Linear Outcome Models for Doubly Robust Estimation.”</span>
+<em>Statistics in Medicine</em> 43 (3): 534–47. <a href="https://doi.org/10.1002/sim.9969" class="external-link">https://doi.org/10.1002/sim.9969</a>.
 </div>
 <div id="ref-greiferChoosingEstimandWhen2021" class="csl-entry">
 Greifer, Noah, and Elizabeth A. Stuart. 2021. <span>“Choosing the
