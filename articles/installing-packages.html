@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9004</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-03-03</h4>
+            <h4 data-toc-skip class="date">2024-03-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/installing-packages.Rmd" class="external-link"><code>vignettes/installing-packages.Rmd</code></a></small>
       <div class="d-none name"><code>installing-packages.Rmd</code></div>
@@ -129,8 +129,8 @@ desired model. For binary treatments, <code><a href="../reference/weightit.html"
 <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code> by default, and for continuous treatments,
 <code><a href="../reference/weightit.html">weightit()</a></code> uses <code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">stats::lm()</a></code> by default, so no
 additional packages are required. For multi-category treatments with
-<code>use.mlogit = FALSE</code>, <code><a href="../reference/weightit.html">weightit()</a></code> uses
-<code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">stats::glm()</a></code>.</p>
+<code>multi.method = "weightit"</code>, the default,
+<code><a href="../reference/weightit.html">weightit()</a></code> uses internal code.</p>
 <div class="section level3">
 <h3 id="binary-and-continuous-treatments-with-missing-saem">Binary and continuous treatments with
 <code>missing = "saem"</code><a class="anchor" aria-label="anchor" href="#binary-and-continuous-treatments-with-missing-saem"></a>
@@ -167,12 +167,13 @@ additional software installed on your computer to install it from
 source.</p>
 </div>
 <div class="section level3">
-<h3 id="multicategory-treatments-with-use-mlogit-true">Multicategory treatments with <code>use.mlogit = TRUE</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-use-mlogit-true"></a>
+<h3 id="multicategory-treatments-with-multi-method-mlogit">Multicategory treatments with
+<code>multi.method = "mlogit"</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-multi-method-mlogit"></a>
 </h3>
-<p>For multicategory treatments, when <code>use.mlogit = TRUE</code>
-(the default), the <code>mlogit</code> package is required for
-multinomial logistic regression. To install <code>mlogit</code> from
-CRAN, run</p>
+<p>For multi-category treatments, when
+<code>multi.method = "mlogit"</code>, the <code>mlogit</code> package is
+required for multinomial logistic regression. To install
+<code>mlogit</code> from CRAN, run</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mlogit"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>mlogit</code> is not on CRAN, or if you want to install the
@@ -183,11 +184,13 @@ using the following code:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mlogit"</span>, repos <span class="op">=</span> <span class="st">"http://R-Forge.R-project.org"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="multicategory-treatments-with-use-mclogit-true">Multicategory treatments with <code>use.mclogit = TRUE</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-use-mclogit-true"></a>
+<h3 id="multicategory-treatments-with-multi-method-mclogit">Multicategory treatments with
+<code>multi.method = "mclogit"</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-multi-method-mclogit"></a>
 </h3>
-<p>For multicategory treatments, when <code>use.mclogit = TRUE</code>,
-the <code>mclogit</code> package is required for multinomial logistic
-regression. To install <code>mclogit</code> from CRAN, run</p>
+<p>For multicategory treatments, when
+<code>multi.method = "mclogit"</code>, the <code>mclogit</code> package
+is required for multinomial logistic regression. To install
+<code>mclogit</code> from CRAN, run</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mclogit"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>mclogit</code> is not on CRAN, or if you want to install the
@@ -198,13 +201,11 @@ repo</a> using the following code:</p>
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"melff/mclogit"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="multicategory-treatments-with-link-bayes-probit">Multicategory treatments with
-<code>link = "bayes.probit"</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-link-bayes-probit"></a>
+<h3 id="multicategory-treatments-with-multi-method-mnp">Multicategory treatments with <code>multi.method = "mnp"</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-multi-method-mnp"></a>
 </h3>
-<p>For multicategory treatments, when
-<code>link = "bayes.probit"</code>, the <code>MNP</code> package is
-required for Bayesian multinomial probit regression. To install
-<code>MNP</code> from CRAN, run</p>
+<p>For multicategory treatments, when <code>multi.method = "mnp"</code>,
+the <code>MNP</code> package is required for Bayesian multinomial probit
+regression. To install <code>MNP</code> from CRAN, run</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"MNP"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>MNP</code> is not on CRAN, or if you want to install the
@@ -249,12 +250,21 @@ additional software installed on your computer to install it from
 source.</p>
 </div>
 <div class="section level2">
-<h2 id="covariate-balancing-propensity-score-weighting-method-cbps-and-method-npcbps">Covariate Balancing Propensity Score weighting
-(<code>method = "cbps"</code> and <code>method = "npcbps"</code>)<a class="anchor" aria-label="anchor" href="#covariate-balancing-propensity-score-weighting-method-cbps-and-method-npcbps"></a>
+<h2 id="covariate-balancing-propensity-score-weighting-method-cbps">Covariate Balancing Propensity Score weighting
+(<code>method = "cbps"</code>)<a class="anchor" aria-label="anchor" href="#covariate-balancing-propensity-score-weighting-method-cbps"></a>
 </h2>
-<p><code>WeightIt</code> uses the R package <code>CBPS</code> to perform
-(nonparametric) covariate balancing propensity score weighting. To
-install <code>CBPS</code> from CRAN, run</p>
+<p>For <code>method = "cbps"</code>, <code>WeightIt</code> uses code
+written for <code>WeightIt</code>, so no additional packages need to be
+installed to use CBPS.</p>
+</div>
+<div class="section level2">
+<h2 id="nonparametric-covariate-balancing-propensity-score-weighting-method-npcbps">Nonparametric Covariate Balancing Propensity Score weighting
+(<code>method = "npcbps"</code>)<a class="anchor" aria-label="anchor" href="#nonparametric-covariate-balancing-propensity-score-weighting-method-npcbps"></a>
+</h2>
+<p>For <code>method = "npcbps"</code>, <code>WeightIt</code> uses the R
+package <code>CBPS</code> to perform nonparametric covariate balancing
+propensity score weighting. To install <code>CBPS</code> from CRAN,
+run</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"CBPS"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>CBPS</code> is not on CRAN, or if you want to install the

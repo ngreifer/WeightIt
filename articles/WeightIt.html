@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9004</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-03-03</h4>
+            <h4 data-toc-skip class="date">2024-03-22</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -230,7 +230,7 @@ familiar scale.</p>
 <span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">##         Coef of Var   MAD Entropy # Zeros</span></span>
-<span><span class="co">## treated       0.000 0.000  -0.000       0</span></span>
+<span><span class="co">## treated       0.000 0.000   0.000       0</span></span>
 <span><span class="co">## control       1.818 1.289   1.098       0</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
@@ -287,14 +287,14 @@ of the weights.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">##            Min                                 Max</span></span>
 <span><span class="co">## treated 1.0000    ||                         1.000</span></span>
-<span><span class="co">## control 0.0188 |---------------------------| 9.419</span></span>
+<span><span class="co">## control 0.0187 |---------------------------| 9.421</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
-<span><span class="co">##                                            </span></span>
-<span><span class="co">##               5      4      3      2      1</span></span>
-<span><span class="co">##  treated      1      1      1      1      1</span></span>
-<span><span class="co">##             608    381    597    303    411</span></span>
-<span><span class="co">##  control 7.1268 7.5013 7.9979 9.0355 9.4195</span></span>
+<span><span class="co">##                                           </span></span>
+<span><span class="co">##               5      4      3     2      1</span></span>
+<span><span class="co">##  treated      1      1      1     1      1</span></span>
+<span><span class="co">##             608    381    597   303    411</span></span>
+<span><span class="co">##  control 7.1272 7.5014 7.9998 9.036 9.4206</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
@@ -318,9 +318,9 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## race_black   Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_hispan  Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## married      Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## married      Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
+<span><span class="co">## re74        Contin.        0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance tally for mean differences</span></span></span>
@@ -330,7 +330,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Variable with the greatest mean difference</span></span></span>
 <span><span class="co">##  Variable Diff.Adj     M.Threshold</span></span>
-<span><span class="co">##   married       -0 Balanced, &lt;0.05</span></span>
+<span><span class="co">##      re75       -0 Balanced, &lt;0.05</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Effective sample sizes</span></span></span>
 <span><span class="co">##            Control Treated</span></span>
@@ -343,37 +343,35 @@ if there is reason to believe it is unlikely to affect the outcome, it
 may be best to leave it as is. (You can try adding <code>I(age^2)</code>
 to the formula and see what changes this causes.)</p>
 <p>Now that we have our weights stored in <code>W.out</code>, let’s
-extract them and estimate our treatment effect.</p>
+extract them and estimate our treatment effect. The functions
+<code><a href="../reference/glm_weightit.html">lm_weightit()</a></code> and <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> make it easy
+to fit (generalized) linear models that account for estimation of of the
+weights in their standard errors. We can then use functions in
+<code>marginaleffects</code> to perform g-computation to extract a
+treatment effect estimation from the outcome model.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Attach weights to dataset</span></span>
-<span><span class="va">lalonde</span><span class="op">$</span><span class="va">weights</span> <span class="op">&lt;-</span> <span class="va">W.out</span><span class="op">$</span><span class="va">weights</span></span>
-<span></span>
-<span><span class="co"># Fit outcome model</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">treat</span> <span class="op">*</span> <span class="op">(</span><span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span>
-<span>                            <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span><span class="op">)</span>,</span>
-<span>          data <span class="op">=</span> <span class="va">lalonde</span>, weights <span class="op">=</span> <span class="va">weights</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Fit outcome model</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">treat</span> <span class="op">*</span> <span class="op">(</span><span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span>
+<span>                                     <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span><span class="op">)</span>,</span>
+<span>                   data <span class="op">=</span> <span class="va">lalonde</span>, weightit <span class="op">=</span> <span class="va">W.out</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># G-computation for the treatment effect</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://marginaleffects.com/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"treat"</span>,</span>
-<span>                vcov <span class="op">=</span> <span class="st">"HC3"</span>,</span>
 <span>                newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">lalonde</span>, <span class="va">treat</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##   Term Contrast Estimate Std. Error    z Pr(&gt;|z|)   S 2.5 % 97.5 %</span></span>
-<span><span class="co">##  treat    1 - 0     1273        823 1.55    0.122 3.0  -339   2886</span></span>
+<span><span class="co">##  treat    1 - 0     1273        770 1.65   0.0983 3.3  -236   2783</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
 <span><span class="co">## Type:  response</span></span></code></pre>
 <p>Our confidence interval for <code>treat</code> contains 0, so there
 isn’t evidence that <code>treat</code> has an effect on
-<code>re78</code>. Although some authors recommend using “robust”
-sandwich standard errors to adjust for the weights <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins, Hernán, and
-Brumback 2000</a>; <a href="#ref-hainmuellerEntropyBalancingCausal2012">Hainmueller
-2012</a>)</span> as we did above, others believe these can misleading
-and recommend bootstrapping instead <span class="citation">(<a href="#ref-reifeisVarianceTreatmentEffect2020">Reifeis and Hudgens
-2020</a>; <a href="#ref-chanGloballyEfficientNonparametric2016">Chan,
-Yam, and Zhang 2016</a>)</span>. Both methods are described in detail at
-<code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>.</p>
+<code>re78</code>. Several types of standard errors are available in
+<code>WeightIt</code>, including analytical standard errors that account
+for estimation of the weights using M-estimation, robust standard errors
+that treat the weights as fixed, and bootstrapping. All type are
+described in detail at <code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>.</p>
 </div>
 <div class="section level2">
 <h2 id="balancing-weights-for-a-longitudinal-treatment">Balancing Weights for a Longitudinal Treatment<a class="anchor" aria-label="anchor" href="#balancing-weights-for-a-longitudinal-treatment"></a>
@@ -702,23 +700,11 @@ Best Practice When Using Inverse Probability of Treatment Weighting
 Treatment Effects in Observational Studies.”</span> <em>Statistics in
 Medicine</em> 34 (28): 3661–79. <a href="https://doi.org/10.1002/sim.6607" class="external-link">https://doi.org/10.1002/sim.6607</a>.
 </div>
-<div id="ref-chanGloballyEfficientNonparametric2016" class="csl-entry">
-Chan, Kwun Chuen Gary, Sheung Chi Phillip Yam, and Zheng Zhang. 2016.
-<span>“Globally Efficient Non-Parametric Inference of Average Treatment
-Effects by Empirical Balancing Calibration Weighting.”</span>
-<em>Journal of the Royal Statistical Society: Series B (Statistical
-Methodology)</em> 78 (3): 673–700. <a href="https://doi.org/10.1111/rssb.12129" class="external-link">https://doi.org/10.1111/rssb.12129</a>.
-</div>
 <div id="ref-hainmuellerEntropyBalancingCausal2012" class="csl-entry">
 Hainmueller, J. 2012. <span>“Entropy Balancing for Causal Effects:
 <span>A</span> Multivariate Reweighting Method to Produce Balanced
 Samples in Observational Studies.”</span> <em>Political Analysis</em> 20
 (1): 25–46. <a href="https://doi.org/10.1093/pan/mpr025" class="external-link">https://doi.org/10.1093/pan/mpr025</a>.
-</div>
-<div id="ref-reifeisVarianceTreatmentEffect2020" class="csl-entry">
-Reifeis, Sarah A., and Michael G. Hudgens. 2020. <span>“On Variance of
-the Treatment Effect in the Treated Using Inverse Probability
-Weighting.”</span> <em>arXiv:2011.11874 [Stat]</em>, November. <a href="https://arxiv.org/abs/2011.11874" class="external-link">https://arxiv.org/abs/2011.11874</a>.
 </div>
 <div id="ref-robinsMarginalStructuralModels2000" class="csl-entry">
 Robins, James M., Miguel Ángel Hernán, and Babette Brumback. 2000.

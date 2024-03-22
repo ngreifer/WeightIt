@@ -26,7 +26,7 @@ checking."><meta property="og:image" content="https://ngreifer.github.io/WeightI
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9004</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -294,6 +294,16 @@ you know better.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ focal    : chr "1"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ fit.obj  : NULL</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  $ info     : Named list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - attr(*, "Mparts")=List of 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ psi_treat:function (Btreat, A, Xtreat, SW)  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ wfun     :function (Btreat, Xtreat, A)  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ Xtreat   : num [1:614, 1:9] 1 1 1 1 1 1 1 1 1 1 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..- attr(*, "dimnames")=List of 2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   .. .. ..$ : chr [1:614] "1" "2" "3" "4" ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   .. .. ..$ : chr [1:9] "(Intercept)" "age" "educ" "race_hispan" ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ A        : int [1:614] 1 1 1 1 1 1 1 1 1 1 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ btreat   : Named num [1:9] -4.933 0.156 0.424 2.082 3.065 ...</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..- attr(*, "names")= chr [1:9] "(Intercept)" "age" "educ" "race_hispan" ...</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - attr(*, "class")= chr "weightit.fit"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Converting to a weightit object for use with</span></span></span>
@@ -326,7 +336,7 @@ you know better.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000  -0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000   0.000       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> control       1.818 1.289   1.098       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>

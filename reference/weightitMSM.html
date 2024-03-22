@@ -18,7 +18,7 @@ packages must be installed to use the desired method."><meta property="og:image"
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.2.9004</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,6 +86,7 @@ packages must be installed to use the desired method.</p>
 <span>  missing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include.obj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  keep.mparts <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">is.MSM.method</span>,</span>
 <span>  weightit.force <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -139,9 +140,10 @@ called <code>exact</code>, which will still work but with a message. Only one
 
 
 <dt>s.weights</dt>
-<dd><p>a vector of sampling weights or the name of a variable in
-<code>data</code> that contains sampling weights. These are ignored for some
-methods.</p></dd>
+<dd><p>A vector of sampling weights or the name of a variable in
+<code>data</code> that contains sampling weights. These can also be matching
+weights if weighting is to be used on matched data. See the individual pages
+for each method for information on whether sampling weights can be supplied.</p></dd>
 
 
 <dt>num.formula</dt>
@@ -162,7 +164,7 @@ covariate to be balanced. For example, if <code>moments = 3</code>, for each
 non-categorical covariate, the covariate, its square, and its cube will be
 balanced. This argument is ignored for other methods; to balance powers of
 the covariates, appropriate functions must be entered in <code>formula</code>. See
-the specific methods help pages for information on whether they accept
+the individual pages for each method for information on whether they accept
 <code>moments</code>.</p></dd>
 
 
@@ -170,8 +172,8 @@ the specific methods help pages for information on whether they accept
 <dd><p><code>logical</code>; for some methods, whether first-order
 interactions of the covariates are to be balanced. This argument is ignored
 for other methods; to balance interactions between the variables,
-appropriate functions must be entered in <code>formula</code>. See the specific
-methods help pages for information on whether they accept <code>int</code>.</p></dd>
+appropriate functions must be entered in <code>formula</code>. See the individual
+pages for each method for information on whether they accept <code>int</code>.</p></dd>
 
 
 <dt>missing</dt>
@@ -184,8 +186,8 @@ package for the use of <code><a href="weightit.html">weightit()</a></code> with 
 
 
 <dt>verbose</dt>
-<dd><p>whether to print additional information output by the fitting
-function.</p></dd>
+<dd><p><code>logical</code>; whether to print additional information
+output by the fitting function.</p></dd>
 
 
 <dt>include.obj</dt>
@@ -197,11 +199,15 @@ See the help pages for each method for information on what object will be
 included if <code>TRUE</code>.</p></dd>
 
 
+<dt>keep.mparts</dt>
+<dd><p><code>logical</code>; whether to include in the output components necessary to estimate standard errors that account for estimation of the weights in <code><a href="glm_weightit.html">glm_weightit()</a></code>. Default is <code>TRUE</code> if such parts are present. See the individual pages for each method for whether these components are produced. Set to <code>FALSE</code> to keep the output object smaller, e.g., if standard errors will not be computed using <code><a href="glm_weightit.html">glm_weightit()</a></code>.</p></dd>
+
+
 <dt>is.MSM.method</dt>
 <dd><p>whether the method estimates weights for multiple time
 points all at once (<code>TRUE</code>) or by estimating weights at each time point
 and then multiplying them together (<code>FALSE</code>). This is only relevant for
-<code>method = "optweight")</code>, which estimates weights for longitudinal
+<code>method = "optweight"</code>, which estimates weights for longitudinal
 treatments all at once, and for user-specified functions.</p></dd>
 
 
