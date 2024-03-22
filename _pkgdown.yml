@@ -1,8 +1,6 @@
 template:
   bootstrap: 5
-
 url: https://ngreifer.github.io/WeightIt/
-
 reference:
 - title: Estimate weights
 - contents:
@@ -12,8 +10,7 @@ reference:
 - title: Specific estimation methods
 - contents: starts_with("method_")
 - title: Estimate treatment effects
-- contents:
-  - glm_weightit
+- contents: glm_weightit
 - title: Modify weights
 - contents:
   - trim
@@ -27,6 +24,5 @@ reference:
   - as.weightit
   - make_full_rank
 - title: Datasets
-- contents:
-  - msmdata
+- contents: msmdata
 
