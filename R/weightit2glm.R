@@ -14,7 +14,7 @@
 #'
 #' ## Multi-Category Treatments
 #'
-#' For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the requested link: for logit (`"logit"`) and probit (`"probit"`) links, \pkgfun{mlogit}{mlogit} is used; for the Bayesian probit (`"bayes.probit"`) link, \pkgfun{MNP}{mnp} is used; and for the biased-reduced multinomial logistic regression (`"br.logit"`), \pkgfun{brglm2}{brmultinom} is used. If the treatment variable is an ordered factor, \pkgfun{MASS}{polr} is used to fit ordinal regression unless `link = "br.logit"`, in which case \pkgfun{brglm2}{bracl} is used. Any of the methods allowed in the `method` argument of `polr()` can be supplied to `link`. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
+#' For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the argument supplied to `multi.method` (see Additional Arguments below). The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
 #' ## Continuous Treatments
 #'
@@ -460,8 +460,10 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   if (multi.method == "weightit") {
     verbosely({
       fit.obj <- do.call(".mlogit_weightit.fit",
-                     c(list(covs, treat, s.weights,
-                            verbose = TRUE, hess = FALSE)),
+                     c(list(x = cbind(1, covs),
+                            y = treat,
+                            weights = s.weights,
+                            hess = FALSE)),
                      quote = TRUE)
     }, verbose = verbose)
 
@@ -665,7 +667,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         fit.obj$psi(Btreat, Xtreat, A, SW)
       },
       wfun = function(Btreat, Xtreat, A) {
-        ps <- fit.obj$get_p(Btreat, Xtreat, A)
+        ps <- fit.obj$get_p(Btreat, Xtreat)
         w <- .get_w_from_ps_internal_multi(ps = ps, treat = A, estimand, focal = focal,
                                            stabilize = stabilize, subclass = subclass)
       },
