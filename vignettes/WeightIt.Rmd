@@ -148,7 +148,8 @@ summary(Wmsm.out)
 Displayed are summaries of how the weights perform at each time point with respect to variability. Next, we'll examine how well they perform with respect to covariate balance.
 
 ```{r}
-bal.tab(Wmsm.out, stats = c("m", "ks"), which.time = .none)
+bal.tab(Wmsm.out, stats = c("m", "ks")
+        which.time = .none)
 ```
 
 By setting `which.time = .none` in `bal.tab()`, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and KS statistics. Now we can estimate our treatment effects.
@@ -156,14 +157,11 @@ By setting `which.time = .none` in `bal.tab()`, we can focus on the overall bala
 First, we fit a marginal structural model for the outcome using `glm()` with the weights included:
 
 ```{r}
-# Attach weights to dataset
-msmdata$weights <- Wmsm.out$weights
-
 # Fit outcome model
-fit <- glm(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
-           data = msmdata, weights = weights,
-           family = quasibinomial)
-
+fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
+                    data = msmdata,
+                    weightit = Wmsm.out,
+                    family = binomial)
 ```
 
 Then, we compute the average expected potential outcomes under each treatment regime using `marginaleffects::avg_predictions()`:
@@ -171,10 +169,7 @@ Then, we compute the average expected potential outcomes under each treatment re
 ```{r, eval = me_ok}
 library("marginaleffects")
 (p <- avg_predictions(fit,
-                      vcov = "HC3",
-                      newdata = datagridcf(A_1 = 0:1, A_2 = 0:1, A_3 = 0:1),
-                      by = c("A_1", "A_2", "A_3"),
-                      type = "response"))
+                      variables = c("A_1", "A_2", "A_3")))
 ```
 
 We can compare the expected potential outcomes under each regime using `marginaleffects::hypotheses()`. To get all pairwise comparisons, supply the `avg_predictions()` output to `hypotheses(., "pairwise")`. To compare individual regimes, we can use `hypotheses()`, identifying the rows of the `avg_predictions()` output. For example, to compare the regimes with no treatment for all three time points vs. the regime with treatment for all three time points, we would run
