@@ -268,7 +268,9 @@ returned for binary treatments and only when <code>method</code> is <code>"glm"<
 <dd><p>Additional information about the fitting. See the individual
 methods pages for what is included.</p></dd>
 
-</dl></div>
+
+</dl><p>When <code>keep.mparts</code> is <code>TRUE</code> (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in <code><a href="glm_weightit.html">glm_weightit()</a></code> are stored in the <code>"Mparts"</code> attribute. When <code>by</code> is specified, <code>keep.mparts</code> is set to <code>FALSE</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The primary purpose of <code>weightit()</code> is as a dispatcher to functions

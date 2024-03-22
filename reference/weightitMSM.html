@@ -133,10 +133,11 @@ saturated models may be time-consuming or impossible to fit.</p></dd>
 <dt>by</dt>
 <dd><p>a string containing the name of the variable in <code>data</code> for
 which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~ gender</code>, weights will be generated separately
-within each level of the variable <code>"gender"</code>. The argument used to be
-called <code>exact</code>, which will still work but with a message. Only one
-<code>by</code> variable is allowed.</p></dd>
+the stratifying variable on the right-hand side. For example, if <code>by = "gender"</code> or <code>by = ~gender</code>, a separate propensity score model or optimization will occur within each level of the variable <code>"gender"</code>. (The argument used to be
+called <code>exact</code>, which will still work but with a message.) Only one
+<code>by</code> variable is allowed; to stratify by multiply variables
+simultaneously, create a new variable that is a full cross of those
+variables using <code><a href="https://rdrr.io/r/base/interaction.html" class="external-link">interaction()</a></code>.</p></dd>
 
 
 <dt>s.weights</dt>
@@ -181,7 +182,7 @@ pages for each method for information on whether they accept <code>int</code>.</
 options and defaults depend on the <code>method</code> used. Ignored if no missing
 data is present. It should be noted that multiple imputation outperforms all
 available missingness methods available in <code><a href="weightit.html">weightit()</a></code> and should
-probably be used instead. See the <a href="https://CRAN.R-project.org/package=MatchThem" class="external-link"><span class="pkg">MatchThem</span></a>
+probably be used instead. Consider the <a href="https://CRAN.R-project.org/package=MatchThem" class="external-link"><span class="pkg">MatchThem</span></a>
 package for the use of <code><a href="weightit.html">weightit()</a></code> with multiply imputed data.</p></dd>
 
 
@@ -258,7 +259,9 @@ Details at <code><a href="weightit.html">weightit()</a></code>.</p></dd>
 <dt>stabilization</dt>
 <dd><p>The stabilization factors, if any.</p></dd>
 
-</dl></div>
+
+</dl><p>When <code>keep.mparts</code> is <code>TRUE</code> (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in <code><a href="glm_weightit.html">glm_weightit()</a></code> are stored in the <code>"Mparts.list"</code> attribute. When <code>by</code> is specified, <code>keep.mparts</code> is set to <code>FALSE</code>.</p>
+    </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Currently only "wide" data sets, where each row corresponds to a unit's
