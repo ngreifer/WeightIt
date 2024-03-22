@@ -148,7 +148,7 @@ summary(Wmsm.out)
 Displayed are summaries of how the weights perform at each time point with respect to variability. Next, we'll examine how well they perform with respect to covariate balance.
 
 ```{r}
-bal.tab(Wmsm.out, stats = c("m", "ks")
+bal.tab(Wmsm.out, stats = c("m", "ks"),
         which.time = .none)
 ```
 
