@@ -1,6 +1,30 @@
 WeightIt News and Updates
 ======
 
+# WeightIt (development version)
+
+* Added a new function, `coxph_weightit()`, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the `summary()` and `print()` methods for `glm_weightit` objects, which are different from those for `coxph` objects.
+
+* `glm_weightit()` gets a new `print()` method that omits some invalid statistics displayed by the `print()` method for `glm` objects and displays the type of standard error estimated.
+
+* `summary.glm_weightit()` (which is also used for `coxph_weightit` objects) gets a new argument, `transform`, which can be used to transform the displayed coefficients and confidence interval bounds (if requested), e.g., by exponentiating them.
+
+* M-estimation is now supported for `method = "glm"` with continuous treatments.
+
+* A new estimator is now used for `method = "cbps"` with longitudinal treatments (i.e., using `weightitMSM()`). Previously, the weights from CBPS applied to each time point were multiplied together. Now, balance at all time points is optimized using a single set of weights. This implementation is close to that described by [Huffman and van Gameren (2018)](https://doi.org/10.1515/jci-2017-0002), not that of [Imai and Ratkovic (2015)](https://doi.org/10.1080/01621459.2014.956872).
+
+* A new estimator is now used for `method = "cbps"` with continuous treatments. The unconditional mean and variance are now included as parameters to be estimated. For the just-identified CBPS, this will typically improve balance, but results will depart from those found using `CBPS::CBPS()`.
+
+* For point treatments (i.e., using `weightit()`), the `stabilize` argument has some new behavior. It can now be be specified as a formula, and the stabilization factor is estimated separately and included in the M-estimation if allowed. It can now only be used when `estimand = "ATE"` (weights for other estimands should not be stabilized).
+
+* For binary treatment with `method = "glm"`, `link` can now be specified as `"flic"` or `"flac"` to use Firth corrected logistic regression as implemented in the `logistf` package.
+
+* With `method = "gbm"`, an error is now thrown if `criterion` (formerly known as `stop.method`) is supplied as anything other than a string.
+
+* Fixed a bug when using M-estimation for sequential treatments with `weightitMSM()` and `stabilize = TRUE`. Standard errors incorrectly accounted for estimation of the stabilization factor; they are now correct.
+
+* Fixed a bug when using `method = "ipt"` for the ATE.
+
 # WeightIt 1.0.0
 
 * Added a new function, `glm_weightit()` (along with wrapper `lm_weightit()`) and associated methods for fitting generalized linear models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via M-estimation or two forms of bootstrapping. `glm_weightit()` also supports multinomial logistic regression in addition to all models supported by `glm()`. Cluster-robust standard errors are supported, and output is compatible with any functions that accept `glm()` objects. Not all weighting methods support M-estimation, but for those that do, a new component is added to the `weightit` output object. Currently, GLM propensity scores, entropy balancing, just-identified CBPS, and inverse probability tilting (described below) support M-estimation-based standard errors with `glm_weightit()`.
@@ -9,7 +33,7 @@ WeightIt News and Updates
 
 * Estimating covariate balancing propensity score weights (i.e., `method = "cbps"`) no longer depends on the `CBPS` package. The default is now the just-identified versions of the method; the over-identified version can be requested by setting `over = TRUE`. The ATT for multi-category treatments is now supported, as are arbitrary numbers of treatment groups (`CBPS` only natively support up to 4 groups and only the ATE for multi-category treatments). For binary treatments, generalized linear models other than logistic regression are now supported (e.g., probit or Poisson regression).
 
-* New function `calibrate()` to apply Platt scaling to calibrate propensity scores as recommended by [Gutman et al. (2022)](http://arxiv.org/abs/2211.01221).
+* New function `calibrate()` to apply Platt scaling to calibrate propensity scores as recommended by [Gutman et al. (2024)](https://doi.org/10.1097/EDE.0000000000001733).
 
 * A new argument `quantile` can be supplied to `weightit()` with all the methods that accept `moments` and `int` (`"ebal"`, `"cbps"`, `"ipt"`, `"npcbps"`, `"optweight"`, and `"energy"`). This allows one to request balance on the quantiles of the covariates, which can add some robustness as demonstrated by [Beręsewicz (2023)](https://arxiv.org/abs/2310.11969).
 
