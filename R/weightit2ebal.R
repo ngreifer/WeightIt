@@ -150,7 +150,11 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     else bw <- A[["base.weight"]]
   }
 
-  reltol <- if_null_then(A[["reltol"]], 1e-10)
+  reltol <- if (is_null(A$reltol)) (.Machine$double.eps) else A$reltol
+  chk::chk_number(reltol)
+
+  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
+  chk::chk_count(maxit)
 
   eb <- function(C, s.weights_t, Q) {
     n <- nrow(C)
@@ -174,7 +178,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
                      method = "BFGS",
                      control = list(trace = 1,
                                     reltol = reltol,
-                                    maxit = if_null_then(A[["maxit"]], 200)),
+                                    maxit = maxit),
                      C = C, Q = Q)
 
     w <- W(opt.out$par, Q, C)
@@ -247,9 +251,15 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
       for (i in groups_to_weight) {
         C <- Xtreat[A == i & !sw0,,drop = FALSE]
+        n <- nrow(C)
         w[A == i & !sw0] <- drop(bw[A == i & !sw0] * exp(-C %*% Btreat[coef_ind[[i]]]))
+        if (sum(w[A == i & !sw0]) > n * .Machine$double.eps) {
+          w[A == i & !sw0] <- w[A == i & !sw0] * n / sum(w[A == i & !sw0])
+        }
       }
+
       w[!sw0] <- w[!sw0] / s.weights[!sw0]
+
       w
     },
     Xtreat = covs,
@@ -287,9 +297,17 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   bw <- bw[subset]
 
-  reltol <- if_null_then(A[["reltol"]], 1e-10)
+  s.weights <- s.weights / mean_fast(s.weights)
+
+  reltol <- if (is_null(A$reltol)) (.Machine$double.eps) else A$reltol
+  chk::chk_number(reltol)
+
+  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
+  chk::chk_count(maxit)
 
   d.moments <- max(if_null_then(A[["d.moments"]], 1), moments)
+  chk::chk_count(d.moments)
+
   k <- ncol(covs)
 
   poly.covs <- int.poly.f(covs, poly = moments)
@@ -354,7 +372,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
                      method = "BFGS",
                      control = list(trace = 0,
                                     reltol = reltol,
-                                    maxit = if_null_then(A[["maxit"]], 200)),
+                                    maxit = maxit),
                      Q = Q, C = C)
 
     w <- W(opt.out$par, Q, C)
@@ -398,7 +416,14 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
       w <- rep(1, length(A))
 
       C <- Xtreat[!sw0,,drop = FALSE]
-      w[!sw0] <- drop(bw[!sw0] * exp(-C %*% Btreat)) / s.weights[!sw0]
+      n <- nrow(C)
+      w[!sw0] <- drop(bw[!sw0] * exp(-C %*% Btreat))
+
+      if (sum(w[!sw0]) > n * .Machine$double.eps) {
+        w[!sw0] <- w[!sw0] * n / sum(w[!sw0])
+      }
+
+      w[!sw0] <- w[!sw0] / s.weights[!sw0]
 
       w
     },
