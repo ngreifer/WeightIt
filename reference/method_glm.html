@@ -55,9 +55,9 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 M-estimation
 
 
-For binary treatments, M-estimation is supported when missing is not "saem" and link does not start with "br.". For multi-category treatments, M-estimation is supported when missing is not "saem" and multi-method is "weightit" (the default for non-ordered treatments) or "glm". For continuous treatments, M-estimation is not supported. See glm_weightit() and vignette("estimating-effects") for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
+For binary treatments, M-estimation is supported when link does not start with "br." and is neither "flic" nor "flac" (see below). For multi-category treatments, M-estimation is supported when multi.method is "weightit" (the default for non-ordered treatments) or "glm". For continuous treatments, M-estimation is supported when use.kernel is not TRUE. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when missing = "saem". See glm_weightit() and vignette("estimating-effects") for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
 
-'><title>Propensity Score Weighting Using Generalized Linear Models — method_glm • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Propensity Score Weighting Using Generalized Linear Models — method_glm"><meta property="og:description" content='This page explains the details of estimating weights from generalized linear model-based propensity scores by setting method = "glm" in the call to weightit() or weightitMSM(). This method can be used with binary, multi-category, and continuous treatments.
+'><title>Propensity Score Weighting Using Generalized Linear Models — method_glm • WeightIt</title><!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png"><link rel="apple-touch-icon" type="image/png" sizes="180x180" href="../apple-touch-icon.png"><link rel="apple-touch-icon" type="image/png" sizes="120x120" href="../apple-touch-icon-120x120.png"><link rel="apple-touch-icon" type="image/png" sizes="76x76" href="../apple-touch-icon-76x76.png"><link rel="apple-touch-icon" type="image/png" sizes="60x60" href="../apple-touch-icon-60x60.png"><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous"><!-- bootstrap-toc --><script src="https://cdn.jsdelivr.net/gh/afeld/bootstrap-toc@v1.0.1/dist/bootstrap-toc.min.js" integrity="sha256-4veVQbu7//Lk5TSmc7YV48MxtMy98e26cf5MrgZYnwo=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.11/clipboard.min.js" integrity="sha512-7O5pXpc0oCRrxk8RUfDYFgn0nO1t+jLuIOQdOMRp4APB7uZ4vSjspzp5y6YDtDs4VzUSTbWzBFZ/LKJhnyFOKw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- search --><script src="https://cdnjs.cloudflare.com/ajax/libs/fuse.js/6.4.6/fuse.js" integrity="sha512-zv6Ywkjyktsohkbp9bb45V6tEMoWhzFzXis+LrMehmJZZSys19Yxf1dopHx7WzIKxr5tK2dVcYmaCk2uqdjF4A==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/autocomplete.js/0.38.0/autocomplete.jquery.min.js" integrity="sha512-GU9ayf+66Xx2TmpxqJpliWbT5PiGYxpaG8rfnBEk1LL8l1KGkRShhngwdXK1UgqhAzWpZHSiYPc09/NwDQIGyg==" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/mark.min.js" integrity="sha512-5CYOlHXGh6QpOFA/TeTylKLWfB3ftPsde7AnmhuitiTX4K5SqCLBeKro6sPS8ilsz1Q4NRx3v8Ko2IBiszzdww==" crossorigin="anonymous"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Propensity Score Weighting Using Generalized Linear Models — method_glm"><meta property="og:description" content='This page explains the details of estimating weights from generalized linear model-based propensity scores by setting method = "glm" in the call to weightit() or weightitMSM(). This method can be used with binary, multi-category, and continuous treatments.
 In general, this method relies on estimating propensity scores with a parametric generalized linear model and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multi-category treatments, a binomial or multinomial regression model is used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For ordinal treatments, an ordinal regression model is used to estimate generalized propensity scores. For continuous treatments, a generalized linear model is used to estimate generalized propensity scores as the conditional density of treatment given the covariates.
 Binary Treatments
 
@@ -113,7 +113,7 @@ For binary treatments with link = "logit" or continuous treatments, a stochastic
 M-estimation
 
 
-For binary treatments, M-estimation is supported when missing is not "saem" and link does not start with "br.". For multi-category treatments, M-estimation is supported when missing is not "saem" and multi-method is "weightit" (the default for non-ordered treatments) or "glm". For continuous treatments, M-estimation is not supported. See glm_weightit() and vignette("estimating-effects") for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
+For binary treatments, M-estimation is supported when link does not start with "br." and is neither "flic" nor "flac" (see below). For multi-category treatments, M-estimation is supported when multi.method is "weightit" (the default for non-ordered treatments) or "glm". For continuous treatments, M-estimation is supported when use.kernel is not TRUE. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when missing = "saem". See glm_weightit() and vignette("estimating-effects") for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
 
 '><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
@@ -122,11 +122,11 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
     
 
-    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-light"><div class="container">
+    <nav class="navbar fixed-top navbar-light navbar-expand-lg bg-light" data-bs-theme="light"><div class="container">
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -225,7 +225,7 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <h3 id="m-estimation">M-estimation<a class="anchor" aria-label="anchor" href="#m-estimation"></a></h3>
 
 
-<p>For binary treatments, M-estimation is supported when <code>missing</code> is not <code>"saem"</code> and <code>link</code> does not start with <code>"br."</code>. For multi-category treatments, M-estimation is supported when <code>missing</code> is not <code>"saem"</code> and <code>multi-method</code> is <code>"weightit"</code> (the default for non-ordered treatments) or <code>"glm"</code>. For continuous treatments, M-estimation is not supported. See <code><a href="glm_weightit.html">glm_weightit()</a></code> and <code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code> for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.</p>
+<p>For binary treatments, M-estimation is supported when <code>link</code> does not start with <code>"br."</code> and is neither <code>"flic"</code> nor <code>"flac"</code> (see below). For multi-category treatments, M-estimation is supported when <code>multi.method</code> is <code>"weightit"</code> (the default for non-ordered treatments) or <code>"glm"</code>. For continuous treatments, M-estimation is supported when <code>use.kernel</code> is not <code>TRUE</code>. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when <code>missing = "saem"</code>. See <code><a href="glm_weightit.html">glm_weightit()</a></code> and <code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code> for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.</p>
 </div>
 
     </div>
@@ -236,7 +236,7 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
     
 
 <p>For binary treatments, the following additional argument can be specified:</p><dl><dt><code>link</code></dt>
-<dd><p>the link used in the generalized linear model for the propensity scores. <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code>. A <code>br.</code> prefix can be added (e.g., <code>"br.logit"</code>); this changes the fitting method to the bias-corrected generalized linear models implemented in the <a href="https://CRAN.R-project.org/package=brglm2" class="external-link"><span class="pkg">brglm2</span></a> package.</p></dd>
+<dd><p>the link used in the generalized linear model for the propensity scores. <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code>. A <code>br.</code> prefix can be added (e.g., <code>"br.logit"</code>); this changes the fitting method to the bias-corrected generalized linear models implemented in the <a href="https://CRAN.R-project.org/package=brglm2" class="external-link"><span class="pkg">brglm2</span></a> package. <code>link</code> can also be either <code>"flic"</code> or <code>"flac"</code> to fit the corresponding Firth corrected logistic regression models implemented in the <a href="https://CRAN.R-project.org/package=logistf" class="external-link"><span class="pkg">logistf</span></a> package.</p></dd>
 
 
 </dl><p>For multi-category treatments, the following additional arguments can be specified:</p><dl><dt><code>multi.method</code></dt>
@@ -270,7 +270,7 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
     
 
 <dl><dt><code>obj</code></dt>
-<dd><p>When <code>include.obj = TRUE</code>, the (generalized) propensity score model fit. For binary treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. For multi-category treatments, the output of the call to the fitting function (or a list thereof if <code>multi.method = "glm"</code>. For continuous treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for the predicted values in the denominator density.</p></dd>
+<dd><p>When <code>include.obj = TRUE</code>, the (generalized) propensity score model fit. For binary treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if <code>multi.method = "glm"</code>). For continuous treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for the predicted values in the denominator density.</p></dd>
 
 
 </dl></div>
@@ -281,32 +281,33 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <h3 id="binary-treatments-1">Binary treatments<a class="anchor" aria-label="anchor" href="#binary-treatments-1"></a></h3>
 
 <ul><li><p><code>estimand = "ATO"</code></p></li>
-</ul><p>Li, F., Morgan, K. L., &amp; Zaslavsky, A. M. (2018). Balancing covariates via propensity score weighting. Journal of the American Statistical Association, 113(521), 390–400. <a href="https://doi.org/10.1080/01621459.2016.1260466" class="external-link">doi:10.1080/01621459.2016.1260466</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
-</ul><p>Li, L., &amp; Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. The International Journal of Biostatistics, 9(2). <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a></p><ul><li><p><code>estimand = "ATOS"</code></p></li>
-</ul><p>Crump, R. K., Hotz, V. J., Imbens, G. W., &amp; Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. Biometrika, 96(1), 187–199. <a href="https://doi.org/10.1093/biomet/asn055" class="external-link">doi:10.1093/biomet/asn055</a></p><ul><li><p>Other estimands</p></li>
-</ul><p>Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. Multivariate Behavioral Research, 46(3), 399–424. <a href="https://doi.org/10.1080/00273171.2011.568786" class="external-link">doi:10.1080/00273171.2011.568786</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
-</ul><p>Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. Journal of Educational and Behavioral Statistics, 35(5), 499–531. <a href="https://doi.org/10.3102/1076998609359785" class="external-link">doi:10.3102/1076998609359785</a></p><ul><li><p>Bias-reduced logistic regression</p></li>
-</ul><p>See references for the <span class="pkg">brglm2</span> <code>package()</code>.</p><ul><li><p>SAEM logistic regression for missing data</p></li>
-</ul><p>Jiang, W., Josse, J., &amp; Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. Computational Statistics &amp; Data Analysis, 106907. <a href="https://doi.org/10.1016/j.csda.2019.106907" class="external-link">doi:10.1016/j.csda.2019.106907</a></p>
+</ul><p>Li, F., Morgan, K. L., &amp; Zaslavsky, A. M. (2018). Balancing covariates via propensity score weighting. <em>Journal of the American Statistical Association</em>, 113(521), 390–400. <a href="https://doi.org/10.1080/01621459.2016.1260466" class="external-link">doi:10.1080/01621459.2016.1260466</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
+</ul><p>Li, L., &amp; Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. <em>The International Journal of Biostatistics</em>, 9(2). <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a></p><ul><li><p><code>estimand = "ATOS"</code></p></li>
+</ul><p>Crump, R. K., Hotz, V. J., Imbens, G. W., &amp; Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. <em>Biometrika</em>, 96(1), 187–199. <a href="https://doi.org/10.1093/biomet/asn055" class="external-link">doi:10.1093/biomet/asn055</a></p><ul><li><p>Other estimands</p></li>
+</ul><p>Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. <em>Multivariate Behavioral Research</em>, 46(3), 399–424. <a href="https://doi.org/10.1080/00273171.2011.568786" class="external-link">doi:10.1080/00273171.2011.568786</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
+</ul><p>Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. <em>Journal of Educational and Behavioral Statistics</em>, 35(5), 499–531. <a href="https://doi.org/10.3102/1076998609359785" class="external-link">doi:10.3102/1076998609359785</a></p><ul><li><p>Bias-reduced logistic regression</p></li>
+</ul><p>See references for the <span class="pkg">brglm2</span> <code>package()</code>.</p><ul><li><p>Firth corrected logistic regression</p></li>
+</ul><p>Puhr, R., Heinze, G., Nold, M., Lusa, L., &amp; Geroldinger, A. (2017). Firth’s logistic regression with rare events: Accurate effect estimates and predictions? <em>Statistics in Medicine</em>, 36(14), 2302–2317. <a href="https://doi.org/10.1002/sim.7273" class="external-link">doi:10.1002/sim.7273</a></p><ul><li><p>SAEM logistic regression for missing data</p></li>
+</ul><p>Jiang, W., Josse, J., &amp; Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>, 106907. <a href="https://doi.org/10.1016/j.csda.2019.106907" class="external-link">doi:10.1016/j.csda.2019.106907</a></p>
 </div>
 
 <div class="section">
 <h3 id="multi-category-treatments-1">Multi-Category Treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments-1"></a></h3>
 
 <ul><li><p><code>estimand = "ATO"</code></p></li>
-</ul><p>Li, F., &amp; Li, F. (2019). Propensity score weighting for causal inference with multiple treatments. The Annals of Applied Statistics, 13(4), 2389–2415. <a href="https://doi.org/10.1214/19-AOAS1282" class="external-link">doi:10.1214/19-AOAS1282</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
-</ul><p>Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J. J., Glynn, R. J., &amp; Franklin, J. M. (2017). Matching weights to simultaneously compare three treatment groups: Comparison to three-way matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395. <a href="https://doi.org/10.1097/EDE.0000000000000627" class="external-link">doi:10.1097/EDE.0000000000000627</a></p><ul><li><p>Other estimands</p></li>
-</ul><p>McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., &amp; Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine, 32(19), 3388–3414. <a href="https://doi.org/10.1002/sim.5753" class="external-link">doi:10.1002/sim.5753</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
-</ul><p>Hong, G. (2012). Marginal mean weighting through stratification: A generalized method for evaluating multivalued and multiple treatments with nonexperimental data. Psychological Methods, 17(1), 44–60. <a href="https://doi.org/10.1037/a0024918" class="external-link">doi:10.1037/a0024918</a></p>
+</ul><p>Li, F., &amp; Li, F. (2019). Propensity score weighting for causal inference with multiple treatments. <em>The Annals of Applied Statistics</em>, 13(4), 2389–2415. <a href="https://doi.org/10.1214/19-AOAS1282" class="external-link">doi:10.1214/19-AOAS1282</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
+</ul><p>Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J. J., Glynn, R. J., &amp; Franklin, J. M. (2017). Matching weights to simultaneously compare three treatment groups: Comparison to three-way matching. <em>Epidemiology</em> (Cambridge, Mass.), 28(3), 387–395. <a href="https://doi.org/10.1097/EDE.0000000000000627" class="external-link">doi:10.1097/EDE.0000000000000627</a></p><ul><li><p>Other estimands</p></li>
+</ul><p>McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., &amp; Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. <em>Statistics in Medicine</em>, 32(19), 3388–3414. <a href="https://doi.org/10.1002/sim.5753" class="external-link">doi:10.1002/sim.5753</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
+</ul><p>Hong, G. (2012). Marginal mean weighting through stratification: A generalized method for evaluating multivalued and multiple treatments with nonexperimental data. <em>Psychological Methods</em>, 17(1), 44–60. <a href="https://doi.org/10.1037/a0024918" class="external-link">doi:10.1037/a0024918</a></p>
 </div>
 
 <div class="section">
 <h3 id="continuous-treatments-1">Continuous treatments<a class="anchor" aria-label="anchor" href="#continuous-treatments-1"></a></h3>
 
 
-<p>Robins, J. M., Hernán, M. Á., &amp; Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. Epidemiology, 11(5), 550–560.</p><ul><li><p>Using non-normal conditional densities</p></li>
-</ul><p>Naimi, A. I., Moodie, E. E. M., Auger, N., &amp; Kaufman, J. S. (2014). Constructing Inverse Probability Weights for Continuous Exposures: A Comparison of Methods. Epidemiology, 25(2), 292–299. <a href="https://doi.org/10.1097/EDE.0000000000000053" class="external-link">doi:10.1097/EDE.0000000000000053</a></p><ul><li><p>SAEM linear regression for missing data</p></li>
-</ul><p>Jiang, W., Josse, J., &amp; Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. Computational Statistics &amp; Data Analysis, 106907. <a href="https://doi.org/10.1016/j.csda.2019.106907" class="external-link">doi:10.1016/j.csda.2019.106907</a></p>
+<p>Robins, J. M., Hernán, M. Á., &amp; Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. <em>Epidemiology</em>, 11(5), 550–560.</p><ul><li><p>Using non-normal conditional densities</p></li>
+</ul><p>Naimi, A. I., Moodie, E. E. M., Auger, N., &amp; Kaufman, J. S. (2014). Constructing Inverse Probability Weights for Continuous Exposures: A Comparison of Methods. <em>Epidemiology</em>, 25(2), 292–299. <a href="https://doi.org/10.1097/EDE.0000000000000053" class="external-link">doi:10.1097/EDE.0000000000000053</a></p><ul><li><p>SAEM linear regression for missing data</p></li>
+</ul><p>Jiang, W., Josse, J., &amp; Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>, 106907. <a href="https://doi.org/10.1016/j.csda.2019.106907" class="external-link">doi:10.1016/j.csda.2019.106907</a></p>
 </div>
 
     </div>
@@ -329,11 +330,10 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -382,11 +382,10 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 3-category (black, hispan, white)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 3-category (black, hispan, white) - estimand: ATE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -438,20 +437,19 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: continuous</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: continuous - covariates: age, educ, married, nodegree, re74</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                  <span style="text-decoration: underline;">Summary of weights</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>       Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.088 |---------------------------| 83.1017</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                    Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.1076 |---------------------------| 101.6599</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         482     481    484     483     485</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 56.933 56.9865 70.237 77.1173 83.1017</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         482     481     484     483      485</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 69.644 69.7094 85.9204 94.3369 101.6599</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -483,11 +481,11 @@ For binary treatments, M-estimation is supported when missing is not "saem" and 
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by Noah Greifer.</p>
+  <p>Developed by Noah Greifer.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.9.</p>
 </div>
 
     </footer></div>
