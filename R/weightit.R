@@ -23,10 +23,7 @@
 #' individual pages for each method for more information on which estimands are
 #' allowed with each method and what literature to read to interpret these
 #' estimands.
-#' @param stabilize `logical`; whether or not to stabilize the weights.
-#' For the methods that involve estimating propensity scores, this involves
-#' multiplying each unit's weight by the proportion of units in their treatment
-#' group. Default is `FALSE`.
+#' @param stabilize whether or not and how to stabilize the weights. If `TRUE`, each unit's weight will be multiplied by a standardization factor, which is the inverse of the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when `estimand = "ATE"`. Default is `FALSE` for no standardization. See also the `num.formula` argument at [weightitMSM()]
 #' @param focal when multi-category treatments are used and ATT weights are
 #' requested, which group to consider the "treated" or focal group. This group
 #' will not be weighted, and the other groups will be weighted to be more like
@@ -161,7 +158,7 @@
 #'                 method = "glm", estimand = "ATT"))
 #' summary(W1)
 #' bal.tab(W1)
-#' @examplesIf requireNamespace("osqp", quietly = TRUE)
+#'
 #' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
@@ -169,11 +166,10 @@
 #' summary(W2)
 #' bal.tab(W2)
 #'
-#' @examplesIf requireNamespace("CBPS", quietly = TRUE)
 #' #Balancing covariates with respect to re75 (continuous)
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
-#'                 method = "cbps", over = FALSE))
+#'                 method = "cbps"))
 #' summary(W3)
 #' bal.tab(W3)
 
@@ -198,9 +194,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   treat <- t.c[["treat"]]
   # treat.name <- t.c[["treat.name"]]
 
-  if (is_null(covs)) {
-    # .err("no covariates were specified")
-  }
   if (is_null(treat)) {
     .err("no treatment variable was specified")
   }
@@ -218,7 +211,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  chk::chk_flag(stabilize)
   chk::chk_flag(verbose)
   chk::chk_flag(include.obj)
   chk::chk_flag(keep.mparts)
@@ -231,20 +223,20 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   ##Process method
-  check.acceptable.method(method, msm = FALSE, force = FALSE)
+  .check_acceptable_method(method, msm = FALSE, force = FALSE)
 
   if (is.character(method)) {
-    method <- method.to.proper.method(method)
+    method <- .method_to_proper_method(method)
     attr(method, "name") <- method
   }
   else if (is.function(method)) {
     method.name <- deparse1(substitute(method))
-    check.user.method(method)
+    .check_user_method(method)
     attr(method, "name") <- method.name
   }
 
   #Process estimand and focal
-  estimand <- process.estimand(estimand, method, treat.type)
+  estimand <- .process_estimand(estimand, method, treat.type)
   f.e.r <- process.focal.and.estimand(focal, estimand, treat)
   focal <- f.e.r[["focal"]]
   # estimand <- f.e.r[["estimand"]]
@@ -264,6 +256,26 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   s.weights <- process.s.weights(s.weights, data)
 
   if (is_null(s.weights)) s.weights <- rep(1, n)
+
+  #Process stabilize
+  if (isFALSE(stabilize)) {
+    stabilize <- NULL
+  }
+  else if (isTRUE(stabilize)) {
+    stabilize <- as.formula("~ 1")
+  }
+
+  if (is_not_null(stabilize)) {
+    if (treat.type != "continious" && estimand != "ATE") {
+      .err("`stabilize` can only be supplied when `estimand = \"ATE\"`")
+    }
+
+    if (!rlang::is_formula(stabilize)) {
+      .err("`stabilize` must be `TRUE`, `FALSE`, or a formula with the stabilization factors on the right hand side")
+    }
+
+    stabilize <- update(formula, update(stabilize, NULL ~ .))
+  }
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
@@ -291,7 +303,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A[["by.factor"]] <- attr(processed.by, "by.factor")
   A[["estimand"]] <- estimand
   A[["focal"]] <- focal
-  A[["stabilize"]] <- stabilize
+  A[["stabilize"]] <- FALSE
   A[["method"]] <- method
   A[["moments"]] <- moments.int[["moments"]]
   A[["int"]] <- moments.int[["int"]]
@@ -305,6 +317,22 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A[[".covs"]] <- reported.covs
 
   obj <- do.call("weightit.fit", A)
+
+  if (is_not_null(stabilize)) {
+    stab.t.c <- get_covs_and_treat_from_formula(stabilize, data)
+
+    A[["treat"]] <- stab.t.c[["treat"]]
+    A[["covs"]] <- stab.t.c[["model.covs"]]
+    A[["method"]] <- "glm"
+    A[["moments"]] <- NULL
+    A[["int"]] <- NULL
+    A[[".formula"]] <- stabilize
+    A[[".covs"]] <- stab.t.c[["reported.covs"]]
+
+    sw_obj <- do.call("weightit.fit", A)
+
+    obj$weights <- obj$weights / sw_obj[["weights"]]
+  }
 
   check_estimated_weights(obj$weights, treat, treat.type, s.weights)
 
@@ -321,20 +349,26 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               by = processed.by,
               call = call,
               formula = formula,
+              stabilize = stabilize,
               env = parent.frame(),
               info = obj$info,
               obj = obj$fit.obj)
 
   out <- clear_null(out)
 
-  if (keep.mparts) {
-    attr(out, "Mparts") <- attr(obj, "Mparts")
+  if (keep.mparts && is_not_null(attr(obj, "Mparts"))) {
+    if (is_null(stabilize)) {
+      attr(out, "Mparts") <- attr(obj, "Mparts")
+    }
+    else {
+      attr(sw_obj, "Mparts")$wfun <- Invert(attr(sw_obj, "Mparts")$wfun)
+      attr(out, "Mparts.list") <- list(attr(obj, "Mparts"), attr(sw_obj, "Mparts"))
+    }
   }
 
   class(out) <- "weightit"
 
   out
-  ####----
 }
 
 #' @exportS3Method print weightit
@@ -343,10 +377,17 @@ print.weightit <- function(x, ...) {
   trim <- attr(x[["weights"]], "trim")
 
   cat("A " %+% italic("weightit") %+% " object\n")
-  if (is_not_null(x[["method"]])) cat(paste0(" - method: \"", attr(x[["method"]], "name"), "\" (", method.to.phrase(x[["method"]]), ")\n"))
-  cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
+  if (is_not_null(x[["method"]])) cat(sprintf(" - method: %s (%s)\n",
+                                              add_quotes(attr(x[["method"]], "name")),
+                                              .method_to_phrase(x[["method"]])))
+  cat(sprintf(" - number of obs.: %s\n",
+              length(x[["weights"]])))
   cat(paste0(" - sampling weights: ", if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present", "\n"))
-  cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x[["treat"]]), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")"), ""))), "\n"))
+  cat(sprintf(" - treatment: %s",
+              if (treat.type == "continuous") "continuous"
+              else paste0(nunique(x[["treat"]]), "-category",
+                          if (treat.type == "multinomial") paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")")
+                          else "")))
   if (is_not_null(x[["estimand"]])) cat(paste0(" - estimand: ", x[["estimand"]], ifelse(is_not_null(x[["focal"]]), paste0(" (focal: ", x[["focal"]], ")"), ""), "\n"))
   if (is_not_null(x[["covs"]])) cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
   if (is_not_null(x[["by"]])) {
