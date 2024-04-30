@@ -2,6 +2,7 @@
 % Please edit documentation in R/glm_weightit.R
 \name{glm_weightit}
 \alias{glm_weightit}
+\alias{coxph_weightit}
 \alias{lm_weightit}
 \alias{summary.glm_weightit}
 \title{Fitting Weighted Generalized Linear Models}
@@ -26,6 +27,19 @@ glm_weightit(
   ...
 )
 
+coxph_weightit(
+  formula,
+  data,
+  weightit,
+  vcov = NULL,
+  cluster,
+  R = 500,
+  x = FALSE,
+  y = TRUE,
+  fwb.args = list(),
+  ...
+)
+
 lm_weightit(
   formula,
   data,
@@ -44,10 +58,10 @@ lm_weightit(
   ...
 )
 
-\method{summary}{glm_weightit}(object, ci = FALSE, level = 0.95, ...)
+\method{summary}{glm_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
 }
 \arguments{
-\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted.}
+\item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted. For \code{coxph_weightit()}, see \code{\link[survival:coxph]{survival::coxph()}} for how this should be specified.}
 
 \item{data}{a data frame containing the variables in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which the function is called.}
 
@@ -57,7 +71,7 @@ lm_weightit(
 
 \item{vcov}{string; the method used to compute the variance of the estimated parameters. Allowable options include \code{"asympt"}, which uses the asymptotically correct M-estimation-based method that accounts for estimation of the weights when available; \code{"const"}, which uses the usual maximum likelihood estimates (only available when \code{weightit} is not supplied); \code{"HC0"}, which computes the robust sandwich variance treating weights (if supplied) as fixed; \code{"BS"}, which uses the traditional bootstrap (including re-estimation of the weights, if supplied); \code{"FWB"}, which uses the fractional weighted bootstrap as implemented in \pkgfun{fwb}{fwb} (including re-estimation of the weights, if supplied); and \code{"none"} to omit calculation of a variance matrix. If \code{NULL} (the default), will use \code{"asympt"} if \code{weightit} is supplied and M-estimation is available and \code{"HC0"} otherwise. See the \code{vcov_type} component of the outcome object to see which was used.}
 
-\item{cluster}{optional; for computing a cluster-robust variance matrix, a variable indicating the clustering of observations, a list (or data frame) thereof, or a one-sided formula specifying which variable(s) from the fitted model should be used. Note the cluster-robust variance matrix uses a correction for small samples, as is done in \code{sadwich::vcovCL()} by default. Cluster-robust variance calculations are available only when \code{vcov} is \code{"asympt"}, \code{"HC0"}, \code{"BS"}, or \code{"FWB"}.}
+\item{cluster}{optional; for computing a cluster-robust variance matrix, a variable indicating the clustering of observations, a list (or data frame) thereof, or a one-sided formula specifying which variable(s) from the fitted model should be used. Note the cluster-robust variance matrix uses a correction for small samples, as is done in \code{sandwich::vcovCL()} by default. Cluster-robust variance calculations are available only when \code{vcov} is \code{"asympt"}, \code{"HC0"}, \code{"BS"}, or \code{"FWB"}.}
 
 \item{R}{the number of bootstrap replications when \code{vcov} is \code{"BS"} or \code{"FWB"}. Default is 500. Ignored otherwise.}
 
@@ -82,14 +96,16 @@ lm_weightit(
 \item{ci}{\code{logical} whether to display Wald confidence intervals for estimated coefficients. Default is \code{FALSE}.}
 
 \item{level}{when \code{ci = TRUE}, the desired confidence level.}
+
+\item{transform}{the function used to transform the coefficients, e.g., \code{exp} (which can also be supplied as a string, e.g., \code{"exp"}); passed to \code{\link[=match.fun]{match.fun()}} before being used on the coefficients. When \code{ci = TRUE}, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.}
 }
 \value{
-A \code{glm_weightit} object, which inherits from \code{glm}. Unless \code{vcov = "none"}, the \code{vcov} component contains the covariance matrix adjusted for the estimation of the weights if requested and a compatible \code{weightit} object was supplied. The \code{vcov_type} component contains the type of variance matrix requested. If \code{cluster} is supplied, it will be stored in the \code{"cluster"} attribute of the output object, even if not used.
+For \code{lm_weightit()} and \code{glm_weightit()}, a \code{glm_weightit} object, which inherits from \code{glm}. Unless \code{vcov = "none"}, the \code{vcov} component contains the covariance matrix adjusted for the estimation of the weights if requested and a compatible \code{weightit} object was supplied. The \code{vcov_type} component contains the type of variance matrix requested. If \code{cluster} is supplied, it will be stored in the \code{"cluster"} attribute of the output object, even if not used. For \code{coxph_weightit()}, a \code{coxph_weightit} object, which inherits from \code{glm_weightit} and \code{coxph}. See \code{\link[survival:coxph]{survival::coxph()}} for details.
 
 \code{print()}, \code{vcov()}, \code{predict()}, and \code{confint()} methods are also available; these generally follow the same pattern as the respect method for \code{glm} objects. \code{confint()} uses Wald confidence intervals (internally calling \code{\link[=confint.lm]{confint.lm()}}). When \code{family = "multinomial"}, predict() produces a matrix of predicted probabilities, one for each level of the outcome, and the \code{type} argument is ignored. \code{model.frame()} output (also the \code{model} component of the output object) will include two extra column when \code{weightit} is supplied: \code{(weights)} containing the weights used in the model (the product of the estimated weights and the sampling weights, if any) and \code{(s.weights)} containing the sampling weights, which will be 1 if \code{s.weights} is not supplied in the original \code{weightit()} call.
 }
 \description{
-\code{lm_weightit()} and \code{glm_weightit()} are used to fit (generalized) linear models with a variance matrix that accounts for estimation of weights, if supplied. By default, these functions use M-estimation to construct a robust covariance matrix using the estimation equations for the weighting model and the outcome model. \code{lm_weightit()} is a wrapper for \code{glm_weightit()} with the Gaussian family and identity link (i.e., a linear model).
+\code{lm_weightit()} and \code{glm_weightit()} are used to fit (generalized) linear models with a variance matrix that accounts for estimation of weights, if supplied. By default, these functions use M-estimation to construct a robust covariance matrix using the estimation equations for the weighting model and the outcome model. \code{lm_weightit()} is a wrapper for \code{glm_weightit()} with the Gaussian family and identity link (i.e., a linear model). \code{coxph_weightit()} fits a Cox proportional hazards model accounting for the weights and is a wrapper for \code{\link[survival:coxph]{survival::coxph()}}.
 }
 \details{
 \code{\link[=glm_weightit]{glm_weightit()}} is essentially a wrapper for \code{\link[=glm]{glm()}} that optionally computes a coefficient variance matrix that can be adjusted to account for estimation of the weights if a \code{weightit} or \code{weightitMSM} object is supplied to the \code{weightit} argument. When no argument is supplied to \code{weightit} or there is no \code{"Mparts"} attribute in the supplied object, the default variance matrix returned will be the "HC0" sandwich variance matrix, which is robust to misspecification of the outcome family (including heteroscedasticity). Otherwise, the default variance matrix uses M-estimation to additionally adjust for estimation of the weights. When possible, this often yields smaller (and more accurate) standard errors. See the individual methods pages to see whether and when an \code{"Mparts"} attribute is included in the supplied object. To request that a variance matrix be computed that doesn't account for estimation of the weights even when a compatible \code{weightit} object is supplied, set \code{vcov = "HC0"}, which treats the weights as fixed.
@@ -99,6 +115,8 @@ Bootstrapping can also be used to compute the coefficient variance matrix; when 
 When \code{family = "multinomial"}, multinomial logistic regression is fit using a custom function in \pkg{WeightIt} that uses M-estimation to estimate the model coefficients. This implementation is less robust to failures than other multinomial logistic regression solvers and should be used with caution. Estimation of coefficients should align with that from \code{mlogit::mlogit()} and \code{mclogit::mblogit()}.
 
 Functions in the \pkg{sandwich} package can be to compute standard errors after fitting, regardless of how \code{vcov} was specified, though these will ignore estimation of the weights, if any. When no adjustment is done for estimation of the weights (i.e., because no \code{weightit} argument was supplied or there was no \code{"Mparts"} component in the supplied object), the default variance matrix produced by \code{glm_weightit()} should align with that from \verb{sandwich::vcovHC(. type = "HC0")} or \code{sandwich::vcovCL(., type = "HC0", cluster = cluster)} when \code{cluster} is supplied.
+
+\code{coxph_weightit()} is a wrapper for \code{\link[survival:coxph]{survival::coxph()}} to fit weighted survival models, optionally accounting for estimation of the weights. It differs from \code{coxph()} in a few ways: the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects then for \code{coxph} objects, and the \code{cluster} argument should be specified as a one-sided formula (which can include multiple clustering variables) and uses a small sample correction for cluster variance estimates when specified. Currently, M-estimation is not supported, so bootstrapping (i.e., \code{vcov = "BS"} or \code{"FWB"}) is the only way to correctly adjust for estimation of the weights.
 }
 \examples{
 
@@ -148,5 +166,5 @@ fit4 <- glm_weightit(re78_3 ~ treat, data = lalonde,
 summary(fit4)
 }
 \seealso{
-\code{\link[=lm]{lm()}} and \code{\link[=glm]{glm()}} for fitting generalized linear models without adjusting standard errors for estimation of the weights.
+\code{\link[=lm]{lm()}} and \code{\link[=glm]{glm()}} for fitting generalized linear models without adjusting standard errors for estimation of the weights. \code{\link[survival:coxph]{survival::coxph()}} for fitting Cox proportional hazards models without adjust standard errors for estimation of the weights.
 }

@@ -45,10 +45,7 @@ individual pages for each method for more information on which estimands are
 allowed with each method and what literature to read to interpret these
 estimands.}
 
-\item{stabilize}{\code{logical}; whether or not to stabilize the weights.
-For the methods that involve estimating propensity scores, this involves
-multiplying each unit's weight by the proportion of units in their treatment
-group. Default is \code{FALSE}.}
+\item{stabilize}{whether or not and how to stabilize the weights. If \code{TRUE}, each unit's weight will be multiplied by a standardization factor, which is the inverse of the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when \code{estimand = "ATE"}. Default is \code{FALSE} for no standardization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}}
 
 \item{focal}{when multi-category treatments are used and ATT weights are
 requested, which group to consider the "treated" or focal group. This group
@@ -186,22 +183,20 @@ data("lalonde", package = "cobalt")
                 method = "glm", estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
-\dontshow{if (requireNamespace("osqp", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "ebal", estimand = "ATE"))
 summary(W2)
 bal.tab(W2)
-\dontshow{\}) # examplesIf}
-\dontshow{if (requireNamespace("CBPS", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "cbps", over = FALSE))
+                method = "cbps"))
 summary(W3)
 bal.tab(W3)
-\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=weightitMSM]{weightitMSM()}} for estimating weights with sequential (i.e.,

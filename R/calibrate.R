@@ -2,7 +2,7 @@
 #' @name calibrate
 #'
 #' @description
-#' `calibrate()` performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2022). This involves fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
+#' `calibrate()` performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2024). This involves fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
 #'
 #' @param x A `weightit` object or a vector of propensity scores. Only binary treatments are supported.
 #' @param treat A vector of treatment status for each unit. Only binary treatments are supported.
@@ -22,7 +22,7 @@
 #' [weightit()], [weightitMSM()]
 #'
 #' @references
-#' Gutman, R., Karavani, E., & Shimoni, Y. (2022). Propensity score models are better when post-calibrated (arXiv:2211.01221). arXiv. \url{http://arxiv.org/abs/2211.01221}
+#' Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse Probability Weighting by Post-calibrating Its Propensity Scores. *Epidemiology*, 35(4). \doi{10.1097/EDE.0000000000001733}
 #'
 #' @examplesIf requireNamespace("gbm", quietly = TRUE)
 #' library("cobalt")

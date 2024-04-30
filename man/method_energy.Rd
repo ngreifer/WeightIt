@@ -55,9 +55,13 @@ Energy balancing for binary and multi-category treatments involves minimizing th
 Energy balancing for continuous treatments involves minimizing the distance covariance between the treatment and the covariates; the distance covariance is a scalar measure of the association between two (possibly multivariate) distributions that is equal to 0 when the two distributions are independent. In addition, the energy distances between the treatment and covariate distributions in the weighted sample and the treatment and covariate distributions in the original sample are minimized.
 
 The primary benefit of energy balancing is that all features of the covariate distribution are balanced, not just means, as with other optimization-based methods like entropy balancing. Still, it is possible to add additional balance constraints to require balance on individual terms using the \code{moments} argument, just like with entropy balancing. Energy balancing can sometimes yield weights with high variability; the \code{lambda} argument can be supplied to penalize highly variable weights to increase the effective sample size at the expense of balance.
+\subsection{Reproducibility}{
+
+Although there are no stochastic components to the optimization, a feature left on by default is to update the optimization based on how long the optimization has been running, which will vary across runs even when a seed is set and no parameters have been changed. See the discussion \href{https://github.com/osqp/osqp-r/issues/19}{here} for more details. To ensure reproducibility, set \code{adaptive_rho_interval} to an integer greater than 0 or set \code{adaptive_rho} to 0.
+}
 }
 \note{
-Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything. If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon). Increasing \code{max_iter} might help.
+Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything (but see the \emph{Reproducibility} section above). If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon). Increasing \code{max_iter} or changing \code{adaptive_rho_interval} might help.
 
 If it seems like the weights are balancing the covariates but you still get a failure to converge, this usually indicates that more iterations are needs to find the optimal solutions. This can occur when \code{moments} or \code{int} are specified. \code{max_iter} should be increased, and setting \code{verbose = TRUE} allows you to monitor the process and examine if the optimization is approaching convergence.
 }

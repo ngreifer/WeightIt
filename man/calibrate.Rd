@@ -32,7 +32,7 @@ If the input is a numeric vector of weights, the output will be a numeric
 vector of the calibrated propensity scores.
 }
 \description{
-\code{calibrate()} performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2022). This involves fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
+\code{calibrate()} performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2024). This involves fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
 }
 \examples{
 \dontshow{if (requireNamespace("gbm", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
@@ -54,7 +54,7 @@ PSc <- calibrate(W$ps, treat = lalonde$treat)
 \dontshow{\}) # examplesIf}
 }
 \references{
-Gutman, R., Karavani, E., & Shimoni, Y. (2022). Propensity score models are better when post-calibrated (arXiv:2211.01221). arXiv. \url{http://arxiv.org/abs/2211.01221}
+Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse Probability Weighting by Post-calibrating Its Propensity Scores. \emph{Epidemiology}, 35(4). \doi{10.1097/EDE.0000000000001733}
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}

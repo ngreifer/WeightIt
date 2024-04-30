@@ -49,6 +49,10 @@ M-estimation is not supported.
 }
 \details{
 BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the \code{n.trees} argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to \code{weightit()} that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun2{dbarts}{bart}{dbarts::bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
+\subsection{Reproducibility}{
+
+BART has a random component, so some work must be done to ensure reproducibility across runs. See the \emph{Reproducibility} section at \pkgfun2{dbarts}{bart}{dbarts::bart2} for more details. To ensure reproducibility, one can do one of two things: 1) supply an argument to \code{seed}, which is passed to \code{dbarts::bart2()} and sets the seed for single- and multi-threaded uses, or 2) call \code{\link[=set.seed]{set.seed()}}, though this only ensures reproducibility when using single-threading, which can be requested by setting \code{n.threads = 1}. Note that to ensure reproducibility on any machine, regardless of the number of cores available, one should use single threading and either supply \code{seed} or call \code{set.seed()}.
+}
 }
 \section{Additional Arguments}{
 

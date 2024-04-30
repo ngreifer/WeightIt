@@ -45,14 +45,14 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 
 \subsection{M-estimation}{
 
-For binary treatments, M-estimation is supported when \code{missing} is not \code{"saem"} and \code{link} does not start with \code{"br."}. For multi-category treatments, M-estimation is supported when \code{missing} is not \code{"saem"} and \code{multi-method} is \code{"weightit"} (the default for non-ordered treatments) or \code{"glm"}. For continuous treatments, M-estimation is not supported. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
+For binary treatments, M-estimation is supported when \code{link} does not start with \code{"br."} and is neither \code{"flic"} nor \code{"flac"} (see below). For multi-category treatments, M-estimation is supported when \code{multi.method} is \code{"weightit"} (the default for non-ordered treatments) or \code{"glm"}. For continuous treatments, M-estimation is supported when \code{use.kernel} is not \code{TRUE}. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when \code{missing = "saem"}. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
 }
 }
 \section{Additional Arguments}{
 
 For binary treatments, the following additional argument can be specified:
 \describe{
-\item{\code{link}}{the link used in the generalized linear model for the propensity scores. \code{link} can be any of those allowed by \code{\link[=binomial]{binomial()}}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the bias-corrected generalized linear models implemented in the \CRANpkg{brglm2} package.}
+\item{\code{link}}{the link used in the generalized linear model for the propensity scores. \code{link} can be any of those allowed by \code{\link[=binomial]{binomial()}}. A \code{br.} prefix can be added (e.g., \code{"br.logit"}); this changes the fitting method to the bias-corrected generalized linear models implemented in the \CRANpkg{brglm2} package. \code{link} can also be either \code{"flic"} or \code{"flac"} to fit the corresponding Firth corrected logistic regression models implemented in the \CRANpkg{logistf} package.}
 }
 
 For multi-category treatments, the following additional arguments can be specified:
@@ -83,7 +83,7 @@ For continuous treatments in the presence of missing data with \code{missing = "
 \section{Additional Outputs}{
 
 \describe{
-\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}}. For multi-category treatments, the output of the call to the fitting function (or a list thereof if \code{multi.method = "glm"}. For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
+\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}} or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if \code{multi.method = "glm"}). For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
 }
 }
 }
@@ -120,37 +120,42 @@ bal.tab(W3)
 \item \code{estimand = "ATO"}
 }
 
-Li, F., Morgan, K. L., & Zaslavsky, A. M. (2018). Balancing covariates via propensity score weighting. Journal of the American Statistical Association, 113(521), 390–400. \doi{10.1080/01621459.2016.1260466}
+Li, F., Morgan, K. L., & Zaslavsky, A. M. (2018). Balancing covariates via propensity score weighting. \emph{Journal of the American Statistical Association}, 113(521), 390–400. \doi{10.1080/01621459.2016.1260466}
 \itemize{
 \item \code{estimand = "ATM"}
 }
 
-Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. The International Journal of Biostatistics, 9(2). \doi{10.1515/ijb-2012-0030}
+Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. \emph{The International Journal of Biostatistics}, 9(2). \doi{10.1515/ijb-2012-0030}
 \itemize{
 \item \code{estimand = "ATOS"}
 }
 
-Crump, R. K., Hotz, V. J., Imbens, G. W., & Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. Biometrika, 96(1), 187–199. \doi{10.1093/biomet/asn055}
+Crump, R. K., Hotz, V. J., Imbens, G. W., & Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. \emph{Biometrika}, 96(1), 187–199. \doi{10.1093/biomet/asn055}
 \itemize{
 \item Other estimands
 }
 
-Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. Multivariate Behavioral Research, 46(3), 399–424. \doi{10.1080/00273171.2011.568786}
+Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. \emph{Multivariate Behavioral Research}, 46(3), 399–424. \doi{10.1080/00273171.2011.568786}
 \itemize{
 \item Marginal mean weighting through stratification
 }
 
-Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. Journal of Educational and Behavioral Statistics, 35(5), 499–531. \doi{10.3102/1076998609359785}
+Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. \emph{Journal of Educational and Behavioral Statistics}, 35(5), 499–531. \doi{10.3102/1076998609359785}
 \itemize{
 \item Bias-reduced logistic regression
 }
 
 See references for the \pkg{brglm2} \pkgfun2{brglm2}{brglm2}{package}.
 \itemize{
+\item Firth corrected logistic regression
+}
+
+Puhr, R., Heinze, G., Nold, M., Lusa, L., & Geroldinger, A. (2017). Firth’s logistic regression with rare events: Accurate effect estimates and predictions? \emph{Statistics in Medicine}, 36(14), 2302–2317. \doi{10.1002/sim.7273}
+\itemize{
 \item SAEM logistic regression for missing data
 }
 
-Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. Computational Statistics & Data Analysis, 106907. \doi{10.1016/j.csda.2019.106907}
+Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. \emph{Computational Statistics & Data Analysis}, 106907. \doi{10.1016/j.csda.2019.106907}
 }
 
 \subsection{Multi-Category Treatments}{
@@ -158,37 +163,37 @@ Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing co
 \item \code{estimand = "ATO"}
 }
 
-Li, F., & Li, F. (2019). Propensity score weighting for causal inference with multiple treatments. The Annals of Applied Statistics, 13(4), 2389–2415. \doi{10.1214/19-AOAS1282}
+Li, F., & Li, F. (2019). Propensity score weighting for causal inference with multiple treatments. \emph{The Annals of Applied Statistics}, 13(4), 2389–2415. \doi{10.1214/19-AOAS1282}
 \itemize{
 \item \code{estimand = "ATM"}
 }
 
-Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J. J., Glynn, R. J., & Franklin, J. M. (2017). Matching weights to simultaneously compare three treatment groups: Comparison to three-way matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395. \doi{10.1097/EDE.0000000000000627}
+Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J. J., Glynn, R. J., & Franklin, J. M. (2017). Matching weights to simultaneously compare three treatment groups: Comparison to three-way matching. \emph{Epidemiology} (Cambridge, Mass.), 28(3), 387–395. \doi{10.1097/EDE.0000000000000627}
 \itemize{
 \item Other estimands
 }
 
-McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. \emph{Statistics in Medicine}, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 \itemize{
 \item Marginal mean weighting through stratification
 }
 
-Hong, G. (2012). Marginal mean weighting through stratification: A generalized method for evaluating multivalued and multiple treatments with nonexperimental data. Psychological Methods, 17(1), 44–60. \doi{10.1037/a0024918}
+Hong, G. (2012). Marginal mean weighting through stratification: A generalized method for evaluating multivalued and multiple treatments with nonexperimental data. \emph{Psychological Methods}, 17(1), 44–60. \doi{10.1037/a0024918}
 }
 
 \subsection{Continuous treatments}{
 
-Robins, J. M., Hernán, M. Á., & Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. Epidemiology, 11(5), 550–560.
+Robins, J. M., Hernán, M. Á., & Brumback, B. (2000). Marginal Structural Models and Causal Inference in Epidemiology. \emph{Epidemiology}, 11(5), 550–560.
 \itemize{
 \item Using non-normal conditional densities
 }
 
-Naimi, A. I., Moodie, E. E. M., Auger, N., & Kaufman, J. S. (2014). Constructing Inverse Probability Weights for Continuous Exposures: A Comparison of Methods. Epidemiology, 25(2), 292–299. \doi{10.1097/EDE.0000000000000053}
+Naimi, A. I., Moodie, E. E. M., Auger, N., & Kaufman, J. S. (2014). Constructing Inverse Probability Weights for Continuous Exposures: A Comparison of Methods. \emph{Epidemiology}, 25(2), 292–299. \doi{10.1097/EDE.0000000000000053}
 \itemize{
 \item SAEM linear regression for missing data
 }
 
-Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. Computational Statistics & Data Analysis, 106907. \doi{10.1016/j.csda.2019.106907}
+Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. \emph{Computational Statistics & Data Analysis}, 106907. \doi{10.1016/j.csda.2019.106907}
 }
 }
 \seealso{

@@ -19,12 +19,14 @@ For multi-category treatments, this method estimates the generalized propensity 
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, this method estimates the generalized propensity scores and weights using \code{optim()} using formulas described by Fong, Hazelett, and Imai (2018).
+For continuous treatments, this method estimates the generalized propensity scores and weights using \code{optim()} using a modification of the formulas described by Fong, Hazlett, and Imai (2018). See Details.
 }
 
 \subsection{Longitudinal Treatments}{
 
-For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how \pkgfun{CBPS}{CBMSM} in the \pkg{CBPS} package estimates weights for longitudinal treatments.
+For longitudinal treatments, the weights are computed using methods similar to those described by Huffman and van Gameren (2018). This involves specifying moment conditions for the models at each time point as with single-time point treatments but using the product of the time-specific weights as the weights that are used in the balance moment conditions. This yields weights that balance the covariate at each time point. This is not the same implementation as is implemented in \code{CBPS::CBMSM()}, and results should not be expected to align between the two methods. Any combination of treatment types is supported.
+
+For the over-identified version (i.e., setting \code{over = TRUE}), the empirical variance is used in the objective function, whereas the expected variance averaging over the treatment is used with binary and multi-category point treatments.
 }
 
 \subsection{Sampling Weights}{
@@ -44,18 +46,20 @@ First, for each variable with missingness, a new missingness indicator variable 
 
 \subsection{M-estimation}{
 
-M-estimation is supported for the just-identified CBPS (the default, setting \code{over = FALSE}) for all scenarios. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details.
+M-estimation is supported for the just-identified CBPS (the default, setting \code{over = FALSE}) for binary and multi-category treatments. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details.
 }
 }
 \details{
-CBPS estimates the coefficients of a generalized linear model (for binary treatments), multinomial logistic regression model (for multi-category treatments), or linear regression model (for continuous treatments) that is used to compute (generalized) propensity scores, from which the weights are computed. It involves replacing (or augmenting, in the case of the over-identified version) the standard regression score equations with the balance constraints in a generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with \code{exact = FALSE}) does away with the score equations for the coefficients so that only the balance constraints (and the score equation for the variance of the error with a continuous treatment) are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multi-category treatments and linear terms for continuous treatments than will the over-identified version.
+CBPS estimates the coefficients of a generalized linear model (for binary treatments), multinomial logistic regression model (for multi-category treatments), or linear regression model (for continuous treatments) that is used to compute (generalized) propensity scores, from which the weights are computed. It involves replacing (or augmenting, in the case of the over-identified version) the standard regression score equations with the balance constraints in a generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with \code{exact = FALSE}) does away with the score equations for the coefficients so that only the balance constraints are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multi-category treatments and linear terms for continuous treatments than will the over-identified version.
 
 Just-identified CBPS is very similar to entropy balancing and inverse probability tilting. For the ATT, all three methods will yield identical estimates. For other estimands, the results will differ.
 
-Note that \pkg{WeightIt} provides different functionality from the \pkg{CBPS} package in terms of the versions of CBPS available; for extensions to CBPS (e.g., optimal CBPS, CBPS for instrumental variables, and jointly estimated CBPS for longitudinal treatments), the \pkg{CBPS} package may be preferred.
+Note that \pkg{WeightIt} provides different functionality from the \pkg{CBPS} package in terms of the versions of CBPS available; for extensions to CBPS (e.g., optimal CBPS and CBPS for instrumental variables), the \pkg{CBPS} package may be preferred. Note that for longitudinal treatments, \code{CBPS::CBMSM()} uses different methods and produces different results from \code{weightitMSM()} called with \code{method = "cbps"}.
 }
 \note{
-This method used to rely on functionality in the \pkg{CBPS} package, but no longer does. Slight differences may be found between the two packages in some cases due to numerical imprecision. \pkg{WeightIt} supports arbitrary numbers of groups for the multi-category CBPS and any estimand, whereas \pkg{CBPS} only supports up to four groups and only the ATE. For continuous treatments with the over-identified CBPS, \pkg{WeightIt} and \pkg{CBPS} use different methods of specifying the GMM variance matrix, which may lead to differing results. Note that the default method differs between the two implementations; by default \pkg{WeightIt} uses the just-identified CBPS, which is faster to fit, yields better balance, and is compatible with M-estimation for estimating the standard error of the treatment effect, whereas \pkg{CBPS} uses the over-identified CBPS by default. However, both the just-identified and over-identified versions are available in both packages.
+This method used to rely on functionality in the \pkg{CBPS} package, but no longer does. Slight differences may be found between the two packages in some cases due to numerical imprecision (or, for continuous and longitudinal treatments, due to a difference in the estimator). \pkg{WeightIt} supports arbitrary numbers of groups for the multi-category CBPS and any estimand, whereas \pkg{CBPS} only supports up to four groups and only the ATE. The implementation of the just-identified CBPS for continuous treatments also differs from that of \pkg{CBPS}, and departs slightly from that described by Fong et al. (2018). The treatment mean and treatment variance are treated as random parameters to be estimated and are included in the balance moment conditions. In Fong et al. (2018), the treatment mean and variance are fixed to their empirical counterparts. For continuous treatments with the over-identified CBPS, \pkg{WeightIt} and \pkg{CBPS} use different methods of specifying the GMM variance matrix, which may lead to differing results.
+
+Note that the default method differs between the two implementations; by default \pkg{WeightIt} uses the just-identified CBPS, which is faster to fit, yields better balance, and is compatible with M-estimation for estimating the standard error of the treatment effect, whereas \pkg{CBPS} uses the over-identified CBPS by default. However, both the just-identified and over-identified versions are available in both packages.
 }
 \section{Additional Arguments}{
 
@@ -66,7 +70,7 @@ The following additional arguments can be specified:
 }
 \item{\code{twostep}}{\code{logical}; when \code{over = TRUE}, whether to use the two-step approximation to the generalized method of moments variance. Default is \code{TRUE}. Ignored when \code{over = FALSE}.
 }
-\item{\code{link}}{\code{"string"}; the link used in the generalized linear model for the propensity scores when treatment is binary. Default is \code{"logit"} for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed: \code{"logit"}, \code{"probit"}, \code{"cauchit"}, and \code{"cloglog"} all use the binomial likelihood, \code{"log"} uses the Poisson likelihood, and \code{"identity"} uses the Gaussian likelihood (i.e., the linear probability model). Note that negative weights are possible with these last two and they should be used with caution. Ignored for multi-category and continuous treatments.
+\item{\code{link}}{\code{"string"}; the link used in the generalized linear model for the propensity scores when treatment is binary. Default is \code{"logit"} for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed: \code{"logit"}, \code{"probit"}, \code{"cauchit"}, and \code{"cloglog"} all use the binomial likelihood, \code{"log"} uses the Poisson likelihood, and \code{"identity"} uses the Gaussian likelihood (i.e., the linear probability model). Note that negative weights are possible with these last two and they should be used with caution. Ignored for multi-category, continuous, and longitudinal treatments.
 }
 \item{\code{reltol}}{the relative tolerance for convergence of the optimization. Passed to the \code{control} argument of \code{optim()}. Default is \code{sqrt(.Machine$double.eps)}.
 }
@@ -115,21 +119,38 @@ cobalt::bal.tab(W2)
                 method = "cbps"))
 summary(W3)
 cobalt::bal.tab(W3)
+
+#Longitudinal treatments
+data("msmdata")
+(W4 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                        A_2 ~ X1_1 + X2_1 +
+                          A_1 + X1_0 + X2_0),
+                   data = msmdata,
+                   method = "cbps"))
+summary(W4)
+cobalt::bal.tab(W4)
 }
 \references{
 \subsection{Binary treatments}{
 
-Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 76(1), 243–263.
+Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, 76(1), 243–263.
 }
 
-\subsection{Multi-Category Treatments}{
+\subsection{Multi-Category treatments}{
 
-Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 76(1), 243–263.
+Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. \emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, 76(1), 243–263.
 }
 
 \subsection{Continuous treatments}{
 
-Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. The Annals of Applied Statistics, 12(1), 156–177. \doi{10.1214/17-AOAS1101}
+Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. \emph{The Annals of Applied Statistics}, 12(1), 156–177. \doi{10.1214/17-AOAS1101}
+}
+
+\subsection{Longitduinal treatments}{
+
+Huffman, C., & van Gameren, E. (2018). Covariate Balancing Inverse Probability Weights for Time-Varying Continuous Interventions. \emph{Journal of Causal Inference}, 6(2). \doi{10.1515/jci-2017-0002}
+
+Note: one should not cite Imai & Ratkovic (2015) when using CBPS for longitudinal treatments.
 
 Some of the code was inspired by the source code of the \pkg{CBPS} package.
 }
