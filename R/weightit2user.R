@@ -212,7 +212,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
   if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]]))) {
     .err("the \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights")
   }
-  if (all(is.na(obj[["w"]]))) .err("All weights were generated as `NA`")
+  if (all(is.na(obj[["w"]]))) .err("all weights were generated as `NA`")
   if (length(obj[["w"]]) != length(treat.list[[1]])) {
     .err(sprintf("%s weights were estimated, but there are %s units",
                  length(obj[["w"]]), length(treat.list[[1]])))

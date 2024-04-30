@@ -217,7 +217,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     .err("`get_w_from_ps()` can only be used with binary or multi-category treatments")
   }
 
-  estimand <- process.estimand(estimand, method = "glm", treat.type = treat.type)
+  estimand <- .process_estimand(estimand, method = "glm", treat.type = treat.type)
 
   processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treated)
   estimand <- processed.estimand$estimand

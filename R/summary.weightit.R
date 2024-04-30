@@ -149,7 +149,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 #' @exportS3Method print summary.weightit
 print.summary.weightit <- function(x, ...) {
   top <- max(lengths(x$weight.top))
-  cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
+  cat(paste(rep(" ", 18), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
 
   tryCatch({
     cat("- " %+% italic("Weight ranges") %+% ":\n\n")
@@ -236,109 +236,6 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
   p
 }
 
-.summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
-  outnames <- c("weight.range", "weight.top",
-                "coef.of.var", "scaled.mad", "negative.entropy",
-                "weight.mean",
-                "effective.sample.size")
-
-  out.list <- make_list(names(object$treat.list))
-
-  if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
-  else sw <- object$s.weights
-  w <- setNames(object$weights*sw, seq_along(sw))
-  treat.types <- vapply(object[["treat.list"]], get_treat_type, character(1L))
-  stabilized <- is_not_null(object[["stabilization"]])
-
-  for (ti in seq_along(object$treat.list)) {
-    out <- make_list(outnames)
-    if (treat.types[ti] == "continuous") {
-      out$weight.range <- list(all = c(min(w[w != 0]),
-                                       max(w[w != 0])))
-      out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
-      out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(all = mean_abs_dev(w/mean_fast(w)))
-      out$negative.entropy <- c(all = neg_ent(w))
-      out$num.zeros <- c(overall = sum(check_if_zero(w)))
-      out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-      nn <- make_df("Total", c("Unweighted", "Weighted"))
-      nn["Unweighted", ] <- ESS(sw)
-      nn["Weighted", ] <- ESS(w)
-
-      out$effective.sample.size <- nn
-
-      out.list[[ti]] <- out
-
-    }
-    else if (treat.types[ti] == "binary") {
-      t <- object$treat.list[[ti]]
-      top0 <- c(treated = min(top, sum(t == 1)),
-                control = min(top, sum(t == 0)))
-      out$weight.range <- list(treated = c(min(w[w != 0 & t == 1]),
-                                           max(w[w != 0 & t == 1])),
-                               control = c(min(w[w != 0 & t == 0]),
-                                           max(w[w != 0 & t == 0])))
-      out$weight.top <- list(treated = rev(w[t == 1][order(abs(w[t == 1]), decreasing = TRUE)][seq_len(top0["treated"])]),
-                             control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
-      out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
-                           control = sd(w[t==0])/mean_fast(w[t==0]))
-      out$scaled.mad <- c(treated = mean_abs_dev(w[t==1]/mean_fast(w[t==1])),
-                          control = mean_abs_dev(w[t==0]/mean_fast(w[t==0])))
-      out$negative.entropy <- c(treated = neg_ent(w[t==1]),
-                                control = neg_ent(w[t==0]))
-      out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
-                         control = sum(check_if_zero(w[t==0])))
-      out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-      nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
-      nn["Unweighted", ] <- c(ESS(sw[t==0]),
-                              ESS(sw[t==1]))
-      nn["Weighted", ] <- c(ESS(w[t==0]),
-                            ESS(w[t==1]))
-
-      out$effective.sample.size <- nn
-      out.list[[ti]] <- out
-
-    }
-    else if (treat.types[ti] == "multinomial") {
-      t <- object$treat.list[[ti]]
-      top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
-      out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w != 0 & t == x]),
-                                                                   max(w[w != 0 & t == x]))),
-                                   levels(t))
-      out$weight.top <- setNames(lapply(levels(t), function(x) rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])),
-                                 levels(t))
-      out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)),
-                           overall = sd(w)/mean_fast(w))
-      out$scaled.mad <- c(vapply(levels(t), function(x) mean_abs_dev(w[t==x]/mean_fast(w[t==x])), numeric(1L)),
-                          overall = mean_abs_dev(w)/mean_fast(w))
-      out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)),
-                                overall = sum(w[w>0]*log(w[w>0]))/sum(w[w>0]))
-      out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)),
-                         overall = sum(check_if_zero(w)))
-      out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-      nn <- make_df(levels(t), c("Unweighted", "Weighted"))
-      for (i in levels(t)) {
-        nn["Unweighted", i] <- ESS(sw[t==i])
-        nn["Weighted", i] <- ESS(w[t==i])
-      }
-
-      out$effective.sample.size <- nn
-      out.list[[ti]] <- out
-    }
-    else if (treat.types[ti] == "ordinal") {
-      .wrn("Sneaky, sneaky! Ordinal coming soon :)", tidy = FALSE)
-    }
-  }
-
-  class(out.list) <- "summary.weightitMSM"
-  attr(out.list, "weights") <- w
-
-  out.list
-}
-
 #' @exportS3Method summary weightitMSM
 #' @rdname summary.weightit
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
@@ -358,13 +255,12 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   out.list
 }
 
-#' @exportS3Method plot summary.weightitMSM
+#' @exportS3Method print summary.weightitMSM
 print.summary.weightitMSM <- function(x, ...) {
   only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))
 
-  cat(paste(rep(" ", 17), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
   for (ti in seq_along(x)) {
-    if (!only.one) cat(strikethrough(paste(rep(" ", 22), collapse = "")) %+% italic(" Time " %+% ti %+% " ") %+% strikethrough(paste(rep(" ", 22), collapse = "")) %+% "\n")
+    if (!only.one) cat(strikethrough(paste(rep(" ", 23), collapse = "")) %+% italic(" Time " %+% ti %+% " ") %+% strikethrough(paste(rep(" ", 23), collapse = "")) %+% "\n")
     print(x[[ti]])
     cat("\n")
     if (only.one) break

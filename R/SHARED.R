@@ -149,7 +149,14 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
 }
 text_box_plot <- function(range.list, width = 12) {
   full.range <- range(unlist(range.list))
-  ratio <- diff(full.range)/(width+1)
+  if (all_the_same(full.range)) {
+    for (i in seq_along(range.list)) {
+      range.list[[i]][1] <- range.list[[i]][1] - 1e-6
+      range.list[[i]][2] <- range.list[[i]][2] + 1e-6
+    }
+    full.range <- range(unlist(range.list))
+  }
+  ratio <- diff(full.range) / (width + 1)
   rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
   rescaled.full.range <- round(full.range/ratio)
   d <- make_df(c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"),
@@ -200,7 +207,8 @@ can_str2num <- function(x) {
   if (is.numeric(x) || is.logical(x)) return(TRUE)
   nas <- is.na(x)
   suppressWarnings(x_num <- as.numeric(as.character(x[!nas])))
-  return(!anyNA(x_num))
+
+  !anyNA(x_num)
 }
 str2num <- function(x) {
   nas <- is.na(x)
@@ -214,22 +222,23 @@ trim_string <- function(x, char = " ", symmetrical = TRUE, recursive = TRUE) {
   ew <- endsWith(x, char)
 
   if (symmetrical) {
-    if (any(sw & ew)) x[sw & ew] <- gsub('^.|.$', '', x[sw & ew])
-    else return(x)
+    if (!any(sw & ew)) return(x)
+
+    x[sw & ew] <- gsub('^.|.$', '', x[sw & ew])
   }
   else {
     asw <- any(sw)
     aew <- any(ew)
-    if (asw || aew) {
-      if (asw) x[sw] <- gsub('^.', '', x[sw])
-      if (aew) x[ew] <- gsub('.$', '', x[ew])
-    }
-    else return(x)
+
+    if (!asw && !aew) return(x)
+
+    if (asw) x[sw] <- gsub('^.', '', x[sw])
+    if (aew) x[ew] <- gsub('.$', '', x[ew])
   }
-  if (recursive) {
-    trim_string(x, char, symmetrical, recursive)
-  }
-  else return(x)
+
+  if (!recursive) return(x)
+
+  trim_string(x, char, symmetrical, recursive)
 }
 
 #Numbers
@@ -267,8 +276,8 @@ check_if_int <- function(x) {
   else if (is.numeric(x)) check_if_zero(x - round(x))
   else rep(FALSE, length(x))
 }
-squish <- function(p, tol = 1e-6) {
-  pmax(pmin(p, 1 - tol), tol)
+squish <- function(p, lo = 1e-6, hi = 1 - lo) {
+  pmax(pmin(p, hi), lo)
 }
 
 #Statistics
@@ -283,7 +292,7 @@ binarize <- function(variable, zero = NULL, one = NULL) {
   }
 
   if (length(unique.vals) == 1) return(setNames(rep(1, length(variable)), names(variable)))
-  else if (length(unique.vals) != 2) stop(paste0("Cannot binarize ", var.name, ": more than two levels."))
+  if (length(unique.vals) != 2) stop(paste0("Cannot binarize ", var.name, ": more than two levels."))
 
   if (is_null(zero)) {
     if (is_null(one)) {
@@ -300,13 +309,15 @@ binarize <- function(variable, zero = NULL, one = NULL) {
       return(setNames(as.integer(variable.numeric != zero), names(variable)))
     }
     else {
-      if (one %in% unique.vals) return(setNames(as.integer(variable == one), names(variable)))
-      else stop("The argument to 'one' is not the name of a level of variable.", call. = FALSE)
+      if (one %in% unique.vals)
+        return(setNames(as.integer(variable == one), names(variable)))
+      stop("The argument to 'one' is not the name of a level of variable.", call. = FALSE)
     }
   }
   else {
-    if (zero %in% unique.vals) return(setNames(as.integer(variable != zero), names(variable)))
-    else stop("The argument to 'zero' is not the name of a level of variable.", call. = FALSE)
+    if (zero %in% unique.vals)
+      return(setNames(as.integer(variable != zero), names(variable)))
+    stop("The argument to 'zero' is not the name of a level of variable.", call. = FALSE)
   }
 }
 ## ESS
@@ -334,12 +345,14 @@ center <- function(x, at = NULL, na.rm = TRUE) {
 w.m <- function(x, w = NULL, na.rm = TRUE) {
   if (is_null(w)) w <- rep(1, length(x))
   if (anyNA(x)) is.na(w[is.na(x)]) <- TRUE
-  return(sum(x*w, na.rm=na.rm)/sum(w, na.rm=na.rm))
+
+  sum(x * w, na.rm = na.rm) / sum(w, na.rm = na.rm)
 }
 col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
   if (is_null(w)) w <- 1
   w.sum <- colSums(w*!is.na(mat))
-  return(colSums(mat*w, na.rm = na.rm)/w.sum)
+
+  colSums(mat*w, na.rm = na.rm) / w.sum
 }
 col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
   if (!is.matrix(mat)) {
@@ -347,7 +360,8 @@ col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
       if (any(vapply(mat, is_, logical(1L), types = c("factor", "character")))) {
         stop("'mat' must be a numeric matrix.")
       }
-      else mat <- data.matrix(mat)
+
+      mat <- data.matrix(mat)
     }
     else if (is.numeric(mat)) {
       mat <- matrix(mat, ncol = 1)
@@ -432,16 +446,22 @@ col.w.cov <- function(mat, y, w = NULL, na.rm = TRUE) {
     x <- w * center(mat, at = colSums(w * mat, na.rm = na.rm))
     cov <- colSums(x*y, na.rm = na.rm)/(1 - sum(w^2))
   }
-  return(cov)
+
+  cov
 }
 col.w.r <- function(mat, y, w = NULL, s.weights = NULL, bin.vars = NULL, na.rm = TRUE) {
-  if (is_null(w) && is_null(s.weights)) return(cor(mat, y, w, use = if (na.rm) "pair" else "everything"))
-  else {
-    cov <- col.w.cov(mat, y = y, w = w, na.rm = na.rm)
-    den <- sqrt(col.w.v(mat, w = s.weights, bin.vars = bin.vars, na.rm = na.rm)) *
-      sqrt(col.w.v(y, w = s.weights, na.rm = na.rm))
-    return(cov/den)
+  if (is_null(w) && is_null(s.weights)) {
+    return(cor(mat, y, use = if (na.rm) "pair" else "everything"))
   }
+
+  cov <- col.w.cov(mat, y = y, w = w, na.rm = na.rm)
+  den <- sqrt(col.w.v(mat, w = s.weights, bin.vars = bin.vars, na.rm = na.rm)) *
+    sqrt(col.w.v(y, w = s.weights, na.rm = na.rm))
+
+  cov / den
+}
+scale_w <- function(x, w = NULL) {
+  (x - w.m(x, w)) / sqrt(col.w.v(x, w))
 }
 mean_abs_dev <- function(x) {
   mean_fast(abs(x - mean_fast(x, TRUE)), TRUE)
@@ -454,7 +474,7 @@ mat_div <- function(mat, vec) {
 }
 abs_ <- function(x, ratio = FALSE) {
   if (ratio) pmax(x, 1/x)
-  else (abs(x))
+  else abs(x)
 }
 mean_fast <- function(x, nas.possible = FALSE) {
   #Equal to mean(x, na.rm = TRUE) but faster
@@ -464,9 +484,8 @@ mean_fast <- function(x, nas.possible = FALSE) {
     n <- sum(!is.na(x))
     return(s/n)
   }
-  s <- sum(x)
-  n <- length(x)
-  return(s/n)
+
+  sum(x)/length(x)
 }
 bw.nrd <- function(x) {
   #R's bw.nrd doesn't always work, but bw.nrd0 does
@@ -479,10 +498,8 @@ w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...)
     return(rep(NA_real_, length(probs)))
   }
 
-  if (!is.null(w)) {
-    if (all(w == 0)) {
-      return(rep(0, length(probs)))
-    }
+  if (!is.null(w) && all(w == 0)) {
+    return(rep(0, length(probs)))
   }
 
   if (isTRUE(na.rm)) {
@@ -777,11 +794,13 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
   else {
     treat.type <- "continuous"
   }
+
   attr(treat, "treat.type") <- treat.type
-  return(treat)
+
+  treat
 }
 get_treat_type <- function(treat) {
-  return(attr(treat, "treat.type"))
+  attr(treat, "treat.type")
 }
 has_treat_type <- function(treat) {
   is_not_null(get_treat_type(treat))
@@ -796,17 +815,15 @@ get_treated_level <- function(treat) {
     unique.vals <- unique(treat, nmax = 2)
   }
 
-  if (can_str2num(unique.vals)) {
-    unique.vals.numeric <- str2num(unique.vals)
-  }
-  else {
-    unique.vals.numeric <- seq_along(unique.vals)
+  unique.vals.numeric <- {
+    if (can_str2num(unique.vals)) str2num(unique.vals)
+    else seq_along(unique.vals)
   }
 
   if (0 %in% unique.vals.numeric) treated <- unique.vals[unique.vals.numeric != 0]
   else treated <- unique.vals[which.max(unique.vals.numeric)]
 
-  return(treated)
+  treated
 }
 
 #Input processing
@@ -834,7 +851,8 @@ process.bin.vars <- function(bin.vars, mat) {
     }
     else stop("'bin.vars' must be a logical, numeric, or character vector.")
   }
-  return(bin.vars)
+
+  bin.vars
 }
 process.s.weights <- function(s.weights, data = NULL) {
   #Process s.weights
@@ -1133,4 +1151,9 @@ check_if_call_from_fun <- function(fun) {
     if (identical(fun, x)) return(TRUE)
   }
   FALSE
+}
+
+Invert <- function(f) {
+  f <- match.fun(f)
+  function(...) 1 / f(...)
 }

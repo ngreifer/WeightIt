@@ -9,11 +9,11 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
                         "super" = "super", "superlearner" = "super",
                         "bart" = "bart",
                         "energy" = "energy")}
-method.to.proper.method <- function(method) {
+.method_to_proper_method <- function(method) {
   method <- tolower(method)
   unname(allowable.methods[method])
 }
-check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
+.check_acceptable_method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
 
   if (missing(method)) method <- "glm"
@@ -32,14 +32,14 @@ check.acceptable.method <- function(method, msm = FALSE, force = FALSE) {
   }
 
   if (msm && !force && is.character(method)) {
-    m <- method.to.proper.method(method)
+    m <- .method_to_proper_method(method)
     if (m %in% c("nbcbps", "ebal", "ebcw", "optweight", "energy", "kbal")) {
       .err(sprintf("the use of %s with longitudinal treatments has not been validated. Set `weightit.force = TRUE` to bypass this error",
-                   method.to.phrase(m)))
+                   .method_to_phrase(m)))
     }
   }
 }
-check.user.method <- function(method) {
+.check_user_method <- function(method) {
   #Check to make sure it accepts treat and covs
   if (all(c("covs", "treat") %in% names(formals(method)))) {
   }
@@ -49,11 +49,11 @@ check.user.method <- function(method) {
     .err("the user-provided function to `method` must contain `covs` and `treat` as named parameters")
   }
 }
-method.to.phrase <- function(method) {
+.method_to_phrase <- function(method) {
 
   if (is.function(method)) return("a user-defined method")
 
-  method <- method.to.proper.method(method)
+  method <- .method_to_proper_method(method)
   if (method %in% c("glm")) return("propensity score weighting with GLM")
   if (method %in% c("gbm")) return("propensity score weighting with GBM")
   if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
@@ -69,7 +69,7 @@ method.to.phrase <- function(method) {
 
   "the chosen method of weighting"
 }
-process.estimand <- function(estimand, method, treat.type) {
+.process_estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
   AE <- list(
     binary = list(  glm = c("ATT", "ATC", "ATE", "ATO", "ATM", "ATOS")
@@ -110,7 +110,7 @@ process.estimand <- function(estimand, method, treat.type) {
 
   if (estimand %nin% AE[[treat.type]][[method]]) {
     .err(sprintf("%s is not an allowable estimand for %s with %s treatments. Only %s allowed",
-                 add_quotes(estimand), method.to.phrase(method), treat.type,
+                 add_quotes(estimand), .method_to_phrase(method), treat.type,
                  word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE)))
   }
 
@@ -148,7 +148,7 @@ check.subclass <- function(method, treat.type) {
   if (treat.type != "continuous" && !is.function(method) &&
       !AE[[treat.type]][[method]]) {
     .err(sprintf("subclasses are not compatible with %s with %s treatments",
-                 method.to.phrase(method), treat.type))
+                 .method_to_phrase(method), treat.type))
   }
 }
 process.ps <- function(ps, data = NULL, treat) {
@@ -336,17 +336,16 @@ process.moments.int <- function(moments, int, method) {
     chk::chk_flag(int)
 
     if (is_not_null(moments)) {
-      if (length(moments) != 1 || !is.numeric(moments) ||
-          !check_if_zero(moments - round(moments))) {
-        chk::chk_whole_number(moments)
-        if (method == "energy") {
-          chk::chk_gte(moments, 0)
-        }
-        else if (method %in% c("npcbps", "ebal", "cbps", "ipt", "ebcw", "optweight")) {
-          chk::chk_gt(moments, 0)
-        }
-        moments <- as.integer(moments)
+      chk::chk_whole_number(moments)
+
+      if (method == "energy") {
+        chk::chk_gte(moments, 0)
       }
+      else if (method %in% c("npcbps", "ebal", "cbps", "ipt", "ebcw", "optweight")) {
+        chk::chk_gt(moments, 0)
+      }
+
+      moments <- as.integer(moments)
     }
     else {
       moments <- {
@@ -358,17 +357,18 @@ process.moments.int <- function(moments, int, method) {
   else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
     .wrn(sprintf("%s not compatible with %s. Ignoring %s",
                  word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
-                 method.to.phrase(method),
+                 .method_to_phrase(method),
                  word_list(c("moments", "int")[mi0], and.or = "and", quotes = "`")))
     moments <- NULL
     int <- FALSE
   }
+
   moments <- as.integer(moments)
 
   list(moments = moments, int = int)
 }
 process.MSM.method <- function(is.MSM.method, method) {
-  methods.with.MSM <- c("optweight")
+  methods.with.MSM <- c("optweight", "cbps")
   if (is.function(method)) {
     if (isTRUE(is.MSM.method)) .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
     is.MSM.method <- FALSE
@@ -377,13 +377,13 @@ process.MSM.method <- function(is.MSM.method, method) {
     if (is_null(is.MSM.method)) is.MSM.method <- TRUE
     else if (!isTRUE(is.MSM.method)) {
       .msg(paste0("%s can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
-                  method.to.phrase(method)))
+                  .method_to_phrase(method)))
     }
   }
   else {
     if (isTRUE(is.MSM.method)) {
       .wrn(sprintf("%s cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point",
-                   method.to.phrase(method)))
+                   .method_to_phrase(method)))
     }
     is.MSM.method <- FALSE
   }
@@ -457,7 +457,7 @@ make.closer.to.1 <- function(x) {
   }
 
   if (is_binary(x)) {
-    return(as.numeric(x == x[!is.na(x)][1]))
+    return(as.numeric(x == max(x, na.rm = TRUE)))
   }
 
   (x - mean_fast(x, TRUE))/sd(x, na.rm = TRUE)
@@ -967,7 +967,7 @@ stabilize_w <- function(weights, treat) {
 }
 
 get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = NULL,
-                         n = NULL, treat = NULL, density = NULL) {
+                         n = NULL, treat = NULL, density = NULL, weights = NULL) {
   if (is_null(n)) n <- 10 * length(treat)
   if (is_null(adjust)) adjust <- 1
 
@@ -975,9 +975,9 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
     if (is_null(bw)) bw <- "nrd0"
     if (is_null(kernel)) kernel <- "gaussian"
 
-    densfun <- function(p, s.weights) {
+    densfun <- function(p) {
       d <- density(p, n = n,
-                   weights = s.weights/sum(s.weights), give.Rkern = FALSE,
+                   weights = weights/sum(weights), give.Rkern = FALSE,
                    bw = bw, adjust = adjust, kernel = kernel)
       out <- with(d, approxfun(x = x, y = y))(p)
       attr(out, "density") <- d
@@ -1006,10 +1006,10 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
     }
     else .err("the argument to `density` cannot be evaluated as a density function")
 
-    densfun <- function(p, s.weights) {
+    densfun <- function(p) {
       # sd <- sd(p)
-      sd <- sqrt(col.w.v(p, s.weights))
-      dens <- density(p/sd)
+      # sd <- sqrt(col.w.v(p, s.weights))
+      dens <- density(p)
       if (is_null(dens) || !is.numeric(dens) || anyNA(dens)) {
         .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the Gaussian density")
       }
@@ -1021,7 +1021,7 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
                    max(p) + 3 * adjust * bw.nrd0(p),
                    length.out = n)
       attr(dens, "density") <- data.frame(x = x,
-                                          y = density(x/sd))
+                                          y = density(x))
       dens
     }
   }
@@ -1147,7 +1147,7 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
 .get_w_from_ps_internal_array <- function(ps, treat, estimand = "ATE", focal = NULL,
                                     subclass = NULL, stabilize = FALSE) {
   #Batch turn PS into weights; primarily for output of predict.gbm
-  # Assumes a (0,1) treatment if binary, with ATT already processed
+  # Assumes a (0,1) treatment if binary
   if (is_null(dim(ps))) {
     ps <- matrix(ps, ncol = 1)
   }
@@ -1165,7 +1165,10 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
       w <- treat/ps + (1-treat)/(1-ps)
     }
     else if (estimand == "ATT") {
-      w <- treat + (1-treat)*ps/(1-ps)
+      w <- treat + (1-treat) * ps/(1-ps)
+    }
+    else if (estimand == "ATC") {
+      w <- treat*(1-ps)/ps + (1-treat)
     }
     else if (estimand == "ATO") {
       w <- ps * (1-ps)
@@ -1196,7 +1199,7 @@ get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = 
 
     if (estimand == "ATE") {
     }
-    else if (estimand == "ATT") {
+    else if (estimand %in% c("ATT", "ATC")) {
       w <- w * ps[, as.character(focal),]
     }
     else if (estimand == "ATO") {

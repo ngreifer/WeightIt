@@ -223,36 +223,35 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
-  if (is_null(A[["criterion"]])) {
-    A[["criterion"]] <- A[["stop.method"]]
+  criterion <- A[["criterion"]]
+  if (is_null(criterion)) {
+    criterion <- A[["stop.method"]]
   }
 
-  if (is_null(A[["criterion"]])) {
+  if (is_null(criterion)) {
     .wrn("no `criterion` was provided. Using \"smd.mean\"")
-    A[["criterion"]] <- "smd.mean"
+    criterion <- "smd.mean"
   }
-  else if (length(A[["criterion"]]) > 1) {
-    .wrn("only one `criterion` is allowed at a time. Using just the first `criterion`")
-    A[["criterion"]] <- A[["criterion"]][1]
+  else {
+    chk::chk_string(criterion)
   }
 
   available.criteria <- cobalt::available.stats(treat.type)
 
-  if (is.character(A[["criterion"]]) &&
-      startsWith(A[["criterion"]], "es.")) {
-    subbed.crit <- sub("es.", "smd.", A[["criterion"]], fixed = TRUE)
+  if (startsWith(criterion, "es.")) {
+    subbed.crit <- sub("es.", "smd.", criterion, fixed = TRUE)
     subbed.match <- charmatch(subbed.crit, available.criteria)
     if (!anyNA(subbed.match) && subbed.match != 0L) {
-      A[["criterion"]] <- subbed.crit
+      criterion <- subbed.crit
     }
   }
 
   cv <- 0
 
-  s.m.matches <- charmatch(A[["criterion"]], available.criteria)
+  s.m.matches <- charmatch(criterion, available.criteria)
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
-    if (startsWith(A[["criterion"]], "cv") &&
-        can_str2num(numcv <- substr(A[["criterion"]], 3, nchar(A[["criterion"]])))) {
+    if (startsWith(criterion, "cv") &&
+        can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
       cv <- round(str2num(numcv))
       if (cv < 2) .err("at least 2 CV-folds must be specified in `criterion`")
     }
@@ -280,13 +279,14 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     }
   }
 
-  chk::chk_count(A[["n.trees"]], "`n.trees`")
-  chk::chk_gt(A[["n.trees"]], 1, "`n.trees`")
+  n.trees <- A[["n.trees"]]
+  chk::chk_count(n.trees)
+  chk::chk_gt(n.trees, 1)
 
   if (treat.type == "binary")  {
     available.distributions <- c("bernoulli", "adaboost")
     t.lev <- get_treated_level(treat)
-    treat <- binarize(treat, one = focal)
+    treat <- binarize(treat, one = t.lev)
   }
   else {
     available.distributions <- "multinomial"
@@ -295,12 +295,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (cv == 0) {
     start.tree <- if_null_then(A[["start.tree"]], 1)
-    if (is_null(A[["n.grid"]])) n.grid <- round(1 + sqrt(2 * (A[["n.trees"]] - start.tree + 1)))
-    else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
-             !between(A[["n.grid"]], c(2, A[["n.trees"]]))) {
-      .err("`n.grid` must be a numeric value between 2 and `n.trees`")
-    }
-    else n.grid <- round(A[["n.grid"]])
+    chk::chk_count(start.tree)
+    chk::chk_range(start.tree, c(1, n.trees))
+
+    n.grid <- if_null_then(A[["n.grid"]],
+                           round(1 + sqrt(2 * (n.trees - start.tree + 1))))
+    chk::chk_count(n.grid)
+    chk::chk_range(n.grid, c(2, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -318,6 +319,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       match_arg(distribution, available.distributions, several.ok = TRUE)}
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
+  A[["n.trees"]] <- n.trees
 
   tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
                                    list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
@@ -349,7 +351,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
       w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
                                          focal = focal, stabilize = stabilize, subclass = subclass)
-      if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+      if (trim.at != 0) {
+        w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+      }
 
       iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
 
@@ -374,7 +378,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
         w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
                                            focal = focal, stabilize = stabilize, subclass = subclass)
-        if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+        if (trim.at != 0) {
+          w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+        }
 
         iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
 
@@ -463,10 +469,6 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     info[["best.tune"]] <- tune[best.tune.index,]
   }
 
-  if (is_not_null(best.ps) && is_not_null(focal) && focal != t.lev) {
-    best.ps <- 1 - best.ps
-  }
-
   list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
 }
 
@@ -489,26 +491,27 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
-  if (is_null(A[["criterion"]])) {
-    A[["criterion"]] <- A[["stop.method"]]
+  criterion <- A[["criterion"]]
+  if (is_null(criterion)) {
+    criterion <- A[["stop.method"]]
   }
-  if (is_null(A[["criterion"]])) {
+
+  if (is_null(criterion)) {
     .wrn("no `criterion` was provided. Using \"p.mean\"")
-    A[["criterion"]] <- "p.mean"
+    criterion <- "p.mean"
   }
-  else if (length(A[["criterion"]]) > 1) {
-    .wrn("only one `criterion` is allowed at a time. Using just the first `criterion`")
-    A[["criterion"]] <- A[["criterion"]][1]
+  else {
+    chk::chk_string(criterion)
   }
 
   available.criteria <- cobalt::available.stats("continuous")
 
   cv <- 0
 
-  s.m.matches <- charmatch(A[["criterion"]], available.criteria)
+  s.m.matches <- charmatch(criterion, available.criteria)
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
-    if (startsWith(A[["criterion"]], "cv") &&
-        can_str2num(numcv <- substr(A[["criterion"]], 3, nchar(A[["criterion"]])))) {
+    if (startsWith(criterion, "cv") &&
+        can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
       cv <- round(str2num(numcv))
       if (cv < 2) .err("at least 2 CV-folds must be specified in `criterion`")
     }
@@ -533,19 +536,21 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     }
   }
 
-  chk::chk_count(A[["n.trees"]], "`n.trees`")
-  chk::chk_gt(A[["n.trees"]], 1, "`n.trees`")
+  n.trees <- A[["n.trees"]]
+  chk::chk_count(n.trees)
+  chk::chk_gt(n.trees, 1)
 
   available.distributions <- c("gaussian", "laplace", "tdist", "poisson")
 
   if (cv == 0) {
     start.tree <- if_null_then(A[["start.tree"]], 1)
-    if (is_null(A[["n.grid"]])) n.grid <- round(1 + sqrt(2 * (A[["n.trees"]] - start.tree + 1)))
-    else if (!is_(A[["n.grid"]], "numeric") || length(A[["n.grid"]]) > 1 ||
-             !between(A[["n.grid"]], c(2, A[["n.trees"]]))) {
-      .err("`n.grid` must be a numeric value between 2 and `n.trees`")
-    }
-    else n.grid <- round(A[["n.grid"]])
+    chk::chk_count(start.tree)
+    chk::chk_range(start.tree, c(1, n.trees))
+
+    n.grid <- if_null_then(A[["n.grid"]],
+                           round(1 + sqrt(2 * (n.trees - start.tree + 1))))
+    chk::chk_count(n.grid)
+    chk::chk_range(n.grid, c(2, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -567,6 +572,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   }
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
+  A[["n.trees"]] <- n.trees
 
   tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
                                    list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
@@ -574,10 +580,11 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   #Process density params
   densfun <- get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
-                          n = A[["n"]], treat = treat, density = A[["density"]])
+                          n = A[["n"]], treat = treat, density = A[["density"]],
+                          weights = s.weights)
 
   #Stabilization - get dens.num
-  dens.num <- densfun(treat - mean(treat), s.weights)
+  dens.num <- densfun(scale_w(treat, s.weights))
 
   current.best.loss <- Inf
 
@@ -601,11 +608,14 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
       gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
 
-      w <- apply(gps, 2, function(gp.score) {
-        dens.num/densfun(treat - gp.score, s.weights)
+      w <- apply(gps, 2, function(p) {
+        r <- treat - p
+        dens.num / densfun(r / sqrt(col.w.v(r, s.weights)))
       })
 
-      if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+      if (trim.at != 0) {
+        w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+      }
 
       iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
 
@@ -628,11 +638,14 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         }
 
         gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
-        w <- apply(gps, 2, function(gp.score) {
-          dens.num/densfun(treat - gp.score, s.weights)
+        w <- apply(gps, 2, function(p) {
+          r <- treat - p
+          dens.num / densfun(r / sqrt(col.w.v(r, s.weights)))
         })
 
-        if (trim.at != 0) w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+        if (trim.at != 0) {
+          w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+        }
 
         iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
 
@@ -694,8 +707,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         best.fit <- fit
         best.gps <- gbm::predict.gbm(fit, n.trees = best.tree, newdata = covs)
 
-        dens.denom <- densfun(treat - best.gps, s.weights)
-        best.w <- dens.num/dens.denom
+        r <- treat - best.gps
+        dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
+        best.w <- dens.num / dens.denom
 
         # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
         current.best.loss <- best.loss
@@ -713,7 +727,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (isTRUE(A[["use.kernel"]]) && isTRUE(A[["plot"]])) {
     d.n <- attr(dens.num, "density")
-    dens.denom <- densfun(treat - best.gps, s.weights)
+    r <- treat - best.gps
+    dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
     d.d <- attr(dens.denom, "density")
     plot_density(d.n, d.d)
   }

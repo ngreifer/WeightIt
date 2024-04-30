@@ -112,17 +112,17 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   #Process density params
   densfun <- get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
-                          n = A[["n"]], treat = treat, density = A[["density"]])
+                          n = A[["n"]], treat = treat, density = A[["density"]],
+                          weights = s.weights)
 
   #Stabilization - get dens.num
-  dens.num <- densfun(treat - mean(treat), s.weights)
-
-  gp.score <- ps
+  dens.num <- densfun(scale_w(treat, s.weights))
 
   #Get weights
-  dens.denom <- densfun(treat - gp.score, s.weights)
+  r <- treat - ps
+  dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
 
-  w <- dens.num/dens.denom
+  w <- dens.num / dens.denom
 
   if (isTRUE(A[["plot"]])) {
     d.n <- attr(dens.num, "density")

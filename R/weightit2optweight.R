@@ -123,7 +123,8 @@
 #' cobalt::bal.tab(W3)
 NULL
 
-weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, verbose, ...) {
+weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing,
+                               moments, int, verbose, ...) {
   A <- list(...)
 
   rlang::check_installed("optweight")
@@ -196,7 +197,10 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   }
   A[names(A) %in% names(formals(weightit2optweight.cont))] <- NULL
 
-  if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
+  if ("tols" %in% names(A)) {
+    A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
+  }
+
   if ("targets" %in% names(A)) {
     .wrn("`targets` cannot be used through WeightIt and will be ignored")
     A[["targets"]] <- NULL
