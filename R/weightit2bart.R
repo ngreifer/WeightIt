@@ -70,6 +70,10 @@
 #' @details
 #' BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the `n.trees` argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to `weightit()` that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun2{dbarts}{bart}{dbarts::bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
 #'
+#' ## Reproducibility
+#'
+#' BART has a random component, so some work must be done to ensure reproducibility across runs. See the *Reproducibility* section at \pkgfun2{dbarts}{bart}{dbarts::bart2} for more details. To ensure reproducibility, one can do one of two things: 1) supply an argument to `seed`, which is passed to `dbarts::bart2()` and sets the seed for single- and multi-threaded uses, or 2) call [set.seed()], though this only ensures reproducibility when using single-threading, which can be requested by setting `n.threads = 1`. Note that to ensure reproducibility on any machine, regardless of the number of cores available, one should use single threading and either supply `seed` or call `set.seed()`.
+#'
 #' @seealso
 #' [weightit()], [weightitMSM()], [get_w_from_ps()]
 #'
@@ -112,7 +116,8 @@
 #' }
 NULL
 
-weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, verbose, ...) {
+weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
+                          subclass, missing, verbose, ...) {
   A <- list(...)
 
   rlang::check_installed("dbarts", version = "0.9-23")
@@ -124,9 +129,6 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   if (!all_the_same(s.weights)) {
     .err("sampling weights cannot be used with `method = \"bart\"`")
   }
-
-  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
-  treat.type <- get_treat_type(treat)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -168,7 +170,8 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   list(w = w, ps = p.score, fit.obj = fit)
 }
 
-weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize, subclass, missing, verbose, ...) {
+weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize,
+                                 subclass, missing, verbose, ...) {
   A <- list(...)
 
   rlang::check_installed("dbarts", version = "0.9-23")
@@ -220,8 +223,8 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal,
-                     stabilize = stabilize, subclass = subclass)
+  w <- .get_w_from_ps_internal_multi(ps = ps, treat = treat, estimand, focal,
+                                     stabilize = stabilize, subclass = subclass)
 
   list(w = w, fit.obj = fit.list)
 }
@@ -248,10 +251,8 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   #Process density params
   densfun <- get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
-                          n = A[["n"]], treat = treat, density = A[["density"]])
-
-  #Stabilization - get dens.num
-  dens.num <- densfun(treat - mean(treat), s.weights)
+                          n = A[["n"]], treat = treat, density = A[["density"]],
+                          weights = s.weights)
 
   A[["formula"]] <- covs
   A[["data"]] <- treat
@@ -273,12 +274,13 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     .err("(from `dbarts::bart2()`) ", e., tidy = FALSE)
   })
 
-  gp.score <- fitted(fit)
+  r <- residuals(fit)
 
   #Get weights
-  dens.denom <- densfun(treat - gp.score, s.weights)
+  dens.num <- densfun(scale_w(treat, s.weights))
+  dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
 
-  w <- dens.num/dens.denom
+  w <- dens.num / dens.denom
 
   if (isTRUE(A[["use.kernel"]]) && isTRUE(A[["plot"]])) {
     d.n <- attr(dens.num, "density")
