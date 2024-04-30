@@ -187,12 +187,10 @@ head(d)
 
 `A` is a binary treatment variable, `X1` through `X9` are covariates, `Y_C` is a continuous outcome, `Y_B` is a binary outcome, and `Y_S` is a survival outcome. `Am` and `Ac` are multi-category and continuous treatment variables, respectively.
 
-We will need to the following packages to perform the analyses:
+In addition to `WeightIt` and whatever package may be required to estimate the weights, we will need the following packages to perform the analyses:
 
 -   `marginaleffects` provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
--   `survival` provides `coxph()` to estimate the coefficients in a Cox-proportional hazards model for the marginal hazard ratio, which we will use for survival outcomes
-
-Of course, we also need `WeightIt` to perform the weighting.
+-   `survival` provides `coxph()` to estimate the coefficients in a Cox-proportional hazards model for the marginal hazard ratio, which is called internall by `coxph_weightit()` for survival outcomes
 
 ```{r,message=FALSE,warning=FALSE, include=FALSE, eval=!me_ok}
 library("WeightIt")
@@ -261,7 +259,7 @@ This section explains how the procedure might differ if any of the following spe
 When weighting for the ATT, everything is identical to the Standard Case except that in the calls to `avg_comparisons()` and `avg_predictions()`, the `newdata` argument must additionally be supplied to `avg_comparisons()` and `avg_predictions()` as
 
 ``` r
-newdata = subset(d, A == 1)
+newdata = subset(A == 1)
 ```
 
 This requests that g-computation be done only for the treated units. For the ATC, replace `1` with `0`.
@@ -306,16 +304,23 @@ For the marginal OR, the only thing that needs to change is that `comparison` sh
 
 There are several measures of effect size for survival outcomes, some of which are described by @mao2018. When using the Cox proportional hazards model, the quantity of interest is the hazard ratio (HR) between the treated and control groups. As with the OR, the HR is non-collapsible, which means the estimated HR will only be a valid estimate of the marginal HR when no other covariates are included in the model. Other effect measures, such as the difference in mean survival times or probability of survival after a given time, can be treated just like continuous and binary outcomes as previously described.
 
-For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph()` from the `survival` package. (See `help("coxph", package = "survival")` for more information on this model.) Robust SEs for HRs were studied by @austin2016 and were found to be conservative; they are requested automatically when weights are supplied to `coxph()`. Other formulas have been developed for estimating standard errors more accurately [@mao2018; @hajage2018], though @austin2016 also found the bootstrap to be adequate.
+For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph_weightit()`, which adapts `coxph()` from the `survival` package but allows for estimation of SEs that account for estimation of the weights. Robust SEs for HRs were studied by @austin2016 and were found to be conservative. Other formulas have been developed for estimating standard errors more accurately [@mao2018; @hajage2018], though @austin2016 also found the bootstrap to be adequate. The HC0 robust standard error is requested by default, and bootstrap standard errors can be requested by setting `vcov` to `"BS"` or `"FWB"`.
 
 ```{r, eval=su_ok, message=F}
-library("survival")
-
 #Cox Regression for marginal HR
-coxph(Surv(Y_S) ~ A, data = d, weights = W$weights)
+fit <- coxph_weightit(survival::Surv(Y_S) ~ A, data = d,
+                      weightit = W)
+
+#Log HR estimates
+summary(fit)
 ```
 
-The `coef` column contains the log HR, and `exp(coef)` contains the HR. Remember to always use the `robust se` for the SE of the log HR. The displayed z-test p-value results from using the robust SE.
+Note that the output differs from that of `survival::coxph()` and is more similar to that of `glm()`. The `Estimate` column contains the log HR. We can request the HR by setting `transform = "exp"` in the call to `summary()`.
+
+```{r}
+#HR and CIs; requested by exponentiating log HRs
+summary(fit, ci = TRUE, transform = "exp")
+```
 
 The `adjustedCurves` package provides integration with `WeightIt` to estimate adjusted survival estimands. We strongly recommend using this package to estimate effects after weighting.
 
@@ -400,7 +405,7 @@ fit <- lm_weightit(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 +
 #G-computation
 p <- avg_predictions(fit,
                      variables = "Am",
-                     newdata = subset(d, Am == "T"))
+                     newdata = subset(Am == "T"))
 p
 
 hypotheses(p, "revpairwise")
