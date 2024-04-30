@@ -19,11 +19,13 @@
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, this method estimates the generalized propensity scores and weights using `optim()` using formulas described by Fong, Hazelett, and Imai (2018).
+#' For continuous treatments, this method estimates the generalized propensity scores and weights using `optim()` using a modification of the formulas described by Fong, Hazlett, and Imai (2018). See Details.
 #'
 #' ## Longitudinal Treatments
 #'
-#' For longitudinal treatments, the weights are the product of the weights estimated at each time point. This is not how \pkgfun{CBPS}{CBMSM} in the \pkg{CBPS} package estimates weights for longitudinal treatments.
+#' For longitudinal treatments, the weights are computed using methods similar to those described by Huffman and van Gameren (2018). This involves specifying moment conditions for the models at each time point as with single-time point treatments but using the product of the time-specific weights as the weights that are used in the balance moment conditions. This yields weights that balance the covariate at each time point. This is not the same implementation as is implemented in `CBPS::CBMSM()`, and results should not be expected to align between the two methods. Any combination of treatment types is supported.
+#'
+#' For the over-identified version (i.e., setting `over = TRUE`), the empirical variance is used in the objective function, whereas the expected variance averaging over the treatment is used with binary and multi-category point treatments.
 #'
 #' ## Sampling Weights
 #'
@@ -40,7 +42,7 @@
 #'
 #' ## M-estimation
 #'
-#' M-estimation is supported for the just-identified CBPS (the default, setting `over = FALSE`) for all scenarios. See [glm_weightit()] and `vignette("estimating-effects")` for details.
+#' M-estimation is supported for the just-identified CBPS (the default, setting `over = FALSE`) for binary and multi-category treatments. See [glm_weightit()] and `vignette("estimating-effects")` for details.
 #'
 #' @section Additional Arguments:
 #'
@@ -50,7 +52,7 @@
 #'     }
 #'     \item{`twostep`}{`logical`; when `over = TRUE`, whether to use the two-step approximation to the generalized method of moments variance. Default is `TRUE`. Ignored when `over = FALSE`.
 #'     }
-#'     \item{`link`}{`"string"`; the link used in the generalized linear model for the propensity scores when treatment is binary. Default is `"logit"` for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed: `"logit"`, `"probit"`, `"cauchit"`, and `"cloglog"` all use the binomial likelihood, `"log"` uses the Poisson likelihood, and `"identity"` uses the Gaussian likelihood (i.e., the linear probability model). Note that negative weights are possible with these last two and they should be used with caution. Ignored for multi-category and continuous treatments.
+#'     \item{`link`}{`"string"`; the link used in the generalized linear model for the propensity scores when treatment is binary. Default is `"logit"` for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed: `"logit"`, `"probit"`, `"cauchit"`, and `"cloglog"` all use the binomial likelihood, `"log"` uses the Poisson likelihood, and `"identity"` uses the Gaussian likelihood (i.e., the linear probability model). Note that negative weights are possible with these last two and they should be used with caution. Ignored for multi-category, continuous, and longitudinal treatments.
 #'     }
 #'     \item{`reltol`}{the relative tolerance for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is `sqrt(.Machine$double.eps)`.
 #'     }
@@ -65,14 +67,16 @@
 #' }
 #'
 #' @details
-#' CBPS estimates the coefficients of a generalized linear model (for binary treatments), multinomial logistic regression model (for multi-category treatments), or linear regression model (for continuous treatments) that is used to compute (generalized) propensity scores, from which the weights are computed. It involves replacing (or augmenting, in the case of the over-identified version) the standard regression score equations with the balance constraints in a generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with `exact = FALSE`) does away with the score equations for the coefficients so that only the balance constraints (and the score equation for the variance of the error with a continuous treatment) are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multi-category treatments and linear terms for continuous treatments than will the over-identified version.
+#' CBPS estimates the coefficients of a generalized linear model (for binary treatments), multinomial logistic regression model (for multi-category treatments), or linear regression model (for continuous treatments) that is used to compute (generalized) propensity scores, from which the weights are computed. It involves replacing (or augmenting, in the case of the over-identified version) the standard regression score equations with the balance constraints in a generalized method of moments estimation. The idea is to nudge the estimation of the coefficients toward those that produce balance in the weighted sample. The just-identified version (with `exact = FALSE`) does away with the score equations for the coefficients so that only the balance constraints are used. The just-identified version will therefore produce superior balance on the means (i.e., corresponding to the balance constraints) for binary and multi-category treatments and linear terms for continuous treatments than will the over-identified version.
 #'
 #' Just-identified CBPS is very similar to entropy balancing and inverse probability tilting. For the ATT, all three methods will yield identical estimates. For other estimands, the results will differ.
 #'
-#' Note that \pkg{WeightIt} provides different functionality from the \pkg{CBPS} package in terms of the versions of CBPS available; for extensions to CBPS (e.g., optimal CBPS, CBPS for instrumental variables, and jointly estimated CBPS for longitudinal treatments), the \pkg{CBPS} package may be preferred.
+#' Note that \pkg{WeightIt} provides different functionality from the \pkg{CBPS} package in terms of the versions of CBPS available; for extensions to CBPS (e.g., optimal CBPS and CBPS for instrumental variables), the \pkg{CBPS} package may be preferred. Note that for longitudinal treatments, `CBPS::CBMSM()` uses different methods and produces different results from `weightitMSM()` called with `method = "cbps"`.
 #'
 #' @note
-#' This method used to rely on functionality in the \pkg{CBPS} package, but no longer does. Slight differences may be found between the two packages in some cases due to numerical imprecision. \pkg{WeightIt} supports arbitrary numbers of groups for the multi-category CBPS and any estimand, whereas \pkg{CBPS} only supports up to four groups and only the ATE. For continuous treatments with the over-identified CBPS, \pkg{WeightIt} and \pkg{CBPS} use different methods of specifying the GMM variance matrix, which may lead to differing results. Note that the default method differs between the two implementations; by default \pkg{WeightIt} uses the just-identified CBPS, which is faster to fit, yields better balance, and is compatible with M-estimation for estimating the standard error of the treatment effect, whereas \pkg{CBPS} uses the over-identified CBPS by default. However, both the just-identified and over-identified versions are available in both packages.
+#' This method used to rely on functionality in the \pkg{CBPS} package, but no longer does. Slight differences may be found between the two packages in some cases due to numerical imprecision (or, for continuous and longitudinal treatments, due to a difference in the estimator). \pkg{WeightIt} supports arbitrary numbers of groups for the multi-category CBPS and any estimand, whereas \pkg{CBPS} only supports up to four groups and only the ATE. The implementation of the just-identified CBPS for continuous treatments also differs from that of \pkg{CBPS}, and departs slightly from that described by Fong et al. (2018). The treatment mean and treatment variance are treated as random parameters to be estimated and are included in the balance moment conditions. In Fong et al. (2018), the treatment mean and variance are fixed to their empirical counterparts. For continuous treatments with the over-identified CBPS, \pkg{WeightIt} and \pkg{CBPS} use different methods of specifying the GMM variance matrix, which may lead to differing results.
+#'
+#' Note that the default method differs between the two implementations; by default \pkg{WeightIt} uses the just-identified CBPS, which is faster to fit, yields better balance, and is compatible with M-estimation for estimating the standard error of the treatment effect, whereas \pkg{CBPS} uses the over-identified CBPS by default. However, both the just-identified and over-identified versions are available in both packages.
 #'
 #' @seealso
 #' [weightit()], [weightitMSM()]
@@ -82,15 +86,21 @@
 #' @references
 #' ## Binary treatments
 #'
-#' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 76(1), 243–263.
+#' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*, 76(1), 243–263.
 #'
-#' ## Multi-Category Treatments
+#' ## Multi-Category treatments
 #'
-#' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. Journal of the Royal Statistical Society: Series B (Statistical Methodology), 76(1), 243–263.
+#' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*, 76(1), 243–263.
 #'
 #' ## Continuous treatments
 #'
-#' Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. The Annals of Applied Statistics, 12(1), 156–177. \doi{10.1214/17-AOAS1101}
+#' Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. *The Annals of Applied Statistics*, 12(1), 156–177. \doi{10.1214/17-AOAS1101}
+#'
+#' ## Longitduinal treatments
+#'
+#' Huffman, C., & van Gameren, E. (2018). Covariate Balancing Inverse Probability Weights for Time-Varying Continuous Interventions. *Journal of Causal Inference*, 6(2). \doi{10.1515/jci-2017-0002}
+#'
+#' Note: one should not cite Imai & Ratkovic (2015) when using CBPS for longitudinal treatments.
 #'
 #' Some of the code was inspired by the source code of the \pkg{CBPS} package.
 #'
@@ -126,6 +136,16 @@
 #'                 method = "cbps"))
 #' summary(W3)
 #' cobalt::bal.tab(W3)
+#'
+#' #Longitudinal treatments
+#' data("msmdata")
+#' (W4 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+#'                         A_2 ~ X1_1 + X2_1 +
+#'                           A_1 + X1_0 + X2_0),
+#'                    data = msmdata,
+#'                    method = "cbps"))
+#' summary(W4)
+#' cobalt::bal.tab(W4)
 NULL
 
 weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
@@ -172,7 +192,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   if (is_null(A$link)) A$link <- "logit"
   link <- A$link
   chk::chk_string(link)
-  link <- match_arg(link, c("logit", "probit", "cauchit", "cloglog", "log", "identity"))
+  chk::chk_subset(link, c("logit", "probit", "cauchit", "cloglog", "log", "identity"))
 
   .fam <- switch(link,
                  "log" = quasipoisson("log"),
@@ -382,7 +402,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   if (!over) {
     Mparts <- list(
       psi_treat = function(Btreat, A, Xtreat, SW) {
-          psi_bal(Btreat, Xtreat, Xtreat, A, SW)
+        psi_bal(Btreat, Xtreat, Xtreat, A, SW)
       },
       wfun = function(Btreat, Xtreat, A) {
         ps <- .fam$linkinv(drop(Xtreat %*% Btreat))
@@ -400,7 +420,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 }
 
 weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
-                                stabilize, subclass, missing, verbose, ...) {
+                                stabilize, subclass, missing, moments, int, verbose, ...) {
 
   A <- list(...)
 
@@ -411,6 +431,11 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
+
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+
+  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                                 focal = focal, treat = treat))
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -512,6 +537,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
       Sigma <- function(B, Xm, Xb = Xm, A, SW) {
         pp <- get_pp(B, Xm)
         sw.5 <- sqrt(SW)
+        swXmXb <- crossprod(sw.5 * Xm, sw.5 * Xb)
 
         S <- list()
 
@@ -528,8 +554,8 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
         for (i in levels(treat)) {
           for (jj in combs) {
             m <- {
-              if      (i == jj[1])  crossprod(sw.5 * Xm, sw.5 * Xb)
-              else if (i == jj[2]) -crossprod(sw.5 * Xm, sw.5 * Xb)
+              if      (i == jj[1])  swXmXb
+              else if (i == jj[2]) -swXmXb
               else matrix(0, ncol(Xm), ncol(Xb))
             }
             S[[sprintf("m%s_b%s%s", i, jj[1], jj[2])]] <- m
@@ -644,6 +670,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
       Sigma <- function(B, Xm, Xb = Xm, A, SW) {
         pp <- get_pp(B, Xm)
         sw.5 <- sqrt(SW)
+        swXmXb <- crossprod(sw.5 * Xm, sw.5 * pp[,focal] * Xb)
 
         S <- list()
 
@@ -660,8 +687,8 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
         for (i in levels(treat)) {
           for (jj in combs) {
             m <- {
-              if      (i == jj[1])  crossprod(sw.5 * Xm, sw.5 * pp[,focal] * Xb)
-              else if (i == jj[2]) -crossprod(sw.5 * Xm, sw.5 * pp[,focal] * Xb)
+              if      (i == jj[1])  swXmXb
+              else if (i == jj[2]) -swXmXb
               else matrix(0, ncol(Xm), ncol(Xb))
             }
             S[[sprintf("m%s_b%s%s", i, jj[1], jj[2])]] <- m
@@ -672,7 +699,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
         for (ii in combs) {
           for (jj in combs) {
             m <- {
-              if (identical(ii, jj))    crossprod(sw.5 * sqrt(1 / pp[,ii[1]] + 1 / pp[,ii[2]]) * pp[,focal] * Xb)
+              if (identical(ii, jj)) crossprod(sw.5 * sqrt(1 / pp[,ii[1]] + 1 / pp[,ii[2]]) * pp[,focal] * Xb)
               else if (ii[1] == jj[1])  crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * pp[,focal] * Xb)
               else if (ii[1] == jj[2]) -crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * pp[,focal] * Xb)
               else if (ii[2] == jj[1]) -crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * pp[,focal] * Xb)
@@ -742,8 +769,8 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   if (!over) {
     Mparts <- list(
       psi_treat = function(Btreat, A, Xtreat, SW) {
-          psi_bal(Btreat, Xtreat, Xtreat, A, SW)
-        },
+        psi_bal(Btreat, Xtreat, Xtreat, A, SW)
+      },
       wfun = function(Btreat, Xtreat, A) {
         ps <- get_pp(Btreat, Xtreat)
         .get_w_from_ps_internal_multi(ps, A, estimand = estimand, focal = focal,
@@ -759,7 +786,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
        Mparts = Mparts)
 }
 
-weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
+weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
 
   A <- list(...)
 
@@ -771,15 +798,22 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     covs <- add_missing_indicators(covs)
   }
 
+  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE, orthogonal_poly = TRUE))
+
+  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                                 treat = treat))
+
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   treat <- (treat - w.m(treat, s.weights)) / sqrt(col.w.v(treat, s.weights))
 
+  covs <- scale(covs,
+                center = col.w.m(covs, s.weights),
+                scale = sqrt(col.w.v(covs, s.weights)))
+
   mod_covs <- cbind(`(Intercept)` = 1,
-                    scale(covs,
-                          center = col.w.m(covs, s.weights),
-                          scale = sqrt(col.w.v(covs, s.weights))))
+                    scale(svd(covs)$u))
 
   bal_covs <- mod_covs
 
@@ -789,33 +823,54 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   twostep <- if (is_null(A$twostep)) TRUE else A$twostep
   if (over) chk::chk_logical(twostep)
 
-  reltol <- if (is_null(A$reltol)) sqrt(.Machine$double.eps) else A$reltol
+  reltol <- if (is_null(A$reltol)) (.Machine$double.eps) else A$reltol
   chk::chk_number(reltol)
 
-  maxit <- if (is_null(A$maxit)) 1e3 else A$maxit
+  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
   chk::chk_count(maxit)
 
-  dens.num <- dnorm(treat, log = TRUE)
+  s.weights <- s.weights / mean_fast(s.weights)
 
-  #Linear regression score; residual variance omitted, included
-  #in balance condition
+  # dens.num <- dnorm(treat, log = TRUE)
+
+  #Linear regression score + score for marginal mean + var and conditional var
   psi_lm <- function(B, Xm, A, SW) {
-    p <- drop(Xm %*% B[-1])
+    un_s2 <- exp(B[1])
+    un_p <- B[2]
+    s2 <- exp(B[3])
 
-    cbind(SW * (A - p) * Xm)
+    p <- drop(Xm %*% B[-(1:3)])
+
+    cbind(#SW * (A - un_p)^2 - un_s2,
+      #SW * (A - un_p),
+      #SW * (A - p)^2 - s2,
+      SW * (A - p) * Xm)
   }
+  # un_s2 <- mean((treat - mean(treat)) ^ 2)
+  # un_p <- mean(treat)
+
+  squish_tol <- 25
 
   # Balance condition
   psi_bal <- function(B, Xm, Xb = Xm, A, SW) {
-    s2 <- exp(B[1])
-    p <- drop(Xm %*% B[-1])
+    un_s2 <- exp(B[1])
+    un_p <- B[2]
+    dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
+                       lo = -squish_tol, hi = squish_tol)
 
-    dens.denom <- dnorm(A, p, sqrt(s2), log = TRUE)
+    s2 <- exp(B[3])
+    p <- drop(Xm %*% B[-(1:3)])
+    dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
+                         lo = -squish_tol, hi = squish_tol)
 
     w <- exp(dens.num - dens.denom)
 
-    cbind(w * SW * A * Xm,
-          SW * (A - p)^2/s2 - 1)
+    cbind(SW * (A - un_p)^2 - un_s2,
+          SW * (A - un_p),
+          SW * (A - p)^2 - s2,
+          # SW * (A - p),
+          # SW * w * Xm,
+          SW * w * A * Xm)
   }
 
   obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
@@ -825,7 +880,8 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
   # Initialize coefs using logistic regression
   init.fit <- lm.wfit(mod_covs, treat, w = s.weights)
-  par_glm <- c(log(var(init.fit$residuals)), init.fit$coefficients)
+  par_glm <- c(0, 0, log(var(init.fit$residuals)), init.fit$coefficients)
+  names(par_glm)[1:3] <- c("log(s^2)", "E[A]", "log(s_r^2)")
 
   # Slightly improve glm coefs to move closer to optimal
   alpha.func <- function(alpha) obj_bal(par_glm * alpha, mod_covs, bal_covs, treat, s.weights)
@@ -855,11 +911,13 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     }
 
     obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
+      psi0 <- psi(B, Xm, Xb, A, SW)
+
       if (is.null(invS)) {
-        invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
+        invS <- generalized_inverse(crossprod(psi0))
       }
 
-      gbar <- colMeans(psi(B, Xm, Xb, A, SW))
+      gbar <- colMeans(psi0)
       sqrt(drop(t(gbar) %*% invS %*% gbar))
     }
 
@@ -890,38 +948,301 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     .wrn("the optimziation failed to converge; try again with a higher value of `maxit`")
   }
 
-  s2 <- exp(par[1])
+  un_s2 <- exp(par[1])
+  un_p <- par[2]
+  dens.num <- dnorm(treat, un_p, sqrt(un_s2), log = TRUE)
 
-  p <- drop(mod_covs %*% par[-1])
+  s2 <- exp(par[3])
+  p <- drop(mod_covs %*% par[-(1:3)])
   dens.denom <- dnorm(treat, p, sqrt(s2), log = TRUE)
 
   w <- exp(dens.num - dens.denom)
 
   Mparts <- NULL
-  if (!over) {
-    Mparts <- list(
-      psi_treat = function(Btreat, A, Xtreat, SW) {
-        psi_bal(Btreat, Xtreat, Xtreat, A, SW)
-      },
-      wfun = function(Btreat, Xtreat, A) {
-        s2 <- exp(Btreat[1])
-
-        p <- drop(Xtreat %*% Btreat[-1])
-        dens.denom <- dnorm(A, p, sqrt(s2), log = TRUE)
-        dens.num <- dnorm(A, log = TRUE)
-
-        exp(dens.num - dens.denom)
-      },
-      Xtreat = mod_covs,
-      A = treat,
-      btreat = par
-    )
-  }
 
   list(w = w, fit.obj = out,
        Mparts = Mparts)
 }
 
-weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, verbose, ...) {
-  .err("CBMSM doesn't work yet")
+weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, verbose, ...) {
+  A <- list(...)
+
+  s.weights <- s.weights[subset]
+  treat.types <- character(length(treat.list))
+
+  for (i in seq_along(covs.list)) {
+    covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
+    treat.list[[i]] <- treat.list[[i]][subset]
+
+    if (missing == "ind") {
+      covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
+    }
+
+    covs.list[[i]] <- cbind(covs.list[[i]], int.poly.f(covs.list[[i]], poly = moments,
+                                                       int = int, center = TRUE))
+
+    covs.list[[i]] <- cbind(covs.list[[i]], quantile_f(covs.list[[i]], qu = A[["quantile"]],
+                                                       s.weights = s.weights,
+                                                       treat = treat.list[[i]]))
+
+    colinear.covs.to.remove <- setdiff(colnames(covs.list[[i]]), colnames(make_full_rank(covs.list[[i]])))
+    covs.list[[i]] <- covs.list[[i]][, colnames(covs.list[[i]]) %nin% colinear.covs.to.remove, drop = FALSE]
+
+    if (!has_treat_type(treat.list[[i]])) {
+      treat.list[[i]] <- assign_treat_type(treat.list[[i]])
+    }
+    treat.types[i] <- get_treat_type(treat.list[[i]])
+
+    treat.list[[i]] <- switch(
+      treat.types[i],
+      "binary" = binarize(treat.list[[i]], one = get_treated_level(treat.list[[i]])),
+      "multinomial" = factor(treat.list[[i]]),
+      "continuous"= (treat.list[[i]] - w.m(treat.list[[i]], s.weights)) / sqrt(col.w.v(treat.list[[i]], s.weights))
+    )
+
+    covs.list[[i]] <- cbind(`(Intercept)` = 1,
+                            scale(svd(scale(covs.list[[i]],
+                                            center = col.w.m(covs.list[[i]], s.weights),
+                                            scale = sqrt(col.w.v(covs.list[[i]], s.weights))))$u))
+  }
+
+  over <- if (is_null(A$over)) FALSE else A$over
+  chk::chk_logical(over)
+
+  twostep <- if (is_null(A$twostep)) TRUE else A$twostep
+  if (over) chk::chk_logical(twostep)
+
+  reltol <- if (is_null(A$reltol)) sqrt(.Machine$double.eps) else A$reltol
+  chk::chk_number(reltol)
+
+  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
+  chk::chk_count(maxit)
+
+  N <- sum(s.weights)
+
+  coef_ind <- vector("list", length(treat.list))
+  for (i in seq_along(treat.list)) {
+    coef_ind[[i]] <- length(unlist(coef_ind)) + switch(
+      treat.types[i],
+      "binary" = seq_len(ncol(covs.list[[i]])),
+      "multinomial" = seq_len((nlevels(treat.list[[i]]) - 1) * ncol(covs.list[[i]])),
+      "continuous" = seq_len(3 + ncol(covs.list[[i]]))
+    )
+  }
+
+  get_p <- lapply(seq_along(treat.list), function(i) {
+    switch(treat.types[i],
+           "binary" = function(B, X, A) {
+             plogis(drop(X %*% B))
+           },
+           "multinomial" = function(B, X, A) {
+             qq <- lapply(seq_len(nlevels(A) - 1), function(j) {
+               coef_ind_i <- (j - 1) * ncol(X) + seq_len(ncol(X))
+               exp(drop(X %*% B[coef_ind_i]))
+             })
+
+             pden <- 1 + rowSums(do.call("cbind", qq))
+
+             p <- do.call("cbind", c(qq, list(1))) / pden
+             colnames(p) <- levels(A)
+
+             p
+           },
+           "continuous" = function(B, X, A) {
+             drop(X %*% B[-(1:3)])
+           })
+  })
+
+  squish_tol <- 25
+
+  get_w <- lapply(seq_along(treat.list), function(i) {
+    switch(treat.types[i],
+           "binary" = function(p, A, B) {
+             A / p + (1 - A) / (1 - p)
+           },
+           "multinomial" = function(p, A, B) {
+             w <- numeric(length(A))
+             for (a in levels(A)) {
+               w[A == a] <- 1 / p[A == a, a]
+             }
+             w
+           },
+           "continuous" = function(p, A, B) {
+             un_s2 <- exp(B[1])
+             un_p <- B[2]
+
+             dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
+                                lo = -Inf, hi = squish_tol)
+
+             s2 <- exp(B[3])
+             dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
+                                  lo = -squish_tol, hi = Inf)
+
+             exp(dens.num - dens.denom)
+           })
+  })
+
+  get_psi_bal <- lapply(seq_along(treat.list), function(i) {
+    switch(treat.types[i],
+           "binary" = function(w, B, X, A, SW) {
+             SW * w * (A - (1 - A)) * X
+           },
+           "multinomial" = function(w, B, X, A, SW) {
+             do.call("cbind", lapply(utils::combn(levels(treat.list[[i]]), 2, simplify = FALSE), function(co) {
+               SW * w * ((A == co[1]) - (A == co[2])) * X
+             }))
+           },
+           "continuous" = function(w, B, X, A, SW) {
+             un_s2 <- exp(B[1])
+             un_p <- B[2]
+             s2 <- exp(B[3])
+             p <- drop(X %*% B[-(1:3)])
+
+             cbind(
+               SW * (A - un_p)^2 - un_s2,
+               SW * (A - un_p),
+               SW * (A - p)^2 - s2,
+               SW * w * A * X)
+           })
+  })
+
+  # Balance condition
+  psi_bal <- function(B, X.list, A.list, SW) {
+    w <- Reduce("*", lapply(seq_along(A.list), function(i) {
+      Bi <- B[coef_ind[[i]]]
+      p <- get_p[[i]](Bi, X.list[[i]], A.list[[i]])
+      get_w[[i]](p, A.list[[i]], Bi)
+    }), init = 1)
+
+    do.call("cbind", lapply(seq_along(A.list), function(i) {
+      get_psi_bal[[i]](w, B[coef_ind[[i]]], X.list[[i]], A.list[[i]], SW)
+    }))
+  }
+
+  obj_bal <- function(B, X.list, A.list, SW) {
+    gbar <- colMeans(psi_bal(B, X.list, A.list, SW))
+    sqrt(sum(gbar^2))
+  }
+
+  # Initialize coefs using GLMs
+  par_glm <- unlist(lapply(seq_along(treat.list), function(i) {
+    switch(treat.types[i],
+           "binary" = glm.fit(covs.list[[i]], treat.list[[i]], family = binomial(),
+                              weights = s.weights)$coefficients,
+           "multinomial" = unlist(lapply(seq_len(nlevels(treat.list[[i]]) - 1), function(j) {
+             glm.fit(covs.list[[i]], treat.list[[i]] == levels(treat.list[[i]])[j],
+                     family = binomial(), weights = s.weights)$coefficients
+           })),
+           "continuous" = {
+             init.fit <- lm.wfit(covs.list[[i]], treat.list[[i]], w = s.weights)
+             b <- c(0, 0, log(var(init.fit$residuals)), init.fit$coefficients)
+             names(b)[1:3] <- c("log(s^2)", "E[A]", "log(s_r^2)")
+             b
+           })
+  }))
+
+  # Slightly improve glm coefs to move closer to optimal
+  alpha.func <- function(alpha) obj_bal(par_glm * alpha, covs.list, treat.list, s.weights)
+  par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
+
+  # Optimize balance objective
+  out <- optim(par = par_alpha,
+               fn = obj_bal,
+               method = "BFGS",
+               control = list(maxit = maxit,
+                              reltol = reltol,
+                              trace = as.integer(verbose)),
+               X.list = covs.list,
+               A.list = treat.list,
+               SW = s.weights)
+
+  par <- out$par
+
+  if (over) {
+    get_psi_glm <- lapply(seq_along(treat.list), function(i) {
+      switch(treat.types[i],
+             "binary" = function(p, X, A, SW) {
+               SW * (A - p) * X
+             },
+             "multinomial" = function(p, X, A, SW) {
+               do.call("cbind", lapply(levels(A), function(i) {
+                 SW * ((A == i) - p[,i]) * X
+               }))
+             },
+             "continuous" = function(p, X, A, SW) {
+               SW * (A - p) * X
+             })
+    })
+
+    psi <- function(B, X.list, A.list, SW) {
+      p.list <- lapply(seq_along(A.list), function(i) {
+        get_p[[i]](B[coef_ind[[i]]], X.list[[i]], A.list[[i]])
+      })
+
+      w <- Reduce("*", lapply(seq_along(A.list), function(i) {
+        get_w[[i]](p.list[[i]], A.list[[i]], B[coef_ind[[i]]])
+      }), init = 1)
+
+      cbind(
+        do.call("cbind", lapply(seq_along(A.list), function(i) {
+          get_psi_bal[[i]](w, B[coef_ind[[i]]], X.list[[i]], A.list[[i]], SW)
+        })),
+        do.call("cbind", lapply(seq_along(A.list), function(i) {
+          get_psi_glm[[i]](p.list[[i]], X.list[[i]], A.list[[i]], SW)
+        }))
+      )
+    }
+
+    Sigma <- function(B, X.list, A.list, SW) {
+      crossprod(psi(B, X.list, A.list, SW))
+    }
+
+    obj <- function(B, X.list, A.list, SW, invS = NULL) {
+      psi0 <- psi(B, X.list, A.list, SW)
+
+      if (is.null(invS)) {
+        invS <- generalized_inverse(crossprod(psi0))
+      }
+
+      gbar <- colMeans(psi0)
+      sqrt(drop(t(gbar) %*% invS %*% gbar))
+    }
+
+    invS <- {
+      if (twostep) generalized_inverse(Sigma(par_alpha, covs.list, treat.list, s.weights))
+      else NULL
+    }
+
+    out <- lapply(list(par_alpha, par), function(par_) {
+      optim(par = par_,
+            fn = obj,
+            method = "BFGS",
+            control = list(maxit = maxit,
+                           reltol = reltol,
+                           trace = as.integer(verbose)),
+            X.list = covs.list,
+            A.list = treat.list,
+            SW = s.weights,
+            invS = invS)
+    })
+
+    out <- out[[which.min(sapply(out, `[[`, "value"))]]
+
+    par <- out$par
+  }
+
+  if (out$converge != 0) {
+    .wrn("the optimziation failed to converge; try again with a higher value of `maxit`")
+  }
+
+  w <- Reduce("*", lapply(seq_along(treat.list), function(i) {
+    Bi <- par[coef_ind[[i]]]
+    p <- get_p[[i]](Bi, covs.list[[i]], treat.list[[i]])
+    get_w[[i]](p, treat.list[[i]], Bi)
+  }), init = 1)
+
+  Mparts <- NULL
+
+  list(w = w, fit.obj = out,
+       Mparts = Mparts)
 }
