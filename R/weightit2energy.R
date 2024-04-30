@@ -85,8 +85,12 @@
 #'
 #' The primary benefit of energy balancing is that all features of the covariate distribution are balanced, not just means, as with other optimization-based methods like entropy balancing. Still, it is possible to add additional balance constraints to require balance on individual terms using the `moments` argument, just like with entropy balancing. Energy balancing can sometimes yield weights with high variability; the `lambda` argument can be supplied to penalize highly variable weights to increase the effective sample size at the expense of balance.
 #'
+#' ## Reproducibility
+#'
+#' Although there are no stochastic components to the optimization, a feature left on by default is to update the optimization based on how long the optimization has been running, which will vary across runs even when a seed is set and no parameters have been changed. See the discussion [here](https://github.com/osqp/osqp-r/issues/19) for more details. To ensure reproducibility, set `adaptive_rho_interval` to an integer greater than 0 or set `adaptive_rho` to 0.
+#'
 #' @note
-#' Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything. If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon). Increasing `max_iter` might help.
+#' Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything (but see the *Reproducibility* section above). If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon). Increasing `max_iter` or changing `adaptive_rho_interval` might help.
 #'
 #' If it seems like the weights are balancing the covariates but you still get a failure to converge, this usually indicates that more iterations are needs to find the optimal solutions. This can occur when `moments` or `int` are specified. `max_iter` should be increased, and setting `verbose = TRUE` allows you to monitor the process and examine if the optimization is approaching convergence.
 #'
@@ -135,7 +139,253 @@
 #' }
 NULL
 
-weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, missing, moments, int, verbose, ...) {
+weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
+                            missing, moments, int, verbose, ...) {
+
+  rlang::check_installed("osqp")
+
+  A <- list(...)
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  d <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
+  A[["dist.mat"]] <- NULL
+
+  if (is.character(d) && length(d) == 1L) {
+    dist.covs <- transform_covariates(data = covs, method = d,
+                                      s.weights = s.weights, discarded = !subset)
+    d <- unname(eucdist_internal(dist.covs))
+  }
+  else {
+    if (inherits(d, "dist")) d <- as.matrix(d)
+
+    if (!is.matrix(d) || !all(dim(d) == length(treat)) ||
+        !all(check_if_zero(diag(d))) || any(d < 0) ||
+        !isSymmetric(unname(d))) {
+      .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
+                   word_list(weightit_distances(), "or", quotes = TRUE)))
+    }
+
+  }
+
+  d <- unname(d[subset, subset])
+
+  covs <- covs[subset, , drop = FALSE]
+  treat <- treat[subset]
+  s.weights <- s.weights[subset]
+
+  t.lev <- get_treated_level(treat)
+  treat <- binarize(treat, one = t.lev)
+
+  n <- length(treat)
+  diagn <- diag(n)
+
+  covs <- scale(covs)
+
+  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  chk::chk_number(min.w)
+
+  lambda <- if_null_then(A[["lambda"]], 1e-4)
+  chk::chk_number(lambda)
+
+  t0 <- which(treat == 0)
+  t1 <- which(treat == 1)
+
+  s.weights[t0] <- s.weights[t0] / mean_fast(s.weights[t0])
+  s.weights[t1] <- s.weights[t1] / mean_fast(s.weights[t1])
+
+  n0 <- length(t0)
+  n1 <- length(t1)
+
+  s.weights_n_0 <- s.weights_n_1 <- rep(0, n)
+  s.weights_n_0[t0] <- s.weights[t0] / n0
+  s.weights_n_1[t1] <- s.weights[t1] / n1
+
+  if (estimand == "ATE") {
+    improved <- if_null_then(A[["improved"]], TRUE)
+    chk::chk_flag(improved)
+
+    nn <- tcrossprod(cbind(s.weights_n_0, s.weights_n_1))
+
+    if (improved) {
+      nn <- nn + tcrossprod(s.weights_n_0 - s.weights_n_1)
+    }
+
+    P <- -d * nn
+
+    q <- ((s.weights * 2 / n) %*% d) * (s.weights_n_0 + s.weights_n_1)
+
+    #Constraints for positivity and sum of weights
+    Amat <- cbind(diagn, s.weights_n_0, s.weights_n_1)
+    lvec <- c(rep(min.w, n), 1, 1)
+    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), 1, 1)
+
+    if (moments != 0 || int) {
+      #Exactly balance moments and/or interactions
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+      targets <- col.w.m(covs, s.weights)
+
+      Amat <- cbind(Amat, covs * s.weights_n_0, covs * s.weights_n_1)
+      lvec <- c(lvec, targets, targets)
+      uvec <- c(uvec, targets, targets)
+    }
+
+    if (is_not_null(A[["quantile"]])) {
+      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
+
+      targets <- col.w.m(qu, s.weights)
+
+      Amat <- cbind(Amat, qu * s.weights_n_0, qu * s.weights_n_1)
+      lvec <- c(lvec, targets, targets)
+      uvec <- c(uvec, targets, targets)
+    }
+  }
+  else if (estimand == "ATT") {
+    nn <- tcrossprod(s.weights_n_0[t0])
+
+    P <- -d[t0, t0] * nn
+
+    q <- 2 * (s.weights_n_1[t1] %*% d[t1, t0]) * s.weights_n_0[t0]
+
+    Amat <- cbind(diag(n0), s.weights_n_0[t0])
+    lvec <- c(rep(min.w, n0), 1)
+    uvec <- c(ifelse(check_if_zero(s.weights[t0]), min.w, Inf), 1)
+
+    if (moments != 0 || int) {
+      #Exactly balance moments and/or interactions
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+      targets <- col.w.m(covs[t1,, drop = FALSE], s.weights[t1])
+
+      Amat <- cbind(Amat, covs[t0,, drop = FALSE] * s.weights_n_0[t0])
+
+      lvec <- c(lvec, targets)
+      uvec <- c(uvec, targets)
+    }
+
+    if (is_not_null(A[["quantile"]])) {
+      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                       focal = 1, treat = treat)
+
+      targets <- col.w.m(qu[t1,, drop = FALSE], s.weights[t1])
+
+      Amat <- cbind(Amat, qu[t0,, drop = FALSE] * s.weights_n_0[t0])
+
+      lvec <- c(lvec, targets)
+      uvec <- c(uvec, targets)
+    }
+  }
+  else if (estimand == "ATC") {
+    nn <- tcrossprod(s.weights_n_1[t1])
+
+    P <- -d[t1, t1] * nn
+
+    q <- 2 * (s.weights_n_0[t0] %*% d[t0, t1]) * s.weights_n_1[t1]
+
+    Amat <- cbind(diag(n1), s.weights_n_1[t1])
+    lvec <- c(rep(min.w, n1), 1)
+    uvec <- c(ifelse(check_if_zero(s.weights[t1]), min.w, Inf), 1)
+
+    if (moments != 0 || int) {
+      #Exactly balance moments and/or interactions
+      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+
+      targets <- col.w.m(covs[t0,, drop = FALSE], s.weights[t0])
+
+      Amat <- cbind(Amat, covs[t1,, drop = FALSE] * s.weights_n_1[t1])
+
+      lvec <- c(lvec, targets)
+      uvec <- c(uvec, targets)
+    }
+
+    if (is_not_null(A[["quantile"]])) {
+      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                       focal = 0, treat = treat)
+
+      targets <- col.w.m(qu[t0,, drop = FALSE], s.weights[t0])
+
+      Amat <- cbind(Amat, qu[t1,, drop = FALSE] * s.weights_n_1[t1])
+
+      lvec <- c(lvec, targets)
+      uvec <- c(uvec, targets)
+    }
+  }
+
+  #Add weight penalty
+  if (lambda < 0) {
+    #Find lambda to make P PSD
+    e <- eigen(P, symmetric = TRUE, only.values = TRUE)
+    e.min <- min(e$values)
+    if (e.min < 0) {
+      lambda <- -e.min*n^2
+    }
+  }
+
+  diag(P) <- diag(P) + lambda / n^2
+
+  if (is_not_null(A[["eps"]])) {
+    chk::chk_number(A[["eps"]], "`eps`")
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  }
+  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2e3L
+  chk::chk_count(A[["max_iter"]], "`max_iter`")
+  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
+  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
+  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
+  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
+  chk::chk_number(A[["time_limit"]], "`time_limit`")
+  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
+  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
+  A[["verbose"]] <- TRUE
+
+  options.list <- do.call(osqp::osqpSettings, A)
+
+  verbosely({
+    opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
+                                pars = options.list)
+  }, verbose = verbose)
+
+  if (identical(opt.out$info$status, "maximum iterations reached")) {
+    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
+                 A[["max_iter"]]))
+  }
+  else if (identical(opt.out$info$status, "run time limit reached")) {
+    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
+                 A[["time_limit"]]))
+  }
+  else if (!startsWith(opt.out$info$status, "solved")) {
+    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
+  }
+
+
+  if (estimand == "ATE") {
+    w <- opt.out$x
+  }
+  else if (estimand == "ATT") {
+    w <- rep(1, n)
+    w[t0] <- opt.out$x
+  }
+  else if (estimand == "ATC") {
+    w <- rep(1, n)
+    w[t1] <- opt.out$x
+  }
+
+  w[w <= min.w] <- min.w
+
+  opt.out$lambda <- lambda
+
+  list(w = w, fit.obj = opt.out)
+}
+
+weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, focal,
+                                  missing, moments, int, verbose, ...) {
   rlang::check_installed("osqp")
 
   A <- list(...)
@@ -174,43 +424,45 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   levels_treat <- levels(treat)
   diagn <- diag(n)
 
+  covs <- scale(covs)
+
   min.w <- if_null_then(A[["min.w"]], 1e-8)
-  if (!chk::vld_number(min.w)) {
-    .wrn("`min.w` must be a single number. Setting `min.w = 1e-8`")
-    min.w <- 1e-8
-  }
+  chk::chk_number(min.w)
 
   lambda <- if_null_then(A[["lambda"]], 1e-4)
-  if (!chk::vld_number(lambda)) {
-    .wrn("`lambda` must be a single number. Setting lambda = 1e-4")
-    lambda <- 1e-4
-  }
+  chk::chk_number(lambda)
 
-  for (t in levels_treat) s.weights[treat == t] <- s.weights[treat == t]/mean(s.weights[treat == t])
+  for (t in levels_treat) {
+    s.weights[treat == t] <- s.weights[treat == t]/mean_fast(s.weights[treat == t])
+  }
 
   treat_t <- vapply(levels_treat, function(t) treat == t, logical(n))
   n_t <- colSums(treat_t)
 
-  s.weights_n_t <- setNames(lapply(levels_treat, function(t) treat_t[,t] * s.weights / n_t[t]),
-                            levels_treat)
+  s.weights_n_t <- vapply(levels_treat, function(t) treat_t[,t] * s.weights / n_t[t],
+                          numeric(n))
 
   if (estimand == "ATE") {
+    improved <- if_null_then(A[["improved"]], TRUE)
+    chk::chk_flag(improved)
 
-    P <- -d * Reduce("+", lapply(s.weights_n_t, tcrossprod))
+    nn <- tcrossprod(s.weights_n_t)
 
-    q <- ((s.weights * 2 / n) %*% d) * Reduce("+", s.weights_n_t)
-
-    if (!isFALSE(A[["improved"]])) {
+    if (improved) {
+      .col_diff <- function(x) x[,1] - x[,2]
       all_pairs <- utils::combn(levels_treat, 2, simplify = FALSE)
-      P <- P - d * Reduce("+", lapply(all_pairs, function(p) {
-        tcrossprod(s.weights_n_t[[p[1]]] - s.weights_n_t[[p[2]]])
-      }))
+      nn <- nn + tcrossprod(vapply(all_pairs, function(p) .col_diff(s.weights_n_t[, p, drop = FALSE]),
+                                   numeric(n)))
     }
 
+    P <- -d * nn
+
+    q <- ((s.weights * 2 / n) %*% d) * rowSums(s.weights_n_t)
+
     #Constraints for positivity and sum of weights
-    Amat <- cbind(diagn, s.weights * treat_t)
-    lvec <- c(rep(min.w, n), n_t)
-    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), n_t)
+    Amat <- cbind(diagn, s.weights_n_t)
+    lvec <- c(rep(min.w, n), rep(1, length(levels_treat)))
+    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), rep(1, length(levels_treat)))
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
@@ -218,7 +470,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
       targets <- col.w.m(covs, s.weights)
 
-      Amat <- cbind(Amat, do.call("cbind", lapply(s.weights_n_t, function(x) covs * x)))
+      Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t, 2, function(x) covs * x, simplify = FALSE)))
       lvec <- c(lvec, rep(targets, length(levels_treat)))
       uvec <- c(uvec, rep(targets, length(levels_treat)))
     }
@@ -228,7 +480,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
       targets <- col.w.m(qu, s.weights)
 
-      Amat <- cbind(Amat, do.call("cbind", lapply(s.weights_n_t, function(x) qu * x)))
+      Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t, 2, function(x) qu * x, simplify = FALSE)))
       lvec <- c(lvec, rep(targets, length(levels_treat)))
       uvec <- c(uvec, rep(targets, length(levels_treat)))
     }
@@ -237,15 +489,16 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
     non_focal <- setdiff(levels_treat, focal)
     in_focal <- treat == focal
 
-    P <- -d[!in_focal, !in_focal] *
-      Reduce("+", lapply(s.weights_n_t[non_focal], function(x) tcrossprod(x[!in_focal])))
+    nn <- tcrossprod(s.weights_n_t[!in_focal, non_focal, drop = FALSE])
 
-    q <- 2 * (s.weights_n_t[[focal]][in_focal] %*% d[in_focal, !in_focal]) *
-      Reduce("+", lapply(s.weights_n_t[non_focal], function(x) x[!in_focal]))
+    P <- -d[!in_focal, !in_focal] * nn
 
-    Amat <- cbind(diag(sum(!in_focal)), s.weights[!in_focal] * treat_t[!in_focal, non_focal])
-    lvec <- c(rep(min.w, sum(!in_focal)), n_t[non_focal])
-    uvec <- c(ifelse_(check_if_zero(s.weights[!in_focal]), min.w, Inf), n_t[non_focal])
+    q <- 2 * (s.weights_n_t[in_focal, focal] %*% d[in_focal, !in_focal]) *
+      rowSums(s.weights_n_t[!in_focal, non_focal, drop = FALSE])
+
+    Amat <- cbind(diag(sum(!in_focal)), s.weights_n_t[!in_focal, non_focal])
+    lvec <- c(rep(min.w, sum(!in_focal)), rep(1, length(non_focal)))
+    uvec <- c(ifelse_(check_if_zero(s.weights[!in_focal]), min.w, Inf), rep(1, length(non_focal)))
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
@@ -253,8 +506,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
       targets <- col.w.m(covs[in_focal,, drop = FALSE], s.weights[in_focal])
 
-      Amat <- cbind(Amat, do.call("cbind", lapply(s.weights_n_t[non_focal],
-                                                  function(x) covs[!in_focal,, drop = FALSE] * x[!in_focal])))
+      Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t[!in_focal, non_focal, drop = FALSE], 2,
+                                                 function(x) covs[!in_focal,, drop = FALSE] * x,
+                                                 simplify = FALSE)))
       lvec <- c(lvec, rep(targets, length(non_focal)))
       uvec <- c(uvec, rep(targets, length(non_focal)))
     }
@@ -265,8 +519,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
 
       targets <- col.w.m(qu[in_focal,, drop = FALSE], s.weights[in_focal])
 
-      Amat <- cbind(Amat, do.call("cbind", lapply(s.weights_n_t[non_focal],
-                                                  function(x) qu[!in_focal,, drop = FALSE] * x[!in_focal])))
+      Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t[!in_focal, non_focal, drop = FALSE], 2,
+                                                 function(x) qu[!in_focal,, drop = FALSE] * x,
+                                                 simplify = FALSE)))
       lvec <- c(lvec, rep(targets, length(non_focal)))
       uvec <- c(uvec, rep(targets, length(non_focal)))
     }
@@ -285,13 +540,22 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   diag(P) <- diag(P) + lambda / n^2
 
   if (is_not_null(A[["eps"]])) {
+    chk::chk_number(A[["eps"]], "`eps`")
     if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
   }
   A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
   if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2e3L
+  chk::chk_count(A[["max_iter"]], "`max_iter`")
+  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
   if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
+  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
   if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
+  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
+  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
+  chk::chk_number(A[["time_limit"]], "`time_limit`")
+  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
+  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
   A[["verbose"]] <- TRUE
 
   options.list <- do.call(osqp::osqpSettings, A)
@@ -302,15 +566,23 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   }, verbose = verbose)
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
-    .wrn("the optimization failed to converge. See Notes section at `?method_energy` for information")
+    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
+                 A[["max_iter"]]))
+  }
+  else if (identical(opt.out$info$status, "run time limit reached")) {
+    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
+                 A[["time_limit"]]))
+  }
+  else if (!startsWith(opt.out$info$status, "solved")) {
+    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
   }
 
-  if (estimand == "ATT") {
-    w <- rep(1, length(treat))
-    w[treat != focal] <- opt.out$x
+  if (estimand == "ATE") {
+    w <- opt.out$x
   }
   else {
-    w <- opt.out$x
+    w <- rep(1, n)
+    w[treat != focal] <- opt.out$x
   }
 
   w[w <= min.w] <- min.w
@@ -320,7 +592,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal, mis
   list(w = w, fit.obj = opt.out)
 }
 
-weightit2energy.multi <- weightit2energy
+# weightit2energy.multi <- weightit2energy
 
 weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("osqp")
@@ -353,6 +625,24 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   Xdist <- unname(Xdist[subset, subset])
 
+  if (is_null(A[["treat.dist.mat"]])) {
+    Adist <- eucdist_internal(X = treat/sqrt(col.w.v(treat, s.weights)))
+  }
+  else {
+    Adist <- A[["treat.dist.mat"]]
+    A[["treat.dist.mat"]] <- NULL
+
+    if (inherits(Adist, "dist")) Adist <- as.matrix(Adist)
+
+    if (!is.matrix(Adist) || !all(dim(Adist) == length(treat)) ||
+        !all(check_if_zero(diag(Adist))) || any(Adist < 0) ||
+        !isSymmetric(unname(Adist))) {
+      .err("`treat.dist.mat` must be a square, symmetric distance matrix with a value for all pairs of units")
+    }
+  }
+
+  Adist <- unname(Adist[subset, subset])
+
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -364,26 +654,16 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   s.weights <- n * s.weights/sum(s.weights)
 
   min.w <- if_null_then(A[["min.w"]], 1e-8)
-  if (!chk::vld_number(min.w)) {
-    .wrn("`min.w` must be a single number. Setting `min.w = 1e-8`")
-    min.w <- 1e-8
-  }
+  chk::chk_number(min.w)
 
   lambda <- if_null_then(A[["lambda"]], 1e-4)
-  if (!chk::vld_number(lambda)) {
-    .wrn("`lambda` must be a single number. Setting lambda = 1e-4")
-    lambda <- 1e-4
-  }
+  chk::chk_number(lambda)
 
   d.moments <- max(if_null_then(A[["d.moments"]], 0), moments)
-  if (!chk::vld_number(d.moments)) {
-    .wrn(sprintf("`d.moments` must be a single number. Setting `lambda = %s`", moments))
-    lambda <- 1e-4
-  }
+  chk::chk_count(d.moments)
 
   dimension.adj <- if_null_then(A[["dimension.adj"]], TRUE)
-
-  Adist <- eucdist_internal(X = treat/sqrt(col.w.v(treat, s.weights)))
+  chk::chk_flag(dimension.adj)
 
   Xmeans <- colMeans(Xdist)
   Xgrand_mean <- mean(Xmeans)
@@ -400,12 +680,11 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   qebA <- drop(s.weights %*% Adist)*2/n^2
   qebX <- drop(s.weights %*% Xdist)*2/n^2
 
-  if (isFALSE(dimension.adj)) {
-    Q_energy_A_adj <- 1 / 2
+  Q_energy_A_adj <- {
+    if (!dimension.adj) 1 / 2
+    else 1 / (1 + sqrt(ncol(covs)))
   }
-  else {
-    Q_energy_A_adj <- 1 / (1 + sqrt(ncol(covs)))
-  }
+
   Q_energy_X_adj <- 1 - Q_energy_A_adj
 
   PebA <- PebA * Q_energy_A_adj
@@ -442,6 +721,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     lvec <- c(lvec, rep(0, ncol(d.covs)), rep(0, ncol(d.treat)))
     uvec <- c(uvec, rep(0, ncol(d.covs)), rep(0, ncol(d.treat)))
   }
+
   if (moments != 0 || int) {
     covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
 
@@ -469,14 +749,24 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   diag(P) <- diag(P) + lambda / n^2
 
   if (is_not_null(A[["eps"]])) {
+    chk::chk_number(A[["eps"]], "`eps`")
     if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
   }
   A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
   if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
+  chk::chk_count(A[["max_iter"]], "`max_iter`")
+  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
   if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
+  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
   if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
+  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
+  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
+  chk::chk_number(A[["time_limit"]], "`time_limit`")
+  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
+  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
   A[["verbose"]] <- TRUE
+
   options.list <- do.call(osqp::osqpSettings, A)
 
   verbosely({
@@ -485,7 +775,15 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   }, verbose = verbose)
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
-    .wrn("the optimization failed to converge. See Notes section at `?method_energy` for information")
+    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
+                 A[["max_iter"]]))
+  }
+  else if (identical(opt.out$info$status, "run time limit reached")) {
+    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
+                 A[["time_limit"]]))
+  }
+  else if (!startsWith(opt.out$info$status, "solved")) {
+    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
   }
 
   w <- opt.out$x
