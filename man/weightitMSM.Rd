@@ -53,8 +53,7 @@ saturated models may be time-consuming or impossible to fit.}
 
 \item{by}{a string containing the name of the variable in \code{data} for
 which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. (The argument used to be
-called \code{exact}, which will still work but with a message.) Only one
+the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. Only one
 \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
 variables using \code{\link[=interaction]{interaction()}}.}
@@ -109,9 +108,7 @@ included if \code{TRUE}.}
 
 \item{is.MSM.method}{whether the method estimates weights for multiple time
 points all at once (\code{TRUE}) or by estimating weights at each time point
-and then multiplying them together (\code{FALSE}). This is only relevant for
-\code{method = "optweight"}, which estimates weights for longitudinal
-treatments all at once, and for user-specified functions.}
+and then multiplying them together (\code{FALSE}). This is only relevant for user-specified functions.}
 
 \item{weightit.force}{several methods are not valid for estimating weights
 with longitudinal treatments, and will produce an error message if

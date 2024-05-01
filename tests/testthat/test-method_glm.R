@@ -82,6 +82,14 @@ test_that("Binary treatment", {
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
+                  link = "flic")
+  })
+
+  expect_null(attr(W, "Mparts"))
+
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
                   link = "probit")
   })
 
@@ -113,6 +121,12 @@ test_that("Binary treatment", {
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
                   link = "br.logit", s.weights = "SW")
+  })
+
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  link = "flac", s.weights = "SW")
   })
 
   expect_equal(test_data$SW, W$s.weights)
