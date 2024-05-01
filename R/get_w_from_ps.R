@@ -219,12 +219,12 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 
   estimand <- .process_estimand(estimand, method = "glm", treat.type = treat.type)
 
-  processed.estimand <- process.focal.and.estimand(focal, estimand, treat, treated)
+  processed.estimand <- .process_focal_and_estimand(focal, estimand, treat, treated)
   estimand <- processed.estimand$estimand
   focal <- processed.estimand$focal
   assumed.treated <- processed.estimand$treated
 
-  ps_mat <- ps_to_ps_mat(ps, treat, assumed.treated, treat.type, treated, estimand)
+  ps_mat <- .ps_to_ps_mat(ps, treat, assumed.treated, treat.type, treated, estimand)
 
   if (nrow(ps_mat) != length(treat)) {
     .err("`ps` and `treat` must have the same number of units")

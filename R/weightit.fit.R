@@ -197,7 +197,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     #Process estimand and focal
     estimand <- .process_estimand(estimand, method, treat.type)
-    f.e.r <- process.focal.and.estimand(focal, estimand, treat)
+    f.e.r <- .process_focal_and_estimand(focal, estimand, treat)
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 
@@ -208,15 +208,15 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       else missing <- ""
     }
     else if (missing != "" && anyNA(covs)) {
-      missing <- process.missing(missing, method, treat.type)
+      missing <- .process_missing(missing, method, treat.type)
     }
     else missing <- ""
 
     #Check subclass
-    if (is_not_null(subclass)) check.subclass(method, treat.type)
+    if (is_not_null(subclass)) .check_subclass(method, treat.type)
 
     #Process moments and int
-    moments.int <- process.moments.int(moments, int, method)
+    moments.int <- .process_moments_int(moments, int, method)
     moments <- moments.int[["moments"]]
     int <- moments.int[["int"]]
   }
@@ -404,7 +404,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
       treat.list[[i]] <- assign_treat_type(treat.list[[i]])
 
       if (anyNA(covs.list[[i]])) {
-        missing <- process.missing(missing, method, get_treat_type(treat.list[[i]]))
+        missing <- .process_missing(missing, method, get_treat_type(treat.list[[i]]))
       }
       else if (i == length(covs.list)) {
         missing <- ""
@@ -437,7 +437,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     }
 
     #Process moments and int
-    moments.int <- process.moments.int(moments, int, method)
+    moments.int <- .process_moments_int(moments, int, method)
     moments <- moments.int[["moments"]]
     int <- moments.int[["int"]]
   }

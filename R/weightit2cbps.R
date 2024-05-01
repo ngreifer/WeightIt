@@ -161,9 +161,9 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
 
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                                  focal = focal, treat = treat))
 
   t.lev <- get_treated_level(treat)
@@ -432,9 +432,9 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
 
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                                  focal = focal, treat = treat))
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
@@ -798,9 +798,9 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE, orthogonal_poly = TRUE))
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE, orthogonal_poly = TRUE))
 
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                                  treat = treat))
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
@@ -978,10 +978,10 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
     }
 
-    covs.list[[i]] <- cbind(covs.list[[i]], int.poly.f(covs.list[[i]], poly = moments,
+    covs.list[[i]] <- cbind(covs.list[[i]], .int_poly_f(covs.list[[i]], poly = moments,
                                                        int = int, center = TRUE))
 
-    covs.list[[i]] <- cbind(covs.list[[i]], quantile_f(covs.list[[i]], qu = A[["quantile"]],
+    covs.list[[i]] <- cbind(covs.list[[i]], .quantile_f(covs.list[[i]], qu = A[["quantile"]],
                                                        s.weights = s.weights,
                                                        treat = treat.list[[i]]))
 

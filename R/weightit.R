@@ -31,8 +31,7 @@
 #' `"ATT"`.
 #' @param by a string containing the name of the variable in `data` for
 #' which weighting is to be done within categories or a one-sided formula with
-#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, a separate propensity score model or optimization will occur within each level of the variable `"gender"`. (The argument used to be
-#' called `exact`, which will still work but with a message.) Only one
+#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, a separate propensity score model or optimization will occur within each level of the variable `"gender"`. Only one
 #' `by` variable is allowed; to stratify by multiply variables
 #' simultaneously, create a new variable that is a full cross of those
 #' variables using [interaction()].
@@ -216,7 +215,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   chk::chk_flag(keep.mparts)
 
   #Process ps
-  ps <- process.ps(ps, data, treat)
+  ps <- .process_ps(ps, data, treat)
   if (is_not_null(ps) && !identical(method, "glm") && !is.function(method)) {
     .wrn("`ps` is supplied, so `method` will be ignored")
     method <- "glm"
@@ -237,7 +236,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   #Process estimand and focal
   estimand <- .process_estimand(estimand, method, treat.type)
-  f.e.r <- process.focal.and.estimand(focal, estimand, treat)
+  f.e.r <- .process_focal_and_estimand(focal, estimand, treat)
   focal <- f.e.r[["focal"]]
   # estimand <- f.e.r[["estimand"]]
   estimand <- f.e.r[["reported.estimand"]]
@@ -246,11 +245,11 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   #Process missing
   missing <- {
     if (!anyNA(reported.covs)) ""
-    else process.missing(missing, method, treat.type)
+    else .process_missing(missing, method, treat.type)
   }
 
   #Check subclass
-  if (is_not_null(subclass)) check.subclass(method, treat.type)
+  if (is_not_null(subclass)) .check_subclass(method, treat.type)
 
   #Process s.weights
   s.weights <- process.s.weights(s.weights, data)
@@ -285,11 +284,11 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
   else by.arg <- "by"
 
-  # processed.by <- process.by(by.name, data = data, treat = treat)
-  processed.by <- process.by(by, data = data, treat = treat, by.arg = by.arg)
+  # processed.by <- .process_by(by.name, data = data, treat = treat)
+  processed.by <- .process_by(by, data = data, treat = treat, by.arg = by.arg)
 
   #Process moments and int
-  moments.int <- process.moments.int(moments, int, method)
+  moments.int <- .process_moments_int(moments, int, method)
 
   call <- match.call()
   # args <- list(...)
@@ -334,7 +333,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     obj$weights <- obj$weights / sw_obj[["weights"]]
   }
 
-  check_estimated_weights(obj$weights, treat, treat.type, s.weights)
+  .check_estimated_weights(obj$weights, treat, treat.type, s.weights)
 
   ## Assemble output object----
   out <- list(weights = obj$weights,

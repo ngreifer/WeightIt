@@ -110,11 +110,11 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights))
+  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights))
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -155,9 +155,9 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]

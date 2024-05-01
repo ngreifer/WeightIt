@@ -139,7 +139,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   t.lev <- get_treated_level(treat)
   treat <- binarize(treat, one = t.lev)
@@ -193,7 +193,7 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   ps <- make_df(levels(treat), nrow = length(treat))
 
@@ -246,10 +246,10 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   #Process density params
-  densfun <- get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
+  densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
                           n = A[["n"]], treat = treat, density = A[["density"]],
                           weights = s.weights)

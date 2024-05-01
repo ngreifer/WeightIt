@@ -224,7 +224,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
       targets <- col.w.m(covs, s.weights)
 
@@ -234,7 +234,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     }
 
     if (is_not_null(A[["quantile"]])) {
-      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
+      qu <- .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
 
       targets <- col.w.m(qu, s.weights)
 
@@ -256,7 +256,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
       targets <- col.w.m(covs[t1,, drop = FALSE], s.weights[t1])
 
@@ -267,7 +267,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     }
 
     if (is_not_null(A[["quantile"]])) {
-      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+      qu <- .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                        focal = 1, treat = treat)
 
       targets <- col.w.m(qu[t1,, drop = FALSE], s.weights[t1])
@@ -291,7 +291,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
       targets <- col.w.m(covs[t0,, drop = FALSE], s.weights[t0])
 
@@ -302,7 +302,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     }
 
     if (is_not_null(A[["quantile"]])) {
-      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+      qu <- .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                        focal = 0, treat = treat)
 
       targets <- col.w.m(qu[t0,, drop = FALSE], s.weights[t0])
@@ -466,7 +466,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
       targets <- col.w.m(covs, s.weights)
 
@@ -476,7 +476,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     }
 
     if (is_not_null(A[["quantile"]])) {
-      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
+      qu <- .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
 
       targets <- col.w.m(qu, s.weights)
 
@@ -502,7 +502,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
       targets <- col.w.m(covs[in_focal,, drop = FALSE], s.weights[in_focal])
 
@@ -514,7 +514,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     }
 
     if (is_not_null(A[["quantile"]])) {
-      qu <- quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+      qu <- .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                        focal = focal, treat = treat)
 
       targets <- col.w.m(qu[in_focal,, drop = FALSE], s.weights[in_focal])
@@ -708,7 +708,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     d.treat <- cbind(poly(treat, degree = d.moments))
 
     if (d.moments > 1) {
-      d.covs <- cbind(d.covs, int.poly.f(d.covs, poly = d.moments))
+      d.covs <- cbind(d.covs, .int_poly_f(d.covs, poly = d.moments))
     }
 
     X.targets <- col.w.m(d.covs, s.weights)
@@ -723,7 +723,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   }
 
   if (moments != 0 || int) {
-    covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+    covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
     X.means <- col.w.m(covs, s.weights)
     A.mean <- w.m(treat, s.weights)

@@ -110,7 +110,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   s.weights <- s.weights[subset]
 
   #Process density params
-  densfun <- get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
+  densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
                           n = A[["n"]], treat = treat, density = A[["density"]],
                           weights = s.weights)

@@ -189,7 +189,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (ncol(covs) > 1) {
     if (missing == "saem") {
@@ -391,7 +391,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (ncol(covs) > 1) {
     if (missing == "saem") {
@@ -768,7 +768,7 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (ncol(covs) > 1) {
     if (missing == "saem") {
@@ -787,7 +787,7 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   s.weights <- s.weights / mean_fast(s.weights)
 
   #Process density params
-  densfun <- get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
+  densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
                           n = A[["n"]], treat = treat, density = A[["density"]],
                           weights = s.weights)

@@ -9,10 +9,12 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
                         "super" = "super", "superlearner" = "super",
                         "bart" = "bart",
                         "energy" = "energy")}
+
 .method_to_proper_method <- function(method) {
   method <- tolower(method)
   unname(allowable.methods[method])
 }
+
 .check_acceptable_method <- function(method, msm = FALSE, force = FALSE) {
   bad.method <- FALSE
 
@@ -39,6 +41,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
     }
   }
 }
+
 .check_user_method <- function(method) {
   #Check to make sure it accepts treat and covs
   if (all(c("covs", "treat") %in% names(formals(method)))) {
@@ -49,6 +52,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
     .err("the user-provided function to `method` must contain `covs` and `treat` as named parameters")
   }
 }
+
 .method_to_phrase <- function(method) {
 
   if (is.function(method)) return("a user-defined method")
@@ -69,6 +73,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
 
   "the chosen method of weighting"
 }
+
 .process_estimand <- function(estimand, method, treat.type) {
   #Allowable estimands
   AE <- list(
@@ -116,7 +121,8 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
 
   estimand
 }
-check.subclass <- function(method, treat.type) {
+
+.check_subclass <- function(method, treat.type) {
   #Allowable estimands
   AE <- list(
     binary = list(  glm = TRUE
@@ -151,7 +157,8 @@ check.subclass <- function(method, treat.type) {
                  .method_to_phrase(method), treat.type))
   }
 }
-process.ps <- function(ps, data = NULL, treat) {
+
+.process_ps <- function(ps, data = NULL, treat) {
   if (is_null(ps)) return(NULL)
 
   if (is.character(ps) && length(ps) == 1L) {
@@ -175,7 +182,8 @@ process.ps <- function(ps, data = NULL, treat) {
 
   ps
 }
-process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
+
+.process_focal_and_estimand <- function(focal, estimand, treat, treated = NULL) {
   reported.estimand <- estimand
 
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
@@ -265,7 +273,8 @@ process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
        reported.estimand = reported.estimand,
        treated = if (is.factor(treated)) as.character(treated) else treated)
 }
-process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
+
+.process_by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
   ##Process by
   bad.by <- FALSE
@@ -330,7 +339,8 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
 
   by.components
 }
-process.moments.int <- function(moments, int, method) {
+
+.process_moments_int <- function(moments, int, method) {
 
   if (is.function(method) || method %in% c("npcbps", "ebal", "cbps", "ipt", "ebcw", "optweight", "energy")) {
     chk::chk_flag(int)
@@ -367,30 +377,44 @@ process.moments.int <- function(moments, int, method) {
 
   list(moments = moments, int = int)
 }
-process.MSM.method <- function(is.MSM.method, method) {
+
+.process_MSM_method <- function(is.MSM.method, method) {
   methods.with.MSM <- c("optweight", "cbps")
+
   if (is.function(method)) {
-    if (isTRUE(is.MSM.method)) .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
-    is.MSM.method <- FALSE
+    if (isTRUE(is.MSM.method)) {
+      .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
+    }
+
+    return(FALSE)
   }
-  else if (method %in% methods.with.MSM) {
-    if (is_null(is.MSM.method)) is.MSM.method <- TRUE
-    else if (!isTRUE(is.MSM.method)) {
+
+  if (method %in% methods.with.MSM) {
+    if (is_null(is.MSM.method)) return(TRUE)
+
+    chk::chk_flag(is.MSM.method)
+
+    if (!is.MSM.method) {
       .msg(paste0("%s can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
                   .method_to_phrase(method)))
     }
-  }
-  else {
-    if (isTRUE(is.MSM.method)) {
-      .wrn(sprintf("%s cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point",
-                   .method_to_phrase(method)))
-    }
-    is.MSM.method <- FALSE
+
+    return(is.MSM.method)
   }
 
-  is.MSM.method
+  if (is_null(is.MSM.method)) return(FALSE)
+
+  chk::chk_flag(is.MSM.method)
+
+  if (is.MSM.method) {
+    .wrn(sprintf("%s cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point",
+                 .method_to_phrase(method)))
+  }
+
+  FALSE
 }
-process.missing <- function(missing, method, treat.type) {
+
+.process_missing <- function(missing, method, treat.type) {
   #Allowable estimands
   AE <- list(binary = list(glm = c("ind", "saem")
                            , gbm = c("ind", "surr")
@@ -441,17 +465,18 @@ process.missing <- function(missing, method, treat.type) {
   }
 
   chk::chk_string(missing)
+
   if (!missing %pin% allowable.missings) {
     .err(sprintf("only %s allowed for `missing` with `method = %s` for %s treatments",
                  word_list(allowable.missings, quotes = 2, is.are = TRUE),
                  add_quotes(method),
                  treat.type))
-    return(allowable.missings[1])
   }
 
   allowable.missings[pmatch(missing, allowable.missings)]
 }
-make.closer.to.1 <- function(x) {
+
+.make_closer_to_1 <- function(x) {
   if (chk::vld_character_or_factor(x) || all_the_same(x)) {
     return(x)
   }
@@ -462,7 +487,8 @@ make.closer.to.1 <- function(x) {
 
   (x - mean_fast(x, TRUE))/sd(x, na.rm = TRUE)
 }
-int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, orthogonal_poly = TRUE) {
+
+.int_poly_f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, orthogonal_poly = TRUE) {
   #Adds to data frame interactions and polynomial terms
   #d=matrix input
   #ex=names of variables to exclude in interactions and polynomials; a subset of df
@@ -520,7 +546,8 @@ int.poly.f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, ortho
 
   out
 }
-quantile_f <- function(d, qu = NULL, s.weights = NULL, focal = NULL, treat = NULL, const = 2000) {
+
+.quantile_f <- function(d, qu = NULL, s.weights = NULL, focal = NULL, treat = NULL, const = 2000) {
   # Creates new variables for use in balance quantiles. `qu` is a list of quantiles for each
   # continuous variable in `d`, and returns a matrix with a column for each requested quantile
   # of each variable, taking on 0 for values less than the quantile, .5 for values at the quantile,
@@ -580,6 +607,7 @@ quantile_f <- function(d, qu = NULL, s.weights = NULL, focal = NULL, treat = NUL
     out
   }))
 }
+
 get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
   check.estimand <- check.weights <- check.focal <- FALSE
   s.d.denom.specified <- is_not_null(s.d.denom)
@@ -643,6 +671,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 
   s.d.denom
 }
+
 get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   s.d.denom.specified <- is_not_null(s.d.denom)
 
@@ -660,7 +689,8 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   try.s.d.denom
 }
-check_estimated_weights <- function(w, treat, treat.type, s.weights) {
+
+.check_estimated_weights <- function(w, treat, treat.type, s.weights) {
 
   tw <- w * s.weights
 
@@ -707,7 +737,8 @@ check_estimated_weights <- function(w, treat, treat.type, s.weights) {
     .wrn("some weights are negative; these cannot be used in most model fitting functions, including `(g)lm_weightit()`")
   }
 }
-ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
+
+.ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
                          treated = NULL, estimand = NULL) {
   if (is_(ps, c("matrix", "data.frame"))) {
     ps.names <- rownames(ps)
@@ -786,6 +817,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
 
   ps
 }
+
 .subclass_ps_multi <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
   chk::chk_count(subclass)
   subclass <- round(subclass)
@@ -819,7 +851,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
 
     if (any(sub.tab == 0)) {
       # .err("Too many subclasses were requested")
-      sub <- subclass_scoot(sub, treat, ps_mat[,i])
+      sub <- .subclass_scoot(sub, treat, ps_mat[,i])
       sub.tab <- table(treat, sub)
     }
 
@@ -843,6 +875,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
 
   ps_sub
 }
+
 .subclass_ps_bin <- function(ps, treat, estimand = "ATE", subclass) {
   chk::chk_count(subclass)
   subclass <- round(subclass)
@@ -864,7 +897,7 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
   sub.tab0 <- tabulate(sub[treat == 0], max_sub)
 
   if (any(sub.tab1 == 0) || any(sub.tab0 == 0)) {
-    sub <- subclass_scoot(sub, treat, ps)
+    sub <- .subclass_scoot(sub, treat, ps)
     sub.tab1 <- tabulate(sub[treat == 1], max_sub)
     sub.tab0 <- tabulate(sub[treat == 0], max_sub)
   }
@@ -878,7 +911,8 @@ ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
 
   sub.ps
 }
-subclass_scoot <- function(sub, treat, x, min.n = 1) {
+
+.subclass_scoot <- function(sub, treat, x, min.n = 1) {
   #Reassigns subclasses so there are no empty subclasses
   #for each treatment group. min.n is the smallest a
   #subclass is allowed to be.
@@ -905,9 +939,11 @@ subclass_scoot <- function(sub, treat, x, min.n = 1) {
     }
   }
 
-  if (any({sub_tab <- table(treat, sub)} == 0)) {
+  sub_tab <- table(treat, sub)
 
-    soft_thresh <- function(x, minus = 1) {
+  if (any(sub_tab == 0)) {
+
+    .soft_thresh <- function(x, minus = 1) {
       x <- x - minus
       x[x < 0] <- 0
       x
@@ -920,8 +956,8 @@ subclass_scoot <- function(sub, treat, x, min.n = 1) {
 
           if (first_0 == nsub ||
               (first_0 != 1 &&
-               sum(soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
-               sum(soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
+               sum(.soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
+               sum(.soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
             #If there are more and closer nonzero subs to the left...
             first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
 
@@ -952,6 +988,7 @@ subclass_scoot <- function(sub, treat, x, min.n = 1) {
 
   sub
 }
+
 stabilize_w <- function(weights, treat) {
   if (is.factor(treat)) t.levels <- levels(treat)
   else t.levels <- unique(treat)
@@ -961,12 +998,13 @@ stabilize_w <- function(weights, treat) {
 
   setNames(weights * tab[as.character(treat)], w.names)
 }
+
 `%+%` <- function(...) {
   if (is.atomic(..1) && is.atomic(..2)) crayon::`%+%`(as.character(..1), as.character(..2))
   else ggplot2::`%+%`(...)
 }
 
-get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = NULL,
+.get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = NULL,
                          n = NULL, treat = NULL, density = NULL, weights = NULL) {
   if (is_null(n)) n <- 10 * length(treat)
   if (is_null(adjust)) adjust <- 1
@@ -1292,13 +1330,6 @@ generalized_inverse <- function(sigma) {
   sigma_inv <- sigmasvd$v[, pos, drop = FALSE] %*% (sigmasvd$d[pos]^-1 * t(sigmasvd$u[, pos, drop = FALSE]))
 
   sigma_inv
-}
-
-#Choleski decomp for non-negative definite matrices
-chol2 <- function(Sinv) {
-  ch <- suppressWarnings(chol(Sinv, pivot = TRUE))
-  p <- order(attr(ch, "pivot"))
-  ch[, p, drop = FALSE]
 }
 
 #Compute gradient numerically using centered difference

@@ -129,12 +129,12 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int, center = TRUE))
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
 
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                                  focal = focal, treat = treat))
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -310,27 +310,27 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   k <- ncol(covs)
 
-  poly.covs <- int.poly.f(covs, poly = moments)
-  int.covs <- int.poly.f(covs, int = int)
+  poly.covs <- .int_poly_f(covs, poly = moments)
+  int.covs <- .int_poly_f(covs, int = int)
 
-  treat <- make.closer.to.1(treat)
-  for (i in seq_col(poly.covs)) poly.covs[,i] <- make.closer.to.1(poly.covs[,i])
-  for (i in seq_col(int.covs)) int.covs[,i] <- make.closer.to.1(int.covs[,i])
+  treat <- .make_closer_to_1(treat)
+  for (i in seq_col(poly.covs)) poly.covs[,i] <- .make_closer_to_1(poly.covs[,i])
+  for (i in seq_col(int.covs)) int.covs[,i] <- .make_closer_to_1(int.covs[,i])
   if (d.moments == moments) {
     d.poly.covs <- poly.covs
   }
   else {
-    d.poly.covs <- int.poly.f(covs, poly = d.moments)
-    for (i in seq_col(d.poly.covs)) d.poly.covs[,i] <- make.closer.to.1(d.poly.covs[,i])
+    d.poly.covs <- .int_poly_f(covs, poly = d.moments)
+    for (i in seq_col(d.poly.covs)) d.poly.covs[,i] <- .make_closer_to_1(d.poly.covs[,i])
   }
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   covs <- cbind(covs, poly.covs, int.covs, d.poly.covs)
   # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   t.mat <- matrix(treat, ncol = 1, dimnames = list(NULL, "treat"))
-  if (d.moments > 1) t.mat <- cbind(t.mat, int.poly.f(t.mat, poly = d.moments))
+  if (d.moments > 1) t.mat <- cbind(t.mat, .int_poly_f(t.mat, poly = d.moments))
 
   treat_c <- sweep(t.mat, 2, cobalt::col_w_mean(t.mat, s.weights))
   covs_c <- sweep(covs, 2, cobalt::col_w_mean(covs, s.weights))

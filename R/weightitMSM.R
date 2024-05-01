@@ -48,9 +48,7 @@
 #' included if `TRUE`.
 #' @param is.MSM.method whether the method estimates weights for multiple time
 #' points all at once (`TRUE`) or by estimating weights at each time point
-#' and then multiplying them together (`FALSE`). This is only relevant for
-#' `method = "optweight"`, which estimates weights for longitudinal
-#' treatments all at once, and for user-specified functions.
+#' and then multiplying them together (`FALSE`). This is only relevant for user-specified functions.
 #' @param weightit.force several methods are not valid for estimating weights
 #' with longitudinal treatments, and will produce an error message if
 #' attempted. Set to `TRUE` to bypass this error message.
@@ -172,18 +170,18 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     method <- .method_to_proper_method(method)
     attr(method, "name") <- method
     if (missing(is.MSM.method)) is.MSM.method <- NULL
-    is.MSM.method <- process.MSM.method(is.MSM.method, method)
+    is.MSM.method <- .process_MSM_method(is.MSM.method, method)
   }
   else if (is.function(method)) {
     method.name <- paste(deparse(substitute(method)))
     .check_user_method(method)
     if (missing(is.MSM.method)) is.MSM.method <- NULL
-    is.MSM.method <- process.MSM.method(is.MSM.method, method)
+    is.MSM.method <- .process_MSM_method(is.MSM.method, method)
     attr(method, "name") <- method.name
   }
 
   #Process moments and int
-  moments.int <- process.moments.int(moments, int, method)
+  moments.int <- .process_moments_int(moments, int, method)
   moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
 
   s.weights <- process.s.weights(s.weights, data)
@@ -281,14 +279,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     treat.list[[i]] <- assign_treat_type(treat.list[[i]])
 
     #By is processed each for each time, but only last time is used for by.factor.
-    processed.by <- process.by(by, data = data,
+    processed.by <- .process_by(by, data = data,
                                treat = treat.list[[i]],
                                treat.name = treat.name,
                                by.arg = by.arg)
 
     #Process missing
     if (anyNA(reported.covs.list[[i]])) {
-      missing <- process.missing(missing, method, get_treat_type(treat.list[[i]]))
+      missing <- .process_missing(missing, method, get_treat_type(treat.list[[i]]))
     }
     else if (i == length(formula.list)) {
       missing <- ""

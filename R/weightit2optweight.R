@@ -133,12 +133,12 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
-  covs <- cbind(covs, quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                                  focal = focal, treat = treat))
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -182,8 +182,8 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -224,8 +224,8 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
   if (is_not_null(covs.list)) {
     covs.list <- lapply(covs.list, function(c) {
       covs <- c[subset, , drop = FALSE]
-      covs <- cbind(covs, int.poly.f(covs, poly = moments, int = int))
-      for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
+      for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
       if (missing == "ind") {
         covs <- add_missing_indicators(covs)

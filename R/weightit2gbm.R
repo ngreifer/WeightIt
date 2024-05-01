@@ -217,7 +217,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs, replace_with = NA)
@@ -485,7 +485,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
+  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs, replace_with = NA)
@@ -578,7 +578,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                                    list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
 
   #Process density params
-  densfun <- get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
+  densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
                           n = A[["n"]], treat = treat, density = A[["density"]],
                           weights = s.weights)
