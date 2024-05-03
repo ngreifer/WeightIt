@@ -47,7 +47,7 @@ expect_M_parts_okay <- function(W, tolerance = 1e-5, ...) {
     colSums(psi(B, A, X, SW))
   }
 
-  start <- 1.1*unlist(btreat.list)
+  start <- 1.01 * unlist(btreat.list)
 
   out <- rootSolve::multiroot(gradfun, start = start,
                               X = Xtreat.list, A = A.list, SW = SW,

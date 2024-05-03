@@ -3,8 +3,8 @@ test_that("Binary treatment", {
 
   expect_no_condition({
     W0 <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "glm", estimand = "ATE",
-                  include.obj = TRUE)
+                   data = test_data, method = "glm", estimand = "ATE",
+                   include.obj = TRUE)
   })
 
   expect_M_parts_okay(W0)
@@ -135,8 +135,8 @@ test_that("Binary treatment", {
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                   data = test_data, method = "glm", estimand = "ATE",
-                   include.obj = TRUE, stabilize = TRUE)
+                  data = test_data, method = "glm", estimand = "ATE",
+                  include.obj = TRUE, stabilize = TRUE)
   })
 
   expect_M_parts_okay(W)
@@ -161,11 +161,25 @@ test_that("Binary treatment", {
   #Non-full rank
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
-                     I(1 - X5) + I(X9 * 2),
-                   data = test_data, method = "glm", estimand = "ATE",
-                   include.obj = TRUE)
+                    I(1 - X5) + I(X9 * 2),
+                  data = test_data, method = "glm", estimand = "ATE",
+                  include.obj = TRUE)
   })
 
   expect_equal(W$weights, W0$weights)
 
+  # Separation
+  set.seed(123)
+  test_data$Xx <- rbinom(nrow(test_data), 1, .01 + .99 * test_data$A)
+
+  expect_warning({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
+                    Xx,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  include.obj = TRUE)
+  }, "Propensity scores numerically equal to 0 or 1 were estimated")
+
+  # expect_failure(expect_M_parts_okay(W))
+
+  test_data$Xx <- NULL
 })
