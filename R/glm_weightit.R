@@ -113,14 +113,14 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
     chk::chk_is(weightit, "weightit")
     if (is_null(attr(weightit, "Mparts", exact = TRUE)) &&
         is_null(attr(weightit, "Mparts.list", exact = TRUE))) {
-      allowable_vcov <- c("none", "HC0", "BS", "FWB")
+      allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
 
       if (is_null(vcov)) {
         vcov <- "HC0"
       }
     }
     else {
-      allowable_vcov <- c("none", "asympt", "HC0", "BS", "FWB")
+      allowable_vcov <- c("none", "const", "asympt", "HC0", "BS", "FWB")
 
       if (is_null(vcov)) {
         vcov <- "asympt"
@@ -130,6 +130,11 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
 
   chk::chk_string(vcov)
   vcov <- match_arg(vcov, allowable_vcov)
+
+  if (inherits(weightit, "weightit") && vcov == "const") {
+    .wrn("`vcov = \"const\"` should not be used when `weightit` is supplied; the resulting standard errors are invalid and should not be interpreted")
+  }
+
   bootstrap <- vcov %in% c("BS", "FWB")
   if (bootstrap) {
     chk::chk_count(R)
@@ -220,7 +225,8 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
     }
     bout <- bout[!aliased]
   }
-  pout <- length(aliased)
+
+  pout <- sum(!aliased)
 
   if (is_not_null(cluster) && vcov %in% c("asympt", "HC0", "BS", "FWB")) {
     if (inherits(cluster, "formula")) {
@@ -473,11 +479,11 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
     }
     else {
       # Mparts.list from weightitMSM() or weightit()
-      psi_treat.list <- lapply(Mparts.list, `[[`, "psi_treat")
-      wfun.list <- lapply(Mparts.list, `[[`, "wfun")
-      Xtreat.list <- lapply(Mparts.list, `[[`, "Xtreat")
-      A.list <- lapply(Mparts.list, `[[`, "A")
-      btreat.list <- lapply(Mparts.list, `[[`, "btreat")
+      psi_treat.list <- grab(Mparts.list, "psi_treat")
+      wfun.list <- grab(Mparts.list, "wfun")
+      Xtreat.list <- grab(Mparts.list, "Xtreat")
+      A.list <- grab(Mparts.list, "A")
+      btreat.list <- grab(Mparts.list, "btreat")
 
       psi_treat <- function(Btreat, A, Xtreat, SW) {
         do.call("cbind", lapply(seq_along(Btreat), function(i) {
@@ -545,12 +551,22 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
                        SW = SW)
     }
 
-    A1 <- solve(-hess)
+    A1 <- try(solve(-hess), silent = TRUE)
+
+    if (null_or_error(A1)) {
+      .e <- conditionMessage(attr(A1, "condition"))
+      if (startsWith(.e, "system is computationally singular")) {
+        .err("the negative Hessian could not be inverted, which indicates an estimation failure, likely due to perfect separation. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = \"none\"`. Simplifying the model can sometimes help")
+      }
+
+      .err(.e, tidy = FALSE)
+    }
+
     V <- A1 %*% tcrossprod(B, A1)
   }
 
   if (is_not_null(V)) {
-    fit$vcov <- V[seq_len(sum(!aliased)), seq_len(sum(!aliased)), drop = FALSE]
+    fit$vcov <- V[seq_len(pout), seq_len(pout), drop = FALSE]
     colnames(fit$vcov) <- rownames(fit$vcov) <- names(aliased)[!aliased]
   }
 
@@ -587,7 +603,7 @@ coxph_weightit <- function(formula, data, weightit,
   else {
     chk::chk_is(weightit, "weightit")
 
-    allowable_vcov <- c("none", "HC0", "BS", "FWB")
+    allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
 
     if (is_null(vcov)) {
       vcov <- "HC0"
@@ -596,6 +612,11 @@ coxph_weightit <- function(formula, data, weightit,
 
   chk::chk_string(vcov)
   vcov <- match_arg(vcov, allowable_vcov)
+
+  if (inherits(weightit, "weightit") && vcov == "const") {
+    .wrn("`vcov = \"const\"` should not be used when `weightit` is supplied; the resulting standard errors are invalid and should not be interpreted")
+  }
+
   bootstrap <- vcov %in% c("BS", "FWB")
   if (bootstrap) {
     chk::chk_count(R)
@@ -649,7 +670,6 @@ coxph_weightit <- function(formula, data, weightit,
     }
     bout <- bout[!aliased]
   }
-  pout <- length(aliased)
 
   if (is_not_null(cluster) && vcov %in% c("asympt", "HC0", "BS", "FWB")) {
     if (inherits(cluster, "formula")) {
