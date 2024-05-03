@@ -531,6 +531,66 @@ We can compare individual predictions using `marginaleffects::hypotheses()`. For
 hypotheses(p, "reference")
 ```
 
+### Moderation Analysis
+
+Moderation analysis involves determining whether a treatment effect differs across levels of another variable. The use of matching with moderation analysis is described in @greenExaminingModerationAnalyses2014, and the application to weighting is similar. The goal is to achieve balance within each subgroup of the potential moderating variable, and there are several ways of doing so. Broadly, one can either perform weighting in the full dataset and interact the moderator with the other covariates in the weighting model, or one can perform completely separate analyses in each subgroup.
+
+In some cases, e.g., unregularized parametric methods like GLM propensity score weighting, CBPS, entropy balancing, or inverse probability tilting, both methods yield identical results. To fit a weighting model within each subgroup, one can use the `by` argument to `weightit()`, which does just this[^5]. There is also the possibility of using the subgroup balancing propensity score [@dongSubgroupBalancingPropensity2020] implemented using `sbps()`, which determines whether a single weighting model fit to the whole or a subgroup-specific weighting model is best for each subgroup and overall. The chosen approach should be that which achieves the best balance, though we don't demonstrate assessing balance here to maintain focus on effect estimation.
+
+[^5]: Currently, when `by` is used, M-estimation based standard errors cannot be computed, but all methods compatible with M-estimation yield identical results when using `by` vs. interacting the moderator with the other covariates in the weighting model. Here, we demonstrate using `by` because it is more generalizable to other methods.
+
+We'll consider the binary variable `X5` to be the potential moderator of the effect of `A` on `Y_C`. Below, we'll estimate weights using CBPS for the ATE within each level of `X5` by supplying it to the `by` argument.
+
+```{r}
+Wm <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
+                 X6 + X7 + X8 + X9, data = d,
+               method = "cbps", estimand = "ATE",
+               by = ~X5)
+
+Wm
+```
+
+Because we are using CBPS, equivalent weights could be estimated by interacting `X5` with the other covariates, e.g., `A ~ X5 * (X1 + X2 + ...)`.
+
+It is staightforward to check subgroup balance using `cobalt::bal.tab()`, which has a `cluster` argument that can be used to assess balance within subgroups, e.g., by `cobalt::bal.tab(Wm, cluster = "X5")`. See the vignette "Appendix 2: Using cobalt with Clustered, Multiply Imputed, and Other Segmented Data" on the `cobalt` [website](#0) for details.
+
+If we are satisfied with balance, we can then model the outcome with an interaction between the treatment, the moderator, and, optionally, the covariates. This is equivalent to fitting a model for the outcome within each combination of the treatment and moderator, so it can be a good idea to simplify this model to include just the most important covariates to the outcome in order to avoid estimating too many parameters. Here, we'll do so using the just the first three covariates.
+
+```{r}
+fit <- lm_weightit(Y_C ~ A * X5 * (X1 + X2 + X3),
+                    data = d, weightit = Wm)
+```
+
+To estimate the subgroup ATEs, we can use `avg_comparisons()`, this time specifying the `by` argument to signify that we want treatment effects stratified by the moderator.
+
+```{r}
+avg_comparisons(fit, variables = "A",
+                by = "X5")
+```
+
+We can see that the subgroup mean differences differ from each other, and we can formally test for moderation using another call to `avg_comparisons()`, this time using the `hypothesis` argument to signify that we want to compare effects between subgroups:
+
+```{r}
+avg_comparisons(fit, variables = "A",
+                by = "X5",
+                hypothesis = "pairwise")
+```
+
+Though the subgroup effects differ from each other in the sample, this difference is not statististically significant at the .05 level, so there is no evidence of moderation by `X5`.
+
+When the moderator has more than two levels, it is possible to run an omnibus test for moderation by changing `hypothesis` to `"reference"` and supplying the output to `marginaleffects::hypotheses()` with `joint = TRUE`, e.g.,
+
+```{r, eval=FALSE}
+avg_comparisons(fit, variables = "A",
+                by = "X5",
+                hypothesis = "reference") |>
+  hypotheses(joint = TRUE)
+```
+
+This produces a single p-value for the test that all pairwise differences between subgroups are equal to zero.
+
+It is important to remember that the presence of moderation does not imply that the moderator causes differences in the treatment effect; it may simply be associated with a variable that interacts with the treatment [@vanderweeleDistinctionInteractionEffect2009]. In addition, depending on which variables are adjusted for and how, moderation may not necessarily represent a disparity, even if one group experiences less benefit than another group [@jacksonMeaningfulCausalDecompositions2021].
+
 ## Reporting Results
 
 It is important to be as thorough and complete as possible when describing the methods of estimating the treatment effect and the results of the analysis. This improves transparency and replicability of the analysis. Results should at least include the following:
