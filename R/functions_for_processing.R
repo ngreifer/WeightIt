@@ -847,21 +847,21 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
                                      all.inside = TRUE))
     }
 
-    sub.tab <- table(treat, sub)
+    sub_tab <- table(treat, sub)
 
-    if (any(sub.tab == 0)) {
+    if (any(sub_tab == 0)) {
       # .err("Too many subclasses were requested")
       sub <- .subclass_scoot(sub, treat, ps_mat[,i])
-      sub.tab <- table(treat, sub)
+      sub_tab <- table(treat, sub)
     }
 
     sub <- as.character(sub)
 
-    sub.totals <- colSums(sub.tab)
-    sub.ps <- setNames(sub.tab[as.character(i), ] / sub.totals,
-                       colnames(sub.tab))
+    sub_totals <- colSums(sub_tab)
+    sub_ps <- setNames(sub_tab[as.character(i), ] / sub_totals,
+                       colnames(sub_tab))
 
-    ps_sub[,i] <- sub.ps[sub]
+    ps_sub[,i] <- sub_ps[sub]
     sub_mat[,i] <- sub
 
     if (ncol(ps_sub) == 2) {
@@ -893,23 +893,23 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
                                  all.inside = TRUE))
 
   max_sub <- max(sub)
-  sub.tab1 <- tabulate(sub[treat == 1], max_sub)
-  sub.tab0 <- tabulate(sub[treat == 0], max_sub)
+  sub_tab1 <- tabulate(sub[treat == 1], max_sub)
+  sub_tab0 <- tabulate(sub[treat == 0], max_sub)
 
-  if (any(sub.tab1 == 0) || any(sub.tab0 == 0)) {
+  if (any(sub_tab1 == 0) || any(sub_tab0 == 0)) {
     sub <- .subclass_scoot(sub, treat, ps)
-    sub.tab1 <- tabulate(sub[treat == 1], max_sub)
-    sub.tab0 <- tabulate(sub[treat == 0], max_sub)
+    sub_tab1 <- tabulate(sub[treat == 1], max_sub)
+    sub_tab0 <- tabulate(sub[treat == 0], max_sub)
   }
 
-  sub.totals <- sub.tab1 + sub.tab0
-  sub1_prop <- sub.tab1/sub.totals
+  sub_totals <- sub_tab1 + sub_tab0
+  sub1_prop <- sub_tab1/sub_totals
 
-  sub.ps <- sub1_prop[sub]
+  sub_ps <- sub1_prop[sub]
 
-  attr(sub.ps, "sub") <- sub
+  attr(sub_ps, "sub") <- sub
 
-  sub.ps
+  sub_ps
 }
 
 .subclass_scoot <- function(sub, treat, x, min.n = 1) {

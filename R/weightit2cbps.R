@@ -286,7 +286,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
               invS = invS)
       })
 
-      out <- out[[which.min(sapply(out, `[[`, "value"))]]
+      out <- out[[which.min(unlist(grab(out, "value")))]]
 
       par <- out$par
     }
@@ -382,7 +382,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
               invS = invS)
       })
 
-      out <- out[[which.min(sapply(out, `[[`, "value"))]]
+      out <- out[[which.min(unlist(grab(out, "value")))]]
 
       par <- out$par
     }
@@ -615,7 +615,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
               invS = invS)
       })
 
-      out <- out[[which.min(sapply(out, `[[`, "value"))]]
+      out <- out[[which.min(unlist(grab(out, "value")))]]
 
       par <- out$par
     }
@@ -748,7 +748,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
               invS = invS)
       })
 
-      out <- out[[which.min(sapply(out, `[[`, "value"))]]
+      out <- out[[which.min(unlist(grab(out, "value")))]]
 
       par <- out$par
     }
@@ -939,7 +939,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
             invS = invS)
     })
 
-    out <- out[[which.min(sapply(out, `[[`, "value"))]]
+    out <- out[[which.min(unlist(grab(out, "value")))]]
 
     par <- out$par
   }
@@ -1226,7 +1226,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
             invS = invS)
     })
 
-    out <- out[[which.min(sapply(out, `[[`, "value"))]]
+    out <- out[[which.min(unlist(grab(out, "value")))]]
 
     par <- out$par
   }

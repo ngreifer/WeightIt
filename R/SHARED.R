@@ -1157,3 +1157,9 @@ Invert <- function(f) {
   f <- match.fun(f)
   function(...) 1 / f(...)
 }
+
+.chol2 <- function(Sinv) {
+  ch <- suppressWarnings(chol(Sinv, pivot = TRUE))
+  p <- order(attr(ch, "pivot"))
+  ch[, p, drop = FALSE]
+}

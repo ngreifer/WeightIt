@@ -147,7 +147,8 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
       .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
     }
-    else bw <- A[["base.weight"]]
+
+    bw <- A[["base.weight"]]
   }
 
   reltol <- if (is_null(A$reltol)) (.Machine$double.eps) else A$reltol
@@ -264,10 +265,10 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     },
     Xtreat = covs,
     A = treat,
-    btreat = unlist(lapply(fit.list, `[[`, "Z"))
+    btreat = unlist(grab(fit.list, "Z"))
   )
 
-  list(w = w, fit.obj = lapply(fit.list, `[[`, "opt.out"),
+  list(w = w, fit.obj = grab(fit.list, "opt.out"),
        Mparts = Mparts)
 }
 
@@ -292,7 +293,8 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
     if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
       .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
     }
-    else bw <- A[["base.weight"]]
+
+    bw <- A[["base.weight"]]
   }
 
   bw <- bw[subset]
