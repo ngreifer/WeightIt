@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-05-01</h4>
+            <h4 data-toc-skip class="date">2024-05-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -1057,6 +1057,127 @@ following:</p>
 <span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
 <span><span class="co">## Type:  response</span></span></code></pre>
 </div>
+<div class="section level3">
+<h3 id="moderation-analysis">Moderation Analysis<a class="anchor" aria-label="anchor" href="#moderation-analysis"></a>
+</h3>
+<p>Moderation analysis involves determining whether a treatment effect
+differs across levels of another variable. The use of matching with
+moderation analysis is described in <span class="citation">(<a href="#ref-greenExaminingModerationAnalyses2014"><strong>greenExaminingModerationAnalyses2014?</strong></a>)</span>,
+and the application to weighting is similar. The goal is to achieve
+balance within each subgroup of the potential moderating variable, and
+there are several ways of doing so. Broadly, one can either perform
+weighting in the full dataset and interact the moderator with the other
+covariates in the weighting model, or one can perform completely
+separate analyses in each subgroup.</p>
+<p>In some cases, e.g., unregularized parametric methods like GLM
+propensity score weighting, CBPS, entropy balancing, or inverse
+probability tilting, both methods yield identical results. To fit a
+weighting model within each subgroup, one can use the <code>by</code>
+argument to <code><a href="../reference/weightit.html">weightit()</a></code>, which does just this<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;Currently, when &lt;code&gt;by&lt;/code&gt; is used, M-estimation
+based standard errors cannot be computed, but all methods compatible
+with M-estimation yield identical results when using &lt;code&gt;by&lt;/code&gt;
+vs. interacting the moderator with the other covariates in the weighting
+model. Here, we demonstrate using &lt;code&gt;by&lt;/code&gt; because it is more
+generalizable to other methods.&lt;/p&gt;"><sup>5</sup></a>. There is also the
+possibility of using the subgroup balancing propensity score <span class="citation">(<a href="#ref-dongSubgroupBalancingPropensity2020">Dong et al.
+2020</a>)</span> implemented using <code><a href="../reference/sbps.html">sbps()</a></code>, which determines
+whether a single weighting model fit to the whole or a subgroup-specific
+weighting model is best for each subgroup and overall. The chosen
+approach should be that which achieves the best balance, though we don’t
+demonstrate assessing balance here to maintain focus on effect
+estimation.</p>
+<p>We’ll consider the binary variable <code>X5</code> to be the
+potential moderator of the effect of <code>A</code> on <code>Y_C</code>.
+Below, we’ll estimate weights using CBPS for the ATE within each level
+of <code>X5</code> by supplying it to the <code>by</code> argument.</p>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">Wm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">A</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
+<span>                 <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
+<span>               method <span class="op">=</span> <span class="st">"cbps"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span>,</span>
+<span>               by <span class="op">=</span> <span class="op">~</span><span class="va">X5</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">Wm</span></span></code></pre></div>
+<pre><code><span><span class="co">## A <span style="font-style: italic;">weightit</span> object</span></span>
+<span><span class="co">##  - method: "cbps" (covariate balancing propensity score weighting)</span></span>
+<span><span class="co">##  - number of obs.: 2000</span></span>
+<span><span class="co">##  - sampling weights: none</span></span>
+<span><span class="co">##  - treatment: 2-category - estimand: ATE</span></span>
+<span><span class="co">##  - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span>
+<span><span class="co">##  - by: X5</span></span></code></pre>
+<p>Because we are using CBPS, equivalent weights could be estimated by
+interacting <code>X5</code> with the other covariates, e.g.,
+<code>A ~ X5 * (X1 + X2 + ...)</code>.</p>
+<p>It is staightforward to check subgroup balance using
+<code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code>, which has a <code>cluster</code>
+argument that can be used to assess balance within subgroups, e.g., by
+<code>cobalt::bal.tab(Wm, cluster = "X5")</code>. See the vignette
+“Appendix 2: Using cobalt with Clustered, Multiply Imputed, and Other
+Segmented Data” on the <code>cobalt</code> <a href="#id_0">website</a>
+for details.</p>
+<p>If we are satisfied with balance, we can then model the outcome with
+an interaction between the treatment, the moderator, and, optionally,
+the covariates. This is equivalent to fitting a model for the outcome
+within each combination of the treatment and moderator, so it can be a
+good idea to simplify this model to include just the most important
+covariates to the outcome in order to avoid estimating too many
+parameters. Here, we’ll do so using the just the first three
+covariates.</p>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="va">X5</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span><span class="op">)</span>,</span>
+<span>                    data <span class="op">=</span> <span class="va">d</span>, weightit <span class="op">=</span> <span class="va">Wm</span><span class="op">)</span></span></code></pre></div>
+<p>To estimate the subgroup ATEs, we can use
+<code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, this time specifying the <code>by</code>
+argument to signify that we want treatment effects stratified by the
+moderator.</p>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                by <span class="op">=</span> <span class="st">"X5"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">##  Term          Contrast X5 Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##     A mean(1) - mean(0)  0     1.16      0.480 2.41   0.0159  6.0 0.217   2.10</span></span>
+<span><span class="co">##     A mean(1) - mean(0)  1     2.38      0.454 5.24   &lt;0.001 22.5 1.487   3.27</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Columns: term, contrast, X5, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
+<p>We can see that the subgroup mean differences differ from each other,
+and we can formally test for moderation using another call to
+<code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, this time using the
+<code>hypothesis</code> argument to signify that we want to compare
+effects between subgroups:</p>
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                by <span class="op">=</span> <span class="st">"X5"</span>,</span>
+<span>                hypothesis <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">##   Term Estimate Std. Error     z Pr(&gt;|z|)   S 2.5 % 97.5 %</span></span>
+<span><span class="co">##  0 - 1    -1.22       0.66 -1.85    0.065 3.9 -2.51 0.0759</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
+<span><span class="co">## Type:  response</span></span></code></pre>
+<p>Though the subgroup effects differ from each other in the sample,
+this difference is not statististically significant at the .05 level, so
+there is no evidence of moderation by <code>X5</code>.</p>
+<p>When the moderator has more than two levels, it is possible to run an
+omnibus test for moderation by changing <code>hypothesis</code> to
+<code>"reference"</code> and supplying the output to
+<code><a href="https://marginaleffects.com/man/hypotheses.html" class="external-link">marginaleffects::hypotheses()</a></code> with
+<code>joint = TRUE</code>, e.g.,</p>
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                by <span class="op">=</span> <span class="st">"X5"</span>,</span>
+<span>                hypothesis <span class="op">=</span> <span class="st">"reference"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://marginaleffects.com/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span>joint <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>This produces a single p-value for the test that all pairwise
+differences between subgroups are equal to zero.</p>
+<p>It is important to remember that the presence of moderation does not
+imply that the moderator causes differences in the treatment effect; it
+may simply be associated with a variable that interacts with the
+treatment <span class="citation">(<a href="#ref-vanderweeleDistinctionInteractionEffect2009">VanderWeele
+2009</a>)</span>. In addition, depending on which variables are adjusted
+for and how, moderation may not necessarily represent a disparity, even
+if one group experiences less benefit than another group <span class="citation">(<a href="#ref-jacksonMeaningfulCausalDecompositions2021">Jackson
+2021</a>)</span>.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="reporting-results">Reporting Results<a class="anchor" aria-label="anchor" href="#reporting-results"></a>
@@ -1106,6 +1227,11 @@ Effects by Empirical Balancing Calibration Weighting.”</span>
 <em>Journal of the Royal Statistical Society: Series B (Statistical
 Methodology)</em> 78 (3): 673–700. <a href="https://doi.org/10.1111/rssb.12129" class="external-link">https://doi.org/10.1111/rssb.12129</a>.
 </div>
+<div id="ref-dongSubgroupBalancingPropensity2020" class="csl-entry">
+Dong, Jing, Junni L Zhang, Shuxi Zeng, and Fan Li. 2020. <span>“Subgroup
+Balancing Propensity Score.”</span> <em>Statistical Methods in Medical
+Research</em> 29 (3): 659–76. <a href="https://doi.org/10.1177/0962280219870836" class="external-link">https://doi.org/10.1177/0962280219870836</a>.
+</div>
 <div id="ref-efronBootstrapMethodsStandard1986" class="csl-entry">
 Efron, B., and R. Tibshirani. 1986. <span>“Bootstrap Methods for
 Standard Errors, Confidence Intervals, and Other Measures of Statistical
@@ -1140,6 +1266,11 @@ Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.
 <span>“Matching as Nonparametric Preprocessing for Reducing Model
 Dependence in Parametric Causal Inference.”</span> <em>Political
 Analysis</em> 15 (3): 199–236. <a href="https://doi.org/10.1093/pan/mpl013" class="external-link">https://doi.org/10.1093/pan/mpl013</a>.
+</div>
+<div id="ref-jacksonMeaningfulCausalDecompositions2021" class="csl-entry">
+Jackson, John W. 2021. <span>“Meaningful Causal Decompositions in Health
+Equity Research: Definition, Identification, and Estimation Through a
+Weighting Framework.”</span> <em>Epidemiology</em> 32 (2): 282. <a href="https://doi.org/10.1097/EDE.0000000000001319" class="external-link">https://doi.org/10.1097/EDE.0000000000001319</a>.
 </div>
 <div id="ref-luncefordStratificationWeightingPropensity2004" class="csl-entry">
 Lunceford, Jared K., and Marie Davidian. 2004. <span>“Stratification and
@@ -1198,6 +1329,11 @@ Stefanski, Leonard A., and Dennis D. Boos. 2002. <span>“The Calculus of
 m-Estimation.”</span> <em>The American Statistician</em> 56 (1): 29–38.
 <a href="https://doi.org/10.1198/000313002753631330" class="external-link">https://doi.org/10.1198/000313002753631330</a>.
 </div>
+<div id="ref-vanderweeleDistinctionInteractionEffect2009" class="csl-entry">
+VanderWeele, Tyler J. 2009. <span>“On the Distinction Between
+Interaction and Effect Modification.”</span> <em>Epidemiology</em> 20
+(6): 863–71. <a href="https://www.jstor.org/stable/25662776" class="external-link">https://www.jstor.org/stable/25662776</a>.
+</div>
 <div id="ref-vansteelandtInvitedCommentaryGComputation2011" class="csl-entry">
 Vansteelandt, Stijn, and Niels Keiding. 2011. <span>“Invited Commentary:
 G-Computation<span></span>lost in Translation?”</span> <em>American
@@ -1233,7 +1369,7 @@ Bootstrap.”</span> <em>The American Statistician</em> 74 (4): 345–58. <a hre
 <div class="section level2">
 <h2 id="code-to-generate-data-used-in-examples">Code to Generate Data used in Examples<a class="anchor" aria-label="anchor" href="#code-to-generate-data-used-in-examples"></a>
 </h2>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Generating data similar to Austin (2009) for demonstrating treatment effect estimation</span></span>
 <span><span class="va">gen_X</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">9</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="va">n</span>, ncol <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>
