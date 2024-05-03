@@ -21,9 +21,15 @@ WeightIt News and Updates
 
 * With `method = "gbm"`, an error is now thrown if `criterion` (formerly known as `stop.method`) is supplied as anything other than a string.
 
+* Added a section on conducting moderation analysis to the estimating effect vignette (`vignette("estimating-effects")`).
+
 * Fixed a bug when using M-estimation for sequential treatments with `weightitMSM()` and `stabilize = TRUE`. Standard errors incorrectly accounted for estimation of the stabilization factor; they are now correct.
 
 * Fixed a bug when using `method = "ipt"` for the ATE.
+
+* Fixed a bug when some coefficients were aliased for `glm_weightit()`. Thanks to @kkwi5241.
+
+* Improved warnings and errors for bad models throughout the package.
 
 # WeightIt 1.0.0
 

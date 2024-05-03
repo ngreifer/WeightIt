@@ -376,22 +376,38 @@ print.weightit <- function(x, ...) {
   trim <- attr(x[["weights"]], "trim")
 
   cat("A " %+% italic("weightit") %+% " object\n")
-  if (is_not_null(x[["method"]])) cat(sprintf(" - method: %s (%s)\n",
-                                              add_quotes(attr(x[["method"]], "name")),
-                                              .method_to_phrase(x[["method"]])))
+
+  if (is_not_null(x[["method"]])) {
+    cat(sprintf(" - method: %s (%s)\n",
+                add_quotes(attr(x[["method"]], "name")),
+                .method_to_phrase(x[["method"]])))
+  }
+
   cat(sprintf(" - number of obs.: %s\n",
               length(x[["weights"]])))
-  cat(paste0(" - sampling weights: ", if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present", "\n"))
-  cat(sprintf(" - treatment: %s",
+
+  cat(sprintf(" - sampling weights: %s\n",
+              if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present"))
+
+  cat(sprintf(" - treatment: %s\n",
               if (treat.type == "continuous") "continuous"
               else paste0(nunique(x[["treat"]]), "-category",
                           if (treat.type == "multinomial") paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")")
                           else "")))
-  if (is_not_null(x[["estimand"]])) cat(paste0(" - estimand: ", x[["estimand"]], ifelse(is_not_null(x[["focal"]]), paste0(" (focal: ", x[["focal"]], ")"), ""), "\n"))
-  if (is_not_null(x[["covs"]])) cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
-  if (is_not_null(x[["by"]])) {
-    cat(paste0(" - by: ", paste(names(x[["by"]]), collapse = ", "), "\n"))
+
+  if (is_not_null(x[["estimand"]])) {
+    cat(paste0(" - estimand: ", x[["estimand"]],
+               if (is_not_null(x[["focal"]])) sprintf(" (focal: %s)", x[["focal"]]) else "", "\n"))
   }
+
+  if (is_not_null(x[["covs"]])) {
+    cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
+  }
+
+  if (is_not_null(x[["by"]])) {
+    cat(sprintf(" - by: %s\n", paste(names(x[["by"]]), collapse = ", ")))
+  }
+
   if (is_not_null(trim)) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)

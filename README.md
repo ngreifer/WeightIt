@@ -103,7 +103,7 @@ assessed using `summary()`, as demonstrated below.
 summary(W)
 ```
 
-    #>                  Summary of weights
+    #>                   Summary of weights
     #> 
     #> - Weight ranges:
     #> 
