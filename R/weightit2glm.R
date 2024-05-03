@@ -211,7 +211,9 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
            "flic", "flac")
   }
 
-  if (is_null(A[["link"]])) A$link <- acceptable.links[1]
+  if (is_null(A[["link"]])) {
+    A[["link"]] <- acceptable.links[1]
+  }
   else {
     which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
     if (is.na(which.link)) {
@@ -224,7 +226,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   use.br <- startsWith(A[["link"]], "br.")
-  if (use.br) A$link <- substr(A$link, 4, nchar(A$link))
+  if (use.br) A[["link"]] <- substr(A[["link"]], 4, nchar(A[["link"]]))
+  use.logistf <- A[["link"]] %in% c("flic", "flac")
 
   if (missing == "saem") {
     rlang::check_installed("misaem")
@@ -248,7 +251,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 
     p.score <- drop(predict(fit, newdata = covs, method = A[["saem.method"]]))
   }
-  else if (A[["link"]] %in% c("flic", "flac")) {
+  else if (use.logistf) {
     rlang::check_installed("logistf")
     fit_fun <- switch(A[["link"]],
                       "flic" = logistf::flic,
@@ -341,6 +344,10 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     })
 
     p.score <- fit$fitted.values
+
+    if (any(p.score <= 1e-14) || any(p.score >= 1 - 1e-14)) {
+      .wrn('propensity scores numerically equal to 0 or 1 were estimated, indicating perfect separation and infinite parameter estimates. These may yield problems with inference. Consider trying a different `link`. See `help("method_glm", package = "WeightIt")` for details')
+    }
   }
 
   fit[["call"]] <- NULL
@@ -352,7 +359,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
                                    stabilize = stabilize, subclass = subclass)
 
   Mparts <- NULL
-  if (missing != "saem" && !use.br) {
+  if (missing != "saem" && !use.br && !use.logistf) {
     Mparts <- list(
       psi_treat = function(Btreat, A, Xtreat, SW) {
         lin_pred <- drop(Xtreat %*% Btreat)
@@ -446,13 +453,13 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   # Process link
   link <- NULL
   if (is_null(multi.method)) {
-    if (is_null(A$link) || identical(A$link, "logit")) {
+    if (is_null(A[["link"]]) || identical(A[["link"]], "logit")) {
       multi.method <- "weightit"
     }
-    else if (identical(A$link, "bayes.probit")) {
+    else if (identical(A[["link"]], "bayes.probit")) {
       multi.method <- "mnp"
     }
-    else if (identical(A$link, "br.logit")) {
+    else if (identical(A[["link"]], "br.logit")) {
       multi.method <- "brmultinom"
     }
     else {
@@ -461,7 +468,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
   else if (multi.method == "polr") {
     acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit", "br.logit")
-    if (is_null(A$link)) {
+    if (is_null(A[["link"]])) {
       link <- acceptable.links[1]
     }
     else {
@@ -476,19 +483,19 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     }
   }
   else if (multi.method == "saem") {
-    if (is_not_null(A$link) && !identical(A$link, "logit")) {
+    if (is_not_null(A[["link"]]) && !identical(A[["link"]], "logit")) {
       .wrn("`link` is ignored when `missing = \"saem\"`")
     }
   }
   else if (multi.method %in% c("weightit", "mclogit", "mnp", "brmultinom")) {
-    if (is_not_null(A$link) && !identical(A$link, "logit")) {
+    if (is_not_null(A[["link"]]) && !identical(A[["link"]], "logit")) {
       .wrn(sprintf("`link` is ignored when `multi.method` is \"%s\"",
                    multi.method))
     }
   }
   else if (multi.method == "glm") {
     acceptable.links <- c("logit", "probit", "cloglog", "identity", "log", "cauchit")
-    if (is_null(A$link)) {
+    if (is_null(A[["link"]])) {
       link <- acceptable.links[1]
     }
     else {
@@ -644,7 +651,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     }, verbose = verbose)},
     error = function(e) {
       .err(sprintf("there was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try a different `multi.method`.\nError message: (from `mclogit::mblogit()`) %s",
-                   A$link, conditionMessage(e)), tidy = FALSE)
+                   A[["link"]], conditionMessage(e)), tidy = FALSE)
     }
     )
 
@@ -749,7 +756,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       },
       Xtreat = cbind(`(Intercept)` = 1, covs),
       A = treat,
-      btreat = unlist(lapply(fit.list, `[[`, "coefficients"))
+      btreat = unlist(grab(fit.list, "coefficients"))
     )
   }
 
