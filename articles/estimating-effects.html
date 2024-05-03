@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9002</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -524,7 +524,8 @@ weighting method.</p>
 <span><span class="co">##  - method: "glm" (propensity score weighting with GLM)</span></span>
 <span><span class="co">##  - number of obs.: 2000</span></span>
 <span><span class="co">##  - sampling weights: none</span></span>
-<span><span class="co">##  - treatment: 2-category - estimand: ATE</span></span>
+<span><span class="co">##  - treatment: 2-category</span></span>
+<span><span class="co">##  - estimand: ATE</span></span>
 <span><span class="co">##  - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span></code></pre>
 <p>Typically one would assess balance and ensure that this weighting
 specification works, but we will skip that step here to focus on effect
@@ -826,7 +827,8 @@ from within the original control group.</p>
 <span><span class="co">##  - method: "ebal" (entropy balancing)</span></span>
 <span><span class="co">##  - number of obs.: 2000</span></span>
 <span><span class="co">##  - sampling weights: none</span></span>
-<span><span class="co">##  - treatment: 3-category (C1, C2, T) - estimand: ATT (focal: T)</span></span>
+<span><span class="co">##  - treatment: 3-category (C1, C2, T)</span></span>
+<span><span class="co">##  - estimand: ATT (focal: T)</span></span>
 <span><span class="co">##  - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span></code></pre>
 <p>Typically one would assess the performance of the weights (balance
 and effective sample size) but we will skip that for now. Next, we fit
@@ -893,7 +895,8 @@ et al. 2021</a>)</span> using <code><a href="../reference/weightit.html">weighti
 <span><span class="co">##  - method: "ebal" (entropy balancing)</span></span>
 <span><span class="co">##  - number of obs.: 2000</span></span>
 <span><span class="co">##  - sampling weights: none</span></span>
-<span><span class="co">##  - treatment: continuous - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span></code></pre>
+<span><span class="co">##  - treatment: continuous</span></span>
+<span><span class="co">##  - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span></code></pre>
 <p>Typically one would assess the performance of the weights (balance
 and effective sample size) but we will skip that for now. Next, we fit
 the outcome model and perform weighted g-computation. For the outcome
@@ -1101,7 +1104,8 @@ of <code>X5</code> by supplying it to the <code>by</code> argument.</p>
 <span><span class="co">##  - method: "cbps" (covariate balancing propensity score weighting)</span></span>
 <span><span class="co">##  - number of obs.: 2000</span></span>
 <span><span class="co">##  - sampling weights: none</span></span>
-<span><span class="co">##  - treatment: 2-category - estimand: ATE</span></span>
+<span><span class="co">##  - treatment: 2-category</span></span>
+<span><span class="co">##  - estimand: ATE</span></span>
 <span><span class="co">##  - covariates: X1, X2, X3, X4, X5, X6, X7, X8, X9</span></span>
 <span><span class="co">##  - by: X5</span></span></code></pre>
 <p>Because we are using CBPS, equivalent weights could be estimated by

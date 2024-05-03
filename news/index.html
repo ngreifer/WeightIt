@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9002</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,8 +65,11 @@
 <li><p>For point treatments (i.e., using <code><a href="../reference/weightit.html">weightit()</a></code>), the <code>stabilize</code> argument has some new behavior. It can now be be specified as a formula, and the stabilization factor is estimated separately and included in the M-estimation if allowed. It can now only be used when <code>estimand = "ATE"</code> (weights for other estimands should not be stabilized).</p></li>
 <li><p>For binary treatment with <code>method = "glm"</code>, <code>link</code> can now be specified as <code>"flic"</code> or <code>"flac"</code> to use Firth corrected logistic regression as implemented in the <code>logistf</code> package.</p></li>
 <li><p>With <code>method = "gbm"</code>, an error is now thrown if <code>criterion</code> (formerly known as <code>stop.method</code>) is supplied as anything other than a string.</p></li>
+<li><p>Added a section on conducting moderation analysis to the estimating effect vignette (<code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>).</p></li>
 <li><p>Fixed a bug when using M-estimation for sequential treatments with <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> and <code>stabilize = TRUE</code>. Standard errors incorrectly accounted for estimation of the stabilization factor; they are now correct.</p></li>
 <li><p>Fixed a bug when using <code>method = "ipt"</code> for the ATE.</p></li>
+<li><p>Fixed a bug when some coefficients were aliased for <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>. Thanks to <a href="https://github.com/kkwi5241" class="external-link">@kkwi5241</a>.</p></li>
+<li><p>Improved warnings and errors for bad models throughout the package.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.0.0" id="weightit-100">WeightIt 1.0.0<a class="anchor" aria-label="anchor" href="#weightit-100"></a></h2><p class="text-muted">CRAN release: 2024-03-23</p>

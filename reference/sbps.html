@@ -22,7 +22,7 @@ criterion that includes subgroup as well as overall balance."><meta property="og
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9002</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -219,7 +219,8 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category - estimand: ATT (focal: 1)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, race, re74</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
@@ -230,7 +231,8 @@ balancing propensity score. Statistical Methods in Medical Research, 29(3),
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category - estimand: ATT (focal: 1)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, race, re74</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - by: race</span>
 <span class="r-in"><span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu">sbps</span><span class="op">(</span><span class="va">W1</span>, <span class="va">W2</span><span class="op">)</span></span></span>
