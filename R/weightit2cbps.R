@@ -96,7 +96,7 @@
 #'
 #' Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. *The Annals of Applied Statistics*, 12(1), 156–177. \doi{10.1214/17-AOAS1101}
 #'
-#' ## Longitduinal treatments
+#' ## Longitudinal treatments
 #'
 #' Huffman, C., & van Gameren, E. (2018). Covariate Balancing Inverse Probability Weights for Time-Varying Continuous Interventions. *Journal of Causal Inference*, 6(2). \doi{10.1515/jci-2017-0002}
 #'

@@ -190,7 +190,7 @@ head(d)
 In addition to `WeightIt` and whatever package may be required to estimate the weights, we will need the following packages to perform the analyses:
 
 -   `marginaleffects` provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
--   `survival` provides `coxph()` to estimate the coefficients in a Cox-proportional hazards model for the marginal hazard ratio, which is called internall by `coxph_weightit()` for survival outcomes
+-   `survival` provides `coxph()` to estimate the coefficients in a Cox-proportional hazards model for the marginal hazard ratio, which is called internally by `coxph_weightit()` for survival outcomes
 
 ```{r,message=FALSE,warning=FALSE, include=FALSE, eval=!me_ok}
 library("WeightIt")
@@ -552,9 +552,9 @@ Wm
 
 Because we are using CBPS, equivalent weights could be estimated by interacting `X5` with the other covariates, e.g., `A ~ X5 * (X1 + X2 + ...)`.
 
-It is staightforward to check subgroup balance using `cobalt::bal.tab()`, which has a `cluster` argument that can be used to assess balance within subgroups, e.g., by `cobalt::bal.tab(Wm, cluster = "X5")`. See `vignette("segmented-data", package = "cobalt")` for details.
+It is straightforward to check subgroup balance using `cobalt::bal.tab()`, which has a `cluster` argument that can be used to assess balance within subgroups, e.g., by `cobalt::bal.tab(Wm, cluster = "X5")`. See `vignette("segmented-data", package = "cobalt")` for details.
 
-If we are satisfied with balance, we can then model the outcome with an interaction between the treatment, the moderator, and, optionally, the covariates. This is equivalent to fitting a model for the outcome within each combination of the treatment and moderator, so it can be a good idea to simplify this model to include just the most important covariates to the outcome in order to avoid estimating too many parameters. At a minimum, you must include na itneraction between the treatment and moderator. Here, we'll fit a linear regression model including the just the first three covariates in addition to the treatment and moderator (allowing the covariates to interact with both).
+If we are satisfied with balance, we can then model the outcome with an interaction between the treatment, the moderator, and, optionally, the covariates. This is equivalent to fitting a model for the outcome within each combination of the treatment and moderator, so it can be a good idea to simplify this model to include just the most important covariates to the outcome in order to avoid estimating too many parameters. At a minimum, you must include na interaction between the treatment and moderator. Here, we'll fit a linear regression model including the just the first three covariates in addition to the treatment and moderator (allowing the covariates to interact with both).
 
 ```{r}
 fit <- lm_weightit(Y_C ~ A * X5 * (X1 + X2 + X3),
@@ -576,7 +576,7 @@ avg_comparisons(fit, variables = "A",
                 hypothesis = "pairwise")
 ```
 
-Though the subgroup effects differ from each other in the sample, this difference is not statististically significant at the .05 level, so there is no evidence of moderation by `X5`.
+Though the subgroup effects differ from each other in the sample, this difference is not statistically significant at the .05 level, so there is no evidence of moderation by `X5`.
 
 When the moderator has more than two levels, it is possible to run an omnibus test for moderation by changing `hypothesis` to `"reference"` and supplying the output to `marginaleffects::hypotheses()` with `joint = TRUE`, e.g.,
 

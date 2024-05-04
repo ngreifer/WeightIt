@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# WeightIt 1.1.0
 
 * Added a new function, `coxph_weightit()`, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the `summary()` and `print()` methods for `glm_weightit` objects, which are different from those for `coxph` objects.
 
