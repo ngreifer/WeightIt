@@ -61,6 +61,8 @@
 #'       }
 #'       \item{`bag.fraction`}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the `bag.fraction` argument in `gbm.fit()`. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using [set.seed()] to ensure replicability of results.
 #'        }
+#'        \item{`use.offset`}{`logical`; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If `TRUE`, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the `offset` argument of `gbm.fit()`. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over `method = "glm"` with respect to `criterion`. Default is `FALSE` to omit the offset. Only allowed for binary and continuous treatments.
+#'        }
 #' }
 #'
 #' All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit}, and some are not used at all.
@@ -114,7 +116,7 @@
 #' \pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multi-category treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multi-category treatments.
 #'
 #' @note
-#' The `criterion` argument used to be called `stop.method`, which is its name in \pkg{twang}. `stop.method` still works for backward compatibility. Additionally, the criteria formerly named as `es.mean`, `es.max`, and `es.rms` have been renamed to `smd.mean`, `smd.max`, and `smd.rms`. The former are used in \pkg{twang} and will still work with `weightit()` for backward compatibility.
+#' The `criterion` argument used to be called `stop.method`, which is its name in \pkg{twang}. `stop.method` still works for backward compatibility. Additionally, the criteria formerly named as `"es.mean"`, `"es.max"`, and `"es.rms"` have been renamed to `"smd.mean"`, `"smd.max"`, and `"smd.rms"`. The former are used in \pkg{twang} and will still work with `weightit()` for backward compatibility.
 #'
 #' @seealso
 #' [weightit()], [weightitMSM()]
@@ -124,16 +126,16 @@
 #' @references
 #' ## Binary treatments
 #'
-#' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. Psychological Methods, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
+#' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. *Psychological Methods*, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 #'
 #' ## Multi-Category Treatments
 #'
-#' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+#' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. *Statistics in Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 #'
 #'
 #' ## Continuous treatments
 #'
-#' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1). \doi{10.1515/jci-2014-0022}
+#' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
 #'
 #' @examplesIf requireNamespace("gbm", quietly = TRUE)
 #' library("cobalt")
@@ -143,11 +145,12 @@
 #' (W1 <- weightit(treat ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "gbm", estimand = "ATE",
-#'                 criterion = "smd.max"))
+#'                 criterion = "smd.max",
+#'                 use.offset = TRUE))
 #' summary(W1)
 #' bal.tab(W1)
 #'
-#' \dontrun{
+#' \donttest{
 #'   #Balancing covariates with respect to race (multi-category)
 #'   (W2 <- weightit(race ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
@@ -314,15 +317,41 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   A[["x"]] <- covs
   A[["y"]] <- treat
-  A[["distribution"]] <- if (is_null(distribution <- A[["distribution"]])) {
-    available.distributions[1]} else {
-      match_arg(distribution, available.distributions, several.ok = TRUE)}
+  A[["distribution"]] <- {
+    if (is_null(distribution <- A[["distribution"]])) available.distributions[1]
+    else match_arg(distribution, available.distributions, several.ok = TRUE)
+  }
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
   A[["n.trees"]] <- n.trees
 
   tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
                                    list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
+
+  # Offset
+  use.offset <- A[["use.offset"]]
+  if (is_not_null(use.offset) && !isFALSE(use.offset)) {
+    if (treat.type == "multinomial") {
+      .err("`use.offset` cannot be used with multi-category treatments")
+    }
+    if (!identical(A[["distribution"]], "bernoulli")) {
+      .err("`use.offset` can only be used with `distribution = \"bernoulli\"`")
+    }
+    chk::chk_flag(use.offset)
+
+    if (use.offset) {
+      fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
+                     weights = s.weights, family = quasibinomial())
+      A[["offset"]] <- fit$linear.predictors
+    }
+    else {
+      A[["offset"]] <- NULL
+    }
+  }
+  else {
+    use.offset <- FALSE
+    A[["offset"]] <- NULL
+  }
 
   current.best.loss <- Inf
 
@@ -348,7 +377,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         .err("a problem has occurred")
       }
 
-      ps <- gbm::predict.gbm(fit, n.trees = iters.grid, type = "response", newdata = covs)
+      ps <- {
+        if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(fit, n.trees = iters.grid,
+                                                         type = "link", newdata = covs))
+        else gbm::predict.gbm(fit, n.trees = iters.grid,
+                              type = "response", newdata = covs)
+      }
+
       w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
                                          focal = focal, stabilize = stabilize, subclass = subclass)
       if (trim.at != 0) {
@@ -375,7 +410,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
           .err("a problem has occurred")
         }
 
-        ps <- gbm::predict.gbm(fit, n.trees = iters.to.check, type = "response", newdata = covs)
+        ps <- {
+          if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(fit, n.trees = iters.to.check,
+                                                           type = "link", newdata = covs))
+          else gbm::predict.gbm(fit, n.trees = iters.to.check,
+                                type = "response", newdata = covs)
+        }
+
         w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
                                            focal = focal, stabilize = stabilize, subclass = subclass)
         if (trim.at != 0) {
@@ -415,7 +456,6 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       A[["cv.folds"]] <- cv
       A["n.cores"] <- list(A[["n.cores"]])
       A["var.names"] <- list(A[["var.names"]])
-      A["offset"] <- list(NULL)
       A[["nTrain"]] <- floor(nrow(covs))
       A[["class.stratify.cv"]] <- FALSE
       A[["y"]] <- treat
@@ -442,7 +482,14 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
       if (best.loss < current.best.loss) {
         best.fit <- fit
-        best.ps <- gbm::predict.gbm(fit, n.trees = best.tree, type = "response", newdata = covs)
+
+        best.ps <- {
+          if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(best.fit, n.trees = best.tree,
+                                                           type = "link", newdata = covs))
+          else gbm::predict.gbm(best.fit, n.trees = best.tree,
+                                type = "response", newdata = covs)
+        }
+
         best.w <- drop(.get_w_from_ps_internal_array(best.ps, treat = treat, estimand = estimand,
                                                      focal = focal, stabilize = stabilize, subclass = subclass))
         # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
@@ -540,7 +587,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   chk::chk_count(n.trees)
   chk::chk_gt(n.trees, 1)
 
-  available.distributions <- c("gaussian", "laplace", "tdist", "poisson")
+  available.distributions <- c("gaussian", "laplace", "tdist")
 
   if (cv == 0) {
     start.tree <- if_null_then(A[["start.tree"]], 1)
@@ -577,6 +624,25 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
                                    list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
 
+  # Offset
+  use.offset <- A[["use.offset"]]
+  if (is_not_null(use.offset)) {
+    chk::chk_flag(use.offset)
+
+    if (use.offset) {
+      fit <- lm.wfit(x = as.matrix(cbind(1, covs)), y = treat,
+                     w = s.weights)
+      A[["offset"]] <- fit$fitted.values
+    }
+    else {
+      A[["offset"]] <- 0
+    }
+  }
+  else {
+    use.offset <- FALSE
+    A[["offset"]] <- 0
+  }
+
   #Process density params
   densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
                           adjust = A[["adjust"]], kernel = A[["kernel"]],
@@ -607,6 +673,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       }
 
       gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
+      if (use.offset) gps <- gps + A[["offset"]]
 
       w <- apply(gps, 2, function(p) {
         r <- treat - p
@@ -638,6 +705,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         }
 
         gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
+        if (use.offset) gps <- gps + A[["offset"]]
+
         w <- apply(gps, 2, function(p) {
           r <- treat - p
           dens.num / densfun(r / sqrt(col.w.v(r, s.weights)))
@@ -706,6 +775,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       if (best.loss < current.best.loss) {
         best.fit <- fit
         best.gps <- gbm::predict.gbm(fit, n.trees = best.tree, newdata = covs)
+        if (use.offset) best.gps <- best.gps + A[["offset"]]
 
         r <- treat - best.gps
         dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
