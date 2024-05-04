@@ -17,9 +17,11 @@ WeightIt News and Updates
 
 * For point treatments (i.e., using `weightit()`), the `stabilize` argument has some new behavior. It can now be be specified as a formula, and the stabilization factor is estimated separately and included in the M-estimation if allowed. It can now only be used when `estimand = "ATE"` (weights for other estimands should not be stabilized).
 
-* For binary treatment with `method = "glm"`, `link` can now be specified as `"flic"` or `"flac"` to use Firth corrected logistic regression as implemented in the `logistf` package.
+* For binary treatments with `method = "glm"`, `link` can now be specified as `"flic"` or `"flac"` to use Firth corrected logistic regression as implemented in the `logistf` package.
 
 * With `method = "gbm"`, an error is now thrown if `criterion` (formerly known as `stop.method`) is supplied as anything other than a string.
+
+* For binary and continuous treatments with `method = "gbm"`, a new argument, `use.offset`, can be supplied, which, if `TRUE`, uses the linear predictor from a generalized linear model as an offset in the boosting model, which can improve performance.
 
 * Added a section on conducting moderation analysis to the estimating effect vignette (`vignette("estimating-effects")`).
 
@@ -28,6 +30,8 @@ WeightIt News and Updates
 * Fixed a bug when using `method = "ipt"` for the ATE.
 
 * Fixed a bug when some coefficients were aliased for `glm_weightit()`. Thanks to @kkwi5241.
+
+* Updated kernel balancing example in `method_user`.
 
 * Improved warnings and errors for bad models throughout the package.
 
