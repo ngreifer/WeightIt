@@ -20,7 +20,7 @@ uses of the word "trim" (see the drop argument below).'><meta property="og:image
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9003</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -326,27 +326,27 @@ Treatment Weighting and Marginal Structural Models. Emerging Adulthood,
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.0782 |-----------------|            7.3680</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0030 |---------------------------| 11.3178</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.0038 |---------------------------| 12.9037</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0041 |-----------------------|     11.2051</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             203    333    436    335     103</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 5.5532 6.1825 6.2122 7.1462   7.368</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             408    337    201    196      45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 8.8746 8.9234 9.7306 9.8349 11.3178</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                              </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             140    286    157     363     246</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 9.0248 9.1261 9.8069 10.9621 12.9037</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             253    219    188     189     106</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 9.6224 10.379 10.652 11.1715 11.2051</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.808 0.640   0.309       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.929 0.714   0.391       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.010 0.742   0.433       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.969 0.729   0.409       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  370.    130.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    198.76   78.93</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  347.    153.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    179.12   75.96</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">trim</span><span class="op">(</span><span class="va">W</span>, at <span class="op">=</span> <span class="fl">.95</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Trimming weights to 95%.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
@@ -354,27 +354,27 @@ Treatment Weighting and Marginal Structural Models. Emerging Adulthood,
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.0782 |---------------------------| 6.1935</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0030 |---------------------------| 6.1935</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.0038 |---------------------------| 6.3104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0041 |---------------------------| 6.3104</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             203    333    436    335    103</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 5.5532 6.1825 6.1935 6.1935 6.1935</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             152    131    115    114     45</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 6.1935 6.1935 6.1935 6.1935 6.1935</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             286    246    157    140    134</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 6.3104 6.3104 6.3104 6.3104 6.3104</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             116    106     77     59      5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 6.3104 6.3104 6.3104 6.3104 6.3104</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.790 0.635   0.301       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.848 0.692   0.354       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.856 0.714   0.369       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.873 0.705   0.366       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  370.    130.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    215.45   80.28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  347.    153.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    197.26   88.52</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

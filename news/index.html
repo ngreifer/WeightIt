@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9003</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,12 +63,14 @@
 <li><p>A new estimator is now used for <code>method = "cbps"</code> with longitudinal treatments (i.e., using <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>). Previously, the weights from CBPS applied to each time point were multiplied together. Now, balance at all time points is optimized using a single set of weights. This implementation is close to that described by <a href="https://doi.org/10.1515/jci-2017-0002" class="external-link">Huffman and van Gameren (2018)</a>, not that of <a href="https://doi.org/10.1080/01621459.2014.956872" class="external-link">Imai and Ratkovic (2015)</a>.</p></li>
 <li><p>A new estimator is now used for <code>method = "cbps"</code> with continuous treatments. The unconditional mean and variance are now included as parameters to be estimated. For the just-identified CBPS, this will typically improve balance, but results will depart from those found using <code><a href="https://rdrr.io/pkg/CBPS/man/CBPS.html" class="external-link">CBPS::CBPS()</a></code>.</p></li>
 <li><p>For point treatments (i.e., using <code><a href="../reference/weightit.html">weightit()</a></code>), the <code>stabilize</code> argument has some new behavior. It can now be be specified as a formula, and the stabilization factor is estimated separately and included in the M-estimation if allowed. It can now only be used when <code>estimand = "ATE"</code> (weights for other estimands should not be stabilized).</p></li>
-<li><p>For binary treatment with <code>method = "glm"</code>, <code>link</code> can now be specified as <code>"flic"</code> or <code>"flac"</code> to use Firth corrected logistic regression as implemented in the <code>logistf</code> package.</p></li>
+<li><p>For binary treatments with <code>method = "glm"</code>, <code>link</code> can now be specified as <code>"flic"</code> or <code>"flac"</code> to use Firth corrected logistic regression as implemented in the <code>logistf</code> package.</p></li>
 <li><p>With <code>method = "gbm"</code>, an error is now thrown if <code>criterion</code> (formerly known as <code>stop.method</code>) is supplied as anything other than a string.</p></li>
+<li><p>For binary and continuous treatments with <code>method = "gbm"</code>, a new argument, <code>use.offset</code>, can be supplied, which, if <code>TRUE</code>, uses the linear predictor from a generalized linear model as an offset in the boosting model, which can improve performance.</p></li>
 <li><p>Added a section on conducting moderation analysis to the estimating effect vignette (<code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>).</p></li>
 <li><p>Fixed a bug when using M-estimation for sequential treatments with <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> and <code>stabilize = TRUE</code>. Standard errors incorrectly accounted for estimation of the stabilization factor; they are now correct.</p></li>
 <li><p>Fixed a bug when using <code>method = "ipt"</code> for the ATE.</p></li>
 <li><p>Fixed a bug when some coefficients were aliased for <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>. Thanks to <a href="https://github.com/kkwi5241" class="external-link">@kkwi5241</a>.</p></li>
+<li><p>Updated kernel balancing example in <code>method_user</code>.</p></li>
 <li><p>Improved warnings and errors for bad models throughout the package.</p></li>
 </ul></div>
     <div class="section level2">

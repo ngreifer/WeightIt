@@ -33,7 +33,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.0.0.9003</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,7 +86,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-05-03</h4>
+            <h4 data-toc-skip class="date">2024-05-04</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -1064,14 +1064,14 @@ following:</p>
 <h3 id="moderation-analysis">Moderation Analysis<a class="anchor" aria-label="anchor" href="#moderation-analysis"></a>
 </h3>
 <p>Moderation analysis involves determining whether a treatment effect
-differs across levels of another variable. The use of matching with
-moderation analysis is described in <span class="citation">(<a href="#ref-greenExaminingModerationAnalyses2014"><strong>greenExaminingModerationAnalyses2014?</strong></a>)</span>,
-and the application to weighting is similar. The goal is to achieve
-balance within each subgroup of the potential moderating variable, and
-there are several ways of doing so. Broadly, one can either perform
-weighting in the full dataset and interact the moderator with the other
-covariates in the weighting model, or one can perform completely
-separate analyses in each subgroup.</p>
+differs across levels of another variable. The use of weighting with
+moderation analysis is described in <span class="citation">Griffin et
+al. (<a href="#ref-griffinTutorialPropensityScore2023">2023</a>)</span>.
+The goal is to achieve balance within each subgroup of the potential
+moderating variable, and there are several ways of doing so. Broadly,
+one can either perform weighting in the full dataset and interact the
+moderator with the other covariates in the weighting model, or one can
+perform completely separate analyses in each subgroup.</p>
 <p>In some cases, e.g., unregularized parametric methods like GLM
 propensity score weighting, CBPS, entropy balancing, or inverse
 probability tilting, both methods yield identical results. To fit a
@@ -1114,18 +1114,20 @@ interacting <code>X5</code> with the other covariates, e.g.,
 <p>It is staightforward to check subgroup balance using
 <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code>, which has a <code>cluster</code>
 argument that can be used to assess balance within subgroups, e.g., by
-<code>cobalt::bal.tab(Wm, cluster = "X5")</code>. See the vignette
-“Appendix 2: Using cobalt with Clustered, Multiply Imputed, and Other
-Segmented Data” on the <code>cobalt</code> <a href="#id_0">website</a>
-for details.</p>
+<code>cobalt::bal.tab(Wm, cluster = "X5")</code>. See
+<code><a href="https://ngreifer.github.io/cobalt/articles/segmented-data.html" class="external-link">vignette("segmented-data", package = "cobalt")</a></code> for
+details.</p>
 <p>If we are satisfied with balance, we can then model the outcome with
 an interaction between the treatment, the moderator, and, optionally,
 the covariates. This is equivalent to fitting a model for the outcome
 within each combination of the treatment and moderator, so it can be a
 good idea to simplify this model to include just the most important
 covariates to the outcome in order to avoid estimating too many
-parameters. Here, we’ll do so using the just the first three
-covariates.</p>
+parameters. At a minimum, you must include na itneraction between the
+treatment and moderator. Here, we’ll fit a linear regression model
+including the just the first three covariates in addition to the
+treatment and moderator (allowing the covariates to interact with
+both).</p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="va">X5</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span><span class="op">)</span>,</span>
 <span>                    data <span class="op">=</span> <span class="va">d</span>, weightit <span class="op">=</span> <span class="va">Wm</span><span class="op">)</span></span></code></pre></div>
@@ -1252,6 +1254,14 @@ Linear Outcome Models for Doubly Robust Estimation.”</span>
 Greifer, Noah, and Elizabeth A. Stuart. 2021. <span>“Choosing the
 Estimand When Matching or Weighting in Observational Studies.”</span>
 <em>arXiv:2106.10577 [Stat]</em>, June. <a href="https://arxiv.org/abs/2106.10577" class="external-link">https://arxiv.org/abs/2106.10577</a>.
+</div>
+<div id="ref-griffinTutorialPropensityScore2023" class="csl-entry">
+Griffin, Beth Ann, Megan S. Schuler, Matt Cefalu, Lynsay Ayer, Mark
+Godley, Noah Greifer, Donna L. Coffman, and Daniel F. McCaffrey. 2023.
+<span>“A Tutorial for Propensity Score Weighting for Moderation Analysis
+With Categorical Variables: An Application Examining Smoking Disparities
+Among Sexual Minority Adults.”</span> <em>Medical Care</em> 61 (12):
+836–45. <a href="https://doi.org/10.1097/MLR.0000000000001922" class="external-link">https://doi.org/10.1097/MLR.0000000000001922</a>.
 </div>
 <div id="ref-hainmuellerEntropyBalancingCausal2012" class="csl-entry">
 Hainmueller, J. 2012. <span>“Entropy Balancing for Causal Effects:
