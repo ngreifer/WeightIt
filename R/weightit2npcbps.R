@@ -71,13 +71,13 @@
 #' \pkgfun{CBPS}{npCBPS} for the fitting function
 #'
 #' @references
-#' Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. The Annals of Applied Statistics, 12(1), 156–177. \doi{10.1214/17-AOAS1101}
+#' Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing propensity score for a continuous treatment: Application to the efficacy of political advertisements. *The Annals of Applied Statistics*, 12(1), 156–177. \doi{10.1214/17-AOAS1101}
 #'
 #' @examplesIf requireNamespace("CBPS", quietly = TRUE)
 #' # Examples take a long time to run
 #' library("cobalt")
 #' data("lalonde", package = "cobalt")
-#' \dontrun{
+#' \donttest{
 #'   #Balancing covariates between treatment groups (binary)
 #'   (W1 <- weightit(treat ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,

@@ -71,37 +71,56 @@ data("msmdata")
 summary(W2)
 bal.tab(W2)
 
-# Kernel balancing using the KBAL package, available
-# using devtools::install_github("chadhazlett/KBAL").
-# Only the ATT and ATC are available. Use 'kbal.method'
-# instead of 'method' in weightit() to choose between
-# "ebal" and "el".
+# Kernel balancing using the `kbal` package, available
+# using `devtools::install_github("chadhazlett/KBAL")`.
+# Only the ATT and ATC are available.
 
 \dontrun{
-  kbal.fun <- function(treat, covs, estimand, focal, ...) {
+  kbal.fun <- function(treat, covs, estimand, focal, verbose, ...) {
     args <- list(...)
     if (is_not_null(focal))
       treat <- as.numeric(treat == focal)
-    else if (estimand != "ATT")
-      stop("estimand must be 'ATT' or 'ATC'.", call. = FALSE)
-    if ("kbal.method" \%in\% names(args)) {
-      names(args)[names(args) == "kbal.method"] <- "method"
+    else
+      stop("`estimand` must be \"ATT\" or \"ATC\".", call. = FALSE)
+
+    args <- args[names(args) \%in\% names(formals(kbal::kbal))]
+    args$allx <- covs
+    args$treatment <- treat
+    args$printprogress <- verbose
+
+    cat_cols <- apply(covs, 2, function(x) length(unique(x)) <= 2)
+
+    if (all(cat_cols)) {
+      args$cat_data <- TRUE
+      args$mixed_data <- FALSE
+      args$scale_data <- FALSE
+      args$linkernel <- FALSE
+      args$drop_MC <- FALSE
     }
-    args[!names(args) \%in\% setdiff(names(formals(KBAL::kbal)),
-                                     c("X", "D"))] <- NULL
-    k.out <- do.call(KBAL::kbal, c(list(X = covs, D = treat),
-                                   args))
+    else if (any(cat_cols)) {
+      args$cat_data <- FALSE
+      args$mixed_data <- TRUE
+      args$cat_columns <- colnames(covs)[cat_cols]
+      args$allx[,!cat_cols] <- scale(args$allx[,!cat_cols])
+      args$cont_scale <- 1
+    }
+    else {
+      args$cat_data <- FALSE
+      args$mixed_data <- FALSE
+    }
+
+    k.out <- do.call(kbal::kbal, args)
     w <- k.out$w
 
-    list(w = w)
+    list(w = w, fit.obj = k.out)
   }
 
   (Wk <- weightit(treat ~ age + educ + married +
                     nodegree + re74, data = lalonde,
                   method = kbal.fun, estimand = "ATT",
-                  kbal.method = "ebal"))
+                  include.obj = TRUE))
   summary(Wk)
-  bal.tab(Wk, disp.ks = TRUE)
+  bal.tab(Wk, stats = c("m", "ks"))
 }
 
 }

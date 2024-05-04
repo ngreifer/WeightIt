@@ -70,6 +70,8 @@
 #'
 #' The `moments` argument functions differently for `method = "energy"` from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2022) for binary and multi-category treatments or by Huling et al. (2023) for continuous treatments. When `moments` is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multi-category treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
 #'
+#' Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some defaults differ from those in `osqpSettings()`; see *Reproducibility* below.
+#'
 #' @section Additional Outputs:
 #' \describe{
 #'   \item{`obj`}{When `include.obj = TRUE`, the output of the call to \pkgfun{osqp}{solve_osqp}, which contains the dual variables and convergence information.
@@ -87,7 +89,7 @@
 #'
 #' ## Reproducibility
 #'
-#' Although there are no stochastic components to the optimization, a feature left on by default is to update the optimization based on how long the optimization has been running, which will vary across runs even when a seed is set and no parameters have been changed. See the discussion [here](https://github.com/osqp/osqp-r/issues/19) for more details. To ensure reproducibility, set `adaptive_rho_interval` to an integer greater than 0 or set `adaptive_rho` to 0.
+#' Although there are no stochastic components to the optimization, a feature turned off by default is to update the optimization based on how long the optimization has been running, which will vary across runs even when a seed is set and no parameters have been changed. See the discussion [here](https://github.com/osqp/osqp-r/issues/19) for more details. To ensure reproducibility by default, `adaptive_rho_interval` is set to 10. See \pkgfun{osqp}{osqpSettings} for details.
 #'
 #' @note
 #' Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything (but see the *Reproducibility* section above). If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon). Increasing `max_iter` or changing `adaptive_rho_interval` might help.
@@ -107,29 +109,27 @@
 #'
 #' ## Continuous treatments
 #'
-#' Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. Journal of the American Statistical Association, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
+#' Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. *Journal of the American Statistical Association*, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 #'
 #' @examplesIf requireNamespace("osqp", quietly = TRUE)
 #' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'
-#' #Examples may not converge, but may after several runs
-#' \dontrun{
-#'   #Balancing covariates between treatment groups (binary)
-#'   (W1 <- weightit(treat ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "energy", estimand = "ATE"))
-#'   summary(W1)
-#'   bal.tab(W1)
+#' #Balancing covariates between treatment groups (binary)
+#' (W1 <- weightit(treat ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "energy", estimand = "ATE"))
+#' summary(W1)
+#' bal.tab(W1)
 #'
-#'   #Balancing covariates with respect to race (multi-category)
-#'   (W2 <- weightit(race ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "energy", estimand = "ATT",
-#'                   focal = "black"))
-#'   summary(W2)
-#'   bal.tab(W2)
-#'
+#' #Balancing covariates with respect to race (multi-category)
+#' (W2 <- weightit(race ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "energy", estimand = "ATT",
+#'                 focal = "black"))
+#' summary(W2)
+#' bal.tab(W2)
+#' \donttest{
 #'   #Balancing covariates with respect to re75 (continuous)
 #'   (W3 <- weightit(re75 ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
@@ -320,7 +320,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
     if (e.min < 0) {
-      lambda <- -e.min*n^2
+      lambda <- -e.min * n^2
     }
   }
 
@@ -332,7 +332,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
   }
   A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2e3L
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 4e3L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
   if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
@@ -533,7 +533,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
     if (e.min < 0) {
-      lambda <- -e.min*n^2
+      lambda <- -e.min * n^2
     }
   }
 
@@ -545,7 +545,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
   }
   A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 2e3L
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 4e3L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
   if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8

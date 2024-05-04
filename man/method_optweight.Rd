@@ -119,19 +119,19 @@ cobalt::bal.tab(W3)
 \references{
 \subsection{Binary treatments}{
 
-Wang, Y., & Zubizarreta, J. R. (2020). Minimal dispersion approximately balancing weights: Asymptotic properties and practical considerations. Biometrika, 107(1), 93–105. \doi{10.1093/biomet/asz050}
+Wang, Y., & Zubizarreta, J. R. (2020). Minimal dispersion approximately balancing weights: Asymptotic properties and practical considerations. \emph{Biometrika}, 107(1), 93–105. \doi{10.1093/biomet/asz050}
 
-Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. Journal of the American Statistical Association, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
+Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. \emph{Journal of the American Statistical Association}, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
 }
 
 \subsection{Multi-Category Treatments}{
 
-de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight adjustment in non-experimental studies with multivalued treatments: Analysis of the effect of an earthquake on post-traumatic stress. Journal of the Royal Statistical Society: Series A (Statistics in Society), n/a(n/a). \doi{10.1111/rssa.12561}
+de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight adjustment in non-experimental studies with multivalued treatments: Analysis of the effect of an earthquake on post-traumatic stress. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, n/a(n/a). \doi{10.1111/rssa.12561}
 }
 
 \subsection{Continuous treatments}{
 
-Greifer, N. (2020). Estimating Balancing Weights for Continuous Treatments Using Constrained Optimization. \doi{10.17615/DYSS-B342}
+Greifer, N. (2020). \emph{Estimating Balancing Weights for Continuous Treatments Using Constrained Optimization}. \doi{10.17615/DYSS-B342}
 }
 }
 \seealso{

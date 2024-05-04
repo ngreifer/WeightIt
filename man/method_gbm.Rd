@@ -54,7 +54,7 @@ Generalized boosted modeling (GBM, also known as gradient boosting machines) is 
 \pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multi-category treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multi-category treatments.
 }
 \note{
-The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{es.mean}, \code{es.max}, and \code{es.rms} have been renamed to \code{smd.mean}, \code{smd.max}, and \code{smd.rms}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
+The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{"es.mean"}, \code{"es.max"}, and \code{"es.rms"} have been renamed to \code{"smd.mean"}, \code{"smd.max"}, and \code{"smd.rms"}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
 }
 \section{Additional Arguments}{
 
@@ -75,6 +75,8 @@ The following additional arguments can be specified:
 \item{\code{shrinkage}}{The shrinkage parameter applied to the trees. This is passed onto the \code{shrinkage} argument in \code{gbm.fit()}. The default is .01 for binary and multi-category treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
 }
 \item{\code{bag.fraction}}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the \code{bag.fraction} argument in \code{gbm.fit()}. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using \code{\link[=set.seed]{set.seed()}} to ensure replicability of results.
+}
+\item{\code{use.offset}}{\code{logical}; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If \code{TRUE}, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the \code{offset} argument of \code{gbm.fit()}. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over \code{method = "glm"} with respect to \code{criterion}. Default is \code{FALSE} to omit the offset. Only allowed for binary and continuous treatments.
 }
 }
 
@@ -135,11 +137,12 @@ data("lalonde", package = "cobalt")
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "gbm", estimand = "ATE",
-                criterion = "smd.max"))
+                criterion = "smd.max",
+                use.offset = TRUE))
 summary(W1)
 bal.tab(W1)
 
-\dontrun{
+\donttest{
   #Balancing covariates with respect to race (multi-category)
   (W2 <- weightit(race ~ age + educ + married +
                     nodegree + re74, data = lalonde,
@@ -198,17 +201,17 @@ bal.tab(W1)
 \references{
 \subsection{Binary treatments}{
 
-McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. Psychological Methods, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
+McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. \emph{Psychological Methods}, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 }
 
 \subsection{Multi-Category Treatments}{
 
-McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. \emph{Statistics in Medicine}, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 }
 
 \subsection{Continuous treatments}{
 
-Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. Journal of Causal Inference, 3(1). \doi{10.1515/jci-2014-0022}
+Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. \emph{Journal of Causal Inference}, 3(1). \doi{10.1515/jci-2014-0022}
 }
 }
 \seealso{

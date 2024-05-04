@@ -57,7 +57,7 @@ Energy balancing for continuous treatments involves minimizing the distance cova
 The primary benefit of energy balancing is that all features of the covariate distribution are balanced, not just means, as with other optimization-based methods like entropy balancing. Still, it is possible to add additional balance constraints to require balance on individual terms using the \code{moments} argument, just like with entropy balancing. Energy balancing can sometimes yield weights with high variability; the \code{lambda} argument can be supplied to penalize highly variable weights to increase the effective sample size at the expense of balance.
 \subsection{Reproducibility}{
 
-Although there are no stochastic components to the optimization, a feature left on by default is to update the optimization based on how long the optimization has been running, which will vary across runs even when a seed is set and no parameters have been changed. See the discussion \href{https://github.com/osqp/osqp-r/issues/19}{here} for more details. To ensure reproducibility, set \code{adaptive_rho_interval} to an integer greater than 0 or set \code{adaptive_rho} to 0.
+Although there are no stochastic components to the optimization, a feature turned off by default is to update the optimization based on how long the optimization has been running, which will vary across runs even when a seed is set and no parameters have been changed. See the discussion \href{https://github.com/osqp/osqp-r/issues/19}{here} for more details. To ensure reproducibility by default, \code{adaptive_rho_interval} is set to 10. See \pkgfun{osqp}{osqpSettings} for details.
 }
 }
 \note{
@@ -94,6 +94,8 @@ The number of moments of the treatment and covariate distributions that are cons
 }
 
 The \code{moments} argument functions differently for \code{method = "energy"} from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2022) for binary and multi-category treatments or by Huling et al. (2023) for continuous treatments. When \code{moments} is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multi-category treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
+
+Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some defaults differ from those in \code{osqpSettings()}; see \emph{Reproducibility} below.
 }
 
 \section{Additional Outputs}{
@@ -109,23 +111,21 @@ The \code{moments} argument functions differently for \code{method = "energy"} f
 library("cobalt")
 data("lalonde", package = "cobalt")
 
-#Examples may not converge, but may after several runs
-\dontrun{
-  #Balancing covariates between treatment groups (binary)
-  (W1 <- weightit(treat ~ age + educ + married +
-                    nodegree + re74, data = lalonde,
-                  method = "energy", estimand = "ATE"))
-  summary(W1)
-  bal.tab(W1)
+#Balancing covariates between treatment groups (binary)
+(W1 <- weightit(treat ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "energy", estimand = "ATE"))
+summary(W1)
+bal.tab(W1)
 
-  #Balancing covariates with respect to race (multi-category)
-  (W2 <- weightit(race ~ age + educ + married +
-                    nodegree + re74, data = lalonde,
-                  method = "energy", estimand = "ATT",
-                  focal = "black"))
-  summary(W2)
-  bal.tab(W2)
-
+#Balancing covariates with respect to race (multi-category)
+(W2 <- weightit(race ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "energy", estimand = "ATT",
+                focal = "black"))
+summary(W2)
+bal.tab(W2)
+\donttest{
   #Balancing covariates with respect to re75 (continuous)
   (W3 <- weightit(re75 ~ age + educ + married +
                     nodegree + re74, data = lalonde,
@@ -143,7 +143,7 @@ Huling, J. D., & Mak, S. (2022). Energy Balancing of Covariate Distributions (ar
 
 \subsection{Continuous treatments}{
 
-Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. Journal of the American Statistical Association, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
+Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. \emph{Journal of the American Statistical Association}, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 }
 }
 \seealso{

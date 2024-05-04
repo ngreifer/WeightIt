@@ -116,9 +116,9 @@ bal.tab(W2)
 \dontshow{\}) # examplesIf}
 }
 \references{
-Hill, J., Weiss, C., & Zhai, F. (2011). Challenges With Propensity Score Strategies in a High-Dimensional Setting and a Potential Alternative. Multivariate Behavioral Research, 46(3), 477–513. \doi{10.1080/00273171.2011.570161}
+Hill, J., Weiss, C., & Zhai, F. (2011). Challenges With Propensity Score Strategies in a High-Dimensional Setting and a Potential Alternative. \emph{Multivariate Behavioral Research}, 46(3), 477–513. \doi{10.1080/00273171.2011.570161}
 
-Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian additive regression trees. The Annals of Applied Statistics, 4(1), 266–298. \doi{10.1214/09-AOAS285}
+Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian additive regression trees. \emph{The Annals of Applied Statistics}, 4(1), 266–298. \doi{10.1214/09-AOAS285}
 
 Note that many references that deal with BART for causal inference focus on estimating potential outcomes with BART, not the propensity scores, and so are not directly relevant when using BART to estimate propensity scores for weights.
 
