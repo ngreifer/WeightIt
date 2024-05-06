@@ -72,16 +72,17 @@ summary(W2)
 bal.tab(W2)
 
 # Kernel balancing using the `kbal` package, available
-# using `devtools::install_github("chadhazlett/KBAL")`.
+# using `remotes::install_github("chadhazlett/KBAL")`.
 # Only the ATT and ATC are available.
 
 \dontrun{
   kbal.fun <- function(treat, covs, estimand, focal, verbose, ...) {
     args <- list(...)
-    if (is_not_null(focal))
-      treat <- as.numeric(treat == focal)
-    else
+
+    if (!estimand \%in\% c("ATT", "ATC"))
       stop("`estimand` must be \"ATT\" or \"ATC\".", call. = FALSE)
+
+    treat <- as.numeric(treat == focal)
 
     args <- args[names(args) \%in\% names(formals(kbal::kbal))]
     args$allx <- covs
