@@ -74,11 +74,37 @@ test_that("Binary treatment", {
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
-                  link = "br.logit")
+                  link = "probit")
+  })
+
+  expect_M_parts_okay(W)
+
+  # brglm2
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  link = "br.logit", epsilon = 1e-10)
+  })
+
+  expect_M_parts_okay(W)
+
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  link = "br.probit", type = "AS_median", epsilon = 1e-10)
+  })
+
+  expect_M_parts_okay(W)
+
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  link = "br.logit", type = "correction", epsilon = 1e-10)
   })
 
   expect_null(attr(W, "Mparts"))
 
+  # logistf
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
@@ -86,14 +112,6 @@ test_that("Binary treatment", {
   })
 
   expect_null(attr(W, "Mparts"))
-
-  expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "glm", estimand = "ATE",
-                  link = "probit")
-  })
-
-  expect_M_parts_okay(W)
 
   # s.weights
 
@@ -120,8 +138,9 @@ test_that("Binary treatment", {
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
-                  link = "br.logit", s.weights = "SW")
+                  link = "br.logit", s.weights = "SW", epsilon = 1e-10)
   })
+  expect_M_parts_okay(W)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -182,4 +201,37 @@ test_that("Binary treatment", {
   # expect_failure(expect_M_parts_okay(W))
 
   test_data$Xx <- NULL
+})
+
+test_that("Ordinal treatment", {
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Ao <- ordered(findInterval(test_data$Ac, quantile(test_data$Ac, seq(0, 1, length.out = 5)),
+                                       all.inside = TRUE))
+
+  expect_no_condition({
+    W0 <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  include.obj = TRUE)
+  })
+
+  #No M-parts for ordinal logistic
+  expect_failure(expect_M_parts_okay(W0))
+
+  expect_no_condition({
+    W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                   data = test_data, method = "glm", estimand = "ATE",
+                  link = "br.logit", parallel = TRUE,
+                  include.obj = TRUE)
+  })
+  expect_failure(expect_M_parts_okay(W))
+
+  expect_no_condition({
+    W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  multi.method = "weightit",
+                  include.obj = TRUE)
+  })
+
+  expect_M_parts_okay(W)
 })

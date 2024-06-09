@@ -1,6 +1,14 @@
 WeightIt News and Updates
 ======
 
+# WeightIt (development version)
+
+* M-estimation can now be used for weighting with bias-reduced regression for the propensity score (`method = "glm"` with `link = "br.{.}"`). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.
+
+* Standard errors are now correctly computed when an offset is included in `glm_weightit()`. Thanks to @zeynepbaskurt. (#63)
+
+* Fixed a bug and clarified some error messages when using ordered treatments with `method = "glm"`. Thanks to Steve Worthington for pointing them out.
+
 # WeightIt 1.1.0
 
 * Added a new function, `coxph_weightit()`, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the `summary()` and `print()` methods for `glm_weightit` objects, which are different from those for `coxph` objects.

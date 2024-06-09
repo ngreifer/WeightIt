@@ -14,7 +14,7 @@ For binary treatments, this method estimates the propensity scores using \code{\
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the argument supplied to \code{multi.method} (see Additional Arguments below). The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For multi-category treatments, the propensity scores are estimated using multinomial regression from one of a few functions depending on the argument supplied to \code{multi.method} (see Additional Arguments below). The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details. Ordinal treatments are treated exactly the same as non-order multi-category treatments except that additional models are available to estimate the generalized propensity score (e.g., ordinal logistic regression).
 }
 
 \subsection{Continuous Treatments}{
@@ -45,7 +45,7 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 
 \subsection{M-estimation}{
 
-For binary treatments, M-estimation is supported when \code{link} does not start with \code{"br."} and is neither \code{"flic"} nor \code{"flac"} (see below). For multi-category treatments, M-estimation is supported when \code{multi.method} is \code{"weightit"} (the default for non-ordered treatments) or \code{"glm"}. For continuous treatments, M-estimation is supported when \code{use.kernel} is not \code{TRUE}. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when \code{missing = "saem"}. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
+For binary treatments, M-estimation is supported when \code{link} is neither \code{"flic"} nor \code{"flac"} (see below). For multi-category treatments, M-estimation is supported when \code{multi.method} is \code{"weightit"} (the default for non-ordered treatments) or \code{"glm"}. For continuous treatments, M-estimation is supported when \code{use.kernel} is not \code{TRUE}. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when \code{missing = "saem"}. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
 }
 }
 \section{Additional Arguments}{

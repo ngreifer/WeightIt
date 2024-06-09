@@ -162,7 +162,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     if (inherits(d, "dist")) d <- as.matrix(d)
 
     if (!is.matrix(d) || !all(dim(d) == length(treat)) ||
-        !all(check_if_zero(diag(d))) || any(d < 0) ||
+        !all(check_if_zero(diag(d))) ||
+        any(d < 0) ||
         !isSymmetric(unname(d))) {
       .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
                    word_list(weightit_distances(), "or", quotes = TRUE)))
@@ -241,6 +242,36 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
       Amat <- cbind(Amat, qu * s.weights_n_0, qu * s.weights_n_1)
       lvec <- c(lvec, targets, targets)
       uvec <- c(uvec, targets, targets)
+    }
+  }
+  else if (estimand == "ATO") {
+
+    nn <- tcrossprod(s.weights_n_0 - s.weights_n_1)
+
+    P <- -d * nn
+
+    q <- NULL
+
+    #Constraints for positivity and sum of weights
+    Amat <- cbind(diagn, s.weights_n_0, s.weights_n_1)
+    lvec <- c(rep(min.w, n), 1, 1)
+    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), 1, 1)
+
+    if (moments != 0 || int) {
+      #Exactly balance moments and/or interactions
+      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
+
+      Amat <- cbind(Amat, covs * (s.weights_n_0 - s.weights_n_1))
+      lvec <- c(lvec, rep(0, ncol(covs)))
+      uvec <- c(uvec, rep(0, ncol(covs)))
+    }
+
+    if (is_not_null(A[["quantile"]])) {
+      qu <- .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
+
+      Amat <- cbind(Amat, qu * (s.weights_n_0 - s.weights_n_1))
+      lvec <- c(lvec, rep(0, ncol(qu)))
+      uvec <- c(uvec, rep(0, ncol(qu)))
     }
   }
   else if (estimand == "ATT") {
@@ -365,16 +396,16 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
 
-  if (estimand == "ATE") {
-    w <- opt.out$x
-  }
-  else if (estimand == "ATT") {
+  if (estimand == "ATT") {
     w <- rep(1, n)
     w[t0] <- opt.out$x
   }
   else if (estimand == "ATC") {
     w <- rep(1, n)
     w[t1] <- opt.out$x
+  }
+  else {
+    w <- opt.out$x
   }
 
   w[w <= min.w] <- min.w

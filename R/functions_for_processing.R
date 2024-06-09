@@ -1333,7 +1333,7 @@ generalized_inverse <- function(sigma) {
 }
 
 #Compute gradient numerically using centered difference
-gradient <- function(.f, .x, .eps = 1e-8, ...) {
+.gradient <- function(.f, .x, .eps = 1e-8, ...) {
 
   .x0 <- .x
 
