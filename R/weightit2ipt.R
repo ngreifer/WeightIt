@@ -115,7 +115,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
 
   covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
+                                  focal = focal, treat = treat))
 
   for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
@@ -151,30 +151,23 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   if (estimand == "ATE") {
     ps <- rep(0, n)
 
-    psi0 <- function(B, X, A, SW) {
-      p <- .fam$linkinv(drop(X %*% B))
-      SW * ((1 - A)/(1 - p) - 1) * X
-    }
-
-    f0 <- function(B, X, A, SW) {
-      .colMeans(psi0(B, X, A, SW), n, k)
-    }
-
-    psi1 <- function(B, X, A, SW) {
-      p <- .fam$linkinv(drop(X %*% B))
-      SW * (A/p - 1) * X
-    }
-
-    f1 <- function(B, X, A, SW) {
-      .colMeans(psi1(B, X, A, SW), n, k)
+    f <- function(B, X, A, SW, .psi) {
+      .colMeans(.psi(B, X, A, SW), n, k)
     }
 
     # Control weights
+    psi0 <- function(B, X, A, SW) {
+      p <- rep(.5, n)
+      p[A == 0] <- .fam$linkinv(drop(X[A == 0,, drop = FALSE] %*% B))
+      SW * ((1 - A)/(1 - p) - 1) * X
+    }
+
     verbosely({
-      fit.list[["0"]] <- rootSolve::multiroot(f0, start = start,
+      fit.list[["0"]] <- rootSolve::multiroot(f, start = start,
                                               X = C,
                                               A = treat,
                                               SW = s.weights,
+                                              .psi = psi0,
                                               rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
                                               verbose = TRUE)
     }, verbose = verbose)
@@ -184,11 +177,18 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
     ps[treat == 0] <- .fam$linkinv(drop(C[treat == 0,, drop = FALSE] %*% par.list[["0"]]))
 
     #Treated weights
+    psi1 <- function(B, X, A, SW) {
+      p <- rep(.5, n)
+      p[A == 1] <- .fam$linkinv(drop(X[A == 1,, drop = FALSE] %*% B))
+      SW * (A/p - 1) * X
+    }
+
     verbosely({
-      fit.list[["1"]] <- rootSolve::multiroot(f1, start = par.list[["0"]],
+      fit.list[["1"]] <- rootSolve::multiroot(f, start = par.list[["0"]],
                                               X = C,
                                               A = treat,
                                               SW = s.weights,
+                                              .psi = psi1,
                                               rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
                                               verbose = TRUE)
     }, verbose = verbose)
@@ -280,7 +280,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
 
   covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
+                                  focal = focal, treat = treat))
 
   for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
