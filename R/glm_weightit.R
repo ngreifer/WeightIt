@@ -154,8 +154,9 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
   if (is.character(family) && identical(family, "multinomial")) {
     glm_call[[1]] <- .mlogit_weightit
 
-    if (is_not_null(weightit))
+    if (is_not_null(weightit)) {
       glm_call$weights <- weightit$weights * weightit$s.weights
+    }
     glm_call$x <- TRUE
     glm_call$y <- TRUE
     glm_call$model <- TRUE
@@ -170,15 +171,16 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
     fit$family <- list(family = "multinomial",
                        link = "logit")
 
-    psi_out <- function(Bout, w, Y, Xout, SW) {
-      fit$psi(Bout, Xout, Y, w * SW)
+    psi_out <- function(Bout, w, Y, Xout, SW, offset) {
+      fit$psi(Bout, Xout, Y, w * SW, offset = offset)
     }
   }
   else {
     glm_call[[1]] <- quote(stats::glm)
 
-    if (is_not_null(weightit))
+    if (is_not_null(weightit)) {
       glm_call$weights <- weightit$weights * weightit$s.weights
+    }
     glm_call$x <- TRUE
     glm_call$y <- TRUE
     glm_call$model <- TRUE
@@ -197,8 +199,8 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
 
     fam <- fit$family
 
-    psi_out <- function(Bout, w, Y, Xout, SW) {
-      lin_pred <- drop(Xout %*% Bout)
+    psi_out <- function(Bout, w, Y, Xout, SW, offset) {
+      lin_pred <- drop(Xout %*% Bout + offset)
       Xout * (SW * w * fam$mu.eta(lin_pred) * (Y - fam$linkinv(lin_pred)) / fam$variance(fam$linkinv(lin_pred)))
     }
   }
@@ -213,6 +215,8 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
   W <- weightit$weights
   SW <- weightit$s.weights
   if (is_null(SW)) SW <- rep(1, length(Y))
+  offset <- fit$offset
+  if (is_null(offset)) offset <- rep(0, length(Y))
   bout <- fit$coefficients
   aliased <- is.na(bout)
 
@@ -434,12 +438,12 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
       Xtreat <- NULL
       A <- NULL
 
-      psi <- function(B, Xout, Y, Xtreat, A, SW) {
+      psi <- function(B, Xout, Y, Xtreat, A, SW, offset) {
         Bout <- B[seq_len(pout)]
         Btreat <- B[-seq_len(pout)]
 
         w <- wfun(Btreat, Xtreat, A)
-        psi_out(B, w, Y, Xout, SW)
+        psi_out(B, w, Y, Xout, SW, offset)
       }
 
       b <- bout
@@ -448,7 +452,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
         psi_b <- fit$gradient
       }
       else {
-        psi_b <- psi(b, Xout, Y, Xtreat, A, SW)
+        psi_b <- psi(b, Xout, Y, Xtreat, A, SW, offset)
       }
 
       if (is_not_null(fit$hessian)) {
@@ -463,19 +467,19 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
       A <- Mparts$A
       btreat <- Mparts$btreat
 
-      psi <- function(B, Xout, Y, Xtreat, A, SW) {
+      psi <- function(B, Xout, Y, Xtreat, A, SW, offset) {
         Bout <- B[seq_len(pout)]
         Btreat <- B[-seq_len(pout)]
 
         w <- wfun(Btreat, Xtreat, A)
 
-        cbind(psi_out(Bout, w, Y, Xout, SW),
+        cbind(psi_out(Bout, w, Y, Xout, SW, offset),
               psi_treat(Btreat, A, Xtreat, SW))
       }
 
       b <- c(bout, btreat)
 
-      psi_b <- psi(b, Xout, Y, Xtreat, A, SW)
+      psi_b <- psi(b, Xout, Y, Xtreat, A, SW, offset)
     }
     else {
       # Mparts.list from weightitMSM() or weightit()
@@ -497,7 +501,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
         }), init = 1)
       }
 
-      psi <- function(B, Xout, Y, Xtreat, A, SW) {
+      psi <- function(B, Xout, Y, Xtreat, A, SW, offset) {
         Bout <- B[seq_len(pout)]
         Btreat <- btreat.list
         k <- 0
@@ -508,13 +512,13 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
 
         w <- wfun(Btreat, Xtreat, A)
 
-        cbind(psi_out(Bout, w, Y, Xout, SW),
+        cbind(psi_out(Bout, w, Y, Xout, SW, offset),
               psi_treat(Btreat, A, Xtreat, SW))
       }
 
       b <- c(bout, unlist(btreat.list))
 
-      psi_b <- psi(b, Xout, Y, Xtreat.list, A.list, SW)
+      psi_b <- psi(b, Xout, Y, Xtreat.list, A.list, SW, offset)
     }
 
     if (is_not_null(cluster)) {
@@ -531,12 +535,12 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
     }
 
     # Gradient of gradfun -> hessian
-    gradfun <- function(B, Xout, Y, Xtreat, A, SW) {
-      colSums(psi(B, Xout, Y, Xtreat, A, SW))
+    gradfun <- function(B, Xout, Y, Xtreat, A, SW, offset) {
+      colSums(psi(B, Xout, Y, Xtreat, A, SW, offset))
     }
 
     if (is_null(hess)) {
-      hess <- gradient(gradfun,
+      hess <- .gradient(gradfun,
                        .x = b,
                        Xout = Xout,
                        Y = Y,
@@ -548,7 +552,8 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
                          if (is_not_null(Mparts.list)) A.list
                          else A
                        },
-                       SW = SW)
+                       SW = SW,
+                       offset = offset)
     }
 
     A1 <- try(solve(-hess), silent = TRUE)
