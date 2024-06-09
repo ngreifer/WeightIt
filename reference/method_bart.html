@@ -120,7 +120,7 @@ M-estimation is not supported.
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -297,42 +297,42 @@ M-estimation is not supported.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000    ||                          1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0017 |---------------------------| 10.4727</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000    ||                         1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0033 |---------------------------| 9.3215</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             454    569    592    374     608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.3435 2.8616 3.2113 3.5383 10.4727</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             409    569    592    374    608</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.3351 2.6372 2.7944 3.1918 9.3215</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000    0.00       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.932 0.957    0.78       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated        0.00 0.000   0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control        1.77 0.914   0.707       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     90.85     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    104.01     185</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.4677</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0708</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0329</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0403</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.4840</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0554</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0319</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0313</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0349</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0670</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted     90.85     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    104.01     185</span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to race (multi-category)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
@@ -351,44 +351,44 @@ M-estimation is not supported.
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.2326 |------------------|           9.1496</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 2.7805     |-----------------------| 12.7265</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.0677 |---------------|              7.9154</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.2473 |----------------|             8.9337</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 2.6530    |------------------------| 13.1981</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.0580 |---------------|              8.4679</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             226     181     244     423     231</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black  7.1068  7.3771  7.9375  8.0638  9.1496</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             426     346     392     570     564</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 12.4312 12.4382 12.5451 12.7198 12.7265</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             283     181     244     423     231</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black   7.047  7.3081  8.1404  8.6699  8.9337</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             345     426     512     570     564</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 12.0981 12.4179 12.4838 12.9087 13.1981</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              68      23      60      76     140</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white  4.6553  4.8837  5.5224  7.6973  7.9154</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  4.3993  5.1405  5.5503  8.1671  8.4679</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.574 0.371   0.124       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.370 0.304   0.068       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.450 0.316   0.081       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.578 0.369   0.126       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.380 0.311   0.072       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.469 0.321   0.086       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   183.03  63.45 248.79</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   182.33  63.03 245.24</span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.1828</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1700</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0553</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0271</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.1139</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.1869</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1631</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0505</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0264</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.1073</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.    72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   183.03  63.45 248.79</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   182.33  63.03 245.24</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span><span class="co">#assuming t(3) conditional density for treatment</span></span></span>
@@ -407,36 +407,36 @@ M-estimation is not supported.
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0777 |---------------------------| 20.2901</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0813 |---------------------------| 18.7614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         310    308    469     484     487</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 7.8106 7.8869 9.0172 18.7796 20.2901</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         490    486    469     484     487</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 7.7128 7.9095 9.0046 17.8882 18.7614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.137 0.478   0.278       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.104 0.476   0.272       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   267.97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   277.03</span>
 <span class="r-in"><span> <span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0278</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0548</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary   0.0786</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0846</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.   0.1147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0297</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0590</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary   0.0787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0829</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.   0.1181</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   267.97</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   277.03</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

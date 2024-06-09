@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9001</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,6 +54,12 @@
       <small>Source: <a href="https://github.com/ngreifer/WeightIt/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">WeightIt (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<ul><li><p>M-estimation can now be used for weighting with bias-reduced regression for the propensity score (<code>method = "glm"</code> with <code>link = "br.{.}"</code>). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.</p></li>
+<li><p>Standard errors are now correctly computed when an offset is included in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>. Thanks to <a href="https://github.com/zeynepbaskurt" class="external-link">@zeynepbaskurt</a>. (<a href="https://github.com/ngreifer/WeightIt/issues/63" class="external-link">#63</a>)</p></li>
+<li><p>Fixed a bug and clarified some error messages when using ordered treatments with <code>method = "glm"</code>. Thanks to Steve Worthington for pointing them out.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="weightit-110">WeightIt 1.1.0<a class="anchor" aria-label="anchor" href="#weightit-110"></a></h2><p class="text-muted">CRAN release: 2024-05-04</p>
 <ul><li><p>Added a new function, <code><a href="../reference/glm_weightit.html">coxph_weightit()</a></code>, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> methods for <code>glm_weightit</code> objects, which are different from those for <code>coxph</code> objects.</p></li>
