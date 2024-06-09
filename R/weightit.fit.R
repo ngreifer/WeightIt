@@ -508,10 +508,10 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     out$weights[by.factor == i] <- obj$w
 
     if (include.obj) {
-      fit.obj[[i]] <- obj$fit.obj
+      fit.obj[i] <- list(obj$fit.obj)
     }
 
-    info[[i]] <- obj$info
+    info[i] <- list(obj$info)
   }
 
   if (include.obj) {
