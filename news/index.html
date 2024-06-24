@@ -10,7 +10,7 @@
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9002</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,12 @@
 <h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">WeightIt (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
 <ul><li><p>M-estimation can now be used for weighting with bias-reduced regression for the propensity score (<code>method = "glm"</code> with <code>link = "br.{.}"</code>). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.</p></li>
 <li><p>Standard errors are now correctly computed when an offset is included in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>. Thanks to <a href="https://github.com/zeynepbaskurt" class="external-link">@zeynepbaskurt</a>. (<a href="https://github.com/ngreifer/WeightIt/issues/63" class="external-link">#63</a>)</p></li>
+<li><p>Improved robustness of <code><a href="../reference/get_w_from_ps.html">get_w_from_ps()</a></code> to propensity scores of 0 and 1.</p></li>
+<li><p>When using <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "gbm"</code>, <code>use.offset</code> is now tunable.</p></li>
+<li><p>Fixed a bug when using <code>method = "gbm"</code> where <code>distribution</code> was not included in the output when tuned.</p></li>
 <li><p>Fixed a bug and clarified some error messages when using ordered treatments with <code>method = "glm"</code>. Thanks to Steve Worthington for pointing them out.</p></li>
+<li><p>Fixed a bug when using <code>method = "gbm"</code> and propensity scores were estimated to be 0 or 1. Thanks to <a href="https://github.com/mitchellcameron123" class="external-link">@mitchellcameron123</a>. Propensity scores are now shifted slightly away from 0 or 1. (<a href="https://github.com/ngreifer/WeightIt/issues/64" class="external-link">#64</a>)</p></li>
+<li><p>Updated the help page of <code><a href="../reference/get_w_from_ps.html">get_w_from_ps()</a></code> to include formulas for the weights.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="weightit-110">WeightIt 1.1.0<a class="anchor" aria-label="anchor" href="#weightit-110"></a></h2><p class="text-muted">CRAN release: 2024-05-04</p>

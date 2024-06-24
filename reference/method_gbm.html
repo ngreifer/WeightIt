@@ -128,7 +128,7 @@ M-estimation is not supported.
     
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.1.0.9002</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -242,6 +242,7 @@ M-estimation is not supported.
     <div class="section level2">
     <h2 id="note">Note<a class="anchor" aria-label="anchor" href="#note"></a></h2>
     <p>The <code>criterion</code> argument used to be called <code>stop.method</code>, which is its name in <span class="pkg">twang</span>. <code>stop.method</code> still works for backward compatibility. Additionally, the criteria formerly named as <code>"es.mean"</code>, <code>"es.max"</code>, and <code>"es.rms"</code> have been renamed to <code>"smd.mean"</code>, <code>"smd.max"</code>, and <code>"smd.rms"</code>. The former are used in <span class="pkg">twang</span> and will still work with <code><a href="weightit.html">weightit()</a></code> for backward compatibility.</p>
+<p>Estimated propensity scores are trimmed to \(10^{-8}\) and \(1 - 10^{-8}\) to ensure balance statistics can be computed.</p>
     </div>
     <div class="section level2">
     <h2 id="additional-arguments">Additional Arguments<a class="anchor" aria-label="anchor" href="#additional-arguments"></a></h2>
@@ -272,7 +273,7 @@ M-estimation is not supported.
 <dd><p>The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the <code>bag.fraction</code> argument in <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm.fit()</a></code>. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> to ensure replicability of results.</p></dd>
 
 <dt><code>use.offset</code></dt>
-<dd><p><code>logical</code>; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If <code>TRUE</code>, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the <code>offset</code> argument of <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm.fit()</a></code>. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over <code>method = "glm"</code> with respect to <code>criterion</code>. Default is <code>FALSE</code> to omit the offset. Only allowed for binary and continuous treatments.</p></dd>
+<dd><p><code>logical</code>; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If <code>TRUE</code>, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the <code>offset</code> argument of <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm.fit()</a></code>. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over <code>method = "glm"</code> with respect to <code>criterion</code>. Default is <code>FALSE</code> to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.</p></dd>
 
 
 </dl><p>All other arguments take on the defaults of those in <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code>, and some are not used at all.</p>
@@ -445,7 +446,7 @@ M-estimation is not supported.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.719 0.523   0.211       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.000 0.000  -0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.000 0.000   0.000       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white        0.641 0.483   0.180       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
@@ -570,17 +571,17 @@ M-estimation is not supported.
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">W5</span><span class="op">$</span><span class="va">info</span><span class="op">$</span><span class="va">tune</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   interaction.depth best.ks.max best.tree</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 2  0.06704768      4836</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2                 3  0.06517037      2171</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3                 4  0.06988698      1588</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 2  0.05894705      2311</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5                 3  0.06485408      1514</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6                 4  0.06591365      1232</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   interaction.depth distribution best.ks.max best.tree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1                 2    bernoulli  0.06704768      4836</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2                 3    bernoulli  0.06517037      2171</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3                 4    bernoulli  0.06988698      1588</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 2     adaboost  0.05894705      2311</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5                 3     adaboost  0.06485408      1514</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6                 4     adaboost  0.06591365      1232</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="va">W5</span><span class="op">$</span><span class="va">info</span><span class="op">$</span><span class="va">best.tune</span> <span class="co">#Best values of tuned parameters</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   interaction.depth best.ks.max best.tree</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 2  0.05894705      2311</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   interaction.depth distribution best.ks.max best.tree</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4                 2     adaboost  0.05894705      2311</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W5</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
