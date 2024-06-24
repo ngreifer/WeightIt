@@ -4,19 +4,19 @@
 #' Given a vector or matrix of propensity scores, outputs a vector of weights
 #' that target the provided estimand.
 #'
-#' @param ps A vector, matrix, or data frame of propensity scores. See Details.
-#' @param treat A vector of treatment status for each individual. See Details.
-#' @param estimand The desired estimand that the weights should target. Current
-#' options include "ATE" (average treatment effect), "ATT" (average treatment
-#' effect on the treated), "ATC" (average treatment effect on the control),
-#' "ATO" (average treatment effect in the overlap), "ATM" (average treatment
-#' effect in the matched sample), and "ATOS" (average treatment effect in the
-#' optimal subset).
-#' @param focal When the estimand is the ATT or ATC, which group should be
+#' @param ps a vector, matrix, or data frame of propensity scores. See Details.
+#' @param treat a vector of treatment status for each individual. See Details.
+#' @param estimand the desired estimand that the weights should target. Current
+#' options include `"ATE"` (average treatment effect), `"ATT"` (average treatment
+#' effect on the treated), `"ATC"` (average treatment effect on the control),
+#' `"ATO"` (average treatment effect in the overlap), `"ATM"` (average treatment
+#' effect in the matched sample), and `"ATOS"` (average treatment effect in the
+#' optimal subset). See Details.
+#' @param focal when `estimand` is `"ATT"` or `"ATC"`, which group should be
 #' consider the (focal) "treated" or "control" group, respectively. If not
-#' `NULL` and `estimand` is not "ATT" or "ATC", `estimand` will
-#' automatically be set to "ATT".
-#' @param treated When treatment is binary, the value of `treat` that is
+#' `NULL` and `estimand` is not `"ATT"` or `"ATC"`, `estimand` will
+#' automatically be set to `"ATT"`.
+#' @param treated when treatment is binary, the value of `treat` that is
 #' considered the "treated" group (i.e., the group for which the propensity
 #' scores are the probability of being in). If `NULL`,
 #' `get_w_from_ps()` will attempt to figure it out on its own using some
@@ -28,7 +28,7 @@
 #' known as fine stratification). If `NULL`, standard inverse probability
 #' weights (and their extensions) will be computed; if a number greater than 1,
 #' subclasses will be formed and weights will be computed based on subclass
-#' membership. `estimand` must be ATE, ATT, or ATC if `subclass` is
+#' membership. `estimand` must be `"ATE"`, `"ATT"`, or `"ATC"` if `subclass` is
 #' non-`NULL`. See Details.
 #' @param stabilize `logical`; whether to compute stabilized weights or
 #' not. This simply involves multiplying each unit's weight by the proportion
@@ -45,33 +45,43 @@
 #'
 #' @details
 #' `get_w_from_ps()` applies the formula for computing weights from
-#' propensity scores for the desired estimand. See the References section for
-#' information on these estimands and the formulas.
+#' propensity scores for the desired estimand. The formula for each estimand is below, with \eqn{A_i} the treatment value for unit \eqn{i} taking on values \eqn{\mathcal{A} = (1, \ldots, g)}, \eqn{p_{a, i}} the probability of receiving treatment level \eqn{a} for unit \eqn{i}, and \eqn{f} is the focal group (the treated group for the ATT and the control group for the ATC):
 #'
-#' `ps` can be entered a variety of ways. For binary treatments, when
-#' `ps` is entered as a vector or unnamed single-column matrix or data
-#' frame, `get_w_from_ps()` has to know which value of `treat`
+#' \deqn{
+#' \begin{aligned}
+#' w^{ATE}_i &= 1 / p_{A_i, i} \\
+#' w^{ATT}_i &= w^{ATE}_i \times p_{f, i} \\
+#' w^{ATO}_i &= w^{ATE}_i / \sum_{a \in \mathcal{A}}{1/p_{a, i}} \\
+#' w^{ATM}_i &= w^{ATE}_i \times \min(p_{1, i}, \ldots, p_{g, i}) \\
+#' w^{ATOS}_i &= w^{ATE}_i \times \mathbb{1}\left(\alpha < p_{2, i} < 1 - \alpha\right)
+#' \end{aligned}
+#' }
+#'
+#' `get_w_from_ps()` can only be used with binary and multi-category treatments.
+#'
+#' ## Supplying the `ps` argument
+#'
+#' The `ps` argument can be entered in two ways:
+#' * A numeric matrix with a row for each unit and a (named) column for each treatment level, with each cell corresponding to the probability of receiving the corresponding treatment level
+#' * A numeric vector with a value for each unit corresponding to the probability of being "treated" (only allowed for binary treatments)
+#'
+#' When supplied as a vector, `get_w_from_ps()` has to know which value of `treat`
 #' corresponds to the "treated" group. For 0/1 variables, 1 will be considered
 #' treated. For other types of variables, `get_w_from_ps()` will try to
 #' figure it out using heuristics, but it's safer to supply an argument to
-#' `treated`. When `estimand` is "ATT" or "ATC", supplying a value to
+#' `treated`. When `estimand` is `"ATT"` or `"ATC"`, supplying a value to
 #' `focal` is sufficient (for ATT, `focal` is the treated group, and
-#' for ATC, `focal` is the control group). When entered as a matrix or
-#' data frame, the columns must be named with the levels of the treatment, and
+#' for ATC, `focal` is the control group).
+#'
+#' When supplied as a matrix, the columns must be named with the levels of the treatment, and
 #' it is assumed that each column corresponds to the probability of being in
 #' that treatment group. This is the safest way to supply `ps` unless
-#' `treat` is a 0/1 variable.
-#'
-#' For multi-category treatments, `ps` can be entered as a vector or a
-#' matrix or data frame. When entered as a vector, it is assumed the value
-#' corresponds to the probability of being in the treatment actually received;
-#' this is only possible when the estimand is "ATE". Otherwise, `ps` must
-#' be entered as a named matrix or data frame as described above for binary
-#' treatments. When the estimand is "ATT" or "ATC", a value for `focal`
+#' `treat` is a 0/1 variable. When `estimand` is `"ATT"` or `"ATC"`, a value for `focal`
 #' must be specified.
 #'
-#' When `subclass` is not `NULL`, marginal mean weighting through
-#' stratification (MMWS) weights are computed. The implementation differs
+#' ## Marginal mean weighting through stratification (MMWS)
+#'
+#' When `subclass` is not `NULL`, MMWS weights are computed. The implementation differs
 #' slightly from that described in Hong (2010, 2012). First, subclasses are
 #' formed by finding the quantiles of the propensity scores in the target group
 #' (for the ATE, all units; for the ATT or ATC, just the units in the focal
@@ -83,21 +93,22 @@
 #' value in the unit's subclass. For example, if a subclass had 10 treated
 #' units and 90 control units in it, the subclass-propensity score for being
 #' treated would be .1 and the subclass-propensity score for being control
-#' would be .9 for all units in the subclass. For multi-category treatments,
+#' would be .9 for all units in the subclass.
+#'
+#' For multi-category treatments,
 #' the propensity scores for each treatment are stratified separately as
 #' described in Hong (2012); for binary treatments, only one set of propensity
 #' scores are stratified and the subclass-propensity scores for the other
 #' treatment are computed as the complement of the propensity scores for the
-#' stratified treatment. After the subclass-propensity scores have been
+#' stratified treatment.
+#'
+#' After the subclass-propensity scores have been
 #' computed, the standard propensity score weighting formulas are used to
 #' compute the unstabilized MMWS weights. To estimate MMWS weights equivalent
 #' to those described in Hong (2010, 2012), `stabilize` must be set to
 #' `TRUE`, but, as with standard propensity score weights, this is
 #' optional. Note that MMWS weights are also known as fine stratification
 #' weights and described by Desai et al. (2017).
-#'
-#' `get_w_from_ps()` is not compatible with continuous treatments.
-#'
 #'
 #' @seealso
 #' [`method_glm`]
@@ -165,7 +176,7 @@
 #'
 #' Hong, G. (2012). Marginal mean weighting through stratification: A
 #' generalized method for evaluating multivalued and multiple treatments with
-#' nonexperimental data. Psychological Methods, 17(1), 44–60. \doi{10.1037/a0024918}
+#' nonexperimental data. *Psychological Methods*, 17(1), 44–60. \doi{10.1037/a0024918}
 #'
 #' @examples
 #'
@@ -208,7 +219,6 @@
 #' @export
 get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL,
                           subclass = NULL, stabilize = FALSE) {
-  #ps must be a matrix/df with columns named after treat levels
 
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
@@ -220,7 +230,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   estimand <- .process_estimand(estimand, method = "glm", treat.type = treat.type)
 
   processed.estimand <- .process_focal_and_estimand(focal, estimand, treat, treated)
-  estimand <- processed.estimand$estimand
+  estimand <- toupper(processed.estimand$estimand)
   focal <- processed.estimand$focal
   assumed.treated <- processed.estimand$treated
 
@@ -230,54 +240,171 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     .err("`ps` and `treat` must have the same number of units")
   }
 
-  w <- rep(0, nrow(ps_mat))
-
   if (is_not_null(subclass)) {
     #Get MMW subclass propensity scores
     ps_mat <- .subclass_ps_multi(ps_mat, treat, estimand, focal, subclass)
   }
 
-  for (i in colnames(ps_mat)) {
-    w[treat == i] <- 1/ps_mat[treat == i, as.character(i)]
+  n <- length(treat)
+  w <- rep.int(1, n)
+
+  if (is.factor(treat)) {
+    treat <- as.integer(factor(treat, levels = colnames(ps_mat)))
+  }
+  else {
+    treat <- match(as.character(treat), colnames(ps_mat))
   }
 
-  if (toupper(estimand) == "ATE") {
-    # w <- w
+  focal <- match(as.character(focal), colnames(ps_mat))
+
+  if (estimand == "ATE") {
+    w[] <- 1 / ps_mat[cbind(seq_len(n), treat)]
   }
-  else if (toupper(estimand) == "ATT") {
-    w <- w*ps_mat[, as.character(focal)]
+  else if (estimand %in% c("ATT", "ATC")) {
+    not_focal <- which(treat != focal)
+    w[not_focal] <- ps_mat[not_focal, focal] / ps_mat[cbind(not_focal, treat[not_focal])]
   }
-  else if (toupper(estimand) == "ATO") {
-    w <- w*rowSums(1/ps_mat)^-1 #Li & Li (2019)
+  else if (estimand == "ATO") {
+    if (treat.type == "binary") {
+      w[] <- ps_mat[cbind(seq_len(n), 3L - treat)]
+    }
+    else {
+      #Li & Li (2019)
+      w[] <- 1 / (ps_mat[cbind(seq_len(n), treat)] *
+        rowSums(1 / ps_mat))
+    }
   }
-  else if (toupper(estimand) == "ATM") {
-    w <- w*do.call("pmin", lapply(seq_col(ps_mat), function(x) ps_mat[,x]), quote = TRUE)
+  else if (estimand == "ATM") {
+    min_ind <- max.col(-ps_mat, ties.method = "first")
+    no_match <- which(ps_mat[cbind(seq_len(n), treat)] != ps_mat[cbind(seq_len(n), min_ind)])
+
+    if (length(no_match) > 0) {
+      w[no_match] <- ps_mat[cbind(no_match, min_ind[no_match])] /
+        ps_mat[cbind(no_match, treat[no_match])]
+    }
   }
-  else if (toupper(estimand) == "ATOS") {
+  else if (estimand == "ATOS") {
     #Crump et al. (2009)
-    ps.sorted <- sort(c(ps_mat[,2], 1 - ps_mat[,2]))
-    q <- ps_mat[,2]*(1-ps_mat[,2])
+    ps.sorted <- sort(ps_mat)
+    q <- ps_mat[,1] * ps_mat[,2]
     alpha.opt <- 0
-    for (i in 1:sum(ps_mat[,2] < .5)) {
+    for (i in seq_len(sum(ps_mat[,2] < .5))) {
       if (i == 1 || !check_if_zero(ps.sorted[i] - ps.sorted[i-1])) {
         alpha <- ps.sorted[i]
-        a <- alpha*(1-alpha)
-        if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
+        a <- alpha * (1 - alpha)
+        if (1 / a <= 2 * sum(1/q[q >= a]) / sum(q >= a)) {
           alpha.opt <- alpha
           break
         }
       }
     }
+
+    w[] <- 1 / ps_mat[cbind(seq_len(n), treat)]
     w[!between(ps_mat[,2], c(alpha.opt, 1 - alpha.opt))] <- 0
   }
-  else return(numeric(0))
 
   if (stabilize) w <- stabilize_w(w, treat)
 
   names(w) <- if_null_then(rownames(ps_mat), names(treat), NULL)
 
   attr(w, "subclass") <- attr(ps_mat, "sub_mat")
-  if (toupper(estimand) == "ATOS") attr(w, "alpha") <- alpha.opt
+  if (estimand == "ATOS") attr(w, "alpha") <- alpha.opt
 
   w
+}
+
+.ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
+                          treated = NULL, estimand = NULL) {
+
+  t.levels <- {
+    if (is.factor(treat)) levels(treat)
+    else unique(treat, nmax = switch(treat.type, "binary" = 2, length(treat)/4))
+  }
+
+  if (treat.type == "binary") {
+    if (is.matrix(ps)) {
+      if (!is.numeric(ps)) {
+        .err("`ps` must be numeric when supplied as a matrix")
+      }
+      ps.names <- rownames(ps)
+    }
+    else if (is.data.frame(ps)) {
+      if (!all(vapply(ps, is.numeric, logical(1L)))) {
+        .err("all columns of `ps` must be numeric when supplied as a data.frame")
+      }
+      ps.names <- rownames(ps)
+      ps <- as.matrix(ps)
+    }
+    else if (is.numeric(ps) && is_null(dim(ps))) {
+      ps.names <- names(ps)
+      ps <- matrix(ps, ncol = 1)
+    }
+    else {
+      .err("`ps` must be a matrix, data frame, or vector of propensity scores")
+    }
+
+    if (ncol(ps) == 1) {
+      if (is_not_null(treated)) {
+        if (!treated %in% t.levels) {
+          .err("the argument to `treated` must be a value in `treat`")
+        }
+        treated.level <- treated
+      }
+      else if (is_not_null(assumed.treated)) {
+        treated.level <- assumed.treated
+      }
+      else if (can_str2num(treat) &&
+               all(check_if_zero(binarize(treat) - str2num(treat)))) {
+        treated.level <- 1
+      }
+      else if (is_not_null(colnames(ps)) && colnames(ps) %in% as.character(t.levels)) {
+        treated.level <- colnames(ps)
+      }
+      else {
+        .err("if the treatment has two non-0/1 levels and `ps` is a vector or has only one column, an argument to `treated` must be supplied")
+      }
+
+      t.levels <- c(setdiff(t.levels, treated.level), treated.level)
+      ps <- matrix(c(1 - ps[, 1], ps[, 1]), ncol = 2,
+                   dimnames = list(ps.names, as.character(t.levels)))
+    }
+    else if (ncol(ps) == 2) {
+      if (!all(as.character(t.levels) %in% colnames(ps))) {
+        .err("if `ps` has two columns, they must be named with the treatment levels")
+      }
+    }
+    else {
+      .err("`ps` cannot have more than two columns if the treatment is binary")
+    }
+
+  }
+  else if (treat.type == "multinomial") {
+    if (is.matrix(ps)) {
+      if (!is.numeric(ps)) {
+        .err("`ps` must be numeric when supplied as a matrix")
+      }
+      ps.names <- rownames(ps)
+    }
+    else if (is.data.frame(ps)) {
+      if (!all(vapply(ps, is.numeric, logical(1L)))) {
+        .err("all columns of `ps` must be numeric when supplied as a data.frame")
+      }
+      ps.names <- rownames(ps)
+      ps <- as.matrix(ps)
+    }
+    else {
+      .err("`ps` must be a matrix or data frame of propensity scores")
+    }
+
+    if (ncol(ps) != nunique(treat)) {
+      .err("`ps` must have as many columns as there are treatment levels")
+    }
+
+    if (!all(t.levels %in% colnames(ps))) {
+      .err("the columns of `ps` must be named with the treatment levels")
+    }
+
+  }
+
+  ps
 }

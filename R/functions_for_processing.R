@@ -234,8 +234,10 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
           treated <- unique.treat[unique.treat.bin == 1]
         }
         else {
-          if (is.factor(treat)) treated <- levels(treat)[2]
-          else treated <- unique.treat[unique.treat.bin == 1]
+          treated <- {
+            if (is.factor(treat)) levels(treat)[2]
+            else unique.treat[unique.treat.bin == 1]
+          }
 
           if (estimand == "ATT") {
             .msg(sprintf("assuming %s the treated level. If not, supply an argument to `focal`",
@@ -268,7 +270,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
     }
   }
 
-  list(focal = as.character(focal),
+  list(focal = focal,
        estimand = estimand,
        reported.estimand = reported.estimand,
        treated = if (is.factor(treated)) as.character(treated) else treated)
@@ -738,86 +740,6 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   }
 }
 
-.ps_to_ps_mat <- function(ps, treat, assumed.treated = NULL, treat.type = NULL,
-                         treated = NULL, estimand = NULL) {
-  if (is_(ps, c("matrix", "data.frame"))) {
-    ps.names <- rownames(ps)
-  }
-  else if (is_(ps, "numeric")) {
-    ps.names <- names(ps)
-    ps <- matrix(ps, ncol = 1)
-  }
-
-  if (is.factor(treat)) t.levels <- levels(treat)
-  else t.levels <- unique(treat, nmax = length(treat)/4)
-
-  if (treat.type == "binary") {
-    if ((!is.matrix(ps) || !is.numeric(ps)) &&
-        (!is.data.frame(ps) || !all(vapply(ps, is.numeric, logical(1L))))) {
-      .err("`ps` must be a matrix, data frame, or vector of propensity scores")
-    }
-
-    if (ncol(ps) == 1) {
-      if (can_str2num(treat) &&
-          all(check_if_zero(binarize(treat) - str2num(treat)))) {
-        treated.level <- 1
-      }
-      else if (is_not_null(treated)) {
-        if (!treated %in% treat) {
-          .err("the argument to `treated` must be a value in `treat`")
-        }
-        treated.level <- treated
-      }
-      else if (is_not_null(assumed.treated)) {
-        treated.level <- assumed.treated
-      }
-      else if (is_not_null(colnames(ps)) && colnames(ps) %in% as.character(t.levels)) {
-        treated.level <- colnames(ps)
-      }
-      else {
-        .err("if the treatment has two non-0/1 levels and `ps` is a vector or has only one column, an argument to `treated` must be supplied")
-      }
-
-      t.levels <- c(treated.level, t.levels[t.levels != treated.level])
-      ps <- matrix(c(ps[, 1], 1 - ps[, 1]), ncol = 2, dimnames = list(ps.names, as.character(t.levels)))
-    }
-    else if (ncol(ps) == 2) {
-      if (!all(as.character(t.levels) %in% colnames(ps))) {
-        .err("if `ps` has two columns, they must be named with the treatment levels")
-      }
-    }
-    else {
-      .err("`ps` cannot have more than two columns if the treatment is binary")
-    }
-
-  }
-  else if (treat.type == "multinomial") {
-    if ((!is.matrix(ps) || !is.numeric(ps)) &&
-        (!is.data.frame(ps) || !all(vapply(ps, is.numeric, logical(1L))))) {
-      .err("`ps` must be a matrix or data frame of propensity scores")
-    }
-
-    if (ncol(ps) == 1) {
-      if (toupper(estimand) != "ATE") {
-        .err("with multi-category treatments, `ps` can be a vector or have only one column only if the estimand is the ATE")
-      }
-
-      ps <- matrix(rep(ps, nunique(treat)), nrow = length(treat), dimnames = list(ps.names, t.levels))
-    }
-    else if (ncol(ps) == nunique(treat)) {
-      if (!all(t.levels %in% colnames(ps))) {
-        .err("the columns of `ps` must be named with the treatment levels")
-      }
-    }
-    else {
-      .err("`ps` must have as many columns as there are treatment levels")
-    }
-
-  }
-
-  ps
-}
-
 .subclass_ps_multi <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
   chk::chk_count(subclass)
   subclass <- round(subclass)
@@ -1087,18 +1009,18 @@ stabilize_w <- function(weights, treat) {
     w[i1] <- 1 / ps[i1]
   }
   else if (estimand == "ATT") {
-    w[i0] <- ps[i0] / (1 - ps[i0])
+    w[i0] <- .p2o(ps[i0])
   }
   else if (estimand == "ATC") {
-    w[i1] <- (1 - ps[i1]) / ps[i1]
+    w[i1] <- .p2o(1 - ps[i1])
   }
   else if (estimand == "ATO") {
     w[i0] <- ps[i0]
     w[i1] <- (1 - ps[i1])
   }
   else if (estimand == "ATM") {
-    w[i0] <- pmin(ps[i0], 1 - ps[i0]) / (1 - ps[i0])
-    w[i1] <- pmin(ps[i1], 1 - ps[i1]) / ps[i1]
+    w[i0][ps[i0] < .5] <- .p2o(ps[i0][ps[i0] < .5])
+    w[i1][ps[i1] > .5] <- .p2o(1 - ps[i1][ps[i1] > .5])
   }
   else if (estimand == "ATOS") {
     w[i0] <- 1 / (1 - ps[i0])
@@ -1190,8 +1112,14 @@ stabilize_w <- function(weights, treat) {
     ps <- matrix(ps, ncol = 1)
   }
 
+  eps <- 1e-8
+
   if (length(dim(ps)) == 2) {
     #Binary treatment, vector ps
+
+    w <- ps
+    w[] <- 0
+
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
       for (p in seq_col(ps)) {
@@ -1199,27 +1127,44 @@ stabilize_w <- function(weights, treat) {
       }
     }
 
+    t1 <- which(treat == 1)
+    t0 <- which(treat == 0)
+
     if (estimand == "ATE") {
-      w <- treat/ps + (1-treat)/(1-ps)
+      ps[t1,][ps[t1,] < eps] <- eps
+      ps[t0,][ps[t0,] > 1 - eps] <- 1 - eps
+
+      w[t1,] <- 1 / ps[t1,]
+      w[t0,] <- 1 / (1 - ps[t0,])
     }
     else if (estimand == "ATT") {
-      w <- treat + (1-treat) * ps/(1-ps)
+      ps[t0,][ps[t0,] > 1 - eps] <- 1 - eps
+
+      w[t1,] <- 1
+      w[t0,] <- .p2o(ps[t0,])
     }
     else if (estimand == "ATC") {
-      w <- treat*(1-ps)/ps + (1-treat)
+      ps[t1,][ps[t1,] < eps] <- eps
+
+      w[t1,] <- .p2o(1 - ps[t1,])
+      w[t0,] <- 1
     }
     else if (estimand == "ATO") {
-      w <- ps * (1-ps)
+      w[t1,] <- 1 - ps[t1,]
+      w[t0,] <- ps[t0,]
     }
     else if (estimand == "ATM") {
-      w <- (treat/ps + (1-treat)/(1-ps))
-      w <- w * pmin(ps, 1 - ps)
+      pslt.5 <- ps < .5
+      w[t1,][pslt.5[t1,]] <- 1
+      w[t1,][!pslt.5[t1,]] <- .p2o(1 - ps[t1,][!pslt.5[t1,]])
+
+      w[t0,][pslt.5[t0,]] <- .p2o(ps[t0,][pslt.5[t0,]])
+      w[t0,][!pslt.5[t0,]] <- 1
     }
 
     if (stabilize) {
-      for (i in 0:1) {
-        w[treat == i] <- mean_fast(treat == i) * w[treat == i]
-      }
+      w[t1] <- w[t1] * length(t1) / length(treat)
+      w[t0] <- w[t0] * length(t0) / length(treat)
     }
   }
   else if (length(dim(ps)) == 3) {
@@ -1231,31 +1176,55 @@ stabilize_w <- function(weights, treat) {
         ps[,,p] <- .subclass_ps_multi(ps[,,p], treat, estimand, focal, subclass)
     }
 
+    ps <- squish(ps, eps)
+
     w <- matrix(0, ncol = dim(ps)[3], nrow = dim(ps)[1])
     t.levs <- unique(treat)
-    for (i in t.levs) w[treat == i,] <- 1/ps[treat == i, as.character(i),]
+
+      for (i in t.levs) {
+        w[treat == i,] <- 1 / ps[treat == i, as.character(i),]
+      }
 
     if (estimand == "ATE") {
+      #Do nothing
     }
     else if (estimand %in% c("ATT", "ATC")) {
-      w <- w * ps[, as.character(focal),]
+      not_focal <- which(treat != focal)
+      w[-not_focal,] <- 1
+      w[not_focal,] <- w[not_focal,] * ps[not_focal, as.character(focal),]
     }
     else if (estimand == "ATO") {
-      w <- w / colSums(aperm(1/ps, c(2,1,3)))
+      w <- w / colSums(aperm(1/ps, c(2, 1, 3)))
     }
     else if (estimand == "ATM") {
+      treat <- as.integer(treat)
+
       for (p in seq_len(dim(ps)[3])) {
-        w[,p] <- w[,p] * do.call("pmin", lapply(seq_len(dim(ps)[2]), function(i) ps[,i,p]))
+        # w[,p] <- w[,p] * do.call("pmin", lapply(seq_len(dim(ps)[2]), function(i) ps[,i,p]))
+
+        ps_p <- ps[,,p]
+        min_ind <- max.col(-ps_p, ties.method = "first")
+        no_match <- which(ps_p[cbind(seq_along(treat), treat)] != ps_p[cbind(seq_along(treat), min_ind)])
+
+        if (length(no_match) < length(treat)) {
+          w[-no_match, p] <- 1
+        }
+
+        if (length(no_match) > 0) {
+          w[no_match, p] <- w[no_match, p] * ps_p[cbind(no_match, min_ind[no_match])]
+        }
       }
     }
 
     if (stabilize) {
       for (i in t.levs) {
-        w[treat == i,] <- mean_fast(treat == i)*w[treat == i,]
+        w[treat == i,] <- mean_fast(treat == i) * w[treat == i,]
       }
     }
   }
-  else .err("don't know how to process more than 3 dims (likely a bug)")
+  else {
+    .err("don't know how to process more than 3 dims (likely a bug)")
+  }
 
   w
 }
@@ -1363,6 +1332,11 @@ generalized_inverse <- function(sigma) {
   }
 
   jacob
+}
+
+#Convert probability to odds
+.p2o <- function(p) {
+  p / (1 - p)
 }
 
 #To pass CRAN checks:
