@@ -61,7 +61,7 @@
 #'       }
 #'       \item{`bag.fraction`}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the `bag.fraction` argument in `gbm.fit()`. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using [set.seed()] to ensure replicability of results.
 #'        }
-#'        \item{`use.offset`}{`logical`; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If `TRUE`, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the `offset` argument of `gbm.fit()`. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over `method = "glm"` with respect to `criterion`. Default is `FALSE` to omit the offset. Only allowed for binary and continuous treatments.
+#'        \item{`use.offset`}{`logical`; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If `TRUE`, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the `offset` argument of `gbm.fit()`. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over `method = "glm"` with respect to `criterion`. Default is `FALSE` to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.
 #'        }
 #' }
 #'
@@ -118,6 +118,8 @@
 #' @note
 #' The `criterion` argument used to be called `stop.method`, which is its name in \pkg{twang}. `stop.method` still works for backward compatibility. Additionally, the criteria formerly named as `"es.mean"`, `"es.max"`, and `"es.rms"` have been renamed to `"smd.mean"`, `"smd.max"`, and `"smd.rms"`. The former are used in \pkg{twang} and will still work with `weightit()` for backward compatibility.
 #'
+#' Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 - 10^{-8}} to ensure balance statistics can be computed.
+#'
 #' @seealso
 #' [weightit()], [weightitMSM()]
 #'
@@ -131,7 +133,6 @@
 #' ## Multi-Category Treatments
 #'
 #' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. *Statistics in Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
-#'
 #'
 #' ## Continuous treatments
 #'
@@ -265,7 +266,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   }
   else criterion <- available.criteria[s.m.matches]
 
-  tunable <- c("interaction.depth", "shrinkage", "distribution")
+  tunable <- c("interaction.depth", "shrinkage", "distribution", "use.offset")
 
   trim.at <- if_null_then(A[["trim.at"]], 0)
 
@@ -325,40 +326,41 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   A[["verbose"]] <- FALSE
   A[["n.trees"]] <- n.trees
 
-  tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
-                                   list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
-
   # Offset
-  use.offset <- A[["use.offset"]]
-  if (is_not_null(use.offset) && !isFALSE(use.offset)) {
-    if (treat.type == "multinomial") {
-      .err("`use.offset` cannot be used with multi-category treatments")
-    }
-    if (!identical(A[["distribution"]], "bernoulli")) {
-      .err("`use.offset` can only be used with `distribution = \"bernoulli\"`")
-    }
-    chk::chk_flag(use.offset)
+  if (is_not_null(A[["use.offset"]])) {
+    chk::chk_logical(A[["use.offset"]], "`use.offset`")
 
-    if (use.offset) {
+    if (any(A[["use.offset"]])) {
+      if (treat.type == "multinomial") {
+        .err("`use.offset` cannot be used with multi-category treatments")
+      }
+      if (!identical(A[["distribution"]], "bernoulli")) {
+        .err("`use.offset` can only be used with `distribution = \"bernoulli\"`")
+      }
+
       fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
                      weights = s.weights, family = quasibinomial())
-      A[["offset"]] <- fit$linear.predictors
+      offset <- fit$linear.predictors
     }
     else {
-      A[["offset"]] <- NULL
+      offset <- NULL
     }
   }
   else {
-    use.offset <- FALSE
-    A[["offset"]] <- NULL
+    A[["use.offset"]] <- FALSE
+    offset <- NULL
   }
+
+  tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
+                                   list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
 
   current.best.loss <- Inf
 
   for (i in seq_row(tune)) {
-
+    use.offset <- tune[["use.offset"]][i]
+    A[["offset"]] <- if (use.offset) offset else NULL
     A[["distribution"]] <- list(name = tune[["distribution"]][i])
-    tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
+    tune_args <- as.list(tune[i, setdiff(tunable, c("distribution", "use.offset"))])
 
     gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
                           A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))],
@@ -379,7 +381,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
       ps <- {
         if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(fit, n.trees = iters.grid,
-                                                         type = "link", newdata = covs))
+                                                                             type = "link", newdata = covs))
         else gbm::predict.gbm(fit, n.trees = iters.grid,
                               type = "response", newdata = covs)
       }
@@ -412,7 +414,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
         ps <- {
           if (use.offset) plogis(A[["offset"]] + gbm::predict.gbm(fit, n.trees = iters.to.check,
-                                                           type = "link", newdata = covs))
+                                                                               type = "link", newdata = covs))
           else gbm::predict.gbm(fit, n.trees = iters.to.check,
                                 type = "response", newdata = covs)
         }
@@ -460,10 +462,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       A[["class.stratify.cv"]] <- FALSE
       A[["y"]] <- treat
       A[["x"]] <- covs
-      A[["distribution"]] <- list(name = tune[["distribution"]][i])
       A[["w"]] <- s.weights
-
-      tune_args <- as.list(tune[i, setdiff(tunable, "distribution")])
 
       gbmCrossVal.call <- as.call(c(list(quote(gbm::gbmCrossVal)),
                                     A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
@@ -509,7 +508,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     if (treat.type == "multinomial") ps <- NULL
   }
 
-  tune[tunable[lengths(A[tunable]) == 1]] <- NULL
+  tune[tunable[vapply(tune[tunable], nunique, integer(1L)) == 1]] <- NULL
 
   if (ncol(tune) > 2) {
     info[["tune"]] <- tune
@@ -803,7 +802,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     plot_density(d.n, d.d)
   }
 
-  tune[tunable[lengths(A[tunable]) == 1]] <- NULL
+  tune[tunable[vapply(tune[tunable], nunique, integer(1L)) == 1]] <- NULL
 
   if (ncol(tune) > 2) {
     info[["tune"]] <- tune
