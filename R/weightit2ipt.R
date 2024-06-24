@@ -148,12 +148,12 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   # start <- setNames(rep(0, k), colnames(C))
   start <- glm.fit(C, treat, weights = s.weights, family = .fam)$coefficients
 
+  f <- function(B, X, A, SW, .psi) {
+    .colMeans(.psi(B, X, A, SW), n, k)
+  }
+
   if (estimand == "ATE") {
     ps <- rep(0, n)
-
-    f <- function(B, X, A, SW, .psi) {
-      .colMeans(.psi(B, X, A, SW), n, k)
-    }
 
     # Control weights
     psi0 <- function(B, X, A, SW) {
@@ -208,15 +208,12 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
                     SW * (A * (1 - p) / p - (1 - A)) * X
                   })
 
-    f <- function(B, X, A, SW) {
-      .colMeans(psi(B, X, A, SW), n, k)
-    }
-
     verbosely({
       fit.list[[1]] <- rootSolve::multiroot(f, start = start,
                                             A = treat,
                                             X = C,
                                             SW = s.weights,
+                                            .psi = psi,
                                             rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
                                             verbose = TRUE)
     }, verbose = verbose)
@@ -310,14 +307,14 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   start <- setNames(rep(0, k), colnames(C))
 
+  f <- function(B, X, A, SW, .psi) {
+    .colMeans(.psi(B, X, A, SW), length(A), k)
+  }
+
   if (estimand == "ATE") {
     psi <- function(B, X, A, SW) {
       p <- .fam$linkinv(drop(X %*% B))
       SW * (A / p - 1) * X
-    }
-
-    f <- function(B, X, A, SW) {
-      .colMeans(psi(B, X, A, SW), length(A), k)
     }
 
     for (i in groups_to_weight) {
@@ -326,6 +323,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                               A = as.numeric(treat == i),
                                               X = C,
                                               SW = s.weights,
+                                              .psi = psi,
                                               rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
                                               verbose = TRUE)
       }, verbose = verbose)
@@ -346,10 +344,6 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       SW * (A - (1 - A) * p / (1 - p)) * X
     }
 
-    f <- function(B, X, A, SW) {
-      .colMeans(psi(B, X, A, SW), length(A), k)
-    }
-
     for (i in groups_to_weight) {
 
       verbosely({
@@ -357,6 +351,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                               A = as.numeric(treat[treat %in% c(i, focal)] == focal),
                                               X = C[treat %in% c(i, focal),, drop = FALSE],
                                               SW = s.weights[treat %in% c(i, focal)],
+                                              .psi = psi,
                                               rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
                                               verbose = TRUE)
       }, verbose = verbose)
