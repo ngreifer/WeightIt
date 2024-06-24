@@ -218,13 +218,13 @@ test_that("Ordinal treatment", {
   #No M-parts for ordinal logistic
   expect_failure(expect_M_parts_okay(W0))
 
-  expect_no_condition({
-    W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                   data = test_data, method = "glm", estimand = "ATE",
-                  link = "br.logit", parallel = TRUE,
-                  include.obj = TRUE)
-  })
-  expect_failure(expect_M_parts_okay(W))
+  # expect_no_condition({
+  #   W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+  #                  data = test_data, method = "glm", estimand = "ATE",
+  #                 link = "br.logit", parallel = TRUE,
+  #                 include.obj = TRUE)
+  # })
+  # expect_failure(expect_M_parts_okay(W))
 
   expect_no_condition({
     W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,

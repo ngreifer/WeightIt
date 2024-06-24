@@ -15,23 +15,23 @@ get_w_from_ps(
 )
 }
 \arguments{
-\item{ps}{A vector, matrix, or data frame of propensity scores. See Details.}
+\item{ps}{a vector, matrix, or data frame of propensity scores. See Details.}
 
-\item{treat}{A vector of treatment status for each individual. See Details.}
+\item{treat}{a vector of treatment status for each individual. See Details.}
 
-\item{estimand}{The desired estimand that the weights should target. Current
-options include "ATE" (average treatment effect), "ATT" (average treatment
-effect on the treated), "ATC" (average treatment effect on the control),
-"ATO" (average treatment effect in the overlap), "ATM" (average treatment
-effect in the matched sample), and "ATOS" (average treatment effect in the
-optimal subset).}
+\item{estimand}{the desired estimand that the weights should target. Current
+options include \code{"ATE"} (average treatment effect), \code{"ATT"} (average treatment
+effect on the treated), \code{"ATC"} (average treatment effect on the control),
+\code{"ATO"} (average treatment effect in the overlap), \code{"ATM"} (average treatment
+effect in the matched sample), and \code{"ATOS"} (average treatment effect in the
+optimal subset). See Details.}
 
-\item{focal}{When the estimand is the ATT or ATC, which group should be
+\item{focal}{when \code{estimand} is \code{"ATT"} or \code{"ATC"}, which group should be
 consider the (focal) "treated" or "control" group, respectively. If not
-\code{NULL} and \code{estimand} is not "ATT" or "ATC", \code{estimand} will
-automatically be set to "ATT".}
+\code{NULL} and \code{estimand} is not \code{"ATT"} or \code{"ATC"}, \code{estimand} will
+automatically be set to \code{"ATT"}.}
 
-\item{treated}{When treatment is binary, the value of \code{treat} that is
+\item{treated}{when treatment is binary, the value of \code{treat} that is
 considered the "treated" group (i.e., the group for which the propensity
 scores are the probability of being in). If \code{NULL},
 \code{get_w_from_ps()} will attempt to figure it out on its own using some
@@ -44,7 +44,7 @@ computing weights using marginal mean weighting through stratification (also
 known as fine stratification). If \code{NULL}, standard inverse probability
 weights (and their extensions) will be computed; if a number greater than 1,
 subclasses will be formed and weights will be computed based on subclass
-membership. \code{estimand} must be ATE, ATT, or ATC if \code{subclass} is
+membership. \code{estimand} must be \code{"ATE"}, \code{"ATT"}, or \code{"ATC"} if \code{subclass} is
 non-\code{NULL}. See Details.}
 
 \item{stabilize}{\code{logical}; whether to compute stabilized weights or
@@ -66,33 +66,45 @@ that target the provided estimand.
 }
 \details{
 \code{get_w_from_ps()} applies the formula for computing weights from
-propensity scores for the desired estimand. See the References section for
-information on these estimands and the formulas.
+propensity scores for the desired estimand. The formula for each estimand is below, with \eqn{A_i} the treatment value for unit \eqn{i} taking on values \eqn{\mathcal{A} = (1, \ldots, g)}, \eqn{p_{a, i}} the probability of receiving treatment level \eqn{a} for unit \eqn{i}, and \eqn{f} is the focal group (the treated group for the ATT and the control group for the ATC):
 
-\code{ps} can be entered a variety of ways. For binary treatments, when
-\code{ps} is entered as a vector or unnamed single-column matrix or data
-frame, \code{get_w_from_ps()} has to know which value of \code{treat}
+\deqn{
+\begin{aligned}
+w^{ATE}_i &= 1 / p_{A_i, i} \\
+w^{ATT}_i &= w^{ATE}_i \times p_{f, i} \\
+w^{ATO}_i &= w^{ATE}_i / \sum_{a \in \mathcal{A}}{1/p_{a, i}} \\
+w^{ATM}_i &= w^{ATE}_i \times \min(p_{1, i}, \ldots, p_{g, i}) \\
+w^{ATOS}_i &= w^{ATE}_i \times \mathbb{1}\left(\alpha < p_{2, i} < 1 - \alpha\right)
+\end{aligned}
+}
+
+\code{get_w_from_ps()} can only be used with binary and multi-category treatments.
+\subsection{Supplying the \code{ps} argument}{
+
+The \code{ps} argument can be entered in two ways:
+\itemize{
+\item A numeric matrix with a row for each unit and a (named) column for each treatment level, with each cell corresponding to the probability of receiving the corresponding treatment level
+\item A numeric vector with a value for each unit corresponding to the probability of being "treated" (only allowed for binary treatments)
+}
+
+When supplied as a vector, \code{get_w_from_ps()} has to know which value of \code{treat}
 corresponds to the "treated" group. For 0/1 variables, 1 will be considered
 treated. For other types of variables, \code{get_w_from_ps()} will try to
 figure it out using heuristics, but it's safer to supply an argument to
-\code{treated}. When \code{estimand} is "ATT" or "ATC", supplying a value to
+\code{treated}. When \code{estimand} is \code{"ATT"} or \code{"ATC"}, supplying a value to
 \code{focal} is sufficient (for ATT, \code{focal} is the treated group, and
-for ATC, \code{focal} is the control group). When entered as a matrix or
-data frame, the columns must be named with the levels of the treatment, and
+for ATC, \code{focal} is the control group).
+
+When supplied as a matrix, the columns must be named with the levels of the treatment, and
 it is assumed that each column corresponds to the probability of being in
 that treatment group. This is the safest way to supply \code{ps} unless
-\code{treat} is a 0/1 variable.
-
-For multi-category treatments, \code{ps} can be entered as a vector or a
-matrix or data frame. When entered as a vector, it is assumed the value
-corresponds to the probability of being in the treatment actually received;
-this is only possible when the estimand is "ATE". Otherwise, \code{ps} must
-be entered as a named matrix or data frame as described above for binary
-treatments. When the estimand is "ATT" or "ATC", a value for \code{focal}
+\code{treat} is a 0/1 variable. When \code{estimand} is \code{"ATT"} or \code{"ATC"}, a value for \code{focal}
 must be specified.
+}
 
-When \code{subclass} is not \code{NULL}, marginal mean weighting through
-stratification (MMWS) weights are computed. The implementation differs
+\subsection{Marginal mean weighting through stratification (MMWS)}{
+
+When \code{subclass} is not \code{NULL}, MMWS weights are computed. The implementation differs
 slightly from that described in Hong (2010, 2012). First, subclasses are
 formed by finding the quantiles of the propensity scores in the target group
 (for the ATE, all units; for the ATT or ATC, just the units in the focal
@@ -104,20 +116,23 @@ treatment value is computed as the proportion of units with that treatment
 value in the unit's subclass. For example, if a subclass had 10 treated
 units and 90 control units in it, the subclass-propensity score for being
 treated would be .1 and the subclass-propensity score for being control
-would be .9 for all units in the subclass. For multi-category treatments,
+would be .9 for all units in the subclass.
+
+For multi-category treatments,
 the propensity scores for each treatment are stratified separately as
 described in Hong (2012); for binary treatments, only one set of propensity
 scores are stratified and the subclass-propensity scores for the other
 treatment are computed as the complement of the propensity scores for the
-stratified treatment. After the subclass-propensity scores have been
+stratified treatment.
+
+After the subclass-propensity scores have been
 computed, the standard propensity score weighting formulas are used to
 compute the unstabilized MMWS weights. To estimate MMWS weights equivalent
 to those described in Hong (2010, 2012), \code{stabilize} must be set to
 \code{TRUE}, but, as with standard propensity score weights, this is
 optional. Note that MMWS weights are also known as fine stratification
 weights and described by Desai et al. (2017).
-
-\code{get_w_from_ps()} is not compatible with continuous treatments.
+}
 }
 \examples{
 
@@ -231,7 +246,7 @@ Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 
 Hong, G. (2012). Marginal mean weighting through stratification: A
 generalized method for evaluating multivalued and multiple treatments with
-nonexperimental data. Psychological Methods, 17(1), 44–60. \doi{10.1037/a0024918}
+nonexperimental data. \emph{Psychological Methods}, 17(1), 44–60. \doi{10.1037/a0024918}
 }
 }
 \seealso{

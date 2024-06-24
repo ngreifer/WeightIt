@@ -7,7 +7,17 @@ WeightIt News and Updates
 
 * Standard errors are now correctly computed when an offset is included in `glm_weightit()`. Thanks to @zeynepbaskurt. (#63)
 
+* Improved robustness of `get_w_from_ps()` to propensity scores of 0 and 1.
+
+* When using `weightit()` with `method = "gbm"`, `use.offset` is now tunable.
+
+* Fixed a bug when using `method = "gbm"` where `distribution` was not included in the output when tuned.
+
 * Fixed a bug and clarified some error messages when using ordered treatments with `method = "glm"`. Thanks to Steve Worthington for pointing them out.
+
+* Fixed a bug when using `method = "gbm"` and propensity scores were estimated to be 0 or 1. Thanks to @mitchellcameron123. Propensity scores are now shifted slightly away from 0 or 1. (#64)
+
+* Updated the help page of `get_w_from_ps()` to include formulas for the weights.
 
 # WeightIt 1.1.0
 

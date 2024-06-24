@@ -55,6 +55,8 @@ Generalized boosted modeling (GBM, also known as gradient boosting machines) is 
 }
 \note{
 The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{"es.mean"}, \code{"es.max"}, and \code{"es.rms"} have been renamed to \code{"smd.mean"}, \code{"smd.max"}, and \code{"smd.rms"}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
+
+Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 - 10^{-8}} to ensure balance statistics can be computed.
 }
 \section{Additional Arguments}{
 
@@ -76,7 +78,7 @@ The following additional arguments can be specified:
 }
 \item{\code{bag.fraction}}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the \code{bag.fraction} argument in \code{gbm.fit()}. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using \code{\link[=set.seed]{set.seed()}} to ensure replicability of results.
 }
-\item{\code{use.offset}}{\code{logical}; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If \code{TRUE}, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the \code{offset} argument of \code{gbm.fit()}. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over \code{method = "glm"} with respect to \code{criterion}. Default is \code{FALSE} to omit the offset. Only allowed for binary and continuous treatments.
+\item{\code{use.offset}}{\code{logical}; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If \code{TRUE}, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the \code{offset} argument of \code{gbm.fit()}. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over \code{method = "glm"} with respect to \code{criterion}. Default is \code{FALSE} to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.
 }
 }
 
