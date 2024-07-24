@@ -236,7 +236,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
       sw0 <- check_if_zero(SW)
 
       do.call("cbind", lapply(groups_to_weight, function(i) {
-        m <- matrix(0, nrow = length(A), ncol = length(Btreat[coef_ind[[i]]]))
+        m <- matrix(0, nrow = nrow(Xtreat), ncol = ncol(Xtreat))
 
         C <- Xtreat[A == i & !sw0,,drop = FALSE]
         w <- drop(bw[A == i & !sw0] * exp(-C %*% Btreat[coef_ind[[i]]]))
