@@ -1,5 +1,5 @@
-# Multinomial logistic regression by finding roots of score equations
-.mlogit_weightit.fit <- function(x, y, weights = NULL, offset = NULL, start = NULL, hess = TRUE, ...) {
+# Multinomial logistic regression
+.multinom_weightit.fit <- function(x, y, weights = NULL, offset = NULL, start = NULL, hess = TRUE, ...) {
   chk::chk_atomic(y)
   y <- as.factor(y)
   chk::chk_numeric(x)
@@ -13,14 +13,13 @@
   if (is.null(offset)) offset <- rep.int(0, nobs)
   else chk::chk_numeric(offset)
 
-  chk::chk_all_equal(c(length(y), nrow(x), length(weights)))
+  chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
 
-  QR <- qr(x)
+  # QR <- qr(x)
 
   aliased_X <- !colnames(x) %in% colnames(make_full_rank(x, with.intercept = FALSE))
   aliased_B <- rep(aliased_X, nlevels(y) - 1)
 
-  n <- length(y)
   k0 <- (nlevels(y) - 1) * ncol(x)
   k <- sum(!aliased_B)
 
@@ -37,22 +36,15 @@
 
   x_ <- x[, !aliased_X, drop = FALSE]
 
-  coef_ind <- setNames(lapply(seq_len(nlevels(y) - 1), function(i) {
-    (i - 1) * sum(!aliased_X) + seq_len(sum(!aliased_X))
-  }), levels(y)[-1])
-
   get_pp <- function(B, X, offset = NULL) {
     if (length(offset) == 0) offset <- 0
 
-    qq <- lapply(levels(y)[-1], function(i) {
-      exp(offset + drop(X %*% B[coef_ind[[i]]]))
-    })
+    qq <- exp(offset + X %*% matrix(B, nrow = ncol(X)))
 
-    pden <- 1 + rowSums(do.call("cbind", qq))
-
-    pp <- do.call("cbind", c(list(1), qq)) / pden
+    pp <- cbind(1, qq) / (1 + rowSums(qq))
 
     colnames(pp) <- levels(y)
+    rownames(pp) <- rownames(X)
 
     pp
   }
@@ -70,15 +62,15 @@
   }
 
   gr <- function(B, X, y, weights, offset) {
-    .colSums(psi(B, X, y, weights, offset), n, k)
+    colSums(psi(B, X, y, weights, offset))
   }
 
-  w_y_mat <- weights * do.call("cbind", lapply(levels(y), function(i) y == i))
+  ind_mat <- cbind(seq_along(y), as.integer(y))
 
   ll <- function(B, X, y, weights, offset) {
-    pp <- get_pp(B, X, offset)
+    p <- get_pp(B, X, offset)[ind_mat]
 
-    sum(w_y_mat * log(pp))
+    sum(weights * log(p))
   }
 
   out <- optim(par = start[!aliased_B],
@@ -104,28 +96,26 @@
   }
 
   pp <- get_pp(out$par, x_, offset)
-  res <- rep(0, length(y))
-  for (i in seq_len(nlevels(y))) {
-    res[y == levels(y)[i]] <- 1 - pp[y == levels(y)[i], i]
-  }
+
+  res <- setNames(1 - pp[ind_mat], rownames(x))
 
   coefs <- setNames(rep(NA_real_, length(start)), names(start))
   coefs[!aliased_B] <- out$par
 
-  aliased <- rep(TRUE, ncol(x))
-  aliased[QR$pivot[seq_len(QR$rank)]] <- FALSE
-  attr(QR$qr, "aliased") <- aliased
+  # aliased <- rep(TRUE, ncol(x))
+  # aliased[QR$pivot[seq_len(QR$rank)]] <- FALSE
+  # attr(QR$qr, "aliased") <- aliased
 
   list(coefficients = coefs,
        residuals = res,
        fitted.values = pp,
-       rank = QR$rank,
-       qr = QR,
+       # rank = QR$rank,
+       # qr = QR,
        solve = out,
        psi = psi,
        f = gr,
        get_p = get_pp,
-       df.residual = length(res) - QR$rank,
+       df.residual = length(res) - sum(!is.na(coefs)),
        x = x,
        y = y,
        weights = weights,
@@ -133,7 +123,7 @@
        hessian = hessian)
 }
 
-.mlogit_weightit <- function(formula, data, weights, subset, start = NULL, na.action,
+.multinom_weightit <- function(formula, data, weights, subset, start = NULL, na.action,
                              hess = TRUE, model = TRUE, x = FALSE, y = TRUE, contrasts = NULL, ...) {
   cal <- match.call()
 
@@ -178,7 +168,7 @@
                     length(offset), NROW(Y)), domain = NA)
   }
 
-  fit <- eval(call(".mlogit_weightit.fit",
+  fit <- eval(call(".multinom_weightit.fit",
                    x = X, y = Y, weights = weights,
                    offset = offset, start = start,
                    hess = hess))
@@ -188,79 +178,9 @@
   if (!x) fit$x <- NULL
   if (!y) fit$y <- NULL
 
-  structure(c(fit, list(call = cal, formula = formula, terms = mt,
-                        data = data, offset = offset,
-                        contrasts = attr(X, "contrasts"), xlevels = .getXlevels(mt, mf))),
-            class = c("mlogit_weightit"))
+  c(fit,
+    list(call = cal, formula = formula, terms = mt,
+         data = data, offset = offset,
+         contrasts = attr(X, "contrasts"), xlevels = .getXlevels(mt, mf)))
 }
 
-#' @exportS3Method vcov mlogit_weightit
-vcov.mlogit_weightit <- function(object, ...) {
-  if (is_null(object$hessian)) {
-    .err("`hess = TRUE` must be specified in the original fitting call to use `vcov()`")
-  }
-
-  solve(-object$hessian)
-}
-
-#' @exportS3Method predict mlogit_weightit
-predict.mlogit_weightit <- function(object, newdata = NULL, na.action = na.pass, ...) {
-
-  na.act <- object$na.action
-  object$na.action <- NULL
-
-  if (is_null(newdata)) {
-    pred <- object$fitted.values
-    if (!is.null(na.act))
-      pred <- napredict(na.act, pred)
-    return(pred)
-  }
-
-  tt <- terms(object)
-
-  Terms <- delete.response(tt)
-  m <- model.frame(tt, newdata, na.action = na.action,
-                   xlev = object$xlevels)
-  y <- as.factor(model.response(m))
-  if (!is.null(cl <- attr(Terms, "dataClasses")))
-    .checkMFClasses(cl, m)
-  x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
-
-  offset <- model.offset(m)
-  if (!is.null(addO <- object$call$offset)) {
-    addO <- eval(addO, newdata, environment(tt))
-    offset <- {
-      if (length(offset) > 0) offset + addO
-      else addO
-    }
-  }
-
-  beta <- object$coefficients
-
-  coef_ind <- setNames(lapply(seq_len(nlevels(y) - 1), function(i) {
-    (i - 1) * ncol(x) + seq_len(ncol(x))
-  }), levels(y)[-1])
-
-  qq <- lapply(levels(y)[-1], function(i) {
-    exp(offset + drop(x %*% beta[coef_ind[[i]]]))
-  })
-
-  pden <- 1 + rowSums(do.call("cbind", qq))
-
-  pp <- do.call("cbind", c(list(1), qq)) / pden
-
-  colnames(pp) <- levels(y)
-
-  pp
-}
-
-#' @exportS3Method sandwich::estfun mlogit_weightit
-estfun.mlogit_weightit <- function(x, ...) {
-  x$gradient
-}
-
-#' @exportS3Method model.matrix mlogit_weightit
-model.matrix.mlogit_weightit <- function(object, ...) {
-  class(object) <- "lm"
-  model.matrix(object, ...)
-}
