@@ -323,13 +323,15 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
 
   by.components <- data.frame(by)
 
-  if (is_not_null(colnames(by))) names(by.components) <- colnames(by)
-  else names(by.components) <- by.name
+  names(by.components) <- {
+    if (is_not_null(colnames(by))) colnames(by)
+    else by.name
+  }
 
   by.factor <- {
     if (is_null(by)) factor(rep(1L, n), levels = 1L)
-    else factor(by.components[[1]], levels = unique(by.components[[1]]),
-                labels = paste(names(by.components), "=", unique(by.components[[1]])))
+    else factor(by.components[[1]], levels = sort(unique(by.components[[1]])),
+                labels = paste(names(by.components), "=", sort(unique(by.components[[1]]))))
   }
   # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
 
@@ -931,45 +933,68 @@ stabilize_w <- function(weights, treat) {
   if (is_null(n)) n <- 10 * length(treat)
   if (is_null(adjust)) adjust <- 1
 
-  if (use.kernel) {
+  if (!identical(use.kernel, FALSE)) {
+    if (isTRUE(use.kernel)) {
+      .wrn("`use.kernel` is deprecated; use `density = \"kernel\"` instead. Setting `density = \"kernel\"`")
+      density <- "kernel"
+    }
+    else {
+      .wrn("`use.kernel` is deprecated")
+    }
+  }
+
+  if (identical(density, "kernel")) {
     if (is_null(bw)) bw <- "nrd0"
     if (is_null(kernel)) kernel <- "gaussian"
 
     densfun <- function(p) {
-      d <- density(p, n = n,
-                   weights = weights/sum(weights), give.Rkern = FALSE,
-                   bw = bw, adjust = adjust, kernel = kernel)
+      d <- stats::density(p, n = n,
+                          weights = weights/sum(weights), give.Rkern = FALSE,
+                          bw = bw, adjust = adjust, kernel = kernel)
       out <- with(d, approxfun(x = x, y = y))(p)
       attr(out, "density") <- d
       out
     }
   }
   else {
-    if (is_null(density)) density <- dnorm
-    else if (is.function(density)) density <- density
+    if (is_null(density)) .density <- function(x) dnorm(x)
+    else if (is.function(density)) .density <- function(x) density(x)
+    else if (identical(density, "dlaplace")) {
+      .density <- function(x) {
+        mu <- 0
+        b <- 1
+        exp(-abs(x - mu)/b)/(2 * b)
+      }
+    }
     else if (is.character(density) && length(density == 1)) {
       splitdens <- strsplit(density, "_", fixed = TRUE)[[1]]
-      if (is_not_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
-        if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
-          .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
-                       density, word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
-        }
-        density <- function(x) {
-          tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
-                   error = function(e) .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE))
-        }
-      }
-      else {
+
+      if (is_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
         .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
                      density, splitdens[1]))
       }
+
+      if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
+        .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
+                     density, word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
+      }
+
+      .density <- function(x) {
+        tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
+                 error = function(e) {
+                   .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE)
+                 })
+      }
+
     }
-    else .err("the argument to `density` cannot be evaluated as a density function")
+    else {
+      .err("the argument to `density` cannot be evaluated as a density function")
+    }
 
     densfun <- function(p) {
       # sd <- sd(p)
       # sd <- sqrt(col.w.v(p, s.weights))
-      dens <- density(p)
+      dens <- .density(p)
       if (is_null(dens) || !is.numeric(dens) || anyNA(dens)) {
         .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the Gaussian density")
       }
@@ -981,7 +1006,7 @@ stabilize_w <- function(weights, treat) {
                    max(p) + 3 * adjust * bw.nrd0(p),
                    length.out = n)
       attr(dens, "density") <- data.frame(x = x,
-                                          y = density(x))
+                                          y = .density(x))
       dens
     }
   }
@@ -1234,9 +1259,9 @@ plot_density <- function(d.n, d.d) {
   d.n_ <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
   d.all <- rbind(d.d_, d.n_)
   d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
-  pl <- ggplot(d.all, aes(x = d.all$x, y = d.all$y)) + geom_line() +
+  pl <- ggplot(d.all, aes(x = .data$x, y = .data$y)) + geom_line() +
     labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
-    facet_grid(rows = vars(dens)) + theme(panel.background = element_rect(fill = "white"),
+    facet_grid(rows = vars(.data$dens)) + theme(panel.background = element_rect(fill = "white"),
                                           panel.border = element_rect(fill = NA, color = "black"),
                                           axis.text.x = element_text(color = "black"),
                                           axis.text.y = element_text(color = "black"),
@@ -1302,13 +1327,16 @@ generalized_inverse <- function(sigma) {
 }
 
 #Compute gradient numerically using centered difference
-.gradient <- function(.f, .x, .eps = 1e-8, ...) {
+.gradient <- function(.f, .x, .eps = 1e-8, parm = NULL, ...) {
+  if (is_null(parm)) {
+    parm <- seq_along(.x)
+  }
 
   .x0 <- .x
 
   .eps <- pmax(abs(.x) * .eps, .eps)
 
-  for (j in seq_along(.x)) {
+  for (j in parm) {
     # forward
     .x[j] <- .x0[j] + .eps[j]/2
 
@@ -1316,8 +1344,8 @@ generalized_inverse <- function(sigma) {
     f_new_forward <- .f(.x, ...)
 
     if (j == 1L) {
-      jacob <- matrix(0, nrow = length(f_new_forward), ncol = length(.x),
-                      dimnames = list(names(f_new_forward), names(.x)))
+      jacob <- matrix(0, nrow = length(f_new_forward), ncol = length(parm),
+                      dimnames = list(names(f_new_forward), names(.x)[parm]))
     }
 
     # backward
@@ -1339,5 +1367,77 @@ generalized_inverse <- function(sigma) {
   p / (1 - p)
 }
 
-#To pass CRAN checks:
-utils::globalVariables(c("dens"))
+#Get psi function (individual contributions to gradient) from glm fit
+.get_glm_psi <- function(fit) {
+  family <- fit$family
+
+  if (!identical(fit$class, "brglmFit") ||
+      identical(fit$type, "ML") || identical(fit$type, "correction")) {
+    psi <- function(B, X, y, weights, offset = 0) {
+      XB <- drop(X %*% B) + offset
+      p <- family$linkinv(XB)
+      D <- family$mu.eta(XB)
+      V <- family$variance(p)
+
+      X * (weights * D * (y - p) / V)
+    }
+  }
+  else {
+    br_type <- fit$type
+    if (is_null(fit$control[["a"]])) {
+      rlang::check_installed("brglm2")
+      fit$control[["a"]] <- formals(brglm2::brglmControl)[["a"]]
+    }
+
+    br_psi <- function(X, W, D, p, XB, V) {
+      DD <- family$d2mu.deta(XB)
+      Wt <- W * D^2 / V #"working weight"
+
+      ## Compute hat values
+      XWt <- sqrt(Wt) * X
+      q <- qr(XWt)
+      Q <- qr.Q(q)
+      H <- rowSums(Q * Q)
+
+      if (br_type %in% c("AS_mixed", "AS_mean")) {
+        AA <- .5 * X * H * DD / D
+        return(AA)
+      }
+
+      V1 <- family$d1variance(p)
+
+      if (br_type == "MPL_Jeffreys") {
+        return(fit$control[["a"]] * X * H * (2 * DD / D - V1 * D / V))
+      }
+
+      #br_type == "AS_median"
+      R_matrix <- qr.R(q)
+      info_unscaled <- crossprod(R_matrix)
+      inverse_info_unscaled <- chol2inv(R_matrix)
+
+      b_vector <- vapply(seq_len(ncol(X)), function(j) {
+        inverse_info_unscaled_j <- inverse_info_unscaled[j, ]
+        vcov_j <- tcrossprod(inverse_info_unscaled_j) / inverse_info_unscaled_j[j]
+        hats_j <- rowSums((X %*% vcov_j) * X) * Wt
+
+        inverse_info_unscaled_j %*% colSums(X * (hats_j * (D * V1 / (6 * V) - DD / (2 * D))))
+      }, numeric(1L))
+
+      AA <- .5 * X * H * DD / D
+      sweep(AA, 2, info_unscaled %*% b_vector / nrow(X), "+")
+    }
+
+    psi <-  function(B, X, y, weights, offset = 0) {
+      XB <- drop(X %*% B) + offset
+      p <- family$linkinv(XB)
+      D <- family$mu.eta(XB)
+      V <- family$variance(p)
+
+      .psi <- X * (weights * D * (y - p) / V)
+
+      .psi + br_psi(X, weights, D, p, XB, V)
+    }
+  }
+
+  psi
+}
