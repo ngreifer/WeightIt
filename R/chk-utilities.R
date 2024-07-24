@@ -13,18 +13,22 @@ pkg_caller_call <- function(start = 1) {
   rlang::caller_call(e_max)
 }
 
-.err <- function(...) {
-  chk::err(..., call = pkg_caller_call(start = 2))
+.err <- function(..., n = NULL, tidy = TRUE) {
+  m <- chk::message_chk(..., n = n, tidy = tidy)
+  rlang::abort(paste(strwrap(m), collapse = "\n"),
+               call = pkg_caller_call(start = 2))
 }
-.wrn <- function(..., immediate = TRUE) {
+.wrn <- function(..., n = NULL, tidy = TRUE, immediate = TRUE) {
   if (immediate && isTRUE(all.equal(getOption("warn"), 0))) {
     op <- options(warn = 1)
     on.exit(options(op))
   }
-  chk::wrn(...)
+  m <- chk::message_chk(..., n = n, tidy = tidy)
+  rlang::warn(paste(strwrap(m), collapse = "\n"))
 }
-.msg <- function(...) {
-  chk::msg(...)
+.msg <- function(..., n = NULL, tidy = TRUE) {
+  m <- chk::message_chk(..., n = n, tidy = tidy)
+  rlang::inform(paste(strwrap(m), collapse = "\n"), tidy = FALSE)
 }
 
 .chk_null_or <- function(x, chk, ..., x_name = NULL) {
@@ -42,7 +46,7 @@ pkg_caller_call <- function(start = 1) {
            error = function(e) {
              msg <- sub("[.]$", " or `NULL`.",
                         conditionMessage(e))
-             .err(msg, .subclass = "chk_error")
+             .err(msg)
            })
 }
 
