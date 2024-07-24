@@ -462,20 +462,13 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   K <- nlevels(treat)
   kk <- seq_len(K)
 
-  coef_ind <- setNames(lapply(kk[-K], function(i) {
-    (i - 1) * ncol(mod_covs) + seq_len(ncol(mod_covs))
-  }), levels(treat)[-K])
-
   get_pp <- function(B, Xm) {
-    qq <- lapply(kk[-K], function(i) {
-      exp(drop(Xm %*% B[coef_ind[[i]]]))
-    })
+    qq <- exp(Xm %*% matrix(B, nrow = ncol(Xm)))
 
-    pden <- 1 + rowSums(do.call("cbind", qq))
+    pp <- cbind(1, qq) / (1 + rowSums(qq))
 
-    out <- do.call("cbind", c(qq, list(1))) / pden
-    colnames(out) <- levels(treat)
-    out
+    colnames(pp) <- levels(treat)
+    pp
   }
 
   #Multinomial logistic regression score
@@ -1036,17 +1029,13 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
              plogis(drop(X %*% B))
            },
            "multinomial" = function(B, X, A) {
-             qq <- lapply(seq_len(nlevels(A) - 1), function(j) {
-               coef_ind_i <- (j - 1) * ncol(X) + seq_len(ncol(X))
-               exp(drop(X %*% B[coef_ind_i]))
-             })
+             qq <- exp(X %*% matrix(B, nrow = ncol(X)))
 
-             pden <- 1 + rowSums(do.call("cbind", qq))
+             pp <- cbind(1, qq) / (1 + rowSums(qq))
 
-             p <- do.call("cbind", c(qq, list(1))) / pden
-             colnames(p) <- levels(A)
+             colnames(pp) <- levels(A)
 
-             p
+             pp
            },
            "continuous" = function(B, X, A) {
              drop(X %*% B[-(1:3)])
