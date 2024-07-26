@@ -19,7 +19,7 @@ For multi-category treatments, the propensity scores are estimated using multino
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, the generalized propensity score is estimated using linear regression. The conditional density can be specified as normal or another distribution. In addition, kernel density estimation can be used instead of assuming a specific density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+For continuous treatments, the generalized propensity score is estimated using linear regression. The conditional density can be specified as normal or another distribution. In addition, kernel density estimation can be used instead of assuming a specific density for the numerator and denominator of the generalized propensity score by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 }
 
 \subsection{Longitudinal Treatments}{
@@ -45,7 +45,7 @@ In the presence of missing data, the following value(s) for \code{missing} are a
 
 \subsection{M-estimation}{
 
-For binary treatments, M-estimation is supported when \code{link} is neither \code{"flic"} nor \code{"flac"} (see below). For multi-category treatments, M-estimation is supported when \code{multi.method} is \code{"weightit"} (the default for non-ordered treatments) or \code{"glm"}. For continuous treatments, M-estimation is supported when \code{use.kernel} is not \code{TRUE}. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when \code{missing = "saem"}. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
+For binary treatments, M-estimation is supported when \code{link} is neither \code{"flic"} nor \code{"flac"} (see below). For multi-category treatments, M-estimation is supported when \code{multi.method} is \code{"weightit"} (the default for non-ordered treatments) or \code{"glm"}. For continuous treatments, M-estimation is supported when \code{density} is not \code{"kernel"}. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when \code{missing = "saem"}. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
 }
 }
 \section{Additional Arguments}{
@@ -63,14 +63,11 @@ For multi-category treatments, the following additional arguments can be specifi
 
 For continuous treatments, the following additional arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
-}
-\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link[=density]{density()}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
-}
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to the \code{\link[=density]{density()}} function. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
-}
-\item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
-}
+\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+
+Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the numerator and denominator densities for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()} except that \code{n} is 10 times the number of units in the sample.}
+\item{\code{plot}}{If \code{density = "kernel"}, whether to plot the estimated densities.}
 \item{\code{link}}{The link used to fit the linear model for the generalized propensity score. Can be any allowed by \code{\link[=gaussian]{gaussian()}}.
 }
 }
@@ -108,9 +105,10 @@ summary(W2)
 bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
+#with kernel density estimate
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "glm", use.kernel = TRUE))
+                method = "glm", density = "kernel"))
 summary(W3)
 bal.tab(W3)
 }

@@ -1,25 +1,37 @@
 WeightIt News and Updates
 ======
 
-# WeightIt (development version)
+# `WeightIt` (development version)
+
+* Added two new functions, `multinom_weightit()` and `ordinal_weightit()` for multinomial logistic regression and ordinal regression with capabilities to estimate a covariance matrix that accounts for estimation of the weights using M-estimation. Previously, multinomial logistic regression could be requested using `glm_weightit()` with `family = "multinomial"`; this has been deprecated.
+
+* M-estimation can now be used for weighting with ordinal regression for weights with multi-category ordered treatments with `method = "glm"`.
 
 * M-estimation can now be used for weighting with bias-reduced regression for the propensity score (`method = "glm"` with `link = "br.{.}"`). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.
+
+* For any weighting methods with continuous treatments that support a `density` argument to specify the numerator and denominator densities of the weights, `density` can now be specified as `"kernel"` to request kernel density estimation. Previously, this was requested by setting `use.kernel = TRUE`, which is now deprecated.
 
 * Standard errors are now correctly computed when an offset is included in `glm_weightit()`. Thanks to @zeynepbaskurt. (#63)
 
 * Improved robustness of `get_w_from_ps()` to propensity scores of 0 and 1.
 
-* When using `weightit()` with `method = "gbm"`, `use.offset` is now tunable.
+* Updates to `weightit()` with `method = "gbm"`:
 
-* Fixed a bug when using `method = "gbm"` where `distribution` was not included in the output when tuned.
+    * `use.offset` is now tunable.
+    * The same random seed is used across specifications as requested by @mitchellcameron123. (#64)
+    * For binary and multi-category treatments with cross-validation used as the criterion, `class.stratify.cv` is now set to `TRUE` by default to stratify on treatment.
+    * For continuous treatments, the default density now corresponds to the distribution requested.
+    * `plot()` can be used on the output of `weightit()` to display the results of the tuning process; see `help("plot.weightit")` for details.
+    * Fixed a bug where `distribution` was not included in the output when tuned.
+    * Fixed a bug when propensity scores were estimated to be 0 or 1. Thanks to @mitchellcameron123. Propensity scores are now shifted slightly away from 0 or 1. (#64)
+
+* When using `weightit()` with `method = "super"` for binary and multi-category treatments, cross-validation now stratifies on treatment, as recommended by [Phillips et al. (2023)](https://doi.org/10.1093/ije/dyad023).
 
 * Fixed a bug and clarified some error messages when using ordered treatments with `method = "glm"`. Thanks to Steve Worthington for pointing them out.
 
-* Fixed a bug when using `method = "gbm"` and propensity scores were estimated to be 0 or 1. Thanks to @mitchellcameron123. Propensity scores are now shifted slightly away from 0 or 1. (#64)
-
 * Updated the help page of `get_w_from_ps()` to include formulas for the weights.
 
-# WeightIt 1.1.0
+# `WeightIt` 1.1.0
 
 * Added a new function, `coxph_weightit()`, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the `summary()` and `print()` methods for `glm_weightit` objects, which are different from those for `coxph` objects.
 
@@ -53,7 +65,7 @@ WeightIt News and Updates
 
 * Improved warnings and errors for bad models throughout the package.
 
-# WeightIt 1.0.0
+# `WeightIt` 1.0.0
 
 * Added a new function, `glm_weightit()` (along with wrapper `lm_weightit()`) and associated methods for fitting generalized linear models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via M-estimation or two forms of bootstrapping. `glm_weightit()` also supports multinomial logistic regression in addition to all models supported by `glm()`. Cluster-robust standard errors are supported, and output is compatible with any functions that accept `glm()` objects. Not all weighting methods support M-estimation, but for those that do, a new component is added to the `weightit` output object. Currently, GLM propensity scores, entropy balancing, just-identified CBPS, and inverse probability tilting (described below) support M-estimation-based standard errors with `glm_weightit()`.
 
@@ -85,13 +97,13 @@ WeightIt News and Updates
 
 * Reorganization of some functions.
 
-# WeightIt 0.14.2
+# `WeightIt` 0.14.2
 
 * Fixed a bug when using `estimand = "ATC"` with multi-category treatments. (#47)
 
 * Fixed a bug in the Estimating Effects vignette. (#46)
 
-# WeightIt 0.14.1
+# `WeightIt` 0.14.1
 
 * `cobalt` version 4.5.1 or greater is now required.
 
@@ -99,7 +111,7 @@ WeightIt News and Updates
 
 * Added a section to the Estimating Effects vignette (`vignette("estimating-effects")`) on estimating the effect of a continuous treatment after weighting.
 
-# WeightIt 0.14.0
+# `WeightIt` 0.14.0
 
 * Added energy balancing for continuous treatments, requested using `method = "energy"`, as described in [Huling et al. (2023)](https://doi.org/10.1080/01621459.2023.2213485). These weights minimize the distance covariance between the treatment and covariates while maintaining representativeness. This method supports exact balance constraints, distributional balance constraints, and sampling weights. The implementation is similar to that in the `independenceWeights` package. See `?method_energy` for details.
 
@@ -127,7 +139,7 @@ WeightIt News and Updates
 
 * The missingness indicator approach now imputes the variable median rather than 0 for missing values. This will not change the performance of most methods, but change others, and doesn't affect balance assessment.
 
-# WeightIt 0.13.1
+# `WeightIt` 0.13.1
 
 * For ordinal multi-category treatments, setting `link = "br.logit"` now uses `brglm2::bracl()` to fit a bias-reduced ordinal regression model.
 
@@ -141,7 +153,7 @@ WeightIt News and Updates
 
 * Updated the logo, thanks to [Ben Stillerman](https://stillben.com).
 
-# WeightIt 0.13.0
+# `WeightIt` 0.13.0
 
 * Fixed a bug that would occur when the `formula.tools` package was loaded, which would occur most commonly when `logistf` was loaded. It would cause the error `The treatment and covariates must have the same number of units.` (#25)
 
@@ -167,7 +179,7 @@ WeightIt News and Updates
 
 * An error is now thrown if an incorrect `link` is supplied with `method = "ps"`.
 
-# WeightIt 0.12.0
+# `WeightIt` 0.12.0
 
 * The use of `method = "twang"` has been retired and will now give an error message. Use `method = "gbm"` for nearly identical functionality with more options, as detailed at `?method_gbm`.
 
@@ -189,7 +201,7 @@ WeightIt News and Updates
 
 * Fixed a bug where `Warning: Deprecated` would appear sometimes when `purrr` (part of the `tidyverse`) was loaded. (#22) Thanks to MrFlick on StackOverflow for the [solution](https://stackoverflow.com/a/66897921/6348551).
 
-# WeightIt 0.11.0
+# `WeightIt` 0.11.0
 
 * Added support for estimating propensity scores using Bayesian additive regression trees (BART) with `method = "bart"`. This method fits a BART model for the treatment using functions in the `dbarts` package to estimate propensity scores that are used in weights. Binary, multinomial, and continuous treatments are supported. BART uses Bayesian priors for its hyperparameters, so no hyperparameter tuning is necessary to get well-performing predictions.
 
@@ -213,11 +225,11 @@ WeightIt News and Updates
 
 * Cleaned up the documentation.
 
-# WeightIt 0.10.2
+# `WeightIt` 0.10.2
 
 * Fixed a bug where treatment values were accidentally switched for some methods.
 
-# WeightIt 0.10.1
+# `WeightIt` 0.10.1
 
 * With `method = "gbm"`, added the ability to tune hyperparameters like `interaction.depth` and `distribution` using the same criteria as is used to select the optimal tree. A summary of the tuning results is included in `info` in the `weightit` output object.
 
@@ -231,7 +243,7 @@ WeightIt News and Updates
 
 * Fixed a bug when using `method = "npcbps"` where weights could be excessively small and mistaken for all being the same. The weights now sum to the number of units.
 
-# WeightIt 0.10.0
+# `WeightIt` 0.10.0
 
 * Added support for energy balancing with `method = "energy"`. This method minimizes the energy distance between samples, which is a multivariate distance measure. This method uses code written specifically for `WeightIt` (i.e., it does not call a package specifically designed for energy balancing) using the `osqp` package for the optimization (same as `optweight`). See Huling & Mak (2020) for details on this method. Also included is an option to require exact balance on moments of the covariates while minimizing the energy distance. The method works for binary and multinomial treatments with the ATE, ATT, or ATC. Sampling weights are supported. Because the method requires the calculation and manipulation of a distance matrix for all units, it can be slow and/or memory intensive for large datasets.
 
@@ -255,7 +267,7 @@ WeightIt News and Updates
 
 * Added output for the number of weights equal to zero in `summary.weightit`. This can be especially helpful when using `"optweight"` or `"energy"` methods or when using `estimand = "ATOS"`.
 
-# WeightIt 0.9.0
+# `WeightIt` 0.9.0
 
 * Added support for entropy balancing (`method = "ebal"`) for continuous treatments as described by Tübbicke (2020). Relies on hand-written code contributed by Stefan Tübbicke rather than another R package. Sampling weights and base weights are both supported as they are with binary and multi-category treatments.
 
@@ -265,7 +277,7 @@ WeightIt News and Updates
 
 * Added `crayon` for prettier printing of `summary()` output.
 
-# WeightIt 0.8.0
+# `WeightIt` 0.8.0
 
 * Formula interfaces now accept `poly(x, .)` and other matrix-generating functions of variables, including the `rms`-class-generating functions from the `rms` package (e.g., `pol()`, `rcs()`, etc.) (the `rms` package must be loaded to use these latter ones) and the `basis`-class-generating functions from the `splines` package (i.e., `bs()` and `ns()`). A bug in an early version of this was found by @ahinton-mmc.
 
@@ -293,13 +305,13 @@ WeightIt News and Updates
 
 * Performance enhancements.
 
-# WeightIt 0.7.1
+# `WeightIt` 0.7.1
 
 * Fixed bug when using `weightit()` inside another function that passed a `by` argument explicitly. Also changed the syntax for `by`; it must now either be a string (which was always possible) or a one-sided formula with the stratifying variable on the right-hand side. To use a variable that is not in `data`, you must use the formula interface. 
 
 * Fixed bug when trying to use `ps` with `by` in `weightit()`.
 
-# WeightIt 0.7.0
+# `WeightIt` 0.7.0
 
 * Added new `sbps()` function for estimating subgroup balancing propensity score weights, including both the standard method and a new smooth version.
 
@@ -315,7 +327,7 @@ WeightIt News and Updates
 
 * Added support for using bias-reduced fitting functions when `method = "ps"` as provided by the `brglm2` package. These can be accessed by changing the `link` to, for example, `"br.logit"` or `"br.probit"`. For multinomial treatments, setting `link = "br.logit"` fits a bias-reduced multinomial regression model using `brglm2::brmultinom()`. This can be helpful when regular maximum likelihood models fail to converge, though this may also be a sign of lack of overlap.
 
-# WeightIt 0.6.0
+# `WeightIt` 0.6.0
 
 * Bug fixes. Functions now work better when used inside other functions (e.g., `lapply`).
 
@@ -339,7 +351,7 @@ WeightIt News and Updates
 
 * Added `ggplot2` to Imports.
 
-# WeightIt 0.5.1
+# `WeightIt` 0.5.1
 
 * Fixed a bug when using the `ps` argument in `weightit()`.
 
@@ -347,7 +359,7 @@ WeightIt News and Updates
 
 * Added warnings for using certain methods with longitudinal treatments as they are not validated and may lead to incorrect inferences.
 
-# WeightIt 0.5.0
+# `WeightIt` 0.5.0
 
 * Added `super` method to estimate propensity scores using the `SuperLearner` package.
 
@@ -363,7 +375,7 @@ WeightIt News and Updates
 
 * Other bug fixes and minor changes.
 
-# WeightIt 0.4.0
+# `WeightIt` 0.4.0
 
 * Added `trim()` function to trim weights.
 
@@ -375,7 +387,7 @@ WeightIt News and Updates
 
 * Fixed a bug where variables would be thrown out when `method = "ebal"`.
 
-# WeightIt 0.3.2
+# `WeightIt` 0.3.2
 
 * Added new `moments` and `int` options for some `weightit()` methods to easily specify moments and interactions of covariates.
 
@@ -385,7 +397,7 @@ WeightIt News and Updates
 
 * Added a vignette.
 
-# WeightIt 0.3.1
+# `WeightIt` 0.3.1
 
 * Edits to code and help files to protect against missing `CBPS` package.
 
@@ -393,13 +405,13 @@ WeightIt News and Updates
 
 * Minor bug fixes and spelling corrections.
 
-# WeightIt 0.3.0
+# `WeightIt` 0.3.0
 
 * Added `weightitMSM()` function (and supporting `print()` and `summary()` functions) to estimate weights for marginal structural models with time-varying treatments and covariates.
 
 * Fixed some bugs, including when using CBPS with continuous treatments, and when using `focal` incorrectly.
 
-# WeightIt 0.2.0
+# `WeightIt` 0.2.0
 
 * Added `method = "sbw"` for stable balancing weights (now removed and replaced with `method = "optweight"`)
 
@@ -409,6 +421,6 @@ WeightIt News and Updates
 
 * Added README and NEWS
 
-# WeightIt 0.1.0
+# `WeightIt` 0.1.0
 
 * First version!

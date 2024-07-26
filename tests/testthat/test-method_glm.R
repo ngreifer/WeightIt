@@ -215,8 +215,7 @@ test_that("Ordinal treatment", {
                   include.obj = TRUE)
   })
 
-  #No M-parts for ordinal logistic
-  expect_failure(expect_M_parts_okay(W0))
+  expect_M_parts_okay(W0)
 
   # expect_no_condition({
   #   W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,

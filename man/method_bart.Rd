@@ -19,7 +19,7 @@ For multi-category treatments, the propensity scores are estimated using several
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, the generalized propensity score is estimated using \pkgfun2{dbarts}{bart}{dbarts::bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{use.kernel = TRUE}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+For continuous treatments, the generalized propensity score is estimated using \pkgfun2{dbarts}{bart}{dbarts::bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 }
 
 \subsection{Longitudinal Treatments}{
@@ -66,14 +66,11 @@ All arguments to \pkgfun2{dbarts}{bart}{dbarts::bart2} can be passed through \co
 
 For continuous treatments only, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
-}
-\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through \code{\link[=density]{density()}} to estimate the numerator and denominator densities for the weights. If \code{FALSE}, the argument to the \code{density} parameter is used instead.
-}
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to the \code{\link[=density]{density()}} function. The defaults are the same as those in \code{density()} except that \code{n} is 10 times the number of units in the sample.
-}
-\item{\code{plot}}{If \code{use.kernel = TRUE}, whether to plot the estimated density.
-}
+\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+
+Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the numerator and denominator densities for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()} except that \code{n} is 10 times the number of units in the sample.}
+\item{\code{plot}}{If \code{density = "kernel"}, whether to plot the estimated densities.}
 }
 }
 

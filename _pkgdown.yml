@@ -9,8 +9,11 @@ reference:
   - summary.weightit
 - title: Specific estimation methods
 - contents: starts_with("method_")
-- title: Estimate treatment effects
-- contents: glm_weightit
+- title: Fit weighted regression models
+- contents:
+  - glm_weightit
+  - predict.glm_weightit
+  - glm_weightit-methods
 - title: Modify weights
 - contents:
   - trim
@@ -23,6 +26,7 @@ reference:
   - weightit.fit
   - as.weightit
   - make_full_rank
+  - plot.weightit
 - title: Datasets
 - contents: msmdata
 

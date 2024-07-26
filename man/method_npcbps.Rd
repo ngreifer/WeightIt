@@ -49,9 +49,6 @@ M-estimation is not supported.
 \details{
 Nonparametric CBPS involves the specification of a constrained optimization problem over the weights. The constraints correspond to covariate balance, and the loss function is the empirical likelihood of the data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or not converge at all, so approximate balance is allowed instead using the \code{cor.prior} argument, which controls the average deviation from zero correlation between the treatment and covariates allowed.
 }
-\note{
-When sampling weights are used with \code{CBPS::CBPS()}, the estimated weights already incorporate the sampling weights. When \code{weightit()} is used with \code{method = "cbps"}, the estimated weights are separated from the sampling weights, as they are with all other methods.
-}
 \section{Additional Arguments}{
 
 \code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.

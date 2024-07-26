@@ -112,7 +112,7 @@ cobalt::bal.tab(W3)
 
 Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. \emph{Political Analysis}, 20(1), 25–46. \doi{10.1093/pan/mpr025}
 
-Zhao, Q., & Percival, D. (2017). Entropy balancing is doubly robust. Journal of Causal Inference, 5(1). \doi{10.1515/jci-2016-0010}
+Zhao, Q., & Percival, D. (2017). Entropy balancing is doubly robust. \emph{Journal of Causal Inference}, 5(1). \doi{10.1515/jci-2016-0010}
 }
 
 \subsection{\code{estimand = "ATE"}}{

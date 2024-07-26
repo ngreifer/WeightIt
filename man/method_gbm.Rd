@@ -52,6 +52,8 @@ M-estimation is not supported.
 Generalized boosted modeling (GBM, also known as gradient boosting machines) is a machine learning method that generates predicted values from a flexible regression of the treatment on the covariates, which are treated as propensity scores and used to compute weights. It does this by building a series of regression trees, each fit to the residuals of the last, minimizing a loss function that depends on the distribution chosen. The optimal number of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004) were innovative in using covariate balance to select this value rather than traditional machine learning performance metrics such as cross-validation accuracy. GBM is particularly effective for fitting nonlinear treatment models characterized by curves and interactions, but performs worse for simpler treatment models. It is unclear which balance measure should be used to select the number of trees, though research has indicated that balance measures tend to perform better than cross-validation accuracy for estimating effective propensity score weights.
 
 \pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multi-category treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multi-category treatments.
+
+\code{plot()} can be used on the output of \code{weightit()} with \code{method = "gbm"} to display the results of the tuning process; see Examples and \code{\link[=plot.weightit]{plot.weightit()}} for more details.
 }
 \note{
 The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{"es.mean"}, \code{"es.max"}, and \code{"es.rms"} have been renamed to \code{"smd.mean"}, \code{"smd.max"}, and \code{"smd.rms"}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
@@ -82,23 +84,22 @@ The following additional arguments can be specified:
 }
 }
 
-All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit}, and some are not used at all.
+All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit}, and some are not used at all. For binary and multi-category treatments with a with cross-validation used as the criterion, \code{class.stratify.cv} is set to \code{TRUE} by default.
 
 The \code{w} argument in \code{gbm.fit()} is ignored because sampling weights are passed using \code{s.weights}.
 
 For continuous treatments only, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if \code{use.kernel = TRUE} (described below).
-}
-\item{\code{use.kernel}}{If \code{TRUE}, uses kernel density estimation through the \code{\link[=density]{density()}} function to estimate the numerator and denominator densities for the weights. If \code{FALSE} (the default), the argument to the \code{density} parameter is used instead.
-}
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{use.kernel = TRUE}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density} except that \code{n} is 10 times the number of units in the sample.
-}
-\item{\code{plot}}{If \code{use.kernel = TRUE} with continuous treatments, whether to plot the estimated density.
-}
+\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+
+Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the numerator and denominator densities for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)
+
+If unspecified, a density corresponding to the argument passed to \code{distribution}. If \code{"gaussian"} (the default), \code{\link[=dnorm]{dnorm()}} is used. If \code{"tdist"}, a t-distribution with 4 degrees of freedom is used. If \code{"laplace"}, a laplace distribution is used.}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()} except that \code{n} is 10 times the number of units in the sample.}
+\item{\code{plot}}{If \code{density = "kernel"}, whether to plot the estimated densities.}
 }
 
-For tunable arguments, multiple entries may be supplied, and \code{weightit()} will choose the best value by optimizing the criterion specified in \code{criterion}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning.
+For tunable arguments, multiple entries may be supplied, and \code{weightit()} will choose the best value by optimizing the criterion specified in \code{criterion}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning. The same seed is used for every run to ensure any variation in performance across tuning parameters is due to the specification and not to using a random seed. This only matters when \code{bag.fraction} differs from 1 (its default) or cross-validation is used as the criterion; otherwise, there are no random components in the model.
 }
 
 \section{Additional Outputs}{
@@ -108,20 +109,16 @@ For tunable arguments, multiple entries may be supplied, and \code{weightit()} w
 A list with the following entries:
 \describe{
 \item{\code{best.tree}}{
-The number of trees at the optimum. If this is close to \code{n.trees}, \code{weightit()} should be rerun with a larger value for \code{n.trees}, and \code{start.tree} can be set to just below \code{best.tree}. When other parameters are tuned, this is the best tree value in the best combination of tuned parameters. See example.
-}
+The number of trees at the optimum. If this is close to \code{n.trees}, \code{weightit()} should be rerun with a larger value for \code{n.trees}, and \code{start.tree} can be set to just below \code{best.tree}. When other parameters are tuned, this is the best tree value in the best combination of tuned parameters. See example.}
 \item{\code{tree.val}}{
-A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \code{\link[=plot]{plot()}} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.
-}
+A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running \code{\link[=plot]{plot()}} on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.}
 }
 If any arguments are to be tuned (i.e., they have been supplied more than one value), the following two additional components are included in \code{info}:
 \describe{
 \item{\code{tune}}{
-A data frame with a column for each argument being tuned, the best value of the balance criterion for the given combination of parameters, and the number of trees at which the best value was reached.
-}
+A data frame with a column for each argument being tuned, the best value of the balance criterion for the given combination of parameters, and the number of trees at which the best value was reached.}
 \item{\code{best.tune}}{
-A one-row data frame containing the values of the arguments being tuned that were ultimately selected to estimate the returned weights.
-}
+A one-row data frame containing the values of the arguments being tuned that were ultimately selected to estimate the returned weights.}
 }
 }
 \item{\code{obj}}{
@@ -144,6 +141,10 @@ data("lalonde", package = "cobalt")
 summary(W1)
 bal.tab(W1)
 
+# View information about the fitting process
+W1$info$best.tree #best tree
+plot(W1) #plot of criterion value against number of trees
+
 \donttest{
   #Balancing covariates with respect to race (multi-category)
   (W2 <- weightit(race ~ age + educ + married +
@@ -156,7 +157,7 @@ bal.tab(W1)
   #Balancing covariates with respect to re75 (continuous)
   (W3 <- weightit(re75 ~ age + educ + married +
                     nodegree + re74, data = lalonde,
-                  method = "gbm", use.kernel = TRUE,
+                  method = "gbm", density = "kernel",
                   criterion = "p.rms", trim.at = .97))
   summary(W3)
   bal.tab(W3)
@@ -170,7 +171,7 @@ bal.tab(W1)
                   n.trees = 10000)
 
   W4a$info$best.tree #10000; optimum hasn't been found
-  plot(W4a$info$tree.val, type = "l") #decreasing at right edge
+  plot(W4a) #decreasing at right edge
 
   W4b <- weightit(re75 ~ age + educ + married +
                     nodegree + re74, data = lalonde,
@@ -180,7 +181,7 @@ bal.tab(W1)
                   n.trees = 20000)
 
   W4b$info$best.tree #13417; optimum has been found
-  plot(W4b$info$tree.val, type = "l") #increasing at right edge
+  plot(W4b) #increasing at right edge
 
   bal.tab(W4b)
 
@@ -195,6 +196,7 @@ bal.tab(W1)
   W5$info$tune
 
   W5$info$best.tune #Best values of tuned parameters
+  plot(W5) #plot criterion values against number of trees
 
   bal.tab(W5, stats = c("m", "ks"))
 }

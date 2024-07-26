@@ -9,12 +9,12 @@ This page explains the details of estimating weights using energy balancing by s
 In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multi-category treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups. For continuous treatments, this is the sum of the distance covariance between the treatment variable and the covariates and the energy distances between the treatment and covariates in the weighted sample and their distributions in the original sample. This method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp} from the \CRANpkg{osqp} package to perform the optimization. This method may be slow or memory-intensive for large datasets.
 \subsection{Binary Treatments}{
 
-For binary treatments, this method estimates the weights using \code{osqp()} using formulas described by Huling and Mak (2022). The following estimands are allowed: ATE, ATT, and ATC.
+For binary treatments, this method estimates the weights using \code{osqp()} using formulas described by Huling and Mak (2024). The following estimands are allowed: ATE, ATT, and ATC.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, this method estimates the weights using \code{osqp()} using formulas described by Huling and Mak (2022). The following estimands are allowed: ATE and ATT.
+For multi-category treatments, this method estimates the weights using \code{osqp()} using formulas described by Huling and Mak (2024). The following estimands are allowed: ATE and ATT.
 }
 
 \subsection{Continuous Treatments}{
@@ -71,12 +71,12 @@ The following following additional arguments can be specified:
 \describe{
 \item{\code{dist.mat}}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include \code{"scaled_euclidean"} for the Euclidean (L2) distance on the scaled covariates (the default), \code{"mahalanobis"} for the Mahalanobis distance, and \code{"euclidean"} for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to \code{\link[=dist]{dist()}}.
 }
-\item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2022), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2021). Default is .0001, which is essentially 0.
+\item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.
 }
 }
 For binary and multi-category treatments, the following additional arguments can be specified:
 \describe{
-\item{\code{improved}}{\code{logical}; whether to use the improved energy balancing weights as described by Huling and Mak (2022) when \code{estimand = "ATE"}. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2022) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is \code{TRUE}; set to \code{FALSE} to use the standard energy balancing weights instead (not recommended).
+\item{\code{improved}}{\code{logical}; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when \code{estimand = "ATE"}. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is \code{TRUE}; set to \code{FALSE} to use the standard energy balancing weights instead (not recommended).
 }
 \item{\code{quantile}}{
 A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \verb{c(x1 = .5, x2 = .75}) to request one quantile for each covariate.
@@ -89,11 +89,11 @@ For continuous treatments, the following additional arguments can be specified:
 The number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified).
 }
 \item{\code{dimension.adj}}{
-\code{logical}; whether to include the dimensionality adjustment described by Huling et al. (2021). If \code{TRUE}, the default, the energy distance for the covariates is weighted \eqn{\sqrt{p}} times as much as the energy distance for the treatment, where \eqn{p} is the number of covariates. If \code{FALSE}, the two energy distances are given equal weights. Default is \code{TRUE}.
+\code{logical}; whether to include the dimensionality adjustment described by Huling et al. (2023). If \code{TRUE}, the default, the energy distance for the covariates is weighted \eqn{\sqrt{p}} times as much as the energy distance for the treatment, where \eqn{p} is the number of covariates. If \code{FALSE}, the two energy distances are given equal weights. Default is \code{TRUE}.
 }
 }
 
-The \code{moments} argument functions differently for \code{method = "energy"} from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2022) for binary and multi-category treatments or by Huling et al. (2023) for continuous treatments. When \code{moments} is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multi-category treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
+The \code{moments} argument functions differently for \code{method = "energy"} from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2024) for binary and multi-category treatments or by Huling et al. (2023) for continuous treatments. When \code{moments} is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multi-category treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
 
 Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some defaults differ from those in \code{osqpSettings()}; see \emph{Reproducibility} below.
 }
@@ -138,7 +138,7 @@ bal.tab(W2)
 \references{
 \subsection{Binary and multi-category treatments}{
 
-Huling, J. D., & Mak, S. (2022). Energy Balancing of Covariate Distributions (arXiv:2004.13962). arXiv. \doi{10.48550/arXiv.2004.13962}
+Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions. \emph{Journal of Causal Inference}, 12(1). \doi{10.1515/jci-2022-0029}
 }
 
 \subsection{Continuous treatments}{

@@ -2,9 +2,10 @@
 % Please edit documentation in R/glm_weightit.R
 \name{glm_weightit}
 \alias{glm_weightit}
+\alias{ordinal_weightit}
+\alias{multinom_weightit}
 \alias{coxph_weightit}
 \alias{lm_weightit}
-\alias{summary.glm_weightit}
 \title{Fitting Weighted Generalized Linear Models}
 \usage{
 glm_weightit(
@@ -19,6 +20,43 @@ glm_weightit(
   start = NULL,
   etastart,
   mustart,
+  control = list(...),
+  x = FALSE,
+  y = TRUE,
+  contrasts = NULL,
+  fwb.args = list(),
+  br = FALSE,
+  ...
+)
+
+ordinal_weightit(
+  formula,
+  data,
+  link = "logit",
+  weightit,
+  vcov = NULL,
+  cluster,
+  R = 500,
+  offset,
+  start = NULL,
+  control = list(...),
+  x = FALSE,
+  y = TRUE,
+  contrasts = NULL,
+  fwb.args = list(),
+  ...
+)
+
+multinom_weightit(
+  formula,
+  data,
+  link = "logit",
+  weightit,
+  vcov = NULL,
+  cluster,
+  R = 500,
+  offset,
+  start = NULL,
   control = list(...),
   x = FALSE,
   y = TRUE,
@@ -57,15 +95,13 @@ lm_weightit(
   contrasts = NULL,
   ...
 )
-
-\method{summary}{glm_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
 }
 \arguments{
 \item{formula}{an object of class "formula" (or one that can be coerced to that class): a symbolic description of the model to be fitted. For \code{coxph_weightit()}, see \code{\link[survival:coxph]{survival::coxph()}} for how this should be specified.}
 
 \item{data}{a data frame containing the variables in the model. If not found in data, the variables are taken from \code{environment(formula)}, typically the environment from which the function is called.}
 
-\item{family}{a description of the error distribution and link function to be used in the model. This can be a character string naming a family function, a family function or the result of a call to a family function. See \link{family} for details of family functions. Can also be the string \code{"multinomial"} for multinomial logistic regression.}
+\item{family}{a description of the error distribution and link function to be used in the model. This can be a character string naming a family function, a family function or the result of a call to a family function. See \link{family} for details of family functions.}
 
 \item{weightit}{a \code{weightit} or \code{weightitMSM} object; the output of a call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If not supplied, an unweighted model will be fit.}
 
@@ -75,48 +111,48 @@ lm_weightit(
 
 \item{R}{the number of bootstrap replications when \code{vcov} is \code{"BS"} or \code{"FWB"}. Default is 500. Ignored otherwise.}
 
-\item{offset}{optional; a numeric vector contain the model offset. See \code{\link[=offset]{offset()}}. An offset can also be preset in the model formula.}
+\item{offset}{optional; a numeric vector containing the model offset. See \code{\link[=offset]{offset()}}. An offset can also be preset in the model formula.}
 
 \item{start}{optional starting values for the coefficients.}
 
-\item{etastart, mustart}{optional starting values for the linear predictor and vector of means when \code{family} is not \code{"multinomial"}. Passed to \code{\link[=glm]{glm()}}.}
+\item{etastart, mustart}{optional starting values for the linear predictor and vector of means. Passed to \code{\link[=glm]{glm()}}.}
 
 \item{control}{a list of parameters for controlling the fitting process.}
 
 \item{x, y}{logical values indicating whether the response vector and model matrix used in the fitting process should be returned as components of the returned value.}
 
-\item{contrasts}{an optional list define contrasts for factor variables. See \code{\link[=model.matrix]{model.matrix()}}.}
+\item{contrasts}{an optional list defining contrasts for factor variables. See \code{\link[=model.matrix]{model.matrix()}}.}
 
 \item{fwb.args}{an optional list of further arguments to supply to \pkgfun{fwb}{fwb} when \code{vcov = "FWB"}.}
 
-\item{\dots}{for \code{glm_weightit()} and \code{lm_weightit()}, arguments to be used to form the default control argument if it is not supplied directly. Ignored otherwise.}
+\item{br}{\code{logical}; whether to use bias-reduced regression as implemented by \pkgfun{brglm2}{brglmFit}. If \code{TRUE}, arguments passed to \code{control} or \dots will be passed to \pkgfun{brglm2}{brglmControl}.}
 
-\item{object}{a \code{glm_weightit} object.}
+\item{\dots}{arguments to be used to form the default control argument if it is not supplied directly.}
 
-\item{ci}{\code{logical} whether to display Wald confidence intervals for estimated coefficients. Default is \code{FALSE}.}
-
-\item{level}{when \code{ci = TRUE}, the desired confidence level.}
-
-\item{transform}{the function used to transform the coefficients, e.g., \code{exp} (which can also be supplied as a string, e.g., \code{"exp"}); passed to \code{\link[=match.fun]{match.fun()}} before being used on the coefficients. When \code{ci = TRUE}, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.}
+\item{link}{for \code{plor_weightit()} and \code{multinom_weightit()}, a string corresponding to the desired link function. For \code{ordinal_weightit()}, any allowed by \code{\link[=binomial]{binomial()}} are accepted; for \code{multinom_weightit()}, only \code{"logit"} is allowed. Default is \code{"logit"} for ordinal or multinomial logistic regression, respectively.}
 }
 \value{
-For \code{lm_weightit()} and \code{glm_weightit()}, a \code{glm_weightit} object, which inherits from \code{glm}. Unless \code{vcov = "none"}, the \code{vcov} component contains the covariance matrix adjusted for the estimation of the weights if requested and a compatible \code{weightit} object was supplied. The \code{vcov_type} component contains the type of variance matrix requested. If \code{cluster} is supplied, it will be stored in the \code{"cluster"} attribute of the output object, even if not used. For \code{coxph_weightit()}, a \code{coxph_weightit} object, which inherits from \code{glm_weightit} and \code{coxph}. See \code{\link[survival:coxph]{survival::coxph()}} for details.
+For \code{lm_weightit()} and \code{glm_weightit()}, a \code{glm_weightit} object, which inherits from \code{glm}. For \code{ordinal_weightit()} and \code{multinom_weightit()}, a \code{ordinal_weightit} or \code{multinom_weightit}, respectively. For \code{coxph_weightit()}, a \code{coxph_weightit} object, which inherits from \code{coxph}. See \code{\link[survival:coxph]{survival::coxph()}} for details.
 
-\code{print()}, \code{vcov()}, \code{predict()}, and \code{confint()} methods are also available; these generally follow the same pattern as the respect method for \code{glm} objects. \code{confint()} uses Wald confidence intervals (internally calling \code{\link[=confint.lm]{confint.lm()}}). When \code{family = "multinomial"}, predict() produces a matrix of predicted probabilities, one for each level of the outcome, and the \code{type} argument is ignored. \code{model.frame()} output (also the \code{model} component of the output object) will include two extra column when \code{weightit} is supplied: \code{(weights)} containing the weights used in the model (the product of the estimated weights and the sampling weights, if any) and \code{(s.weights)} containing the sampling weights, which will be 1 if \code{s.weights} is not supplied in the original \code{weightit()} call.
+Unless \code{vcov = "none"}, the \code{vcov} component contains the covariance matrix adjusted for the estimation of the weights if requested and a compatible \code{weightit} object was supplied. The \code{vcov_type} component contains the type of variance matrix requested. If \code{cluster} is supplied, it will be stored in the \code{"cluster"} attribute of the output object, even if not used.
+
+The \code{model} component of the output object (also the \code{model.frame()} output) will include two extra columns when \code{weightit} is supplied: \code{(weights)} containing the weights used in the model (the product of the estimated weights and the sampling weights, if any) and \code{(s.weights)} containing the sampling weights, which will be 1 if \code{s.weights} is not supplied in the original \code{weightit()} call.
 }
 \description{
-\code{lm_weightit()} and \code{glm_weightit()} are used to fit (generalized) linear models with a variance matrix that accounts for estimation of weights, if supplied. By default, these functions use M-estimation to construct a robust covariance matrix using the estimation equations for the weighting model and the outcome model. \code{lm_weightit()} is a wrapper for \code{glm_weightit()} with the Gaussian family and identity link (i.e., a linear model). \code{coxph_weightit()} fits a Cox proportional hazards model accounting for the weights and is a wrapper for \code{\link[survival:coxph]{survival::coxph()}}.
+\code{glm_weightit()} is used to fit generalized linear models with a covariance matrix that accounts for estimation of weights, if supplied. \code{lm_weightit()} is a wrapper for \code{glm_weightit()} with the Gaussian family and identity link (i.e., a linear model). \code{ordinal_weightit()} fits proportional odds ordinal regression models. \code{multinom_weightit()} fits multinomial logistic regression models. \code{coxph_weightit()} fits a Cox proportional hazards model and is a wrapper for \code{\link[survival:coxph]{survival::coxph()}}. By default, these functions use M-estimation to construct a robust covariance matrix using the estimating equations for the weighting model and the outcome model when available.
 }
 \details{
 \code{\link[=glm_weightit]{glm_weightit()}} is essentially a wrapper for \code{\link[=glm]{glm()}} that optionally computes a coefficient variance matrix that can be adjusted to account for estimation of the weights if a \code{weightit} or \code{weightitMSM} object is supplied to the \code{weightit} argument. When no argument is supplied to \code{weightit} or there is no \code{"Mparts"} attribute in the supplied object, the default variance matrix returned will be the "HC0" sandwich variance matrix, which is robust to misspecification of the outcome family (including heteroscedasticity). Otherwise, the default variance matrix uses M-estimation to additionally adjust for estimation of the weights. When possible, this often yields smaller (and more accurate) standard errors. See the individual methods pages to see whether and when an \code{"Mparts"} attribute is included in the supplied object. To request that a variance matrix be computed that doesn't account for estimation of the weights even when a compatible \code{weightit} object is supplied, set \code{vcov = "HC0"}, which treats the weights as fixed.
 
-Bootstrapping can also be used to compute the coefficient variance matrix; when \code{vcov = "BS"} or \code{vcov = "FWB"}, which implement the traditional resampling-based and fractional weighted bootstrap, respectively, the entire process of estimating the weights and fitting the outcome model is repeated in bootstrap samples (if a \code{weightit} object is supplied). This accounts for estimation of the weights and can be used with any weighting method. It is important to set a seed using \code{set.seed()} to ensure replicability of the results. The fractional weighted bootstrap is more reliable but requires the weighting method to accept sampling weights (which most do, and you'll get an error if it doesn't). Setting \code{vcov = "FWB"} and supplying \code{fwb.args = list(wtype = "multinom")} also performs the resampling-based bootstrap but with the additional features \pkg{fwb} provides (e.g., a progress and parallelization) at the expense of needing to have \pkg{fwb} installed.
+Bootstrapping can also be used to compute the coefficient variance matrix; when \code{vcov = "BS"} or \code{vcov = "FWB"}, which implement the traditional resampling-based and fractional weighted bootstrap, respectively, the entire process of estimating the weights and fitting the outcome model is repeated in bootstrap samples (if a \code{weightit} object is supplied). This accounts for estimation of the weights and can be used with any weighting method. It is important to set a seed using \code{set.seed()} to ensure replicability of the results. The fractional weighted bootstrap is more reliable but requires the weighting method to accept sampling weights (which most do, and you'll get an error if it doesn't). Setting \code{vcov = "FWB"} and supplying \code{fwb.args = list(wtype = "multinom")} also performs the resampling-based bootstrap but with the additional features \pkg{fwb} provides (e.g., a progress bar and parallelization) at the expense of needing to have \pkg{fwb} installed.
 
-When \code{family = "multinomial"}, multinomial logistic regression is fit using a custom function in \pkg{WeightIt} that uses M-estimation to estimate the model coefficients. This implementation is less robust to failures than other multinomial logistic regression solvers and should be used with caution. Estimation of coefficients should align with that from \code{mlogit::mlogit()} and \code{mclogit::mblogit()}.
+\code{multinom_weightit()} implements multinomial logistic regression using a custom function in \pkg{WeightIt}. This implementation is less robust to failures than other multinomial logistic regression solvers and should be used with caution. Estimation of coefficients should align with that from \code{mlogit::mlogit()} and \code{mclogit::mblogit()}.
 
-Functions in the \pkg{sandwich} package can be to compute standard errors after fitting, regardless of how \code{vcov} was specified, though these will ignore estimation of the weights, if any. When no adjustment is done for estimation of the weights (i.e., because no \code{weightit} argument was supplied or there was no \code{"Mparts"} component in the supplied object), the default variance matrix produced by \code{glm_weightit()} should align with that from \verb{sandwich::vcovHC(. type = "HC0")} or \code{sandwich::vcovCL(., type = "HC0", cluster = cluster)} when \code{cluster} is supplied.
+\code{ordinal_weightit()} implements proportional odds ordinal regression using a custom function in \pkg{WeightIt}. Estimation of coefficients should align with that from \code{MASS::polr()}.
 
-\code{coxph_weightit()} is a wrapper for \code{\link[survival:coxph]{survival::coxph()}} to fit weighted survival models, optionally accounting for estimation of the weights. It differs from \code{coxph()} in a few ways: the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects then for \code{coxph} objects, and the \code{cluster} argument should be specified as a one-sided formula (which can include multiple clustering variables) and uses a small sample correction for cluster variance estimates when specified. Currently, M-estimation is not supported, so bootstrapping (i.e., \code{vcov = "BS"} or \code{"FWB"}) is the only way to correctly adjust for estimation of the weights.
+\code{coxph_weightit()} is a wrapper for \code{\link[survival:coxph]{survival::coxph()}} to fit weighted survival models. It differs from \code{coxph()} in that the \code{cluster} argument (if used) should be specified as a one-sided formula (which can include multiple clustering variables) and uses a small sample correction for cluster variance estimates when specified. Currently, M-estimation is not supported, so bootstrapping (i.e., \code{vcov = "BS"} or \code{"FWB"}) is the only way to correctly adjust for estimation of the weights. By default, the robust variance is estimated treating weights as fixed, which is the same variance returned when \code{robust = TRUE} in \code{coxph()}.
+
+Functions in the \pkg{sandwich} package can be to compute standard errors after fitting, regardless of how \code{vcov} was specified, though these will ignore estimation of the weights, if any. When no adjustment is done for estimation of the weights (i.e., because no \code{weightit} argument was supplied or there was no \code{"Mparts"} component in the supplied object), the default variance matrix produced by \code{glm_weightit()} should align with that from \verb{sandwich::vcovHC(. type = "HC0")} or \code{sandwich::vcovCL(., type = "HC0", cluster = cluster)} when \code{cluster} is supplied. Not all types are available for all models.
 }
 \examples{
 
@@ -149,7 +185,7 @@ set.seed(123)
 fit3 <- lm_weightit(re78 ~ treat, data = lalonde,
                     weightit = w.out,
                     vcov = "FWB",
-                    R = 50,
+                    R = 50, #should use way more
                     fwb.args = list(wtype = "mammen"))
 
 summary(fit3)
@@ -159,12 +195,21 @@ summary(fit3)
 lalonde$re78_3 <- factor(findInterval(lalonde$re78,
                                       c(0, 5e3, 1e4)))
 
-fit4 <- glm_weightit(re78_3 ~ treat, data = lalonde,
-                     weightit = w.out,
-                     family = "multinomial")
+fit4 <- multinom_weightit(re78_3 ~ treat,
+                        data = lalonde,
+                        weightit = w.out)
 
 summary(fit4)
+
+# Ordinal probit regression that adjusts for estimation
+# of weights
+fit5 <- ordinal_weightit(ordered(re78_3) ~ treat,
+                      data = lalonde,
+                      link = "probit",
+                      weightit = w.out)
+
+summary(fit5)
 }
 \seealso{
-\code{\link[=lm]{lm()}} and \code{\link[=glm]{glm()}} for fitting generalized linear models without adjusting standard errors for estimation of the weights. \code{\link[survival:coxph]{survival::coxph()}} for fitting Cox proportional hazards models without adjust standard errors for estimation of the weights.
+\code{\link[=lm]{lm()}} and \code{\link[=glm]{glm()}} for fitting generalized linear models without adjusting standard errors for estimation of the weights. \code{\link[survival:coxph]{survival::coxph()}} for fitting Cox proportional hazards models without adjusting standard errors for estimation of the weights.
 }

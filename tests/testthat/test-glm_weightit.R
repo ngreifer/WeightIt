@@ -53,6 +53,19 @@ test_that("No weights", {
   expect_equal(coef(fit), coef(fit_g))
   expect_equal(vcov(fit), sandwich::vcovCL(fit_g, cluster = clus),
                tolerance = 1e-5)
+
+  #BR
+  expect_no_condition({
+    fit <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                        data = test_data, family = binomial("probit"), br = TRUE)
+  })
+
+  fit_g <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+               data = test_data, family = binomial("probit"),
+               method = brglm2::brglmFit)
+
+  expect_equal(coef(fit), coef(fit_g))
+
 })
 
 test_that("Binary treatment", {
