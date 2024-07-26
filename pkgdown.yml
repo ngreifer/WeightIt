@@ -1,12 +1,11 @@
 pandoc: 3.1.11
-pkgdown: 2.0.9
+pkgdown: 2.1.0
 pkgdown_sha: ~
 articles:
   estimating-effects: estimating-effects.html
   installing-packages: installing-packages.html
   WeightIt: WeightIt.html
-last_built: 2024-06-24T18:41Z
+last_built: 2024-07-26T18:22Z
 urls:
   reference: https://ngreifer.github.io/WeightIt/reference
   article: https://ngreifer.github.io/WeightIt/articles
-

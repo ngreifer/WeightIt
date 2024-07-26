@@ -1,105 +1,40 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/404.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/articles/WeightIt.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/articles/estimating-effects.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/articles/installing-packages.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/index.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/ESS.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/WeightIt-package.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/as.weightit.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/calibrate.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/glm_weightit.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/make_full_rank.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_bart.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_cbps.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_ebal.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_energy.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_gbm.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_glm.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_ipt.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_npcbps.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_optweight.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_super.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/method_user.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/msmdata.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/sbps.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/summary.weightit.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/trim.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/weightit.fit.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/weightit.html</loc>
-  </url>
-  <url>
-    <loc>https://ngreifer.github.io/WeightIt/reference/weightitMSM.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://ngreifer.github.io/WeightIt/404.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/articles/WeightIt.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/articles/estimating-effects.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/articles/index.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/articles/installing-packages.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/authors.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/index.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/news/index.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/ESS.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/WeightIt-package.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/as.weightit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/calibrate.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/glm_weightit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/index.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/make_full_rank.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_bart.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_cbps.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_ebal.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_energy.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_gbm.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_glm.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_ipt.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_npcbps.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_optweight.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_super.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/method_user.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/msmdata.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/plot.weightit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/sbps.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/summary.weightit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/trim.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/weightit.fit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/weightit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/weightitMSM.html</loc></url>
 </urlset>
+
