@@ -313,9 +313,12 @@ only weights estimated using a generalized linear model propensity
 score, entropy balancing, inverse probability tilting, or the
 just-identified covariate balancing propensity score can be accommodated
 with this method. <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> can be used to fit
-(generalized) linear models for the outcome that account for estimation
-of the weights. When estimating equations are not available for a given
-method, the weights are treated as fixed and known, and the M-estimation
+generalized linear models for the outcome that account for estimation of
+the weights; <code><a href="../reference/glm_weightit.html">ordinal_weightit()</a></code>,
+<code><a href="../reference/glm_weightit.html">multinom_weightit()</a></code>, and <code><a href="../reference/glm_weightit.html">coxph_weightit()</a></code> can
+be used to fit ordinal, multinomial, and Cox proportional hazards
+models. When estimating equations are not available for a given method,
+the weights are treated as fixed and known, and the M-estimation
 standard errors are equal to the robust standard errors described
 below.</p>
 </div>
@@ -635,6 +638,9 @@ the RR is actually displayed.) To view the log RR and its standard
 error, omit the <code>transform</code> argument.</p>
 <p>For the marginal OR, the only thing that needs to change is that
 <code>comparison</code> should be set to <code>"lnoravg"</code>.</p>
+<p>Multi-category outcomes can be modeled using
+<code><a href="../reference/glm_weightit.html">ordinal_weightit()</a></code> and <code><a href="../reference/glm_weightit.html">multinom_weightit()</a></code>,
+which fit ordinal and multinomial regression models, respectively.</p>
 </div>
 <div class="section level4">
 <h4 id="survival-outcomes">Survival outcomes<a class="anchor" aria-label="anchor" href="#survival-outcomes"></a>
