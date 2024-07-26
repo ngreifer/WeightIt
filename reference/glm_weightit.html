@@ -207,7 +207,7 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>For <code>lm_weightit()</code> and <code>glm_weightit()</code>, a <code>glm_weightit</code> object, which inherits from <code>glm</code>. For <code>ordinal_weightit()</code> and <code>multinom_weightit()</code>, a <code>ordinal_weightit</code> or <code>multinom_weightit</code>, respectively. For <code>coxph_weightit()</code>, a <code>coxph_weightit</code> object, which inherits from <code>coxph</code>. See <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">survival::coxph()</a></code> for details.</p>
+    <p>For <code>lm_weightit()</code> and <code>glm_weightit()</code>, a <code>glm_weightit</code> object, which inherits from <code>glm</code>. For <code>ordinal_weightit()</code> and <code>multinom_weightit()</code>, an <code>ordinal_weightit</code> or <code>multinom_weightit</code>, respectively. For <code>coxph_weightit()</code>, a <code>coxph_weightit</code> object, which inherits from <code>coxph</code>. See <code><a href="https://rdrr.io/pkg/survival/man/coxph.html" class="external-link">survival::coxph()</a></code> for details.</p>
 <p>Unless <code>vcov = "none"</code>, the <code>vcov</code> component contains the covariance matrix adjusted for the estimation of the weights if requested and a compatible <code>weightit</code> object was supplied. The <code>vcov_type</code> component contains the type of variance matrix requested. If <code>cluster</code> is supplied, it will be stored in the <code>"cluster"</code> attribute of the output object, even if not used.</p>
 <p>The <code>model</code> component of the output object (also the <code><a href="https://rdrr.io/r/stats/model.frame.html" class="external-link">model.frame()</a></code> output) will include two extra columns when <code>weightit</code> is supplied: <code>(weights)</code> containing the weights used in the model (the product of the estimated weights and the sampling weights, if any) and <code>(s.weights)</code> containing the sampling weights, which will be 1 if <code>s.weights</code> is not supplied in the original <code><a href="weightit.html">weightit()</a></code> call.</p>
     </div>
@@ -269,6 +269,7 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> treat          833.2      676.6   1.232    0.218    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-style: italic;">Standard error: HC0 robust</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="co"># example code</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Linear regression outcome model that bootstraps</span></span></span>
 <span class="r-in"><span><span class="co"># estimation of weights and outcome model fitting</span></span></span>
@@ -293,15 +294,14 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> treat          833.2      644.4   1.293    0.196    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-style: italic;">Standard error: fractional weighted bootstrap</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Multinomial logistic regression outcome model</span></span></span>
 <span class="r-in"><span><span class="co"># that adjusts for estimation of weights</span></span></span>
 <span class="r-in"><span><span class="va">lalonde</span><span class="op">$</span><span class="va">re78_3</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/findInterval.html" class="external-link">findInterval</a></span><span class="op">(</span><span class="va">lalonde</span><span class="op">$</span><span class="va">re78</span>,</span></span>
 <span class="r-in"><span>                                      <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5e3</span>, <span class="fl">1e4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">fit4</span> <span class="op">&lt;-</span> <span class="fu">multinom_weightit</span><span class="op">(</span><span class="va">re78_3</span> <span class="op">~</span> <span class="va">treat</span>,</span></span>
-<span class="r-in"><span>                        data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
-<span class="r-in"><span>                        weightit <span class="op">=</span> <span class="va">w.out</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                          data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
+<span class="r-in"><span>                          weightit <span class="op">=</span> <span class="va">w.out</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -320,9 +320,9 @@
 <span class="r-in"><span><span class="co"># Ordinal probit regression that adjusts for estimation</span></span></span>
 <span class="r-in"><span><span class="co"># of weights</span></span></span>
 <span class="r-in"><span><span class="va">fit5</span> <span class="op">&lt;-</span> <span class="fu">ordinal_weightit</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">ordered</a></span><span class="op">(</span><span class="va">re78_3</span><span class="op">)</span> <span class="op">~</span> <span class="va">treat</span>,</span></span>
-<span class="r-in"><span>                      data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
-<span class="r-in"><span>                      link <span class="op">=</span> <span class="st">"probit"</span>,</span></span>
-<span class="r-in"><span>                      weightit <span class="op">=</span> <span class="va">w.out</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                         data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
+<span class="r-in"><span>                         link <span class="op">=</span> <span class="st">"probit"</span>,</span></span>
+<span class="r-in"><span>                         weightit <span class="op">=</span> <span class="va">w.out</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit5</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
