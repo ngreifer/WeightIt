@@ -10,7 +10,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 
   X <- check_X(X)
 
-  #If allvariables have no variance, use Euclidean to avoid errors
+  #If all variables have no variance, use Euclidean to avoid errors
   #If some have no variance, removes those to avoid messing up distances
   no_variance <- which(apply(X, 2, function(x) abs(max(x) - min(x)) < sqrt(.Machine$double.eps)))
   if (length(no_variance) == ncol(X)) {
@@ -23,7 +23,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 
   method <- match_arg(method, weightit_distances())
 
-  if (is.null(discarded)) discarded <- rep(FALSE, nrow(X))
+  if (is.null(discarded)) discarded <- rep.int(FALSE, nrow(X))
 
   if (method == "mahalanobis") {
     # X <- sweep(X, 2, colMeans(X))
@@ -58,7 +58,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
     #Rosenbaum (2010, ch8)
     X_r <- matrix(0, nrow = sum(!discarded), ncol = ncol(X),
                   dimnames = list(rownames(X)[!discarded], colnames(X)))
-    for (i in seq_len(ncol(X_r))) X_r[,i] <- rank(X[!discarded, i])
+    for (i in seq_col(X_r)) X_r[,i] <- rank(X[!discarded, i])
 
     if (is.null(s.weights)) var_r <- cov(X_r)
     else var_r <- cov.wt(X_r, s.weights[!discarded])$cov
@@ -78,7 +78,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 
     if (any(discarded)) {
       X_r <- array(0, dim = dim(X), dimnames = dimnames(X))
-      for (i in seq_len(ncol(X_r))) X_r[!discarded,i] <- rank(X[!discarded,i])
+      for (i in seq_col(X_r)) X_r[!discarded,i] <- rank(X[!discarded,i])
     }
 
     X <- mahalanobize(X_r, inv_var)
@@ -100,7 +100,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
       stop("If 'var' is not NULL, it must be a covariance matrix or a vector of variances with as many entries as supplied variables.", call. = FALSE)
     }
 
-    for (i in seq_len(ncol(X))) {
+    for (i in seq_col(X)) {
       X[,i] <- X[,i]/sds[i]
     }
   }

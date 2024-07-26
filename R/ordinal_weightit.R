@@ -36,7 +36,7 @@
   nm <- c(colnames(x), paste(levels(y)[-m], levels(y)[-1], sep = "|"))
 
   aliased_X <- !colnames(x) %in% colnames(make_full_rank(x, with.intercept = TRUE))
-  aliased_B <- c(aliased_X, rep(FALSE, m - 1))
+  aliased_B <- c(aliased_X, rep.int(FALSE, m - 1L))
 
   x_ <- x[, !aliased_X, drop = FALSE]
   y_ <- as.integer(y)
@@ -71,7 +71,7 @@
 
     start <- start[!aliased_B]
 
-    if (any(diff(start[-seq_len(ncol(x))]) <= 0)) {
+    if (any(diff(start[-seq_col(x)]) <= 0)) {
       .err("starting values for the thresholds must be in ascending order")
     }
   }
@@ -98,7 +98,7 @@
   if (!no_x) {
     sds <- apply(x_, 2L, sd)
     x_ <- sweep(x_, 2L, sds, "/")
-    start <- start * c(sds, rep(1, m - 1))
+    start <- start * c(sds, rep.int(1, m - 1L))
   }
 
   # Get predicted probabilities for all units for category y
@@ -114,8 +114,8 @@
       Xb <- offset
     }
     else {
-      a <- B[-seq_len(ncol(X))]
-      b <- B[seq_len(ncol(X))]
+      a <- B[-seq_col(X)]
+      b <- B[seq_col(X)]
       Xb <- offset + drop(X %*% b)
     }
 
@@ -165,8 +165,8 @@
       Xb <- offset
     }
     else {
-      a <- B[-seq_len(ncol(X))]
-      b <- B[seq_len(ncol(X))]
+      a <- B[-seq_col(X)]
+      b <- B[seq_col(X)]
       Xb <- offset + drop(X %*% b)
     }
 
@@ -196,32 +196,27 @@
   hessian <- NULL
   if (hess) {
     # Estimate using natural parameterization to get hessian
-    out <- try(optim(par = theta0,
-                     function(...) ll(..., .cumsum_param = FALSE),
-                     X = x_,
-                     Y = y_,
-                     weights = weights,
-                     offset = offset,
-                     gr = gr,
-                     method = "BFGS",
-                     hessian = TRUE,
-                     control = list(fnscale = -1,
-                                    maxit = 1e2,
-                                    reltol = 1e-16)),
-               silent = TRUE)
+    hessian <- try(optimHess(par = theta0,
+                             function(...) ll(..., .cumsum_param = FALSE),
+                             X = x_,
+                             Y = y_,
+                             weights = weights,
+                             offset = offset,
+                             gr = gr,
+                             control = list(fnscale = -1)),
+                   silent = TRUE)
 
     # If optimization fails, use numeric differentiation of gradient to get hessian
-    hessian <- {
-      if (!null_or_error(out) && out$convergence == 0) out$hessian
-      else .gradient(gr, theta0,
-                     X = x_,
-                     Y = y_,
-                     weights = weights,
-                     offset = offset)
+    if (null_or_error(hessian)) {
+      hessian <- .gradient(gr, theta0,
+                           X = x_,
+                           Y = y_,
+                           weights = weights,
+                           offset = offset)
     }
 
     if (!no_x) {
-      hessian <- hessian * tcrossprod(c(sds, rep(1, m - 1)))
+      hessian <- hessian * tcrossprod(c(sds, rep.int(1, m - 1L)))
     }
 
     colnames(hessian) <- rownames(hessian) <- names(theta0)
@@ -242,8 +237,8 @@
       Xb <- offset
     }
     else {
-      a <- B[-seq_len(ncol(X))]
-      b <- B[seq_len(ncol(X))]
+      a <- B[-seq_col(X)]
+      b <- B[seq_col(X)]
       Xb <- offset + drop(X %*% b)
     }
 
@@ -265,18 +260,18 @@
 
   # Adjust estimates and gradient to be put on original scale
   if (!no_x) {
-    theta <- theta / c(sds, rep(1, m - 1))
-    grad <- sweep(grad, 2, c(sds, rep(1, m - 1)), "*")
+    theta <- theta / c(sds, rep.int(1, m - 1L))
+    grad <- sweep(grad, 2, c(sds, rep.int(1, m - 1L)), "*")
   }
 
-  coefs <- setNames(rep(NA_real_, ncol(x) + m - 1), nm)
+  coefs <- setNames(rep.int(NA_real_, ncol(x) + m - 1L), nm)
   coefs[!aliased_B] <- theta
 
   list(coefficients = coefs,
        residuals = res,
        fitted.values = pp,
        family = family,
-       linear.predictors = offset + drop(x_ %*% theta[seq_len(ncol(x_))]),
+       linear.predictors = offset + drop(x_ %*% theta[seq_col(x_)]),
        solve = out0,
        psi = psi,
        f = gr,

@@ -80,7 +80,7 @@
 #' ### `estimand = "ATT"`
 #' Hainmueller, J. (2012). Entropy Balancing for Causal Effects: A Multivariate Reweighting Method to Produce Balanced Samples in Observational Studies. *Political Analysis*, 20(1), 25–46. \doi{10.1093/pan/mpr025}
 #'
-#' Zhao, Q., & Percival, D. (2017). Entropy balancing is doubly robust. Journal of Causal Inference, 5(1). \doi{10.1515/jci-2016-0010}
+#' Zhao, Q., & Percival, D. (2017). Entropy balancing is doubly robust. *Journal of Causal Inference*, 5(1). \doi{10.1515/jci-2016-0010}
 #'
 #' ### `estimand = "ATE"`
 #'
@@ -144,7 +144,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (is_not_null(A[["base.weights"]])) A[["base.weight"]] <- A[["base.weights"]]
   if (is_null(A[["base.weight"]])) {
-    bw <- rep(1, length(treat))
+    bw <- rep.int(1, length(treat))
   }
   else {
     if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
@@ -154,10 +154,10 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     bw <- A[["base.weight"]]
   }
 
-  reltol <- if (is_null(A$reltol)) (.Machine$double.eps) else A$reltol
+  reltol <- if_null_then(A$reltol, 1e-10)
   chk::chk_number(reltol)
 
-  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
+  maxit <- if_null_then(A$maxit, 1e4)
   chk::chk_count(maxit)
 
   eb <- function(C, s.weights_t, Q) {
@@ -176,7 +176,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
       drop(-(w %*% C)/sum(w))
     }
 
-    opt.out <- optim(par = rep(0, ncol(C)),
+    opt.out <- optim(par = rep.int(0, ncol(C)),
                      fn = objective.EB,
                      gr = gradient.EB,
                      method = "BFGS",
@@ -202,7 +202,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
          opt.out = opt.out)
   }
 
-  w <- rep(1, length(treat))
+  w <- rep.int(1, length(treat))
   sw0 <- check_if_zero(s.weights)
 
   if (estimand == "ATE") {
@@ -230,7 +230,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   Mparts <- list(
     psi_treat = function(Btreat, A, Xtreat, SW) {
       coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
-        (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+        (i - 1) * ncol(Xtreat) + seq_col(Xtreat)
       }), groups_to_weight)
 
       sw0 <- check_if_zero(SW)
@@ -247,11 +247,11 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     },
     wfun = function(Btreat, Xtreat, A) {
       coef_ind <- setNames(lapply(seq_along(groups_to_weight), function(i) {
-        (i - 1) * ncol(Xtreat) + seq_len(ncol(Xtreat))
+        (i - 1) * ncol(Xtreat) + seq_col(Xtreat)
       }), groups_to_weight)
 
       sw0 <- check_if_zero(s.weights)
-      w <- rep(1, length(A))
+      w <- rep.int(1, length(A))
 
       for (i in groups_to_weight) {
         C <- Xtreat[A == i & !sw0,,drop = FALSE]
@@ -290,7 +290,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   if (is_not_null(A[["base.weights"]])) A[["base.weight"]] <- A[["base.weights"]]
   if (is_null(A[["base.weight"]])) {
-    bw <- rep(1, length(treat))
+    bw <- rep.int(1, length(treat))
   }
   else {
     if (!is.numeric(A[["base.weight"]]) || length(A[["base.weight"]]) != length(treat)) {
@@ -304,10 +304,10 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   s.weights <- s.weights / mean_fast(s.weights)
 
-  reltol <- if (is_null(A$reltol)) (.Machine$double.eps) else A$reltol
+  reltol <- if_null_then(A$reltol, 1e-10)
   chk::chk_number(reltol)
 
-  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
+  maxit <- if_null_then(A$maxit, 1e4)
   chk::chk_count(maxit)
 
   d.moments <- max(if_null_then(A[["d.moments"]], 1), moments)
@@ -371,7 +371,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
       drop(-(w %*% C)/sum(w))
     }
 
-    opt.out <- optim(par = rep(0, ncol(C)),
+    opt.out <- optim(par = rep.int(0, ncol(C)),
                      fn = objective.EB,
                      gr = gradient.EB,
                      method = "BFGS",
@@ -397,7 +397,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
          opt.out = opt.out)
   }
 
-  w <- rep(1, length(treat))
+  w <- rep.int(1, length(treat))
   sw0 <- check_if_zero(s.weights)
 
   verbosely({
@@ -418,7 +418,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
     },
     wfun = function(Btreat, Xtreat, A) {
       sw0 <- check_if_zero(s.weights)
-      w <- rep(1, length(A))
+      w <- rep.int(1, length(A))
 
       C <- Xtreat[!sw0,,drop = FALSE]
       n <- nrow(C)

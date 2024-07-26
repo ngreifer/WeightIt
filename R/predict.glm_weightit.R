@@ -130,7 +130,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
     }
     else if (type == "class") {
       out <- factor(max.col(object$fitted.values, ties.method = "first"),
-                    levels = seq_len(ncol(object$fitted.values)),
+                    levels = seq_col(object$fitted.values),
                     labels = colnames(object$fitted.values),
                     ordered = inherits(object, "ordinal_weightit"))
     }
@@ -181,7 +181,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   x <- x[,colnames(x) != "(Intercept)", drop = FALSE]
 
   if (type == "link") {
-    return(offset + drop(x %*% object$coefficients[seq_len(ncol(x))]))
+    return(offset + drop(x %*% object$coefficients[seq_col(x)]))
   }
 
   p <- object$get_p(object$coefficients, x, offset)
@@ -192,7 +192,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 
   if (type == "class") {
     out <- factor(max.col(p, ties.method = "first"),
-                  levels = seq_len(ncol(p)),
+                  levels = seq_col(p),
                   labels = colnames(p),
                   ordered = inherits(object, "ordinal_weightit"))
   }
@@ -238,7 +238,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
     }
     else if (type == "class") {
       out <- factor(max.col(object$fitted.values, ties.method = "first"),
-                    levels = seq_len(ncol(object$fitted.values)),
+                    levels = seq_col(object$fitted.values),
                     labels = colnames(object$fitted.values))
     }
     else if (type == "mean") {
@@ -294,7 +294,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
 
   if (type == "class") {
     out <- factor(max.col(p, ties.method = "first"),
-                  levels = seq_len(ncol(p)),
+                  levels = seq_col(p),
                   labels = colnames(p))
   }
   else if (type == "mean") {

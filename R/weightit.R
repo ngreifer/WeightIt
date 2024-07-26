@@ -252,7 +252,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   #Process s.weights
   s.weights <- process.s.weights(s.weights, data)
 
-  if (is_null(s.weights)) s.weights <- rep(1, n)
+  if (is_null(s.weights)) s.weights <- rep.int(1, n)
 
   #Process stabilize
   if (isFALSE(stabilize)) {
@@ -263,7 +263,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   if (is_not_null(stabilize)) {
-    if (treat.type != "continious" && estimand != "ATE") {
+    if (treat.type != "continuous" && estimand != "ATE") {
       .err("`stabilize` can only be supplied when `estimand = \"ATE\"`")
     }
 
@@ -371,9 +371,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 #' @exportS3Method print weightit
 print.weightit <- function(x, ...) {
   treat.type <- get_treat_type(x[["treat"]])
-  trim <- attr(x[["weights"]], "trim")
 
-  cat("A " %+% italic("weightit") %+% " object\n")
+  cat("A " %+% italic(class(x)[1]) %+% " object\n")
 
   if (is_not_null(x[["method"]])) {
     cat(sprintf(" - method: %s (%s)\n",
@@ -388,33 +387,48 @@ print.weightit <- function(x, ...) {
               if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present"))
 
   cat(sprintf(" - treatment: %s\n",
-              if (treat.type == "continuous") "continuous"
-              else paste0(nunique(x[["treat"]]), "-category",
-                          if (treat.type == "multinomial") paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")")
-                          else "")))
+              switch(treat.type,
+                     "continuous" = "continuous",
+                     "multinomial" = sprintf("%s-category (%s)",
+                                             nunique(x[["treat"]]),
+                                             paste(levels(x[["treat"]]), collapse = ", ")),
+                     "binary" = "2-category")))
 
   if (is_not_null(x[["estimand"]])) {
-    cat(paste0(" - estimand: ", x[["estimand"]],
-               if (is_not_null(x[["focal"]])) sprintf(" (focal: %s)", x[["focal"]]) else "", "\n"))
+    cat(sprintf(" - estimand: %s\n",
+                if (is_null(x[["focal"]])) x[["estimand"]]
+                else sprintf("%s (focal: %s)", x[["estimand"]], x[["focal"]])))
   }
 
   if (is_not_null(x[["covs"]])) {
-    cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
+    cat(sprintf(" - covariates: %s\n",
+                if (length(names(x[["covs"]])) > 60) "too many to name"
+                else paste(names(x[["covs"]]), collapse = ", ")))
   }
 
   if (is_not_null(x[["by"]])) {
     cat(sprintf(" - by: %s\n", paste(names(x[["by"]]), collapse = ", ")))
   }
 
-  if (is_not_null(trim)) {
+  if (is_not_null(x[["moderator"]])) {
+    nsubgroups <- nlevels(attr(x[["moderator"]], "by.factor"))
+    cat(sprintf(" - moderator: %s (%s subgroups)\n",
+                paste(names(x[["moderator"]]), collapse = ", "),
+                nsubgroups))
+  }
+
+  if (is_not_null(trim <- attr(x[["weights"]], "trim"))) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(paste(" - weights trimmed at", word_list(paste0(round(100*trim, 2), "%")), "\n"))
+      cat(sprintf(" - weights trimmed at %s\n", word_list(paste0(round(100*trim, 2), "%"))))
     }
     else {
-      if (attr(x[["weights"]], "trim.lower")) t.b <- "top and bottom" else t.b <- "top"
-      cat(paste(" - weights trimmed at the", t.b, trim, "\n"))
+      cat(sprintf(" - weights trimmed at the %s %s\n",
+                  if (attr(x[["weights"]], "trim.lower")) "top and bottom"
+                  else "top",
+                  trim))
     }
   }
+
   invisible(x)
 }

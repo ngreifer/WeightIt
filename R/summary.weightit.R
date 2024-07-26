@@ -57,10 +57,12 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
                 "effective.sample.size")
   out <- make_list(outnames)
 
-  if (ignore.s.weights  || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
-  else sw <- object$s.weights
+  sw <- {
+    if (ignore.s.weights  || is_null(object$s.weights)) rep.int(1, length(object$weights))
+    else object$s.weights
+  }
 
-  w <- setNames(object$weights*sw, seq_along(sw))
+  w <- setNames(object$weights * sw, seq_along(sw))
   t <- object$treat
   treat.type <- get_treat_type(object[["treat"]])
   stabilized <- is_not_null(object[["stabilization"]])
@@ -69,8 +71,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   attr(out, "treat") <- t
 
   if (treat.type == "continuous") {
-    out$weight.range <- list(all = c(min(w[w != 0]),
-                                     max(w[w != 0])))
+    out$weight.range <- list(all = range(w[w != 0]))
     out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
     out$coef.of.var <- c(all = sd(w)/mean_fast(w))
     out$scaled.mad <- c(all = mean_abs_dev(w/mean_fast(w)))
@@ -89,10 +90,8 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 
     top0 <- c(treated = min(top, sum(t == 1)),
               control = min(top, sum(t == 0)))
-    out$weight.range <- list(treated = c(min(w[w != 0 & t == 1]),
-                                         max(w[w != 0 & t == 1])),
-                             control = c(min(w[w != 0 & t == 0]),
-                                         max(w[w != 0 & t == 0])))
+    out$weight.range <- list(treated = range(w[w != 0 & t == 1]),
+                             control = range(w[w != 0 & t == 0]))
     out$weight.top <- list(treated = rev(w[t == 1][order(abs(w[t == 1]), decreasing = TRUE)][seq_len(top0["treated"])]),
                            control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
     out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
@@ -117,15 +116,15 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     t <- as.factor(t)
 
     top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
-    out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w != 0 & t == x]),
-                                                                 max(w[w != 0 & t == x]))),
+    out$weight.range <- setNames(lapply(levels(t), function(x) range(w[w != 0 & t == x])),
                                  levels(t))
-    out$weight.top <- setNames(lapply(levels(t), function(x) rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])),
-                               levels(t))
-    out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
-    out$scaled.mad <- c(vapply(levels(t), function(x) mean_abs_dev(w[t==x])/mean_fast(w[t==x]), numeric(1L)))
-    out$negative.entropy <- c(vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L)))
-    out$num.zeros <- c(vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L)))
+    out$weight.top <- setNames(lapply(levels(t), function(x) {
+      rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])
+    }), levels(t))
+    out$coef.of.var <- vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L))
+    out$scaled.mad <- vapply(levels(t), function(x) mean_abs_dev(w[t==x])/mean_fast(w[t==x]), numeric(1L))
+    out$negative.entropy <- vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L))
+    out$num.zeros <- vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L))
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     nn <- make_df(levels(t), c("Unweighted", "Weighted"))
@@ -149,16 +148,17 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 #' @exportS3Method print summary.weightit
 print.summary.weightit <- function(x, ...) {
   top <- max(lengths(x$weight.top))
-  cat(paste(rep(" ", 18), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
+  cat(paste(rep.int(" ", 18L), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
 
   tryCatch({
     cat("- " %+% italic("Weight ranges") %+% ":\n\n")
     print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
   })
-  df <- setNames(data.frame(do.call("c", lapply(names(x$weight.top), function(x) c(" ", x))),
-                            matrix(do.call("c", lapply(x$weight.top, function(x) c(names(x), rep("", top - length(x)), round(x, 4), rep("", top - length(x))))),
-                                   byrow = TRUE, nrow = 2*length(x$weight.top))),
-                 rep("", 1 + top))
+  df <- setNames(data.frame(unlist(lapply(names(x$weight.top), function(x) c(" ", x))),
+                            matrix(unlist(lapply(x$weight.top, function(x) {
+                              c(names(x), rep.int("", top - length(x)), round(x, 4), rep.int("", top - length(x)))
+                            })), byrow = TRUE, nrow = 2 * length(x$weight.top))),
+                 rep.int("", 1L + top))
   cat("\n- " %+% italic(sprintf("Units with the %s most extreme weights%s",
                                 top, ngettext(length(x$weight.top), "",
                                               " by group"))) %+% ":\n")
@@ -169,10 +169,14 @@ print.summary.weightit <- function(x, ...) {
                                                               x$negative.entropy,
                                                               x$num.zeros)),
                                           c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
-  if (is_not_null(x$weight.mean)) cat("\n- " %+% italic("Mean of Weights") %+% " = " %+% round(x$weight.mean, 2) %+% "\n")
+  if (is_not_null(x$weight.mean)) {
+    cat("\n- " %+% italic("Mean of Weights") %+% " = " %+% round(x$weight.mean, 2) %+% "\n")
+  }
 
   cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
+
   print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
+
   invisible(x)
 }
 
@@ -229,8 +233,10 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
       scale_y_continuous(expand = expansion(c(0, .05))) +
       geom_vline(data = w_means, aes(xintercept = w), linetype = "12", color = "red") +
       labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
-      theme_bw() + facet_wrap(vars(t), ncol = 1, scales = "free") +
-      theme(panel.background = element_blank(), panel.border = element_rect(fill = NA, color = "black", size = .25))
+      theme_bw() +
+      facet_wrap(vars(t), ncol = 1, scales = "free") +
+      theme(panel.background = element_blank(),
+            panel.border = element_rect(fill = NA, color = "black", size = .25))
   }
 
   p
@@ -241,8 +247,10 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
 summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   out.list <- make_list(names(object$treat.list))
 
-  if (ignore.s.weights || is_null(object$s.weights)) sw <- rep(1, length(object$weights))
-  else sw <- object$s.weights
+  sw <- {
+    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, length(object$weights))
+    else object$s.weights
+  }
 
   for (ti in seq_along(object$treat.list)) {
     obj <- as.weightit(object$weights, treat = object$treat.list[[ti]],
@@ -260,7 +268,11 @@ print.summary.weightitMSM <- function(x, ...) {
   only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))
 
   for (ti in seq_along(x)) {
-    if (!only.one) cat(strikethrough(paste(rep(" ", 23), collapse = "")) %+% italic(" Time " %+% ti %+% " ") %+% strikethrough(paste(rep(" ", 23), collapse = "")) %+% "\n")
+    if (!only.one) {
+      cat(strikethrough(paste(rep.int(" ", 23), collapse = "")) %+%
+            italic(" Time " %+% ti %+% " ") %+%
+            strikethrough(paste(rep.int(" ", 23), collapse = "")) %+% "\n")
+    }
     print(x[[ti]])
     cat("\n")
     if (only.one) break

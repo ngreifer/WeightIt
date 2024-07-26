@@ -5,6 +5,10 @@
   chk::chk_numeric(x)
   chk::chk_matrix(x)
 
+  if (is_null(colnames(x))) {
+    colnames(x) <- paste0("x", seq_col(x))
+  }
+
   nobs <- length(y)
 
   if (is_null(weights)) weights <- rep.int(1, nobs)
@@ -18,13 +22,12 @@
   # QR <- qr(x)
 
   aliased_X <- !colnames(x) %in% colnames(make_full_rank(x, with.intercept = FALSE))
-  aliased_B <- rep(aliased_X, nlevels(y) - 1)
+  aliased_B <- rep.int(aliased_X, nlevels(y) - 1)
 
   k0 <- (nlevels(y) - 1) * ncol(x)
-  k <- sum(!aliased_B)
 
   if (is_null(start)) {
-    start <- rep(0, k0)
+    start <- rep.int(0, k0)
   }
   else {
     chk::chk_numeric(start)
@@ -57,7 +60,9 @@
       weights * ((y == i) - pp[,i]) * X
     }))
 
-    colnames(out) <- names(B)
+    if (is_not_null(names(B)))
+      colnames(out) <- names(B)
+
     out
   }
 
@@ -99,10 +104,10 @@
 
   res <- setNames(1 - pp[ind_mat], rownames(x))
 
-  coefs <- setNames(rep(NA_real_, length(start)), names(start))
+  coefs <- setNames(rep.int(NA_real_, length(start)), names(start))
   coefs[!aliased_B] <- out$par
 
-  # aliased <- rep(TRUE, ncol(x))
+  # aliased <- rep.int(TRUE, ncol(x))
   # aliased[QR$pivot[seq_len(QR$rank)]] <- FALSE
   # attr(QR$qr, "aliased") <- aliased
 

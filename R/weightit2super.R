@@ -18,7 +18,7 @@
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, the generalized propensity score is estimated using \pkgfun{SuperLearner}{SuperLearner}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting `use.kernel = TRUE`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+#' For continuous treatments, the generalized propensity score is estimated using \pkgfun{SuperLearner}{SuperLearner}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting `density = "kernel"`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -54,14 +54,11 @@
 #'
 #' For continuous treatments only, the following arguments may be supplied:
 #'   \describe{
-#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014). Ignored if `use.kernel = TRUE` (described below).
-#'     }
-#'     \item{`use.kernel`}{If `TRUE`, uses kernel density estimation through the [density()] function to estimate the numerator and denominator densities for the weights. If `FALSE`, the argument to the `density` parameter is used instead.
-#'     }
-#'     \item{`bw`, `adjust`, `kernel`, `n`}{If `use.kernel = TRUE`, the arguments to the [density()] function. The defaults are the same as those in `density` except that `n` is 10 times the number of units in the sample.
-#'     }
-#'     \item{`plot`}{If `use.kernel = TRUE`, whether to plot the estimated density.
-#'     }
+#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+#'
+#' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the numerator and denominator densities for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
+#'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()` except that `n` is 10 times the number of units in the sample.}
+#'     \item{`plot`}{If `density = "kernel"`, whether to plot the estimated densities.}
 #'   }
 #'
 #' ## Balance SuperLearner
@@ -99,6 +96,8 @@
 #'
 #' The `criterion` argument used to be called `stop.method`, which is its name in \pkg{twang}. `stop.method` still works for backward compatibility. Additionally, the criteria formerly named as `es.mean`, `es.max`, and `es.rms` have been renamed to `smd.mean`, `smd.max`, and `smd.rms`. The former are used in \pkg{twang} and will still work with `weightit()` for backward compatibility.
 #'
+#' As of version 1.2.0, the default behavior for binary and multi-category treatments is to stratify on the treatment when performing cross-validation to ensure all treatment groups are represented in cross-validation. To recover previous behavior, set `cvControl = list(stratifyCV = FALSE)`.
+#'
 #' @seealso
 #' [weightit()], [weightitMSM()], [get_w_from_ps()]
 #'
@@ -106,10 +105,6 @@
 #' ## Binary treatments
 #'
 #' Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity Score Estimators’ Robustness to Model Misspecification Using Super Learner. *American Journal of Epidemiology*, 181(2), 108–119. \doi{10.1093/aje/kwu253}
-#'
-#' ## Multi-Category Treatments
-#'
-#' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score. *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*, 76(1), 243–263.
 #'
 #' ## Continuous treatments
 #'
@@ -196,15 +191,16 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
     else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
+  if (is_null(A[["cvControl"]][["stratifyCV"]])) {
+    A[["cvControl"]][["stratifyCV"]] <- TRUE
+  }
+
   discrete <- if_null_then(A[["discrete"]], FALSE)
   chk::chk_flag(discrete)
 
   if (identical(A[["SL.method"]], "method.balance")) {
 
-    criterion <- A[["criterion"]]
-    if (is_null(criterion)) {
-      criterion <- A[["stop.method"]]
-    }
+    criterion <- if_null_then(A[["criterion"]], A[["stop.method"]])
 
     if (is_null(criterion)) {
       .wrn("no `criterion` was provided. Using \"smd.mean\"")
@@ -308,6 +304,10 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
     else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
   }
 
+  if (is_null(A[["cvControl"]][["stratifyCV"]])) {
+    A[["cvControl"]][["stratifyCV"]] <- TRUE
+  }
+
   discrete <- if_null_then(A[["discrete"]], FALSE)
   chk::chk_flag(discrete)
 
@@ -398,10 +398,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   if (identical(B[["SL.method"]], "method.balance")) {
 
-    criterion <- A[["criterion"]]
-    if (is_null(criterion)) {
-      criterion <- A[["stop.method"]]
-    }
+    criterion <- if_null_then(A[["criterion"]], A[["stop.method"]])
 
     if (is_null(criterion)) {
       .wrn("no `criterion` was provided. Using \"p.mean\"")
@@ -460,7 +457,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   w <- dens.num / dens.denom
 
-  if (isTRUE(A[["use.kernel"]]) && isTRUE(A[["plot"]])) {
+  if (isTRUE(A[["plot"]])) {
     d.n <- attr(dens.num, "density")
     d.d <- attr(dens.denom, "density")
     plot_density(d.n, d.d)
@@ -501,7 +498,10 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
         w <- get_w_from_ps(ps, Y, estimand)
         cobalt::bal.compute(init, weights = w)
       }
-      fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
+
+      fit <- optim(rep.int(1/ncol(Z), ncol(Z)), loss,
+                   method = "L-BFGS-B", lower = 0, upper = 1)
+
       coef <- fit$par
 
       list(cvRisk = cvRisk, coef = coef/sum(coef))
@@ -548,7 +548,9 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
         cobalt::bal.compute(init, weights = w)
       }
 
-      fit <- optim(rep(1/ncol(Z), ncol(Z)), loss, method = "L-BFGS-B", lower = 0, upper = 1)
+      fit <- optim(rep.int(1/ncol(Z), ncol(Z)), loss,
+                   method = "L-BFGS-B", lower = 0, upper = 1)
+
       coef <- fit$par
 
       list(cvRisk = cvRisk, coef = coef/sum(coef))

@@ -173,7 +173,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
 
     if (is_null(s.weights)) {
-      s.weights <- rep(1, length(treat))
+      s.weights <- rep.int(1, length(treat))
     }
     else {
       chk::chk_vector(s.weights)
@@ -185,7 +185,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
 
     if (is_null(by.factor)) {
-      by.factor <- factor(rep(1, length(treat)), levels = 1)
+      by.factor <- factor(rep.int(1, length(treat)), levels = 1)
     }
     else {
       chk::chk_factor(by.factor)
@@ -227,7 +227,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
   out <- make_list(c("weights", "treat", "estimand", "method", "ps", "s.weights",
                      "focal", "fit.obj", "info"))
-  out$weights <- out$ps <- rep(NA_real_, length(treat))
+  out$weights <- out$ps <- rep.int(NA_real_, length(treat))
 
   if (include.obj) {
     fit.obj <- make_list(levels(by.factor))
@@ -414,7 +414,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     .check_acceptable_method(method, msm = TRUE, force = FALSE)
 
     if (is_null(s.weights)) {
-      s.weights <- rep(1, n)
+      s.weights <- rep.int(1, n)
     }
     else {
       chk::chk_vector(s.weights)
@@ -426,7 +426,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     }
 
     if (is_null(by.factor)) {
-      by.factor <- factor(rep(1, n), levels = 1)
+      by.factor <- factor(rep.int(1, n), levels = 1)
     }
     else {
       chk::chk_factor(by.factor)
@@ -449,7 +449,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
 
   out <- make_list(c("weights", "treat.list", "method", "s.weights",
                      "fit.obj", "info"))
-  out$weights <- rep(NA_real_, length(treat.list[[1]]))
+  out$weights <- rep.int(NA_real_, length(treat.list[[1]]))
 
   if (include.obj) {
     fit.obj <- make_list(levels(by.factor))

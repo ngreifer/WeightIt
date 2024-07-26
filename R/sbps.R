@@ -145,7 +145,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     }
     else if (is_not_null(obj2[["by"]])) {
       if (is_not_null(obj[["by"]])) {
-        if (is_null(processed.moderator)) .err("cannot figure out moderator. Please supply a value to `moderator`")
+        if (is_null(processed.moderator))
+          .err("cannot figure out moderator. Please supply a value to `moderator`")
       }
       else {
         processed.moderator <- obj2[["by"]]
@@ -170,23 +171,25 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       call[["by"]] <- processed.moderator
     }
 
-    obj2 <- eval(call)
+    obj2 <- eval(call, obj[["env"]])
   }
 
   if ((is_null(obj[["ps"]]) || is_null(obj2[["ps"]])) && smooth) {
     .err("smooth SBPS can only be used with methods that produce a propensity score")
   }
 
-  call <- obj[["call"]]
-  if (is_null(formula) && "formula" %in% names(call)) {
-    formula <- eval(call[["formula"]])
+  if (is_null(formula)) {
+    formula <- obj[["formula"]]
   }
+
   formula <- delete.response(terms(formula))
 
   t.c <- get_covs_and_treat_from_formula(formula, combined.data)
+
   if (is_null(t.c[["reported.covs"]])) {
-    .err("No covariates were found")
+    .err("no covariates were found")
   }
+
   covs <- t.c[["model.covs"]]
   s.weights <- obj[["s.weights"]]
 
@@ -252,8 +255,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
         else {
           F0_o <- unlist(lapply(levels(treat), function(t) {
             covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
-            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
-            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            treat_i <- c(rep.int(1, nrow(covs)), rep.int(0, sum(treat == t)))
+            w_i <- c(rep.int(1, nrow(covs)), w_[treat == t])
             if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
             else s.weights_i <- NULL
             cobalt::col_w_smd(covs_i, treat_i, w_i, std = TRUE, s.d.denom = "treated",
@@ -261,8 +264,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
           }))
           F0_s <- unlist(lapply(levels(treat), function(t) {
             covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
-            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
-            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            treat_i <- c(rep.int(1, nrow(covs)), rep.int(0, sum(treat == t)))
+            w_i <- c(rep.int(1, nrow(covs)), w_[treat == t])
             moderator.factor_i <- c(moderator.factor, moderator.factor[treat == t])
             if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
             else s.weights_i <- NULL
@@ -285,12 +288,12 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(moderator.factor, drop.first = FALSE),
       #                           treat, w_, std = FALSE,
       #                           abs = TRUE, s.weights = s.weights,
-      #                           bin.vars = rep(TRUE, length(R)))
+      #                           bin.vars = rep.int(TRUE, length(R)))
 
       sum(F0_o^2) + sum(F0_s^2) #+ sum(F0_g^2)
     }
 
-    opt.out <- optim(rep(.5, length(R)), fn = get_F_smooth,
+    opt.out <- optim(rep.int(.5, length(R)), fn = get_F_smooth,
                      ps_o = ps_o, ps_s = ps_s, treat.type = treat.type,
                      lower = 0, upper = 1,
                      method = "L-BFGS-B")
@@ -356,8 +359,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
         else {
           F0_o <- unlist(lapply(levels(treat), function(t) {
             covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
-            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
-            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            treat_i <- c(rep.int(1, nrow(covs)), rep.int(0, sum(treat == t)))
+            w_i <- c(rep.int(1, nrow(covs)), w_[treat == t])
             if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
             else s.weights_i <- NULL
             cobalt::col_w_smd(covs_i, treat_i, w_i, std = TRUE, s.d.denom = "treated",
@@ -365,8 +368,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
           }))
           F0_s <- unlist(lapply(levels(treat), function(t) {
             covs_i <- rbind(covs, covs[treat == t, , drop = FALSE])
-            treat_i <- c(rep(1, nrow(covs)), rep(0, sum(treat == t)))
-            w_i <- c(rep(1, nrow(covs)), w_[treat == t])
+            treat_i <- c(rep.int(1, nrow(covs)), rep.int(0, sum(treat == t)))
+            w_i <- c(rep.int(1, nrow(covs)), w_[treat == t])
             moderator.factor_i <- c(moderator.factor, moderator.factor[treat == t])
             if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
             else s.weights_i <- NULL
@@ -389,7 +392,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       # F0_g <- cobalt::col_w_smd(cobalt::splitfactor(moderator.factor, drop.first = FALSE),
       #                           treat, w_, std = FALSE,
       #                           abs = TRUE, s.weights = s.weights,
-      #                           bin.vars = rep(TRUE, length(R)))
+      #                           bin.vars = rep.int(TRUE, length(R)))
 
       sum(F0_o^2) + sum(F0_s^2) #+ sum(F0_g^2)
     }
@@ -413,7 +416,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     else {
       #Stochastic search described by Dong et al (2019)
 
-      s_min <- setNames(rep(0, length(R), replace = TRUE), R)
+      s_min <- setNames(rep.int(0, length(R)), R)
       F_min <- get_F(s_min, moderator.factor, w_o, w_s, treat.type)
 
       L1 <- 25
@@ -477,44 +480,14 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   out
 }
 
-#' @exportS3Method print weightit.sbps
-print.weightit.sbps <- function(x, ...) {
-  treat.type <- get_treat_type(x[["treat"]])
-  trim <- attr(x[["weights"]], "trim")
-
-  cat("A weightit.sbps object\n")
-  if (is_not_null(x[["method"]])) cat(paste0(" - method: \"", attr(x[["method"]], "name"), "\" (", .method_to_phrase(x[["method"]]), ")\n"))
-  cat(paste0(" - number of obs.: ", length(x[["weights"]]), "\n"))
-  cat(paste0(" - sampling weights: ", if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present", "\n"))
-  cat(paste0(" - treatment: ", ifelse(treat.type == "continuous", "continuous", paste0(nunique(x[["treat"]]), "-category", ifelse(treat.type == "multinomial", paste0(" (", paste(levels(x[["treat"]]), collapse = ", "), ")"), ""))), "\n"))
-  if (is_not_null(x[["estimand"]])) cat(paste0(" - estimand: ", x[["estimand"]], ifelse(is_not_null(x[["focal"]]), paste0(" (focal: ", x[["focal"]], ")"), ""), "\n"))
-  if (is_not_null(x[["covs"]])) cat(paste0(" - covariates: ", ifelse(length(names(x[["covs"]])) > 60, "too many to name", paste(names(x[["covs"]]), collapse = ", ")), "\n"))
-  if (is_not_null(x[["by"]])) {
-    cat(paste0(" - by: ", paste(names(x[["by"]]), collapse = ", "), "\n"))
-  }
-  if (is_not_null(x[["moderator"]])) {
-    nsubgroups <- nlevels(attr(x[["moderator"]], "by.factor"))
-    cat(paste0(" - moderator: ", paste(names(x[["moderator"]]), collapse = ", ")," (", nsubgroups, " subgroups)\n"))
-  }
-  if (is_not_null(trim)) {
-    if (trim < 1) {
-      if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(paste(" - weights trimmed at", word_list(paste0(round(100*trim, 2), "%")), "\n"))
-    }
-    else {
-      if (attr(x[["weights"]], "trim.lower")) t.b <- "top and bottom" else t.b <- "top"
-      cat(paste(" - weights trimmed at the", t.b, trim, "\n"))
-    }
-  }
-  invisible(x)
-}
-
 #' @exportS3Method summary weightit.sbps
 summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 
-  if (ignore.s.weights || is_null(object$s.weights)) sw_ <- rep(1, length(object$weights))
-  else sw_ <- object$s.weights
-  w_ <- object$weights*sw_
+  sw_ <- {
+    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, length(object$weights))
+    else object$s.weights
+  }
+  w_ <- object$weights * sw_
   t_ <- object$treat
   mod <- object$moderator
   mod_factor <- attr(mod, "by.factor")
@@ -620,15 +593,17 @@ print.summary.weightit.sbps <- function(x, ...) {
   print.data.frame(round_df_char(attr(x, "prop.subgroup"), 2))
 
   for (g in seq_along(x)) {
-    cat(paste("\n - - - - - - - Subgroup", names(x)[g], "- - - - - - -\n"))
+    cat(sprintf("\n - - - - - - - Subgroup %s - - - - - - -\n", names(x)[g]))
     top <- max(lengths(x[[g]]$weight.top))
     cat("- Weight ranges:\n")
     print.data.frame(round_df_char(text_box_plot(x[[g]]$weight.range, 28), 4), ...)
-    df <- setNames(data.frame(do.call("c", lapply(names(x[[g]]$weight.top), function(j) c(" ", j))),
-                              matrix(do.call("c", lapply(x[[g]]$weight.top, function(j) c(names(j), rep("", top - length(j)), round(j, 4), rep("", top - length(j))))),
-                                     byrow = TRUE, nrow = 2*length(x[[g]]$weight.top))),
-                   rep("", 1 + top))
-    cat(paste("\n- Units with", top, "greatest weights by group:\n"))
+    df <- setNames(data.frame(unlist(lapply(names(x[[g]]$weight.top), function(j) c(" ", j))),
+                              matrix(unlist(lapply(x[[g]]$weight.top, function(j) {
+                                c(names(j), rep.int("", top - length(j)), round(j, 4), rep.int("", top - length(j)))
+                              })),
+                              byrow = TRUE, nrow = 2 * length(x[[g]]$weight.top))),
+                   rep.int("", 1 + top))
+    cat(sprintf("\n- Units with %s greatest weights by group:\n", top))
     print.data.frame(df, row.names = FALSE)
     cat("\n")
     print.data.frame(round_df_char(as.data.frame(matrix(c(x[[g]]$weight.ratio, x[[g]]$coef.of.var), ncol = 2,
@@ -637,5 +612,6 @@ print.summary.weightit.sbps <- function(x, ...) {
     cat("\n- Effective Sample Sizes:\n")
     print.data.frame(round_df_char(x[[g]]$effective.sample.size, 3))
   }
+
   invisible(x)
 }

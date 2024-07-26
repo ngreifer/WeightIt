@@ -70,7 +70,7 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     }
     else if (all(dim(ps) == c(n, 1))) {
       ps <- setNames(list2DF(lapply(levels(treat), function(x) {
-        p_ <- rep(1, length(treat))
+        p_ <- rep.int(1, length(treat))
         p_[treat == x] <- ps[treat == x, 1]
         p_
       })), levels(treat))[subset, , drop = FALSE]
@@ -82,7 +82,7 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   else if (is.numeric(ps)) {
     if (length(ps) == n) {
       ps <- setNames(list2DF(lapply(levels(treat), function(x) {
-        p_ <- rep(1, length(treat))
+        p_ <- rep.int(1, length(treat))
         p_[treat == x] <- ps[treat == x]
         p_
       })), levels(treat))[subset, , drop = FALSE]

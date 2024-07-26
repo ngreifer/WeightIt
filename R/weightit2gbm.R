@@ -867,7 +867,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       d$tune <- factor(d$tune)
 
       #Subsample if too big
-      ind <- unlist(lapply(split(seq_len(nrow(d)), d[c("by", "tune")]), function(i) {
+      ind <- unlist(lapply(split(seq_row(d), d[c("by", "tune")]), function(i) {
         if (length(i) <= subsample) return(i)
         b <- d$by[i][1]
         t <- d$tune[i][1]
@@ -889,7 +889,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       }))
 
       #Subsample if too big
-      ind <- unlist(lapply(split(seq_len(nrow(d)), d["by"]), function(i) {
+      ind <- unlist(lapply(split(seq_row(d), d["by"]), function(i) {
         if (length(i) <= subsample) return(i)
         b <- d$by[i][1]
 
@@ -917,7 +917,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       d$tune <- factor(d$tune)
 
       #Subsample if too big
-      ind <- unlist(lapply(split(seq_len(nrow(d)), d["tune"]), function(i) {
+      ind <- unlist(lapply(split(seq_row(d), d["tune"]), function(i) {
         if (length(i) <= subsample) return(i)
         t <- d$tune[i][1]
 
@@ -957,7 +957,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     tune_args <- setdiff(names(tune), c(paste.("best", criterion), "best.tree"))
     tune_args <- tune_args[!vapply(tune[tune_args], all_the_same, logical(1L))]
 
-    levels(d$tune) <- levels(best$tune) <- vapply(seq_len(nrow(tune)), function(i) {
+    levels(d$tune) <- levels(best$tune) <- vapply(seq_row(tune), function(i) {
       do.call("paste", c(lapply(tune_args, function(a) {
         sprintf("%s = %s", a, add_quotes(tune[[a]][i], is.character(tune[[a]][i])))
       }), list(sep = ", ")))

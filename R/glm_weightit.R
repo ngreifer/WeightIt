@@ -414,8 +414,9 @@ lm_weightit <- function(formula, data, weightit,
     attr(vcov, "R") <- R
 
     if (vcov == "FWB") {
-      if (is_not_null(weightit) && identical(weightit$method, "bart")) {
-        .err("`vcov = \"FWB\"` cannot be used with `method = \"bart\"`")
+      if (is_not_null(weightit) && weightit$method %in% c("bart", "npcbps")) {
+        .err(sprintf("`vcov = \"FWB\"` cannot be used with `method = %s`",
+                     add_quotes(weightit$method)))
       }
 
       rlang::check_installed("fwb")
@@ -443,9 +444,9 @@ lm_weightit <- function(formula, data, weightit,
   Y <- fit$y
   W <- weightit$weights
   SW <- weightit$s.weights
-  if (is_null(SW)) SW <- rep(1, length(Y))
+  if (is_null(SW)) SW <- rep.int(1, length(Y))
   offset <- fit$offset
-  if (is_null(offset)) offset <- rep(0, length(Y))
+  if (is_null(offset)) offset <- rep.int(0, length(Y))
   bout <- fit$coefficients
   aliased <- is.na(bout)
 
@@ -638,7 +639,7 @@ lm_weightit <- function(formula, data, weightit,
 
     if (is_null(cluster)) {
       boot_out <- do.call("rbind", lapply(seq_len(R), function(i) {
-        ind <- sample(seq_len(nrow(data)), nrow(data), replace = TRUE)
+        ind <- sample(seq_row(data), nrow(data), replace = TRUE)
         bootfun(data, ind)
       }))
 
@@ -811,7 +812,7 @@ lm_weightit <- function(formula, data, weightit,
                         offset = offset)
     }
 
-    A1 <- try(solve(hess), silent = TRUE)
+    A1 <- try(solve(hess, t(.chol2(B))), silent = TRUE)
 
     if (null_or_error(A1)) {
       .e <- conditionMessage(attr(A1, "condition"))
@@ -823,10 +824,12 @@ lm_weightit <- function(formula, data, weightit,
       .err(.e, tidy = FALSE)
     }
 
-    V <- A1 %*% tcrossprod(B, A1)
+    #Subset to just the outcome model coefs
+    A1 <- A1[seq_len(pout), , drop = FALSE]
+
+    V <- tcrossprod(A1)
   }
 
-  V <- V[seq_len(pout), seq_len(pout), drop = FALSE]
   colnames(V) <- rownames(V) <- names(aliased)[!aliased]
 
   attr(V, "cluster") <- cluster

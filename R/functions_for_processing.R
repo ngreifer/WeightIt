@@ -329,7 +329,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
   }
 
   by.factor <- {
-    if (is_null(by)) factor(rep(1L, n), levels = 1L)
+    if (is_null(by)) factor(rep.int(1L, n), levels = 1L)
     else factor(by.components[[1]], levels = sort(unique(by.components[[1]])),
                 labels = paste(names(by.components), "=", sort(unique(by.components[[1]]))))
   }
@@ -499,7 +499,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
   #int=whether to include interactions or not; currently only 2-way are supported
   #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
 
-  if (is_null(ex)) ex <- rep(FALSE, ncol(d))
+  if (is_null(ex)) ex <- rep.int(FALSE, ncol(d))
 
   binary.vars <- is_binary_col(d)
 
@@ -572,7 +572,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
       if (length(qu) != 1) {
         .err("`quantile` must be a number between 0 and 1, a named list thereof, a named vector thereof, or a named list of lists thereof")
       }
-      qu <- setNames(rep(qu, sum(!binary.vars)),
+      qu <- setNames(rep.int(qu, sum(!binary.vars)),
                      colnames(d)[!binary.vars])
     }
     qu <- as.list(qu)
@@ -714,7 +714,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
     }
     else {
       t.levels <- unique(treat)
-      bad.treat.groups <- setNames(rep(FALSE, length(t.levels)), t.levels)
+      bad.treat.groups <- setNames(rep.int(FALSE, length(t.levels)), t.levels)
       for (i in t.levels) {
         ti <- which(treat == i)
         if (all(is.na(w[ti])) || all(check_if_zero(w[ti]))) bad.treat.groups[as.character(i)] <- TRUE
@@ -933,7 +933,7 @@ stabilize_w <- function(weights, treat) {
   if (is_null(n)) n <- 10 * length(treat)
   if (is_null(adjust)) adjust <- 1
 
-  if (!identical(use.kernel, FALSE)) {
+  if (!isFALSE(use.kernel)) {
     if (isTRUE(use.kernel)) {
       .wrn("`use.kernel` is deprecated; use `density = \"kernel\"` instead. Setting `density = \"kernel\"`")
       density <- "kernel"
@@ -1018,7 +1018,7 @@ stabilize_w <- function(weights, treat) {
                                         subclass = NULL, stabilize = FALSE) {
 
   estimand <- toupper(estimand)
-  w <- rep(1, length(treat))
+  w <- rep.int(1, length(treat))
 
   #Assume treat is binary
   if (is_not_null(subclass)) {
@@ -1078,7 +1078,7 @@ stabilize_w <- function(weights, treat) {
                                           subclass = NULL, stabilize = FALSE) {
 
   estimand <- toupper(estimand)
-  w <- rep(0, length(treat))
+  w <- rep.int(0, length(treat))
 
   ps_mat <- ps
 
@@ -1415,7 +1415,7 @@ generalized_inverse <- function(sigma) {
       info_unscaled <- crossprod(R_matrix)
       inverse_info_unscaled <- chol2inv(R_matrix)
 
-      b_vector <- vapply(seq_len(ncol(X)), function(j) {
+      b_vector <- vapply(seq_col(X), function(j) {
         inverse_info_unscaled_j <- inverse_info_unscaled[j, ]
         vcov_j <- tcrossprod(inverse_info_unscaled_j) / inverse_info_unscaled_j[j]
         hats_j <- rowSums((X %*% vcov_j) * X) * Wt

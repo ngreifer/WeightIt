@@ -200,7 +200,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   n0 <- length(t0)
   n1 <- length(t1)
 
-  s.weights_n_0 <- s.weights_n_1 <- rep(0, n)
+  s.weights_n_0 <- s.weights_n_1 <- rep.int(0, n)
   s.weights_n_0[t0] <- s.weights[t0] / n0
   s.weights_n_1[t1] <- s.weights[t1] / n1
 
@@ -220,7 +220,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
     #Constraints for positivity and sum of weights
     Amat <- cbind(diagn, s.weights_n_0, s.weights_n_1)
-    lvec <- c(rep(min.w, n), 1, 1)
+    lvec <- c(rep.int(min.w, n), 1, 1)
     uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), 1, 1)
 
     if (moments != 0 || int) {
@@ -254,7 +254,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
     #Constraints for positivity and sum of weights
     Amat <- cbind(diagn, s.weights_n_0, s.weights_n_1)
-    lvec <- c(rep(min.w, n), 1, 1)
+    lvec <- c(rep.int(min.w, n), 1, 1)
     uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), 1, 1)
 
     if (moments != 0 || int) {
@@ -262,16 +262,16 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
       covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
       Amat <- cbind(Amat, covs * (s.weights_n_0 - s.weights_n_1))
-      lvec <- c(lvec, rep(0, ncol(covs)))
-      uvec <- c(uvec, rep(0, ncol(covs)))
+      lvec <- c(lvec, rep.int(0, ncol(covs)))
+      uvec <- c(uvec, rep.int(0, ncol(covs)))
     }
 
     if (is_not_null(A[["quantile"]])) {
       qu <- .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights)
 
       Amat <- cbind(Amat, qu * (s.weights_n_0 - s.weights_n_1))
-      lvec <- c(lvec, rep(0, ncol(qu)))
-      uvec <- c(uvec, rep(0, ncol(qu)))
+      lvec <- c(lvec, rep.int(0, ncol(qu)))
+      uvec <- c(uvec, rep.int(0, ncol(qu)))
     }
   }
   else if (estimand == "ATT") {
@@ -282,7 +282,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     q <- 2 * (s.weights_n_1[t1] %*% d[t1, t0]) * s.weights_n_0[t0]
 
     Amat <- cbind(diag(n0), s.weights_n_0[t0])
-    lvec <- c(rep(min.w, n0), 1)
+    lvec <- c(rep.int(min.w, n0), 1)
     uvec <- c(ifelse(check_if_zero(s.weights[t0]), min.w, Inf), 1)
 
     if (moments != 0 || int) {
@@ -317,7 +317,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     q <- 2 * (s.weights_n_0[t0] %*% d[t0, t1]) * s.weights_n_1[t1]
 
     Amat <- cbind(diag(n1), s.weights_n_1[t1])
-    lvec <- c(rep(min.w, n1), 1)
+    lvec <- c(rep.int(min.w, n1), 1)
     uvec <- c(ifelse(check_if_zero(s.weights[t1]), min.w, Inf), 1)
 
     if (moments != 0 || int) {
@@ -397,11 +397,11 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
 
   if (estimand == "ATT") {
-    w <- rep(1, n)
+    w <- rep.int(1, n)
     w[t0] <- opt.out$x
   }
   else if (estimand == "ATC") {
-    w <- rep(1, n)
+    w <- rep.int(1, n)
     w[t1] <- opt.out$x
   }
   else {
@@ -492,8 +492,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
     #Constraints for positivity and sum of weights
     Amat <- cbind(diagn, s.weights_n_t)
-    lvec <- c(rep(min.w, n), rep(1, length(levels_treat)))
-    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), rep(1, length(levels_treat)))
+    lvec <- c(rep.int(min.w, n), rep.int(1, length(levels_treat)))
+    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), rep.int(1, length(levels_treat)))
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
@@ -502,8 +502,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
       targets <- col.w.m(covs, s.weights)
 
       Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t, 2, function(x) covs * x, simplify = FALSE)))
-      lvec <- c(lvec, rep(targets, length(levels_treat)))
-      uvec <- c(uvec, rep(targets, length(levels_treat)))
+      lvec <- c(lvec, rep.int(targets, length(levels_treat)))
+      uvec <- c(uvec, rep.int(targets, length(levels_treat)))
     }
 
     if (is_not_null(A[["quantile"]])) {
@@ -512,8 +512,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
       targets <- col.w.m(qu, s.weights)
 
       Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t, 2, function(x) qu * x, simplify = FALSE)))
-      lvec <- c(lvec, rep(targets, length(levels_treat)))
-      uvec <- c(uvec, rep(targets, length(levels_treat)))
+      lvec <- c(lvec, rep.int(targets, length(levels_treat)))
+      uvec <- c(uvec, rep.int(targets, length(levels_treat)))
     }
   }
   else {
@@ -528,8 +528,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
       rowSums(s.weights_n_t[!in_focal, non_focal, drop = FALSE])
 
     Amat <- cbind(diag(sum(!in_focal)), s.weights_n_t[!in_focal, non_focal])
-    lvec <- c(rep(min.w, sum(!in_focal)), rep(1, length(non_focal)))
-    uvec <- c(ifelse_(check_if_zero(s.weights[!in_focal]), min.w, Inf), rep(1, length(non_focal)))
+    lvec <- c(rep.int(min.w, sum(!in_focal)), rep.int(1, length(non_focal)))
+    uvec <- c(ifelse(check_if_zero(s.weights[!in_focal]), min.w, Inf), rep.int(1, length(non_focal)))
 
     if (moments != 0 || int) {
       #Exactly balance moments and/or interactions
@@ -540,8 +540,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
       Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t[!in_focal, non_focal, drop = FALSE], 2,
                                                  function(x) covs[!in_focal,, drop = FALSE] * x,
                                                  simplify = FALSE)))
-      lvec <- c(lvec, rep(targets, length(non_focal)))
-      uvec <- c(uvec, rep(targets, length(non_focal)))
+      lvec <- c(lvec, rep.int(targets, length(non_focal)))
+      uvec <- c(uvec, rep.int(targets, length(non_focal)))
     }
 
     if (is_not_null(A[["quantile"]])) {
@@ -553,8 +553,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
       Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t[!in_focal, non_focal, drop = FALSE], 2,
                                                  function(x) qu[!in_focal,, drop = FALSE] * x,
                                                  simplify = FALSE)))
-      lvec <- c(lvec, rep(targets, length(non_focal)))
-      uvec <- c(uvec, rep(targets, length(non_focal)))
+      lvec <- c(lvec, rep.int(targets, length(non_focal)))
+      uvec <- c(uvec, rep.int(targets, length(non_focal)))
     }
   }
 
@@ -612,7 +612,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     w <- opt.out$x
   }
   else {
-    w <- rep(1, n)
+    w <- rep.int(1, n)
     w[treat != focal] <- opt.out$x
   }
 
@@ -731,7 +731,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   q <- q * s.weights
 
   Amat <- cbind(diag(n), s.weights)
-  lvec <- c(rep(min.w, n), n)
+  lvec <- c(rep.int(min.w, n), n)
   uvec <- c(ifelse(sw0, min.w, Inf), n)
 
   if (d.moments != 0) {
@@ -749,8 +749,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     d.treat <- scale(d.treat, center = A.targets, scale = FALSE)
 
     Amat <- cbind(Amat, d.covs * s.weights, d.treat * s.weights)
-    lvec <- c(lvec, rep(0, ncol(d.covs)), rep(0, ncol(d.treat)))
-    uvec <- c(uvec, rep(0, ncol(d.covs)), rep(0, ncol(d.treat)))
+    lvec <- c(lvec, rep.int(0, ncol(d.covs)), rep.int(0, ncol(d.treat)))
+    uvec <- c(uvec, rep.int(0, ncol(d.covs)), rep.int(0, ncol(d.treat)))
   }
 
   if (moments != 0 || int) {
@@ -764,8 +764,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
 
     Amat <- cbind(Amat, covs * treat * s.weights)
 
-    lvec <- c(lvec, rep(0, ncol(covs)))
-    uvec <- c(uvec, rep(0, ncol(covs)))
+    lvec <- c(lvec, rep.int(0, ncol(covs)))
+    uvec <- c(uvec, rep.int(0, ncol(covs)))
   }
 
   #Add weight penalty

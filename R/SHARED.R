@@ -63,7 +63,7 @@ firstup <- function(x) {
   #Capitalize first letter
   `substr<-`(x, 1, 1, toupper(substr(x, 1, 1)))
 }
-expand.grid_string <- function(..., collapse = "") {
+expand_grid_string <- function(..., collapse = "") {
   do.call("paste", c(expand.grid(...), sep = collapse))
 }
 num_to_superscript <- function(x) {
@@ -125,12 +125,12 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
     if (!identical(as.character(pad), "0") && any(grepl(".", df[[i]], fixed = TRUE))) {
       s <- strsplit(df[[i]], ".", fixed = TRUE)
       lengths <- lengths(s)
-      digits.r.of.. <- rep(0, NROW(df))
+      digits.r.of.. <- rep.int(0, NROW(df))
       digits.r.of..[lengths > 1] <- nchar(vapply(s[lengths > 1], `[[`, character(1L), 2))
       max.dig <- max(digits.r.of..)
 
       dots <- ifelse(lengths > 1, "", if (as.character(pad) != "") "." else pad)
-      pads <- vapply(max.dig - digits.r.of.., function(n) paste(rep(pad, n), collapse = ""), character(1L))
+      pads <- vapply(max.dig - digits.r.of.., function(n) paste(rep.int(pad, n), collapse = ""), character(1L))
 
       df[[i]] <- paste0(df[[i]], dots, pads)
     }
@@ -159,7 +159,7 @@ text_box_plot <- function(range.list, width = 12) {
   ratio <- diff(full.range) / (width + 1)
   rescaled.range.list <- lapply(range.list, function(x) round(x/ratio))
   rescaled.full.range <- round(full.range/ratio)
-  d <- make_df(c("Min", paste(rep(" ", width + 1), collapse = ""), "Max"),
+  d <- make_df(c("Min", paste(rep.int(" ", width + 1), collapse = ""), "Max"),
                names(range.list),
                "character")
   d[["Min"]] <- vapply(range.list, function(x) x[1], numeric(1L))
@@ -171,7 +171,9 @@ text_box_plot <- function(range.list, width = 12) {
     #|
     spaces2 <- max(c(0, diff(rescaled.full.range) - (spaces1 + 1 + dashes + 1)))
 
-    d[i, 2] <- paste0(paste(rep(" ", spaces1), collapse = ""), "|", paste(rep("-", dashes), collapse = ""), "|", paste(rep(" ", spaces2), collapse = ""))
+    d[i, 2] <- paste0(paste(rep.int(" ", spaces1), collapse = ""), "|",
+                      paste(rep.int("-", dashes), collapse = ""), "|",
+                      paste(rep.int(" ", spaces2), collapse = ""))
   }
 
   d
@@ -272,9 +274,9 @@ min_ <- function(..., na.rm = TRUE) {
 }
 check_if_int <- function(x) {
   #Checks if integer-like
-  if (is.integer(x)) rep(TRUE, length(x))
+  if (is.integer(x)) rep.int(TRUE, length(x))
   else if (is.numeric(x)) check_if_zero(x - round(x))
-  else rep(FALSE, length(x))
+  else rep.int(FALSE, length(x))
 }
 squish <- function(p, lo = 1e-6, hi = 1 - lo) {
   pmax(pmin(p, hi), lo)
@@ -291,8 +293,10 @@ binarize <- function(variable, zero = NULL, one = NULL) {
     unique.vals <- unique(variable)
   }
 
-  if (length(unique.vals) == 1) return(setNames(rep(1, length(variable)), names(variable)))
-  if (length(unique.vals) != 2) stop(paste0("Cannot binarize ", var.name, ": more than two levels."))
+  if (length(unique.vals) == 1L)
+    return(setNames(rep.int(1L, length(variable)), names(variable)))
+  if (length(unique.vals) != 2L)
+    .err(sprintf("cannot binarize %s: more than two levels", var.name))
 
   if (is_null(zero)) {
     if (is_null(one)) {
@@ -343,7 +347,7 @@ center <- function(x, at = NULL, na.rm = TRUE) {
   out
 }
 w.m <- function(x, w = NULL, na.rm = TRUE) {
-  if (is_null(w)) w <- rep(1, length(x))
+  if (is_null(w)) w <- rep.int(1, length(x))
   if (anyNA(x)) is.na(w[is.na(x)]) <- TRUE
 
   sum(x * w, na.rm = na.rm) / sum(w, na.rm = na.rm)
@@ -369,9 +373,9 @@ col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
     else stop("'mat' must be a numeric matrix.")
   }
 
-  if (is_null(bin.vars)) bin.vars <- rep(FALSE, ncol(mat))
+  if (is_null(bin.vars)) bin.vars <- rep.int(FALSE, ncol(mat))
   else if (length(bin.vars) != ncol(mat) || anyNA(as.logical(bin.vars))) {
-    stop("'bin.vars' must be a logical vector with length equal to the number of columns of 'mat'.", call. = FALSE)
+    stop("'bin.vars' must be a logical vector with length equal to the number of columns of 'mat'.")
   }
   bin.var.present <- any(bin.vars)
   non.bin.vars.present <- any(!bin.vars)
@@ -404,7 +408,7 @@ col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
     }
   }
   else {
-    if (is_null(w)) w <- rep(1, nrow(mat))
+    if (is_null(w)) w <- rep.int(1, nrow(mat))
     w <- w/sum(w)
     if (non.bin.vars.present) {
       x <- sqrt(w) * center(mat[, !bin.vars, drop = FALSE],
@@ -495,11 +499,11 @@ w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...)
 
   n <- length(x)
   if (n == 0 || (!isTRUE(na.rm) && anyNA(x))) {
-    return(rep(NA_real_, length(probs)))
+    return(rep.int(NA_real_, length(probs)))
   }
 
   if (!is.null(w) && all(w == 0)) {
-    return(rep(0, length(probs)))
+    return(rep.int(0, length(probs)))
   }
 
   if (isTRUE(na.rm)) {
@@ -708,7 +712,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
   if (is_null(rhs.term.labels)) {
     new.form <- as.formula("~ 0")
     tt.covs <- terms(new.form)
-    covs <- data.frame(Intercept = rep(1, if (is_null(treat)) 1 else length(treat)))[,-1, drop = FALSE]
+    covs <- data.frame(Intercept = rep.int(1, if (is_null(treat)) 1L else length(treat)))[,-1, drop = FALSE]
     # if (is_not_null(treat.name) && treat.name == "Intercept") {
     #   names(covs) <- "Intercept_"
     # }
@@ -829,27 +833,34 @@ get_treated_level <- function(treat) {
 #Input processing
 process.bin.vars <- function(bin.vars, mat) {
   if (missing(bin.vars)) bin.vars <- is_binary_col(mat)
-  else if (is_null(bin.vars)) bin.vars <- rep(FALSE, ncol(mat))
+  else if (is_null(bin.vars)) bin.vars <- rep.int(FALSE, ncol(mat))
+  else if (is.logical(bin.vars)) {
+    bin.vars[is.na(bin.vars)] <- FALSE
+    if (length(bin.vars) != ncol(mat))
+      stop("If 'bin.vars' is logical, it must have length equal to the number of columns of 'mat'.")
+  }
+  else if (is.numeric(bin.vars)) {
+    bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != 0]
+    if (any(bin.vars < 0) && any(bin.vars > 0))
+      stop("Positive and negative indices cannot be mixed with 'bin.vars'.")
+    if (any(abs(bin.vars) > ncol(mat)))
+      stop("If 'bin.vars' is numeric, none of its values can exceed the number of columns of 'mat'.")
+
+    logical.bin.vars <- rep.int(any(bin.vars < 0), ncol(mat))
+    logical.bin.vars[abs(bin.vars)] <- !logical.bin.vars[abs(bin.vars)]
+    bin.vars <- logical.bin.vars
+  }
+  else if (is.character(bin.vars)) {
+    bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != ""]
+    if (is_null(colnames(mat)))
+      stop("If 'bin.vars' is character, 'mat' must have column names.")
+    if (any(bin.vars %nin% colnames(mat)))
+      stop("If 'bin.vars' is character, all its values must be column names of 'mat'.")
+
+    bin.vars <- colnames(mat) %in% bin.vars
+  }
   else {
-    if (is.logical(bin.vars)) {
-      bin.vars[is.na(bin.vars)] <- FALSE
-      if (length(bin.vars) != ncol(mat)) stop("If 'bin.vars' is logical, it must have length equal to the number of columns of 'mat'.")
-    }
-    else if (is.numeric(bin.vars)) {
-      bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != 0]
-      if (any(bin.vars < 0) && any(bin.vars > 0)) stop("Positive and negative indices cannot be mixed with 'bin.vars'.")
-      if (any(abs(bin.vars) > ncol(mat))) stop("If 'bin.vars' is numeric, none of its values can exceed the number of columns of 'mat'.")
-      logical.bin.vars <- rep(any(bin.vars < 0), ncol(mat))
-      logical.bin.vars[abs(bin.vars)] <- !logical.bin.vars[abs(bin.vars)]
-      bin.vars <- logical.bin.vars
-    }
-    else if (is.character(bin.vars)) {
-      bin.vars <- bin.vars[!is.na(bin.vars) & bin.vars != ""]
-      if (is_null(colnames(mat))) stop("If 'bin.vars' is character, 'mat' must have column names.")
-      if (any(bin.vars %nin% colnames(mat))) stop("If 'bin.vars' is character, all its values must be column names of 'mat'.")
-      bin.vars <- colnames(mat) %in% bin.vars
-    }
-    else stop("'bin.vars' must be a logical, numeric, or character vector.")
+    stop("'bin.vars' must be a logical, numeric, or character vector.")
   }
 
   bin.vars
@@ -974,14 +985,22 @@ make_df <- function(ncol, nrow = 0, types = "numeric") {
   colnames(df) <- col_names
   rownames(df) <- row_names
   if (is_not_null(types)) {
-    if (length(types) %nin% c(1, ncol)) stop("'types' must be equal to the number of columns.")
+    if (length(types) %nin% c(1L, ncol))
+      stop("'types' must be equal to the number of columns.")
     if (any(types %nin% c("numeric", "integer", "logical", "character", NA))) {
       stop("'types' must be an acceptable type. For factors, use NA.")
     }
-    if (length(types) == 1) types <- rep(types, ncol)
-    for (i in seq_len(ncol)) if (!is.na(types)[i] && types[i] != "numeric") df[[i]] <- get(types[i])(nrow)
+
+    if (length(types) == 1) types <- rep.int(types, ncol)
+
+    for (i in seq_len(ncol)) {
+      if (!is.na(types)[i] && types[i] != "numeric") {
+        df[[i]] <- get(types[i])(nrow)
+      }
+    }
   }
-  return(df)
+
+  df
 }
 ifelse_ <- function(...) {
   dotlen <- ...length()
@@ -989,15 +1008,15 @@ ifelse_ <- function(...) {
   out <- ...elt(dotlen)
   if (dotlen > 1) {
     if (!is_(out, "atomic")) stop("The last entry to ifelse_ must be atomic.")
-    if (length(out) == 1) out <- rep(out, length(..1))
+    if (length(out) == 1) out <- rep.int(out, length(..1))
     n <- length(out)
     for (i in seq_len((dotlen - 1)/2)) {
       test <- ...elt(2*i - 1)
       yes <- ...elt(2*i)
-      if (length(yes) == 1) yes <- rep(yes, n)
+      if (length(yes) == 1) yes <- rep.int(yes, n)
       if (length(yes) != n || length(test) != n) stop("All entries must have the same length.")
-      if (!is.logical(test)) stop(paste("The", ordinal(2*i - 1), "entry to ifelse_ must be logical."))
-      if (!is_(yes, "atomic")) stop(paste("The", ordinal(2*i), "entry to ifelse_ must be atomic."))
+      if (!is.logical(test)) stop(sprintf("The %s entry to ifelse_ must be logical.", ordinal(2*i - 1)))
+      if (!is_(yes, "atomic")) stop(sprintf("The %s entry to ifelse_ must be atomic.", ordinal(2*i)))
       pos <- which(test)
       out[pos] <- yes[pos]
     }
@@ -1005,7 +1024,8 @@ ifelse_ <- function(...) {
   else {
     if (!is_(out, "atomic")) stop("The first entry to ifelse_ must be atomic.")
   }
-  return(out)
+
+  out
 }
 is_ <- function(x, types, stop = FALSE, arg.to = FALSE) {
   s1 <- deparse1(substitute(x))
@@ -1044,7 +1064,7 @@ if_null_then <- function(x1 = NULL, x2 = NULL, ...) {
     }
     return(..1)
   }
-  else return(x1)
+  else x1
 }
 clear_null <- function(x) {
   x[lengths(x) == 0] <- NULL

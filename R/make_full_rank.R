@@ -69,7 +69,7 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
 
   chk::chk_not_any_na(mat)
 
-  keep <- rep(TRUE, ncol(mat))
+  keep <- rep.int(TRUE, ncol(mat))
 
   #If intercept is to be included in check, add column of 1s
   if (with.intercept) {

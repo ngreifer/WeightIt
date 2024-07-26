@@ -18,7 +18,7 @@
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, the generalized propensity score is estimated using \pkgfun2{dbarts}{bart}{dbarts::bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting `use.kernel = TRUE`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+#' For continuous treatments, the generalized propensity score is estimated using \pkgfun2{dbarts}{bart}{dbarts::bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting `density = "kernel"`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -279,7 +279,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 
   w <- dens.num / dens.denom
 
-  if (isTRUE(A[["use.kernel"]]) && isTRUE(A[["plot"]])) {
+  if (isTRUE(A[["plot"]])) {
     d.n <- attr(dens.num, "density")
     d.d <- attr(dens.denom, "density")
     plot_density(d.n, d.d)

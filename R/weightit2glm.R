@@ -18,7 +18,7 @@
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, the generalized propensity score is estimated using linear regression. The conditional density can be specified as normal or another distribution. In addition, kernel density estimation can be used instead of assuming a specific density for the numerator and denominator of the generalized propensity score by setting `use.kernel = TRUE`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+#' For continuous treatments, the generalized propensity score is estimated using linear regression. The conditional density can be specified as normal or another distribution. In addition, kernel density estimation can be used instead of assuming a specific density for the numerator and denominator of the generalized propensity score by setting `density = "kernel"`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -40,7 +40,7 @@
 #'
 #' ## M-estimation
 #'
-#' For binary treatments, M-estimation is supported when `link` is neither `"flic"` nor `"flac"` (see below). For multi-category treatments, M-estimation is supported when `multi.method` is `"weightit"` (the default for non-ordered treatments) or `"glm"`. For continuous treatments, M-estimation is supported when `use.kernel` is not `TRUE`. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when `missing = "saem"`. See [glm_weightit()] and `vignette("estimating-effects")` for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
+#' For binary treatments, M-estimation is supported when `link` is neither `"flic"` nor `"flac"` (see below). For multi-category treatments, M-estimation is supported when `multi.method` is `"weightit"` (the default for non-ordered treatments) or `"glm"`. For continuous treatments, M-estimation is supported when `density` is not `"kernel"`. The conditional treatment variance and unconditional treatment mean and variance are included as parameters to estimate, as these all go into calculation of the weights. For all treatment type, M-estimation is not supported when `missing = "saem"`. See [glm_weightit()] and `vignette("estimating-effects")` for details. For longitudinal treatments, M-estimation is supported whenever the underlying methods are.
 #'
 #' @section Additional Arguments:
 #' For binary treatments, the following additional argument can be specified:
@@ -165,9 +165,10 @@
 #' bal.tab(W2)
 #'
 #' #Balancing covariates with respect to re75 (continuous)
+#' #with kernel density estimate
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
-#'                 method = "glm", use.kernel = TRUE))
+#'                 method = "glm", density = "kernel"))
 #' summary(W3)
 #' bal.tab(W3)
 NULL
@@ -204,7 +205,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   #Process link
   acceptable.links <- {
     if (missing == "saem") "logit"
-    else c(expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit")),
+    else c(expand_grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit")),
            "flic", "flac")
   }
 
@@ -276,8 +277,9 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     }, verbose = verbose)},
     warning = function(w) {
       w <- conditionMessage(w)
-      if (w != "non-integer #successes in a binomial glm!") .wrn(sprintf("(from `logistf::%s()`) ", A[["link"]]),
-                                                                 w, tidy = FALSE)
+      if (w != "non-integer #successes in a binomial glm!")
+        .wrn(sprintf("(from `logistf::%s()`) ", A[["link"]]),
+             w, tidy = FALSE)
       invokeRestart("muffleWarning")
     })
 
@@ -305,7 +307,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 
     if (family$link %in% c("log", "identity")) {
       #Need starting values because links are unbounded
-      start <- c(family$linkfun(w.m(treat, s.weights)), rep(0, ncol(covs)))
+      start <- c(family$linkfun(w.m(treat, s.weights)), rep.int(0, ncol(covs)))
     }
     else {
       #Default starting values from glm.fit() without weights; these
@@ -338,7 +340,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     }, verbose = verbose)},
     warning = function(w) {
       w <- conditionMessage(w)
-      if (w != "non-integer #successes in a binomial glm!") .wrn("(from `glm()`) ", w, tidy = FALSE)
+      if (w != "non-integer #successes in a binomial glm!")
+        .wrn("(from `glm()`) ", w, tidy = FALSE)
       invokeRestart("muffleWarning")
     })
 

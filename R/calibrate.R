@@ -57,12 +57,17 @@ calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, ...) {
   chk::chk_numeric(x)
 
   s.weights <- process.s.weights(s.weights, data)
-  if (is_null(s.weights)) s.weights <- rep(1, length(x))
+  if (is_null(s.weights)) s.weights <- rep.int(1, length(x))
 
   p <- glm.fit(cbind(1, x), treat, weights = s.weights,
                family = quasibinomial())$fitted.values
 
-  nm <- if (!is_null(names(x))) names(x) else if (!is_null(data)) rownames(data) else names(treat)
+  nm <- {
+    if (!is_null(names(x))) names(x)
+    else if (!is_null(data)) rownames(data)
+    else names(treat)
+  }
+
   setNames(p, nm)
 }
 

@@ -73,7 +73,7 @@ summary.glm_weightit <- function(object,
     covmat <- suppressWarnings(vcov(object, complete = TRUE))
     if (is_null(covmat)) {
       ci <- FALSE
-      s.err <- rep(NA_real_, length(coef.p))
+      s.err <- rep.int(NA_real_, length(coef.p))
       pvalue <- tvalue <- s.err
     }
     else {
@@ -148,7 +148,7 @@ summary.multinom_weightit <- function(object, ci = FALSE, level = .95, transform
     covmat <- suppressWarnings(vcov(object, complete = TRUE))
     if (is_null(covmat)) {
       ci <- FALSE
-      s.err <- rep(NA_real_, length(coef.p))
+      s.err <- rep.int(NA_real_, length(coef.p))
       pvalue <- tvalue <- s.err
     }
     else {
@@ -233,7 +233,7 @@ summary.coxph_weightit <- function(object, ci = FALSE, level = .95, transform = 
     covmat <- suppressWarnings(vcov(object, complete = TRUE))
     if (is_null(covmat)) {
       ci <- FALSE
-      s.err <- rep(NA_real_, length(coef.p))
+      s.err <- rep.int(NA_real_, length(coef.p))
       pvalue <- tvalue <- s.err
     }
     else {
