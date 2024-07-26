@@ -132,7 +132,7 @@ lm_weightit(
 \item{link}{for \code{plor_weightit()} and \code{multinom_weightit()}, a string corresponding to the desired link function. For \code{ordinal_weightit()}, any allowed by \code{\link[=binomial]{binomial()}} are accepted; for \code{multinom_weightit()}, only \code{"logit"} is allowed. Default is \code{"logit"} for ordinal or multinomial logistic regression, respectively.}
 }
 \value{
-For \code{lm_weightit()} and \code{glm_weightit()}, a \code{glm_weightit} object, which inherits from \code{glm}. For \code{ordinal_weightit()} and \code{multinom_weightit()}, a \code{ordinal_weightit} or \code{multinom_weightit}, respectively. For \code{coxph_weightit()}, a \code{coxph_weightit} object, which inherits from \code{coxph}. See \code{\link[survival:coxph]{survival::coxph()}} for details.
+For \code{lm_weightit()} and \code{glm_weightit()}, a \code{glm_weightit} object, which inherits from \code{glm}. For \code{ordinal_weightit()} and \code{multinom_weightit()}, an \code{ordinal_weightit} or \code{multinom_weightit}, respectively. For \code{coxph_weightit()}, a \code{coxph_weightit} object, which inherits from \code{coxph}. See \code{\link[survival:coxph]{survival::coxph()}} for details.
 
 Unless \code{vcov = "none"}, the \code{vcov} component contains the covariance matrix adjusted for the estimation of the weights if requested and a compatible \code{weightit} object was supplied. The \code{vcov_type} component contains the type of variance matrix requested. If \code{cluster} is supplied, it will be stored in the \code{"cluster"} attribute of the output object, even if not used.
 
@@ -176,6 +176,8 @@ fit2 <- lm_weightit(re78 ~ treat, data = lalonde,
                     weightit = w.out, vcov = "HC0")
 
 summary(fit2)
+\dontshow{if (requireNamespace("fwb", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+# example code
 
 # Linear regression outcome model that bootstraps
 # estimation of weights and outcome model fitting
@@ -189,24 +191,24 @@ fit3 <- lm_weightit(re78 ~ treat, data = lalonde,
                     fwb.args = list(wtype = "mammen"))
 
 summary(fit3)
-
+\dontshow{\}) # examplesIf}
 # Multinomial logistic regression outcome model
 # that adjusts for estimation of weights
 lalonde$re78_3 <- factor(findInterval(lalonde$re78,
                                       c(0, 5e3, 1e4)))
 
 fit4 <- multinom_weightit(re78_3 ~ treat,
-                        data = lalonde,
-                        weightit = w.out)
+                          data = lalonde,
+                          weightit = w.out)
 
 summary(fit4)
 
 # Ordinal probit regression that adjusts for estimation
 # of weights
 fit5 <- ordinal_weightit(ordered(re78_3) ~ treat,
-                      data = lalonde,
-                      link = "probit",
-                      weightit = w.out)
+                         data = lalonde,
+                         link = "probit",
+                         weightit = w.out)
 
 summary(fit5)
 }

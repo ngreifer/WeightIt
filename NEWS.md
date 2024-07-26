@@ -7,7 +7,7 @@ WeightIt News and Updates
 
 * M-estimation can now be used for weighting with ordinal regression for weights with multi-category ordered treatments with `method = "glm"`.
 
-* M-estimation can now be used for weighting with bias-reduced regression for the propensity score (`method = "glm"` with `link = "br.{.}"`). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.
+* M-estimation can now be used with bias-reduced regression as implemented in `brglm2` for the propensity score (`method = "glm"` with `link = "br.{.}"`) and for the outcome model (`glm_weightit()` with `br = TRUE`). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.
 
 * For any weighting methods with continuous treatments that support a `density` argument to specify the numerator and denominator densities of the weights, `density` can now be specified as `"kernel"` to request kernel density estimation. Previously, this was requested by setting `use.kernel = TRUE`, which is now deprecated.
 

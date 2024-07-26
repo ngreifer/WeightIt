@@ -22,7 +22,7 @@
 #' @param \dots arguments to be used to form the default control argument if it is not supplied directly.
 #'
 #' @returns
-#' For `lm_weightit()` and `glm_weightit()`, a `glm_weightit` object, which inherits from `glm`. For `ordinal_weightit()` and `multinom_weightit()`, a `ordinal_weightit` or `multinom_weightit`, respectively. For `coxph_weightit()`, a `coxph_weightit` object, which inherits from `coxph`. See [survival::coxph()] for details.
+#' For `lm_weightit()` and `glm_weightit()`, a `glm_weightit` object, which inherits from `glm`. For `ordinal_weightit()` and `multinom_weightit()`, an `ordinal_weightit` or `multinom_weightit`, respectively. For `coxph_weightit()`, a `coxph_weightit` object, which inherits from `coxph`. See [survival::coxph()] for details.
 #'
 #' Unless `vcov = "none"`, the `vcov` component contains the covariance matrix adjusted for the estimation of the weights if requested and a compatible `weightit` object was supplied. The `vcov_type` component contains the type of variance matrix requested. If `cluster` is supplied, it will be stored in the `"cluster"` attribute of the output object, even if not used.
 #'
@@ -66,6 +66,8 @@
 #'                     weightit = w.out, vcov = "HC0")
 #'
 #' summary(fit2)
+#' @examplesIf requireNamespace("fwb", quietly = TRUE)
+#' # example code
 #'
 #' # Linear regression outcome model that bootstraps
 #' # estimation of weights and outcome model fitting
@@ -79,24 +81,24 @@
 #'                     fwb.args = list(wtype = "mammen"))
 #'
 #' summary(fit3)
-#'
+#' @examples
 #' # Multinomial logistic regression outcome model
 #' # that adjusts for estimation of weights
 #' lalonde$re78_3 <- factor(findInterval(lalonde$re78,
 #'                                       c(0, 5e3, 1e4)))
 #'
 #' fit4 <- multinom_weightit(re78_3 ~ treat,
-#'                         data = lalonde,
-#'                         weightit = w.out)
+#'                           data = lalonde,
+#'                           weightit = w.out)
 #'
 #' summary(fit4)
 #'
 #' # Ordinal probit regression that adjusts for estimation
 #' # of weights
 #' fit5 <- ordinal_weightit(ordered(re78_3) ~ treat,
-#'                       data = lalonde,
-#'                       link = "probit",
-#'                       weightit = w.out)
+#'                          data = lalonde,
+#'                          link = "probit",
+#'                          weightit = w.out)
 #'
 #' summary(fit5)
 
