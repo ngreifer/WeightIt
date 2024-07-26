@@ -169,7 +169,8 @@ Then, we compute the average expected potential outcomes under each treatment re
 ```{r, eval = me_ok}
 library("marginaleffects")
 (p <- avg_predictions(fit,
-                      variables = c("A_1", "A_2", "A_3")))
+                      variables = c("A_1", "A_2", "A_3"),
+                      type = "response"))
 ```
 
 We can compare the expected potential outcomes under each regime using `marginaleffects::hypotheses()`. To get all pairwise comparisons, supply the `avg_predictions()` output to `hypotheses(., "pairwise")`. To compare individual regimes, we can use `hypotheses()`, identifying the rows of the `avg_predictions()` output. For example, to compare the regimes with no treatment for all three time points vs. the regime with treatment for all three time points, we would run
