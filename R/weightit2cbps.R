@@ -164,7 +164,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
 
   covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
+                                  focal = focal, treat = treat))
 
   t.lev <- get_treated_level(treat)
   treat <- binarize(treat, one = t.lev)
@@ -175,22 +175,23 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   mod_covs <- svd(cbind(`(Intercept)` = 1, scale(covs)))$u
   bal_covs <- svd(cbind(`(Intercept)` = 1, scale(covs)))$u
 
-  over <- if (is_null(A$over)) FALSE else A$over
-  chk::chk_logical(over)
+  over <- if_null_then(A$over, FALSE)
+  chk::chk_flag(over)
 
-  twostep <- if (is_null(A$twostep)) TRUE else A$twostep
-  if (over) chk::chk_logical(twostep)
+  if (over) {
+    twostep <- if_null_then(A$twostep, TRUE)
+    chk::chk_flag(twostep)
+  }
 
-  reltol <- if (is_null(A$reltol)) sqrt(.Machine$double.eps) else A$reltol
+  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if (is_null(A$maxit)) 1e3 else A$maxit
+  maxit <- if_null_then(A$maxit, 1e3)
   chk::chk_count(maxit)
 
   N <- sum(s.weights)
 
-  if (is_null(A$link)) A$link <- "logit"
-  link <- A$link
+  link <- if_null_then(A$link, "logit")
   chk::chk_string(link)
   chk::chk_subset(link, c("logit", "probit", "cauchit", "cloglog", "log", "identity"))
 
@@ -199,196 +200,113 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
                  "identity" = gaussian("identity"),
                  quasibinomial(link))
 
-  #Generalized linear model score
-  psi_glm <- function(B, Xm, A, SW) {
-    lin_pred <- drop(Xm %*% B)
-    p <- .fam$linkinv(lin_pred)
-    (SW * (A - p) * .fam$mu.eta(lin_pred) / .fam$variance(p)) * Xm
+  # Initialize coefs using logistic regression
+  par_glm <- glm.fit(mod_covs, treat, family = .fam, weights = s.weights)$coefficients
+
+  # Balance condition for ATT
+  psi_bal <- switch(estimand,
+                    "ATE" = function(B, Xm, Xb = Xm, A, SW) {
+                      p <- .fam$linkinv(drop(Xm %*% B))
+                      SW * (A / p - (1 - A)/(1 - p)) * Xb
+                    },
+                    "ATT" = function(B, Xm, Xb = Xm, A, SW) {
+                      p <- .fam$linkinv(drop(Xm %*% B))
+                      SW * ((A - p) / (1 - p)) * Xb
+                    },
+                    "ATC" = function(B, Xm, Xb = Xm, A, SW) {
+                      p <- .fam$linkinv(drop(Xm %*% B))
+                      SW * ((A - p) / p) * Xb
+                    })
+
+  obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
+    gbar <- colMeans(psi_bal(B, Xm, Xb, A, SW))
+    sqrt(sum(gbar^2))
   }
 
-  if (estimand == "ATE") {
-    # Balance condition for ATE
-    psi_bal <- function(B, Xm, Xb = Xm, A, SW) {
-      p <- .fam$linkinv(drop(Xm %*% B))
-      SW * (A/p - (1-A)/(1-p)) * Xb
+  # Slightly improve glm coefs to move closer to optimal
+  alpha.func <- function(alpha) obj_bal(par_glm * alpha, mod_covs, bal_covs, treat, s.weights)
+  par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
+
+  # Optimize balance objective
+  out <- optim(par = par_alpha,
+               fn = obj_bal,
+               method = "BFGS",
+               control = list(maxit = maxit,
+                              reltol = reltol),
+               Xm = mod_covs,
+               Xb = bal_covs,
+               A = treat,
+               SW = s.weights)
+
+  par <- out$par
+
+  if (over) {
+    #Generalized linear model score
+    psi_glm <- function(B, Xm, A, SW) {
+      lin_pred <- drop(Xm %*% B)
+      p <- .fam$linkinv(lin_pred)
+      (SW * (A - p) * .fam$mu.eta(lin_pred) / .fam$variance(p)) * Xm
     }
 
-    obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
-      gbar <- colMeans(psi_bal(B, Xm, Xb, A, SW))
-      sqrt(sum(gbar^2))
+    # Combine LR and balance
+    psi <- function(B, Xm, Xb = Xm, A, SW) {
+      cbind(psi_glm(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
     }
 
-    # Initialize coefs using logistic regression
-    par_glm <- glm.fit(mod_covs, treat, family = .fam, weights = s.weights)$coefficients
+    Sigma <- function(B, Xm, Xb = Xm, A, SW) {
+      lp <- drop(Xm %*% B)
+      p <- .fam$linkinv(lp)
+      sw.5 <- sqrt(SW)
+      g <- .fam$mu.eta(lp) / .fam$variance(p)
 
-    # Slightly improve glm coefs to move closer to optimal
-    alpha.func <- function(alpha) obj_bal(par_glm * alpha, mod_covs, bal_covs, treat, s.weights)
-    par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
+      S11 <- crossprod(sw.5 * g * sqrt(p * (1 - p)) * Xm)
+      S12 <- switch(estimand,
+                    "ATE" = crossprod(sw.5 * g * Xm, sw.5 * Xb),
+                    "ATT" = crossprod(sw.5 * g * Xm, sw.5 * p * Xb),
+                    "ATC" = crossprod(sw.5 * g * Xm, sw.5 * (1 - p) * Xb))
+      S21 <- t(S12)
+      S22 <- switch(estimand,
+                    "ATE" = crossprod(sw.5 / sqrt(p * (1 - p)) * Xb),
+                    "ATT" = crossprod(sw.5 * sqrt(p / (1 - p)) * Xb),
+                    "ATC" = crossprod(sw.5 * sqrt((1 - p) / p) * Xb))
 
-    # Optimize balance objective
-    out <- optim(par = par_alpha,
-                 fn = obj_bal,
-                 method = "BFGS",
-                 control = list(maxit = maxit,
-                                reltol = reltol),
-                 Xm = mod_covs,
-                 Xb = bal_covs,
-                 A = treat,
-                 SW = s.weights)
+      rbind(cbind(S11, S12),
+            cbind(S21, S22)) / N
+    }
+
+    obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
+      if (is.null(invS)) {
+        invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
+      }
+
+      gbar <- colMeans(psi(B, Xm, Xb, A, SW))
+      sqrt(drop(t(gbar) %*% invS %*% gbar))
+    }
+
+    invS <- {
+      if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs, treat, s.weights))
+      else NULL
+    }
+
+    out <- lapply(list(par_alpha, par), function(par_) {
+      optim(par = par_,
+            fn = obj,
+            method = "BFGS",
+            control = list(maxit = maxit,
+                           reltol = reltol),
+            Xm = mod_covs,
+            Xb = bal_covs,
+            A = treat,
+            SW = s.weights,
+            invS = invS)
+    })
+
+    out <- out[[which.min(unlist(grab(out, "value")))]]
 
     par <- out$par
-
-    if (over) {
-      # Combine LR and balance
-      psi <- function(B, Xm, Xb = Xm, A, SW) {
-        cbind(psi_glm(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
-      }
-
-      Sigma <- function(B, Xm, Xb = Xm, A, SW) {
-        lp <- drop(Xm %*% B)
-        p <- .fam$linkinv(lp)
-        sw.5 <- sqrt(SW)
-        g <- .fam$mu.eta(lp) / .fam$variance(p)
-
-        S11 <- crossprod(sw.5 * g * sqrt(p * (1 - p)) * Xm)
-        S12 <- crossprod(sw.5 * g * Xm, sw.5 * Xb)
-        S21 <- t(S12)
-        S22 <- crossprod(sw.5 / sqrt(p * (1 - p)) * Xb)
-
-        rbind(cbind(S11, S12),
-              cbind(S21, S22)) / N
-      }
-
-      obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
-        if (is.null(invS)) {
-          invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
-        }
-
-        gbar <- colMeans(psi(B, Xm, Xb, A, SW))
-        sqrt(drop(t(gbar) %*% invS %*% gbar))
-      }
-
-      invS <- {
-        if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs, treat, s.weights))
-        else NULL
-      }
-
-      out <- lapply(list(par_alpha, par), function(par_) {
-        optim(par = par_,
-              fn = obj,
-              method = "BFGS",
-              control = list(maxit = maxit,
-                             reltol = reltol),
-              Xm = mod_covs,
-              Xb = bal_covs,
-              A = treat,
-              SW = s.weights,
-              invS = invS)
-      })
-
-      out <- out[[which.min(unlist(grab(out, "value")))]]
-
-      par <- out$par
-    }
-
-    p.score <- .fam$linkinv(drop(mod_covs %*% par))
   }
-  else {
-    # Balance condition for ATT
-    psi_bal <- switch(estimand,
-                      "ATT" = function(B, Xm, Xb = Xm, A, SW) {
-                        p <- .fam$linkinv(drop(Xm %*% B))
-                        SW * ((A - p) / (1 - p)) * Xb
-                      },
-                      "ATC" = function(B, Xm, Xb = Xm, A, SW) {
-                        p <- .fam$linkinv(drop(Xm %*% B))
-                        SW * ((A - p) / p) * Xb
-                      })
 
-    obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
-      gbar <- colMeans(psi_bal(B, Xm, Xb, A, SW))
-      sqrt(sum(gbar^2))
-    }
-
-    # Initialize coefs using logistic regression
-    par_glm <- glm.fit(mod_covs, treat, family = .fam, weights = s.weights)$coefficients
-
-    # Slightly improve glm coefs to move closer to optimal
-    alpha.func <- function(alpha) obj_bal(par_glm * alpha, mod_covs, bal_covs, treat, s.weights)
-    par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
-
-    # Optimize balance objective
-    out <- optim(par = par_alpha,
-                 fn = obj_bal,
-                 method = "BFGS",
-                 control = list(maxit = maxit,
-                                reltol = reltol),
-                 Xm = mod_covs,
-                 Xb = bal_covs,
-                 A = treat,
-                 SW = s.weights)
-
-    par <- out$par
-
-    if (over) {
-      # Combine LR and balance
-      psi <- function(B, Xm, Xb = Xm, A, SW) {
-        cbind(psi_glm(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
-      }
-
-      Sigma <- function(B, Xm, Xb = Xm, A, SW) {
-        lp <- drop(Xm %*% B)
-        p <- .fam$linkinv(lp)
-        sw.5 <- sqrt(SW)
-        g <- .fam$mu.eta(lp) / .fam$variance(p)
-
-        S11 <- crossprod(sw.5 * g * sqrt(p * (1 - p)) * Xm)
-        S12 <- switch(estimand,
-                      "ATT" = crossprod(sw.5 * g * Xm, sw.5 * p * Xb),
-                      "ATC" = crossprod(sw.5 * g * Xm, sw.5 * (1 - p) * Xb))
-        S21 <- t(S12)
-        S22 <- switch(estimand,
-                      "ATT" = crossprod(sw.5 * sqrt(p / (1 - p)) * Xb),
-                      "ATC" = crossprod(sw.5 * sqrt((1 - p) / p) * Xb))
-
-        rbind(cbind(S11, S12),
-              cbind(S21, S22)) / N
-      }
-
-      obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
-        if (is.null(invS)) {
-          invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
-        }
-
-        gbar <- colMeans(psi(B, Xm, Xb, A, SW))
-        sqrt(drop(t(gbar) %*% invS %*% gbar))
-      }
-
-      invS <- {
-        if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs, treat, s.weights))
-        else NULL
-      }
-
-      out <- lapply(list(par_alpha, par), function(par_) {
-        optim(par = par_,
-              fn = obj,
-              method = "BFGS",
-              control = list(maxit = maxit,
-                             reltol = reltol),
-              Xm = mod_covs,
-              Xb = bal_covs,
-              A = treat,
-              SW = s.weights,
-              invS = invS)
-      })
-
-      out <- out[[which.min(unlist(grab(out, "value")))]]
-
-      par <- out$par
-    }
-
-    p.score <- .fam$linkinv(drop(mod_covs %*% par))
-  }
+  p.score <- .fam$linkinv(drop(mod_covs %*% par))
 
   if (out$converge != 0) {
     .wrn("the optimziation failed to converge; try again with a higher value of `maxit`")
@@ -435,7 +353,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
 
   covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
+                                  focal = focal, treat = treat))
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -443,25 +361,25 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   mod_covs <- svd(cbind(`(Intercept)` = 1, scale(covs)))$u
   bal_covs <- svd(cbind(`(Intercept)` = 1, scale(covs)))$u
 
-  over <- if (is_null(A$over)) FALSE else A$over
-  chk::chk_logical(over)
+  over <- if_null_then(A$over, FALSE)
+  chk::chk_flag(over)
 
-  twostep <- if (is_null(A$twostep)) TRUE else A$twostep
-  if (over) chk::chk_logical(twostep)
+  if (over) {
+    twostep <- if_null_then(A$twostep, TRUE)
+    chk::chk_flag(twostep)
+  }
 
-  reltol <- if (is_null(A$reltol)) sqrt(.Machine$double.eps) else A$reltol
+  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if (is_null(A$maxit)) 1e3 else A$maxit
+  maxit <- if_null_then(A$maxit, 1e3)
   chk::chk_count(maxit)
 
   N <- sum(s.weights)
 
   treat_num <- as.integer(treat)
 
-  K <- nlevels(treat)
-  kk <- seq_len(K)
-
+  #Function to compute predicted probabilities
   get_pp <- function(B, Xm) {
     qq <- exp(Xm %*% matrix(B, nrow = ncol(Xm)))
 
@@ -471,280 +389,162 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
     pp
   }
 
-  #Multinomial logistic regression score
-  psi_mlr <- function(B, Xm, A, SW) {
-    pp <- get_pp(B, Xm)
+  # Initialize coefs using multinomial logistic regression
+  par_glm <- .multinom_weightit.fit(mod_covs, treat, weights = s.weights,
+                                    hess = FALSE)$coefficients
 
-    do.call("cbind", lapply(levels(treat), function(i) {
-      SW * ((A == i) - pp[,i]) * Xm
-    }))
+  # Balance measured between all combinations of treatment groups
+  combs <- utils::combn(levels(treat), 2, simplify = FALSE)
+
+  psi_bal <- switch(estimand,
+                    "ATE" = function(B, Xm, Xb = Xm, A, SW) {
+                      pp <- get_pp(B, Xm)
+
+                      do.call("cbind", lapply(combs, function(co) {
+                        SW * ((A == co[1]) / pp[,co[1]] - (A == co[2]) / pp[,co[2]]) * Xb
+                      }))
+                    },
+                    function(B, Xm, Xb = Xm, A, SW) {
+                      pp <- get_pp(B, Xm)
+
+                      do.call("cbind", lapply(combs, function(co) {
+                        SW * pp[,focal] * ((A == co[1]) / pp[,co[1]] - (A == co[2]) / pp[,co[2]]) * Xb
+                      }))
+                    })
+
+  obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
+    gbar <- colMeans(psi_bal(B, Xm, Xb, A, SW))
+    sqrt(sum(gbar^2))
   }
 
-  if (estimand == "ATE") {
-    combs <- utils::combn(levels(treat), 2, simplify = FALSE)
-    # combs <- lapply(kk, function(i) c(i, i - 1))
+  # Slightly improve glm coefs to move closer to optimal
+  alpha.func <- function(alpha) obj_bal(par_glm * alpha, Xm = mod_covs, Xb = bal_covs,
+                                        A = treat, SW = s.weights)
+  par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
 
-    # Balance condition for ATE
-    psi_bal <- function(B, Xm, Xb = Xm, A, SW) {
+  # Optimize balance objective
+  out <- optim(par = par_alpha,
+               fn = obj_bal,
+               method = "BFGS",
+               control = list(maxit = maxit,
+                              reltol = reltol),
+               Xm = mod_covs,
+               Xb = bal_covs,
+               A = treat,
+               SW = s.weights)
+
+  par <- out$par
+
+  if (over) {
+    #Multinomial logistic regression score
+    psi_mlr <- function(B, Xm, A, SW) {
       pp <- get_pp(B, Xm)
 
-      do.call("cbind", lapply(combs, function(co) {
-        SW * ((A == co[1]) / pp[,co[1]] - (A == co[2]) / pp[,co[2]]) * Xb
+      do.call("cbind", lapply(levels(treat), function(i) {
+        SW * ((A == i) - pp[,i]) * Xm
       }))
     }
 
-    obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
-      gbar <- colMeans(psi_bal(B, Xm, Xb, A, SW))
-      sqrt(sum(gbar^2))
+    # Combine LR and balance
+    psi <- function(B, Xm, Xb = Xm, A, SW) {
+      cbind(psi_mlr(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
     }
 
-    # Initialize coefs using logistic regression
-    par_glm <- unlist(lapply(kk[-K], function(i) {
-      glm.fit(mod_covs, treat_num == i, family = binomial(), weights = s.weights)$coefficients
-    }))
-
-    # Slightly improve glm coefs to move closer to optimal
-    alpha.func <- function(alpha) obj_bal(par_glm * alpha, Xm = mod_covs, Xb = bal_covs,
-                                          A = treat, SW = s.weights)
-    par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
-
-    # Optimize balance objective
-    out <- optim(par = par_alpha,
-                 fn = obj_bal,
-                 method = "BFGS",
-                 control = list(maxit = maxit,
-                                reltol = reltol),
-                 Xm = mod_covs,
-                 Xb = bal_covs,
-                 A = treat,
-                 SW = s.weights)
-
-    par <- out$par
-
-    if (over) {
-      # Combine LR and balance
-      psi <- function(B, Xm, Xb = Xm, A, SW) {
-        cbind(psi_mlr(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
-      }
-
-      Sigma <- function(B, Xm, Xb = Xm, A, SW) {
-        pp <- get_pp(B, Xm)
-        sw.5 <- sqrt(SW)
-        swXmXb <- crossprod(sw.5 * Xm, sw.5 * Xb)
-
-        S <- list()
-
-        for (i in levels(treat)) {
-          for (j in levels(treat)) {
-            S[[sprintf("m%s_m%s", i, j)]] <- {
-              if      (i == j) crossprod(sw.5 * sqrt(pp[,i] * (1 - pp[,i])) *  Xm)
-              else if (i < j) -crossprod(sw.5 * sqrt(pp[,i] * pp[,j]) * Xm)
-              else t(S[[sprintf("m%s_m%s", j, i)]])
-            }
-          }
-        }
-
-        for (i in levels(treat)) {
-          for (jj in combs) {
-            m <- {
-              if      (i == jj[1])  swXmXb
-              else if (i == jj[2]) -swXmXb
-              else matrix(0, ncol(Xm), ncol(Xb))
-            }
-            S[[sprintf("m%s_b%s%s", i, jj[1], jj[2])]] <- m
-            S[[sprintf("b%s%s_m%s", jj[1], jj[2], i)]] <- t(m)
-          }
-        }
-
-        for (ii in combs) {
-          for (jj in combs) {
-            m <- {
-              if (identical(ii, jj))    crossprod(sw.5 * sqrt(1 / pp[,ii[1]] + 1 / pp[,ii[2]]) * Xb)
-              else if (ii[1] == jj[1])  crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * Xb)
-              else if (ii[1] == jj[2]) -crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * Xb)
-              else if (ii[2] == jj[1]) -crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * Xb)
-              else if (ii[2] == jj[2])  crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * Xb)
-              else matrix(0, ncol(Xb), ncol(Xb))
-            }
-            S[[sprintf("b%s%s_b%s%s", ii[1], ii[2], jj[1], jj[2])]] <- m
-            S[[sprintf("b%s%s_b%s%s", jj[1], jj[2], ii[1], ii[2])]] <- m
-          }
-        }
-
-        nms <- c(sprintf("m%s", levels(treat)), sprintf("b%s", vapply(combs, paste0, character(1L), collapse = "")))
-
-        do.call("rbind", lapply(nms, function(i) {
-          do.call("cbind", lapply(nms, function(j) {
-            S[[sprintf("%s_%s", i, j)]]
-          }))
-        })) / N
-      }
-
-      obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
-        if (is.null(invS)) {
-          invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
-        }
-
-        gbar <- colMeans(psi(B, Xm, Xb, A, SW))
-
-        sqrt(drop(t(gbar) %*% invS %*% gbar))
-      }
-
-      invS <- {
-        if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs, treat_num, s.weights))
-        else NULL
-      }
-
-      out <- lapply(list(par_alpha, par), function(par_) {
-        optim(par = par_,
-              fn = obj,
-              method = "BFGS",
-              control = list(maxit = maxit,
-                             reltol = reltol),
-              Xm = mod_covs,
-              Xb = bal_covs,
-              A = treat,
-              SW = s.weights,
-              invS = invS)
-      })
-
-      out <- out[[which.min(unlist(grab(out, "value")))]]
-
-      par <- out$par
-    }
-  }
-  else {
-    # combs <- lapply(setdiff(levels(treat), focal), function(i) c(focal, i))
-    combs <- utils::combn(levels(treat), 2, simplify = FALSE)
-
-    # Balance condition for ATT
-    psi_bal <- function(B, Xm, Xb = Xm, A, SW) {
+    Sigma <- function(B, Xm, Xb = Xm, A, SW) {
       pp <- get_pp(B, Xm)
+      sw.5 <- sqrt(SW)
+      swXmXb <- switch(estimand,
+                       "ATE" = crossprod(sw.5 * Xm, sw.5 * Xb),
+                       crossprod(sw.5 * Xm, sw.5 * pp[,focal] * Xb))
 
-      do.call("cbind", lapply(combs, function(co) {
-        SW * pp[,focal] * ((A == co[1]) / pp[,co[1]] - (A == co[2]) / pp[,co[2]]) * Xb
-      }))
+      S <- list()
+
+      for (i in levels(treat)) {
+        for (j in levels(treat)) {
+          S[[sprintf("m%s_m%s", i, j)]] <- {
+            if      (i == j) crossprod(sw.5 * sqrt(pp[,i] * (1 - pp[,i])) *  Xm)
+            else if (i < j) -crossprod(sw.5 * sqrt(pp[,i] * pp[,j]) * Xm)
+            else t(S[[sprintf("m%s_m%s", j, i)]])
+          }
+        }
+      }
+
+      for (i in levels(treat)) {
+        for (jj in combs) {
+          m <- {
+            if      (i == jj[1])  swXmXb
+            else if (i == jj[2]) -swXmXb
+            else matrix(0, ncol(Xm), ncol(Xb))
+          }
+          S[[sprintf("m%s_b%s%s", i, jj[1], jj[2])]] <- m
+          S[[sprintf("b%s%s_m%s", jj[1], jj[2], i)]] <- t(m)
+        }
+      }
+
+      for (ii in combs) {
+        for (jj in combs) {
+          m <- switch(estimand,
+                      "ATE" = {
+                        if (identical(ii, jj))    crossprod(sw.5 * sqrt(1 / pp[,ii[1]] + 1 / pp[,ii[2]]) * Xb)
+                        else if (ii[1] == jj[1])  crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * Xb)
+                        else if (ii[1] == jj[2]) -crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * Xb)
+                        else if (ii[2] == jj[1]) -crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * Xb)
+                        else if (ii[2] == jj[2])  crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * Xb)
+                        else matrix(0, ncol(Xb), ncol(Xb))
+                      },
+                      {
+                        if (identical(ii, jj)) crossprod(sw.5 * sqrt(1 / pp[,ii[1]] + 1 / pp[,ii[2]]) * pp[,focal] * Xb)
+                        else if (ii[1] == jj[1])  crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * pp[,focal] * Xb)
+                        else if (ii[1] == jj[2]) -crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * pp[,focal] * Xb)
+                        else if (ii[2] == jj[1]) -crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * pp[,focal] * Xb)
+                        else if (ii[2] == jj[2])  crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * pp[,focal] * Xb)
+                        else matrix(0, ncol(Xb), ncol(Xb))
+                      })
+          S[[sprintf("b%s%s_b%s%s", ii[1], ii[2], jj[1], jj[2])]] <- m
+          S[[sprintf("b%s%s_b%s%s", jj[1], jj[2], ii[1], ii[2])]] <- m
+        }
+      }
+
+      nms <- c(sprintf("m%s", levels(treat)), sprintf("b%s", vapply(combs, paste0, character(1L), collapse = "")))
+
+      do.call("rbind", lapply(nms, function(i) {
+        do.call("cbind", lapply(nms, function(j) {
+          S[[sprintf("%s_%s", i, j)]]
+        }))
+      })) / N
     }
 
-    obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
-      gbar <- colMeans(psi_bal(B, Xm, Xb, A, SW))
-      sqrt(sum(gbar^2)) #use sqrt to improve convergence
+    obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
+      if (is.null(invS)) {
+        invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
+      }
+
+      gbar <- colMeans(psi(B, Xm, Xb, A, SW))
+
+      sqrt(drop(t(gbar) %*% invS %*% gbar)) #use sqrt to improve convergence
     }
 
-    # Initialize coefs using logistic regression
-    par_glm <- unlist(lapply(kk[-K], function(i) {
-      glm.fit(mod_covs, treat_num == i, family = binomial(), weights = s.weights)$coefficients
-    }))
+    invS <- {
+      if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs, treat_num, s.weights))
+      else NULL
+    }
 
-    # Slightly improve glm coefs to move closer to optimal
-    alpha.func <- function(alpha) obj_bal(par_glm * alpha, Xm = mod_covs, Xb = bal_covs,
-                                          A = treat, SW = s.weights)
-    par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
+    out <- lapply(list(par_alpha, par), function(par_) {
+      optim(par = par_,
+            fn = obj,
+            method = "BFGS",
+            control = list(maxit = maxit,
+                           reltol = reltol),
+            Xm = mod_covs,
+            Xb = bal_covs,
+            A = treat,
+            SW = s.weights,
+            invS = invS)
+    })
 
-    # Optimize balance objective
-    out <- optim(par = par_alpha,
-                 fn = obj_bal,
-                 method = "BFGS",
-                 control = list(maxit = maxit,
-                                reltol = reltol),
-                 Xm = mod_covs,
-                 Xb = bal_covs,
-                 A = treat,
-                 SW = s.weights)
+    out <- out[[which.min(unlist(grab(out, "value")))]]
 
     par <- out$par
-
-    if (over) {
-      # Combine LR and balance
-      psi <- function(B, Xm, Xb = Xm, A, SW) {
-        cbind(psi_mlr(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
-      }
-
-      Sigma <- function(B, Xm, Xb = Xm, A, SW) {
-        pp <- get_pp(B, Xm)
-        sw.5 <- sqrt(SW)
-        swXmXb <- crossprod(sw.5 * Xm, sw.5 * pp[,focal] * Xb)
-
-        S <- list()
-
-        for (i in levels(treat)) {
-          for (j in levels(treat)) {
-            S[[sprintf("m%s_m%s", i, j)]] <- {
-              if      (i == j) crossprod(sw.5 * sqrt(pp[,i] * (1 - pp[,i])) *  Xm)
-              else if (i < j) -crossprod(sw.5 * sqrt(pp[,i] * pp[,j]) * Xm)
-              else t(S[[sprintf("m%s_m%s", j, i)]])
-            }
-          }
-        }
-
-        for (i in levels(treat)) {
-          for (jj in combs) {
-            m <- {
-              if      (i == jj[1])  swXmXb
-              else if (i == jj[2]) -swXmXb
-              else matrix(0, ncol(Xm), ncol(Xb))
-            }
-            S[[sprintf("m%s_b%s%s", i, jj[1], jj[2])]] <- m
-            S[[sprintf("b%s%s_m%s", jj[1], jj[2], i)]] <- t(m)
-          }
-        }
-
-        for (ii in combs) {
-          for (jj in combs) {
-            m <- {
-              if (identical(ii, jj)) crossprod(sw.5 * sqrt(1 / pp[,ii[1]] + 1 / pp[,ii[2]]) * pp[,focal] * Xb)
-              else if (ii[1] == jj[1])  crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * pp[,focal] * Xb)
-              else if (ii[1] == jj[2]) -crossprod(sw.5 * sqrt(1 / pp[,ii[1]]) * pp[,focal] * Xb)
-              else if (ii[2] == jj[1]) -crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * pp[,focal] * Xb)
-              else if (ii[2] == jj[2])  crossprod(sw.5 * sqrt(1 / pp[,ii[2]]) * pp[,focal] * Xb)
-              else matrix(0, ncol(Xb), ncol(Xb))
-            }
-            S[[sprintf("b%s%s_b%s%s", ii[1], ii[2], jj[1], jj[2])]] <- m
-            S[[sprintf("b%s%s_b%s%s", jj[1], jj[2], ii[1], ii[2])]] <- m
-          }
-        }
-
-        nms <- c(sprintf("m%s", levels(treat)), sprintf("b%s", vapply(combs, paste0, character(1L), collapse = "")))
-
-        do.call("rbind", lapply(nms, function(i) {
-          do.call("cbind", lapply(nms, function(j) {
-            S[[sprintf("%s_%s", i, j)]]
-          }))
-        })) / N
-      }
-
-      obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
-        if (is.null(invS)) {
-          invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
-        }
-
-        gbar <- colMeans(psi(B, Xm, Xb, A, SW))
-
-        sqrt(drop(t(gbar) %*% invS %*% gbar)) #use sqrt to improve convergence
-      }
-
-      invS <- {
-        if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs, treat_num, s.weights))
-        else NULL
-      }
-
-      out <- lapply(list(par_alpha, par), function(par_) {
-        optim(par = par_,
-              fn = obj,
-              method = "BFGS",
-              control = list(maxit = maxit,
-                             reltol = reltol),
-              Xm = mod_covs,
-              Xb = bal_covs,
-              A = treat,
-              SW = s.weights,
-              invS = invS)
-      })
-
-      out <- out[[which.min(unlist(grab(out, "value")))]]
-
-      par <- out$par
-    }
   }
 
   if (out$converge != 0) {
@@ -794,7 +594,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
   covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE, orthogonal_poly = TRUE))
 
   covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 treat = treat))
+                                  treat = treat))
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -810,35 +610,24 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   bal_covs <- mod_covs
 
-  over <- if (is_null(A$over)) FALSE else A$over
-  chk::chk_logical(over)
+  over <- if_null_then(A$over, FALSE)
+  chk::chk_flag(over)
 
-  twostep <- if (is_null(A$twostep)) TRUE else A$twostep
-  if (over) chk::chk_logical(twostep)
+  if (over) {
+    twostep <- if_null_then(A$twostep, TRUE)
+    chk::chk_flag(twostep)
+  }
 
-  reltol <- if (is_null(A$reltol)) (.Machine$double.eps) else A$reltol
+  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
+  maxit <- if_null_then(A$maxit, 1e4)
   chk::chk_count(maxit)
 
   s.weights <- s.weights / mean_fast(s.weights)
 
   # dens.num <- dnorm(treat, log = TRUE)
 
-  #Linear regression score + score for marginal mean + var and conditional var
-  psi_lm <- function(B, Xm, A, SW) {
-    un_s2 <- exp(B[1])
-    un_p <- B[2]
-    s2 <- exp(B[3])
-
-    p <- drop(Xm %*% B[-(1:3)])
-
-    cbind(#SW * (A - un_p)^2 - un_s2,
-      #SW * (A - un_p),
-      #SW * (A - p)^2 - s2,
-      SW * (A - p) * Xm)
-  }
   # un_s2 <- mean((treat - mean(treat)) ^ 2)
   # un_p <- mean(treat)
 
@@ -894,6 +683,21 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
   par <- out$par
 
   if (over) {
+
+    #Linear regression score + score for marginal mean + var and conditional var
+    psi_lm <- function(B, Xm, A, SW) {
+      un_s2 <- exp(B[1])
+      un_p <- B[2]
+      s2 <- exp(B[3])
+
+      p <- drop(Xm %*% B[-(1:3)])
+
+      cbind(#SW * (A - un_p)^2 - un_s2,
+        #SW * (A - un_p),
+        #SW * (A - p)^2 - s2,
+        SW * (A - p) * Xm)
+    }
+
     # Combine LR and balance
     psi <- function(B, Xm, Xb = Xm, A, SW) {
       cbind(psi_lm(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
@@ -972,11 +776,11 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     }
 
     covs.list[[i]] <- cbind(covs.list[[i]], .int_poly_f(covs.list[[i]], poly = moments,
-                                                       int = int, center = TRUE))
+                                                        int = int, center = TRUE))
 
     covs.list[[i]] <- cbind(covs.list[[i]], .quantile_f(covs.list[[i]], qu = A[["quantile"]],
-                                                       s.weights = s.weights,
-                                                       treat = treat.list[[i]]))
+                                                        s.weights = s.weights,
+                                                        treat = treat.list[[i]]))
 
     colinear.covs.to.remove <- setdiff(colnames(covs.list[[i]]), colnames(make_full_rank(covs.list[[i]])))
     covs.list[[i]] <- covs.list[[i]][, colnames(covs.list[[i]]) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -999,25 +803,25 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
                                             scale = sqrt(col.w.v(covs.list[[i]], s.weights))))$u))
   }
 
-  over <- if (is_null(A$over)) FALSE else A$over
-  chk::chk_logical(over)
+  over <- if_null_then(A$over, FALSE)
+  chk::chk_flag(over)
 
-  twostep <- if (is_null(A$twostep)) TRUE else A$twostep
-  if (over) chk::chk_logical(twostep)
+  if (over) {
+    twostep <- if_null_then(A$twostep, TRUE)
+    chk::chk_flag(twostep)
+  }
 
-  reltol <- if (is_null(A$reltol)) sqrt(.Machine$double.eps) else A$reltol
+  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if (is_null(A$maxit)) 1e4 else A$maxit
+  maxit <- if_null_then(A$maxit, 1e4)
   chk::chk_count(maxit)
-
-  N <- sum(s.weights)
 
   coef_ind <- vector("list", length(treat.list))
   for (i in seq_along(treat.list)) {
     coef_ind[[i]] <- length(unlist(coef_ind)) + switch(
       treat.types[i],
-      "binary" = seq_len(ncol(covs.list[[i]])),
+      "binary" = seq_col(covs.list[[i]]),
       "multinomial" = seq_len((nlevels(treat.list[[i]]) - 1) * ncol(covs.list[[i]])),
       "continuous" = seq_len(3 + ncol(covs.list[[i]]))
     )
@@ -1118,10 +922,8 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     switch(treat.types[i],
            "binary" = glm.fit(covs.list[[i]], treat.list[[i]], family = binomial(),
                               weights = s.weights)$coefficients,
-           "multinomial" = unlist(lapply(seq_len(nlevels(treat.list[[i]]) - 1), function(j) {
-             glm.fit(covs.list[[i]], treat.list[[i]] == levels(treat.list[[i]])[j],
-                     family = binomial(), weights = s.weights)$coefficients
-           })),
+           "multinomial" = .multinom_weightit.fit(covs.list[[i]], treat.list[[i]], hess = FALSE,
+                                                  weights = s.weights)$coefficients,
            "continuous" = {
              init.fit <- lm.wfit(covs.list[[i]], treat.list[[i]], w = s.weights)
              b <- c(0, 0, log(var(init.fit$residuals)), init.fit$coefficients)
