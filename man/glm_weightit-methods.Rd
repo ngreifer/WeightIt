@@ -17,7 +17,7 @@
 \method{confint}{glm_weightit}(object, parm, level = 0.95, ...)
 }
 \arguments{
-\item{object, x}{an output from one of the above modelling functions.}
+\item{object, x}{an output from one of the above modeling functions.}
 
 \item{ci}{\code{logical}; whether to display Wald confidence intervals for estimated coefficients. Default is \code{FALSE}.}
 

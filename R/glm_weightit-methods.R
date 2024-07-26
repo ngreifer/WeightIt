@@ -7,7 +7,7 @@
 #' @inheritParams stats::vcov
 #' @inheritParams stats::confint
 #' @inheritParams stats::print.lm
-#' @param object,x an output from one of the above modelling functions.
+#' @param object,x an output from one of the above modeling functions.
 #' @param ci `logical`; whether to display Wald confidence intervals for estimated coefficients. Default is `FALSE`.
 #' @param level when `ci = TRUE`, the desired confidence level.
 #' @param transform the function used to transform the coefficients, e.g., `exp` (which can also be supplied as a string, e.g., `"exp"`); passed to [match.fun()] before being used on the coefficients. When `ci = TRUE`, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.
