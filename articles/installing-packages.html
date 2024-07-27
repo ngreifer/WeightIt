@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -122,10 +122,10 @@ following code:</p>
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"julierennes/misaem"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="binary-and-multicategory-treatments-with-link-br-logit">Binary and multicategory treatments with
-<code>link = "br.logit"</code><a class="anchor" aria-label="anchor" href="#binary-and-multicategory-treatments-with-link-br-logit"></a>
+<h3 id="binary-and-multi-category-treatments-with-link-br-logit">Binary and multi-category treatments with
+<code>link = "br.logit"</code><a class="anchor" aria-label="anchor" href="#binary-and-multi-category-treatments-with-link-br-logit"></a>
 </h3>
-<p>For binary and multicategory treatments, when <code>link</code> is
+<p>For binary and multi-category treatments, when <code>link</code> is
 supplied as <code>"br.logit"</code> or another link beginning with
 <code>"br."</code>, the <code>brglm2</code> package is required. To
 install <code>brglm2</code> from CRAN, run</p>
@@ -142,67 +142,41 @@ additional software installed on your computer to install it from
 source.</p>
 </div>
 <div class="section level3">
-<h3 id="multicategory-treatments-with-multi-method-mlogit">Multicategory treatments with
-<code>multi.method = "mlogit"</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-multi-method-mlogit"></a>
+<h3 id="multi-category-treatments-with-multi-method-mclogit">Multi-category treatments with
+<code>multi.method = "mclogit"</code><a class="anchor" aria-label="anchor" href="#multi-category-treatments-with-multi-method-mclogit"></a>
 </h3>
 <p>For multi-category treatments, when
-<code>multi.method = "mlogit"</code>, the <code>mlogit</code> package is
-required for multinomial logistic regression. To install
-<code>mlogit</code> from CRAN, run</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mlogit"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>mlogit</code> is not on CRAN, or if you want to install the
-development version from source, you can do so from the developer, Yves
-Croissant’s, <a href="https://r-forge.r-project.org/projects/mlogit/" class="external-link">R-Forge repo</a>
-using the following code:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mlogit"</span>, repos <span class="op">=</span> <span class="st">"http://R-Forge.R-project.org"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level3">
-<h3 id="multicategory-treatments-with-multi-method-mclogit">Multicategory treatments with
-<code>multi.method = "mclogit"</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-multi-method-mclogit"></a>
-</h3>
-<p>For multicategory treatments, when
 <code>multi.method = "mclogit"</code>, the <code>mclogit</code> package
 is required for multinomial logistic regression. To install
 <code>mclogit</code> from CRAN, run</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"mclogit"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>mclogit</code> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Martin Elff’s, <a href="https://github.com/melff/mclogit/" class="external-link">GitHub
 repo</a> using the following code:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"melff/mclogit"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="multicategory-treatments-with-multi-method-mnp">Multicategory treatments with <code>multi.method = "mnp"</code><a class="anchor" aria-label="anchor" href="#multicategory-treatments-with-multi-method-mnp"></a>
+<h3 id="multi-category-treatments-with-multi-method-mnp">Multi-category treatments with
+<code>multi.method = "mnp"</code><a class="anchor" aria-label="anchor" href="#multi-category-treatments-with-multi-method-mnp"></a>
 </h3>
-<p>For multicategory treatments, when <code>multi.method = "mnp"</code>,
-the <code>MNP</code> package is required for Bayesian multinomial probit
-regression. To install <code>MNP</code> from CRAN, run</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<p>For multi-category treatments, when
+<code>multi.method = "mnp"</code>, the <code>MNP</code> package is
+required for Bayesian multinomial probit regression. To install
+<code>MNP</code> from CRAN, run</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"MNP"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>MNP</code> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Kosuke Imai’s, <a href="https://github.com/kosukeimai/MNP" class="external-link">GitHub
 repo</a> using the following code:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"kosukeimai/MNP"</span><span class="op">)</span></span></code></pre></div>
 <p><code>MNP</code> requires compilation, which means you may need
 additional software installed on your computer to install it from
 source.</p>
-</div>
-<div class="section level3">
-<h3 id="ordinal-multicategory-treatments">Ordinal multicategory treatments<a class="anchor" aria-label="anchor" href="#ordinal-multicategory-treatments"></a>
-</h3>
-<p>For multicategory ordinal treatments (i.e., where the treatment
-variable is an ordered factor), the <code>MASS</code> package is
-required unless <code>link = "br.logit"</code> (in which case the
-<code>brglm2</code> package is needed; see above). MASS is a core
-package and can always be installed from CRAN using the code below:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"MASS"</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level2">
@@ -213,12 +187,12 @@ package and can always be installed from CRAN using the code below:</p>
 propensity score weights using GBM. It does <em>not</em> rely on the
 <code>twang</code> package at all. To install <code>gbm</code> from
 CRAN, run</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"gbm"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>gbm</code> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer’s <a href="https://github.com/gbm-developers/gbm" class="external-link">GitHub repo</a> using the
 following code:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"gbm-developers/gbm"</span><span class="op">)</span></span></code></pre></div>
 <p><code>gbm</code> requires compilation, which means you may need
 additional software installed on your computer to install it from
@@ -240,13 +214,13 @@ installed to use CBPS.</p>
 package <code>CBPS</code> to perform nonparametric covariate balancing
 propensity score weighting. To install <code>CBPS</code> from CRAN,
 run</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"CBPS"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>CBPS</code> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Kosuke Imai’s, <a href="https://github.com/kosukeimai/CBPS" class="external-link">GitHub
 repo</a> using the following code:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"kosukeimai/CBPS"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -262,7 +236,7 @@ balancing.</p>
 <p><code>WeightIt</code> uses the R package <code>rootSolve</code> to
 perform the root finding required for inverse probability tilting. To
 install <code>rootSolve</code> from CRAN, run</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"rootSolve"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -289,13 +263,13 @@ mathematically identical.</p>
 <p><code>WeightIt</code> uses the R package <code>optweight</code> to
 perform optimization-based weighting. To install <code>optweight</code>
 from CRAN, run</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"optweight"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>optweight</code> is not on CRAN, or if you want to install
 the development version from source, you can do so from the developer,
 Noah Greifer’s (my), <a href="https://github.com/ngreifer/optweight" class="external-link">GitHub repo</a> using the
 following code:</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"ngreifer/optweight"</span><span class="op">)</span></span></code></pre></div>
 <p><code>optweight</code> depends on the <code>osqp</code> package,
 which requires compilation, which means you may need additional software
@@ -308,13 +282,13 @@ installed on your computer to install it from source.</p>
 <p><code>WeightIt</code> uses the R package <code>SuperLearner</code> to
 estimate propensity score weights using SuperLearner. To install
 <code>SuperLearner</code> from CRAN, run</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"SuperLearner"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>SuperLearner</code> is not on CRAN, or if you want to
 install the development version from source, you can do so from the
 developer, Eric Polley’s, <a href="https://github.com/ecpolley/SuperLearner" class="external-link">GitHub repo</a> using
 the following code:</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"ecpolley/SuperLearner"</span><span class="op">)</span></span></code></pre></div>
 <p><code>SuperLearner</code> itself is a wrapper for many other
 packages. The whole point of using SuperLearner is to include many
@@ -329,7 +303,7 @@ read these into your R session to be used with
 <code>method = "super"</code>, use <code><a href="https://rdrr.io/r/base/source.html" class="external-link">source()</a></code> on the raw text
 file URL. For example, to read in the code for <code>SL.dbarts</code>,
 run</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"https://raw.githubusercontent.com/ecpolley/SuperLearnerExtra/master/SL/SL.dbarts.R"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -339,13 +313,13 @@ run</p>
 <p><code>WeightIt</code> uses the R package <code>dbarts</code> to
 estimate propensity score weights using BART. To install
 <code>dbarts</code> from CRAN, run</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"dbarts"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>dbarts</code> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Vincent Dorie’s, <a href="https://github.com/vdorie/dbarts" class="external-link">GitHub
 repo</a> using the following code:</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">remotes</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"vdorie/dbarts"</span><span class="op">)</span></span></code></pre></div>
 <p><code>dbarts</code> requires compilation, which means you may need
 additional software installed on your computer to install it from
@@ -357,7 +331,7 @@ source.</p>
 <p><code>WeightIt</code> uses the R package <code>osqp</code> to perform
 the optimization required for energy balancing. To install
 <code>osqp</code> from CRAN, run</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"osqp"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>osqp</code> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer’s site
