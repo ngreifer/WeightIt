@@ -1,4 +1,9 @@
 test_that("Binary treatment", {
+  skip_if_not_installed("rootSolve")
+  skip_if_not_installed("cobalt")
+  skip_if_not_installed("brglm2")
+  skip_if_not_installed("logistf")
+
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -210,6 +215,8 @@ test_that("Binary treatment", {
 })
 
 test_that("Ordinal treatment", {
+  skip_if_not_installed("rootSolve")
+
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))

@@ -1,4 +1,8 @@
 test_that("No weights", {
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("mlogit")
+  skip_if_not_installed("dfidx")
+
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -56,6 +60,9 @@ test_that("No weights", {
 })
 
 test_that("Binary treatment", {
+  skip_if_not_installed("mlogit")
+  skip_if_not_installed("dfidx")
+
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))

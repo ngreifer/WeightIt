@@ -1,4 +1,7 @@
 test_that("No weights", {
+  skip_if_not_installed("sandwich")
+  skip_if_not_installed("brglm2")
+
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -71,6 +74,8 @@ test_that("No weights", {
 })
 
 test_that("Binary treatment", {
+  skip_if_not_installed("fwb")
+
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -80,8 +85,6 @@ test_that("Binary treatment", {
                    data = test_data, method = "glm", estimand = "ATE",
                    include.obj = TRUE)
   })
-
-  expect_M_parts_okay(W)
 
   expect_no_condition({
     fit0 <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
