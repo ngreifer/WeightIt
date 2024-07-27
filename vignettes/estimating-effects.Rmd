@@ -25,7 +25,7 @@ pre code {
 }
 </style>
 ```
-```{r, include = FALSE}
+```{r, cache = FALSE, include = FALSE, eval = TRUE}
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 options(width = 200, digits= 4)
 
@@ -192,11 +192,7 @@ In addition to `WeightIt` and whatever package may be required to estimate the w
 -   `marginaleffects` provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
 -   `survival` provides `coxph()` to estimate the coefficients in a Cox-proportional hazards model for the marginal hazard ratio, which is called internally by `coxph_weightit()` for survival outcomes
 
-```{r,message=FALSE,warning=FALSE, include=FALSE, eval=!me_ok}
-library("WeightIt")
-```
-
-```{r,message=FALSE,warning=FALSE, eval=me_ok}
+```{r,message=FALSE,warning=FALSE, eval= if (me_ok) TRUE else 1L}
 library("WeightIt")
 library("marginaleffects")
 ```

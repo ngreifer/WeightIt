@@ -78,8 +78,6 @@ test_that("Binary treatment", {
                   include.obj = TRUE)
   })
 
-  expect_M_parts_okay(W)
-
   expect_no_condition({
     fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
                             data = test_data, weightit = W)

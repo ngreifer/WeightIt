@@ -15,7 +15,7 @@ bibliography: references.bib
 link-citations: true
 ---
 
-```{r setup, include=FALSE}
+```{r setup, cache = FALSE, include=FALSE, eval = TRUE}
 knitr::opts_chunk$set(eval = FALSE)
 ```
 
