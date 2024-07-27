@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# `WeightIt` 1.2.1
+
+* Fixes to vignettes and tests to satisfy CRAN checks.
+
 # `WeightIt` 1.2.0
 
 * Added two new functions, `multinom_weightit()` and `ordinal_weightit()` for multinomial logistic regression and ordinal regression with capabilities to estimate a covariance matrix that accounts for estimation of the weights using M-estimation. Previously, multinomial logistic regression could be requested using `glm_weightit()` with `family = "multinomial"`; this has been deprecated.
