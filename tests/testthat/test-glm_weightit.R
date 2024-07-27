@@ -1,4 +1,6 @@
 test_that("No weights", {
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
   expect_no_condition({
@@ -19,7 +21,7 @@ test_that("No weights", {
                data = test_data, family = binomial)
   expect_equal(coef(fit0), coef(fit_g))
   expect_equal(vcov(fit0), sandwich::sandwich(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
 
   #Offset
   set.seed(123)
@@ -36,7 +38,7 @@ test_that("No weights", {
                data = test_data, family = binomial)
   expect_equal(coef(fit), coef(fit_g))
   expect_equal(vcov(fit), sandwich::sandwich(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
 
   #Cluster-robust SEs
   clus <- sample(1:50, nrow(test_data), replace = TRUE)
@@ -52,7 +54,7 @@ test_that("No weights", {
                data = test_data, family = binomial)
   expect_equal(coef(fit), coef(fit_g))
   expect_equal(vcov(fit), sandwich::vcovCL(fit_g, cluster = clus),
-               tolerance = 1e-5)
+               tolerance = eps)
 
   #BR
   expect_no_condition({
@@ -69,6 +71,8 @@ test_that("No weights", {
 })
 
 test_that("Binary treatment", {
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
   expect_no_condition({

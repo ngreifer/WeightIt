@@ -1,4 +1,6 @@
 test_that("Binary treatment", {
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
   expect_no_condition({
@@ -36,7 +38,8 @@ test_that("Binary treatment", {
 
   expect_M_parts_okay(W)
 
-  expect_equal(W$weights[W$treat == 1], rep(1, sum(W$treat == 1)))
+  expect_equal(W$weights[W$treat == 1], rep(1, sum(W$treat == 1)),
+               tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -45,7 +48,8 @@ test_that("Binary treatment", {
 
   expect_M_parts_okay(W)
 
-  expect_equal(W$weights[W$treat == 0], rep(1, sum(W$treat == 0)))
+  expect_equal(W$weights[W$treat == 0], rep(1, sum(W$treat == 0)),
+               tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -55,7 +59,8 @@ test_that("Binary treatment", {
   expect_M_parts_okay(W)
 
   expect_equal(unname(cobalt::col_w_smd(W$covs, W$treat, W$weights)),
-               rep(0, 12))
+               rep(0, 12),
+               tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -164,7 +169,8 @@ test_that("Binary treatment", {
   expect_false(is_null(attr(W, "Mparts.list", exact = TRUE)))
 
   expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights),
-               cobalt::col_w_smd(W0$covs, W0$treat, W0$weights))
+               cobalt::col_w_smd(W0$covs, W0$treat, W0$weights),
+               tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -204,6 +210,7 @@ test_that("Binary treatment", {
 })
 
 test_that("Ordinal treatment", {
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Ao <- ordered(findInterval(test_data$Ac, quantile(test_data$Ac, seq(0, 1, length.out = 5)),

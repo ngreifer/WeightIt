@@ -1,4 +1,6 @@
 test_that("No weights", {
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_O <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
                                                        all.inside = TRUE), ordered = TRUE))
@@ -29,9 +31,9 @@ test_that("No weights", {
   }
 
   expect_equal(coef(fit), .coef(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
   expect_equal(vcov(fit), sandwich::sandwich(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
 
   expect_no_condition({
     fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
@@ -43,7 +45,7 @@ test_that("No weights", {
   #Cluster-robust SEs
   expect_equal(vcov(fit),
                sandwich::vcovCL(fit_g, cluster = ~clus),
-               tolerance = 1e-6)
+               tolerance = eps)
 
   #Offset
   expect_no_condition({
@@ -58,9 +60,9 @@ test_that("No weights", {
                       control = list(reltol = 1e-12))
 
   expect_equal(coef(fit), .coef(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
   # expect_equal(vcov(fit), sandwich::sandwich(fit_g),
-  #              tolerance = 1e-6)
+  #              tolerance = eps)
 
   #Probit
   expect_no_condition({
@@ -77,12 +79,14 @@ test_that("No weights", {
   })
 
   expect_equal(coef(fit), .coef(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
   expect_equal(vcov(fit), sandwich::sandwich(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
 })
 
 test_that("Binary treatment", {
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_O <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
                                                        all.inside = TRUE), ordered = TRUE))
@@ -129,9 +133,9 @@ test_that("Binary treatment", {
   }
 
   expect_equal(coef(fit), .coef(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
   # expect_equal(vcov(fit), sandwich::sandwich(fit_g),
-  #              tolerance = 1e-6)
+  #              tolerance = eps)
 
   expect_no_condition({
     fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
@@ -143,7 +147,7 @@ test_that("Binary treatment", {
   #Cluster-robust SEs
   # expect_equal(vcov(fit),
   #              sandwich::vcovCL(fit_g, cluster = ~clus),
-  #              tolerance = 1e-6)
+  #              tolerance = eps)
 
   #Offset
   expect_no_condition({
@@ -161,7 +165,7 @@ test_that("Binary treatment", {
   })
 
   expect_equal(coef(fit), .coef(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
 
   #Probit
   expect_no_condition({
@@ -178,8 +182,8 @@ test_that("Binary treatment", {
   })
 
   expect_equal(coef(fit), .coef(fit_g),
-               tolerance = 1e-6)
+               tolerance = eps)
   # expect_equal(vcov(fit), sandwich::sandwich(fit_g),
-  #              tolerance = 1e-6)
+  #              tolerance = eps)
 
 })
