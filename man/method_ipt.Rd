@@ -76,6 +76,7 @@ The \code{stabilize} argument is ignored.
 }
 
 \examples{
+\dontshow{if (requireNamespace("rootSolve", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
@@ -91,7 +92,7 @@ cobalt::bal.tab(W1)
                 method = "ipt", estimand = "ATE"))
 summary(W2)
 cobalt::bal.tab(W2)
-
+\dontshow{\}) # examplesIf}
 }
 \references{
 \subsection{\code{estimand = "ATE"}}{

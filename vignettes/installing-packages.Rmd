@@ -151,7 +151,11 @@ remotes::install_github("kosukeimai/CBPS")
 
 ## Inverse probability tilting (`method = "ipt"`)
 
-`WeightIt` uses code written for `WeightIt`, so no additional packages need to be installed to use inverse probability tilting.
+`WeightIt` uses the R package `rootSolve` to perform the root finding required for inverse probability tilting. To install `rootSolve` from CRAN, run
+
+```{r}
+install.packages("rootSolve")
+```
 
 ## Empirical balancing calibration weighting (`method = "ebcw"`)
 
