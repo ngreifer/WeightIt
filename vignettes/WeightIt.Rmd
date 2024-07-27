@@ -15,7 +15,7 @@ link-citations: true
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval=T)
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
 options(width = 200, digits= 4)
 
 me_ok <- requireNamespace("marginaleffects", quietly = TRUE)
@@ -86,12 +86,13 @@ Indeed, we have achieved perfect balance on the means of the covariates. However
 
 Now that we have our weights stored in `W.out`, let's extract them and estimate our treatment effect. The functions `lm_weightit()` and `glm_weightit()` make it easy to fit (generalized) linear models that account for estimation of of the weights in their standard errors. We can then use functions in `marginaleffects` to perform g-computation to extract a treatment effect estimation from the outcome model.
 
-```{r, message=FALSE, eval = me_ok}
+```{r, message=FALSE}
 # Fit outcome model
 fit <- lm_weightit(re78 ~ treat * (age + educ + race + married +
                                      nodegree + re74 + re75),
                    data = lalonde, weightit = W.out)
-
+```
+```{r, message=FALSE, eval = me_ok}
 # G-computation for the treatment effect
 library("marginaleffects")
 avg_comparisons(fit, variables = "treat",
