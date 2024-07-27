@@ -39,7 +39,7 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="weightit-120">
-<code>WeightIt</code> 1.2.0<a class="anchor" aria-label="anchor" href="#weightit-120"></a></h2>
+<code>WeightIt</code> 1.2.0<a class="anchor" aria-label="anchor" href="#weightit-120"></a></h2><p class="text-muted">CRAN release: 2024-07-26</p>
 <ul><li><p>Added two new functions, <code><a href="../reference/glm_weightit.html">multinom_weightit()</a></code> and <code><a href="../reference/glm_weightit.html">ordinal_weightit()</a></code> for multinomial logistic regression and ordinal regression with capabilities to estimate a covariance matrix that accounts for estimation of the weights using M-estimation. Previously, multinomial logistic regression could be requested using <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with <code>family = "multinomial"</code>; this has been deprecated.</p></li>
 <li><p>M-estimation can now be used for weighting with ordinal regression for weights with multi-category ordered treatments with <code>method = "glm"</code>.</p></li>
 <li><p>M-estimation can now be used with bias-reduced regression as implemented in <code>brglm2</code> for the propensity score (<code>method = "glm"</code> with <code>link = "br.{.}"</code>) and for the outcome model (<code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with <code>br = TRUE</code>). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.</p></li>
