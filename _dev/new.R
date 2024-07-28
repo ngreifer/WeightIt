@@ -61,8 +61,8 @@ weightit2enet <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   model.covs <- cbind(covs, int.poly.f(covs, int = int, poly = moments))
   model.covs <- apply(model.covs, 2, make.closer.to.1)
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (is_null(A[["stop.method"]])) {
     warning("No stop.method was provided. Using \"es.mean\".",
@@ -570,8 +570,8 @@ weightit2kernbal <- function(covs, treat, s.weights, subset, estimand, focal, mi
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))

@@ -110,7 +110,7 @@ weightit2ps <- function(formula, data, treat, s.weights, subset, estimand, focal
 
   fit.obj <- NULL
 
-  bin.treat <- get.treat.type(treat) == "binary"
+  bin.treat <- get_treat_type(treat) == "binary"
   ord.treat <- is.ordered(treat)
 
   treat.name <- deparse1(attr(terms(update(formula, . ~ 0)), "variables")[[2]])
@@ -135,7 +135,7 @@ weightit2ps <- function(formula, data, treat, s.weights, subset, estimand, focal
   if (ord.treat) acceptable.links <- c("logit", "probit", "loglog", "cloglog", "cauchit")
   else if (bin.treat || isFALSE(A$use.mlogit)) {
     if (missing == "saem") acceptable.links <- "logit"
-    else acceptable.links <- expand.grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
+    else acceptable.links <- expand_grid_string(c("", "br."), c("logit", "probit", "cloglog", "identity", "log", "cauchit"))
   }
   else acceptable.links <- c("logit", "probit", "bayes.probit", "br.logit")
 
@@ -159,7 +159,7 @@ weightit2ps <- function(formula, data, treat, s.weights, subset, estimand, focal
 
   if (bin.treat) {
 
-    t.lev <- get.treated.level(treat)
+    t.lev <- get_treated_level(treat)
 
     ps <- make_df(levels(treat), nrow = length(subset))
 
@@ -610,7 +610,7 @@ weightit2optweight.msm <- function(covs.list, treat.list, s.weights, subset, mis
   if (is_not_null(treat.list)) {
     treat.list <- lapply(treat.list, function(t) {
       treat <- t[subset]
-      if (get.treat.type(t) != "continuous") treat <- factor(treat)
+      if (get_treat_type(t) != "continuous") treat <- factor(treat)
       return(treat)
     })
   }
@@ -647,8 +647,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   for (i in seq_col(covs)) covs[,i] <- make.closer.to.1(covs[,i])
 
@@ -702,7 +702,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset, stabil
 
   if (treat.type == "binary")  {
     available.distributions <- c("bernoulli", "adaboost")
-    t.lev <- get.treated.level(treat)
+    t.lev <- get_treated_level(treat)
     treat <- binarize(treat, one = focal)
   }
   else {
@@ -1156,8 +1156,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1249,7 +1249,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset, stabi
     p.score <- NULL
   }
   else if (is_not_null(dim(ps)) && length(dim(ps)) == 2) {
-    p.score <- ps[[get.treated.level(treat)]]
+    p.score <- ps[[get_treated_level(treat)]]
   }
   else p.score <- ps
 
@@ -1648,8 +1648,8 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1746,7 +1746,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal, stab
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
 
-  p.score <- if (treat.type == "binary") ps[[get.treated.level(treat)]] else NULL
+  p.score <- if (treat.type == "binary") ps[[get_treated_level(treat)]] else NULL
 
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)
@@ -1919,8 +1919,8 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
                                      call. = FALSE)
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))
@@ -1970,7 +1970,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
 
-  p.score <- if (treat.type == "binary") ps[[get.treated.level(treat)]] else NULL
+  p.score <- if (treat.type == "binary") ps[[get_treated_level(treat)]] else NULL
 
   obj <- list(w = w, ps = p.score, info = info, fit.obj = fit.list)
   return(obj)

@@ -41,23 +41,25 @@ W <- weightit(f.build("re78", covs), data = lalonde, method = "ps", use.kernel =
 
 #method = "gbm"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
-              stop.method = c("es.mean", "ks.mean"), estimand = "ATE")
+              criterion = c("es.mean", "ks.mean"), estimand = "ATE")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
-              stop.method = c("es.mean"), estimand = "ATT",
+              stop.method = c("es.mean"), estimand = "ATE")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "gbm",
+              criterion = c("smd.mean"), estimand = "ATT",
               subclass = 40)
 W <- weightit(f.build("treat", covs), data = lalonde_mis, method = "gbm", estimand = "ATT", missing = "surr",
-              stop.method = "r2.2")
+              criterion = "r2.2")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "gbr", estimand = "ATC", s.weights = s,
-              stop.method = "ks.rms")
+              criterion = "ks.rms")
 
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATE",
-              stop.method = "energy.dist")
+              criterion = "energy.dist")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "gbm", estimand = "ATT",
-              focal = "A", s.weights = s, stop.method = "ks.max")
+              focal = "A", s.weights = s, criterion = "ks.max")
 
-W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "p.max")
-W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", stop.method = "distance.cov")
-W <- weightit(f.build("re78", covs), data = lalonde_mis, method = "gbm", stop.method = "p.max", use.kernel = TRUE)
+W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", criterion = "p.max")
+W <- weightit(f.build("re78", covs), data = lalonde, method = "gbm", criterion = "distance.cov")
+W <- weightit(f.build("re78", covs), data = lalonde_mis, method = "gbm", criterion = "p.max", use.kernel = TRUE)
 
 
 #method = "cbps"
@@ -96,15 +98,15 @@ W <- weightit(f.build("re78", covs), data = lalonde, method = "ebal")
 W <- weightit(f.build("re78", covs), data = lalonde, method = "ebal", moments = 2, d.moments = 3)
 
 
-#method = "ebcw"
-W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATE")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATC")
-W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATT",
-              s.weights = s)
-
-W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebcw", estimand = "ATE")
-W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebcw", estimand = "ATT",
-              focal = "A", s.weights = s)
+# #method = "ebcw"
+# W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATE")
+# W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATC")
+# W <- weightit(f.build("treat", covs), data = lalonde, method = "ebcw", estimand = "ATT",
+#               s.weights = s)
+#
+# W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebcw", estimand = "ATE")
+# W <- weightit(f.build("treat3", covs), data = lalonde, method = "ebcw", estimand = "ATT",
+#               focal = "A", s.weights = s)
 
 #method = "optweight"
 W <- weightit(f.build("treat", covs), data = lalonde, method = "optweight", estimand = "ATE")
@@ -123,7 +125,10 @@ W <- weightit(f.build("treat", covs), data = lalonde, method = "super", estimand
               SL.library = c("SL.glm", "SL.lda"))
 W <- weightit(f.build("treat", covs), data = lalonde, method = "super", estimand = "ATC",
               SL.library = c("SL.glm", "SL.lda"), SL.method = "method.balance",
-              stop.method = "ks.max")
+              criterion = "ks.max")
+W <- weightit(f.build("treat", covs), data = lalonde, method = "super", estimand = "ATT",
+              SL.library = c("SL.glm", "SL.lda", "SL.gbm"), SL.method = "method.balance",
+              stop.method = "es.max")
 W <- weightit(f.build("treat", covs), data = lalonde, method = "super", estimand = "ATO",
               s.weights = s, SL.library = c("SL.glm", "SL.lda"))
 
@@ -136,7 +141,7 @@ W <- weightit(f.build("re78", covs), data = lalonde, method = "super",
               SL.library = c("SL.glm", "SL.stepAIC"), use.kernel = TRUE)
 W <- weightit(f.build("re78", covs), data = lalonde, method = "super",
               SL.library = c("SL.glm", "SL.stepAIC"), SL.method = "method.balance",
-              stop.method = "p.max", density = "dt_3", s.weights = s)
+              criterion = "p.max", density = "dt_3", s.weights = s)
 
 #method = "bart"
 W <- weightit(treat ~ covs, data = lalonde, method = "bart", estimand = "ATE")
@@ -169,6 +174,9 @@ W <- weightit(f.build("treat", covs), data = lalonde, method = "energy", estiman
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "energy", estimand = "ATE")
 W <- weightit(f.build("treat3", covs), data = lalonde, method = "energy", estimand = "ATT",
               focal = "A", s.weights = s)
+
+W <- weightit(f.build("re78", covs), data = lalonde, method = "energy")
+W <- weightit(f.build("re78", covs), data = lalonde, method = "energy", moments = 1)
 
 #user defined
 
@@ -206,7 +214,7 @@ psmsm <- iptw(list(tx1 ~ use0 + gender + age,
               cumulative = FALSE,
               priorTreatment = FALSE,
               verbose = FALSE,
-              stop.method = "es.max",
+              criterion = "es.max",
               n.trees = 200)
 
 Wmsm <- weightitMSM(list(tx1 ~ use0 + gender + age,

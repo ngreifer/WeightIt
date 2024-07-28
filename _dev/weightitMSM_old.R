@@ -48,7 +48,7 @@
   covs.list <- reported.covs.list <- treat.list <- w.data.list <- w.formula.list <- w.list <- ps.list <- vector("list", length(formula.list))
   for (i in seq_along(formula.list)) {
     #Process treat and covs from formula and data
-    t.c <- get.covs.and.treat.from.formula(formula.list[[i]], data)
+    t.c <- get_covs_and_treat_from_formula(formula.list[[i]], data)
     reported.covs.list[[i]] <- t.c[["reported.covs"]]
     covs.list[[i]] <- t.c[["model.covs"]]
     treat.list[[i]] <- t.c[["treat"]]
@@ -203,7 +203,7 @@
         # }
         # else {
         #   for (i in seq_along(num.formula)) {
-        #     t.c <- get.covs.and.treat.from.formula(num.formula[[i]], data)
+        #     t.c <- get_covs_and_treat_from_formula(num.formula[[i]], data)
         #     num.covs.list[[i]] <- t.c[["covs"]]
         #     num.treat.list[[i]] <- t.c[["treat"]]
         #

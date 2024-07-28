@@ -82,7 +82,7 @@ add_miss_ind_to_formula <- function(formula, data = NULL) {
 }
 
 #treat.type processing
-assign.treat.type <- function(treat, use.multi = FALSE) {
+assign_treat_type <- function(treat, use.multi = FALSE) {
   #Returns treat with treat.type attribute
   nunique.treat <- nunique(treat)
 
@@ -102,13 +102,13 @@ assign.treat.type <- function(treat, use.multi = FALSE) {
   attr(treat, "treat.type") <- treat.type
   return(treat)
 }
-get.treat.type <- function(treat) {
+get_treat_type <- function(treat) {
   return(attr(treat, "treat.type"))
 }
-has.treat.type <- function(treat) {
-  is_not_null(get.treat.type(treat))
+has_treat_type <- function(treat) {
+  is_not_null(get_treat_type(treat))
 }
-get.treated.level <- function(treat) {
+get_treated_level <- function(treat) {
   if (!is_binary(treat)) stop("'treat' must be a binary variable.")
   if (is.character(treat) || is.factor(treat)) {
     treat <- factor(treat, nmax = 2)
@@ -344,8 +344,8 @@ process.ps <- function(ps, data = NULL, treat) {
 process.focal.and.estimand <- function(focal, estimand, treat, treated = NULL) {
   reported.estimand <- estimand
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multinomial" = length(treat)/4))
 
@@ -437,8 +437,8 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
   bad.by <- FALSE
   n <- length(treat)
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (missing(by)) {
     bad.by <- TRUE
@@ -456,7 +456,7 @@ process.by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
     by <- drop(by[, 1])
   }
   else if (is.formula(by, 1)) {
-    t.c <- get.covs.and.treat.from.formula(by, data)
+    t.c <- get_covs_and_treat_from_formula(by, data)
     by <- t.c[["reported.covs"]]
     if (NCOL(by) != 1) stop(paste0("Only one variable can be on the right-hand side of the formula for '", by.arg, "'."), call. = FALSE)
     else by.name <- colnames(by)
@@ -795,8 +795,8 @@ compute_s.d.denom <- function(mat, treat, s.d.denom = "pooled", s.weights = NULL
     if (lengths["subset"] == 0) subset <- rep(TRUE, NROW(mat))
     else if (anyNA(as.logical(subset))) stop("'subset' must be a logical vector.")
 
-    if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-    cont.treat <- get.treat.type(treat) == "continuous"
+    if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+    cont.treat <- get_treat_type(treat) == "continuous"
 
     if (!cont.treat) {
       treat <- as.character(treat)

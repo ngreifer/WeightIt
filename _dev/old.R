@@ -178,8 +178,8 @@ weightit2sbw <- function(covs, treat, s.weights, subset, estimand, focal, moment
   if (!all_the_same(s.weights)) stop("Sampling weights cannot be used with method = \"bart\".",
                                      call. = FALSE)
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (missing == "ind") {
     missing.ind <- apply(covs[, anyNA_col(covs), drop = FALSE], 2, function(x) as.numeric(is.na(x)))

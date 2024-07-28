@@ -27,7 +27,7 @@ Sampling weights are not supported.
 In the presence of missing data, the following value(s) for \code{missing} are allowed:
 \describe{
 \item{\code{"ind"} (default)}{
-First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with 0s. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
+First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
 }
 \item{\code{"hot"}}{
 The function that fits the BART model (i.e., \code{gbart} or \code{mbart}) performs hot-deck imputation, which involves randomly selecting a value to impute the missing covariate with from another unit in the dataset with a nonmissing value for that variable. The \pkg{BART} authors recommend only doing this for small amounts of missingness. Doing so will slightly weaken the estimated relationship between the covariate with missingness and the outcome (what the authors describe as being "biased toward the null").

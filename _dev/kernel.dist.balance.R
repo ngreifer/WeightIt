@@ -28,8 +28,8 @@ init_kernel.dist <- function(covs, treat, s.weights = NULL, estimand = "ATE", fo
 
   if (lengths["s.weights"] == 0) s.weights <- rep(1, NROW(covs))
 
-  if (!has.treat.type(treat)) treat <- assign.treat.type(treat)
-  treat.type <- get.treat.type(treat)
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
 
   if (treat.type == "continuous") stop("treat must be a binary or multinomial variable.")
 

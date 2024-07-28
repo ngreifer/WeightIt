@@ -1,5 +1,5 @@
-#Original version of .mlogit_weightit.fit() that uses rootSolve
-..mlogit_weightit.fit <- function(x, y, weights = NULL, offset = NULL, start = NULL, hess = TRUE, ...) {
+#Original version of .multinom_weightit.fit() that uses rootSolve
+..multinom_weightit.fit <- function(x, y, weights = NULL, offset = NULL, start = NULL, hess = TRUE, ...) {
   rlang::check_installed("rootSolve")
 
   chk::chk_atomic(y)
