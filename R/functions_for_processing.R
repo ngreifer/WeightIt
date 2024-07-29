@@ -30,7 +30,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
       .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
     }
 
-    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting\n\tmethod or a function that produces weights. Allowable methods:\n", paste(add_quotes(unique(allowable.methods)), collapse = ", ")), tidy = FALSE)
+    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n", paste(add_quotes(unique(allowable.methods)), collapse = ", ")), tidy = FALSE)
   }
 
   if (msm && !force && is.character(method)) {
@@ -399,7 +399,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
     chk::chk_flag(is.MSM.method)
 
     if (!is.MSM.method) {
-      .msg(paste0("%s can be used with a single model when multiple time points are present.\nUsing a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
+      .msg(paste0("%s can be used with a single model when multiple time points are present. Using a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
                   .method_to_phrase(method)))
     }
 
@@ -411,7 +411,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
   chk::chk_flag(is.MSM.method)
 
   if (is.MSM.method) {
-    .wrn(sprintf("%s cannot be used with a single model when multiple time points are present.\nUsing a seperate model for each time point",
+    .wrn(sprintf("%s cannot be used with a single model when multiple time points are present. Using a seperate model for each time point",
                  .method_to_phrase(method)))
   }
 
@@ -699,37 +699,30 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   tw <- w * s.weights
 
   extreme.warn <- FALSE
-  if (treat.type == "continuous") {
-    if (all_the_same(w)) {
-      .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1]))
-    }
-    else {
-      w.cv <- sd(tw, na.rm = TRUE)/mean(tw, na.rm = TRUE)
-      if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
-    }
+  if (all_the_same(w)) {
+    .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1]))
+  }
+  else if (treat.type == "continuous") {
+    w.cv <- sd(tw, na.rm = TRUE)/mean(tw, na.rm = TRUE)
+    if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
   }
   else {
-    if (all_the_same(w)) {
-      .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1]))
+    t.levels <- unique(treat)
+    bad.treat.groups <- setNames(rep.int(FALSE, length(t.levels)), t.levels)
+    for (i in t.levels) {
+      ti <- which(treat == i)
+      if (all(is.na(w[ti])) || all(check_if_zero(w[ti]))) bad.treat.groups[as.character(i)] <- TRUE
+      else if (!extreme.warn && sum(is.finite(tw[ti])) > 1) {
+        w.cv <- sd(tw[ti], na.rm = TRUE)/mean(tw[ti], na.rm = TRUE)
+        if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
+      }
     }
-    else {
-      t.levels <- unique(treat)
-      bad.treat.groups <- setNames(rep.int(FALSE, length(t.levels)), t.levels)
-      for (i in t.levels) {
-        ti <- which(treat == i)
-        if (all(is.na(w[ti])) || all(check_if_zero(w[ti]))) bad.treat.groups[as.character(i)] <- TRUE
-        else if (!extreme.warn && sum(is.finite(tw[ti])) > 1) {
-          w.cv <- sd(tw[ti], na.rm = TRUE)/mean(tw[ti], na.rm = TRUE)
-          if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
-        }
-      }
 
-      if (any(bad.treat.groups)) {
-        n <- sum(bad.treat.groups)
-        .wrn(sprintf("all weights are `NA` or 0 in treatment %s %s",
-                     ngettext(n, "group", "groups"),
-                     word_list(t.levels[bad.treat.groups], quotes = TRUE)))
-      }
+    if (any(bad.treat.groups)) {
+      n <- sum(bad.treat.groups)
+      .wrn(sprintf("all weights are `NA` or 0 in treatment %s %s",
+                   ngettext(n, "group", "groups"),
+                   word_list(t.levels[bad.treat.groups], quotes = TRUE)))
     }
   }
 
@@ -935,7 +928,7 @@ stabilize_w <- function(weights, treat) {
 
   if (!isFALSE(use.kernel)) {
     if (isTRUE(use.kernel)) {
-      .wrn("`use.kernel` is deprecated; use `density = \"kernel\"` instead. Setting `density = \"kernel\"`")
+      .wrn('`use.kernel` is deprecated; use `density = "kernel"` instead. Setting `density = "kernel"`')
       density <- "kernel"
     }
     else {
@@ -1261,13 +1254,13 @@ plot_density <- function(d.n, d.d) {
   d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
   pl <- ggplot(d.all, aes(x = .data$x, y = .data$y)) + geom_line() +
     labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
-    facet_grid(rows = vars(.data$dens)) + theme(panel.background = element_rect(fill = "white"),
-                                          panel.border = element_rect(fill = NA, color = "black"),
-                                          axis.text.x = element_text(color = "black"),
-                                          axis.text.y = element_text(color = "black"),
-                                          panel.grid.major = element_blank(),
-                                          panel.grid.minor = element_blank()
-    )
+    facet_grid(rows = vars(.data$dens)) +
+    theme(panel.background = element_rect(fill = "white"),
+          panel.border = element_rect(fill = NA, color = "black"),
+          axis.text.x = element_text(color = "black"),
+          axis.text.y = element_text(color = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank())
   print(pl)
 }
 
