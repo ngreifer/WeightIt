@@ -112,7 +112,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     nn["Weighted", ] <- c(ESS(w[t==0]),
                           ESS(w[t==1]))
   }
-  else if (treat.type == "multinomial" || is_(t, c("factor", "character"))) {
+  else if (treat.type == "multi" || chk::vld_character_or_factor(t)) {
     t <- as.factor(t)
 
     top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))

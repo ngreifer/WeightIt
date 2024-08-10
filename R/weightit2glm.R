@@ -422,7 +422,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   if (missing == "saem") {
-    if (is_not_null(A$multi.method) && !identical(A$multi.method, "saem")) {
+    if (is_not_null(A$multi.method) && !identical(A$multi.method, "saem") && !identical(A$multi.method, "glm")) {
       .wrn("`multi.method` is ignored when `missing = \"saem\"`")
     }
     multi.method <- "saem"

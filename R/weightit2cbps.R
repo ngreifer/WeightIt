@@ -793,7 +793,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     treat.list[[i]] <- switch(
       treat.types[i],
       "binary" = binarize(treat.list[[i]], one = get_treated_level(treat.list[[i]])),
-      "multinomial" = factor(treat.list[[i]]),
+      "multi" = factor(treat.list[[i]]),
       "continuous"= (treat.list[[i]] - w.m(treat.list[[i]], s.weights)) / sqrt(col.w.v(treat.list[[i]], s.weights))
     )
 
@@ -822,7 +822,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     coef_ind[[i]] <- length(unlist(coef_ind)) + switch(
       treat.types[i],
       "binary" = seq_col(covs.list[[i]]),
-      "multinomial" = seq_len((nlevels(treat.list[[i]]) - 1) * ncol(covs.list[[i]])),
+      "multi" = seq_len((nlevels(treat.list[[i]]) - 1) * ncol(covs.list[[i]])),
       "continuous" = seq_len(3 + ncol(covs.list[[i]]))
     )
   }
@@ -832,7 +832,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
            "binary" = function(B, X, A) {
              plogis(drop(X %*% B))
            },
-           "multinomial" = function(B, X, A) {
+           "multi" = function(B, X, A) {
              qq <- exp(X %*% matrix(B, nrow = ncol(X)))
 
              pp <- cbind(1, qq) / (1 + rowSums(qq))
@@ -853,7 +853,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
            "binary" = function(p, A, B) {
              A / p + (1 - A) / (1 - p)
            },
-           "multinomial" = function(p, A, B) {
+           "multi" = function(p, A, B) {
              w <- numeric(length(A))
              for (a in levels(A)) {
                w[A == a] <- 1 / p[A == a, a]
@@ -880,7 +880,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
            "binary" = function(w, B, X, A, SW) {
              SW * w * (A - (1 - A)) * X
            },
-           "multinomial" = function(w, B, X, A, SW) {
+           "multi" = function(w, B, X, A, SW) {
              do.call("cbind", lapply(utils::combn(levels(treat.list[[i]]), 2, simplify = FALSE), function(co) {
                SW * w * ((A == co[1]) - (A == co[2])) * X
              }))
@@ -922,7 +922,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     switch(treat.types[i],
            "binary" = glm.fit(covs.list[[i]], treat.list[[i]], family = binomial(),
                               weights = s.weights)$coefficients,
-           "multinomial" = .multinom_weightit.fit(covs.list[[i]], treat.list[[i]], hess = FALSE,
+           "multi" = .multinom_weightit.fit(covs.list[[i]], treat.list[[i]], hess = FALSE,
                                                   weights = s.weights)$coefficients,
            "continuous" = {
              init.fit <- lm.wfit(covs.list[[i]], treat.list[[i]], w = s.weights)
@@ -955,7 +955,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
              "binary" = function(p, X, A, SW) {
                SW * (A - p) * X
              },
-             "multinomial" = function(p, X, A, SW) {
+             "multi" = function(p, X, A, SW) {
                do.call("cbind", lapply(levels(A), function(i) {
                  SW * ((A == i) - p[,i]) * X
                }))

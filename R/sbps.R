@@ -233,7 +233,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
                                                                abs = TRUE, s.weights = s.weights[moderator.factor == g],
                                                                bin.vars = bin.vars)))
       }
-      else if (treat.type == "multinomial") {
+      else if (treat.type == "multi") {
         if (is_not_null(focal)) {
           bin.treat <- as.numeric(treat == focal)
           s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
@@ -337,7 +337,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
                                                                abs = TRUE, s.weights = s.weights[moderator.factor == g],
                                                                bin.vars = bin.vars)))
       }
-      else if (treat.type == "multinomial") {
+      else if (treat.type == "multi") {
         if (is_not_null(focal)) {
           bin.treat <- as.numeric(treat == focal)
           s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
@@ -544,7 +544,7 @@ summary.weightit.sbps <- function(object, top = 5, ignore.s.weights = FALSE, ...
       nn["Weighted", ] <- c(ESS(w[t==0]),
                             ESS(w[t==1]))
     }
-    else if (treat.type == "multinomial") {
+    else if (treat.type == "multi") {
       out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
                                                                    max(w[w > 0 & t == x]))),
                                    levels(t))
