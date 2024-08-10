@@ -8,7 +8,7 @@
 #'
 #' In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \pkgfun{optweight}{optweight} from the \CRANpkg{optweight} package.
 #'
-#' Because `optweight()` offers finer control and uses the same syntax as `weightit()`, it is recommended that \pkgfun{optweight}{optweight} be used instead of `weightit` with `method = "optweight"`.
+#' Because `optweight()` offers finer control and uses the same syntax as `weightit()`, it is recommended that \pkgfun{optweight}{optweight} be used instead of `weightit()` with `method = "optweight"`.
 #'
 #' ## Binary Treatments
 #'
@@ -71,6 +71,8 @@
 #' @details
 #' Stable balancing weights are weights that solve a constrained optimization problem, where the constraints correspond to covariate balance and the loss function is the variance (or other norm) of the weights. These weights maximize the effective sample size of the weighted sample subject to user-supplied balance constraints. An advantage of this method over entropy balancing is the ability to allow approximate, rather than exact, balance through the `tols` argument, which can increase precision even for slight relaxations of the constraints.
 #'
+#' `plot()` can be used on the output of `weightit()` with `method = "optweight"` to display the dual variables; see Examples and [plot.weightit()] for more details.
+#'
 #' @note
 #' The specification of `tols` differs between `weightit()` and `optweight()`. In `weightit()`, one tolerance value should be included per level of each factor variable, whereas in `optweight()`, all levels of a factor are given the same tolerance, and only one value needs to be supplied for a factor variable. Because of the potential for confusion and ambiguity, it is recommended to only supply one value for `tols` in `weightit()` that applies to all variables. For finer control, use `optweight()` directly.
 #'
@@ -106,6 +108,7 @@
 #'                 tols = 0))
 #' summary(W1)
 #' cobalt::bal.tab(W1)
+#' plot(W1)
 #'
 #' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
@@ -114,13 +117,15 @@
 #'                 tols = .01))
 #' summary(W2)
 #' cobalt::bal.tab(W2)
+#' plot(W2)
 #'
 #' #Balancing covariates with respect to re75 (continuous)
-#' (W3 <- weightit(re75 ~ age + educ + married +
-#'                   nodegree + re74, data = lalonde,
-#'                 method = "optweight", tols = .05))
-#' summary(W3)
-#' cobalt::bal.tab(W3)
+# (W3 <- weightit(re75 ~ age + educ + married +
+#                   nodegree + re74, data = lalonde,
+#                 method = "optweight", tols = .05))
+# summary(W3)
+# cobalt::bal.tab(W3)
+# plot(W3)
 NULL
 
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing,
@@ -262,4 +267,35 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
   }, verbose = verbose)
 
   list(w = out$w, fit.obj = out)
+}
+
+.plot_duals_optweight <- function(info, by = NULL) {
+
+  use.by <- is_not_null(by)
+
+  if (!use.by) {
+    info <- list("z" = info)
+  }
+
+  d <- do.call("rbind", lapply(seq_along(info), function(i) {
+    cbind(info[[i]]$duals, by = names(info)[i])
+  }))
+
+  d$by <- factor(d$by, levels = names(info))
+
+    title <- "Dual Variables for Constraints"
+  # }
+  d$cov <- factor(d$cov, levels = rev(unique(d$cov)))
+  d$constraint <- factor(d$constraint, levels = unique(d$constraint, nmax = 2),
+                         labels = paste("Constraint:", unique(d$constraint, nmax = 2)))
+
+  p <- ggplot(d, aes(y = .data$cov, x = .data$dual)) +
+    geom_col() +
+    geom_vline(xintercept = 0) +
+    labs(x = "Absolute Dual Variable", y = "Covariate", title = title) +
+    scale_x_continuous(expand = expansion(c(0, 0.05))) +
+    facet_grid(rows = vars(.data$constraint),
+               if (use.by) vars(.data$by) else NULL) +
+    theme_bw()
+  p
 }
