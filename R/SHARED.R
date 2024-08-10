@@ -84,8 +84,13 @@ num_to_superscript <- function(x) {
   vapply(splitx, function(y) paste0(nums[y], collapse = ""), character(1L))
 }
 ordinal <- function(x) {
-  if (!is.numeric(x) || !is.vector(x) || is_null(x)) stop("'x' must be a numeric vector.")
-  if (length(x) > 1) return(vapply(x, ordinal, character(1L)))
+  if (is_null(x) || !is.numeric(x))
+    stop("'x' must be a numeric vector.")
+
+  if (length(x) > 1) {
+    out <- setNames(vapply(x, ordinal, character(1L)), names(x))
+    return(out)
+  }
 
   x0 <- abs(x)
   out <- paste0(x0, switch(substring(x0, nchar(x0), nchar(x0)),
@@ -95,7 +100,7 @@ ordinal <- function(x) {
                            "th"))
   if (sign(x) == -1) out <- paste0("-", out)
 
-  out
+  setNames(out, names(x))
 }
 round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   if (NROW(df) == 0 || NCOL(df) == 0) return(df)
@@ -803,7 +808,7 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
     treat.type <- "binary"
   }
   else if (use.multi || chk::vld_character_or_factor(treat)) {
-    treat.type <- "multinomial"
+    treat.type <- "multi"
     if (!inherits(treat, "processed.treat")) treat <- factor(treat)
   }
   else {

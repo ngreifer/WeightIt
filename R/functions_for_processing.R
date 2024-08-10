@@ -1,18 +1,11 @@
-allowable.methods <- {c("glm" = "glm", "ps" = "glm",
-                        "gbm" = "gbm", "gbr" = "gbm",
-                        "cbps" = "cbps",
-                        "npcbps" = "npcbps",
-                        "ebal" = "ebal", "entropy" = "ebal", "ebalance" = "ebal",
-                        "ipt" = "ipt",
-                        # "ebcw" = "ebcw", "ate" = "ebcw",
-                        "optweight" = "optweight", "sbw" = "optweight",
-                        "super" = "super", "superlearner" = "super",
-                        "bart" = "bart",
-                        "energy" = "energy")}
-
 .method_to_proper_method <- function(method) {
+  .allowable.methods <- unlist(lapply(names(.weightit_methods), function(m) {
+    alias <- .weightit_methods[[m]]$alias
+    setNames(rep(m, length(alias)), alias)
+  }))
+
   method <- tolower(method)
-  unname(allowable.methods[method])
+  unname(.allowable.methods[method])
 }
 
 .check_acceptable_method <- function(method, msm = FALSE, force = FALSE) {
@@ -21,7 +14,7 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
   if (missing(method)) method <- "glm"
   else if (is_null(method) || length(method) > 1) bad.method <- TRUE
   else if (is.character(method)) {
-    if (tolower(method) %nin% names(allowable.methods)) bad.method <- TRUE
+    if (tolower(method) %nin% unlist(grab(.weightit_methods, "alias"))) bad.method <- TRUE
   }
   else if (!is.function(method)) bad.method <- TRUE
 
@@ -30,16 +23,183 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
       .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
     }
 
-    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n", paste(add_quotes(unique(allowable.methods)), collapse = ", ")), tidy = FALSE)
+    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n", paste(add_quotes(names(.weightit_methods)), collapse = ", ")),
+         tidy = FALSE)
   }
 
   if (msm && !force && is.character(method)) {
     m <- .method_to_proper_method(method)
-    if (m %in% c("nbcbps", "ebal", "ebcw", "optweight", "energy", "kbal")) {
+    if (!.weightit_methods[[m]]$msm_valid) {
       .err(sprintf("the use of %s with longitudinal treatments has not been validated. Set `weightit.force = TRUE` to bypass this error",
                    .method_to_phrase(m)))
     }
   }
+}
+
+.check_method_treat.type <- function(method, treat.type) {
+  if (!is.function(method)) {
+    if (treat.type %nin% .weightit_methods[[method]]$treat_type) {
+      .err(sprintf("%s can only be used with a %s treatment",
+                  .method_to_phrase(method),
+                  word_list(.weightit_methods[[method]]$treat_type, and.or = "or")))
+    }
+  }
+}
+
+.check_method_s.weights <- function(method, s.weights) {
+  if (!is.function(method) &&
+      !.weightit_methods[[method]]$s.weights_ok &&
+      !all_the_same(s.weights)) {
+    .err(sprintf("sampling weights cannot be used with %s", .method_to_phrase(method)))
+  }
+}
+
+.method_to_phrase <- function(method) {
+
+  if (is.function(method))
+    return("a user-defined method")
+
+  method <- .method_to_proper_method(method)
+
+  if (method %nin% names(.weightit_methods))
+    return("the chosen method of weighting")
+
+  .weightit_methods[[method]]$description
+}
+
+.process_estimand <- function(estimand, method, treat.type) {
+  if (is.function(method)) {
+    .chk_null_or(estimand, chk::chk_string)
+    return(toupper(estimand))
+  }
+
+  if (treat.type == "continuous") {
+    if (is_not_null(estimand) && !identical(toupper(estimand), "ATE")) {
+      .wrn("`estimand` is ignored for continuous treatments")
+    }
+
+    return("ATE")
+  }
+
+  chk::chk_string(estimand)
+  estimand <- toupper(estimand)
+
+  allowable_estimands <- .weightit_methods[[method]]$estimand
+
+  if (treat.type == "multi") {
+    allowable_estimands <- setdiff(allowable_estimands, "ATOS")
+  }
+
+  if (estimand %nin% allowable_estimands) {
+    .err(sprintf("%s is not an allowable estimand for %s with a %s treatment. Only %s allowed",
+                 add_quotes(estimand), .method_to_phrase(method), treat.type,
+                 word_list(allowable_estimands, quotes = TRUE, and.or = "and", is.are = TRUE)))
+  }
+
+  estimand
+}
+
+.check_subclass <- function(method, treat.type) {
+  if (is_not_null(method) && !is.function(method)) {
+
+    subclass_ok <- .weightit_methods[[method]]$subclass_ok
+
+    if (treat.type == "continuous" || !subclass_ok) {
+      .err(sprintf("subclasses are not compatible with %s with a %s treatment",
+                   .method_to_phrase(method), treat.type))
+    }
+  }
+}
+
+.process_moments_int <- function(moments, int, method) {
+
+  if (is.function(method)) {
+    return(list(moments = moments, int = int))
+  }
+
+  if (.weightit_methods[[method]]$moments_int_ok) {
+    chk::chk_flag(int)
+
+    if (is_not_null(moments)) {
+      chk::chk_whole_number(moments)
+
+      chk::chk_gte(moments, .weightit_methods[[method]]$moments_default)
+    }
+    else {
+      moments <- {
+        if (int) 1L
+        else .weightit_methods[[method]]$moments_default
+      }
+    }
+  }
+  else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
+    .wrn(sprintf("%s not compatible with %s. Ignoring %s",
+                 word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
+                 .method_to_phrase(method),
+                 word_list(c("moments", "int")[mi0], and.or = "and", quotes = "`")))
+    moments <- integer(0L)
+    int <- FALSE
+  }
+
+  moments <- as.integer(moments)
+
+  list(moments = moments, int = int)
+}
+
+.process_MSM_method <- function(is.MSM.method, method) {
+  if (is.function(method)) {
+    if (isTRUE(is.MSM.method)) {
+      .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
+    }
+
+    return(FALSE)
+  }
+
+  if (.weightit_methods[[method]]$msm_method_available) {
+    if (is_null(is.MSM.method)) return(TRUE)
+
+    chk::chk_flag(is.MSM.method)
+
+    if (!is.MSM.method) {
+      .msg(sprintf("%s can be used with a single model when multiple time points are present. Using a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
+                   .method_to_phrase(method)))
+    }
+
+    return(is.MSM.method)
+  }
+
+  if (is_not_null(is.MSM.method)) {
+
+    chk::chk_flag(is.MSM.method)
+
+    if (is.MSM.method) {
+      .wrn(sprintf("%s cannot be used with a single model when multiple time points are present. Using a seperate model for each time point",
+                   .method_to_phrase(method)))
+    }
+  }
+
+  FALSE
+}
+
+.process_missing <- function(missing, method, treat.type) {
+  allowable.missings <- .weightit_methods[[method]]$missing
+
+  if (is_null(missing)) {
+    .wrn(sprintf("missing values are present in the covariates. See `?WeightIt::method_%s` for information on how these are handled",
+                 method))
+    return(allowable.missings[1])
+  }
+
+  chk::chk_string(missing)
+
+  if (missing %nin% allowable.missings) {
+    .err(sprintf("only %s allowed for `missing` with %s with a %s treatment",
+                 word_list(allowable.missings, quotes = 2, is.are = TRUE),
+                 .method_to_phrase(method),
+                 treat.type))
+  }
+
+  missing
 }
 
 .check_user_method <- function(method) {
@@ -50,111 +210,6 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
   # }
   else {
     .err("the user-provided function to `method` must contain `covs` and `treat` as named parameters")
-  }
-}
-
-.method_to_phrase <- function(method) {
-
-  if (is.function(method)) return("a user-defined method")
-
-  method <- .method_to_proper_method(method)
-  if (method %in% c("glm")) return("propensity score weighting with GLM")
-  if (method %in% c("gbm")) return("propensity score weighting with GBM")
-  if (method %in% c("cbps")) return("covariate balancing propensity score weighting")
-  if (method %in% c("npcbps")) return("non-parametric covariate balancing propensity score weighting")
-  if (method %in% c("ebal")) return("entropy balancing")
-  if (method %in% c("ipt")) return("inverse probability tilting")
-  # if (method %in% c("ebcw")) return("empirical balancing calibration weighting")
-  if (method %in% c("optweight")) return("targeted stable balancing weights")
-  if (method %in% c("super")) return("propensity score weighting with SuperLearner")
-  if (method %in% c("bart")) return("propensity score weighting with BART")
-  if (method %in% c("energy")) return("energy balancing")
-  # if (method %in% c("kbal")) return("kernel balancing")
-
-  "the chosen method of weighting"
-}
-
-.process_estimand <- function(estimand, method, treat.type) {
-  #Allowable estimands
-  AE <- list(
-    binary = list(  glm = c("ATT", "ATC", "ATE", "ATO", "ATM", "ATOS")
-                    , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                    , cbps = c("ATT", "ATC", "ATE")
-                    , npcbps = c("ATE")
-                    , ebal = c("ATT", "ATC", "ATE")
-                    , ipt = c("ATT", "ATC", "ATE")
-                    # , ebcw = c("ATT", "ATC", "ATE")
-                    , optweight = c("ATT", "ATC", "ATE")
-                    , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                    , energy = c("ATT", "ATC", "ATE")
-                    , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                    # , kbal = c("ATT", "ATC", "ATE")
-    ),
-    multinomial = list(  glm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                         , gbm = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                         , cbps = c("ATT", "ATC", "ATE")
-                         , npcbps = c("ATE")
-                         , ebal = c("ATT", "ATC", "ATE")
-                         , ipt = c("ATT", "ATC", "ATE")
-                         # , ebcw = c("ATT", "ATC", "ATE")
-                         , optweight = c("ATT", "ATC", "ATE")
-                         , super = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                         , energy = c("ATT", "ATC", "ATE")
-                         , bart = c("ATT", "ATC", "ATE", "ATO", "ATM")
-                         # , kbal = c("ATT", "ATE")
-    ))
-
-
-  if (treat.type == "continuous" || is.function(method)) {
-    .chk_null_or(estimand, chk::chk_string)
-    return(toupper(estimand))
-  }
-
-  chk::chk_string(estimand)
-  estimand <- toupper(estimand)
-
-  if (estimand %nin% AE[[treat.type]][[method]]) {
-    .err(sprintf("%s is not an allowable estimand for %s with %s treatments. Only %s allowed",
-                 add_quotes(estimand), .method_to_phrase(method), treat.type,
-                 word_list(AE[[treat.type]][[method]], quotes = TRUE, and.or = "and", is.are = TRUE)))
-  }
-
-  estimand
-}
-
-.check_subclass <- function(method, treat.type) {
-  #Allowable estimands
-  AE <- list(
-    binary = list(  glm = TRUE
-                    , gbm = TRUE
-                    , cbps = TRUE
-                    , npcbps = FALSE
-                    , ebal = FALSE
-                    , ipt = FALSE
-                    # , ebcw = FALSE
-                    , optweight = FALSE
-                    , super = TRUE
-                    , energy = FALSE
-                    , bart = TRUE
-                    # , kbal = FALSE
-    ),
-    multinomial = list(  glm = TRUE
-                         , gbm = TRUE
-                         , cbps = FALSE
-                         , npcbps = FALSE
-                         , ebal = FALSE
-                         , ipt = FALSE
-                         # , ebcw = FALSE
-                         , optweight = FALSE
-                         , super = TRUE
-                         , energy = FALSE
-                         , bart = TRUE
-    ))
-
-  if (treat.type != "continuous" && !is.function(method) &&
-      !AE[[treat.type]][[method]]) {
-    .err(sprintf("subclasses are not compatible with %s with %s treatments",
-                 .method_to_phrase(method), treat.type))
   }
 }
 
@@ -189,14 +244,14 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multinomial" = length(treat)/4))
+  unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multi" = length(treat)/4))
 
   #Check focal
   if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
     .err("the argument supplied to `focal` must be the name of a level of treatment")
   }
 
-  if (treat.type == "multinomial") {
+  if (treat.type == "multi") {
 
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
       .wrn(sprintf("`estimand = %s` is not compatible with `focal`. Setting `estimand` to \"ATT\"",
@@ -342,142 +397,6 @@ allowable.methods <- {c("glm" = "glm", "ps" = "glm",
   attr(by.components, "by.factor") <- by.factor
 
   by.components
-}
-
-.process_moments_int <- function(moments, int, method) {
-
-  if (is.function(method) || method %in% c("npcbps", "ebal", "cbps", "ipt", "ebcw", "optweight", "energy")) {
-    chk::chk_flag(int)
-
-    if (is_not_null(moments)) {
-      chk::chk_whole_number(moments)
-
-      if (method == "energy") {
-        chk::chk_gte(moments, 0)
-      }
-      else if (method %in% c("npcbps", "ebal", "cbps", "ipt", "ebcw", "optweight")) {
-        chk::chk_gt(moments, 0)
-      }
-
-      moments <- as.integer(moments)
-    }
-    else {
-      moments <- {
-        if (!is.function(method) && method == "energy" && !int) 0L
-        else 1L
-      }
-    }
-  }
-  else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
-    .wrn(sprintf("%s not compatible with %s. Ignoring %s",
-                 word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
-                 .method_to_phrase(method),
-                 word_list(c("moments", "int")[mi0], and.or = "and", quotes = "`")))
-    moments <- NULL
-    int <- FALSE
-  }
-
-  moments <- as.integer(moments)
-
-  list(moments = moments, int = int)
-}
-
-.process_MSM_method <- function(is.MSM.method, method) {
-  methods.with.MSM <- c("optweight", "cbps")
-
-  if (is.function(method)) {
-    if (isTRUE(is.MSM.method)) {
-      .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
-    }
-
-    return(FALSE)
-  }
-
-  if (method %in% methods.with.MSM) {
-    if (is_null(is.MSM.method)) return(TRUE)
-
-    chk::chk_flag(is.MSM.method)
-
-    if (!is.MSM.method) {
-      .msg(paste0("%s can be used with a single model when multiple time points are present. Using a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
-                  .method_to_phrase(method)))
-    }
-
-    return(is.MSM.method)
-  }
-
-  if (is_null(is.MSM.method)) return(FALSE)
-
-  chk::chk_flag(is.MSM.method)
-
-  if (is.MSM.method) {
-    .wrn(sprintf("%s cannot be used with a single model when multiple time points are present. Using a seperate model for each time point",
-                 .method_to_phrase(method)))
-  }
-
-  FALSE
-}
-
-.process_missing <- function(missing, method, treat.type) {
-  #Allowable estimands
-  AE <- list(binary = list(glm = c("ind", "saem")
-                           , gbm = c("ind", "surr")
-                           , cbps = c("ind")
-                           , npcbps = c("ind")
-                           , ebal = c("ind")
-                           , ipt = c("ind")
-                           # , ebcw = c("ind")
-                           , optweight = c("ind")
-                           , super = c("ind")
-                           , bart = c("ind")
-                           , energy = c("ind")
-                           # , kbal = c("ind")
-  ),
-  multinomial = list(glm = c("ind")
-                     , gbm = c("ind", "surr")
-                     , cbps = c("ind")
-                     , npcbps = c("ind")
-                     , ebal = c("ind")
-                     , ipt = c("ind")
-                     # , ebcw = c("ind")
-                     , optweight = c("ind")
-                     , super = c("ind")
-                     , bart = c("ind")
-                     , energy = c("ind")
-                     # , kbal = c("ind")
-  ),
-  continuous = list(glm = c("ind", "saem")
-                    , gbm = c("ind", "surr")
-                    , cbps = c("ind")
-                    , npcbps = c("ind")
-                    , ebal = c("ind")
-                    , ipt = c("ind")
-                    # , ebcw = c("ind")
-                    , optweight = c("ind")
-                    , super = c("ind")
-                    , bart = c("ind")
-                    , energy = c("ind")
-                    # , kbal = c("ind")
-  ))
-
-  allowable.missings <- AE[[treat.type]][[method]]
-
-  if (is_null(missing)) {
-    .wrn(sprintf("missing values are present in the covariates. See `?WeightIt::method_%s` for information on how these are handled",
-                 method))
-    return(allowable.missings[1])
-  }
-
-  chk::chk_string(missing)
-
-  if (!missing %pin% allowable.missings) {
-    .err(sprintf("only %s allowed for `missing` with `method = %s` for %s treatments",
-                 word_list(allowable.missings, quotes = 2, is.are = TRUE),
-                 add_quotes(method),
-                 treat.type))
-  }
-
-  allowable.missings[pmatch(missing, allowable.missings)]
 }
 
 .make_closer_to_1 <- function(x) {

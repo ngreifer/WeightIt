@@ -41,7 +41,6 @@
 #' ignored and set to `"glm"`.
 #' @param moments,int,subclass arguments to customize the weight estimation.
 #' See [weightit()] for details.
-#' @param is.MSM.method see [weightitMSM()]. Typically can be ignored.
 #' @param missing `character`; how missing data should be handled. The
 #' options depend on the `method` used. If `NULL`, `covs` covs
 #' will be checked for `NA` values, and if present, `missing` will be
@@ -133,7 +132,7 @@
 weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.factor = NULL,
                          estimand = "ATE", focal = NULL, stabilize = FALSE,
                          ps = NULL, moments = NULL, int = FALSE,
-                         subclass = NULL, is.MSM.method = FALSE, missing = NULL,
+                         subclass = NULL, missing = NULL,
                          verbose = FALSE, include.obj = FALSE, ...) {
 
   #Checks
@@ -161,6 +160,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     .check_acceptable_method(method, msm = FALSE, force = FALSE)
 
+    .check_method_treat.type(method, treat.type)
+
     if (is_not_null(ps)) {
       chk::chk_vector(ps)
       chk::chk_numeric(ps)
@@ -176,8 +177,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       s.weights <- rep.int(1, length(treat))
     }
     else {
-      chk::chk_vector(s.weights)
+      .chk_basic_vector(s.weights)
       chk::chk_numeric(s.weights)
+
+      .check_method_s.weights(method, s.weights)
 
       if (length(s.weights) != length(treat)) {
         .err("`s.weights` and `treat` must be the same length")
@@ -237,21 +240,19 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   obj <- NULL
 
   if (!is.function(method)) {
-    fun <- "weightit"
 
-    if (is.MSM.method) fun <- paste0(fun, "MSM")
+
+    fun <- "weightit"
 
     if (is_null(ps))
       fun <- paste0(fun, "2", method)
     else
       fun <- paste0(fun, "2ps")
 
-    if (!is.MSM.method) {
       fun <- switch(treat.type,
-                    "multinomial" = paste.(fun, "multi"),
+                    "multi" = paste.(fun, "multi"),
                     "continuous" = paste.(fun, "cont"),
                     fun)
-    }
 
     ####
     # if (FORMULA.TEST) fun <- paste0(".", fun)
@@ -277,17 +278,6 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                            missing = missing,
                            verbose = verbose,
                            ...))
-    }
-    else if (is.MSM.method) {
-      obj <- weightitMSM2user(Fun = method,
-                              covs.list = covs,
-                              treat.list = treat,
-                              s.weights = s.weights,
-                              subset = by.factor == i,
-                              stabilize = stabilize,
-                              missing = missing,
-                              verbose = verbose,
-                              ...)
     }
     else {
       obj <- weightit2user(Fun = method,
@@ -397,6 +387,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
       if (nrow(covs.list[[i]]) != n) {
         .err("treatment and covariates must have the same number of units")
       }
+
       if (anyNA(treat.list[[i]])) {
         .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in treat.list[[%s]]", i))
       }
@@ -420,8 +411,10 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
       chk::chk_vector(s.weights)
       chk::chk_numeric(s.weights)
 
+      .check_method_s.weights(method, s.weights)
+
       if (length(s.weights) != n) {
-        .err("`s.weights` and `treat` must be the same length")
+        .err("`s.weights` must have length equal to the number of units")
       }
     }
 

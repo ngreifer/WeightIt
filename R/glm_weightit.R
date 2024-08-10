@@ -416,7 +416,8 @@ lm_weightit <- function(formula, data, weightit,
     attr(vcov, "R") <- R
 
     if (vcov == "FWB") {
-      if (is_not_null(weightit) && weightit$method %in% c("bart", "npcbps")) {
+      if (is_not_null(weightit) && is.character(weightit$method) &&
+          !.weightit_methods[[weightit$method]]$s.weights_ok) {
         .err(sprintf("`vcov = \"FWB\"` cannot be used with `method = %s`",
                      add_quotes(weightit$method)))
       }

@@ -182,17 +182,26 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
   #Process moments and int
   moments.int <- .process_moments_int(moments, int, method)
-  moments <- moments.int[["moments"]]; int <- moments.int[["int"]]
+  moments <- moments.int[["moments"]]
+  int <- moments.int[["int"]]
 
   s.weights <- process.s.weights(s.weights, data)
 
   if (is_not_null(num.formula)) {
-    if (!stabilize) {
+    if (!isTRUE(stabilize)) {
       .msg("setting `stabilize` to `TRUE` based on `num.formula` input")
     }
     stabilize <- TRUE
   }
+
   if (stabilize) {
+    if (!is.function(method) && !.weightit_methods[[method]]$stabilize_ok) {
+      .wrn(sprintf("`stabilize` cannot be used with %s and will be ignored",
+                   .method_to_phrase(method)))
+      stabilize <- FALSE
+      num.formula <- NULL
+    }
+
     if (is_not_null(num.formula)) {
       if (rlang::is_formula(num.formula)) {
         if (!rlang::is_formula(num.formula, lhs = FALSE)) {
@@ -264,25 +273,31 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     names(treat.list)[i] <- treat.name
     names(reported.covs.list)[i] <- treat.name
 
-    if (is_null(covs.list[[i]])) .err(sprintf("no covariates were specified in the %s formula", ordinal(i)))
-    if (is_null(treat.list[[i]])) .err(sprintf("no treatment variable was specified in the %s formula", ordinal(i)))
+    if (is_null(covs.list[[i]]))
+      .err(sprintf("no covariates were specified in the %s formula", ordinal(i)))
+
+    if (is_null(treat.list[[i]]))
+      .err(sprintf("no treatment variable was specified in the %s formula", ordinal(i)))
 
     n <- length(treat.list[[i]])
 
-    if (nrow(covs.list[[i]]) != n) {
+    if (nrow(covs.list[[i]]) != n)
       .err("treatment and covariates must have the same number of units")
-    }
-    if (anyNA(treat.list[[i]])) {
+
+    if (anyNA(treat.list[[i]]))
       .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s", treat.name))
-    }
 
     treat.list[[i]] <- assign_treat_type(treat.list[[i]])
 
+    if (!is.MSM.method) {
+      .check_method_treat.type(method, get_treat_type(treat.list[[i]]))
+    }
+
     #By is processed each for each time, but only last time is used for by.factor.
     processed.by <- .process_by(by, data = data,
-                               treat = treat.list[[i]],
-                               treat.name = treat.name,
-                               by.arg = by.arg)
+                                treat = treat.list[[i]],
+                                treat.name = treat.name,
+                                by.arg = by.arg)
 
     #Process missing
     if (anyNA(reported.covs.list[[i]])) {
@@ -294,6 +309,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   }
 
   if (is_null(s.weights)) s.weights <- rep.int(1, n)
+  else .check_method_s.weights(method, s.weights)
 
   if (is.MSM.method) {
     #Returns weights (w)
@@ -365,7 +381,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
       w.list[[i]] <- obj[["weights"]]
       ps.list[[i]] <- obj[["ps"]]
       obj.list[[i]] <- obj[["fit.obj"]]
-      Mparts.list[[i]] <- attr(obj, "Mparts")
+      Mparts.list[i] <- list(attr(obj, "Mparts"))
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
@@ -401,7 +417,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
         sw.list[[i]] <- 1/sw_obj[["weights"]]
         stabout[[i]] <- stab.f[-2]
 
-        stab.Mparts.list[[i]] <- attr(sw_obj, "Mparts")
+        stab.Mparts.list[i] <- list(attr(sw_obj, "Mparts"))
 
         if (is_not_null(stab.Mparts.list[[i]])) {
           stab.Mparts.list[[i]]$wfun <- Invert(stab.Mparts.list[[i]]$wfun)
@@ -426,7 +442,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   }
 
   if (all_the_same(w)) .err(sprintf("all weights are %s", w[1]))
-
 
   ## Assemble output object----
   out <- list(weights = w,
@@ -484,9 +499,9 @@ print.weightitMSM <- function(x, ...) {
                 i,
                 switch(treat.types[i],
                        "continuous" = "continuous",
-                       "multinomial" = sprintf("%s-category (%s)",
-                                               nunique(x[["treat.list"]][[i]]),
-                                               paste(levels(x[["treat.list"]][[i]]), collapse = ", ")),
+                       "multi" = sprintf("%s-category (%s)",
+                                         nunique(x[["treat.list"]][[i]]),
+                                         paste(levels(x[["treat.list"]][[i]]), collapse = ", ")),
                        "binary" = "2-category")))
   }
 
@@ -494,8 +509,8 @@ print.weightitMSM <- function(x, ...) {
   for (i in seq_along(x$covs.list)) {
     if (i == 1) {
       cat(sprintf("    + baseline: %s\n",
-          if (is_null(x$covs.list[[i]])) "(none)"
-          else paste(names(x$covs.list[[i]]), collapse = ", ")))
+                  if (is_null(x$covs.list[[i]])) "(none)"
+                  else paste(names(x$covs.list[[i]]), collapse = ", ")))
     }
     else {
       cat(sprintf("    + after time %s: %s\n",

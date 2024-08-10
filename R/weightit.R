@@ -225,6 +225,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   if (is.character(method)) {
     method <- .method_to_proper_method(method)
     attr(method, "name") <- method
+
+    .check_method_treat.type(method, treat.type)
   }
   else if (is.function(method)) {
     method.name <- deparse1(substitute(method))
@@ -253,6 +255,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   s.weights <- process.s.weights(s.weights, data)
 
   if (is_null(s.weights)) s.weights <- rep.int(1, n)
+  else .check_method_s.weights(method, s.weights)
 
   #Process stabilize
   if (isFALSE(stabilize)) {
@@ -263,15 +266,22 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   if (is_not_null(stabilize)) {
-    if (treat.type != "continuous" && estimand != "ATE") {
-      .err("`stabilize` can only be supplied when `estimand = \"ATE\"`")
+    if (!.weightit_methods[[method]]$stabilize_ok) {
+      .wrn(sprintf("`stabilize` cannot be used with %s and will be ignored",
+                   .method_to_phrase(method)))
+      stabilize <- NULL
     }
+    else {
+      if (treat.type != "continuous" && estimand != "ATE") {
+        .err("`stabilize` can only be supplied when `estimand = \"ATE\"`")
+      }
 
-    if (!rlang::is_formula(stabilize)) {
-      .err("`stabilize` must be `TRUE`, `FALSE`, or a formula with the stabilization factors on the right hand side")
+      if (!rlang::is_formula(stabilize)) {
+        .err("`stabilize` must be `TRUE`, `FALSE`, or a formula with the stabilization factors on the right hand side")
+      }
+
+      stabilize <- update(formula, update(stabilize, NULL ~ .))
     }
-
-    stabilize <- update(formula, update(stabilize, NULL ~ .))
   }
 
   ##Process by
@@ -389,7 +399,7 @@ print.weightit <- function(x, ...) {
   cat(sprintf(" - treatment: %s\n",
               switch(treat.type,
                      "continuous" = "continuous",
-                     "multinomial" = sprintf("%s-category (%s)",
+                     "multi" = sprintf("%s-category (%s)",
                                              nunique(x[["treat"]]),
                                              paste(levels(x[["treat"]]), collapse = ", ")),
                      "binary" = "2-category")))

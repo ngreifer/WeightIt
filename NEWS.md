@@ -3,6 +3,12 @@ WeightIt News and Updates
 
 # `WeightIt` 1.2.1
 
+* Added the new user-facing object `.weightit_methods`, which contains information on each method and the options allowed with it. This is used within `WeightIt` for checking arguments but can also be used by other package developers who call functions in `WeightIt`. See `help(".weightit_methods")` for details.
+
+* `plot.weightit()` can be used with `method = "optweight"` to display the dual variables.
+
+* `missing` no longer allows partial matching.
+
 * Fixes to vignettes and tests to satisfy CRAN checks.
 
 # `WeightIt` 1.2.0
