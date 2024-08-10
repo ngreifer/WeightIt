@@ -61,7 +61,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-07-29</h4>
+            <h4 data-toc-skip class="date">2024-08-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/installing-packages.Rmd" class="external-link"><code>vignettes/installing-packages.Rmd</code></a></small>
       <div class="d-none name"><code>installing-packages.Rmd</code></div>
@@ -82,11 +82,10 @@ you only need the one you want to use. For example, the
 <code>miseam</code> package provides support for logistic regression
 with missing data, but if you have no missing data or you don’t want to
 use the approach implemented in <code>miseam</code>, you don’t need to
-install it. <code>WeightIt</code> strongly depends on four packages,
+install it. <code>WeightIt</code> strongly depends on a few packages,
 which are automatically installed along with <code>WeightIt</code>, so
-you don’t need to worry about installing them separately; these are
-<code>cobalt</code>, <code>ggplot2</code>, <code>crayon</code>, and
-<code>backports</code>.</p>
+you don’t need to worry about installing them separately; these are not
+listed here.</p>
 <p>Below we note each method (by name and by the input to the
 <code>method</code> argument of <code><a href="../reference/weightit.html">weightit()</a></code>) and how to
 install the required packages either from CRAN or otherwise when the
@@ -107,12 +106,12 @@ additional packages are required. For multi-category treatments with
 <code>multi.method = "weightit"</code>, the default,
 <code><a href="../reference/weightit.html">weightit()</a></code> uses internal code.</p>
 <div class="section level3">
-<h3 id="binary-and-continuous-treatments-with-missing-saem">Binary and continuous treatments with
-<code>missing = "saem"</code><a class="anchor" aria-label="anchor" href="#binary-and-continuous-treatments-with-missing-saem"></a>
+<h3 id="missing-saem">
+<code>missing = "saem"</code><a class="anchor" aria-label="anchor" href="#missing-saem"></a>
 </h3>
-<p>For binary and continuous treatments, when missing data is present
-and <code>missing = "saem"</code> is supplied, the <code>misaem</code>
-package is required. To install <code>misaem</code> from CRAN, run</p>
+<p>When missing data is present and <code>missing = "saem"</code> is
+supplied, the <code>misaem</code> package is required. To install
+<code>misaem</code> from CRAN, run</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"misaem"</span><span class="op">)</span></span></code></pre></div>
 <p>If <code>misaem</code> is not on CRAN, or if you want to install the
@@ -296,7 +295,7 @@ different machine learning algorithms to combine them into a
 well-fitting stacked model. These algorithms exist in many different R
 packages, which each need to be installed to use them. See the Suggested
 packages on the <code>SuperLearner</code> <a href="https://cran.r-project.org/package=SuperLearner" class="external-link">CRAN page</a> to
-see what packages might be used with <code>SuperLearner</code>.</p>
+see which packages might be used with <code>SuperLearner</code>.</p>
 <p>There are additional functions for use with <code>SuperLearner</code>
 in the <code>SuperLearnerExtra</code> <a href="https://github.com/ecpolley/SuperLearnerExtra" class="external-link">repository</a>. To
 read these into your R session to be used with
