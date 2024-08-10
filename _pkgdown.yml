@@ -27,6 +27,7 @@ reference:
   - as.weightit
   - make_full_rank
   - plot.weightit
+  - .weightit_methods
 - title: Datasets
 - contents: msmdata
 

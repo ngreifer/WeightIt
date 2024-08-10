@@ -17,7 +17,6 @@ weightit.fit(
   moments = NULL,
   int = FALSE,
   subclass = NULL,
-  is.MSM.method = FALSE,
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
@@ -64,8 +63,6 @@ ignored and set to \code{"glm"}.}
 
 \item{moments, int, subclass}{arguments to customize the weight estimation.
 See \code{\link[=weightit]{weightit()}} for details.}
-
-\item{is.MSM.method}{see \code{\link[=weightitMSM]{weightitMSM()}}. Typically can be ignored.}
 
 \item{missing}{\code{character}; how missing data should be handled. The
 options depend on the \code{method} used. If \code{NULL}, \code{covs} covs

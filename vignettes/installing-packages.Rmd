@@ -21,7 +21,7 @@ knitr::opts_chunk$set(eval = FALSE)
 
 `WeightIt` is a wrapper for several other packages that aid in estimating balancing weights. In many ways, this is `WeigthIt`'s strength, because it is easy to try out several weighting methods without having to learn a completely new syntax for each one. One weakness of this is that when one of these packages is not available (e.g., on CRAN), the method that relies on that package cannot be used.
 
-This document explains how to install each package `WeightIt` uses. You do not need to install every single one; you only need the one you want to use. For example, the `miseam` package provides support for logistic regression with missing data, but if you have no missing data or you don't want to use the approach implemented in `miseam`, you don't need to install it. `WeightIt` strongly depends on four packages, which are automatically installed along with `WeightIt`, so you don't need to worry about installing them separately; these are `cobalt`, `ggplot2`, `crayon`, and `backports`.
+This document explains how to install each package `WeightIt` uses. You do not need to install every single one; you only need the one you want to use. For example, the `miseam` package provides support for logistic regression with missing data, but if you have no missing data or you don't want to use the approach implemented in `miseam`, you don't need to install it. `WeightIt` strongly depends on a few packages, which are automatically installed along with `WeightIt`, so you don't need to worry about installing them separately; these are not listed here.
 
 Below we note each method (by name and by the input to the `method` argument of `weightit()`) and how to install the required packages either from CRAN or otherwise when the CRAN version is not available. In many cases, this involves installing the package from the author's GitHub repository, which requires either the `remotes` or `devtools` package, which both contain the function `install_github()`.
 
@@ -29,9 +29,9 @@ Below we note each method (by name and by the input to the `method` argument of 
 
 Several options are available for estimating propensity score weights using GLMs depending on the treatment type and other features of the desired model. For binary treatments, `weightit()` uses `stats::glm()` by default, and for continuous treatments, `weightit()` uses `stats::lm()` by default, so no additional packages are required. For multi-category treatments with `multi.method = "weightit"`, the default, `weightit()` uses internal code.
 
-### Binary and continuous treatments with `missing = "saem"`
+### `missing = "saem"`
 
-For binary and continuous treatments, when missing data is present and `missing = "saem"` is supplied, the `misaem` package is required. To install `misaem` from CRAN, run
+When missing data is present and `missing = "saem"` is supplied, the `misaem` package is required. To install `misaem` from CRAN, run
 
 ```{r}
 install.packages("misaem")
@@ -182,7 +182,7 @@ If `SuperLearner` is not on CRAN, or if you want to install the development vers
 remotes::install_github("ecpolley/SuperLearner")
 ```
 
-`SuperLearner` itself is a wrapper for many other packages. The whole point of using SuperLearner is to include many different machine learning algorithms to combine them into a well-fitting stacked model. These algorithms exist in many different R packages, which each need to be installed to use them. See the Suggested packages on the `SuperLearner` [CRAN page](https://cran.r-project.org/package=SuperLearner) to see what packages might be used with `SuperLearner`.
+`SuperLearner` itself is a wrapper for many other packages. The whole point of using SuperLearner is to include many different machine learning algorithms to combine them into a well-fitting stacked model. These algorithms exist in many different R packages, which each need to be installed to use them. See the Suggested packages on the `SuperLearner` [CRAN page](https://cran.r-project.org/package=SuperLearner) to see which packages might be used with `SuperLearner`.
 
 There are additional functions for use with `SuperLearner` in the `SuperLearnerExtra` [repository](https://github.com/ecpolley/SuperLearnerExtra). To read these into your R session to be used with `method = "super"`, use `source()` on the raw text file URL. For example, to read in the code for `SL.dbarts`, run
 

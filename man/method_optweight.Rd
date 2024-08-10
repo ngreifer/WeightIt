@@ -9,7 +9,7 @@ This page explains the details of estimating optimization-based weights (also kn
 
 In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \pkgfun{optweight}{optweight} from the \CRANpkg{optweight} package.
 
-Because \code{optweight()} offers finer control and uses the same syntax as \code{weightit()}, it is recommended that \pkgfun{optweight}{optweight} be used instead of \code{weightit} with \code{method = "optweight"}.
+Because \code{optweight()} offers finer control and uses the same syntax as \code{weightit()}, it is recommended that \pkgfun{optweight}{optweight} be used instead of \code{weightit()} with \code{method = "optweight"}.
 \subsection{Binary Treatments}{
 
 For binary treatments, this method estimates the weights using \pkgfun{optweight}{optweight}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the \code{optweight} fit object.
@@ -51,6 +51,8 @@ M-estimation is not supported.
 }
 \details{
 Stable balancing weights are weights that solve a constrained optimization problem, where the constraints correspond to covariate balance and the loss function is the variance (or other norm) of the weights. These weights maximize the effective sample size of the weighted sample subject to user-supplied balance constraints. An advantage of this method over entropy balancing is the ability to allow approximate, rather than exact, balance through the \code{tols} argument, which can increase precision even for slight relaxations of the constraints.
+
+\code{plot()} can be used on the output of \code{weightit()} with \code{method = "optweight"} to display the dual variables; see Examples and \code{\link[=plot.weightit]{plot.weightit()}} for more details.
 }
 \note{
 The specification of \code{tols} differs between \code{weightit()} and \code{optweight()}. In \code{weightit()}, one tolerance value should be included per level of each factor variable, whereas in \code{optweight()}, all levels of a factor are given the same tolerance, and only one value needs to be supplied for a factor variable. Because of the potential for confusion and ambiguity, it is recommended to only supply one value for \code{tols} in \code{weightit()} that applies to all variables. For finer control, use \code{optweight()} directly.
@@ -99,6 +101,7 @@ data("lalonde", package = "cobalt")
                 tols = 0))
 summary(W1)
 cobalt::bal.tab(W1)
+plot(W1)
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
@@ -107,13 +110,9 @@ cobalt::bal.tab(W1)
                 tols = .01))
 summary(W2)
 cobalt::bal.tab(W2)
+plot(W2)
 
 #Balancing covariates with respect to re75 (continuous)
-(W3 <- weightit(re75 ~ age + educ + married +
-                  nodegree + re74, data = lalonde,
-                method = "optweight", tols = .05))
-summary(W3)
-cobalt::bal.tab(W3)
 \dontshow{\}) # examplesIf}
 }
 \references{

@@ -59,6 +59,6 @@ URL: https://ngreifer.github.io/WeightIt/,
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr
 LazyData: true
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
