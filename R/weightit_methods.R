@@ -32,7 +32,7 @@
 #' names(.weightit_methods)
 #'
 #' # Get all acceptable names and aliases
-#' unlist(lapply(.weightit_methods, `[[`, "alias"))
+#' lapply(.weightit_methods, `[[`, "alias")
 #'
 #' # Which estimands are allowed with `method = "bart"`
 #' .weightit_methods[["bart"]]$estimand
@@ -45,9 +45,7 @@
 #'
 #' # All methods that return propensity scores (for
 #' # binary treatments only)
-#' supp <- sapply(.weightit_methods, function(x) {
-#'   x$ps
-#' })
+#' supp <- sapply(.weightit_methods, `[[`, "ps")
 #' names(.weightit_methods)[supp]
 
 #' @export

@@ -180,6 +180,6 @@ We can compare the expected potential outcomes under each regime using `marginal
 hypotheses(p, "b8 - b1 = 0")
 ```
 
-These results indicate that receive treatment at all time points reduces the risk of the outcome relative to not receiving treatment at all.
+These results indicate that receiving treatment at all time points reduces the risk of the outcome relative to not receiving treatment at all.
 
 ## References
