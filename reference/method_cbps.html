@@ -223,7 +223,7 @@ M-estimation is supported for the just-identified CBPS (the default, setting ove
     <h2 id="additional-arguments">Additional Arguments<a class="anchor" aria-label="anchor" href="#additional-arguments"></a></h2>
 
 
-
+<p><code>moments</code> and <code>int</code> are accepted. See <code><a href="weightit.html">weightit()</a></code> for details.</p>
 <p>The following additional arguments can be specified:</p><dl><dt><code>over</code></dt>
 <dd><p><code>logical</code>; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is <code>FALSE</code> to use the just-identified CBPS.</p></dd>
 
@@ -238,6 +238,9 @@ M-estimation is supported for the just-identified CBPS (the default, setting ove
 
 <dt><code>maxit</code></dt>
 <dd><p>the maximum number of iterations for convergence of the optimization. Passed to the <code>control</code> argument of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>. Default is 1000.</p></dd>
+
+<dt><code>quantile</code></dt>
+<dd><p>A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75</code>) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.</p></dd>
 
 
 </dl></div>

@@ -258,7 +258,7 @@ that perform the estimation of balancing weights using the requested
 more information about them, including additional arguments and outputs
 (e.g., when <code>include.obj = TRUE</code>), how missing values are treated,
 which estimands are allowed, and whether sampling weights are allowed.</p><table class="table table"><tr><td><code><a href="method_glm.html">"glm"</a></code></td><td>Propensity score weighting using generalized linear models</td></tr><tr><td><code><a href="method_gbm.html">"gbm"</a></code></td><td>Propensity score weighting using generalized boosted modeling</td></tr><tr><td><code><a href="method_cbps.html">"cbps"</a></code></td><td>Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_npcbps.html">"npcbps"</a></code></td><td>Non-parametric Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_ebal.html">"ebal"</a></code></td><td>Entropy balancing</td></tr><tr><td><code><a href="method_ipt.html">"ipt"</a></code></td><td>Inverse probability tilting</td></tr><tr><td><code><a href="method_optweight.html">"optweight"</a></code></td><td>Optimization-based weighting</td></tr><tr><td><code><a href="method_super.html">"super"</a></code></td><td>Propensity score weighting using SuperLearner</td></tr><tr><td><code><a href="method_bart.html">"bart"</a></code></td><td>Propensity score weighting using Bayesian additive regression trees (BART)</td></tr><tr><td><code><a href="method_energy.html">"energy"</a></code></td><td>Energy balancing</td></tr></table><p><code>method</code> can also be supplied as a user-defined function; see
-<code><a href="method_user.html">method_user</a></code> for instructions and examples.</p>
+<code><a href="method_user.html">method_user</a></code> for instructions and examples. Setting <code>method = NULL</code> computes units weights.</p>
 <p>When using <code>weightit()</code>, please cite both the <span class="pkg">WeightIt</span> package
 (using <code>citation("WeightIt")</code>) and the paper(s) in the references
 section of the method used.</p>
@@ -272,15 +272,14 @@ longitudinal) treatments for use in estimating marginal structural models
 matrix of covariates and a vector of treatment statuses rather than a
 formula and data frame and performs minimal argument checking and
 processing. It may be useful for speeding up simulation studies for which
-the correct arguments are known. In general <code>weightit()</code> should be
+the correct arguments are known. In general, <code>weightit()</code> should be
 used.</p>
 <p><code><a href="summary.weightit.html">summary.weightit()</a></code> for summarizing the weights</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates between treatment groups (binary)</span></span></span>
