@@ -124,7 +124,7 @@
 #' | [`"energy"`][method_energy] | Energy balancing |
 #'
 #' `method` can also be supplied as a user-defined function; see
-#' [`method_user`] for instructions and examples.
+#' [`method_user`] for instructions and examples. Setting `method = NULL` computes units weights.
 #'
 #' When using `weightit()`, please cite both the \pkg{WeightIt} package
 #' (using `citation("WeightIt")`) and the paper(s) in the references
@@ -139,13 +139,12 @@
 #' matrix of covariates and a vector of treatment statuses rather than a
 #' formula and data frame and performs minimal argument checking and
 #' processing. It may be useful for speeding up simulation studies for which
-#' the correct arguments are known. In general `weightit()` should be
+#' the correct arguments are known. In general, `weightit()` should be
 #' used.
 #'
 #' [summary.weightit()] for summarizing the weights
 #'
 #' @examples
-#'
 #' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'

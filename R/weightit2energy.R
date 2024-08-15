@@ -168,7 +168,6 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
       .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
                    word_list(weightit_distances(), "or", quotes = TRUE)))
     }
-
   }
 
   d <- unname(d[subset, subset])
@@ -712,8 +711,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     X.targets <- col.w.m(d.covs, s.weights)
     A.targets <- col.w.m(d.treat, s.weights)
 
-    d.covs <- scale(d.covs, center = X.targets, scale = FALSE)
-    d.treat <- scale(d.treat, center = A.targets, scale = FALSE)
+    d.covs <- center(d.covs, X.targets)
+    d.treat <- center(d.treat, A.targets)
 
     Amat <- cbind(Amat, d.covs * s.weights, d.treat * s.weights)
     lvec <- c(lvec, rep.int(0, ncol(d.covs)), rep.int(0, ncol(d.treat)))

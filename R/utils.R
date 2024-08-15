@@ -113,15 +113,20 @@ ordinal <- function(x) {
   setNames(out, names(x))
 }
 round_df_char <- function(df, digits, pad = "0", na_vals = "") {
-  if (NROW(df) == 0 || NCOL(df) == 0) return(df)
-  if (!is.data.frame(df)) df <- as.data.frame.matrix(df, stringsAsFactors = FALSE)
+  if (NROW(df) == 0L || NCOL(df) == 0L) return(df)
+
+  if (!is.data.frame(df))
+    df <- as.data.frame.matrix(df, stringsAsFactors = FALSE)
+
   rn <- rownames(df)
   cn <- colnames(df)
 
   infs <- o.negs <- array(FALSE, dim = dim(df))
   nas <- is.na(df)
   nums <- vapply(df, is.numeric, logical(1))
-  infs[,nums] <- vapply(which(nums), function(i) !nas[,i] & !is.finite(df[[i]]), logical(NROW(df)))
+  for (i in which(nums)) {
+    infs[,i] <- !nas[,i] & !is.finite(df[[i]])
+  }
 
   for (i in which(!nums)) {
     if (can_str2num(df[[i]])) {
@@ -221,7 +226,7 @@ str2num <- function(x) {
   nas <- is.na(x)
   if (!is.numeric(x) && !is.logical(x)) x <- as.character(x)
   suppressWarnings(x_num <- as.numeric(x))
-  is.na(x_num[nas]) <- TRUE
+  is.na(x_num)[nas] <- TRUE
   x_num
 }
 cat0 <- function(... , file = "", sep = "", fill = FALSE, labels = NULL,
@@ -247,10 +252,13 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
   if (range[2] < range[1]) range <- c(range[2], range[1])
 
   if (anyNA(x)) {
-    if (length(na.action) != 1 || !is.atomic(na.action)) stop("'na.action' must be an atomic vector of length 1.", call. = FALSE)
+    if (length(na.action) != 1L || !is.logical(na.action)) stop("'na.action' must be a logical vector of length 1.", call. = FALSE)
   }
-  if (inclusive) out <- ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
-  else out <- ifelse(is.na(x), na.action, x > range[1] & x < range[2])
+
+  out <- {
+    if (inclusive) ifelse(is.na(x), na.action, x >= range[1] & x <= range[2])
+    else ifelse(is.na(x), na.action, x > range[1] & x < range[2])
+  }
 
   out
 }
@@ -271,55 +279,65 @@ binarize <- function(variable, zero = NULL, one = NULL) {
 
   if (length(unique.vals) == 1L)
     return(setNames(rep.int(1L, length(variable)), names(variable)))
+
   if (length(unique.vals) != 2L)
     .err(sprintf("cannot binarize %s: more than two levels", var.name))
 
-  if (is_null(zero)) {
-    if (is_null(one)) {
-      if (can_str2num(unique.vals)) {
-        variable.numeric <- str2num(variable)
-      }
-      else {
-        variable.numeric <- as.numeric(as.factor(variable))
-      }
+  if (is_not_null(zero)) {
+    if (zero %nin% unique.vals)
+      .err(sprintf("the argument to `zero` is not the name of a level of %s", var.name))
 
-      if (0 %in% variable.numeric) zero <- 0
-      else zero <- min(variable.numeric, na.rm = TRUE)
+    return(setNames(as.integer(variable != zero), names(variable)))
+  }
 
-      return(setNames(as.integer(variable.numeric != zero), names(variable)))
-    }
-    else {
-      if (one %in% unique.vals)
-        return(setNames(as.integer(variable == one), names(variable)))
-      stop("The argument to 'one' is not the name of a level of variable.", call. = FALSE)
-    }
+  if (is_not_null(one)) {
+    if (one %nin% unique.vals)
+      .err(sprintf("the argument to `one` is not the name of a level of %s", var.name))
+
+    return(setNames(as.integer(variable == one), names(variable)))
   }
-  else {
-    if (zero %in% unique.vals)
-      return(setNames(as.integer(variable != zero), names(variable)))
-    stop("The argument to 'zero' is not the name of a level of variable.", call. = FALSE)
+
+  variable.numeric <- {
+    if (can_str2num(unique.vals)) str2num(variable)
+    else as.numeric(as.factor(variable))
   }
+
+  zero <- {
+    if (0 %in% variable.numeric) 0
+    else min(variable.numeric, na.rm = TRUE)
+  }
+
+  setNames(as.integer(variable.numeric != zero), names(variable))
 }
 center <- function(x, at = NULL, na.rm = TRUE) {
   if (is.data.frame(x)) {
     x <- as.matrix.data.frame(x)
     type <- "df"
   }
-  if (!is.numeric(x)) stop("'x' must be numeric.")
-  else if (is.array(x) && length(dim(x)) > 2) stop("'x' must be a numeric or matrix-like (not array).")
-  else if (!is.matrix(x)) {
+
+  if (!is.numeric(x))
+    stop("'x' must be numeric.")
+
+  if (is.array(x) && length(dim(x)) > 2)
+    stop("'x' must be a numeric or matrix-like (not array).")
+
+  if (is.matrix(x)) {
+    type <- "matrix"
+  }
+  else {
     x <- matrix(x, ncol = 1)
     type <- "vec"
   }
-  else type <- "matrix"
+
   if (is_null(at)) at <- colMeans(x, na.rm = na.rm)
   else if (length(at) %nin% c(1, ncol(x))) stop("'at' is not the right length.")
+
   out <- x - matrix(at, byrow = TRUE, ncol = ncol(x), nrow = nrow(x))
 
-  if (type == "df") out <- as.data.frame.matrix(out)
-  else if (type == "vec") out <- drop(out)
-
-  out
+  switch(type,
+         "df" = as.data.frame.matrix(out),
+         "vec" = drop(out),
+         out)
 }
 w.m <- function(x, w = NULL, na.rm = TRUE) {
   if (is_null(w)) w <- rep.int(1, length(x))
