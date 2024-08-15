@@ -202,9 +202,9 @@ summary.multinom_weightit <- function(object, ci = FALSE, level = .95, transform
 summary.ordinal_weightit <- function(object, ci = FALSE, level = .95, transform = NULL, ...) {
   out <- summary.multinom_weightit(object, ci = ci, level = level, transform = transform, ...)
 
-  nthreshold <- ncol(object$fitted.values) - 1
+  nthreshold <- ncol(object$fitted.values) - 1L
 
-  attr(out, "thresholds") <- rownames(out$coefficients)[-seq(1, nrow(out$coefficients) - nthreshold)]
+  attr(out, "thresholds") <- rownames(out$coefficients)[-seq_len(nrow(out$coefficients) - nthreshold)]
 
   out
 }
@@ -287,16 +287,17 @@ summary.coxph_weightit <- function(object, ci = FALSE, level = .95, transform = 
 print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") - 3L),
                                        signif.stars = getOption("show.signif.stars"),
                                        ...) {
-  cat("\n", underline("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
-      "\n", sep = "")
+  cat0("\n", underline("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
+       "\n")
 
   if (length(x$aliased) == 0L) {
     cat("\nNo Coefficients\n\n")
     return(invisible(x))
   }
 
-  cat("\n", underline(paste0("Coefficients", if (x$transformed) " (transformed):" else ":")),
-      "\n", sep = "")
+  cat0("\n", underline(sprintf("Coefficients%s:",
+                               if (x$transformed) " (transformed)" else "")),
+       "\n")
 
   coefs <- x$coefficients
 
@@ -328,8 +329,8 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
   if (is_not_null(attr(x, "thresholds"))) {
     thresholds <- x$coefficients[attr(x, "thresholds"),, drop = FALSE]
 
-    cat("\n", underline(paste0("Thresholds", if (x$transformed) " (transformed):" else ":")),
-        "\n", sep = "")
+    cat0("\n", underline(sprintf("Thresholds%s:", if (x$transformed) " (transformed)" else "")),
+         "\n")
 
     printCoefmat(thresholds, digits = digits, signif.legend = FALSE,
                  na.print = ".",
@@ -347,13 +348,15 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
 #' @rdname glm_weightit-methods
 print.glm_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
 
-  cat("\n", underline("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
-      "\n", sep = "")
+  cat0("\n", underline("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
+       "\n")
 
   if (is_not_null(coef(x))) {
-    cat("\n", underline(paste0("Coefficients",
-                               if (is.character(co <- x$contrasts))
-                                 paste("  [contrasts: ", apply(cbind(names(co), co), 1L, paste, collapse = "="), "]"), ":\n")), sep = "")
+    cat0("\n", underline(sprintf("Coefficients%s:",
+                                 if (is.character(co <- x$contrasts))
+                                   paste("  [contrasts: ", apply(cbind(names(co), co), 1L, paste, collapse = "="), "]")
+                                 else "")),
+         "\n")
 
     print.default(format(x$coefficients, digits = digits),
                   print.gap = 2, quote = FALSE)
@@ -361,7 +364,9 @@ print.glm_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ..
                        .vcov_to_phrase(x$vcov_type,
                                        is_not_null(x$cluster)))))
   }
-  else cat("No coefficients\n\n")
+  else {
+    cat("No coefficients\n\n")
+  }
 
   invisible(x)
 }
@@ -419,7 +424,7 @@ vcov.glm_weightit <- function(object, complete = TRUE, ...) {
       .err("no variance-covariance matrix was found in the supplied object; this is likely a bug")
     }
 
-    .wrn("`vcov` was specified as `\"none\"` in the original fitting call, so no variance-covariance matrix will be returned")
+    .wrn('`vcov` was specified as `"none"` in the original fitting call, so no variance-covariance matrix will be returned')
 
     return(NULL)
   }

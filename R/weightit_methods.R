@@ -20,7 +20,7 @@
 #' \item{`moments_int_ok`}{a logical for whether `moments`, `int`, and `quantile` can be used with the method.}
 #' \item{`moments_default`}{when `moments_int_ok` is `TRUE`, the default value of `moments` used with the method. For most methods, this is 1.}
 #' \item{`density_ok`}{a logical for whether arguments that control the density can be used with the method when used with a continuous treatment.}
-#' \item{`stabilize_ok`}{a logical for whether the `stabilize` argument (and `num.formula` for longitduinal treatments) can be used with the method.}
+#' \item{`stabilize_ok`}{a logical for whether the `stabilize` argument (and `num.formula` for longitudinal treatments) can be used with the method.}
 #' \item{`plot.weightit_ok`}{a logical for whether `plot()` can be used on the `weightit` output with the method.}
 #' }
 #'

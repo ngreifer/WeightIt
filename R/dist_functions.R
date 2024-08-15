@@ -12,18 +12,18 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 
   #If all variables have no variance, use Euclidean to avoid errors
   #If some have no variance, removes those to avoid messing up distances
-  no_variance <- which(apply(X, 2, function(x) abs(max(x) - min(x)) < sqrt(.Machine$double.eps)))
-  if (length(no_variance) == ncol(X)) {
+  no_variance <- apply(X, 2, function(x) abs(max(x) - min(x)) < sqrt(.Machine$double.eps))
+  if (sum(no_variance) == ncol(X)) {
     method <- "euclidean"
-    X <- X[,1, drop = FALSE]
+    X <- X[, 1, drop = FALSE]
   }
-  else if (length(no_variance) > 0) {
-    X <- X[,-no_variance, drop = FALSE]
+  else {
+    X <- X[, !no_variance, drop = FALSE]
   }
 
   method <- match_arg(method, weightit_distances())
 
-  if (is.null(discarded)) discarded <- rep.int(FALSE, nrow(X))
+  if (is_null(discarded)) discarded <- rep.int(FALSE, nrow(X))
 
   if (method == "mahalanobis") {
     # X <- sweep(X, 2, colMeans(X))
@@ -64,7 +64,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
     else var_r <- cov.wt(X_r, s.weights[!discarded])$cov
 
     multiplier <- sd(seq_len(sum(!discarded)))/sqrt(diag(var_r))
-    var_r <- var_r * outer(multiplier, multiplier, "*")
+    var_r <- var_r * tcrossprod(multiplier)
 
     inv_var <- NULL
     d <- det(var_r)
@@ -196,7 +196,8 @@ check_X <- function(X) {
   }
 
   if (anyNA(X)) stop("Missing values are not allowed in the covariates.", call. = FALSE)
-  else if (any(!is.finite(X))) stop("Non-finite values are not allowed in the covariates.", call. = FALSE)
+
+  if (any(!is.finite(X))) stop("Non-finite values are not allowed in the covariates.", call. = FALSE)
 
   if (!is.numeric(X) || length(dim(X)) != 2) {
     stop("bad X")
@@ -208,7 +209,7 @@ check_X <- function(X) {
 
 is.cov_like <- function(var, X) {
   is.numeric(var) &&
-    length(dim(var)) == 2 &&
+    length(dim(var)) == 2L &&
     (missing(X) || all(dim(var) == ncol(X))) &&
     isSymmetric(var) &&
     all(diag(var) >= 0)
@@ -217,11 +218,7 @@ weightit_distances <- function() {
   c("mahalanobis", "robust_mahalanobis", "euclidean", "scaled_euclidean")
 }
 mahalanobize <- function(X, inv_var) {
-  ## Mahalanobize covariates by computing cholesky decomp,
+  ## Mahalanobize covariates by computing Cholesky decomp,
   ## allowing for NPD cov matrix by pivoting
-  ch <- suppressWarnings(chol(inv_var, pivot = TRUE))
-  p <- order(attr(ch, "pivot"))
-  # r <- seq_len(attr(ch, "rank"))
-
-  tcrossprod(X, ch[, p, drop = FALSE])
+  tcrossprod(X, .chol2(inv_var))
 }

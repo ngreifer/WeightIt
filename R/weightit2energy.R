@@ -153,7 +153,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   d <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
   A[["dist.mat"]] <- NULL
 
-  if (is.character(d) && length(d) == 1L) {
+  if (chk::vld_string(d)) {
     dist.covs <- transform_covariates(data = covs, method = d,
                                       s.weights = s.weights, discarded = !subset)
     d <- unname(eucdist_internal(dist.covs))
@@ -398,7 +398,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   d <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
   A[["dist.mat"]] <- NULL
 
-  if (is.character(d) && length(d) == 1L) {
+  if (chk::vld_string(d)) {
     dist.covs <- transform_covariates(data = covs, method = d,
                                       s.weights = s.weights, discarded = !subset)
     d <- unname(eucdist_internal(dist.covs))
@@ -593,8 +593,6 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   list(w = w, fit.obj = opt.out)
 }
 
-# weightit2energy.multi <- weightit2energy
-
 weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("osqp")
 
@@ -607,7 +605,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   Xdist <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
   A[["dist.mat"]] <- NULL
 
-  if (is.character(Xdist) && length(Xdist) == 1L) {
+  if (chk::vld_string(Xdist)) {
     dist.covs <- transform_covariates(data = covs, method = Xdist,
                                       s.weights = s.weights, discarded = !subset)
     Xdist <- unname(eucdist_internal(X = dist.covs))
@@ -621,7 +619,6 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
       .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
                    word_list(weightit_distances(), "or", quotes = TRUE)))
     }
-
   }
 
   Xdist <- unname(Xdist[subset, subset])
@@ -697,7 +694,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   P <- Pdcow + PebA + PebX
   q <- qebA + qebX
 
-  P <- P * outer(s.weights, s.weights)
+  P <- P * tcrossprod(s.weights)
   q <- q * s.weights
 
   Amat <- cbind(diag(n), s.weights)
@@ -729,7 +726,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
     X.means <- col.w.m(covs, s.weights)
     A.mean <- w.m(treat, s.weights)
 
-    covs <- scale(covs, center = X.means, scale = FALSE)
+    covs <- center(covs, X.means)
     treat <- treat - A.mean
 
     Amat <- cbind(Amat, covs * treat * s.weights)

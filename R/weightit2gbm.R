@@ -256,17 +256,20 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   s.m.matches <- charmatch(criterion, available.criteria)
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
-    if (startsWith(criterion, "cv") &&
-        can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
-      cv <- round(str2num(numcv))
-      if (cv < 2) .err("at least 2 CV-folds must be specified in `criterion`")
-    }
-    else {
-      .err(sprintf("`criterion` must be one of %s.",
+    if (!startsWith(criterion, "cv") ||
+        !can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
+      .err(sprintf("`criterion` must be one of %s",
                    word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
     }
+
+    cv <- round(str2num(numcv))
+
+    if (cv < 2)
+      .err("at least 2 CV-folds must be specified in `criterion`")
   }
-  else criterion <- available.criteria[s.m.matches]
+  else {
+    criterion <- available.criteria[s.m.matches]
+  }
 
   tunable <- c("interaction.depth", "shrinkage", "distribution", "use.offset")
 
@@ -385,8 +388,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     if (cv == 0) {
 
       n.trees <- fit[["n.trees"]]
-      iters <- 1:n.trees
-      iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
+      iters <- seq_len(n.trees)
+      iters.grid <- unique(round(seq(start.tree, n.trees, length.out = n.grid)))
 
       if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) {
         .err("a problem has occurred")
@@ -565,15 +568,20 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   s.m.matches <- charmatch(criterion, available.criteria)
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
-    if (startsWith(criterion, "cv") &&
-        can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
-      cv <- round(str2num(numcv))
-      if (cv < 2) .err("at least 2 CV-folds must be specified in `criterion`")
+    if (!startsWith(criterion, "cv") ||
+        !can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
+      .err(sprintf("`criterion` must be one of %s",
+                   word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
     }
-    else .err(sprintf("`criterion` must be one of %s",
-                      word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
+
+    cv <- round(str2num(numcv))
+
+    if (cv < 2)
+      .err("at least 2 CV-folds must be specified in `criterion`")
   }
-  else criterion <- available.criteria[s.m.matches]
+  else {
+    criterion <- available.criteria[s.m.matches]
+  }
 
   tunable <- c("interaction.depth", "shrinkage", "use.offset", "distribution")
 
@@ -697,8 +705,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     if (cv == 0) {
 
       n.trees <- fit[["n.trees"]]
-      iters <- 1:n.trees
-      iters.grid <- round(seq(start.tree, n.trees, length.out = n.grid))
+      iters <- seq_len(n.trees)
+      iters.grid <- unique(round(seq(start.tree, n.trees, length.out = n.grid)))
 
       if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) {
         .err("a problem has occurred")
@@ -806,7 +814,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
         best.w <- dens.num / dens.denom
 
-        # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
         current.best.loss <- best.loss
         best.tune.index <- i
       }

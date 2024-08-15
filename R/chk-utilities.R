@@ -1,8 +1,9 @@
 #chk utilities
 
 pkg_caller_call <- function(start = 1) {
-  package.funs <- c(getNamespaceExports(utils::packageName()),
-                    .getNamespaceInfo(asNamespace(utils::packageName()), "S3methods")[, 3])
+  pn <- utils::packageName()
+  package.funs <- c(getNamespaceExports(pn),
+                    .getNamespaceInfo(asNamespace(pn), "S3methods")[, 3])
   k <- start #skip checking pkg_caller_call()
   e_max <- start
   while (!is.null(e <- rlang::caller_call(k))) {
@@ -19,7 +20,7 @@ pkg_caller_call <- function(start = 1) {
                call = pkg_caller_call(start = 2))
 }
 .wrn <- function(..., n = NULL, tidy = TRUE, immediate = TRUE) {
-  if (immediate && isTRUE(all.equal(getOption("warn"), 0))) {
+  if (immediate && isTRUE(all.equal(0, getOption("warn")))) {
     op <- options(warn = 1)
     on.exit(options(op))
   }
@@ -29,25 +30,6 @@ pkg_caller_call <- function(start = 1) {
 .msg <- function(..., n = NULL, tidy = TRUE) {
   m <- chk::message_chk(..., n = n, tidy = tidy)
   rlang::inform(paste(strwrap(m), collapse = "\n"), tidy = FALSE)
-}
-
-.chk_null_or <- function(x, chk, ..., x_name = NULL) {
-  if (is.null(x_name)) {
-    x_name <- deparse1(substitute(x))
-  }
-
-  x_name <- add_quotes(x_name, "`")
-
-  if (is.null(x)) {
-    return(invisible(x))
-  }
-
-  tryCatch(chk(x, ..., x_name = x_name),
-           error = function(e) {
-             msg <- sub("[.]$", " or `NULL`.",
-                        conditionMessage(e))
-             .err(msg)
-           })
 }
 
 .chk_basic_vector <- function(x, x_name = NULL) {

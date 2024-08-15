@@ -96,10 +96,6 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
 
   A <- list(...)
 
-  if (!all_the_same(s.weights)) {
-    .err("sampling weights cannot be used with `method = \"npcbps\"`")
-  }
-
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
@@ -118,9 +114,13 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
 
   new.data <- data.frame(treat = treat, covs)
 
+  corprior <- if_null_then(A[["corprior"]], .01)
+
   tryCatch({verbosely({
-    fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
-                   quote = TRUE)
+    fit <- CBPS::npCBPS(formula(new.data),
+                        data = new.data,
+                        corprior = corprior,
+                        print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
     e. <- conditionMessage(e)
@@ -141,10 +141,6 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   A <- list(...)
 
-  if (!all_the_same(s.weights)) {
-    .err("sampling weights cannot be used with `method = \"npcbps\"`")
-  }
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
@@ -161,9 +157,13 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   new.data <- data.frame(treat = treat, covs)
 
+  corprior <- if_null_then(A[["corprior"]], .01)
+
   tryCatch({verbosely({
-    fit <- do.call(CBPS::npCBPS, c(list(formula(new.data), data = new.data, print.level = 1), A),
-                   quote = TRUE)
+    fit <- CBPS::npCBPS(formula(new.data),
+                        data = new.data,
+                        corprior = corprior,
+                        print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
     e. <- conditionMessage(e)

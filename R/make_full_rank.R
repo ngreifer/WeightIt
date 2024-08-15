@@ -74,7 +74,7 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
   #If intercept is to be included in check, add column of 1s
   if (with.intercept) {
     q <- qr(cbind(1, mat))
-    keep[q$pivot[-seq(q$rank)]-1] <- FALSE
+    keep[q$pivot[-seq(q$rank)] - 1] <- FALSE
   }
   else {
     q <- qr(mat)

@@ -204,7 +204,7 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
       if (drop) {
         weights[to.be.trimmed & (weights < trim.w[1] | weights > trim.w[2])] <- 0
         .msg(sprintf("setting weights beyond %s where treat is not %s to 0",
-                     word_list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%")),
+                     word_list(paste0(round(100 * trim.q[c(lower, TRUE)], 2), "%")),
                      word_list(groups.not.to.trim, and.or = "or")))
       }
       else {
@@ -222,14 +222,14 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
       if (drop) {
         weights[weights < trim.w[1] | weights > trim.w[2]] <- 0
         .msg(sprintf("Setting weights beyond %s to 0",
-                     word_list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%"))))
+                     word_list(paste0(round(100 * trim.q[c(lower, TRUE)], 2), "%"))))
       }
       else {
         weights[weights < trim.w[1]] <- trim.w[1]
         weights[weights > trim.w[2]] <- trim.w[2]
 
         .msg(sprintf("Trimming weights to %s",
-                     word_list(paste0(round(100*trim.q[c(lower, TRUE)], 2), "%"))))
+                     word_list(paste0(round(100 * trim.q[c(lower, TRUE)], 2), "%"))))
       }
 
     }
@@ -252,7 +252,7 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
       }
 
       weights.text <- {
-        if (at > 1) paste(at, "weights")
+        if (at > 1) sprintf("%s weights", at)
         else if (lower) "weights"
         else "weight"
       }
@@ -292,7 +292,7 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
       }
 
       weights.text <- {
-        if (at > 1) paste(at, "weights")
+        if (at > 1) sprintf("%s weights", at)
         else if (lower) "weights"
         else "weight"
       }
@@ -307,12 +307,12 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
                      weights.text))
       }
       else {
-      weights[weights < trim.w[1]] <- trim.w[1]
-      weights[weights > trim.w[2]] <- trim.w[2]
+        weights[weights < trim.w[1]] <- trim.w[1]
+        weights[weights > trim.w[2]] <- trim.w[2]
 
-      .msg(sprintf("trimming the %s %s",
-                   word_list(c("top", "bottom")[c(TRUE, lower)]),
-                   weights.text))
+        .msg(sprintf("trimming the %s %s",
+                     word_list(c("top", "bottom")[c(TRUE, lower)]),
+                     weights.text))
       }
     }
   }

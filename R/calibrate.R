@@ -56,7 +56,7 @@ calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, ...) {
   }
   chk::chk_numeric(x)
 
-  s.weights <- process.s.weights(s.weights, data)
+  s.weights <- .process.s.weights(s.weights, data)
   if (is_null(s.weights)) s.weights <- rep.int(1, length(x))
 
   p <- glm.fit(cbind(1, x), treat, weights = s.weights,

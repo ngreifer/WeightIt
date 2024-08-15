@@ -141,7 +141,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
 
   covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
+                                  focal = focal, treat = treat))
 
   for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
@@ -226,44 +226,62 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, verbose, ...) {
   A <- list(...)
   rlang::check_installed("optweight")
-  if (is_not_null(covs.list)) {
-    covs.list <- lapply(covs.list, function(c) {
-      covs <- c[subset, , drop = FALSE]
-      covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
-      for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
-      if (missing == "ind") {
-        covs <- add_missing_indicators(covs)
-      }
+  s.weights <- s.weights[subset]
+  treat.types <- character(length(treat.list))
 
-      covs
-    })
-  }
-  if (is_not_null(treat.list)) {
-    treat.list <- lapply(treat.list, function(t) {
-      treat <- t[subset]
-      if (get_treat_type(t) != "continuous") treat <- factor(treat)
-      return(treat)
-    })
-  }
-  if (is_not_null(s.weights)) {
-    s.weights <- s.weights[subset]
+  for (i in seq_along(treat.list)) {
+    treat.list[[i]] <- treat.list[[i]][subset]
+
+    if (!has_treat_type(treat.list[[i]])) {
+      treat.list[[i]] <- assign_treat_type(treat.list[[i]])
+    }
+    treat.types[i] <- get_treat_type(treat.list[[i]])
+
+    if (get_treat_type(treat.list[[i]]) != "continuous") {
+      treat.list[[i]] <- factor(treat.list[[i]])
+    }
+
+    covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
+
+    if (missing == "ind") {
+      covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
+    }
+
+    covs.list[[i]] <- cbind(covs.list[[i]],
+                            .int_poly_f(covs.list[[i]], poly = moments, int = int))
+
+    if (treat.types[i] %in% c("binary", "multi") &&
+        is_not_null(A[["quantile"]])) {
+      covs.list[[i]] <- cbind(covs.list[[i]], .quantile_f(covs.list[[i]], qu = A[["quantile"]],
+                                                          s.weights = s.weights,
+                                                          treat = treat.list[[i]]))
+    }
+
+    for (j in seq_col(covs.list[[i]])) {
+      covs.list[[i]][,j] <- .make_closer_to_1(covs.list[[i]][,j])
+    }
   }
 
   baseline.data <- data.frame(treat.list[[1]], covs.list[[1]])
   baseline.formula <- formula(baseline.data)
-  if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(baseline.formula, baseline.data, A[["tols"]], stop = TRUE)
+  if ("tols" %in% names(A)) {
+    A[["tols"]] <- optweight::check.tols(baseline.formula, baseline.data, A[["tols"]], stop = TRUE)
+  }
+
   if ("targets" %in% names(A)) {
     .wrn("`targets` cannot be used through WeightIt and will be ignored")
     A[["targets"]] <- NULL
   }
 
   verbosely({
-    out <- do.call(optweight::optweight.fit, c(list(treat = treat.list,
-                                                    covs = covs.list,
-                                                    s.weights = s.weights,
-                                                    verbose = TRUE),
-                                               A), quote = TRUE)
+    out <- do.call(optweight::optweight.fit,
+                   c(list(treat = treat.list,
+                          covs = covs.list,
+                          s.weights = s.weights,
+                          verbose = TRUE),
+                     A),
+                   quote = TRUE)
   }, verbose = verbose)
 
   list(w = out$w, fit.obj = out)
@@ -283,7 +301,7 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
 
   d$by <- factor(d$by, levels = names(info))
 
-    title <- "Dual Variables for Constraints"
+  title <- "Dual Variables for Constraints"
   # }
   d$cov <- factor(d$cov, levels = rev(unique(d$cov)))
   d$constraint <- factor(d$constraint, levels = unique(d$constraint, nmax = 2),

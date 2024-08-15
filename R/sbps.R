@@ -135,8 +135,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   data.list <- list(data, obj2[["covs"]], obj[["covs"]])
   combined.data <- do.call("data.frame", clear_null(data.list))
   processed.moderator <- .process_by(moderator, data = clear_null(combined.data),
-                                    treat = obj[["treat"]], treat.name = NULL,
-                                    by.arg = "moderator")
+                                     treat = obj[["treat"]], treat.name = NULL,
+                                     by.arg = "moderator")
   moderator.factor <- attr(processed.moderator, "by.factor")
 
   if (is_not_null(obj2)) {

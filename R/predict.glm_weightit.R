@@ -153,8 +153,9 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
       out <- drop(object$fitted.values %*% values[colnames(object$fitted.values)])
     }
 
-    if (!is.null(na.act))
+    if (is_not_null(na.act))
       out <- napredict(na.act, out)
+
     return(out)
   }
 
@@ -164,16 +165,16 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   m <- model.frame(tt, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
-  if (!is.null(cl <- attr(Terms, "dataClasses")))
+  if (is_not_null(cl <- attr(Terms, "dataClasses")))
     .checkMFClasses(cl, m)
   x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
 
   offset <- model.offset(m)
-  if (!is.null(addO <- object$call$offset)) {
+  if (is_not_null(addO <- object$call$offset)) {
     addO <- eval(addO, newdata, environment(tt))
     offset <- {
-      if (length(offset) > 0) offset + addO
-      else addO
+      if (is_null(offset)) addO
+      else offset + addO
     }
   }
   if (is_null(offset)) offset <- rep.int(0, nrow(x))
@@ -260,8 +261,9 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
       out <- drop(object$fitted.values %*% values[colnames(object$fitted.values)])
     }
 
-    if (!is.null(na.act))
+    if (is_not_null(na.act))
       out <- napredict(na.act, out)
+
     return(out)
   }
 
@@ -271,16 +273,16 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
   m <- model.frame(tt, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
-  if (!is.null(cl <- attr(Terms, "dataClasses")))
+  if (is_not_null(cl <- attr(Terms, "dataClasses")))
     .checkMFClasses(cl, m)
   x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
 
   offset <- model.offset(m)
-  if (!is.null(addO <- object$call$offset)) {
+  if (is_not_null(addO <- object$call$offset)) {
     addO <- eval(addO, newdata, environment(tt))
     offset <- {
-      if (length(offset) > 0) offset + addO
-      else addO
+      if (is_null(offset)) addO
+      else offset + addO
     }
   }
 

@@ -1,4 +1,10 @@
 .method_to_proper_method <- function(method) {
+  if (is_null(method)) return(NULL)
+
+  if (!is.character(method) || method %nin% unlist(grab(.weightit_methods, "alias"))) {
+    return(method)
+  }
+
   .allowable.methods <- unlist(lapply(names(.weightit_methods), function(m) {
     alias <- .weightit_methods[[m]]$alias
     setNames(rep(m, length(alias)), alias)
@@ -12,7 +18,8 @@
   bad.method <- FALSE
 
   if (missing(method)) method <- "glm"
-  else if (is_null(method) || length(method) > 1) bad.method <- TRUE
+  else if (is_null(method)) return(invisible(NULL))
+  else if (length(method) > 1L) bad.method <- TRUE
   else if (is.character(method)) {
     if (tolower(method) %nin% unlist(grab(.weightit_methods, "alias"))) bad.method <- TRUE
   }
@@ -23,7 +30,8 @@
       .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
     }
 
-    .err(paste0("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n", paste(add_quotes(names(.weightit_methods)), collapse = ", ")),
+    .err(sprintf("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n%s",
+                 word_list(names(.weightit_methods), and.or = FALSE, quotes = 2)),
          tidy = FALSE)
   }
 
@@ -37,17 +45,38 @@
 }
 
 .check_method_treat.type <- function(method, treat.type) {
-  if (!is.function(method)) {
-    if (treat.type %nin% .weightit_methods[[method]]$treat_type) {
-      .err(sprintf("%s can only be used with a %s treatment",
-                  .method_to_phrase(method),
-                  word_list(.weightit_methods[[method]]$treat_type, and.or = "or")))
-    }
+  if (is_not_null(method) && is.character(method) &&
+      treat.type %nin% .weightit_methods[[method]]$treat_type) {
+    .err(sprintf("%s can only be used with a %s treatment",
+                 .method_to_phrase(method),
+                 word_list(.weightit_methods[[method]]$treat_type, and.or = "or")))
   }
 }
 
+.process.s.weights <- function(s.weights, data = NULL) {
+  #Process s.weights
+  if (is_null(s.weights)) return(NULL)
+
+  if (is.numeric(s.weights)) return(s.weights)
+
+  if (!is.character(s.weights) || length(s.weights) != 1) {
+    .err("the argument to `s.weights` must be a vector or data frame of sampling weights or the (quoted) names of the variable in `data` that contains sampling weights")
+  }
+
+  if (is_null(data)) {
+    .err("`s.weights` was specified as a string but there was no argument to `data`")
+  }
+
+  if (s.weights %nin% names(data)) {
+    .err("the name supplied to `s.weights` is not the name of a variable in `data`")
+  }
+
+  data[[s.weights]]
+}
+
 .check_method_s.weights <- function(method, s.weights) {
-  if (!is.function(method) &&
+  if (is_not_null(method) &&
+      !is.function(method) &&
       !.weightit_methods[[method]]$s.weights_ok &&
       !all_the_same(s.weights)) {
     .err(sprintf("sampling weights cannot be used with %s", .method_to_phrase(method)))
@@ -55,6 +84,9 @@
 }
 
 .method_to_phrase <- function(method) {
+
+  if (is_null(method))
+    return("no weighting")
 
   if (is.function(method))
     return("a user-defined method")
@@ -68,8 +100,9 @@
 }
 
 .process_estimand <- function(estimand, method, treat.type) {
+
   if (is.function(method)) {
-    .chk_null_or(estimand, chk::chk_string)
+    chk::chk_null_or(estimand, vld = chk::vld_string)
     return(toupper(estimand))
   }
 
@@ -84,7 +117,10 @@
   chk::chk_string(estimand)
   estimand <- toupper(estimand)
 
-  allowable_estimands <- .weightit_methods[[method]]$estimand
+  allowable_estimands <- {
+    if (is_null(method)) unique(unlist(grab(.weightit_methods, "estimand")))
+    else .weightit_methods[[method]]$estimand
+  }
 
   if (treat.type == "multi") {
     allowable_estimands <- setdiff(allowable_estimands, "ATOS")
@@ -112,6 +148,9 @@
 }
 
 .process_moments_int <- function(moments, int, method) {
+  if (is_null(method)) {
+    return(list(moments = integer(), int = FALSE))
+  }
 
   if (is.function(method)) {
     return(list(moments = moments, int = int))
@@ -147,6 +186,10 @@
 }
 
 .process_MSM_method <- function(is.MSM.method, method) {
+  if (is_null(method)) {
+    return(FALSE)
+  }
+
   if (is.function(method)) {
     if (isTRUE(is.MSM.method)) {
       .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
@@ -181,7 +224,11 @@
   FALSE
 }
 
-.process_missing <- function(missing, method, treat.type) {
+.process_missing <- function(missing, method) {
+  if (is_null(method)) {
+    return("")
+  }
+
   allowable.missings <- .weightit_methods[[method]]$missing
 
   if (is_null(missing)) {
@@ -193,10 +240,9 @@
   chk::chk_string(missing)
 
   if (missing %nin% allowable.missings) {
-    .err(sprintf("only %s allowed for `missing` with %s with a %s treatment",
+    .err(sprintf("only %s allowed for `missing` with %s",
                  word_list(allowable.missings, quotes = 2, is.are = TRUE),
-                 .method_to_phrase(method),
-                 treat.type))
+                 .method_to_phrase(method)))
   }
 
   missing
@@ -216,15 +262,20 @@
 .process_ps <- function(ps, data = NULL, treat) {
   if (is_null(ps)) return(NULL)
 
-  if (is.character(ps) && length(ps) == 1L) {
+  if (chk::vld_string(ps)) {
     if (is_null(data)) {
       .err("`ps` was specified as a string but there was no argument to `data`")
     }
+
     if (ps %nin% names(data)) {
       .err("the name supplied to `ps` is not the name of a variable in `data`")
     }
 
     ps <- data[[ps]]
+
+    if (!is.numeric(ps)) {
+      .err("the name supplied to `ps` must correspond to a numeric variable in `data`")
+    }
   }
   else if (is.numeric(ps)) {
     if (length(ps) != length(treat)) {
@@ -232,7 +283,7 @@
     }
   }
   else {
-    .err("the argument to `ps` must be a vector of propensity scores or the (quoted) name of the variable in `data` that contains propensity scores")
+    .err("the argument to `ps` must be a vector of propensity scores or the (quoted) name of a numeric variable in `data` that contains propensity scores")
   }
 
   ps
@@ -306,22 +357,21 @@
 
         }
 
-        focal <- switch(estimand, "ATT" = treated,
+        focal <- switch(estimand,
+                        "ATT" = treated,
                         "ATC" = setdiff(unique.treat, treated))
       }
       else {
-        treated <- switch(estimand, "ATT" = focal,
-                        "ATC" = setdiff(unique.treat, focal))
+        treated <- switch(estimand,
+                          "ATT" = focal,
+                          "ATC" = setdiff(unique.treat, focal))
       }
 
-      # if (estimand == "ATC") estimand <- "ATT"
     }
-    else {
-      if (is_null(focal)) {
-        focal <- switch(estimand, "ATT" = treated,
-                        "ATC" = setdiff(unique.treat, treated))
-      }
-      # if (estimand == "ATC") estimand <- "ATT"
+    else if (is_null(focal)) {
+      focal <- switch(estimand,
+                      "ATT" = treated,
+                      "ATC" = setdiff(unique.treat, treated))
     }
   }
 
@@ -347,7 +397,7 @@
     by <- NULL
     by.name <- NULL
   }
-  else if (is.character(by) && length(by) == 1 && by %in% names(data)) {
+  else if (chk::vld_string(by) && by %in% names(data)) {
     by.name <- by
     by <- data[[by]]
   }
@@ -364,7 +414,9 @@
     }
     by.name <- colnames(by)
   }
-  else bad.by <- TRUE
+  else {
+    bad.by <- TRUE
+  }
 
   if (bad.by) {
     .err(sprintf("`%s` must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side",
@@ -388,12 +440,15 @@
     else factor(by.components[[1]], levels = sort(unique(by.components[[1]])),
                 labels = paste(names(by.components), "=", sort(unique(by.components[[1]]))))
   }
-  # by.vars <- acceptable.bys[vapply(acceptable.bys, function(x) equivalent.factors(by, data[[x]]), logical(1L))]
 
-  if (treat.type != "continuous" && any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
-    .err(sprintf("Not all the groups formed by `%s` contain all treatment levels%s. Consider coarsening `%s`",
-                 by.arg, if (is_not_null(treat.name)) paste(" in", treat.name) else "", by.arg))
+  if (treat.type != "continuous" &&
+      any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
+    .err(sprintf("not all the groups formed by `%s` contain all treatment levels%s. Consider coarsening `%s`",
+                 by.arg,
+                 if (is_not_null(treat.name)) sprintf(" in %s", treat.name) else "",
+                 by.arg))
   }
+
   attr(by.components, "by.factor") <- by.factor
 
   by.components
@@ -425,6 +480,7 @@
   if (center && (int || !orthogonal_poly)) {
     d[,!binary.vars] <- center(d[, !binary.vars, drop = FALSE])
   }
+
   nd <- NCOL(d)
 
   if (poly > 1) {
@@ -438,22 +494,26 @@
       }
     }
   }
-  else poly_terms <- poly_co.names <- list()
+  else {
+    poly_terms <- poly_co.names <- list()
+  }
 
   if (int && nd > 1) {
     int_terms <- int_co.names <- make_list(1)
     ints_to_make <- utils::combn(colnames(d)[!ex], 2, simplify = FALSE)
 
     if (is_not_null(ints_to_make)) {
-      int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]]*d[,i[2]]))
+      int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]] * d[,i[2]]))
 
       int_co.names[[1]] <- vapply(ints_to_make, paste, character(1L), collapse = " * ")
     }
   }
-  else int_terms <- int_co.names <- list()
+  else {
+    int_terms <- int_co.names <- list()
+  }
 
   if (is_null(poly_terms) && is_null(int_terms)) {
-    return(matrix(ncol = 0, nrow = nrow(d), dimnames = list(rownames(d), NULL)))
+    return(matrix(ncol = 0L, nrow = nrow(d), dimnames = list(rownames(d), NULL)))
   }
 
   out <- do.call("cbind", c(poly_terms, int_terms))
@@ -477,7 +537,7 @@
   # and 1 for values greater than the quantile. The mean of each variable is equal to the quantile.
 
   if (is_null(qu)) {
-    return(matrix(ncol = 0, nrow = nrow(d), dimnames = list(rownames(d), NULL)))
+    return(matrix(ncol = 0L, nrow = nrow(d), dimnames = list(rownames(d), NULL)))
   }
 
   vld_qu <- function(x) {
@@ -494,6 +554,7 @@
       qu <- setNames(rep.int(qu, sum(!binary.vars)),
                      colnames(d)[!binary.vars])
     }
+
     qu <- as.list(qu)
   }
 
@@ -501,8 +562,8 @@
     .err("`quantile` must be a number between 0 and 1, a named list or vector of such values, or a named list of vectors of such values")
   }
 
-  if (length(qu) == 1 && is_null(names(qu))) {
-    qu <- setNames(lapply(seq_len(sum(!binary.vars)), function(i) qu[[1]]),
+  if (length(qu) == 1L && is_null(names(qu))) {
+    qu <- setNames(qu[[rep.int(1L, sum(!binary.vars))]],
                    colnames(d)[!binary.vars])
   }
 
@@ -532,67 +593,50 @@
 }
 
 get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
-  check.estimand <- check.weights <- check.focal <- FALSE
   s.d.denom.specified <- is_not_null(s.d.denom)
   estimand.specified <- is_not_null(estimand)
   if (!is.factor(treat)) treat <- factor(treat)
 
   if (s.d.denom.specified) {
     allowable.s.d.denoms <- c("treated", "control", "pooled", "all", "weighted", "hedges")
-    try.s.d.denom <- tryCatch(match_arg(s.d.denom, allowable.s.d.denoms),
-                              error = function(cond) NA_character_)
-    if (anyNA(try.s.d.denom)) {
-      check.estimand <- TRUE
-    }
-    else {
-      s.d.denom <- try.s.d.denom
-    }
-  }
-  else {
-    check.estimand <- TRUE
-  }
 
-  if (check.estimand) {
-    if (estimand.specified) {
-      allowable.estimands <- c("ATT", "ATC", "ATE", "ATO", "ATM")
-      try.estimand <- tryCatch(match_arg(toupper(estimand), allowable.estimands),
-                               error = function(cond) NA_character_)
-      if (anyNA(try.estimand) || try.estimand %in% c("ATC", "ATT")) {
-        check.focal <- TRUE
-      }
-      else {
-        s.d.denom <- vapply(try.estimand, switch, FUN.VALUE = character(1L),
-                            ATO = "weighted", ATM = "weighted", "pooled")
-      }
-    }
-    else {
-      check.focal <- TRUE
-    }
-  }
-  if (check.focal) {
-    if (is_not_null(focal)) {
-      s.d.denom <- focal
-    }
-    else check.weights <- TRUE
-  }
-  if (check.weights) {
-    if (is_null(weights)) {
-      s.d.denom <- "pooled"
-    }
-    else {
-      for (tv in levels(treat)) {
-        if (all_the_same(weights[treat == tv]) &&
-            !all_the_same(weights[treat != tv])) {
-          s.d.denom <- tv
-        }
-        else if (tv == last(levels(treat))) {
-          s.d.denom <- "pooled"
-        }
-      }
+    try.s.d.denom <- try(match_arg(s.d.denom, allowable.s.d.denoms), silent = TRUE)
+
+    if (!null_or_error(try.s.d.denom)) {
+      return(try.s.d.denom)
     }
   }
 
-  s.d.denom
+  if (estimand.specified) {
+    allowable.estimands <- c("ATT", "ATC", "ATE", "ATO", "ATM")
+
+    try.estimand <- try(match_arg(toupper(estimand), allowable.estimands), silent = TRUE)
+
+    if (!null_or_error(try.estimand) && try.estimand %nin% c("ATC", "ATT")) {
+      s.d.denom <- switch(try.estimand,
+                          ATO = "weighted",
+                          ATM = "weighted",
+                          "pooled")
+      return(s.d.denom)
+    }
+  }
+
+  if (is_not_null(focal)) {
+    return(focal)
+  }
+
+  if (is_null(weights) || all_the_same(weights)) {
+    return("pooled")
+  }
+
+  for (tv in levels(treat)) {
+    if (all_the_same(weights[treat == tv]) &&
+        !all_the_same(weights[treat != tv])) {
+      return(tv)
+    }
+  }
+
+  "pooled"
 }
 
 get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
@@ -604,13 +648,13 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   allowable.s.d.denoms <- c("all", "weighted")
 
-  try.s.d.denom <- tryCatch(match_arg(s.d.denom, allowable.s.d.denoms),
-                            error = function(cond) NA_character_)
-  if (anyNA(try.s.d.denom)) {
-    return("all")
+  try.s.d.denom <- try(match_arg(s.d.denom, allowable.s.d.denoms), silent = TRUE)
+
+  if (!null_or_error(try.s.d.denom)) {
+    return(try.s.d.denom)
   }
 
-  try.s.d.denom
+  "all"
 }
 
 .check_estimated_weights <- function(w, treat, treat.type, s.weights) {
@@ -630,7 +674,9 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
     bad.treat.groups <- setNames(rep.int(FALSE, length(t.levels)), t.levels)
     for (i in t.levels) {
       ti <- which(treat == i)
-      if (all(is.na(w[ti])) || all(check_if_zero(w[ti]))) bad.treat.groups[as.character(i)] <- TRUE
+      if (all(is.na(w[ti])) || all(check_if_zero(w[ti]))) {
+        bad.treat.groups[as.character(i)] <- TRUE
+      }
       else if (!extreme.warn && sum(is.finite(tw[ti])) > 1) {
         w.cv <- sd(tw[ti], na.rm = TRUE)/mean(tw[ti], na.rm = TRUE)
         if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
@@ -658,7 +704,9 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   chk::chk_count(subclass)
   subclass <- round(subclass)
 
-  if (!toupper(estimand) %in% c("ATE", "ATT")) {
+  estimand <- toupper(estimand)
+
+  if (estimand %nin% c("ATE", "ATT")) {
     .err("only the ATE, ATT, and ATC are compatible with stratification weights")
   }
 
@@ -669,13 +717,13 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   ps_sub <- sub_mat <- ps_mat * 0
 
   for (i in colnames(ps_mat)) {
-    if (toupper(estimand) == "ATE") {
+    if (estimand == "ATE") {
       sub <- as.integer(findInterval(ps_mat[, as.character(i)],
                                      quantile(ps_mat[, as.character(i)],
                                               seq(0, 1, length.out = subclass + 1)),
                                      all.inside = TRUE))
     }
-    else if (toupper(estimand) == "ATT") {
+    else if (estimand == "ATT") {
       if (i != focal) ps_mat[, as.character(i)] <- 1 - ps_mat[, as.character(i)]
       sub <- as.integer(findInterval(ps_mat[, as.character(i)],
                                      quantile(ps_mat[treat == focal, as.character(i)],
@@ -700,7 +748,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
     ps_sub[,i] <- sub_ps[sub]
     sub_mat[,i] <- sub
 
-    if (ncol(ps_sub) == 2) {
+    if (ncol(ps_sub) == 2L) {
       ps_sub[,colnames(ps_sub) != i] <- 1 - ps_sub[,i]
       sub_mat[,colnames(sub_mat) != i] <- sub
       break
@@ -716,7 +764,9 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   chk::chk_count(subclass)
   subclass <- round(subclass)
 
-  if (!toupper(estimand) %in% c("ATE", "ATT", "ATC")) {
+  estimand <- toupper(estimand)
+
+  if (estimand %nin% c("ATE", "ATT", "ATC")) {
     .err("only the ATE, ATT, and ATC are compatible with stratification weights")
   }
 
@@ -739,7 +789,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   }
 
   sub_totals <- sub_tab1 + sub_tab0
-  sub1_prop <- sub_tab1/sub_totals
+  sub1_prop <- sub_tab1 / sub_totals
 
   sub_ps <- sub1_prop[sub]
 
@@ -777,52 +827,53 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   sub_tab <- table(treat, sub)
 
-  if (any(sub_tab == 0)) {
-
-    .soft_thresh <- function(x, minus = 1) {
-      x <- x - minus
-      x[x < 0] <- 0
-      x
-    }
-
-    for (t in unique.treat) {
-      for (n in seq_len(min.n)) {
-        while (any(sub_tab[t,] == 0)) {
-          first_0 <- which(sub_tab[t,] == 0)[1]
-
-          if (first_0 == nsub ||
-              (first_0 != 1 &&
-               sum(.soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
-               sum(.soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
-            #If there are more and closer nonzero subs to the left...
-            first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
-
-            name_to_move <- names(sub)[which(x == max(x[treat == t & sub == first_non0_to_left]) & treat == t & sub == first_non0_to_left)[1]]
-
-            sub[name_to_move] <- first_0
-            sub_tab[t, first_0] <- 1L
-            sub_tab[t, first_non0_to_left] <- sub_tab[t, first_non0_to_left] - 1L
-
-          }
-          else {
-            #If there are more and closer nonzero subs to the right...
-            first_non0_to_right <- min(seq(first_0 + 1, nsub)[sub_tab[t, seq(first_0 + 1, nsub)] > 0])
-            name_to_move <- names(sub)[which(x == min(x[treat == t & sub == first_non0_to_right]) & treat == t & sub == first_non0_to_right)[1]]
-            sub[name_to_move] <- first_0
-            sub_tab[t, first_0] <- 1L
-            sub_tab[t, first_non0_to_right] <- sub_tab[t, first_non0_to_right] - 1L
-          }
-        }
-
-        sub_tab[t,] <- sub_tab[t,] - 1
-      }
-    }
-
-    #Unsort
-    sub <- sub[names(sub)]
+  if (!any(sub_tab == 0)) {
+    return(sub)
   }
 
-  sub
+  .soft_thresh <- function(x, minus = 1) {
+    x <- x - minus
+    x[x < 0] <- 0
+    x
+  }
+
+  for (t in unique.treat) {
+    for (n in seq_len(min.n)) {
+      while (any(sub_tab[t,] == 0)) {
+        first_0 <- which(sub_tab[t,] == 0)[1]
+
+        if (first_0 == nsub ||
+            (first_0 != 1 &&
+             sum(.soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
+             sum(.soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
+          #If there are more and closer nonzero subs to the left...
+          first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
+
+          name_to_move <- names(sub)[which(x == max(x[treat == t & sub == first_non0_to_left]) &
+                                             treat == t & sub == first_non0_to_left)[1]]
+
+          sub[name_to_move] <- first_0
+          sub_tab[t, first_0] <- 1L
+          sub_tab[t, first_non0_to_left] <- sub_tab[t, first_non0_to_left] - 1L
+
+        }
+        else {
+          #If there are more and closer nonzero subs to the right...
+          first_non0_to_right <- min(seq(first_0 + 1, nsub)[sub_tab[t, seq(first_0 + 1, nsub)] > 0])
+          name_to_move <- names(sub)[which(x == min(x[treat == t & sub == first_non0_to_right]) &
+                                             treat == t & sub == first_non0_to_right)[1]]
+          sub[name_to_move] <- first_0
+          sub_tab[t, first_0] <- 1L
+          sub_tab[t, first_non0_to_right] <- sub_tab[t, first_non0_to_right] - 1L
+        }
+      }
+
+      sub_tab[t,] <- sub_tab[t,] - 1
+    }
+  }
+
+  #Unsort
+  sub[names(sub)]
 }
 
 stabilize_w <- function(weights, treat) {
@@ -835,13 +886,8 @@ stabilize_w <- function(weights, treat) {
   setNames(weights * tab[as.character(treat)], w.names)
 }
 
-`%+%` <- function(...) {
-  if (is.atomic(..1) && is.atomic(..2)) crayon::`%+%`(as.character(..1), as.character(..2))
-  else ggplot2::`%+%`(...)
-}
-
 .get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = NULL,
-                         n = NULL, treat = NULL, density = NULL, weights = NULL) {
+                          n = NULL, treat = NULL, density = NULL, weights = NULL) {
   if (is_null(n)) n <- 10 * length(treat)
   if (is_null(adjust)) adjust <- 1
 
@@ -878,7 +924,7 @@ stabilize_w <- function(weights, treat) {
         exp(-abs(x - mu)/b)/(2 * b)
       }
     }
-    else if (is.character(density) && length(density == 1)) {
+    else if (is.character(density) && length(density) == 1L) {
       splitdens <- strsplit(density, "_", fixed = TRUE)[[1]]
 
       if (is_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
@@ -886,7 +932,7 @@ stabilize_w <- function(weights, treat) {
                      density, splitdens[1]))
       }
 
-      if (length(splitdens) > 1 && !can_str2num(splitdens[-1])) {
+      if (length(splitdens) > 1L && !can_str2num(splitdens[-1])) {
         .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
                      density, word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
       }
@@ -1042,7 +1088,7 @@ stabilize_w <- function(weights, treat) {
 }
 
 .get_w_from_ps_internal_array <- function(ps, treat, estimand = "ATE", focal = NULL,
-                                    subclass = NULL, stabilize = FALSE) {
+                                          subclass = NULL, stabilize = FALSE) {
   #Batch turn PS into weights; primarily for output of predict.gbm
   # Assumes a (0,1) treatment if binary
   if (is_null(dim(ps))) {
@@ -1118,9 +1164,9 @@ stabilize_w <- function(weights, treat) {
     w <- matrix(0, ncol = dim(ps)[3], nrow = dim(ps)[1])
     t.levs <- unique(treat)
 
-      for (i in t.levs) {
-        w[treat == i,] <- 1 / ps[treat == i, as.character(i),]
-      }
+    for (i in t.levs) {
+      w[treat == i,] <- 1 / ps[treat == i, as.character(i),]
+    }
 
     if (estimand == "ATE") {
       #Do nothing
@@ -1167,11 +1213,12 @@ stabilize_w <- function(weights, treat) {
 }
 
 plot_density <- function(d.n, d.d) {
-  d.d_ <- cbind(as.data.frame(d.d[c("x", "y")]), dens = "Denominator Density", stringsAsfactors = FALSE)
-  d.n_ <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
-  d.all <- rbind(d.d_, d.n_)
+  d.d <- cbind(as.data.frame(d.d[c("x", "y")]), dens = "Denominator Density", stringsAsfactors = FALSE)
+  d.n <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
+  d.all <- rbind(d.d, d.n)
   d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
-  pl <- ggplot(d.all, aes(x = .data$x, y = .data$y)) + geom_line() +
+  pl <- ggplot(d.all, aes(x = .data$x, y = .data$y)) +
+    geom_line() +
     labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
     facet_grid(rows = vars(.data$dens)) +
     theme(panel.background = element_rect(fill = "white"),
@@ -1193,14 +1240,15 @@ replace_na_with <- function(covs, with = "median") {
   if (is.na(with) || !anyNA(covs)) return(covs)
 
   if (is.character(with)) {
+    .with <- match.fun(with)
     for (i in colnames(covs)[anyNA_col(covs)]) {
       if (all(is.na(covs[,i]))) covs <- covs[, colnames(covs) != i, drop = FALSE]
-      else covs[is.na(covs[,i]), i] <- match.fun(with)(covs[, i], na.rm = TRUE)
+      else covs[is.na(covs[,i]), i] <- .with(covs[, i], na.rm = TRUE)
     }
-    return(covs)
   }
-
-  covs[is.na(covs)] <- with
+  else {
+    covs[is.na(covs)] <- with
+  }
 
   covs
 }
@@ -1296,6 +1344,7 @@ generalized_inverse <- function(sigma) {
   }
   else {
     br_type <- fit$type
+
     if (is_null(fit$control[["a"]])) {
       rlang::check_installed("brglm2")
       fit$control[["a"]] <- formals(brglm2::brglmControl)[["a"]]

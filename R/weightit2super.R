@@ -186,9 +186,17 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]}
-    else if (f == "env") {if (is_null(A[["env"]])) A[["env"]] <- environment(SuperLearner::SuperLearner)}
-    else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+    if (f == "method") {
+      if (is_null(A[["SL.method"]]))
+        A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]
+    }
+    else if (f == "env") {
+      if (is_null(A[["env"]]))
+        A[["env"]] <- environment(SuperLearner::SuperLearner)
+    }
+    else if (is_null(A[[f]])) {
+      A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+    }
   }
 
   if (is_null(A[["cvControl"]][["stratifyCV"]])) {
@@ -241,17 +249,19 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- binarize(treat, one = t.lev)
 
   tryCatch({verbosely({
-    fit <- do.call(SuperLearner::SuperLearner, list(Y = treat,
-                                                    X = as.data.frame(covs),
-                                                    family = binomial(),
-                                                    SL.library = A[["SL.library"]],
-                                                    verbose = FALSE,
-                                                    method = A[["SL.method"]],
-                                                    id = NULL,
-                                                    obsWeights = s.weights,
-                                                    control = A[["control"]],
-                                                    cvControl = A[["cvControl"]],
-                                                    env = A[["env"]]))
+    #Note: do.call() is needed because arguments are quoted
+    fit <- do.call(SuperLearner::SuperLearner,
+                   list(Y = treat,
+                        X = as.data.frame(covs),
+                        family = binomial(),
+                        SL.library = A[["SL.library"]],
+                        verbose = FALSE,
+                        method = A[["SL.method"]],
+                        id = NULL,
+                        obsWeights = s.weights,
+                        control = A[["control"]],
+                        cvControl = A[["cvControl"]],
+                        env = A[["env"]]))
   }, verbose = verbose)},
   error = function(e) {
     e. <- conditionMessage(e)
@@ -299,9 +309,17 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
 
 
   for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {if (is_null(A[["SL.method"]])) A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]}
-    else if (f == "env") {if (is_null(A[["env"]])) A[["env"]] <- environment(SuperLearner::SuperLearner)}
-    else if (is_null(A[[f]])) A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+    if (f == "method") {
+      if (is_null(A[["SL.method"]]))
+        A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]
+    }
+    else if (f == "env") {
+      if (is_null(A[["env"]]))
+        A[["env"]] <- environment(SuperLearner::SuperLearner)
+    }
+    else if (is_null(A[[f]])) {
+      A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+    }
   }
 
   if (is_null(A[["cvControl"]][["stratifyCV"]])) {
@@ -312,7 +330,7 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   chk::chk_flag(discrete)
 
   if (identical(A[["SL.method"]], "method.balance")) {
-    .err("\"method.balance\" cannot be used with multi-category treatments")
+    .err('"method.balance" cannot be used with multi-category treatments')
   }
 
   fit.list <- info <- make_list(levels(treat))
@@ -322,17 +340,19 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
 
     treat_i <- as.numeric(treat == i)
     tryCatch({verbosely({
-      fit.list[[i]] <- do.call(SuperLearner::SuperLearner, list(Y = treat_i,
-                                                                X = as.data.frame(covs),
-                                                                family = binomial(),
-                                                                SL.library = A[["SL.library"]],
-                                                                verbose = FALSE,
-                                                                method = A[["SL.method"]],
-                                                                id = NULL,
-                                                                obsWeights = s.weights,
-                                                                control = A[["control"]],
-                                                                cvControl = A[["cvControl"]],
-                                                                env = A[["env"]]))
+      #Note: do.call() is needed because arguments are quoted
+      fit.list[[i]] <- do.call(SuperLearner::SuperLearner,
+                               list(Y = treat_i,
+                                    X = as.data.frame(covs),
+                                    family = binomial(),
+                                    SL.library = A[["SL.library"]],
+                                    verbose = FALSE,
+                                    method = A[["SL.method"]],
+                                    id = NULL,
+                                    obsWeights = s.weights,
+                                    control = A[["control"]],
+                                    cvControl = A[["cvControl"]],
+                                    env = A[["env"]]))
     }, verbose = verbose)},
     error = function(e) {
       e. <- conditionMessage(e)
@@ -379,18 +399,26 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   #Process density params
   densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
-                          adjust = A[["adjust"]], kernel = A[["kernel"]],
-                          n = A[["n"]], treat = treat, density = A[["density"]],
-                          weights = s.weights)
+                           adjust = A[["adjust"]], kernel = A[["kernel"]],
+                           n = A[["n"]], treat = treat, density = A[["density"]],
+                           weights = s.weights)
 
   #Stabilization - get dens.num
   dens.num <- densfun(scale_w(treat, s.weights))
 
   #Estimate GPS
   for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {if (is_null(B[["SL.method"]])) B[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]}
-    else if (f == "env") {if (is_null(B[["env"]])) B[["env"]] <- environment(SuperLearner::SuperLearner)}
-    else if (is_null(B[[f]])) B[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+    if (f == "method") {
+      if (is_null(B[["SL.method"]]))
+        B[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]
+    }
+    else if (f == "env") {
+      if (is_null(B[["env"]]))
+        B[["env"]] <- environment(SuperLearner::SuperLearner)
+    }
+    else if (is_null(B[[f]])) {
+      B[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
+    }
   }
 
   discrete <- if_null_then(A[["discrete"]], FALSE)
@@ -428,6 +456,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   }
 
   tryCatch({verbosely({
+    #Note: do.call() is needed because arguments are quoted
     fit <- do.call(SuperLearner::SuperLearner,
                    list(Y = treat,
                         X = as.data.frame(covs),

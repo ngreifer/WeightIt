@@ -84,35 +84,37 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     nn["Weighted", ] <- ESS(w)
 
   }
-  else if (treat.type == "binary" && !is_(t, c("factor", "character"))) {
+  else if (treat.type == "binary" && !chk::vld_character_or_factor(t)) {
     treated <- get_treated_level(t)
     t <- as.integer(t == treated)
+    t0 <- which(t == 0L)
+    t1 <- which(t == 1L)
 
-    top0 <- c(treated = min(top, sum(t == 1)),
-              control = min(top, sum(t == 0)))
-    out$weight.range <- list(treated = range(w[w != 0 & t == 1]),
-                             control = range(w[w != 0 & t == 0]))
-    out$weight.top <- list(treated = rev(w[t == 1][order(abs(w[t == 1]), decreasing = TRUE)][seq_len(top0["treated"])]),
-                           control = rev(w[t == 0][order(abs(w[t == 0]), decreasing = TRUE)][seq_len(top0["control"])]))
-    out$coef.of.var <- c(treated = sd(w[t==1])/mean_fast(w[t==1]),
-                         control = sd(w[t==0])/mean_fast(w[t==0]))
-    out$scaled.mad <- c(treated = mean_abs_dev(w[t==1]/mean_fast(w[t==1])),
-                        control = mean_abs_dev(w[t==0]/mean_fast(w[t==0])))
-    out$negative.entropy <- c(treated = neg_ent(w[t==1]),
-                              control = neg_ent(w[t==0]))
-    out$num.zeros <- c(treated = sum(check_if_zero(w[t==1])),
-                       control = sum(check_if_zero(w[t==0])))
+    top0 <- c(treated = min(top, sum(t1)),
+              control = min(top, sum(t0)))
+    out$weight.range <- list(treated = range(w[t1][w[t1] != 0]),
+                             control = range(w[t0][w[t0] != 0]))
+    out$weight.top <- list(treated = rev(w[t1][order(abs(w[t1]), decreasing = TRUE)][seq_len(top0["treated"])]),
+                           control = rev(w[t0][order(abs(w[t0]), decreasing = TRUE)][seq_len(top0["control"])]))
+    out$coef.of.var <- c(treated = sd(w[t1])/mean_fast(w[t1]),
+                         control = sd(w[t0])/mean_fast(w[t0]))
+    out$scaled.mad <- c(treated = mean_abs_dev(w[t1]/mean_fast(w[t1])),
+                        control = mean_abs_dev(w[t0]/mean_fast(w[t0])))
+    out$negative.entropy <- c(treated = neg_ent(w[t1]),
+                              control = neg_ent(w[t0]))
+    out$num.zeros <- c(treated = sum(check_if_zero(w[t1])),
+                       control = sum(check_if_zero(w[t0])))
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     #dc <- weightit$discarded
 
     nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
-    nn["Unweighted", ] <- c(ESS(sw[t==0]),
-                            ESS(sw[t==1]))
-    nn["Weighted", ] <- c(ESS(w[t==0]),
-                          ESS(w[t==1]))
+    nn["Unweighted", ] <- c(ESS(sw[t0]),
+                            ESS(sw[t1]))
+    nn["Weighted", ] <- c(ESS(w[t0]),
+                          ESS(w[t1]))
   }
-  else if (treat.type == "multi" || chk::vld_character_or_factor(t)) {
+  else {
     t <- as.factor(t)
 
     top0 <- setNames(lapply(levels(t), function(x) min(top, sum(t == x))), levels(t))
@@ -148,10 +150,10 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
 #' @exportS3Method print summary.weightit
 print.summary.weightit <- function(x, ...) {
   top <- max(lengths(x$weight.top))
-  cat(paste(rep.int(" ", 18L), collapse = "") %+% underline("Summary of weights") %+% "\n\n")
+  cat0(space(18), underline("Summary of weights"), "\n\n")
 
   tryCatch({
-    cat("- " %+% italic("Weight ranges") %+% ":\n\n")
+    cat0("- ", italic("Weight ranges"), ":\n\n")
     print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
   })
   df <- setNames(data.frame(unlist(lapply(names(x$weight.top), function(x) c(" ", x))),
@@ -159,21 +161,22 @@ print.summary.weightit <- function(x, ...) {
                               c(names(x), rep.int("", top - length(x)), round(x, 4), rep.int("", top - length(x)))
                             })), byrow = TRUE, nrow = 2 * length(x$weight.top))),
                  rep.int("", 1L + top))
-  cat("\n- " %+% italic(sprintf("Units with the %s most extreme weights%s",
-                                top, ngettext(length(x$weight.top), "",
-                                              " by group"))) %+% ":\n")
+  cat0("\n- ", italic(sprintf("Units with the %s most extreme weights%s",
+                              top,
+                              ngettext(length(x$weight.top), "", " by group"))),
+       ":\n")
   print.data.frame(df, row.names = FALSE)
-  cat("\n- " %+% italic("Weight statistics") %+% ":\n\n")
+  cat0("\n- ", italic("Weight statistics"), ":\n\n")
   print.data.frame(round_df_char(setNames(as.data.frame(cbind(x$coef.of.var,
                                                               x$scaled.mad,
                                                               x$negative.entropy,
                                                               x$num.zeros)),
                                           c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
   if (is_not_null(x$weight.mean)) {
-    cat("\n- " %+% italic("Mean of Weights") %+% " = " %+% round(x$weight.mean, 2) %+% "\n")
+    cat0("\n- ", italic("Mean of Weights"), " = ", round(x$weight.mean, 2), "\n")
   }
 
-  cat("\n- " %+% italic("Effective Sample Sizes") %+% ":\n\n")
+  cat0("\n- ", italic("Effective Sample Sizes"), ":\n\n")
 
   print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
 
@@ -199,7 +202,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
   }
 
   subtitle <- {
-    if (is_not_null(focal))  paste0("For Units Not in Treatment Group \"", focal, "\"")
+    if (is_not_null(focal))  sprintf("For Units Not in Treatment Group %s", add_quotes(focal))
     else NULL
   }
 
@@ -220,7 +223,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
     d <- data.frame(w, t = factor(t))
     if (is_not_null(focal)) d <- d[t != focal,]
 
-    levels(d$t) <- paste("Treat =", levels(d$t))
+    levels(d$t) <- sprintf("Treat = %s", levels(d$t))
     w_means <- aggregate(w ~ t, data = d, FUN = mean)
 
     p <- ggplot(data = d, mapping = aes(x = w)) +
@@ -269,9 +272,9 @@ print.summary.weightitMSM <- function(x, ...) {
 
   for (ti in seq_along(x)) {
     if (!only.one) {
-      cat(strikethrough(paste(rep.int(" ", 23), collapse = "")) %+%
-            italic(" Time " %+% ti %+% " ") %+%
-            strikethrough(paste(rep.int(" ", 23), collapse = "")) %+% "\n")
+      cat0(strikethrough(space(23)),
+           italic(sprintf(" Time %s ", ti)),
+           strikethrough(space(23)), "\n")
     }
     print(x[[ti]])
     cat("\n")
@@ -284,10 +287,10 @@ print.summary.weightitMSM <- function(x, ...) {
 #' @exportS3Method plot summary.weightitMSM
 #' @rdname summary.weightit
 plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1, ...) {
-  if (!is.numeric(time) || length(time) != 1 || time %nin% seq_along(x)) {
+  if (!is.numeric(time) || length(time) != 1L || time %nin% seq_along(x)) {
     .err("`time` must be a number corresponding to the time point for which to display the distribution of weights")
   }
 
   plot.summary.weightit(x[[time]], binwidth = binwidth, bins = bins, ...) +
-    labs(subtitle = paste0("For Time ", time))
+    labs(subtitle = sprintf("For Time %s", time))
 }

@@ -343,9 +343,9 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       .err("`ps` must be a matrix, data frame, or vector of propensity scores")
     }
 
-    if (ncol(ps) == 1) {
+    if (ncol(ps) == 1L) {
       if (is_not_null(treated)) {
-        if (!treated %in% t.levels) {
+        if (treated %nin% t.levels) {
           .err("the argument to `treated` must be a value in `treat`")
         }
         treated.level <- treated
@@ -368,7 +368,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       ps <- matrix(c(1 - ps[, 1], ps[, 1]), ncol = 2,
                    dimnames = list(ps.names, as.character(t.levels)))
     }
-    else if (ncol(ps) == 2) {
+    else if (ncol(ps) == 2L) {
       if (!all(as.character(t.levels) %in% colnames(ps))) {
         .err("if `ps` has two columns, they must be named with the treatment levels")
       }

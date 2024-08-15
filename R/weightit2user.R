@@ -131,15 +131,19 @@ NULL
 weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
                           stabilize, subclass, missing, ps, moments, int, verbose, ...) {
   A <- list(...)
+
   if (is_not_null(covs)) {
     covs <- covs[subset, , drop = FALSE]
   }
+
   if (is_not_null(treat)) {
     treat <- treat[subset]
   }
+
   if (is_not_null(s.weights)) {
     s.weights <- s.weights[subset]
   }
+
   if (is_not_null(ps)) {
     ps <- ps[subset]
   }
@@ -152,7 +156,9 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
 
   fun_args <- Fun_formal
   for (i in names(fun_args)) {
-    if (exists(i, inherits = FALSE)) fun_args[i] <- list(get0(i, inherits = FALSE))
+    if (exists(i, inherits = FALSE)) {
+      fun_args[i] <- list(get0(i, inherits = FALSE))
+    }
     else if (i %in% names(A)) {
       fun_args[i] <- A[i]
       A[[i]] <- NULL
@@ -171,43 +177,60 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
     names(obj)[names(obj) == "weights"] <- "w"
   }
   else {
-    .err("the output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights")
+    .err('the output of the user-provided function must be a list with an entry named "w" or "weights" containing the estimated weights')
   }
 
-  if (is_null(obj[["w"]])) .err("no weights were estimated")
-  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]]))) {
+  if (is_null(obj[["w"]]))
+    .err("no weights were estimated")
+
+  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]])))
     .err("the \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights")
-  }
-  if (all(is.na(obj[["w"]]))) .err("all weights were generated as `NA`")
-  if (length(obj[["w"]]) != length(treat)) {
+
+  if (all(is.na(obj[["w"]])))
+    .err("all weights were generated as `NA`")
+
+  if (length(obj[["w"]]) != length(treat))
     .err(sprintf("%s weights were estimated, but there are %s units",
                  length(obj[["w"]]), length(treat)))
-  }
 
   obj
 }
 
-weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize, missing, moments, int, verbose, ...) {
+weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize,
+                             missing, moments, int, verbose, ...) {
   A <- list(...)
+
   if (is_not_null(covs.list)) {
-    covs.list <- covs <- lapply(covs.list, function(c) c[subset, , drop = FALSE])
+    for (i in seq_along(covs.list)) {
+      covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
+    }
+
+    covs <- covs.list
   }
+
   if (is_not_null(treat.list)) {
-    treat.list <- treat <- lapply(treat.list, function(t) t[subset])
+    for (i in seq_along(treat.list)) {
+      treat.list[[i]] <- treat.list[[i]][subset]
+    }
+
+    treat <- treat.list
   }
+
   if (is_not_null(s.weights)) {
     s.weights <- s.weights[subset]
   }
 
   #Get a list of function args for the user-defined function Fun
   Fun_formal <- as.list(formals(Fun))
-  if (has_dots <- any(names(Fun_formal) == "...")) {
+  if (has_dots <- ("..." %in% names(Fun_formal))) {
     Fun_formal[["..."]] <- NULL
   }
 
   fun_args <- Fun_formal
   for (i in names(fun_args)) {
-    if (exists(i, inherits = FALSE)) fun_args[i] <- list(get0(i, inherits = FALSE))
+    if (exists(i, inherits = FALSE)) {
+      fun_args[i] <- list(get0(i, inherits = FALSE))
+    }
     else if (is_not_null(A[[i]])) {
       fun_args[[i]] <- A[[i]]
       A[[i]] <- NULL
@@ -226,18 +249,21 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
     names(obj)[names(obj) == "weights"] <- "w"
   }
   else {
-    .err("the output of the user-provided function must be a list with an entry named \"w\" or \"weights\" containing the estimated weights")
+    .err('the output of the user-provided function must be a list with an entry named "w" or "weights" containing the estimated weights')
   }
 
-  if (is_null(obj[["w"]])) .err("no weights were estimated")
-  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]]))) {
+  if (is_null(obj[["w"]]))
+    .err("no weights were estimated")
+
+  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]])))
     .err("the \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights")
-  }
-  if (all(is.na(obj[["w"]]))) .err("all weights were generated as `NA`")
-  if (length(obj[["w"]]) != length(treat.list[[1]])) {
+
+  if (all(is.na(obj[["w"]])))
+    .err("all weights were generated as `NA`")
+
+  if (length(obj[["w"]]) != length(treat.list[[1]]))
     .err(sprintf("%s weights were estimated, but there are %s units",
                  length(obj[["w"]]), length(treat.list[[1]])))
-  }
 
   obj
 }

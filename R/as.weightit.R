@@ -105,14 +105,14 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
     }
   }
 
-  .chk_null_or(estimand, chk::chk_string)
-  .chk_null_or(s.weights, chk::chk_numeric)
+  chk::chk_null_or(estimand, vld = chk::vld_string)
+  chk::chk_null_or(s.weights, vld = chk::vld_numeric)
 
   if (is_not_null(s.weights) && length(s.weights) != length(treat)) {
     .err("`s.weights` and `treat` must be the same length")
   }
 
-  .chk_null_or(ps, chk::chk_numeric)
+  chk::chk_null_or(ps, vld = chk::vld_numeric)
 
   if (is_not_null(ps) && length(ps) != length(treat)) {
     .err("`ps` and `treat` must be the same length")
@@ -177,7 +177,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
     }
   }
 
-  .chk_null_or(covs.list, chk::chk_list)
+  chk::chk_null_or(covs.list, vld = chk::vld_list)
   if (is_not_null(covs.list)) {
     if (!all(vapply(covs.list, is.data.frame, logical(1L)))) {
       .err("`covs.list` must be a list of data.frames for each time point")
@@ -193,14 +193,14 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
     }
   }
 
-  .chk_null_or(estimand, chk::chk_string)
-  .chk_null_or(s.weights, chk::chk_numeric)
+  chk::chk_null_or(estimand, vld = chk::vld_string)
+  chk::chk_null_or(s.weights, vld = chk::vld_numeric)
 
   if (is_not_null(s.weights) && length(s.weights) != length(weights)) {
     .err("`s.weights` and `x` must be the same length")
   }
 
-  .chk_null_or(ps.list, chk::chk_list)
+  chk::chk_null_or(ps.list, vld = chk::vld_list)
   if (is_not_null(ps.list)) {
     if (length(ps.list) != length(treat.list)) {
       .err("`ps.list` must have the same number of time points as `treat.list`")

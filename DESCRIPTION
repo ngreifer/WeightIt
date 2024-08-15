@@ -20,7 +20,7 @@ Depends:
 Imports:
     cobalt (>= 4.5.1),
     ggplot2 (>= 3.3.0),
-    chk (>= 0.8.1),
+    chk (>= 0.9.2),
     rlang (>= 1.1.0),
     crayon,
     generics,

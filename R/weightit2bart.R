@@ -6,19 +6,19 @@
 #' @description
 #' This page explains the details of estimating weights from Bayesian additive regression trees (BART)-based propensity scores by setting `method = "bart"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
-#' In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on \pkgfun2{dbarts}{bart}{dbarts::bart2} from the \CRANpkg{dbarts} package.
+#' In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on \pkgfun{dbarts}{bart2} from the \CRANpkg{dbarts} package.
 #'
 #' ## Binary Treatments
 #'
-#' For binary treatments, this method estimates the propensity scores using \pkgfun2{dbarts}{bart}{dbarts::bart2}. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
+#' For binary treatments, this method estimates the propensity scores using \pkgfun{dbarts}{bart2}. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
 #' ## Multi-Category Treatments
 #'
-#' For multi-category treatments, the propensity scores are estimated using several calls to \pkgfun2{dbarts}{bart}{dbarts::bart2}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
+#' For multi-category treatments, the propensity scores are estimated using several calls to \pkgfun{dbarts}{bart2}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, the generalized propensity score is estimated using \pkgfun2{dbarts}{bart}{dbarts::bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting `density = "kernel"`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+#' For continuous treatments, the generalized propensity score is estimated using \pkgfun{dbarts}{bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting `density = "kernel"`. Other arguments to [density()] can be specified to refine the density estimation parameters. `plot = TRUE` can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -42,7 +42,7 @@
 #'
 #' @section Additional Arguments:
 #'
-#' All arguments to \pkgfun2{dbarts}{bart}{dbarts::bart2} can be passed through `weightit()` or `weightitMSM()`, with the following exceptions:
+#' All arguments to \pkgfun{dbarts}{bart2} can be passed through `weightit()` or `weightitMSM()`, with the following exceptions:
 #'
 #'  * `test`, `weights`,`subset`, `offset.test` are ignored
 #'  * `combine.chains` is always set to `TRUE`
@@ -65,11 +65,11 @@
 #' }
 #'
 #' @details
-#' BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the `n.trees` argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to `weightit()` that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun2{dbarts}{bart}{dbarts::bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
+#' BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the `n.trees` argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to `weightit()` that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun{dbarts}{bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
 #'
 #' ## Reproducibility
 #'
-#' BART has a random component, so some work must be done to ensure reproducibility across runs. See the *Reproducibility* section at \pkgfun2{dbarts}{bart}{dbarts::bart2} for more details. To ensure reproducibility, one can do one of two things: 1) supply an argument to `seed`, which is passed to `dbarts::bart2()` and sets the seed for single- and multi-threaded uses, or 2) call [set.seed()], though this only ensures reproducibility when using single-threading, which can be requested by setting `n.threads = 1`. Note that to ensure reproducibility on any machine, regardless of the number of cores available, one should use single threading and either supply `seed` or call `set.seed()`.
+#' BART has a random component, so some work must be done to ensure reproducibility across runs. See the *Reproducibility* section at \pkgfun{dbarts}{bart2} for more details. To ensure reproducibility, one can do one of two things: 1) supply an argument to `seed`, which is passed to `dbarts::bart2()` and sets the seed for single- and multi-threaded uses, or 2) call [set.seed()], though this only ensures reproducibility when using single-threading, which can be requested by setting `n.threads = 1`. Note that to ensure reproducibility on any machine, regardless of the number of cores available, one should use single-threading and either supply `seed` or call `set.seed()`.
 #'
 #' @seealso
 #' [weightit()], [weightitMSM()], [get_w_from_ps()]
@@ -123,10 +123,6 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  if (!all_the_same(s.weights)) {
-    .err("sampling weights cannot be used with `method = \"bart\"`")
-  }
-
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -141,16 +137,17 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   t.lev <- get_treated_level(treat)
   treat <- binarize(treat, one = t.lev)
 
+  A[["data"]] <- treat
   A[["formula"]] <- covs
   A[["keepCall"]] <- FALSE
   A[["combineChains"]] <- TRUE
   A[["verbose"]] <- FALSE #necessary to prevent crash
-  A[["data"]] <- treat
 
   bart.call <- as.call(c(list(quote(dbarts::bart2)),
                          A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
                                                    names(formals(dbarts::dbartsControl))),
                                                  c("offset.test", "weights", "subset", "test"))]))
+
   tryCatch({verbosely({
     fit <- eval(bart.call)
   }, verbose = verbose)},
@@ -176,10 +173,6 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
-
-  if (!all_the_same(s.weights)) {
-    .err("sampling weights cannot be used with `method = \"bart\"`")
-  }
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -235,10 +228,6 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  if (!all_the_same(s.weights)) {
-    .err("sampling weights cannot be used with `method = \"bart\"`")
-  }
-
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -261,8 +250,8 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
                          A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
                                                    names(formals(dbarts::dbartsControl))),
                                                  c("offset.test", "weights", "subset", "test"))]))
-  #Estimate GPS
 
+  #Estimate GPS
   tryCatch({verbosely({
     fit <- eval(bart.call)
   }, verbose = verbose)},
@@ -285,7 +274,5 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     plot_density(d.n, d.d)
   }
 
-  info <- list()
-
-  list(w = w, info = info, fit.obj = fit)
+  list(w = w, fit.obj = fit)
 }

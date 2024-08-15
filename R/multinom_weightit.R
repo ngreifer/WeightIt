@@ -169,7 +169,7 @@
   offset <- as.vector(model.offset(mf))
   if (!is.null(offset)) {
     if (length(offset) != NROW(Y))
-      .err(gettextf("number of offsets is %d should equal %d (number of observations)",
+      .err(gettextf("number of offsets is %d; should equal %d (number of observations)",
                     length(offset), NROW(Y)), domain = NA)
   }
 

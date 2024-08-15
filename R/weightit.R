@@ -194,6 +194,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   if (is_null(treat)) {
     .err("no treatment variable was specified")
   }
+
   if (length(treat) != nrow(covs)) {
     .err("the treatment and covariates must have the same number of units")
   }
@@ -201,7 +202,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   n <- length(treat)
 
   if (anyNA(treat)) {
-    .err("no missing values are allowed in the treatment variable")
+    .err("missing values are not allowed in the treatment variable")
   }
 
   #Get treat type
@@ -214,7 +215,9 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   #Process ps
   ps <- .process_ps(ps, data, treat)
-  if (is_not_null(ps) && !identical(method, "glm") && !is.function(method)) {
+  if (is_not_null(ps) && is_not_null(method) &&
+      !is.function(method) &&
+      !identical(method, "glm")) {
     .wrn("`ps` is supplied, so `method` will be ignored")
     method <- "glm"
   }
@@ -222,13 +225,15 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   ##Process method
   .check_acceptable_method(method, msm = FALSE, force = FALSE)
 
-  if (is.character(method)) {
+  if (is_null(method)) {
+    method <- NULL
+  }
+  else if (is.character(method)) {
     method <- .method_to_proper_method(method)
     attr(method, "name") <- method
-
     .check_method_treat.type(method, treat.type)
   }
-  else if (is.function(method)) {
+  else { #function
     method.name <- deparse1(substitute(method))
     .check_user_method(method)
     attr(method, "name") <- method.name
@@ -244,21 +249,21 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   #Process missing
   missing <- {
-    if (!anyNA(reported.covs)) ""
-    else .process_missing(missing, method, treat.type)
+    if (is_null(method) || !anyNA(reported.covs)) ""
+    else .process_missing(missing, method)
   }
 
   #Check subclass
   if (is_not_null(subclass)) .check_subclass(method, treat.type)
 
   #Process s.weights
-  s.weights <- process.s.weights(s.weights, data)
+  s.weights <- .process.s.weights(s.weights, data)
 
   if (is_null(s.weights)) s.weights <- rep.int(1, n)
   else .check_method_s.weights(method, s.weights)
 
   #Process stabilize
-  if (isFALSE(stabilize)) {
+  if (is_null(method) || isFALSE(stabilize)) {
     stabilize <- NULL
   }
   else if (isTRUE(stabilize)) {
@@ -266,7 +271,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   if (is_not_null(stabilize)) {
-    if (!.weightit_methods[[method]]$stabilize_ok) {
+    if (is.character(method) && !.weightit_methods[[method]]$stabilize_ok) {
       .wrn(sprintf("`stabilize` cannot be used with %s and will be ignored",
                    .method_to_phrase(method)))
       stabilize <- NULL
@@ -303,7 +308,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   ## Running models ----
 
-  #Returns weights (weights) and propensity score (ps)
   A[["treat"]] <- treat
   A[["covs"]] <- covs
   A[["s.weights"]] <- s.weights
@@ -311,7 +315,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A[["estimand"]] <- estimand
   A[["focal"]] <- focal
   A[["stabilize"]] <- FALSE
-  A[["method"]] <- method
+  A["method"] <- list(method)
   A[["moments"]] <- moments.int[["moments"]]
   A[["int"]] <- moments.int[["int"]]
   A[["subclass"]] <- subclass
@@ -323,6 +327,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A[[".formula"]] <- formula
   A[[".covs"]] <- reported.covs
 
+  #Returns weights (weights) and propensity score (ps)
   obj <- do.call("weightit.fit", A)
 
   if (is_not_null(stabilize)) {
@@ -341,7 +346,9 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     obj$weights <- obj$weights / sw_obj[["weights"]]
   }
 
-  .check_estimated_weights(obj$weights, treat, treat.type, s.weights)
+  if (is_not_null(method) && is_null(ps)) {
+    .check_estimated_weights(obj$weights, treat, treat.type, s.weights)
+  }
 
   ## Assemble output object----
   out <- list(weights = obj$weights,
@@ -382,12 +389,18 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 print.weightit <- function(x, ...) {
   treat.type <- get_treat_type(x[["treat"]])
 
-  cat("A " %+% italic(class(x)[1]) %+% " object\n")
+  cat(sprintf("A %s object\n", italic(class(x)[1])))
 
   if (is_not_null(x[["method"]])) {
     cat(sprintf(" - method: %s (%s)\n",
                 add_quotes(attr(x[["method"]], "name")),
                 .method_to_phrase(x[["method"]])))
+  }
+  else if (all_the_same(x[["weights"]])) {
+    cat(" - method: no weighting\n")
+  }
+  else if (is_not_null(x[["ps"]])) {
+    cat(" - method: propensity score weighting\n")
   }
 
   cat(sprintf(" - number of obs.: %s\n",
@@ -400,8 +413,8 @@ print.weightit <- function(x, ...) {
               switch(treat.type,
                      "continuous" = "continuous",
                      "multi" = sprintf("%s-category (%s)",
-                                             nunique(x[["treat"]]),
-                                             paste(levels(x[["treat"]]), collapse = ", ")),
+                                       nunique(x[["treat"]]),
+                                       word_list(levels(x[["treat"]]), and.or = FALSE)),
                      "binary" = "2-category")))
 
   if (is_not_null(x[["estimand"]])) {
@@ -413,17 +426,17 @@ print.weightit <- function(x, ...) {
   if (is_not_null(x[["covs"]])) {
     cat(sprintf(" - covariates: %s\n",
                 if (length(names(x[["covs"]])) > 60) "too many to name"
-                else paste(names(x[["covs"]]), collapse = ", ")))
+                else word_list(names(x[["covs"]]), and.or = FALSE)))
   }
 
   if (is_not_null(x[["by"]])) {
-    cat(sprintf(" - by: %s\n", paste(names(x[["by"]]), collapse = ", ")))
+    cat(sprintf(" - by: %s\n", word_list(names(x[["by"]]), and.or = FALSE)))
   }
 
   if (is_not_null(x[["moderator"]])) {
     nsubgroups <- nlevels(attr(x[["moderator"]], "by.factor"))
     cat(sprintf(" - moderator: %s (%s subgroups)\n",
-                paste(names(x[["moderator"]]), collapse = ", "),
+                word_list(names(x[["moderator"]]), and.or = FALSE),
                 nsubgroups))
   }
 
