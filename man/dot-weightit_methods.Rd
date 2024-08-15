@@ -30,7 +30,7 @@ Each component is itself a list containing the following components:
 \item{\code{moments_int_ok}}{a logical for whether \code{moments}, \code{int}, and \code{quantile} can be used with the method.}
 \item{\code{moments_default}}{when \code{moments_int_ok} is \code{TRUE}, the default value of \code{moments} used with the method. For most methods, this is 1.}
 \item{\code{density_ok}}{a logical for whether arguments that control the density can be used with the method when used with a continuous treatment.}
-\item{\code{stabilize_ok}}{a logical for whether the \code{stabilize} argument (and \code{num.formula} for longitduinal treatments) can be used with the method.}
+\item{\code{stabilize_ok}}{a logical for whether the \code{stabilize} argument (and \code{num.formula} for longitudinal treatments) can be used with the method.}
 \item{\code{plot.weightit_ok}}{a logical for whether \code{plot()} can be used on the \code{weightit} output with the method.}
 }
 }

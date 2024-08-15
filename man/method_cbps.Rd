@@ -63,6 +63,7 @@ Note that the default method differs between the two implementations; by default
 }
 \section{Additional Arguments}{
 
+\code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.
 
 The following additional arguments can be specified:
 \describe{
@@ -75,6 +76,9 @@ The following additional arguments can be specified:
 \item{\code{reltol}}{the relative tolerance for convergence of the optimization. Passed to the \code{control} argument of \code{optim()}. Default is \code{sqrt(.Machine$double.eps)}.
 }
 \item{\code{maxit}}{the maximum number of iterations for convergence of the optimization. Passed to the \code{control} argument of \code{optim()}. Default is 1000.
+}
+\item{\code{quantile}}{
+A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \verb{c(x1 = .5, x2 = .75}) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
 }
 }
 }

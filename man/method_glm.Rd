@@ -143,7 +143,7 @@ Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for 
 \item Bias-reduced logistic regression
 }
 
-See references for the \pkg{brglm2} \pkgfun2{brglm2}{brglm2}{package}.
+See references for the \CRANpkg{brglm2} package.
 \itemize{
 \item Firth corrected logistic regression
 }
