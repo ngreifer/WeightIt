@@ -45,6 +45,7 @@
 #' M-estimation is supported for the just-identified CBPS (the default, setting `over = FALSE`) for binary and multi-category treatments. See [glm_weightit()] and `vignette("estimating-effects")` for details.
 #'
 #' @section Additional Arguments:
+#' `moments` and `int` are accepted. See [weightit()] for details.
 #'
 #' The following additional arguments can be specified:
 #'   \describe{
@@ -58,6 +59,9 @@
 #'     }
 #'     \item{`maxit`}{the maximum number of iterations for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is 1000.
 #'     }
+#'     \item{`quantile`}{
+#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75`) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
+#'   }
 #' }
 #'
 #' @section Additional Outputs:
@@ -593,9 +597,6 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE, orthogonal_poly = TRUE))
 
-  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                  treat = treat))
-
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
@@ -768,8 +769,14 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   treat.types <- character(length(treat.list))
 
   for (i in seq_along(covs.list)) {
-    covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
     treat.list[[i]] <- treat.list[[i]][subset]
+
+    if (!has_treat_type(treat.list[[i]])) {
+      treat.list[[i]] <- assign_treat_type(treat.list[[i]])
+    }
+    treat.types[i] <- get_treat_type(treat.list[[i]])
+
+    covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
 
     if (missing == "ind") {
       covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
@@ -778,17 +785,15 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     covs.list[[i]] <- cbind(covs.list[[i]], .int_poly_f(covs.list[[i]], poly = moments,
                                                         int = int, center = TRUE))
 
-    covs.list[[i]] <- cbind(covs.list[[i]], .quantile_f(covs.list[[i]], qu = A[["quantile"]],
-                                                        s.weights = s.weights,
-                                                        treat = treat.list[[i]]))
+    if (treat.types[i] %in% c("binary", "multi") &&
+        is_not_null(A[["quantile"]])) {
+      covs.list[[i]] <- cbind(covs.list[[i]], .quantile_f(covs.list[[i]], qu = A[["quantile"]],
+                                                          s.weights = s.weights,
+                                                          treat = treat.list[[i]]))
+    }
 
     colinear.covs.to.remove <- setdiff(colnames(covs.list[[i]]), colnames(make_full_rank(covs.list[[i]])))
     covs.list[[i]] <- covs.list[[i]][, colnames(covs.list[[i]]) %nin% colinear.covs.to.remove, drop = FALSE]
-
-    if (!has_treat_type(treat.list[[i]])) {
-      treat.list[[i]] <- assign_treat_type(treat.list[[i]])
-    }
-    treat.types[i] <- get_treat_type(treat.list[[i]])
 
     treat.list[[i]] <- switch(
       treat.types[i],
@@ -822,8 +827,8 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     coef_ind[[i]] <- length(unlist(coef_ind)) + switch(
       treat.types[i],
       "binary" = seq_col(covs.list[[i]]),
-      "multi" = seq_len((nlevels(treat.list[[i]]) - 1) * ncol(covs.list[[i]])),
-      "continuous" = seq_len(3 + ncol(covs.list[[i]]))
+      "multi" = seq_len((nlevels(treat.list[[i]]) - 1L) * ncol(covs.list[[i]])),
+      "continuous" = seq_len(3L + ncol(covs.list[[i]]))
     )
   }
 
