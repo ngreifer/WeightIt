@@ -7,11 +7,11 @@
 #' Each component is itself a list containing the following components:
 #' \describe{
 #' \item{`treat_type`}{at least one of `"binary"`, `"multi"`, or `"continuous"` indicating which treatment types are available for this method.}
-#' \item{`estimand`}{which estimands are available for this method. All methods that suppoprt binayr and multi-categoyr treatment accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
-#' \item{`alias`}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to requets entropy balancing is `"ebal"`, but `"ebalance"` and `"entropy"` also work. The first value is the canonical name.}
+#' \item{`estimand`}{which estimands are available for this method. All methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
+#' \item{`alias`}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is `"ebal"`, but `"ebalance"` and `"entropy"` also work. The first value is the canonical name.}
 #' \item{`description`}{a string containing the description of the name in English.}
 #' \item{`ps`}{a logical for whether propensity scores are returned by the method for binary treatments. Propensity scores are never returned for multi-category or continuous treatments.}
-#' \item{`msm_valid`}{a logical for whether the method can be validly used with longtiduinal treatments.}
+#' \item{`msm_valid`}{a logical for whether the method can be validly used with longitudinal treatments.}
 #' \item{`msm_method_available`}{a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the `is.MSM.method` argument of `weightitMSM()`.}
 #' \item{`subclass_ok`}{a logical for whether `subclass` can be supplied to compute subclassification weights from the propensity scores.}
 #' \item{`packages_needed`}{a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.}

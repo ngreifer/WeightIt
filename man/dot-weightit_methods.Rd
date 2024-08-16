@@ -17,11 +17,11 @@ An object of class \code{list} of length 10.
 Each component is itself a list containing the following components:
 \describe{
 \item{\code{treat_type}}{at least one of \code{"binary"}, \code{"multi"}, or \code{"continuous"} indicating which treatment types are available for this method.}
-\item{\code{estimand}}{which estimands are available for this method. All methods that suppoprt binayr and multi-categoyr treatment accept \code{"ATE"}, \code{"ATT"}, and \code{"ATC"}, as well as some other estimands depending on the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for more details about what each estimand means.}
-\item{\code{alias}}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to requets entropy balancing is \code{"ebal"}, but \code{"ebalance"} and \code{"entropy"} also work. The first value is the canonical name.}
+\item{\code{estimand}}{which estimands are available for this method. All methods that support binary and multi-category treatments accept \code{"ATE"}, \code{"ATT"}, and \code{"ATC"}, as well as some other estimands depending on the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for more details about what each estimand means.}
+\item{\code{alias}}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is \code{"ebal"}, but \code{"ebalance"} and \code{"entropy"} also work. The first value is the canonical name.}
 \item{\code{description}}{a string containing the description of the name in English.}
 \item{\code{ps}}{a logical for whether propensity scores are returned by the method for binary treatments. Propensity scores are never returned for multi-category or continuous treatments.}
-\item{\code{msm_valid}}{a logical for whether the method can be validly used with longtiduinal treatments.}
+\item{\code{msm_valid}}{a logical for whether the method can be validly used with longitudinal treatments.}
 \item{\code{msm_method_available}}{a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the \code{is.MSM.method} argument of \code{weightitMSM()}.}
 \item{\code{subclass_ok}}{a logical for whether \code{subclass} can be supplied to compute subclassification weights from the propensity scores.}
 \item{\code{packages_needed}}{a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.}
