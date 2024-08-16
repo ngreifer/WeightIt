@@ -147,42 +147,77 @@
   }
 }
 
-.process_moments_int <- function(moments, int, method) {
-  if (is_null(method)) {
-    return(list(moments = integer(), int = FALSE))
-  }
-
+.process_moments_int_quantile <- function(moments, int, quantile = NULL, method) {
   if (is.function(method)) {
-    return(list(moments = moments, int = int))
+    return(list(moments = moments, int = int, quantile = quantile))
   }
 
-  if (.weightit_methods[[method]]$moments_int_ok) {
-    chk::chk_flag(int)
-
-    if (is_not_null(moments)) {
-      chk::chk_whole_number(moments)
-
-      chk::chk_gte(moments, .weightit_methods[[method]]$moments_default)
+  if (is_null(method) || !.weightit_methods[[method]]$moments_int_ok) {
+    if (is_not_null(method) &&
+      any(mi0 <- c(is_not_null(moments), is_not_null(int) && !isFALSE(int), is_not_null(quantile)))) {
+      .wrn(sprintf("%s not compatible with %s. Ignoring %s",
+                   word_list(c("moments", "int", "quantile")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
+                   .method_to_phrase(method),
+                   word_list(c("moments", "int", "quantile")[mi0], and.or = "and", quotes = "`")))
     }
-    else {
-      moments <- {
-        if (int) 1L
-        else .weightit_methods[[method]]$moments_default
+
+    return(list(moments = integer(), int = FALSE, quantile = list()))
+  }
+
+  chk::chk_flag(int)
+
+  if (is_not_null(quantile)) {
+    .vld_qu <- function(x) {
+      is.numeric(x) && all(x >= 0) && all(x <= 1)
+    }
+
+    bad.q <- FALSE
+    if (is.numeric(quantile) && .vld_qu(quantile)) {
+      if (length(quantile) == 1L || (is_not_null(names(quantile)) && !any(names(quantile) == ""))) {
+        quantile <- as.list(quantile)
+      }
+      else {
+        bad.q <- TRUE
       }
     }
-  }
-  else if (is_not_null(moments) && any(mi0 <- c(as.integer(moments) != 1L, int))) {
-    .wrn(sprintf("%s not compatible with %s. Ignoring %s",
-                 word_list(c("moments", "int")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
-                 .method_to_phrase(method),
-                 word_list(c("moments", "int")[mi0], and.or = "and", quotes = "`")))
-    moments <- integer(0L)
-    int <- FALSE
+    else if (is.list(quantile)) {
+      if ((length(quantile) > 1L && (is_null(names(quantile)) || any(names(quantile) == ""))) ||
+          !all(vapply(quantile, .vld_qu, logical(1L)))) {
+        bad.q <- TRUE
+      }
+    }
+    else {
+      bad.q <- TRUE
+    }
+
+    if (bad.q) {
+      .err("`quantile` must be a number between 0 and 1, a named list or vector of such values, or a named list of vectors of such values")
+    }
   }
 
-  moments <- as.integer(moments)
+  if (is_not_null(moments)) {
+    chk::chk_whole_number(moments)
 
-  list(moments = moments, int = int)
+    chk::chk_gte(moments,
+                 if (is_null(quantile)) .weightit_methods[[method]]$moments_default
+                 else 0)
+
+    if (int && moments < 1) {
+      .wrn("when `int = TRUE`, `moments` must be greater than or equal to 1. Setting `moments = 1`")
+      moments <- 1L
+    }
+    else {
+      moments <- as.integer(moments)
+    }
+  }
+  else {
+    moments <- {
+      if (int) 1L
+      else .weightit_methods[[method]]$moments_default
+    }
+  }
+
+  list(moments = moments, int = int, quantile = quantile)
 }
 
 .process_MSM_method <- function(is.MSM.method, method) {
@@ -473,6 +508,13 @@
   #int=whether to include interactions or not; currently only 2-way are supported
   #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
 
+  if (!is.matrix(d)) {
+    if (!is.numeric(d))
+      .err("an error occurred, probably a bug")
+
+    matrix(d, ncol = 1, dimnames = list(NULL, "x"))
+  }
+
   if (is_null(ex)) ex <- rep.int(FALSE, ncol(d))
 
   binary.vars <- is_binary_col(d)
@@ -483,22 +525,32 @@
 
   nd <- NCOL(d)
 
-  if (poly > 1) {
-    make.poly <- which(!binary.vars & !ex)
-    npol <- length(make.poly)
-    poly_terms <- poly_co.names <- make_list(npol)
-    if (npol > 0) {
-      for (i in seq_along(make.poly)) {
-        poly_terms[[i]] <- poly(d[, make.poly[i]], degree = poly, raw = !orthogonal_poly, simple = TRUE)[,-1, drop = FALSE]
-        poly_co.names[[i]] <- paste0(if (orthogonal_poly) "orth_", colnames(d)[make.poly[i]], num_to_superscript(2:poly))
+  if (poly == 0 || nd == 0L) {
+    poly_terms <- poly_co.names <- list()
+  }
+  else if (poly == 1) {
+    poly_terms <- list(d)
+    poly_co.names <- list(colnames(d))
+  }
+  else {
+    poly_terms <- poly_co.names <- make_list(nd)
+
+    for (i in seq_col(d)) {
+      if (ex[i] || binary.vars[i]) {
+        poly_terms[[i]] <- d[, i]
+        poly_co.names[[i]] <- colnames(d)[i]
+      }
+      else {
+        poly_terms[[i]] <- poly(d[, i], degree = poly, raw = !orthogonal_poly, simple = TRUE)
+        poly_co.names[[i]] <- sprintf("%s%s%s",
+                                      if (orthogonal_poly) "orth_" else "",
+                                      colnames(d)[i],
+                                      num_to_superscript(seq_len(poly)))
       }
     }
   }
-  else {
-    poly_terms <- poly_co.names <- list()
-  }
 
-  if (int && nd > 1) {
+  if (int && nd > 1L) {
     int_terms <- int_co.names <- make_list(1)
     ints_to_make <- utils::combn(colnames(d)[!ex], 2, simplify = FALSE)
 
@@ -517,9 +569,9 @@
   }
 
   out <- do.call("cbind", c(poly_terms, int_terms))
-  out_co.names <- c(do.call("c", poly_co.names), do.call("c", int_co.names))
+  out_co.names <- c(unlist(poly_co.names), unlist(int_co.names))
 
-  colnames(out) <- unlist(out_co.names)
+  colnames(out) <- out_co.names
 
   #Remove single values
   if (is_not_null(out)) {
@@ -546,24 +598,8 @@
 
   binary.vars <- is_binary_col(d)
 
-  if (is.numeric(qu) && vld_qu(qu)) {
-    if (is_null(names(qu))) {
-      if (length(qu) != 1) {
-        .err("`quantile` must be a number between 0 and 1, a named list thereof, a named vector thereof, or a named list of lists thereof")
-      }
-      qu <- setNames(rep.int(qu, sum(!binary.vars)),
-                     colnames(d)[!binary.vars])
-    }
-
-    qu <- as.list(qu)
-  }
-
-  if (!is.list(qu)) {
-    .err("`quantile` must be a number between 0 and 1, a named list or vector of such values, or a named list of vectors of such values")
-  }
-
   if (length(qu) == 1L && is_null(names(qu))) {
-    qu <- setNames(qu[[rep.int(1L, sum(!binary.vars))]],
+    qu <- setNames(qu[rep.int(1L, sum(!binary.vars))],
                    colnames(d)[!binary.vars])
   }
 

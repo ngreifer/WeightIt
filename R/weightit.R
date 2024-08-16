@@ -300,31 +300,33 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   processed.by <- .process_by(by, data = data, treat = treat, by.arg = by.arg)
 
   #Process moments and int
-  moments.int <- .process_moments_int(moments, int, method)
+  m.i.q <- .process_moments_int_quantile(moments = moments,
+                                         int = int,
+                                         quantile = A[["quantile"]],
+                                         method = method)
 
   call <- match.call()
   # args <- list(...)
 
   ## Running models ----
 
-  A[["treat"]] <- treat
-  A[["covs"]] <- covs
-  A[["s.weights"]] <- s.weights
-  A[["by.factor"]] <- attr(processed.by, "by.factor")
-  A[["estimand"]] <- estimand
-  A[["focal"]] <- focal
-  A[["stabilize"]] <- FALSE
+  A["treat"] <- list(treat)
+  A["covs"] <- list(covs)
+  A["s.weights"] <- list(s.weights)
+  A["by.factor"] <- list(attr(processed.by, "by.factor"))
+  A["estimand"] <- list(estimand)
+  A["focal"] <- list(focal)
+  A["stabilize"] <- list(FALSE)
   A["method"] <- list(method)
-  A[["moments"]] <- moments.int[["moments"]]
-  A[["int"]] <- moments.int[["int"]]
-  A[["subclass"]] <- subclass
-  A[["ps"]] <- ps
-  A[["missing"]] <- missing
-  A[["verbose"]] <- verbose
-  A[["include.obj"]] <- include.obj
-  A[[".data"]] <- data
-  A[[".formula"]] <- formula
-  A[[".covs"]] <- reported.covs
+  A[c("moments", "int", "quantile")] <- m.i.q[c("moments", "int", "quantile")]
+  A["subclass"] <- list(subclass)
+  A["ps"] <- list(ps)
+  A["missing"] <- list(missing)
+  A["verbose"] <- list(verbose)
+  A["include.obj"] <- list(include.obj)
+  A[".data"] <- list(data)
+  A[".formula"] <- list(formula)
+  A[".covs"] <- list(reported.covs)
 
   #Returns weights (weights) and propensity score (ps)
   obj <- do.call("weightit.fit", A)
@@ -332,13 +334,14 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   if (is_not_null(stabilize)) {
     stab.t.c <- get_covs_and_treat_from_formula(stabilize, data)
 
-    A[["treat"]] <- stab.t.c[["treat"]]
-    A[["covs"]] <- stab.t.c[["model.covs"]]
-    A[["method"]] <- "glm"
-    A[["moments"]] <- NULL
-    A[["int"]] <- NULL
-    A[[".formula"]] <- stabilize
-    A[[".covs"]] <- stab.t.c[["reported.covs"]]
+    A["treat"] <- list(stab.t.c[["treat"]])
+    A["covs"] <- list(stab.t.c[["model.covs"]])
+    A["method"] <- list("glm")
+    A["moments"] <- list(integer())
+    A["int"] <- list(FALSE)
+    A["quantile"] <- list(list())
+    A[".formula"] <- list(stabilize)
+    A[".covs"] <- list(stab.t.c[["reported.covs"]])
 
     sw_obj <- do.call("weightit.fit", A)
 

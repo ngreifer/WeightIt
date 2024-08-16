@@ -316,26 +316,26 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
   }
 
   #Process moments and int
-  moments.int <- .process_moments_int(moments, int, method)
-  moments <- moments.int[["moments"]]
-  int <- moments.int[["int"]]
+  m.i.q <- .process_moments_int_quantile(moments = moments,
+                                         int = int,
+                                         quantile = A[["quantile"]],
+                                         method = method)
 
-  A[["s.weights"]] <- s.weights
-  A[["by.factor"]] <- attr(processed.by, "by.factor")
+  A["s.weights"] <- list(s.weights)
+  A["by.factor"] <- list(attr(processed.by, "by.factor"))
   A["method"] <- list(method)
-  A[["moments"]] <- moments
-  A[["int"]] <- int
-  A[["subclass"]] <- numeric()
-  A[["verbose"]] <- verbose
-  A[["include.obj"]] <- include.obj
+  A[c("moments", "int", "quantile")] <- m.i.q[c("moments", "int", "quantile")]
+  A["subclass"] <- list(numeric())
+  A["missing"] <- list(missing)
+  A["verbose"] <- list(verbose)
+  A["include.obj"] <- list(include.obj)
 
   if (is.MSM.method) {
     #Returns weights (w)
 
-    A[["covs.list"]] <- covs.list
-    A[["treat.list"]] <- treat.list
-    A[["stabilize"]] <- stabilize
-    A[["missing"]] <- missing
+    A["covs.list"] <- list(covs.list)
+    A["treat.list"] <- list(treat.list)
+    A["stabilize"] <- list(stabilize)
 
     obj <- do.call("weightitMSM.fit", A)
 
@@ -349,39 +349,38 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
       .err(sprintf("the argument to `link` must have length 1 or %s", length(formula.list)))
     }
 
-    if (length(A[["link"]]) == 1) {
+    if (length(A[["link"]]) == 1L) {
       A[["link"]] <- rep.int(A[["link"]], length(formula.list))
     }
 
     obj.list <- make_list(length(formula.list))
 
-    A[["estimand"]] <- "ATE"
-    A[["focal"]] <- character()
-    A[["stabilize"]] <- FALSE
-    A[["ps"]] <- numeric()
-    A[["is.MSM.method"]] <- FALSE
+    A["estimand"] <- list("ATE")
+    A["focal"] <- list(character())
+    A["stabilize"] <- list(FALSE)
+    A["ps"] <- list(numeric())
+    A["is.MSM.method"] <- list(FALSE)
 
     for (i in seq_along(formula.list)) {
       A_i <- A
       if (length(A[["link"]]) == length(formula.list)) {
-        A_i[["link"]] <- A[["link"]][[i]]
+        A_i["link"] <- list(A[["link"]][[i]])
       }
 
-      A_i[["covs"]] <- covs.list[[i]]
-      A_i[["treat"]] <- treat.list[[i]]
-      A_i[["treat.type"]] <- get_treat_type(treat.list[[i]])
-      A_i[[".data"]] <- data
-      A_i[[".covs"]] <- reported.covs.list[[i]]
-      A_i[["missing"]] <- missing
+      A_i["covs"] <- list(covs.list[[i]])
+      A_i["treat"] <- list(treat.list[[i]])
+      A_i["treat.type"] <- list(get_treat_type(treat.list[[i]]))
+      A_i[".data"] <- list(data)
+      A_i[".covs"] <- list(reported.covs.list[[i]])
 
       ## Running models ----
 
       #Returns weights (w) and propensty score (ps)
       obj <- do.call("weightit.fit", A_i)
 
-      w.list[[i]] <- obj[["weights"]]
-      ps.list[[i]] <- obj[["ps"]]
-      obj.list[[i]] <- obj[["fit.obj"]]
+      w.list[i] <- list(obj[["weights"]])
+      ps.list[i] <- list(obj[["ps"]])
+      obj.list[i] <- list(obj[["fit.obj"]])
       Mparts.list[i] <- list(attr(obj, "Mparts"))
 
       if (stabilize) {
@@ -411,10 +410,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
         stab.t.c_i <- get_covs_and_treat_from_formula(stab.f, data)
 
-        A_i[["covs"]] <- stab.t.c_i[["model.covs"]]
-        A_i[["method"]] <- "glm"
-        A_i[["moments"]] <- numeric()
-        A_i[["int"]] <- FALSE
+        A_i["covs"] <- list(stab.t.c_i[["model.covs"]])
+        A_i["method"] <- list("glm")
+        A_i["moments"] <- list(integer())
+        A_i["int"] <- list(FALSE)
+        A_i["quantile"] <- list(list())
 
         sw_obj <- do.call("weightit.fit", A_i)
 

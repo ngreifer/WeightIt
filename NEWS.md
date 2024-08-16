@@ -9,6 +9,8 @@ WeightIt News and Updates
 
 * `missing` no longer allows partial matching.
 
+* `moments` can now be set to 0 when `quantile` is supplied to ensure balance on the quantiles without the moments for the methods that accepts `quantiles`. Thanks to @BERENZ for the suggestion.
+
 * Fixes to vignettes and tests to satisfy CRAN checks.
 
 * Minor bug, performance, and readability fixes.
@@ -405,7 +407,7 @@ WeightIt News and Updates
 
 * Fixed bug when using objects not in the data set in `weightit()`. Behavior has changed to include transformed covariates entered in formula in `weightit()` output.
 
-* Fixed bug resulting from potential colinearity when using `ebal` or `ebcw`.
+* Fixed bug resulting from potential collinearity when using `ebal` or `ebcw`.
 
 * Added a vignette.
 

@@ -135,6 +135,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                          subclass = NULL, missing = NULL,
                          verbose = FALSE, include.obj = FALSE, ...) {
 
+  A <- list(...)
+
   #Checks
   if (!check_if_call_from_fun(weightit) && !check_if_call_from_fun(weightitMSM)) {
 
@@ -225,9 +227,14 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     if (is_not_null(subclass)) .check_subclass(method, treat.type)
 
     #Process moments and int
-    moments.int <- .process_moments_int(moments, int, method)
-    moments <- moments.int[["moments"]]
-    int <- moments.int[["int"]]
+    m.i.q <- .process_moments_int_quantile(moments = moments,
+                                           int = int,
+                                           quantile = A[["quantile"]],
+                                           method = method)
+
+    moments <- m.i.q[["moments"]]
+    int <- m.i.q[["int"]]
+    A["quantile"] <- m.i.q["quantile"]
   }
   else {
     if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
@@ -261,51 +268,36 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                   fun)
   }
 
+  A["covs"] <- list(covs)
+  A["treat"] <- list(treat)
+  A["s.weights"] <- list(s.weights)
+  A["estimand"] <- list(estimand)
+  A["focal"] <- list(focal)
+  A["stabilize"] <- list(stabilize)
+  A["subclass"] <- list(subclass)
+  A["ps"] <- list(ps)
+  A["moments"] <- list(moments)
+  A["int"] <- list(int)
+  A["missing"] <- list(missing)
+  A["verbose"] <- list(verbose)
+
   for (i in levels(by.factor)) {
+    A["subset"] <- list(by.factor == i)
+
     #Run method
-    if (!is.function(method)) {
-      obj <- do.call(fun,
-                     alist(covs = covs,
-                           treat = treat,
-                           s.weights = s.weights,
-                           subset = by.factor == i,
-                           estimand = estimand,
-                           focal = focal,
-                           stabilize = stabilize,
-                           subclass = subclass,
-                           ps = ps,
-                           moments = moments,
-                           int = int,
-                           missing = missing,
-                           verbose = verbose,
-                           ...))
+    if (is.function(method)) {
+      A["Fun"] <- list(method)
     }
-    else {
-      obj <- do.call(fun,
-                     alist(Fun = method,
-                           covs = covs,
-                           treat = treat,
-                           s.weights = s.weights,
-                           subset = by.factor == i,
-                           estimand = estimand,
-                           focal = focal,
-                           stabilize = stabilize,
-                           subclass = subclass,
-                           ps = ps,
-                           moments = moments,
-                           int = int,
-                           missing = missing,
-                           verbose = verbose,
-                           ...))
-    }
+
+    obj <- do.call(fun, A)
 
     #Extract weights
     if (is_null(obj)) {
-      .err("no object was created. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues")
+      .err("no object was created. This is probably a bug, and you should report it at https://github.com/ngreifer/WeightIt/issues")
     }
 
     if (is_null(obj$w) || all(is.na(obj$w))) {
-      .wrn("no weights were estimated. This is probably a bug,\n     and you should report it at https://github.com/ngreifer/WeightIt/issues")
+      .wrn("no weights were estimated. This is probably a bug, and you should report it at https://github.com/ngreifer/WeightIt/issues")
     }
 
     if (any(!is.finite(obj$w))) {
@@ -367,6 +359,8 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
                             moments = NULL, int = FALSE,
                             subclass = NULL, is.MSM.method = FALSE, missing = NULL,
                             verbose = FALSE, include.obj = FALSE, ...) {
+
+  A <- list(...)
 
   #Checks
   if (!check_if_call_from_fun(weightitMSM)) {
@@ -441,9 +435,14 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     }
 
     #Process moments and int
-    moments.int <- .process_moments_int(moments, int, method)
-    moments <- moments.int[["moments"]]
-    int <- moments.int[["int"]]
+    m.i.q <- .process_moments_int_quantile(moments = moments,
+                                           int = int,
+                                           quantile = A[["quantile"]],
+                                           method = method)
+
+    moments <- m.i.q[["moments"]]
+    int <- m.i.q[["int"]]
+    A["quantile"] <- m.i.q["quantile"]
   }
   else {
     for (i in seq_along(treat.list)) {
@@ -472,35 +471,27 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     }
   }
 
+  A["covs.list"] <- list(covs.list)
+  A["treat.list"] <- list(treat.list)
+  A["s.weights"] <- list(s.weights)
+  A["estimand"] <- list(estimand)
+  A["focal"] <- list(focal)
+  A["moments"] <- list(moments)
+  A["int"] <- list(int)
+  A["stabilize"] <- list(stabilize)
+  A["subclass"] <- list(subclass)
+  A["missing"] <- list(missing)
+  A["verbose"] <- list(verbose)
+
   for (i in levels(by.factor)) {
+    A["subset"] <- list(by.factor == i)
+
     #Run method
-    if (!is.function(method)) {
-      obj <- do.call(fun,
-                     alist(covs.list = covs.list,
-                           treat.list = treat.list,
-                           s.weights = s.weights,
-                           subset = by.factor == i,
-                           estimand = estimand,
-                           focal = focal,
-                           stabilize = stabilize,
-                           subclass = subclass,
-                           moments = moments,
-                           int = int,
-                           missing = missing,
-                           verbose = verbose,
-                           ...))
+    if (is.function(method)) {
+      A["Fun"] <- list(method)
     }
-    else {
-      obj <- do.call(fun,
-                     alist(covs.list = covs.list,
-                           treat.list = treat.list,
-                           s.weights = s.weights,
-                           subset = by.factor == i,
-                           stabilize = stabilize,
-                           missing = missing,
-                           verbose = verbose,
-                           ...))
-    }
+
+    obj <- do.call(fun, A)
 
     #Extract weights
     if (is_null(obj)) {

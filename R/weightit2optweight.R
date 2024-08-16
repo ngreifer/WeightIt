@@ -47,7 +47,7 @@
 #'
 #' \describe{
 #'   \item{`quantile`}{
-#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75`) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
+#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
 #'   }
 #' }
 #'
@@ -138,10 +138,9 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
-  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
-
-  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                  focal = focal, treat = treat))
+  covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
+                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                            focal = focal, treat = treat))
 
   for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
@@ -187,7 +186,8 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int))
+  covs <- .int_poly_f(covs, poly = moments, int = int)
+
   for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
   if (missing == "ind") {
@@ -251,11 +251,14 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
     covs.list[[i]] <- cbind(covs.list[[i]],
                             .int_poly_f(covs.list[[i]], poly = moments, int = int))
 
-    if (treat.types[i] %in% c("binary", "multi") &&
-        is_not_null(A[["quantile"]])) {
-      covs.list[[i]] <- cbind(covs.list[[i]], .quantile_f(covs.list[[i]], qu = A[["quantile"]],
-                                                          s.weights = s.weights,
-                                                          treat = treat.list[[i]]))
+    if (treat.types[i] %in% c("binary", "multi")) {
+      covs.list[[i]] <- cbind(.int_poly_f(covs.list[[i]], poly = moments, int = int, center = TRUE),
+                              .quantile_f(covs.list[[i]], qu = A[["quantile"]], s.weights = s.weights,
+                                          treat = treat.list[[i]]))
+    }
+    else {
+      covs.list[[i]] <- cbind(covs.list[[i]], .int_poly_f(covs.list[[i]], poly = moments,
+                                                          int = int, center = TRUE))
     }
 
     for (j in seq_col(covs.list[[i]])) {

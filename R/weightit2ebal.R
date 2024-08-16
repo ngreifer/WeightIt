@@ -49,7 +49,7 @@
 #'     A vector of base weights, one for each unit. These correspond to the base weights $q$ in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{\sum w \log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to `base.weights` but can be included in a `weightit()` call that includes `s.weights`.
 #'   }
 #'   \item{`quantile`}{
-#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75`) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
+#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
 #'   }
 #'   \item{`d.moments`}{
 #'     With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting `d.moments = 3` ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. `d.moments` should be greater than or equal to `moments` and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2021) recommend setting `d.moments = 3`, even if `moments` is less than 3. This argument corresponds to the tuning parameters $r$ and $s$ in Vegetabile et al. (2021) (which here are set to be equal). Ignored for binary and multi-category treatments.
@@ -132,10 +132,9 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(covs, .int_poly_f(covs, poly = moments, int = int, center = TRUE))
-
-  covs <- cbind(covs, .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
-                                 focal = focal, treat = treat))
+  covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
+                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                            focal = focal, treat = treat))
 
   for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 
@@ -281,14 +280,16 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
   A <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- treat[subset]
   s.weights <- s.weights[subset]
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
 
-  if (is_not_null(A[["base.weights"]])) A[["base.weight"]] <- A[["base.weights"]]
+  if (is_not_null(A[["base.weights"]])) {
+    names(A)[names(A) == "base.weights"] <- "base.weight"
+  }
+
   if (is_null(A[["base.weight"]])) {
     bw <- rep.int(1, length(treat))
   }
@@ -300,57 +301,58 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
     bw <- A[["base.weight"]]
   }
 
+  treat <- treat[subset]
+
   bw <- bw[subset]
 
   s.weights <- s.weights / mean_fast(s.weights)
 
-  reltol <- if_null_then(A$reltol, 1e-10)
+  reltol <- if_null_then(A[["reltol"]], 1e-10)
   chk::chk_number(reltol)
 
-  maxit <- if_null_then(A$maxit, 1e4)
+  maxit <- if_null_then(A[["maxit"]], 1e4)
   chk::chk_count(maxit)
 
   d.moments <- max(if_null_then(A[["d.moments"]], 1), moments)
   chk::chk_count(d.moments)
 
-  k <- ncol(covs)
-
-  poly.covs <- .int_poly_f(covs, poly = moments)
-  int.covs <- .int_poly_f(covs, int = int)
-
   treat <- .make_closer_to_1(treat)
-  for (i in seq_col(poly.covs)) poly.covs[,i] <- .make_closer_to_1(poly.covs[,i])
-  for (i in seq_col(int.covs)) int.covs[,i] <- .make_closer_to_1(int.covs[,i])
-  if (d.moments == moments) {
-    d.poly.covs <- poly.covs
-  }
-  else {
-    d.poly.covs <- .int_poly_f(covs, poly = d.moments)
-    for (i in seq_col(d.poly.covs)) d.poly.covs[,i] <- .make_closer_to_1(d.poly.covs[,i])
-  }
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
-
-  covs <- cbind(covs, poly.covs, int.covs, d.poly.covs)
-  # colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
-  # covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   t.mat <- matrix(treat, ncol = 1, dimnames = list(NULL, "treat"))
-  if (d.moments > 1) t.mat <- cbind(t.mat, .int_poly_f(t.mat, poly = d.moments))
+  t.mat <- .int_poly_f(t.mat, poly = d.moments)
 
-  treat_c <- sweep(t.mat, 2, cobalt::col_w_mean(t.mat, s.weights))
-  covs_c <- sweep(covs, 2, cobalt::col_w_mean(covs, s.weights))
+  t.mat <- center(t.mat, cobalt::col_w_mean(t.mat, s.weights))
 
-  covs.ind <- seq_len(k)
-  poly.covs.ind <- k + seq_col(poly.covs)
-  int.covs.ind <- k + ncol(poly.covs) + seq_col(int.covs)
-  d.poly.covs.ind <- k + ncol(poly.covs) + ncol(int.covs) + seq_col(d.poly.covs)
+  bal.covs <- .int_poly_f(covs, poly = moments, int = int, center = TRUE)
 
-  C <- cbind(treat_c, covs_c[, c(covs.ind, int.covs.ind, d.poly.covs.ind)],
-             treat_c[,1] * covs_c[, c(covs.ind, int.covs.ind, poly.covs.ind)])
+  for (i in seq_col(bal.covs)) bal.covs[,i] <- .make_closer_to_1(bal.covs[,i])
 
-  colnames(C) <- c(paste(colnames(treat_c), "(mean)"),
-                   paste(colnames(covs_c)[c(covs.ind, int.covs.ind, d.poly.covs.ind)], "(mean)"),
-                   colnames(covs_c)[c(covs.ind, int.covs.ind, poly.covs.ind)])
+  bal.covs <- center(bal.covs, cobalt::col_w_mean(bal.covs, s.weights))
+
+  if (d.moments == moments) {
+    C <- cbind(t.mat,
+               bal.covs,
+               t.mat[,1] * bal.covs)
+
+    colnames(C) <- c(paste(colnames(t.mat), "(mean)"),
+                     paste(colnames(bal.covs), "(mean)"),
+                     colnames(bal.covs))
+  }
+  else {
+    d.covs <- .int_poly_f(covs, poly = d.moments, int = int, center = TRUE)
+
+    for (i in seq_col(d.covs)) d.covs[,i] <- .make_closer_to_1(d.covs[,i])
+
+    d.covs <- center(d.covs, cobalt::col_w_mean(d.covs, s.weights))
+
+    C <- cbind(t.mat,
+               d.covs,
+               t.mat[,1] * bal.covs)
+
+    colnames(C) <- c(paste(colnames(t.mat), "(mean)"),
+                     paste(colnames(d.covs), "(mean)"),
+                     colnames(bal.covs))
+  }
 
   colinear.covs.to.remove <- setdiff(colnames(C), colnames(make_full_rank(C)))
   C <- C[, colnames(C) %nin% colinear.covs.to.remove, drop = FALSE]
