@@ -57,10 +57,10 @@
 <dd><p>at least one of <code>"binary"</code>, <code>"multi"</code>, or <code>"continuous"</code> indicating which treatment types are available for this method.</p></dd>
 
 <dt><code>estimand</code></dt>
-<dd><p>which estimands are available for this method. All methods that suppoprt binayr and multi-categoyr treatment accept <code>"ATE"</code>, <code>"ATT"</code>, and <code>"ATC"</code>, as well as some other estimands depending on the method. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for more details about what each estimand means.</p></dd>
+<dd><p>which estimands are available for this method. All methods that support binary and multi-category treatments accept <code>"ATE"</code>, <code>"ATT"</code>, and <code>"ATC"</code>, as well as some other estimands depending on the method. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for more details about what each estimand means.</p></dd>
 
 <dt><code>alias</code></dt>
-<dd><p>a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to requets entropy balancing is <code>"ebal"</code>, but <code>"ebalance"</code> and <code>"entropy"</code> also work. The first value is the canonical name.</p></dd>
+<dd><p>a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is <code>"ebal"</code>, but <code>"ebalance"</code> and <code>"entropy"</code> also work. The first value is the canonical name.</p></dd>
 
 <dt><code>description</code></dt>
 <dd><p>a string containing the description of the name in English.</p></dd>
@@ -69,7 +69,7 @@
 <dd><p>a logical for whether propensity scores are returned by the method for binary treatments. Propensity scores are never returned for multi-category or continuous treatments.</p></dd>
 
 <dt><code>msm_valid</code></dt>
-<dd><p>a logical for whether the method can be validly used with longtiduinal treatments.</p></dd>
+<dd><p>a logical for whether the method can be validly used with longitudinal treatments.</p></dd>
 
 <dt><code>msm_method_available</code></dt>
 <dd><p>a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the <code>is.MSM.method</code> argument of <code><a href="weightitMSM.html">weightitMSM()</a></code>.</p></dd>

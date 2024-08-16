@@ -218,7 +218,7 @@ M-estimation is supported for all scenarios. See glm_weightit() and vignette("es
 <dd><p>A vector of base weights, one for each unit. These correspond to the base weights $q$ in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \(\sum w \log(w/q)\), subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to <code>base.weights</code> but can be included in a <code><a href="weightit.html">weightit()</a></code> call that includes <code>s.weights</code>.</p></dd>
 
 <dt><code>quantile</code></dt>
-<dd><p>A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75</code>) to request one quantile for each covariate. Only allowed with binary and multi-category treatments.</p></dd>
+<dd><p>A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75)</code> to request one quantile for each covariate. Only allowed with binary and multi-category treatments.</p></dd>
 
 <dt><code>d.moments</code></dt>
 <dd><p>With continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting <code>d.moments = 3</code> ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. <code>d.moments</code> should be greater than or equal to <code>moments</code> and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2021) recommend setting <code>d.moments = 3</code>, even if <code>moments</code> is less than 3. This argument corresponds to the tuning parameters $r$ and $s$ in Vegetabile et al. (2021) (which here are set to be equal). Ignored for binary and multi-category treatments.</p></dd>
@@ -406,36 +406,36 @@ M-estimation is supported for all scenarios. See glm_weightit() and vignette("es
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0001 |---------------------------| 17.6707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0001 |---------------------------| 17.6502</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        484    200    166     171     180</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 6.756 7.6063 8.5176 10.2529 17.6707</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         484    200    166     171     180</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 6.7447 7.6159 8.5233 10.2661 17.6502</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.253 0.615   0.423       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.252 0.614   0.423       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   239.12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   239.32</span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       -0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       -0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.  -0.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.  -0.0001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary  -0.0001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary   0.0005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.  -0.0001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   239.12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   239.32</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

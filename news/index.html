@@ -43,6 +43,7 @@
 <ul><li><p>Added the new user-facing object <code>.weightit_methods</code>, which contains information on each method and the options allowed with it. This is used within <code>WeightIt</code> for checking arguments but can also be used by other package developers who call functions in <code>WeightIt</code>. See <code><a href="../reference/dot-weightit_methods.html">help(".weightit_methods")</a></code> for details.</p></li>
 <li><p><code><a href="../reference/plot.weightit.html">plot.weightit()</a></code> can be used with <code>method = "optweight"</code> to display the dual variables.</p></li>
 <li><p><code>missing</code> no longer allows partial matching.</p></li>
+<li><p><code>moments</code> can now be set to 0 when <code>quantile</code> is supplied to ensure balance on the quantiles without the moments for the methods that accepts <code>quantiles</code>. Thanks to <a href="https://github.com/BERENZ" class="external-link">@BERENZ</a> for the suggestion.</p></li>
 <li><p>Fixes to vignettes and tests to satisfy CRAN checks.</p></li>
 <li><p>Minor bug, performance, and readability fixes.</p></li>
 </ul></div>
@@ -314,7 +315,7 @@
 <code>WeightIt</code> 0.3.2<a class="anchor" aria-label="anchor" href="#weightit-032"></a></h2><p class="text-muted">CRAN release: 2018-03-14</p>
 <ul><li><p>Added new <code>moments</code> and <code>int</code> options for some <code><a href="../reference/weightit.html">weightit()</a></code> methods to easily specify moments and interactions of covariates.</p></li>
 <li><p>Fixed bug when using objects not in the data set in <code><a href="../reference/weightit.html">weightit()</a></code>. Behavior has changed to include transformed covariates entered in formula in <code><a href="../reference/weightit.html">weightit()</a></code> output.</p></li>
-<li><p>Fixed bug resulting from potential colinearity when using <code>ebal</code> or <code>ebcw</code>.</p></li>
+<li><p>Fixed bug resulting from potential collinearity when using <code>ebal</code> or <code>ebcw</code>.</p></li>
 <li><p>Added a vignette.</p></li>
 </ul></div>
     <div class="section level2">
