@@ -165,7 +165,7 @@ which estimands are allowed, and whether sampling weights are allowed.\tabular{l
 
 
 \code{method} can also be supplied as a user-defined function; see
-\code{\link{method_user}} for instructions and examples. Setting \code{method = NULL} computes units weights.
+\code{\link{method_user}} for instructions and examples. Setting \code{method = NULL} computes unit weights.
 
 When using \code{weightit()}, please cite both the \pkg{WeightIt} package
 (using \code{citation("WeightIt")}) and the paper(s) in the references

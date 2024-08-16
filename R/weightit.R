@@ -124,7 +124,7 @@
 #' | [`"energy"`][method_energy] | Energy balancing |
 #'
 #' `method` can also be supplied as a user-defined function; see
-#' [`method_user`] for instructions and examples. Setting `method = NULL` computes units weights.
+#' [`method_user`] for instructions and examples. Setting `method = NULL` computes unit weights.
 #'
 #' When using `weightit()`, please cite both the \pkg{WeightIt} package
 #' (using `citation("WeightIt")`) and the paper(s) in the references

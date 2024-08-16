@@ -42,9 +42,9 @@
 #' @param moments,int,subclass arguments to customize the weight estimation.
 #' See [weightit()] for details.
 #' @param missing `character`; how missing data should be handled. The
-#' options depend on the `method` used. If `NULL`, `covs` covs
+#' options depend on the `method` used. If `NULL`, `covs`
 #' will be checked for `NA` values, and if present, `missing` will be
-#' set to `"ind"`. If `""`, `covs` covs will not be checked for
+#' set to `"ind"`. If `""`, `covs` will not be checked for
 #' `NA` values; this can be faster when it is known there are none.
 #' @param verbose whether to print additional information output by the fitting
 #' function.
@@ -154,7 +154,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     chk::chk_flag(include.obj)
 
     if (length(treat) != nrow(covs)) {
-      .err("`treat` and `'covs` must contain the same number of units")
+      .err("`treat` and `covs` must contain the same number of units")
     }
 
     if (!has_treat_type(treat)) treat <- assign_treat_type(treat)

@@ -65,9 +65,9 @@ ignored and set to \code{"glm"}.}
 See \code{\link[=weightit]{weightit()}} for details.}
 
 \item{missing}{\code{character}; how missing data should be handled. The
-options depend on the \code{method} used. If \code{NULL}, \code{covs} covs
+options depend on the \code{method} used. If \code{NULL}, \code{covs}
 will be checked for \code{NA} values, and if present, \code{missing} will be
-set to \code{"ind"}. If \code{""}, \code{covs} covs will not be checked for
+set to \code{"ind"}. If \code{""}, \code{covs} will not be checked for
 \code{NA} values; this can be faster when it is known there are none.}
 
 \item{verbose}{whether to print additional information output by the fitting
