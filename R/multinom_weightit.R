@@ -19,9 +19,7 @@
 
   chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
 
-  # QR <- qr(x)
-
-  aliased_X <- !colnames(x) %in% colnames(make_full_rank(x, with.intercept = FALSE))
+  aliased_X <- colnames(x) %nin% colnames(make_full_rank(x, with.intercept = FALSE))
   aliased_B <- rep.int(aliased_X, nlevels(y) - 1)
 
   k0 <- (nlevels(y) - 1) * ncol(x)
@@ -107,15 +105,9 @@
   coefs <- setNames(rep.int(NA_real_, length(start)), names(start))
   coefs[!aliased_B] <- out$par
 
-  # aliased <- rep.int(TRUE, ncol(x))
-  # aliased[QR$pivot[seq_len(QR$rank)]] <- FALSE
-  # attr(QR$qr, "aliased") <- aliased
-
   list(coefficients = coefs,
        residuals = res,
        fitted.values = pp,
-       # rank = QR$rank,
-       # qr = QR,
        solve = out,
        psi = psi,
        f = gr,
