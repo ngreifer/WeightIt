@@ -86,7 +86,7 @@
     }
   }
 
-  names(start) <- nm
+  names(start) <- nm[!aliased_B]
 
   ind_mat <- cbind(seq_along(y), y_)
 
@@ -151,8 +151,8 @@
       theta0[-1L] <- theta0[1L] + cumsum(exp(theta0[-1L]))
     }
     else {
-      a1 <- theta0[ncol(x) + 1L]
-      theta0[-seq_len(ncol(x))] <- c(a1, a1 + cumsum(exp(theta0[-seq_len(ncol(x) + 1L)])))
+      a1 <- theta0[ncol(x_) + 1L]
+      theta0[-seq_len(ncol(x_))] <- c(a1, a1 + cumsum(exp(theta0[-seq_len(ncol(x_) + 1L)])))
     }
   }
 
