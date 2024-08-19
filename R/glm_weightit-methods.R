@@ -7,12 +7,15 @@
 #' @inheritParams stats::vcov
 #' @inheritParams stats::confint
 #' @inheritParams stats::print.lm
-#' @param object,x an output from one of the above modeling functions.
+#' @param object,object2,x an output from one of the above modeling functions. For `anova()`, `object2` is required.
 #' @param ci `logical`; whether to display Wald confidence intervals for estimated coefficients. Default is `FALSE`.
 #' @param level when `ci = TRUE`, the desired confidence level.
 #' @param transform the function used to transform the coefficients, e.g., `exp` (which can also be supplied as a string, e.g., `"exp"`); passed to [match.fun()] before being used on the coefficients. When `ci = TRUE`, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.
 #' @param complete `logical`; whether the full variance-covariance matrix should be returned also in case of an over-determined system where some coefficients are undefined and `coef(.)` contains `NA`s correspondingly. When `complete = TRUE`, `vcov()` is compatible with `coef()` also in this singular case.
 #' @param \dots ignored.
+#' @param test the type of test statistic used to compare models. Currently only `"Chisq"` (the chi-square statistic) is allowed.
+#' @param method the kind of test used to compare models. Currently only `"Wald"` is allowed.
+#' @param tolerance for the Wald test, the tolerance used to determine if models are symbolically nested.
 #'
 #' @returns
 #' `summary()` returns a `summary.glm_weightit()` object, which has its own print method. For `coxph_weightit()` objects, the `print()` and `summary()` methods are more like those for `glm` objects then for `coxph` objects.
@@ -22,12 +25,42 @@
 #' @details
 #' `vcov()` (which is called by `summary()`) simply extracts the covariance matrix already computed by the fitting function. `confint()` computes Wald confidence intervals (internally calling [confint.lm()]). The `estfun()` method for `multinom_weightit` and `ordinal_weightit` objects (which is used by function in the \pkg{sandwich} package to compute coefficient covariance matrices) simply extracts the `gradient` component of the object. For `glm_weightit` and `coxph_weightit` objects, the `glm` and `coxph` methods are dispatched instead.
 #'
+#' `anova()` performs a Wald test to compare two fitted models. The models must be nested, but they don't have to be nested symbolically (i.e., the names of the coefficients of the smaller model do not have to be a subset of the names of the coefficients of the larger model). The larger model must be supplied to `object` and the smaller to `object2`. Both models must contain the same units, weights (if any), and outcomes. The variance-covariance matrix of the coefficients of the smaller model is not used, so it can be specified as `"none"` in the original model call. Otherwise, a warning be thrown if the covariances were computed using different methods.s
+#'
 #' @seealso
 #' [glm_weightit()] for the page documenting `glm_weightit()`, `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and `coxph_weightit()`. [summary.glm()], [vcov], [confint()] for the relevant methods pages. [predict.glm_weightit()] for computing predictions from the models.
 #'
 #' @examples
-#' ## See examples at ?glm_weightit
+#' ## See more examples at ?glm_weightit
 #'
+#' data("lalonde", package = "cobalt")
+#'
+#' # Model comparison for any relationship between `treat`
+#' # and `re78` (not the same as testing for the ATE)
+#' fit1 <- glm_weightit(
+#'   re78 ~ treat * (age + educ + race + married + nodegree +
+#'                     re74 + re75), data = lalonde
+#' )
+#'
+#' fit2 <- glm_weightit(
+#'   re78 ~ age + educ + race + married + nodegree +
+#'     re74 + re75, data = lalonde
+#' )
+#'
+#' anova(fit1, fit2)
+#' @examplesIf requireNamespace("splines", quietlty = TRUE)
+#' # Model comparison between spline model and linear
+#' # model; note they are nested but not symbolically
+#' # nested
+#' fit_s <- glm_weightit(
+#'   re78 ~ splines::ns(age, df = 4), data = lalonde
+#' )
+#'
+#' fit_l <- glm_weightit(
+#'   re78 ~ age, data = lalonde
+#' )
+#'
+#' anova(fit_s, fit_l)
 
 #' @exportS3Method summary glm_weightit
 #' @rdname glm_weightit-methods
@@ -485,6 +518,21 @@ model.matrix.ordinal_weightit <- function(object, ...) {
   model.matrix.multinom_weightit(object, ...)
 }
 
+#' @exportS3Method stats::nobs ordinal_weightit
+nobs.ordinal_weightit <- function(object, ...) {
+  if (is_not_null(object[["weights"]])) {
+    sum(object[["weights"]] != 0)
+  }
+  else {
+    length(object[["residuals"]])
+  }
+}
+
+#' @exportS3Method stats::nobs multinom_weightit
+nobs.multinom_weightit <- function(object, ...) {
+  nobs.ordinal_weightit(object, ...)
+}
+
 #' @importFrom generics estfun
 #' @exportS3Method generics::estfun multinom_weightit
 estfun.multinom_weightit <- function(x, ...) {
@@ -537,3 +585,296 @@ glance.ordinal_weightit <- glance.glm_weightit
 
 #' @exportS3Method generics::glance coxph_weightit
 glance.coxph_weightit <- glance.glm_weightit
+
+#' @exportS3Method stats::anova glm_weightit
+#' @rdname glm_weightit-methods
+anova.glm_weightit <- function(object, object2, test = "Chisq",
+                               method = "Wald", tolerance = 1e-7, ...) {
+
+  chk::chk_not_missing(object, "`object`")
+
+  chk::chk_not_missing(object2, "`object2`")
+  chk::chk_is(object2, class(object)[1])
+
+  if (!identical(nobs(object), nobs(object2)) ||
+      !identical(object[["weights"]], object2[["weights"]])) {
+    .err("models must be fit with the same units to be compared")
+  }
+
+  if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
+    .err("models must be fit with `y = TRUE`")
+  }
+
+  if (!identical(object[["y"]], object2[["y"]])) {
+    .err("models must be fit with the same outcomes to be compared")
+  }
+
+  chk::chk_string(test)
+  test <- match_arg(test, c("Chisq"))
+
+  chk::chk_string(method)
+  method <- match_arg(method, c("Wald"))
+
+  if (!identical(attr(object, "vcov_type"), attr(object2, "vcov_type")) &&
+      !identical(attr(object2, "vcov_type"), "none")) {
+    .wrn("different `vcov` types detected for each model; using the `vcov` from the larger model")
+  }
+
+  b1 <- coef(object, complete = FALSE)
+  b2 <- coef(object2, complete = FALSE)
+
+  df1 <- nobs(object) - length(b1)
+  df2 <- nobs(object2) - length(b2)
+
+  if (df1 >= df2) {
+    .err("`object2` does not appear to be nested within `object`")
+  }
+
+  Z1 <- .lm.fit(x = model.matrix(object2)[, names(b2), drop = FALSE],
+                y = model.matrix(object)[, names(b1), drop = FALSE])$residuals
+
+  Z1_svd <- svd(Z1)
+  keep <- Z1_svd$d > tolerance
+  q <- sum(keep)
+
+  if (q > df2 - df1) {
+    .err("`object2` does not appear to be nested within `object`")
+  }
+
+  L <- t(Z1_svd$v[, keep, drop = FALSE])
+
+  V <- vcov(object, complete = FALSE)
+
+  value.hyp <- L %*% b1
+  vcov.hyp <- L %*% V %*% t(L)
+
+  SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
+
+  variables <- list(deparse1(formula(object)),
+                    deparse1(formula(object2)))
+
+  title <- "Wald test\n"
+  topnote <- paste0("Model ", format(1:2), ": ", variables, collapse = "\n")
+
+  rval <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
+                  c("1", "2"))
+
+  rval[[1]] <- c(df1, df2)
+  rval[[2]] <- c(NA_integer_, as.integer(q))
+  rval[[3]][2] <- SSH
+  rval[[4]][2] <- pchisq(SSH, q, lower.tail = FALSE)
+
+  result <- structure(rval,
+                      heading = c(title, topnote),
+                      class = c("anova", "data.frame"))
+
+  attr(result, "value") <- value.hyp
+  attr(result, "vcov") <- vcov.hyp
+
+  result
+}
+
+#' @exportS3Method stats::anova ordinal_weightit
+anova.ordinal_weightit <- function(object, object2, test = "Chisq",
+                                   method = "Wald", tolerance = 1e-7, ...) {
+
+  chk::chk_not_missing(object, "`object`")
+
+  chk::chk_not_missing(object2, "`object2`")
+  chk::chk_is(object2, class(object)[1])
+
+  if (!identical(nobs(object), nobs(object2)) ||
+      !identical(object[["weights"]], object2[["weights"]])) {
+    .err("models must be fit with the same units to be compared")
+  }
+
+  if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
+    .err("models must be fit with `y = TRUE`")
+  }
+
+  if (!identical(object[["y"]], object2[["y"]])) {
+    .err("models must be fit with the same outcomes to be compared")
+  }
+
+  nthreshold <- ncol(object$fitted.values) - 1L
+
+  chk::chk_string(test)
+  test <- match_arg(test, c("Chisq"))
+
+  chk::chk_string(method)
+  method <- match_arg(method, c("Wald"))
+
+  if (!identical(attr(object, "vcov_type"), attr(object2, "vcov_type")) &&
+      !identical(attr(object2, "vcov_type"), "none")) {
+    .wrn("different `vcov` types detected for each model; using the `vcov` from the larger model")
+  }
+
+  b1 <- coef(object)
+  b2 <- coef(object2)
+
+  df1 <- nobs(object) - sum(!is.na(b1))
+  df2 <- nobs(object2) - sum(!is.na(b2))
+
+  if (df1 >= df2) {
+    .err("`object2` does not appear to be nested within `object`")
+  }
+
+  b1 <- b1[seq_len(length(b1) - nthreshold)]
+  b2 <- b2[seq_len(length(b2) - nthreshold)]
+
+  X1 <- model.matrix(object)
+  X2 <- model.matrix(object2)
+
+  nm <- names(na.rem(b1))[names(na.rem(b1)) %in% colnames(X1)[-1]]
+  nm2 <- names(na.rem(b2))[names(na.rem(b2)) %in% colnames(X2)[-1]]
+
+  #Drop intercept column
+  Z1 <- .lm.fit(x = cbind(1, X2[, nm2, drop = FALSE]),
+                y = cbind(1, X1[, nm, drop = FALSE]))$residuals[, -1, drop = FALSE]
+
+  Z1_svd <- svd(Z1)
+  keep <- Z1_svd$d > tolerance
+  q <- sum(keep)
+
+  if (q > df2 - df1) {
+    .err("`object2` does not appear to be nested within `object`")
+  }
+
+  L <- t(Z1_svd$v[, keep, drop = FALSE])
+
+  V <- vcov(object)
+
+  value.hyp <- L %*% b1[nm]
+  vcov.hyp <- L %*% V[nm, nm, drop = FALSE] %*% t(L)
+
+  SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
+
+  variables <- c(deparse1(formula(object)),
+                 deparse1(formula(object2)))
+
+  title <- "Wald test\n"
+  topnote <- paste0("Model ", format(1:2), ": ", variables, collapse = "\n")
+
+  rval <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
+                  c("1", "2"))
+
+  rval[[1]] <- c(df1, df2)
+  rval[[2]] <- c(NA_integer_, as.integer(q))
+  rval[[3]][2] <- SSH
+  rval[[4]][2] <- pchisq(SSH, q, lower.tail = FALSE)
+
+  result <- structure(rval,
+                      heading = c(title, topnote),
+                      class = c("anova", "data.frame"))
+
+  attr(result, "value") <- value.hyp
+  attr(result, "vcov") <- vcov.hyp
+
+  result
+}
+
+#' @exportS3Method stats::anova multinom_weightit
+anova.multinom_weightit <- function(object, object2, test = "Chisq",
+                                    method = "Wald", tolerance = 1e-7, ...) {
+
+  chk::chk_not_missing(object, "`object`")
+
+  chk::chk_not_missing(object2, "`object2`")
+  chk::chk_is(object2, class(object)[1])
+
+  if (!identical(nobs(object), nobs(object2)) ||
+      !identical(object[["weights"]], object2[["weights"]])) {
+    .err("models must be fit with the same units to be compared")
+  }
+
+  if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
+    .err("models must be fit with `y = TRUE`")
+  }
+
+  if (!identical(object[["y"]], object2[["y"]])) {
+    .err("models must be fit with the same outcomes to be compared")
+  }
+
+  chk::chk_string(test)
+  test <- match_arg(test, c("Chisq"))
+
+  chk::chk_string(method)
+  method <- match_arg(method, c("Wald"))
+
+  if (!identical(attr(object, "vcov_type"), attr(object2, "vcov_type")) &&
+      !identical(attr(object2, "vcov_type"), "none")) {
+    .wrn("different `vcov` types detected for each model; using the `vcov` from the larger model")
+  }
+
+  b1 <- coef(object)
+  b2 <- coef(object2)
+
+  df1 <- nobs(object) - sum(!is.na(b1))
+  df2 <- nobs(object2) - sum(!is.na(b2))
+
+  if (df1 >= df2) {
+    .err("`object2` does not appear to be nested within `object`")
+  }
+
+  X1 <- model.matrix(object)
+  X2 <- model.matrix(object2)
+
+  k <- nlevels(object[["y"]]) - 1L
+
+  Z1 <- matrix(0, nrow = nrow(X1), ncol = sum(!is.na(b1)),
+               dimnames = list(NULL, names(na.rem(b1))))
+
+  j <- 0
+  for (i in 1L + seq_len(k)) {
+    in_i <- which(object[["y"]] == levels(object[["y"]])[i])
+    b1_i <- b1[(i - 2L) * ncol(X1) + seq_col(X1)]
+    b2_i <- b2[(i - 2L) * ncol(X2) + seq_col(X2)]
+
+    Z1[in_i, j + seq_len(sum(!is.na(b1_i)))] <- .lm.fit(x = X2[in_i, !is.na(b2_i), drop = FALSE],
+                                                        y = X1[in_i, !is.na(b1_i), drop = FALSE])$residuals
+    j <- j + sum(!is.na(b1_i))
+  }
+
+  Z1_svd <- svd(Z1)
+  keep <- which(Z1_svd$d > tolerance)
+  q <- length(keep)
+
+  if (q > df2 - df1) {
+    .err("`object2` does not appear to be nested within `object`")
+  }
+
+  L <- t(Z1_svd$v[, keep, drop = FALSE])
+
+  V <- vcov(object, complete = FALSE)
+
+  value.hyp <- L %*% na.rem(b1)
+  vcov.hyp <- L %*% V %*% t(L)
+
+  SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
+
+  variables <- list(deparse1(formula(object)),
+                    deparse1(formula(object2)))
+
+  title <- "Wald test\n"
+  topnote <- paste0("Model ", format(1:2), ": ", variables, collapse = "\n")
+
+  rval <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
+                  c("1", "2"))
+
+  rval[[1]] <- c(df1, df2)
+  rval[[2]] <- c(NA_integer_, as.integer(q))
+  rval[[3]][2] <- SSH
+  rval[[4]][2] <- pchisq(SSH, q, lower.tail = FALSE)
+
+  result <- structure(rval,
+                      heading = c(title, topnote),
+                      class = c("anova", "data.frame"))
+
+  attr(result, "value") <- value.hyp
+  attr(result, "vcov") <- vcov.hyp
+
+  result
+}
+
+#' @exportS3Method stats::anova coxph_weightit
+anova.coxph_weightit <- anova.glm_weightit
