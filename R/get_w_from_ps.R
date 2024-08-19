@@ -378,7 +378,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     }
 
   }
-  else if (treat.type == "multi") {
+  else if (treat.type == "multi-category") {
     if (is.matrix(ps)) {
       if (!is.numeric(ps)) {
         .err("`ps` must be numeric when supplied as a matrix")

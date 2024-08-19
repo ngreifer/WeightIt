@@ -6,7 +6,7 @@
 #' @details
 #' Each component is itself a list containing the following components:
 #' \describe{
-#' \item{`treat_type`}{at least one of `"binary"`, `"multi"`, or `"continuous"` indicating which treatment types are available for this method.}
+#' \item{`treat_type`}{at least one of `"binary"`, `"multi-category"`, or `"continuous"` indicating which treatment types are available for this method.}
 #' \item{`estimand`}{which estimands are available for this method. All methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
 #' \item{`alias`}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is `"ebal"`, but `"ebalance"` and `"entropy"` also work. The first value is the canonical name.}
 #' \item{`description`}{a string containing the description of the name in English.}
@@ -51,7 +51,7 @@
 #' @export
 .weightit_methods <- {list(
   "glm" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = c("glm", "ps"),
     description = "propensity score weighting with GLM",
@@ -69,7 +69,7 @@
     plot.weightit_ok = FALSE
   ),
   "bart" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = c("bart"),
     description = "propensity score weighting with BART",
@@ -87,7 +87,7 @@
     plot.weightit_ok = FALSE
   ),
   "cbps" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("cbps", "cbgps"),
     description = "covariate balancing propensity score weighting",
@@ -105,7 +105,7 @@
     plot.weightit_ok = FALSE
   ),
   "ebal" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("ebal", "ebalance", "entropy"),
     description = "entropy balancing",
@@ -123,7 +123,7 @@
     plot.weightit_ok = FALSE
   ),
   "energy" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("energy", "dcows"),
     description = "energy balancing",
@@ -141,7 +141,7 @@
     plot.weightit_ok = FALSE
   ),
   "gbm" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = c("gbm", "gbr"),
     description = "propensity score weighting with GBM",
@@ -159,7 +159,7 @@
     plot.weightit_ok = TRUE
   ),
   "ipt" = list(
-    treat_type = c("binary", "multi"),
+    treat_type = c("binary", "multi-category"),
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("ipt"),
     description = "inverse probability tilting",
@@ -177,7 +177,7 @@
     plot.weightit_ok = FALSE
   ),
   "npcbps" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE"),
     alias = c("npcbps", "npcbgps"),
     description = "non-parametric covariate balancing propensity score weighting",
@@ -195,7 +195,7 @@
     plot.weightit_ok = FALSE
   ),
   "optweight" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("optweight", "sbw"),
     description = "stable balancing weights",
@@ -213,7 +213,7 @@
     plot.weightit_ok = TRUE
   ),
   "super" = list(
-    treat_type = c("binary", "multi", "continuous"),
+    treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = c("super", "superlearner"),
     description = "propensity score weighting with SuperLearner",

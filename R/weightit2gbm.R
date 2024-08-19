@@ -339,7 +339,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (any(A[["use.offset"]])) {
-    if (treat.type == "multi") {
+    if (treat.type == "multi-category") {
       .err("`use.offset` cannot be used with multi-category treatments")
     }
 
@@ -515,11 +515,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         info <- list(best.tree = best.tree,
                      tree.val = tree.val)
 
-        if (treat.type == "multi") best.ps <- NULL
+        if (treat.type == "multi-category") best.ps <- NULL
       }
     }
 
-    if (treat.type == "multi") ps <- NULL
+    if (treat.type == "multi-category") ps <- NULL
   }
 
   if (nrow(tune) > 1) {

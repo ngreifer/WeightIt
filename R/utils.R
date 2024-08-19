@@ -743,7 +743,7 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
     treat.type <- "binary"
   }
   else if (use.multi || chk::vld_character_or_factor(treat)) {
-    treat.type <- "multi"
+    treat.type <- "multi-category"
     if (!inherits(treat, "processed.treat")) treat <- factor(treat)
   }
   else {

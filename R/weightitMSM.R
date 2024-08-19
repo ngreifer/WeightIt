@@ -507,7 +507,7 @@ print.weightitMSM <- function(x, ...) {
                 i,
                 switch(treat.types[i],
                        "continuous" = "continuous",
-                       "multi" = sprintf("%s-category (%s)",
+                       "multi-category" = sprintf("%s-category (%s)",
                                          nunique(x[["treat.list"]][[i]]),
                                          word_list(levels(x[["treat.list"]][[i]]), and.or = FALSE)),
                        "binary" = "2-category")))

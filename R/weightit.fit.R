@@ -263,7 +263,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
 
     fun <- switch(treat.type,
-                  "multi" = paste.(fun, "multi"),
+                  "multi-category" = paste.(fun, "multi"),
                   "continuous" = paste.(fun, "cont"),
                   fun)
   }

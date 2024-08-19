@@ -229,8 +229,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
   else if (is.character(method)) {
     method <- .method_to_proper_method(method)
-    attr(method, "name") <- method
     .check_method_treat.type(method, treat.type)
+    attr(method, "name") <- method
   }
   else { #function
     method.name <- deparse1(substitute(method))
@@ -414,7 +414,7 @@ print.weightit <- function(x, ...) {
   cat(sprintf(" - treatment: %s\n",
               switch(treat.type,
                      "continuous" = "continuous",
-                     "multi" = sprintf("%s-category (%s)",
+                     "multi-category" = sprintf("%s-category (%s)",
                                        nunique(x[["treat"]]),
                                        word_list(levels(x[["treat"]]), and.or = FALSE)),
                      "binary" = "2-category")))

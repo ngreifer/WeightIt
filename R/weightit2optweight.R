@@ -251,7 +251,7 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
     covs.list[[i]] <- cbind(covs.list[[i]],
                             .int_poly_f(covs.list[[i]], poly = moments, int = int))
 
-    if (treat.types[i] %in% c("binary", "multi")) {
+    if (treat.types[i] %in% c("binary", "multi-category")) {
       covs.list[[i]] <- cbind(.int_poly_f(covs.list[[i]], poly = moments, int = int, center = TRUE),
                               .quantile_f(covs.list[[i]], qu = A[["quantile"]], s.weights = s.weights,
                                           treat = treat.list[[i]]))

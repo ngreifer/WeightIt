@@ -1,7 +1,13 @@
 .method_to_proper_method <- function(method) {
   if (is_null(method)) return(NULL)
 
-  if (!is.character(method) || method %nin% unlist(grab(.weightit_methods, "alias"))) {
+  if (!is.character(method)) {
+    return(method)
+  }
+
+  method <- tolower(method)
+
+  if (method %nin% unlist(grab(.weightit_methods, "alias"))) {
     return(method)
   }
 
@@ -10,26 +16,25 @@
     setNames(rep(m, length(alias)), alias)
   }))
 
-  method <- tolower(method)
   unname(.allowable.methods[method])
 }
 
 .check_acceptable_method <- function(method, msm = FALSE, force = FALSE) {
-  bad.method <- FALSE
 
-  if (missing(method)) method <- "glm"
-  else if (is_null(method)) return(invisible(NULL))
-  else if (length(method) > 1L) bad.method <- TRUE
-  else if (is.character(method)) {
-    if (tolower(method) %nin% unlist(grab(.weightit_methods, "alias"))) bad.method <- TRUE
+  if (missing(method)) {
+    method <- "glm"
   }
-  else if (!is.function(method)) bad.method <- TRUE
+  else if (is_null(method)) {
+    return(invisible(NULL))
+  }
 
-  if (bad.method) {
-    if (identical(method, "twang")) {
-      .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
-    }
+  if (identical(method, "twang")) {
+    .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
+  }
 
+  if ((!is.character(method) && !is.function(method)) ||
+      (is.character(method) && (length(method) > 1L ||
+                                .method_to_proper_method(method) %nin% names(.weightit_methods)))) {
     .err(sprintf("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n%s",
                  word_list(names(.weightit_methods), and.or = FALSE, quotes = 2)),
          tidy = FALSE)
@@ -46,7 +51,8 @@
 
 .check_method_treat.type <- function(method, treat.type) {
   if (is_not_null(method) && is.character(method) &&
-      treat.type %nin% .weightit_methods[[method]]$treat_type) {
+      (method %in% names(.weightit_methods)) &&
+      (treat.type %nin% .weightit_methods[[method]]$treat_type)) {
     .err(sprintf("%s can only be used with a %s treatment",
                  .method_to_phrase(method),
                  word_list(.weightit_methods[[method]]$treat_type, and.or = "or")))
@@ -122,7 +128,7 @@
     else .weightit_methods[[method]]$estimand
   }
 
-  if (treat.type == "multi") {
+  if (treat.type == "multi-category") {
     allowable_estimands <- setdiff(allowable_estimands, "ATOS")
   }
 
@@ -330,14 +336,14 @@
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multi" = length(treat)/4))
+  unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multi-category" = length(treat)/4))
 
   #Check focal
   if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
     .err("the argument supplied to `focal` must be the name of a level of treatment")
   }
 
-  if (treat.type == "multi") {
+  if (treat.type == "multi-category") {
 
     if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
       .wrn(sprintf("`estimand = %s` is not compatible with `focal`. Setting `estimand` to \"ATT\"",
