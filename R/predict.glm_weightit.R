@@ -77,7 +77,7 @@
 #'                                   treat = 1))
 #'
 #' mean(p1) - mean(p0)
-#'
+#' \donttest{
 #' # Ordinal logistic regression
 #' fit3 <- ordinal_weightit(
 #'   re78 ~ treat * (age + educ + race + married +
@@ -95,6 +95,7 @@
 #'                                   treat = 1))
 #'
 #' mean(p1) - mean(p0)
+#' }
 
 #' @exportS3Method predict glm_weightit
 #' @name predict.glm_weightit

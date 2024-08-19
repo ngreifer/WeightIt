@@ -57,7 +57,7 @@ This page documents methods for objects returned by \code{\link[=glm_weightit]{g
 \details{
 \code{vcov()} (which is called by \code{summary()}) simply extracts the covariance matrix already computed by the fitting function. \code{confint()} computes Wald confidence intervals (internally calling \code{\link[=confint.lm]{confint.lm()}}). The \code{estfun()} method for \code{multinom_weightit} and \code{ordinal_weightit} objects (which is used by function in the \pkg{sandwich} package to compute coefficient covariance matrices) simply extracts the \code{gradient} component of the object. For \code{glm_weightit} and \code{coxph_weightit} objects, the \code{glm} and \code{coxph} methods are dispatched instead.
 
-\code{anova()} performs a Wald test to compare two fitted models. The models must be nested, but they don't have to be nested symbolically (i.e., the names of the coefficients of the smaller model do not have to be a subset of the names of the coefficients of the larger model). The larger model must be supplied to \code{object} and the smaller to \code{object2}. Both models must contain the same units, weights (if any), and outcomes. The variance-covariance matrix of the coefficients of the smaller model is not used, so it can be specified as \code{"none"} in the original model call. Otherwise, a warning be thrown if the covariances were computed using different methods.s
+\code{anova()} performs a Wald test to compare two fitted models. The models must be nested, but they don't have to be nested symbolically (i.e., the names of the coefficients of the smaller model do not have to be a subset of the names of the coefficients of the larger model). The larger model must be supplied to \code{object} and the smaller to \code{object2}. Both models must contain the same units, weights (if any), and outcomes. The variance-covariance matrix of the coefficients of the smaller model is not used, so it can be specified as \code{"none"} in the original model call. Otherwise, a warning be thrown if the covariances were computed using different methods.
 }
 \examples{
 ## See more examples at ?glm_weightit
@@ -77,7 +77,8 @@ fit2 <- glm_weightit(
 )
 
 anova(fit1, fit2)
-\dontshow{if (requireNamespace("splines", quietlty = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+
+\dontshow{if (requireNamespace("splines", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Model comparison between spline model and linear
 # model; note they are nested but not symbolically
 # nested

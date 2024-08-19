@@ -25,7 +25,7 @@
 #' @details
 #' `vcov()` (which is called by `summary()`) simply extracts the covariance matrix already computed by the fitting function. `confint()` computes Wald confidence intervals (internally calling [confint.lm()]). The `estfun()` method for `multinom_weightit` and `ordinal_weightit` objects (which is used by function in the \pkg{sandwich} package to compute coefficient covariance matrices) simply extracts the `gradient` component of the object. For `glm_weightit` and `coxph_weightit` objects, the `glm` and `coxph` methods are dispatched instead.
 #'
-#' `anova()` performs a Wald test to compare two fitted models. The models must be nested, but they don't have to be nested symbolically (i.e., the names of the coefficients of the smaller model do not have to be a subset of the names of the coefficients of the larger model). The larger model must be supplied to `object` and the smaller to `object2`. Both models must contain the same units, weights (if any), and outcomes. The variance-covariance matrix of the coefficients of the smaller model is not used, so it can be specified as `"none"` in the original model call. Otherwise, a warning be thrown if the covariances were computed using different methods.s
+#' `anova()` performs a Wald test to compare two fitted models. The models must be nested, but they don't have to be nested symbolically (i.e., the names of the coefficients of the smaller model do not have to be a subset of the names of the coefficients of the larger model). The larger model must be supplied to `object` and the smaller to `object2`. Both models must contain the same units, weights (if any), and outcomes. The variance-covariance matrix of the coefficients of the smaller model is not used, so it can be specified as `"none"` in the original model call. Otherwise, a warning be thrown if the covariances were computed using different methods.
 #'
 #' @seealso
 #' [glm_weightit()] for the page documenting `glm_weightit()`, `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and `coxph_weightit()`. [summary.glm()], [vcov], [confint()] for the relevant methods pages. [predict.glm_weightit()] for computing predictions from the models.
@@ -48,7 +48,8 @@
 #' )
 #'
 #' anova(fit1, fit2)
-#' @examplesIf requireNamespace("splines", quietlty = TRUE)
+#'
+#' @examplesIf requireNamespace("splines", quietly = TRUE)
 #' # Model comparison between spline model and linear
 #' # model; note they are nested but not symbolically
 #' # nested
@@ -597,7 +598,7 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
   chk::chk_is(object2, class(object)[1])
 
   if (!identical(nobs(object), nobs(object2)) ||
-      !identical(object[["weights"]], object2[["weights"]])) {
+      !identical(weights(object), weights(object2))) {
     .err("models must be fit with the same units to be compared")
   }
 
@@ -650,11 +651,10 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  variables <- list(deparse1(formula(object)),
-                    deparse1(formula(object2)))
-
   title <- "Wald test\n"
-  topnote <- paste0("Model ", format(1:2), ": ", variables, collapse = "\n")
+  topnote <- sprintf("Model 1: %s\nModel 2: %s",
+                     deparse1(formula(object)),
+                     deparse1(formula(object2)))
 
   rval <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                   c("1", "2"))
@@ -684,7 +684,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   chk::chk_is(object2, class(object)[1])
 
   if (!identical(nobs(object), nobs(object2)) ||
-      !identical(object[["weights"]], object2[["weights"]])) {
+      !identical(weights(object), weights(object2))) {
     .err("models must be fit with the same units to be compared")
   }
 
@@ -749,11 +749,10 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  variables <- c(deparse1(formula(object)),
-                 deparse1(formula(object2)))
-
   title <- "Wald test\n"
-  topnote <- paste0("Model ", format(1:2), ": ", variables, collapse = "\n")
+  topnote <- sprintf("Model 1: %s\nModel 2: %s",
+                     deparse1(formula(object)),
+                     deparse1(formula(object2)))
 
   rval <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                   c("1", "2"))
@@ -783,7 +782,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   chk::chk_is(object2, class(object)[1])
 
   if (!identical(nobs(object), nobs(object2)) ||
-      !identical(object[["weights"]], object2[["weights"]])) {
+      !identical(weights(object), weights(object2))) {
     .err("models must be fit with the same units to be compared")
   }
 
@@ -852,11 +851,10 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  variables <- list(deparse1(formula(object)),
-                    deparse1(formula(object2)))
-
   title <- "Wald test\n"
-  topnote <- paste0("Model ", format(1:2), ": ", variables, collapse = "\n")
+  topnote <- sprintf("Model 1: %s\nModel 2: %s",
+                     deparse1(formula(object)),
+                     deparse1(formula(object2)))
 
   rval <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                   c("1", "2"))

@@ -108,7 +108,7 @@ p1 <- predict(fit2, type = "mean", values = values,
                                   treat = 1))
 
 mean(p1) - mean(p0)
-
+\donttest{
 # Ordinal logistic regression
 fit3 <- ordinal_weightit(
   re78 ~ treat * (age + educ + race + married +
@@ -126,6 +126,7 @@ p1 <- predict(fit3, type = "mean",
                                   treat = 1))
 
 mean(p1) - mean(p0)
+}
 }
 \seealso{
 \code{\link[stats:predict.glm]{stats::predict.glm()}} for predictions from generalized linear models. \code{\link[=glm_weightit]{glm_weightit()}} for the fitting function. \code{\link[survival:predict.coxph]{survival::predict.coxph()}} for predictions from Cox proportional hazards models.
