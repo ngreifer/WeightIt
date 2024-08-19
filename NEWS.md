@@ -1,7 +1,9 @@
 WeightIt News and Updates
 ======
 
-# `WeightIt` 1.2.1
+# `WeightIt` 1.3.0
+
+* Added `anova()` methods for `glm_weightit`, `multinom_weightit`, `ordinal_weightit`, and `coxph_weightit` objects to perform Wald tests for comparing nested models. The models do not have to be symbolically nested.
 
 * Added the new user-facing object `.weightit_methods`, which contains information on each method and the options allowed with it. This is used within `WeightIt` for checking arguments but can also be used by other package developers who call functions in `WeightIt`. See `help(".weightit_methods")` for details.
 
@@ -10,6 +12,8 @@ WeightIt News and Updates
 * `missing` no longer allows partial matching.
 
 * `moments` can now be set to 0 when `quantile` is supplied to ensure balance on the quantiles without the moments for the methods that accepts `quantiles`. Thanks to @BERENZ for the suggestion.
+
+* Fixed a bug in `ordinal_weightit()` where the Hessian (and therefore the HC0 robust variance) were calculated incorrectly when come coefficients were aliased (i.e., due to linearly dependent predictors).
 
 * Fixes to vignettes and tests to satisfy CRAN checks.
 
