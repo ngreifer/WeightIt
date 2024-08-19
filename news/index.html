@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,12 +38,14 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="1.2.1" id="weightit-121">
-<code>WeightIt</code> 1.2.1<a class="anchor" aria-label="anchor" href="#weightit-121"></a></h2>
-<ul><li><p>Added the new user-facing object <code>.weightit_methods</code>, which contains information on each method and the options allowed with it. This is used within <code>WeightIt</code> for checking arguments but can also be used by other package developers who call functions in <code>WeightIt</code>. See <code><a href="../reference/dot-weightit_methods.html">help(".weightit_methods")</a></code> for details.</p></li>
+<h2 class="pkg-version" data-toc-text="1.3.0" id="weightit-130">
+<code>WeightIt</code> 1.3.0<a class="anchor" aria-label="anchor" href="#weightit-130"></a></h2>
+<ul><li><p>Added <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> methods for <code>glm_weightit</code>, <code>multinom_weightit</code>, <code>ordinal_weightit</code>, and <code>coxph_weightit</code> objects to perform Wald tests for comparing nested models. The models do not have to be symbolically nested.</p></li>
+<li><p>Added the new user-facing object <code>.weightit_methods</code>, which contains information on each method and the options allowed with it. This is used within <code>WeightIt</code> for checking arguments but can also be used by other package developers who call functions in <code>WeightIt</code>. See <code><a href="../reference/dot-weightit_methods.html">help(".weightit_methods")</a></code> for details.</p></li>
 <li><p><code><a href="../reference/plot.weightit.html">plot.weightit()</a></code> can be used with <code>method = "optweight"</code> to display the dual variables.</p></li>
 <li><p><code>missing</code> no longer allows partial matching.</p></li>
 <li><p><code>moments</code> can now be set to 0 when <code>quantile</code> is supplied to ensure balance on the quantiles without the moments for the methods that accepts <code>quantiles</code>. Thanks to <a href="https://github.com/BERENZ" class="external-link">@BERENZ</a> for the suggestion.</p></li>
+<li><p>Fixed a bug in <code><a href="../reference/glm_weightit.html">ordinal_weightit()</a></code> where the Hessian (and therefore the HC0 robust variance) were calculated incorrectly when come coefficients were aliased (i.e., due to linearly dependent predictors).</p></li>
 <li><p>Fixes to vignettes and tests to satisfy CRAN checks.</p></li>
 <li><p>Minor bug, performance, and readability fixes.</p></li>
 </ul></div>
