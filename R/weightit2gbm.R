@@ -242,7 +242,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     chk::chk_string(criterion)
   }
 
-  available.criteria <- cobalt::available.stats(treat.type)
+  available.criteria <- cobalt::available.stats(switch(treat.type, "multi-category" = "multi", treat.type))
 
   if (startsWith(criterion, "es.")) {
     subbed.crit <- sub("es.", "smd.", criterion, fixed = TRUE)

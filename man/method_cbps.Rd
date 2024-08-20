@@ -123,7 +123,7 @@ cobalt::bal.tab(W2)
                 method = "cbps"))
 summary(W3)
 cobalt::bal.tab(W3)
-
+\donttest{
 #Longitudinal treatments
 data("msmdata")
 (W4 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
@@ -133,6 +133,7 @@ data("msmdata")
                    method = "cbps"))
 summary(W4)
 cobalt::bal.tab(W4)
+}
 }
 \references{
 \subsection{Binary treatments}{
