@@ -155,23 +155,27 @@ w3 <- get_w_from_ps(ps, treat = treatAB,
                     estimand = "ATT", treated = "A")
 all.equal(w1, w3)
 
-#Using MMWS
+# Using MMWS
 w4 <- get_w_from_ps(ps, treat = lalonde$treat,
                     estimand = "ATE", subclass = 20,
                     stabilize = TRUE)
-\dontshow{if (requireNamespace("gbm", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-#A multi-category example using GBM predicted probabilities
-library(gbm)
-T3 <- factor(sample(c("A", "B", "C"), nrow(lalonde), replace = TRUE))
 
-gbm.fit <- gbm(T3 ~ age + educ + race + married +
-                 nodegree + re74 + re75, data = lalonde,
-               distribution = "multinomial", n.trees = 200,
-               interaction.depth = 3)
-ps.multi <- drop(predict(gbm.fit, type = "response",
-                         n.trees = 200))
-w <- get_w_from_ps(ps.multi, T3, estimand = "ATE")
-\dontshow{\}) # examplesIf}
+# A multi-category example using predicted probabilities
+# from multinomial logistic regression
+T3 <- factor(sample(c("A", "B", "C"), nrow(lalonde),
+                    replace = TRUE))
+
+multi.fit <- multinom_weightit(
+  T3 ~ age + educ + race + married +
+    nodegree + re74 + re75, data = lalonde,
+  vcov = "none"
+)
+
+ps.multi <- fitted(multi.fit)
+head(ps.multi)
+
+w5 <- get_w_from_ps(ps.multi, treat = T3,
+                    estimand = "ATE")
 }
 \references{
 \subsection{Binary treatments}{
