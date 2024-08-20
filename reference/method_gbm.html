@@ -406,11 +406,57 @@ M-estimation is not supported.
 <span class="r-in"><span>                    <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                  method <span class="op">=</span> <span class="st">"gbm"</span>, estimand <span class="op">=</span> <span class="st">"ATT"</span>,</span></span>
 <span class="r-in"><span>                  focal <span class="op">=</span> <span class="st">"hispan"</span>, criterion <span class="op">=</span> <span class="st">"ks.mean"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in cobalt::available.stats(treat.type):</span> The argument to `treat.type` should be one of "binary", "multinomial", or "continuous".</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit</span> object</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "gbm" (propensity score weighting with GBM)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 3-category (black, hispan, white)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: hispan)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in eval(expr, envir, enclos):</span> object 'W2' not found</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.0666  |------------------------|   1.0589</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.0000                          ||   1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.0366 |---------------------------| 1.1517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            183   162    191    485    190</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black 0.9078 0.954 0.9542 1.0433 1.0589</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            100    87     44     28      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan      1     1      1      1      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             68   227    380    434    523</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white 0.6885 0.721 0.8131 0.8343 1.1517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.719 0.523   0.211       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.000 0.000   0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.641 0.483   0.180       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.       72 299.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   160.38     72 212.12</span>
 <span class="r-in"><span>  <span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in bal.tab(W2, stats = c("m", "ks")):</span> Object 'W2' not found.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj Max.KS.Adj</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.0823     0.0887</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.2987     0.1272</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.1170     0.1170</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0658     0.0658</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.0308     0.0934</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             black  white hispan</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.   299.       72</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   160.38 212.12     72</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span>  <span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span>  <span class="op">(</span><span class="va">W3</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
