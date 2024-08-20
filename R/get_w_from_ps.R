@@ -275,8 +275,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     }
     else {
       #Li & Li (2019)
-      w[] <- 1 / (ps_mat[cbind(seq_len(n), treat)] *
-        rowSums(1 / ps_mat))
+      w[] <- 1 / (ps_mat[cbind(seq_len(n), treat)] * rowSums(1 / ps_mat))
     }
   }
   else if (estimand == "ATM") {
