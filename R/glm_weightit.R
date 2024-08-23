@@ -841,9 +841,9 @@ lm_weightit <- function(formula, data, weightit,
 }
 
 .process_fit <- function(fit, weightit, vcov, glm_weightit_call, x, y) {
-  if (is_not_null(weightit) && is_not_null(fit$model)) {
-    fit$model[["(s.weights)"]] <- weightit$s.weights
-    fit$model[["(weights)"]] <- weightit$weights * weightit$s.weights
+  if (is_not_null(weightit) && is_not_null(fit[["model"]])) {
+    fit$model[["(s.weights)"]] <- weightit[["s.weights"]]
+    fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
   }
 
   fit$vcov_type <- vcov
