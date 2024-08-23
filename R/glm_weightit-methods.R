@@ -8,7 +8,7 @@
 #' @inheritParams stats::confint
 #' @inheritParams stats::print.lm
 #' @param object,object2,x an output from one of the above modeling functions. For `anova()`, `object2` is required.
-#' @param ci `logical`; whether to display Wald confidence intervals for estimated coefficients. Default is `FALSE`.
+#' @param ci `logical`; whether to display Wald confidence intervals for estimated coefficients. Default is `FALSE`. (Note: this argument can also be supplied as `conf.int`.)
 #' @param level when `ci = TRUE`, the desired confidence level.
 #' @param transform the function used to transform the coefficients, e.g., `exp` (which can also be supplied as a string, e.g., `"exp"`); passed to [match.fun()] before being used on the coefficients. When `ci = TRUE`, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.
 #' @param thresholds `logical`; whether to include thresholds in the `summary()` output for `ordinal_weightit` objects. Default is `TRUE`.
@@ -19,7 +19,7 @@
 #' @param tolerance for the Wald test, the tolerance used to determine if models are symbolically nested.
 #'
 #' @returns
-#' `summary()` returns a `summary.glm_weightit()` object, which has its own print method. For `coxph_weightit()` objects, the `print()` and `summary()` methods are more like those for `glm` objects then for `coxph` objects.
+#' `summary()` returns a `summary.glm_weightit()` object, which has its own `print()` method. For `coxph_weightit()` objects, the `print()` and `summary()` methods are more like those for `glm` objects then for `coxph` objects.
 #'
 #' Otherwise, all methods return the same type of object as their generics.
 #'
@@ -167,6 +167,7 @@ summary.glm_weightit <- function(object,
 }
 
 #' @exportS3Method summary multinom_weightit
+#' @rdname glm_weightit-methods
 summary.multinom_weightit <- function(object, ci = FALSE, level = .95, transform = NULL, ...) {
   chk::chk_flag(ci)
 
@@ -242,6 +243,7 @@ summary.multinom_weightit <- function(object, ci = FALSE, level = .95, transform
 }
 
 #' @exportS3Method summary ordinal_weightit
+#' @rdname glm_weightit-methods
 summary.ordinal_weightit <- function(object, ci = FALSE, level = .95, transform = NULL, thresholds = TRUE, ...) {
   chk::chk_flag(thresholds)
 
@@ -262,6 +264,7 @@ summary.ordinal_weightit <- function(object, ci = FALSE, level = .95, transform 
 }
 
 #' @exportS3Method summary coxph_weightit
+#' @rdname glm_weightit-methods
 summary.coxph_weightit <- function(object, ci = FALSE, level = .95, transform = NULL, ...) {
   chk::chk_flag(ci)
 
@@ -499,7 +502,6 @@ vcov.coxph_weightit <- function(object, complete = TRUE, ...) {
 
 # confint() methods
 #' @exportS3Method stats::confint glm_weightit
-#' @rdname glm_weightit-methods
 confint.glm_weightit <- function(object, parm, level = 0.95, ...) {
   chk::chk_number(level)
   chk::chk_gt(level, .5)

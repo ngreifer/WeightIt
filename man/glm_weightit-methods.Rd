@@ -3,19 +3,32 @@
 \name{glm_weightit-methods}
 \alias{glm_weightit-methods}
 \alias{summary.glm_weightit}
+\alias{summary.multinom_weightit}
+\alias{summary.ordinal_weightit}
+\alias{summary.coxph_weightit}
 \alias{print.glm_weightit}
 \alias{vcov.glm_weightit}
-\alias{confint.glm_weightit}
 \alias{anova.glm_weightit}
 \title{Methods for \code{glm_weightit()} objects}
 \usage{
 \method{summary}{glm_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
 
+\method{summary}{multinom_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
+
+\method{summary}{ordinal_weightit}(
+  object,
+  ci = FALSE,
+  level = 0.95,
+  transform = NULL,
+  thresholds = TRUE,
+  ...
+)
+
+\method{summary}{coxph_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
+
 \method{print}{glm_weightit}(x, digits = max(3L, getOption("digits") - 3L), ...)
 
 \method{vcov}{glm_weightit}(object, complete = TRUE, ...)
-
-\method{confint}{glm_weightit}(object, parm, level = 0.95, ...)
 
 \method{anova}{glm_weightit}(object, object2, test = "Chisq", method = "Wald", tolerance = 1e-07, ...)
 }
@@ -30,23 +43,19 @@
 
 \item{\dots}{ignored.}
 
+\item{thresholds}{\code{logical}; whether to include thresholds in the \code{summary()} output for \code{ordinal_weightit} objects. Default is \code{TRUE}.}
+
 \item{digits}{the number of \emph{significant} digits to be
     passed to \code{\link{format}(\link[stats]{coef}(x), .)} when
     \code{\link{print}()}ing.}
 
 \item{complete}{\code{logical}; whether the full variance-covariance matrix should be returned also in case of an over-determined system where some coefficients are undefined and \code{coef(.)} contains \code{NA}s correspondingly. When \code{complete = TRUE}, \code{vcov()} is compatible with \code{coef()} also in this singular case.}
 
-\item{parm}{a specification of which parameters are to be given
-    confidence intervals, either a vector of numbers or a vector of
-    names.  If missing, all parameters are considered.}
-
 \item{test}{the type of test statistic used to compare models. Currently only \code{"Chisq"} (the chi-square statistic) is allowed.}
 
 \item{method}{the kind of test used to compare models. Currently only \code{"Wald"} is allowed.}
 
 \item{tolerance}{for the Wald test, the tolerance used to determine if models are symbolically nested.}
-
-\item{thresholds}{\code{logical}; whether to include thresholds in the \code{summary()} output for \code{ordinal_weightit} objects. Default is \code{TRUE}.}
 }
 \value{
 \code{summary()} returns a \code{summary.glm_weightit()} object, which has its own print method. For \code{coxph_weightit()} objects, the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects then for \code{coxph} objects.
