@@ -45,6 +45,8 @@
 \item{method}{the kind of test used to compare models. Currently only \code{"Wald"} is allowed.}
 
 \item{tolerance}{for the Wald test, the tolerance used to determine if models are symbolically nested.}
+
+\item{thresholds}{\code{logical}; whether to include thresholds in the \code{summary()} output for \code{ordinal_weightit} objects. Default is \code{TRUE}.}
 }
 \value{
 \code{summary()} returns a \code{summary.glm_weightit()} object, which has its own print method. For \code{coxph_weightit()} objects, the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects then for \code{coxph} objects.

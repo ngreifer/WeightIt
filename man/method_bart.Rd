@@ -85,7 +85,7 @@ When \code{include.obj = TRUE}, the \code{bart2} fit(s) used to generate the pre
 
 \examples{
 \dontshow{if (requireNamespace("dbarts", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-library("cobalt")
+\donttest{library("cobalt")
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
@@ -94,7 +94,7 @@ data("lalonde", package = "cobalt")
                 method = "bart", estimand = "ATT"))
 summary(W1)
 bal.tab(W1)
-\donttest{
+
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                 nodegree + re74, data = lalonde,

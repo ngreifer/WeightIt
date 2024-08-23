@@ -13,7 +13,11 @@ WeightIt News and Updates
 
 * `moments` can now be set to 0 when `quantile` is supplied to ensure balance on the quantiles without the moments for the methods that accepts `quantiles`. Thanks to @BERENZ for the suggestion.
 
+* For `ordinal_weightit` objects, `summary()` now has the option to omit thresholds from the output.
+
 * Fixed a bug in `ordinal_weightit()` where the Hessian (and therefore the HC0 robust variance) were calculated incorrectly when come coefficients were aliased (i.e., due to linearly dependent predictors).
+
+* Fixed a bug in `print.summary.glm_weightit()` when confidence intervals were requested. A new printing function is used that produces slightly nicer tables.
 
 * Fixes to vignettes and tests to satisfy CRAN checks.
 
