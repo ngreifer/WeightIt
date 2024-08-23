@@ -11,6 +11,7 @@
 #' @param ci `logical`; whether to display Wald confidence intervals for estimated coefficients. Default is `FALSE`.
 #' @param level when `ci = TRUE`, the desired confidence level.
 #' @param transform the function used to transform the coefficients, e.g., `exp` (which can also be supplied as a string, e.g., `"exp"`); passed to [match.fun()] before being used on the coefficients. When `ci = TRUE`, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.
+#' @param thresholds `logical`; whether to include thresholds in the `summary()` output for `ordinal_weightit` objects. Default is `TRUE`.
 #' @param complete `logical`; whether the full variance-covariance matrix should be returned also in case of an over-determined system where some coefficients are undefined and `coef(.)` contains `NA`s correspondingly. When `complete = TRUE`, `vcov()` is compatible with `coef()` also in this singular case.
 #' @param \dots ignored.
 #' @param test the type of test statistic used to compare models. Currently only `"Chisq"` (the chi-square statistic) is allowed.
@@ -70,7 +71,15 @@ summary.glm_weightit <- function(object,
                                  level = .95,
                                  transform = NULL,
                                  ...) {
-  chk::chk_flag(ci)
+
+  if ("conf.int" %in% ...names()) {
+    conf.int <- ...elt(match("conf.int", ...names()))
+    chk::chk_flag(conf.int)
+    ci <- conf.int
+  }
+  else {
+    chk::chk_flag(ci)
+  }
 
   df.r <- object$df.residual
 
@@ -233,12 +242,21 @@ summary.multinom_weightit <- function(object, ci = FALSE, level = .95, transform
 }
 
 #' @exportS3Method summary ordinal_weightit
-summary.ordinal_weightit <- function(object, ci = FALSE, level = .95, transform = NULL, ...) {
+summary.ordinal_weightit <- function(object, ci = FALSE, level = .95, transform = NULL, thresholds = TRUE, ...) {
+  chk::chk_flag(thresholds)
+
   out <- summary.multinom_weightit(object, ci = ci, level = level, transform = transform, ...)
 
   nthreshold <- ncol(object$fitted.values) - 1L
 
-  attr(out, "thresholds") <- rownames(out$coefficients)[-seq_len(nrow(out$coefficients) - nthreshold)]
+  thresholds_ind <- seq(nrow(out$coefficients) - nthreshold + 1, nrow(out$coefficients))
+
+  if (thresholds) {
+    attr(out, "thresholds") <- rownames(out$coefficients)[thresholds_ind]
+  }
+  else {
+    out$coefficients <- out$coefficients[-thresholds_ind, , drop = FALSE]
+  }
 
   out
 }
@@ -324,7 +342,7 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
   cat0("\n", underline("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
        "\n")
 
-  if (length(x$aliased) == 0L) {
+  if (is_null(x$coefficients)) {
     cat("\nNo Coefficients\n\n")
     return(invisible(x))
   }
@@ -339,22 +357,21 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
     coefs <- coefs[-match(attr(x, "thresholds"), rownames(x$coefficients)),, drop = FALSE]
   }
 
-  if (!is.null(aliased <- x$aliased) && any(aliased)) {
+  if (is_not_null(aliased <- x$aliased) && any(aliased)) {
     if (is_not_null(attr(x, "thresholds"))) {
       aliased <- aliased[-match(attr(x, "thresholds"), names(aliased))]
     }
 
     cn <- names(aliased)
-    coefs <- matrix(NA, length(aliased), ncol(coefs), dimnames = list(cn, colnames(coefs)))
+    coefs <- matrix(NA_real_, nrow = length(aliased), ncol = ncol(coefs),
+                    dimnames = list(cn, colnames(coefs)))
     coefs[!aliased, ] <- x$coefficients
   }
 
-  printCoefmat(coefs, digits = digits, signif.legend = FALSE,
-               na.print = ".",
-               cs.ind = if (x$transformed) -3L else -(3:4),
-               tst.ind = if (x$transformed) 2L else 3L,
-               has.Pvalue = TRUE,
-               ...)
+  .printCoefmat_glm_weightit(coefs, digits = digits,
+                            has.Pvalue = TRUE,
+                            signif.stars = signif.stars,
+                            ...)
 
   cat(italic(sprintf("Standard error: %s\n",
                      .vcov_to_phrase(x$vcov_type,
@@ -366,12 +383,10 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
     cat0("\n", underline(sprintf("Thresholds%s:", if (x$transformed) " (transformed)" else "")),
          "\n")
 
-    printCoefmat(thresholds, digits = digits, signif.legend = FALSE,
-                 na.print = ".",
-                 cs.ind = if (x$transformed) -3L else -(3:4),
-                 tst.ind = if (x$transformed) 2L else 3L,
-                 has.Pvalue = TRUE,
-                 ...)
+    .printCoefmat_glm_weightit(thresholds, digits = digits,
+                              has.Pvalue = TRUE,
+                              signif.stars = signif.stars,
+                              ...)
   }
 
   invisible(x)
@@ -603,7 +618,7 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with `y = TRUE`")
+    .err("models must be fit with `y = TRUE` to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
@@ -689,7 +704,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with `y = TRUE`")
+    .err("models must be fit with `y = TRUE` to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
@@ -787,7 +802,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with `y = TRUE`")
+    .err("models must be fit with `y = TRUE` to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
@@ -876,3 +891,193 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
 
 #' @exportS3Method stats::anova coxph_weightit
 anova.coxph_weightit <- anova.glm_weightit
+
+.printCoefmat_glm_weightit <- function(x,
+                                      digits = max(3L, getOption("digits") - 2L),
+                                      signif.stars = TRUE,
+                                      signif.legend = FALSE,
+                                      dig.tst = max(1L, min(5L, digits - 1L)),
+                                      cs.ind = NULL,
+                                      tst.ind = NULL,
+                                      p.ind = NULL,
+                                      zap.ind = integer(),
+                                      P.values = NULL,
+                                      has.Pvalue = TRUE,
+                                      eps.Pvalue = 1e-6,
+                                      na.print = ".",
+                                      quote = FALSE,
+                                      right = TRUE,
+                                      ...) {
+  if (is_null(d <- dim(x)) || length(d) != 2L) {
+    .err("'x' must be coefficient matrix/data frame")
+  }
+
+  nm <- colnames(x)
+
+  chk::chk_flag(has.Pvalue)
+
+  if (has.Pvalue) {
+    if (is_null(p.ind)) {
+      if (is_null(nm)) {
+        .err("`has.Pvalue` set to `TRUE` but `p.ind` is `NULL` and no colnames present")
+      }
+
+      p.ind <- which(substr(nm, 1L, 3L) %in% c("Pr(", "p-v"))
+
+      if (is_null(p.ind)) {
+        .err("`has.Pvalue` set to `TRUE` but `p.ind` is `NULL` and no colnames match p-value strings")
+      }
+    }
+    else {
+      chk::chk_whole_number(p.ind)
+      chk::chk_subset(p.ind, seq_col(x))
+    }
+  }
+  else {
+    if (is_not_null(p.ind)) {
+      .err("`has.Pvalue` set to `FALSE` but `p.ind` is not `NULL`")
+    }
+  }
+
+  if (is_null(P.values)) {
+    scp <- getOption("show.coef.Pvalues")
+    if (!is.logical(scp) || is.na(scp)) {
+      .wrn("option \"show.coef.Pvalues\" is invalid: assuming `TRUE`")
+      scp <- TRUE
+    }
+    P.values <- has.Pvalue && scp
+  }
+  else {
+    chk::chk_flag(P.values)
+  }
+
+  if (P.values && !has.Pvalue) {
+    .err("`P.values` is `TRUE`, but `has.Pvalue` is not")
+  }
+
+  if (is_null(cs.ind)) {
+    cs.ind <- which(nm %in% c("Estimate", "Std. Error") | endsWith(nm, " %"))
+  }
+  else {
+    chk::chk_whole_numeric(cs.ind)
+    chk::chk_subset(cs.ind, seq_col(x))
+  }
+
+  cs.ind <- setdiff(cs.ind, p.ind)
+
+  if (is_null(tst.ind)) {
+    tst.ind <- which(endsWith(nm, "value"))
+  }
+  else {
+    chk::chk_whole_numeric(tst.ind)
+    chk::chk_subset(tst.ind, seq_col(x))
+  }
+
+  tst.ind <- setdiff(tst.ind, p.ind)
+
+  if (any(tst.ind %in% cs.ind)) {
+    .err("`tst.ind` must not overlap with `cs.ind`")
+  }
+
+  xm <- data.matrix(x)
+
+  if (is_null(tst.ind)) {
+    tst.ind <- setdiff(which(endsWith(nm, "value")), p.ind)
+  }
+
+  Cf <- array("", dim = d, dimnames = dimnames(xm))
+
+  ok <- !(ina <- is.na(xm))
+
+  for (i in zap.ind) {
+    xm[, i] <- zapsmall(xm[, i], digits)
+  }
+
+  if (is_not_null(cs.ind)) {
+    acs <- abs(coef.se <- xm[, cs.ind, drop = FALSE])
+    if (any(ia <- is.finite(acs))) {
+      digmin <- 1 + if (length(acs <- acs[ia & acs != 0]))
+        floor(log10(range(acs[acs != 0], finite = TRUE)))
+      else 0
+
+      Cf[, cs.ind] <- format(round(coef.se, max(1L, digits - digmin)), digits = digits)
+    }
+  }
+
+  if (is_not_null(tst.ind)) {
+    Cf[, tst.ind] <- format(round(xm[, tst.ind], digits = dig.tst),
+                            digits = digits)
+  }
+
+  if (is_not_null(r.ind <- setdiff(seq_col(xm), c(cs.ind, tst.ind, p.ind)))) {
+    for (i in r.ind) {
+      Cf[, i] <- format(xm[, i], digits = digits)
+    }
+  }
+
+  ok[, tst.ind] <- FALSE
+  okP <- if (has.Pvalue) ok[, -p.ind] else ok
+
+  x1 <- Cf[okP]
+  dec <- getOption("OutDec")
+
+  if (dec != ".") {
+    x1 <- chartr(dec, ".", x1)
+  }
+
+  x0 <- (xm[okP] == 0) != (as.numeric(x1) == 0)
+
+  if (is_not_null(not.both.0 <- which(x0 & !is.na(x0)))) {
+    Cf[okP][not.both.0] <- format(xm[okP][not.both.0], digits = max(1L, digits - 1L))
+  }
+
+  if (any(ina)) {
+    Cf[ina] <- na.print
+  }
+
+  if (any(inan <- is.nan(xm))) {
+    Cf[inan] <- "NaN"
+  }
+
+  if (P.values) {
+    chk::chk_flag(signif.stars)
+
+    if (any(okP <- ok[, p.ind])) {
+      pv <- as.vector(xm[, p.ind])
+      Cf[okP, p.ind] <- format.pval(pv[okP], digits = dig.tst,
+                                    eps = eps.Pvalue)
+
+      signif.stars <- signif.stars && any(pv[okP] < 0.1)
+
+      if (signif.stars) {
+        Signif <- symnum(pv, corr = FALSE, na = FALSE,
+                         cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
+                         symbols = c("***", "**", "*", ".", " "))
+        Cf <- cbind(Cf, format(Signif))
+      }
+    }
+    else signif.stars <- FALSE
+  }
+  else {
+    if (has.Pvalue) {
+      Cf <- Cf[, -p.ind, drop = FALSE]
+    }
+    signif.stars <- FALSE
+  }
+
+  print.default(Cf, quote = quote, right = right, na.print = na.print, ...)
+
+  if (signif.stars) {
+    chk::chk_flag(signif.legend)
+
+    if (signif.legend) {
+      if ((w <- getOption("width")) < nchar(sleg <- attr(Signif, "legend"))) {
+        sleg <- strwrap(sleg, width = w - 2, prefix = space(2))
+      }
+
+      cat0("---\nSignif. codes:  ", sleg, fill = w + 4 + max(nchar(sleg, "bytes") - nchar(sleg)))
+    }
+  }
+
+  invisible(x)
+}
