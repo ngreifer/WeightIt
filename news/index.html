@@ -45,7 +45,9 @@
 <li><p><code><a href="../reference/plot.weightit.html">plot.weightit()</a></code> can be used with <code>method = "optweight"</code> to display the dual variables.</p></li>
 <li><p><code>missing</code> no longer allows partial matching.</p></li>
 <li><p><code>moments</code> can now be set to 0 when <code>quantile</code> is supplied to ensure balance on the quantiles without the moments for the methods that accepts <code>quantiles</code>. Thanks to <a href="https://github.com/BERENZ" class="external-link">@BERENZ</a> for the suggestion.</p></li>
+<li><p>For <code>ordinal_weightit</code> objects, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> now has the option to omit thresholds from the output.</p></li>
 <li><p>Fixed a bug in <code><a href="../reference/glm_weightit.html">ordinal_weightit()</a></code> where the Hessian (and therefore the HC0 robust variance) were calculated incorrectly when come coefficients were aliased (i.e., due to linearly dependent predictors).</p></li>
+<li><p>Fixed a bug in <code>print.summary.glm_weightit()</code> when confidence intervals were requested. A new printing function is used that produces slightly nicer tables.</p></li>
 <li><p>Fixes to vignettes and tests to satisfy CRAN checks.</p></li>
 <li><p>Minor bug, performance, and readability fixes.</p></li>
 </ul></div>

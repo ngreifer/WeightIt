@@ -61,7 +61,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-08-20</h4>
+            <h4 data-toc-skip class="date">2024-08-23</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -680,7 +680,7 @@ setting <code>vcov</code> to <code>"BS"</code> or
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Coefficients:</span></span></span>
 <span><span class="co">##   Estimate Std. Error z value Pr(&gt;|z|)    </span></span>
-<span><span class="co">## A    0.387     0.0965    4.02  5.9e-05 ***</span></span>
+<span><span class="co">## A   0.3873     0.0965    4.02  5.9e-05 ***</span></span>
 <span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust</span></span></span>
 <span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
 <p>Note that the output differs from that of
@@ -696,8 +696,8 @@ the call to <code><a href="https://rdrr.io/r/base/summary.html" class="external-
 <span><span class="co">## coxph_weightit(formula = survival::Surv(Y_S) ~ A, data = d, weightit = W)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Coefficients (transformed):</span></span></span>
-<span><span class="co">##   Estimate z value Pr(&gt;|z|) 2.5 % 97.5 %</span></span>
-<span><span class="co">## A     1.47    4.02 5.93e-05  1.22    1.8</span></span>
+<span><span class="co">##   Estimate z value Pr(&gt;|z|) 2.5 % 97.5 %    </span></span>
+<span><span class="co">## A     1.47    4.02  5.9e-05  1.22   1.78 ***</span></span>
 <span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust</span></span></span>
 <span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
 <p>The <code>adjustedCurves</code> package provides integration with
