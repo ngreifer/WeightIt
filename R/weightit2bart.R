@@ -86,7 +86,7 @@
 #' See [`method_glm`] for additional references on propensity score weighting more generally.
 #'
 #' @examplesIf requireNamespace("dbarts", quietly = TRUE)
-#' library("cobalt")
+#' \donttest{library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)
@@ -95,7 +95,7 @@
 #'                 method = "bart", estimand = "ATT"))
 #' summary(W1)
 #' bal.tab(W1)
-#' \donttest{
+#'
 #' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                 nodegree + re74, data = lalonde,

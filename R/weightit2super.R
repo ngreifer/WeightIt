@@ -117,7 +117,7 @@
 #' See [`method_glm`] for additional references.
 #'
 #' @examplesIf all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))
-#' library("cobalt")
+#' \donttest{library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)
@@ -128,26 +128,26 @@
 #'                                "SL.glm.interaction")))
 #' summary(W1)
 #' bal.tab(W1)
-#' \donttest{
-#'   #Balancing covariates with respect to race (multi-category)
-#'   (W2 <- weightit(race ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "super", estimand = "ATE",
-#'                   SL.library = c("SL.glm", "SL.stepAIC",
-#'                                  "SL.glm.interaction")))
-#'   summary(W2)
-#'   bal.tab(W2)
 #'
-#'   #Balancing covariates with respect to re75 (continuous)
-#'   #assuming t(8) conditional density for treatment
-#'   (W3 <- weightit(re75 ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "super", density = "dt_8",
-#'                   SL.library = c("SL.glm", "SL.ridge",
-#'                                  "SL.glm.interaction")))
-#'   summary(W3)
-#'   bal.tab(W3)
-#' }
+#' #Balancing covariates with respect to race (multi-category)
+#' (W2 <- weightit(race ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "super", estimand = "ATE",
+#'                 SL.library = c("SL.glm", "SL.stepAIC",
+#'                                "SL.glm.interaction")))
+#' summary(W2)
+#' bal.tab(W2)
+#'
+#' #Balancing covariates with respect to re75 (continuous)
+#' #assuming t(8) conditional density for treatment
+#' (W3 <- weightit(re75 ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "super", density = "dt_8",
+#'                 SL.library = c("SL.glm", "SL.ridge",
+#'                                "SL.glm.interaction")))
+#' summary(W3)
+#' bal.tab(W3)
+#'
 #' #Balancing covariates between treatment groups (binary)
 #' # using balance SuperLearner to minimize the maximum
 #' # KS statistic
@@ -159,7 +159,7 @@
 #'                 SL.method = "method.balance",
 #'                 criterion = "ks.max"))
 #' summary(W4)
-#' bal.tab(W4, stats = c("m", "ks"))
+#' bal.tab(W4, stats = c("m", "ks"))}
 NULL
 
 weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
