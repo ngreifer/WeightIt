@@ -234,11 +234,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     rlang::check_installed("misaem")
     if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
     if (is_null(A[["control"]])) A[["control"]] <- list()
-    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
+    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- TRUE #need TRUE to bypass error in miss.glm.fit()
     if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
 
     data <- data.frame(treat, covs)
-
+# browser()
     withCallingHandlers({
       verbosely({
         fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
@@ -614,7 +614,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     rlang::check_installed("misaem")
     if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
     if (is_null(A[["control"]])) A[["control"]] <- list()
-    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- FALSE
+    if (is_null(A[["control"]][["var_cal"]])) A[["control"]][["var_cal"]] <- TRUE #need TRUE to bypass error in miss.glm.fit()
     if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
 
     ps <- make_df(levels(treat), nrow = length(treat))
