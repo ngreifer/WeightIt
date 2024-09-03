@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-08-26</h4>
+            <h4 data-toc-skip class="date">2024-09-03</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -525,11 +525,13 @@ estimate the ATE.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term          Contrast Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A mean(1) - mean(0)     1.96      0.346 5.66   &lt;0.001 26.0  1.28   2.63</span></span>
+<span><span class="co">##  Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##      1.96      0.346 5.66   &lt;0.001 26.0  1.28   2.63</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Term: A</span></span>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Comparison: mean(1) - mean(0)</span></span>
+<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted</span></span></code></pre>
 <p>If, in addition to the effect estimate, we want the average estimated
 potential outcomes, we can use
 <code><a href="https://marginaleffects.com/man/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>, which we demonstrate
@@ -543,8 +545,8 @@ the outcome model (if any) are interacted with the treatment.</p>
 <span><span class="co">##  0     1.42      0.135 10.5   &lt;0.001 84.0  1.16   1.68</span></span>
 <span><span class="co">##  1     3.38      0.318 10.6   &lt;0.001 84.8  2.75   4.00</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: A, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Columns: A, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
 <p>We can see that the difference in potential outcome means is equal to
 the average treatment effect computed previously<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;To verify that they are equal, supply the output of
 &lt;code&gt;&lt;a href="https://marginaleffects.com/man/predictions.html" class="external-link"&gt;avg_predictions()&lt;/a&gt;&lt;/code&gt; to &lt;code&gt;&lt;a href="https://marginaleffects.com/man/hypotheses.html" class="external-link"&gt;hypotheses()&lt;/a&gt;&lt;/code&gt;, e.g.,
@@ -626,11 +628,13 @@ displays the statistics of interest:</p>
 <span>                comparison <span class="op">=</span> <span class="st">"lnratioavg"</span>,</span>
 <span>                transform <span class="op">=</span> <span class="st">"exp"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term              Contrast Estimate Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A ln(mean(1) / mean(0))     1.64   &lt;0.001 39.5  1.43   1.88</span></span>
+<span><span class="co">##  Estimate Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##      1.64   &lt;0.001 39.5  1.43   1.88</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, contrast, estimate, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Term: A</span></span>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Comparison: ln(mean(1) / mean(0))</span></span>
+<span><span class="co">## Columns: term, contrast, estimate, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted</span></span></code></pre>
 <p>The output displays the marginal RR, its Z-value, the p-value for the
 Z-test of the log RR against 0, and its confidence interval. (Note that
 even though the <code>Contrast</code> label still suggests the log RR,
@@ -834,8 +838,8 @@ outcome under each treatment for the focal group, and the use
 <span><span class="co">##  C2     1.84      0.301  6.12   &lt;0.001  30.0 1.252   2.43</span></span>
 <span><span class="co">##  T      3.75      0.217 17.27   &lt;0.001 219.7 3.324   4.17</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: Am, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Columns: Am, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
 <div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"revpairwise"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
@@ -844,8 +848,8 @@ outcome under each treatment for the focal group, and the use
 <span><span class="co">##  T - C1      2.11      0.416 5.064   &lt;0.001 21.2  1.292   2.92</span></span>
 <span><span class="co">##  T - C2      1.91      0.371 5.144   &lt;0.001 21.8  1.181   2.63</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
 <p>We find significant ATTs between the focal treatment and control
 levels (<code>T - C1</code> and <code>T - C2</code>), but the difference
 between control levels (<code>C2 - C1</code>), which can be interpreted
@@ -1018,8 +1022,8 @@ treatment regime using
 <span><span class="co">##    1   1   0    0.378     0.0163 23.2   &lt;0.001 393.1 0.346  0.410</span></span>
 <span><span class="co">##    1   1   1    0.422     0.0261 16.1   &lt;0.001 192.3 0.371  0.473</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: A_1, A_2, A_3, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Columns: A_1, A_2, A_3, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
 <p>We can compare individual predictions using
 <code><a href="https://marginaleffects.com/man/hypotheses.html" class="external-link">marginaleffects::hypotheses()</a></code>. For example, to compare all
 treatment histories to just the first treatment history (i.e., in which
@@ -1037,8 +1041,8 @@ following:</p>
 <span><span class="co">##  1, 1, 0 - 0, 0, 0  -0.3083     0.0232 -13.30  &lt; 0.001 131.6 -0.354 -0.2629</span></span>
 <span><span class="co">##  1, 1, 1 - 0, 0, 0  -0.2647     0.0308  -8.61  &lt; 0.001  56.9 -0.325 -0.2044</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
 </div>
 <div class="section level3">
 <h3 id="moderation-analysis">Moderation Analysis<a class="anchor" aria-label="anchor" href="#moderation-analysis"></a>
@@ -1119,12 +1123,14 @@ moderator.</p>
 <code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                by <span class="op">=</span> <span class="st">"X5"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term          Contrast X5 Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A mean(1) - mean(0)  0     1.16      0.480 2.41   0.0159  6.0 0.217   2.10</span></span>
-<span><span class="co">##     A mean(1) - mean(0)  1     2.38      0.454 5.24   &lt;0.001 22.5 1.487   3.27</span></span>
+<span><span class="co">##  X5 Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##   0     1.16      0.480 2.41   0.0159  6.0 0.217   2.10</span></span>
+<span><span class="co">##   1     2.38      0.454 5.24   &lt;0.001 22.5 1.487   3.27</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, contrast, X5, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Term: A</span></span>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Comparison: mean(1) - mean(0)</span></span>
+<span><span class="co">## Columns: term, contrast, X5, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted</span></span></code></pre>
 <p>We can see that the subgroup mean differences differ from each other,
 and we can formally test for moderation using another call to
 <code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, this time using the
@@ -1135,11 +1141,12 @@ effects between subgroups:</p>
 <span>                by <span class="op">=</span> <span class="st">"X5"</span>,</span>
 <span>                hypothesis <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##   Term Estimate Std. Error     z Pr(&gt;|z|)   S 2.5 % 97.5 %</span></span>
-<span><span class="co">##  0 - 1    -1.22       0.66 -1.85    0.065 3.9 -2.51 0.0759</span></span>
+<span><span class="co">##  Estimate Std. Error     z Pr(&gt;|z|)   S 2.5 % 97.5 %</span></span>
+<span><span class="co">##     -1.22       0.66 -1.85    0.065 3.9 -2.51 0.0759</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high </span></span>
-<span><span class="co">## Type:  response</span></span></code></pre>
+<span><span class="co">## Term: 0 - 1</span></span>
+<span><span class="co">## Type:  probs </span></span>
+<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
 <p>Though the subgroup effects differ from each other in the sample,
 this difference is not statistically significant at the .05 level, so
 there is no evidence of moderation by <code>X5</code>.</p>
