@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,7 +40,10 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
 <code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
-<ul><li>Changed defaults with <code>missing = "saem"</code> for binary and multi-category treatments to bypass bug in <code>misaem</code> code. (<a href="https://github.com/ngreifer/WeightIt/issues/71" class="external-link">#71</a>)</li>
+<ul><li><p>Changed defaults with <code>missing = "saem"</code> for binary and multi-category treatments to bypass a bug in <code>misaem</code> code. (<a href="https://github.com/ngreifer/WeightIt/issues/71" class="external-link">#71</a>)</p></li>
+<li><p>Preemptively fixed some bugs related to the use of <code>missing</code>, including when <code>missing</code> is used with <code>by</code>.</p></li>
+<li><p>The missingness method (if any) is now included in the output of <code><a href="../reference/weightit.html">weightit()</a></code>, <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code>, and <code><a href="../reference/weightit.fit.html">weightit.fit()</a></code> and is printed when using the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method for these objects.</p></li>
+<li><p>When <code>missing = "saem"</code>, using <code>vcov = "FWB"</code> in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, etc., now appropriately results in an error. (<a href="https://github.com/ngreifer/WeightIt/issues/71" class="external-link">#71</a>)</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.0" id="weightit-130">

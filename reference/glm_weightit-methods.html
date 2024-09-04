@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,7 +82,7 @@
 
 
 <dt id="arg-ci">ci<a class="anchor" aria-label="anchor" href="#arg-ci"></a></dt>
-<dd><p><code>logical</code>; whether to display Wald confidence intervals for estimated coefficients. Default is <code>FALSE</code>.</p></dd>
+<dd><p><code>logical</code>; whether to display Wald confidence intervals for estimated coefficients. Default is <code>FALSE</code>. (Note: this argument can also be supplied as <code>conf.int</code>.)</p></dd>
 
 
 <dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
@@ -125,7 +125,7 @@
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns a <code>summary.glm_weightit()</code> object, which has its own print method. For <code><a href="glm_weightit.html">coxph_weightit()</a></code> objects, the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods are more like those for <code>glm</code> objects then for <code>coxph</code> objects.</p>
+    <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns a <code>summary.glm_weightit()</code> object, which has its own <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method. For <code><a href="glm_weightit.html">coxph_weightit()</a></code> objects, the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods are more like those for <code>glm</code> objects then for <code>coxph</code> objects.</p>
 <p>Otherwise, all methods return the same type of object as their generics.</p>
     </div>
     <div class="section level2">

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2024-09-03</h4>
+            <h4 data-toc-skip class="date">2024-09-04</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -132,11 +132,11 @@ of a policy or population-wide intervention. A conditional effect is the
 comparison between the expected potential outcomes in the treatment
 groups within strata. This is useful for identifying the effect of a
 treatment for an individual patient or a subset of the population.</p>
-<p><strong>Effect measures.</strong> The outcome types we consider here
-are continuous, with the effect measured by the mean difference; binary,
-with the effect measured by the risk difference (RD), risk ratio (RR),
-or odds ratio (OR); and time-to-event (i.e., survival), with the effect
-measured by the hazard ratio (HR). The RR, OR, and HR are
+<p><strong>Effect measures.</strong> The main outcome types we consider
+here are continuous, with the effect measured by the mean difference;
+binary, with the effect measured by the risk difference (RD), risk ratio
+(RR), or odds ratio (OR); and time-to-event (i.e., survival), with the
+effect measured by the hazard ratio (HR). The RR, OR, and HR are
 <em>noncollapsible</em> effect measures, which means the marginal effect
 on that scale is not a (possibly) weighted average of the conditional
 effects within strata, even if the stratum-specific effects are of the
@@ -589,32 +589,36 @@ weighting for the ATO for example, we need to specify the following:</p>
 <code class="sourceCode R"><span><span class="va">wts</span> <span class="op">=</span> <span class="va">W</span><span class="op">$</span><span class="va">weights</span></span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="binary-outcomes">Binary outcomes<a class="anchor" aria-label="anchor" href="#binary-outcomes"></a>
+<h4 id="binary-and-count-outcomes">Binary and count outcomes<a class="anchor" aria-label="anchor" href="#binary-and-count-outcomes"></a>
 </h4>
-<p>Estimating effects on binary outcomes is essentially the same as for
-continuous outcomes. The main difference is that there are several
-measures of the effect one can consider, which include the odds ratio
-(OR), risk ratio/relative risk (RR), and risk difference (RD), and the
-syntax to <code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code> depends on which one is
-desired. The outcome model should be one appropriate for binary outcomes
-(e.g., logistic regression) but is unrelated to the desired effect
-measure because we can compute any of the above effect measures using
-<code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code> after the logistic regression.</p>
-<p>To fit a logistic regression model, change <code><a href="../reference/glm_weightit.html">lm_weightit()</a></code>
-to <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> and set <code>family = binomial</code>.
-To compute the marginal RD, we can use exactly the same syntax as in the
-Standard Case; nothing needs to change<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Note that for low or high average expected risks
+<p>Estimating effects on binary and count outcomes is essentially the
+same as for continuous outcomes. The main difference is that there are
+several measures of the effect one can consider, which include the odds
+ratio (OR), risk ratio/relative risk (RR), and risk difference (RD) for
+binary outcomes and the count/incidence ratio for count outcomes, and
+the syntax to <code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code> depends on which one is
+desired. The outcome model should be one appropriate for the outcomes
+(e.g., logistic regression for binary outcomes or Poisson regression for
+count outcomes) but is unrelated to the desired effect measure because
+we can compute any of the above effect measures using
+<code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code> after fitting the model.</p>
+<p>To fit a generalized linear model, change <code><a href="../reference/glm_weightit.html">lm_weightit()</a></code>
+to <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> and set <code>family = binomial</code>
+for binary outcomes or <code>family = poisson</code> for count outcomes.
+To compute the marginal RD or mean difference, we can use exactly the
+same syntax as in the Standard Case; nothing needs to change<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;Note that for low or high average expected risks
 computed with &lt;code&gt;&lt;a href="https://marginaleffects.com/man/predictions.html" class="external-link"&gt;predictions()&lt;/a&gt;&lt;/code&gt;, the confidence intervals may
 go below 0 or above 1; this is because an approximation is used. To
 avoid this problem, bootstrapping or simulation-based inference can be
 used instead.&lt;/p&gt;'><sup>3</sup></a>.</p>
-<p>To compute the marginal log RR, we need to add
-<code>comparison = "lnratioavg"</code> to
-<code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code>; this computes the marginal log RR. To
-get the marginal RR, we need to add <code>transform = "exp"</code> to
-<code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, which exponentiates the marginal log RR
-and its confidence interval. The code below computes the effects and
-displays the statistics of interest:</p>
+<p>To compute the marginal RR or count/incidence ratio, first we need to
+add <code>comparison = "lnratioavg"</code> to
+<code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code>; this computes the marginal log ratio. To
+get the marginal ratio itself, we need to add
+<code>transform = "exp"</code> to <code><a href="https://marginaleffects.com/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, which
+exponentiates the marginal log ratio and its confidence interval. The
+code below computes the effects and displays the statistics of interest
+for a binary outcome <code>Y_B</code>:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Logistic regression model with covariates</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">Y_B</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
@@ -704,10 +708,10 @@ the call to <code><a href="https://rdrr.io/r/base/summary.html" class="external-
 <span><span class="co">## A     1.47    4.02  5.9e-05  1.22   1.78 ***</span></span>
 <span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust</span></span></span>
 <span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
-<p>The <code>adjustedCurves</code> package provides integration with
-<code>WeightIt</code> to estimate adjusted survival estimands. We
-strongly recommend using this package to estimate effects after
-weighting.</p>
+<p>The <a href="https://cran.r-project.org/package=adjustedCurves" class="external-link"><code>adjustedCurves</code></a>
+package provides integration with <code>WeightIt</code> to estimate
+adjusted survival estimands. We strongly recommend using this package to
+estimate effects after weighting.</p>
 </div>
 <div class="section level4">
 <h4 id="using-sampling-weights-andor-clustered-data">Using sampling weights and/or clustered data<a class="anchor" aria-label="anchor" href="#using-sampling-weights-andor-clustered-data"></a>
