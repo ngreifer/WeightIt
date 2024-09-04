@@ -123,7 +123,7 @@ Before an effect is estimated, the estimand must be specified and clarified. Alt
 
 **Marginal and conditional effects.** A marginal effect is a comparison between the expected potential outcome under treatment and the expected potential outcome under control. This is the same quantity estimated in randomized trials without blocking or covariate adjustment and is particularly useful for quantifying the overall effect of a policy or population-wide intervention. A conditional effect is the comparison between the expected potential outcomes in the treatment groups within strata. This is useful for identifying the effect of a treatment for an individual patient or a subset of the population.
 
-**Effect measures.** The outcome types we consider here are continuous, with the effect measured by the mean difference; binary, with the effect measured by the risk difference (RD), risk ratio (RR), or odds ratio (OR); and time-to-event (i.e., survival), with the effect measured by the hazard ratio (HR). The RR, OR, and HR are *noncollapsible* effect measures, which means the marginal effect on that scale is not a (possibly) weighted average of the conditional effects within strata, even if the stratum-specific effects are of the same magnitude. For these effect measures, it is critical to distinguish between marginal and conditional effects because different statistical methods target different types of effects. The mean difference and RD are *collapsible* effect measures, so the same methods can be used to estimate marginal and conditional effects.
+**Effect measures.** The main outcome types we consider here are continuous, with the effect measured by the mean difference; binary, with the effect measured by the risk difference (RD), risk ratio (RR), or odds ratio (OR); and time-to-event (i.e., survival), with the effect measured by the hazard ratio (HR). The RR, OR, and HR are *noncollapsible* effect measures, which means the marginal effect on that scale is not a (possibly) weighted average of the conditional effects within strata, even if the stratum-specific effects are of the same magnitude. For these effect measures, it is critical to distinguish between marginal and conditional effects because different statistical methods target different types of effects. The mean difference and RD are *collapsible* effect measures, so the same methods can be used to estimate marginal and conditional effects.
 
 Our primary focus will be on marginal effects, which are appropriate for all effect measures, easily interpretable, and require few modeling assumptions.
 
@@ -268,15 +268,15 @@ When weighting for an estimand that changes the target population away from one 
 wts = W$weights
 ```
 
-#### Binary outcomes
+#### Binary and count outcomes
 
-Estimating effects on binary outcomes is essentially the same as for continuous outcomes. The main difference is that there are several measures of the effect one can consider, which include the odds ratio (OR), risk ratio/relative risk (RR), and risk difference (RD), and the syntax to `avg_comparisons()` depends on which one is desired. The outcome model should be one appropriate for binary outcomes (e.g., logistic regression) but is unrelated to the desired effect measure because we can compute any of the above effect measures using `avg_comparisons()` after the logistic regression.
+Estimating effects on binary and count outcomes is essentially the same as for continuous outcomes. The main difference is that there are several measures of the effect one can consider, which include the odds ratio (OR), risk ratio/relative risk (RR), and risk difference (RD) for binary outcomes and the count/incidence ratio for count outcomes, and the syntax to `avg_comparisons()` depends on which one is desired. The outcome model should be one appropriate for the outcomes (e.g., logistic regression for binary outcomes or Poisson regression for count outcomes) but is unrelated to the desired effect measure because we can compute any of the above effect measures using `avg_comparisons()` after fitting the model.
 
-To fit a logistic regression model, change `lm_weightit()` to `glm_weightit()` and set `family = binomial`. To compute the marginal RD, we can use exactly the same syntax as in the Standard Case; nothing needs to change[^3].
+To fit a generalized linear model, change `lm_weightit()` to `glm_weightit()` and set `family = binomial` for binary outcomes or `family = poisson` for count outcomes. To compute the marginal RD or mean difference, we can use exactly the same syntax as in the Standard Case; nothing needs to change[^3].
 
 [^3]: Note that for low or high average expected risks computed with `predictions()`, the confidence intervals may go below 0 or above 1; this is because an approximation is used. To avoid this problem, bootstrapping or simulation-based inference can be used instead.
 
-To compute the marginal log RR, we need to add `comparison = "lnratioavg"` to `avg_comparisons()`; this computes the marginal log RR. To get the marginal RR, we need to add `transform = "exp"` to `avg_comparisons()`, which exponentiates the marginal log RR and its confidence interval. The code below computes the effects and displays the statistics of interest:
+To compute the marginal RR or count/incidence ratio, first we need to add `comparison = "lnratioavg"` to `avg_comparisons()`; this computes the marginal log ratio. To get the marginal ratio itself, we need to add `transform = "exp"` to `avg_comparisons()`, which exponentiates the marginal log ratio and its confidence interval. The code below computes the effects and displays the statistics of interest for a binary outcome `Y_B`:
 
 ```{r, eval=me_ok}
 #Logistic regression model with covariates
@@ -320,7 +320,7 @@ Note that the output differs from that of `survival::coxph()` and is more simila
 summary(fit, ci = TRUE, transform = "exp")
 ```
 
-The `adjustedCurves` package provides integration with `WeightIt` to estimate adjusted survival estimands. We strongly recommend using this package to estimate effects after weighting.
+The [`adjustedCurves`](https://cran.r-project.org/package=adjustedCurves) package provides integration with `WeightIt` to estimate adjusted survival estimands. We strongly recommend using this package to estimate effects after weighting.
 
 #### Using sampling weights and/or clustered data
 
