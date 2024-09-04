@@ -35,7 +35,7 @@
 \arguments{
 \item{object, object2, x}{an output from one of the above modeling functions. For \code{anova()}, \code{object2} is required.}
 
-\item{ci}{\code{logical}; whether to display Wald confidence intervals for estimated coefficients. Default is \code{FALSE}.}
+\item{ci}{\code{logical}; whether to display Wald confidence intervals for estimated coefficients. Default is \code{FALSE}. (Note: this argument can also be supplied as \code{conf.int}.)}
 
 \item{level}{when \code{ci = TRUE}, the desired confidence level.}
 
@@ -58,7 +58,7 @@
 \item{tolerance}{for the Wald test, the tolerance used to determine if models are symbolically nested.}
 }
 \value{
-\code{summary()} returns a \code{summary.glm_weightit()} object, which has its own print method. For \code{coxph_weightit()} objects, the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects then for \code{coxph} objects.
+\code{summary()} returns a \code{summary.glm_weightit()} object, which has its own \code{print()} method. For \code{coxph_weightit()} objects, the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects then for \code{coxph} objects.
 
 Otherwise, all methods return the same type of object as their generics.
 }
