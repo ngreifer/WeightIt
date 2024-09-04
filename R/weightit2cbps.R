@@ -162,6 +162,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -349,6 +351,8 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
+
+  missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -590,6 +594,8 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -777,7 +783,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
     covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
 
-    if (missing == "ind") {
+    if (.process_missing2(missing, covs.list[[i]]) == "ind") {
       covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
     }
 

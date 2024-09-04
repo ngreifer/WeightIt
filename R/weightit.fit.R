@@ -241,8 +241,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     treat.type <- get_treat_type(treat)
   }
 
+  missing <- .process_missing2(missing, covs)
+
   out <- make_list(c("weights", "treat", "estimand", "method", "ps", "s.weights",
-                     "focal", "fit.obj", "info"))
+                     "focal", "missing", "fit.obj", "info"))
   out$weights <- out$ps <- rep.int(NA_real_, length(treat))
 
   if (include.obj) {
@@ -348,6 +350,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   out$method <- method
   out$s.weights <- s.weights
   out$focal <- focal
+  out$missing <- missing
 
   class(out) <- "weightit.fit"
 
@@ -446,11 +449,13 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
   }
   else {
     for (i in seq_along(treat.list)) {
-      if (!has_treat_type(treat.list[[i]])) treat.list[[i]] <- assign_treat_type(treat.list[[i]])
+      if (!has_treat_type(treat.list[[i]])) {
+        treat.list[[i]] <- assign_treat_type(treat.list[[i]])
+      }
     }
   }
 
-  out <- make_list(c("weights", "treat.list", "method", "s.weights",
+  out <- make_list(c("weights", "treat.list", "method", "s.weights", "missing",
                      "fit.obj", "info"))
   out$weights <- rep.int(NA_real_, length(treat.list[[1]]))
 
@@ -540,6 +545,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
   out$treat.list <- treat.list
   out$method <- method
   out$s.weights <- s.weights
+  out$missing <- missing
 
   class(out) <- "weightitMSM.fit"
 

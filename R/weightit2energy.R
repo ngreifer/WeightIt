@@ -146,6 +146,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   A <- list(...)
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -361,6 +363,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   A <- list(...)
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -547,6 +551,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   rlang::check_installed("osqp")
 
   A <- list(...)
+
+  missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)

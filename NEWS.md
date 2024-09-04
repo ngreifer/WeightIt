@@ -3,7 +3,13 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
-* Changed defaults with `missing = "saem"` for binary and multi-category treatments to bypass bug in `misaem` code. (#71)
+* Changed defaults with `missing = "saem"` for binary and multi-category treatments to bypass a bug in `misaem` code. (#71)
+
+* Preemptively fixed some bugs related to the use of `missing`, including when `missing` is used with `by`.
+
+* The missingness method (if any) is now included in the output of `weightit()`, `weightitMSM()`, and `weightit.fit()` and is printed when using the `print()` method for these objects.
+
+* When `missing = "saem"`, using `vcov = "FWB"` in `glm_weightit()`, etc., now appropriately results in an error. (#71)
 
 # `WeightIt` 1.3.0
 

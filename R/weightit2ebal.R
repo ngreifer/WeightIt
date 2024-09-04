@@ -128,6 +128,8 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -281,6 +283,8 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   covs <- covs[subset, , drop = FALSE]
   s.weights <- s.weights[subset]
+
+  missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)

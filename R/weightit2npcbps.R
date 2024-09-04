@@ -99,6 +99,8 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -143,6 +145,8 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
+
+  missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)

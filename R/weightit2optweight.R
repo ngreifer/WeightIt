@@ -138,6 +138,8 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
                 .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
                             focal = focal, treat = treat))
@@ -185,6 +187,8 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
+
+  missing <- .process_missing2(missing, covs)
 
   covs <- .int_poly_f(covs, poly = moments, int = int)
 
@@ -244,7 +248,7 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
 
     covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
 
-    if (missing == "ind") {
+    if (.process_missing2(missing, covs.list[[i]]) == "ind") {
       covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
     }
 

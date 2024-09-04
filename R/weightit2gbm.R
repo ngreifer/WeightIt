@@ -220,6 +220,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
@@ -542,6 +544,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
+
+  missing <- .process_missing2(missing, covs)
 
   for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
 

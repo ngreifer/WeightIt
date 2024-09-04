@@ -289,6 +289,22 @@
   missing
 }
 
+.missing_to_phrase <- function(missing) {
+  switch(missing,
+         "ind" = "missingness indicators",
+         "saem" = "SAEM",
+         "surr" = "surrogate splitting",
+         missing)
+}
+
+.process_missing2 <- function(missing, covs) {
+  if (is_null(missing) || identical(missing, "") || !anyNA(covs)) {
+    return("")
+  }
+
+  missing
+}
+
 .check_user_method <- function(method) {
   #Check to make sure it accepts treat and covs
   if (all(c("covs", "treat") %in% names(formals(method)))) {

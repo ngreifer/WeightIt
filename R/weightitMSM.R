@@ -461,6 +461,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
               call = call,
               formula.list = formula.list,
               stabilization = stabout,
+              missing = if (missing == "") NULL else missing,
               env = parent.frame(),
               obj = obj.list
   )
@@ -502,7 +503,7 @@ print.weightitMSM <- function(x, ...) {
               word_list(names(x[["treat.list"]]), and.or = FALSE)))
 
   cat(" - treatment:\n")
-  for (i in seq_along(x$treat.list)) {
+  for (i in seq_along(x[["treat.list"]])) {
     cat(sprintf("    + time %s: %s\n",
                 i,
                 switch(treat.types[i],
@@ -513,18 +514,25 @@ print.weightitMSM <- function(x, ...) {
                        "binary" = "2-category")))
   }
 
-  cat(" - covariates:\n")
-  for (i in seq_along(x$covs.list)) {
-    if (i == 1L) {
-      cat(sprintf("    + baseline: %s\n",
-                  if (is_null(x$covs.list[[i]])) "(none)"
-                  else word_list(names(x$covs.list[[i]]), and.or = FALSE)))
+  if (is_not_null(x[["covs.list"]])) {
+    cat(" - covariates:\n")
+    for (i in seq_along(x[["covs.list"]])) {
+      if (i == 1L) {
+        cat(sprintf("    + baseline: %s\n",
+                    if (is_null(x$covs.list[[i]])) "(none)"
+                    else word_list(names(x$covs.list[[i]]), and.or = FALSE)))
+      }
+      else {
+        cat(sprintf("    + after time %s: %s\n",
+                    i - 1L,
+                    word_list(names(x$covs.list[[i]]), and.or = FALSE)))
+      }
     }
-    else {
-      cat(sprintf("    + after time %s: %s\n",
-                  i - 1L,
-                  word_list(names(x$covs.list[[i]]), and.or = FALSE)))
-    }
+  }
+
+  if (is_not_null(x[["missing"]]) && !identical(x[["missing"]], "")) {
+    cat(sprintf(" - missingness method: %s\n",
+                .missing_to_phrase(x[["missing"]])))
   }
 
   if (is_not_null(x[["by"]])) {

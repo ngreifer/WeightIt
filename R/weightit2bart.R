@@ -123,6 +123,8 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -173,6 +175,8 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
+
+  missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -227,6 +231,8 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
+
+  missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)

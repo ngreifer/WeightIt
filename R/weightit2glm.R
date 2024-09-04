@@ -183,6 +183,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -231,6 +233,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   use.logistf <- A[["link"]] %in% c("flic", "flac")
 
   if (missing == "saem") {
+
+    if (!all_the_same(s.weights)) {
+      .err('sampling weights cannot be used with `missing = "saem"`')
+    }
+
     rlang::check_installed("misaem")
     if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
     if (is_null(A[["control"]])) A[["control"]] <- list()
@@ -238,7 +245,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     if (is_null(A[["control"]][["ll_obs_cal"]])) A[["control"]][["ll_obs_cal"]] <- FALSE
 
     data <- data.frame(treat, covs)
-# browser()
+
     withCallingHandlers({
       verbosely({
         fit <- misaem::miss.glm(formula(data), data = data, control = as.list(A[["control"]]))
@@ -399,6 +406,8 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   s.weights <- s.weights[subset]
 
   ord.treat <- is.ordered(treat)
+
+  missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
@@ -611,6 +620,11 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     fit.obj <- fit
   }
   else if (multi.method == "saem") {
+
+    if (!all_the_same(s.weights)) {
+      .err('sampling weights cannot be used with `missing = "saem"`')
+    }
+
     rlang::check_installed("misaem")
     if (is_null(A[["saem.method"]])) A[["saem.method"]] <- "map"
     if (is_null(A[["control"]])) A[["control"]] <- list()
@@ -811,6 +825,8 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
+  missing <- .process_missing2(missing, covs)
+
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
@@ -850,13 +866,18 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   if (is_null(A[["link"]])) A[["link"]] <- "identity"
 
   if (missing == "saem") {
+
+    if (!all_the_same(s.weights)) {
+      .err('sampling weights cannot be used with `missing = "saem"`')
+    }
+
     rlang::check_installed("misaem")
 
     acceptable.links <- "identity"
     which.link <- acceptable.links[pmatch(A[["link"]], acceptable.links, nomatch = 0)][1]
 
     if (is.na(which.link)) {
-      .err(sprintf("only %s allowed as the link for continuous treatments with missing = \"saem\"",
+      .err(sprintf('only %s allowed as the link for continuous treatments with `missing = "saem"`',
                    word_list(acceptable.links, quotes = TRUE, is.are = TRUE)))
     }
 

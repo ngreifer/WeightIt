@@ -306,7 +306,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
                                          method = method)
 
   call <- match.call()
-  # args <- list(...)
 
   ## Running models ----
 
@@ -366,6 +365,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               call = call,
               formula = formula,
               stabilize = stabilize,
+              missing = if (missing == "") NULL else missing,
               env = parent.frame(),
               info = obj$info,
               obj = obj$fit.obj)
@@ -429,6 +429,11 @@ print.weightit <- function(x, ...) {
     cat(sprintf(" - covariates: %s\n",
                 if (length(names(x[["covs"]])) > 60) "too many to name"
                 else word_list(names(x[["covs"]]), and.or = FALSE)))
+  }
+
+  if (is_not_null(x[["missing"]]) && !identical(x[["missing"]], "")) {
+    cat(sprintf(" - missingness method: %s\n",
+                .missing_to_phrase(x[["missing"]])))
   }
 
   if (is_not_null(x[["by"]])) {

@@ -126,12 +126,13 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
                  ps = ps)
 
   if (...length() > 0L) {
-    A <- list(...)
-    if (is_null(names(A)) || any(names(A) == "")) {
+    nm <- ...names()
+    if (is_null(nm) || any(nm == "")) {
       .err("all arguments in `...` must be named")
     }
-    for (i in names(A)) {
-      w.list[[i]] <- A[[i]]
+
+    for (i in seq_along(nm)) {
+      w.list[[nm[i]]] <- ...elt(i)
     }
   }
 
@@ -229,11 +230,14 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
 
 
   if (...length() > 0L) {
-    A <- list(...)
-    if (is_null(names(A)) || any(names(A) == "")) {
+    nm <- ...names()
+    if (is_null(nm) || any(nm == "")) {
       .err("all arguments in `...` must be named")
     }
-    w.list <- c(w.list, A)
+
+    for (i in seq_along(nm)) {
+      w.list[[nm[i]]] <- ...elt(i)
+    }
   }
 
   class(w.list) <- c("weightitMSM", "weightit")

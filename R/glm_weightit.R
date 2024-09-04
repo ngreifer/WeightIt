@@ -104,17 +104,13 @@
 
 #' @export
 #' @name glm_weightit
-glm_weightit <- function(formula, data, family = gaussian, weightit,
+glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
                          vcov = NULL, cluster, R = 500,
                          offset, start = NULL, etastart, mustart,
                          control = list(...),
                          x = FALSE, y = TRUE,
                          contrasts = NULL, fwb.args = list(),
                          br = FALSE, ...) {
-
-  if (missing(weightit)) {
-    weightit <- list()
-  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
@@ -125,7 +121,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
   glm_call <- glm_weightit_call <- match.call()
 
   if (identical(family, "multinomial")) {
-    .wrn("using `glm_weightit()`  with `family = \"multinomial\"` is deprecated. Please use `multinom_weightit()` instead")
+    .wrn('using `glm_weightit()`  with `family = "multinomial"` is deprecated. Please use `multinom_weightit()` instead')
     glm_weightit_call[[1]] <- quote(WeightIt::multinom_weightit)
     glm_weightit_call[["family"]] <- NULL
 
@@ -167,7 +163,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
   })
 
   if (br && vcov %in% c("asympt", "HC0") && identical(fit$type, "correction")) {
-    .err("`type = \"correction\"` cannot be used with the specified `vcov`")
+    .err('`type = "correction"` cannot be used with the specified `vcov`')
   }
 
   fit$psi <- .get_glm_psi(fit)
@@ -188,16 +184,12 @@ glm_weightit <- function(formula, data, family = gaussian, weightit,
 
 #' @export
 #' @rdname glm_weightit
-ordinal_weightit <- function(formula, data, link = "logit", weightit,
+ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
                           vcov = NULL, cluster, R = 500,
                           offset, start = NULL,
                           control = list(...),
                           x = FALSE, y = TRUE,
                           contrasts = NULL, fwb.args = list(), ...) {
-
-  if (missing(weightit)) {
-    weightit <- list()
-  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
@@ -244,16 +236,12 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit,
 
 #' @export
 #' @rdname glm_weightit
-multinom_weightit <- function(formula, data, link = "logit", weightit,
+multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
                             vcov = NULL, cluster, R = 500,
                             offset, start = NULL,
                             control = list(...),
                             x = FALSE, y = TRUE,
                             contrasts = NULL, fwb.args = list(), ...) {
-
-  if (missing(weightit)) {
-    weightit <- list()
-  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
@@ -300,16 +288,12 @@ multinom_weightit <- function(formula, data, link = "logit", weightit,
 
 #' @export
 #' @rdname glm_weightit
-coxph_weightit <- function(formula, data, weightit,
+coxph_weightit <- function(formula, data, weightit = NULL,
                            vcov = NULL, cluster, R = 500,
                            x = FALSE, y = TRUE,
                            fwb.args = list(), ...) {
 
   rlang::check_installed("survival")
-
-  if (missing(weightit)) {
-    weightit <- list()
-  }
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args,
                         m_est_supported = FALSE)
@@ -356,7 +340,7 @@ coxph_weightit <- function(formula, data, weightit,
 
 #' @export
 #' @rdname glm_weightit
-lm_weightit <- function(formula, data, weightit,
+lm_weightit <- function(formula, data, weightit = NULL,
                         vcov = NULL, cluster, R = 500,
                         offset, start = NULL, etastart, mustart,
                         control = list(...),
@@ -373,39 +357,39 @@ lm_weightit <- function(formula, data, weightit,
 .process_vcov <- function(vcov = NULL, weightit = NULL, R, fwb.args = list(),
                           m_est_supported = TRUE) {
   if (is_null(weightit)) {
-    weightit <- list()
+    if (is_null(vcov)) {
+      return("HC0")
+    }
 
     allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
-
-    if (is_null(vcov)) {
-      vcov <- "HC0"
-    }
   }
   else {
     chk::chk_is(weightit, "weightit")
+
     if (!m_est_supported ||
         (is_null(attr(weightit, "Mparts", exact = TRUE)) &&
         is_null(attr(weightit, "Mparts.list", exact = TRUE)))) {
-      allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
 
       if (is_null(vcov)) {
-        vcov <- "HC0"
+        return("HC0")
       }
+
+      allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
     }
     else {
-      allowable_vcov <- c("none", "const", "asympt", "HC0", "BS", "FWB")
-
       if (is_null(vcov)) {
         vcov <- "asympt"
       }
+
+      allowable_vcov <- c("none", "const", "asympt", "HC0", "BS", "FWB")
     }
   }
 
   chk::chk_string(vcov)
   vcov <- match_arg(vcov, allowable_vcov)
 
-  if (inherits(weightit, "weightit") && vcov == "const") {
-    .wrn("`vcov = \"const\"` should not be used when `weightit` is supplied; the resulting standard errors are invalid and should not be interpreted")
+  if (is_not_null(weightit) && vcov == "const") {
+    .wrn('`vcov = "const"` should not be used when `weightit` is supplied; the resulting standard errors are invalid and should not be interpreted')
   }
 
   bootstrap <- vcov %in% c("BS", "FWB")
@@ -417,10 +401,16 @@ lm_weightit <- function(formula, data, weightit,
 
     if (vcov == "FWB") {
       #Error for weighting methods that don't accept s.weights
-      if (is_not_null(weightit) && is.character(weightit$method) &&
-          !.weightit_methods[[weightit$method]]$s.weights_ok) {
-        .err(sprintf("`vcov = \"FWB\"` cannot be used with `method = %s`",
-                     add_quotes(weightit$method)))
+      if (is_not_null(weightit)) {
+        if (is.character(weightit$method) &&
+            !.weightit_methods[[weightit$method]]$s.weights_ok) {
+          .err(sprintf('`vcov = "FWB"` cannot be used with `method = %s`',
+                       add_quotes(weightit$method)))
+        }
+
+        if (identical(weightit$missing, "saem")) {
+          .err('`vcov = "FWB"` cannot be used with `missing = "saem"`')
+        }
       }
 
       rlang::check_installed("fwb")
@@ -434,7 +424,7 @@ lm_weightit <- function(formula, data, weightit,
   vcov
 }
 
-.compute_vcov <- function(fit, weightit, vcov, cluster = NULL, glm_call) {
+.compute_vcov <- function(fit, weightit = NULL, vcov, cluster = NULL, glm_call) {
 
   if (is_not_null(cluster) && vcov %in% c("none", "const")) {
     .wrn("`cluster` is not used when `vcov = %s`", add_quotes(vcov))
@@ -446,11 +436,21 @@ lm_weightit <- function(formula, data, weightit,
 
   Xout <- fit$x
   Y <- fit$y
-  W <- weightit$weights
-  SW <- weightit$s.weights
-  if (is_null(SW)) SW <- rep.int(1, length(Y))
-  offset <- fit$offset
-  if (is_null(offset)) offset <- rep.int(0, length(Y))
+
+  if (is_not_null(weightit)) {
+    W <- weightit$weights
+    SW <- weightit$s.weights
+  }
+  else {
+    W <- SW <- NULL
+  }
+
+  if (is_null(SW)) {
+    SW <- rep.int(1, length(Y))
+  }
+
+  offset <- if_null_then(fit$offset, rep.int(0, length(Y)))
+
   bout <- fit$coefficients
   aliased <- is.na(bout)
 
@@ -601,7 +601,7 @@ lm_weightit <- function(formula, data, weightit,
       weightit_boot <- list(weights = 1)
       data <- eval(glm_call$data, genv)
       if (is_null(data)) {
-        .err(sprintf("a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = \"BS\"`",
+        .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
                      deparse1(glm_call[[1]])))
       }
     }
@@ -821,7 +821,7 @@ lm_weightit <- function(formula, data, weightit,
       .e <- conditionMessage(attr(A1, "condition"))
       if (startsWith(.e, "system is computationally singular") ||
           startsWith(.e, "Lapack routine dgesv: system is exactly singular")) {
-        .err("the Hessian could not be inverted, which indicates an estimation failure, likely due to perfect separation. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = \"none\"`. Simplifying the model can sometimes help")
+        .err('the Hessian could not be inverted, which indicates an estimation failure, likely due to perfect separation. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = "none"`. Simplifying the model can sometimes help')
       }
 
       .err(.e, tidy = FALSE)
@@ -840,7 +840,7 @@ lm_weightit <- function(formula, data, weightit,
   V
 }
 
-.process_fit <- function(fit, weightit, vcov, glm_weightit_call, x, y) {
+.process_fit <- function(fit, weightit = NULL, vcov, glm_weightit_call, x, y) {
   if (is_not_null(weightit) && is_not_null(fit[["model"]])) {
     fit$model[["(s.weights)"]] <- weightit[["s.weights"]]
     fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
@@ -848,6 +848,10 @@ lm_weightit <- function(formula, data, weightit,
 
   fit$vcov_type <- vcov
   fit$call <- glm_weightit_call
+
+  if (is_not_null(weightit)) {
+    fit$weightit_call <- weightit[["call"]]
+  }
 
   if (isFALSE(x)) fit$x <- NULL
   if (isFALSE(y)) fit$y <- NULL
