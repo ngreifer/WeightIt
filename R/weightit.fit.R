@@ -31,7 +31,7 @@
 #' @param stabilize `logical`; whether or not to stabilize the weights.
 #' For the methods that involve estimating propensity scores, this involves
 #' multiplying each unit's weight by the proportion of units in their treatment
-#' group. Default is `FALSE`.
+#' group. Default is `FALSE`. Note this differs from its use with [weightit()].
 #' @param focal when multi-category treatments are used and ATT weights are
 #' requested, which group to consider the "treated" or focal group. This group
 #' will not be weighted, and the other groups will be weighted to be more like

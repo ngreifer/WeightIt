@@ -56,7 +56,7 @@ the focal group. Must be non-\code{NULL} if \code{estimand = "ATT"} or
 \item{stabilize}{\code{logical}; whether or not to stabilize the weights.
 For the methods that involve estimating propensity scores, this involves
 multiplying each unit's weight by the proportion of units in their treatment
-group. Default is \code{FALSE}.}
+group. Default is \code{FALSE}. Note this differs from its use with \code{\link[=weightit]{weightit()}}.}
 
 \item{ps}{a vector of propensity scores. If specified, \code{method} will be
 ignored and set to \code{"glm"}.}

@@ -45,7 +45,7 @@ individual pages for each method for more information on which estimands are
 allowed with each method and what literature to read to interpret these
 estimands.}
 
-\item{stabilize}{whether or not and how to stabilize the weights. If \code{TRUE}, each unit's weight will be multiplied by a standardization factor, which is the inverse of the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when \code{estimand = "ATE"}. Default is \code{FALSE} for no standardization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}}
+\item{stabilize}{whether or not and how to stabilize the weights. If \code{TRUE}, each unit's weight will be multiplied by a standardization factor, which is the the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when \code{estimand = "ATE"}. Default is \code{FALSE} for no standardization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}.}
 
 \item{focal}{when multi-category treatments are used and ATT weights are
 requested, which group to consider the "treated" or focal group. This group

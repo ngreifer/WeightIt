@@ -11,6 +11,8 @@ WeightIt News and Updates
 
 * When `missing = "saem"`, using `vcov = "FWB"` in `glm_weightit()`, etc., now appropriately results in an error. (#71)
 
+* Typo fixes in documentation.
+
 # `WeightIt` 1.3.0
 
 * Added `anova()` methods for `glm_weightit`, `multinom_weightit`, `ordinal_weightit`, and `coxph_weightit` objects to perform Wald tests for comparing nested models. The models do not have to be symbolically nested.
