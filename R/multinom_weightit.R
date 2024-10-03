@@ -76,6 +76,16 @@
     sum(weights * log(p))
   }
 
+  dots <- list(...)
+
+  control <- list(fnscale = -1, #maximize likelihood; optim() minimizes by default
+                  trace = 0,
+                  maxit = 1e3,
+                  reltol = 1e-12)
+
+  control <- modifyList(control,
+                        dots[intersect(names(dots), c("trace", "maxit", "reltol", "ndeps", "REPORT"))])
+
   out <- optim(par = start[!aliased_B],
                ll,
                X = x_,
@@ -85,9 +95,7 @@
                gr = gr,
                method = "BFGS",
                hessian = hess,
-               control = list(fnscale = -1, #maximize likelihood; optim() minimizes by default
-                              maxit = 1e3,
-                              reltol = 1e-14))
+               control = control)
 
   grad <- psi(out$par, X = x_, y = y,
               weights = weights, offset = offset)
@@ -181,3 +189,93 @@
          contrasts = attr(X, "contrasts"), xlevels = .getXlevels(mt, mf)))
 }
 
+.get_hess_multinom <- function(fit) {
+  x <- if_null_then(fit[["x"]], model.matrix(fit))
+  y <- if_null_then(fit[["y"]], model.response(model.frame(fit)))
+  weights <- weights(fit)
+  offset <- fit$offset
+  coefs <- coef(fit)
+
+  y <- as.factor(y)
+
+  if (is_null(colnames(x))) {
+    colnames(x) <- paste0("x", seq_col(x))
+  }
+
+  nobs <- length(y)
+
+  if (is_null(weights)) weights <- rep.int(1, nobs)
+
+  if (is.null(offset)) offset <- rep.int(0, nobs)
+
+
+  aliased_X <- colnames(x) %nin% colnames(make_full_rank(x, with.intercept = FALSE))
+
+  x_ <- x[, !aliased_X, drop = FALSE]
+
+  get_pp <- function(B, X, offset = NULL) {
+    if (length(offset) == 0) offset <- 0
+
+    qq <- exp(offset + X %*% matrix(B, nrow = ncol(X)))
+
+    pp <- cbind(1, qq) / (1 + rowSums(qq))
+
+    colnames(pp) <- levels(y)
+    rownames(pp) <- rownames(X)
+
+    pp
+  }
+
+  #Multinomial logistic regression score
+  psi <- function(B, X, y, weights, offset = NULL) {
+    pp <- get_pp(B, X, offset)
+
+    out <- do.call("cbind", lapply(levels(y)[-1], function(i) {
+      weights * ((y == i) - pp[,i]) * X
+    }))
+
+    if (is_not_null(names(B)))
+      colnames(out) <- names(B)
+
+    out
+  }
+
+  gr <- function(B, X, y, weights, offset) {
+    colSums(psi(B, X, y, weights, offset))
+  }
+
+  ind_mat <- cbind(seq_along(y), as.integer(y))
+
+  ll <- function(B, X, y, weights, offset) {
+    p <- get_pp(B, X, offset)[ind_mat]
+
+    sum(weights * log(p))
+  }
+
+  theta0 <- na.rem(coefs)
+
+  # Estimate using natural parameterization to get hessian
+  hessian <- try(optimHess(par = theta0,
+                           ll,
+                           X = x_,
+                           y = y,
+                           weights = weights,
+                           offset = offset,
+                           gr = gr,
+                           control = list(fnscale = -1)),
+                 silent = TRUE)
+
+  # If optimization fails, use numeric differentiation of gradient to get hessian
+  if (null_or_error(hessian)) {
+    hessian <- .gradient(gr, theta0,
+                         X = x_,
+                         y = y,
+                         weights = weights,
+                         offset = offset)
+  }
+
+
+  colnames(hessian) <- rownames(hessian) <- names(theta0)
+
+  hessian
+}
