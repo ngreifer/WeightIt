@@ -17,12 +17,9 @@ knitr::opts_chunk$set(
 ```
 # WeightIt: Weighting for Covariate Balance in Observational Studies <img src="man/figures/logo.png" align="right" width="150"/>
 
-<!-- badges: start -->
 [![CRAN status](https://www.r-pkg.org/badges/version/WeightIt?color=00622B)](https://CRAN.R-project.org/package=WeightIt)
 [![CRAN_Downloads_Badge](https://cranlogs.r-pkg.org/badges/WeightIt?color=00622B)](https://cran.r-project.org/package=WeightIt)
-<!-- badges: end -->
 
-------
 ### Overview
 
 *WeightIt* is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety of estimands including the ATE, ATT, ATC, ATO, and others, and support for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. *WeightIt* also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. *WeightIt* uses a familiar formula interface and is meant to complement `MatchIt` as a package that provides a unified interface to basic and advanced weighting methods.
@@ -33,10 +30,10 @@ To install and load *WeightIt* , use the code below:
 
 ```{r, eval = FALSE}
 #CRAN version
-install.packages("WeightIt")
+pak::pkg_install("WeightIt")
 
 #Development version
-remotes::install_github("ngreifer/WeightIt")
+pak::pkg_install("ngreifer/WeightIt")
 
 library("WeightIt")
 ```
@@ -75,8 +72,8 @@ Desirable qualities include small coefficients of variation close to 0 and large
 Finally, we can estimate the effect of the treatment using a weighted outcome model, accounting for estimation of the weights in the standard error of the effect estimate:
 
 ```{r}
-fit <- lm_weightit(re78 ~ treat, data = lalonde,
-                   weightit = W)
+fit <- glm_weightit(re78 ~ treat, data = lalonde,
+                    weightit = W)
 
 summary(fit, ci = TRUE)
 ```

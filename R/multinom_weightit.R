@@ -83,8 +83,8 @@
                   maxit = 1e3,
                   reltol = 1e-12)
 
-  control <- modifyList(control,
-                        dots[intersect(names(dots), c("trace", "maxit", "reltol", "ndeps", "REPORT"))])
+  control <- utils::modifyList(control,
+                               dots[intersect(names(dots), c("trace", "maxit", "reltol", "ndeps", "REPORT"))])
 
   out <- optim(par = start[!aliased_B],
                ll,

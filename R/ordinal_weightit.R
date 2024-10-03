@@ -136,8 +136,8 @@
                   maxit = 1e3,
                   reltol = 1e-12)
 
-  control <- modifyList(control,
-                        dots[intersect(names(dots), c("trace", "maxit", "reltol", "ndeps", "REPORT"))])
+  control <- utils::modifyList(control,
+                               dots[intersect(names(dots), c("trace", "maxit", "reltol", "ndeps", "REPORT"))])
 
   # Estimate using cumsum parameterization to get estimates
   out0 <- optim(par = start,

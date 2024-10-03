@@ -54,7 +54,7 @@
 
 \item{complete}{\code{logical}; whether the full variance-covariance matrix should be returned also in case of an over-determined system where some coefficients are undefined and \code{coef(.)} contains \code{NA}s correspondingly. When \code{complete = TRUE}, \code{vcov()} is compatible with \code{coef()} also in this singular case.}
 
-\item{formula.}{changes to the model formula, passed to the \code{new} argument of \code{\link[=udpdate.formula]{udpdate.formula()}}.}
+\item{formula.}{changes to the model formula, passed to the \code{new} argument of \code{\link[=update.formula]{update.formula()}}.}
 
 \item{evaluate}{whether to evaluate the call (\code{TRUE}, the default) or just return it.}
 }

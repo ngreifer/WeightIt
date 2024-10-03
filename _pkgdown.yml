@@ -13,6 +13,7 @@ reference:
 - contents:
   - glm_weightit
   - predict.glm_weightit
+  - anova.glm_weightit
   - glm_weightit-methods
 - title: Modify weights
 - contents:

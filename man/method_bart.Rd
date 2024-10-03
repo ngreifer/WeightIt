@@ -19,7 +19,7 @@ For multi-category treatments, the propensity scores are estimated using several
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, the generalized propensity score is estimated using \pkgfun{dbarts}{bart2}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+For continuous treatments, weights are estimated as \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the stabilization factor) is the unconditional density of treatment evaluated the observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized propensity score) is the conditional density of treatment given the covariates evaluated at the observed value of treatment. The shape of \eqn{f_A(.)} and \eqn{f_{A|X}(.)} is controlled by the \code{density} argument described below (normal distributions by default), and the predicted values used for the mean of the conditional density are estimated using BART as implemented in \pkgfun{dbarts}{bart2}. Kernel density estimation can be used instead of assuming a specific density for the numerator and denominator by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters.
 }
 
 \subsection{Longitudinal Treatments}{

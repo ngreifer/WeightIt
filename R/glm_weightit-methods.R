@@ -14,7 +14,7 @@
 #' @param thresholds `logical`; whether to include thresholds in the `summary()` output for `ordinal_weightit` objects. Default is `TRUE`.
 #' @param vcov either a string indicating the method used to compute the variance of the estimated parameters for `object`, a function used to extract the variance, or the variance matrix itself. Default is to use the variance matrix already present in `object`. If a string or function, arguments passed to `...` are supplied to the method or function. (Note: for `vcov()`, can also be supplied as `type`.)
 #' @param complete `logical`; whether the full variance-covariance matrix should be returned also in case of an over-determined system where some coefficients are undefined and `coef(.)` contains `NA`s correspondingly. When `complete = TRUE`, `vcov()` is compatible with `coef()` also in this singular case.
-#' @param formula. changes to the model formula, passed to the `new` argument of [udpdate.formula()].
+#' @param formula. changes to the model formula, passed to the `new` argument of [update.formula()].
 #' @param \dots for `vcov()` or `summary()` or `confint()` with `vcov` supplied, other arguments used to compute the variance matrix depending on the method supplied to `vcov`, e.g., `cluster`, `R`, or `fwb.args`. For `update()`, additional arguments to the call or arguments with changed values. See [glm_weightit()] for details.
 #' @param evaluate whether to evaluate the call (`TRUE`, the default) or just return it.
 #'
@@ -714,6 +714,7 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
   object
 }
 
+#Note: the following need to be fun.foo <- fun.bar for environment reasons
 #' @exportS3Method stats::update multinom_weightit
 update.multinom_weightit <- update.glm_weightit
 
