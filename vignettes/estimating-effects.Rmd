@@ -244,7 +244,7 @@ avg_predictions(fit, variables = "A")
 
 We can see that the difference in potential outcome means is equal to the average treatment effect computed previously[^2]. The arguments to `avg_predictions()` are the same as those to `avg_comparisons()`.
 
-[^2]: To verify that they are equal, supply the output of `avg_predictions()` to `hypotheses()`, e.g., `avg_predictions(…) |> hypotheses("revpairwise")`; this explicitly compares the average potential outcomes and should yield identical estimates to the `avg_comparisons()` call.
+[^2]: To verify that they are equal, supply the output of `avg_predictions()` to `hypotheses()`, e.g., `avg_predictions(...) |> hypotheses("revpairwise")`; this explicitly compares the average potential outcomes and should yield identical estimates to the `avg_comparisons()` call.
 
 ### Adjustments to the Standard Case
 
