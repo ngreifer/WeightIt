@@ -40,7 +40,7 @@ control the size and/or number of bins.}
 \item{time}{\code{numeric}; the time point for which to display the distribution of weights. Default is to plot the distribution for the first time points.}
 }
 \value{
-For point treatments (i.e., \code{weightit} objects), a \code{summary.weightit} object with the following elements:
+For point treatments (i.e., \code{weightit} objects), \code{summary()} returns a \code{summary.weightit} object with the following elements:
 \item{weight.range}{The range (minimum and maximum) weight for each treatment group.}
 \item{weight.top}{The units with the greatest weights in each treatment group; how many are included is determined by \code{top}.}
 \item{coef.of.var (Coef of Var)}{The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.}
@@ -49,7 +49,7 @@ For point treatments (i.e., \code{weightit} objects), a \code{summary.weightit} 
 \item{num.zeros}{The number of weights equal to zero.}
 \item{effective.sample.size}{The effective sample size for each treatment group before and after weighting. See \code{\link[=ESS]{ESS()}}.}
 
-For longitudinal treatments (i.e., \code{weightitMSM} objects), a list of
+For longitudinal treatments (i.e., \code{weightitMSM} objects), \code{summary()} returns a list of
 the above elements for each treatment period.
 
 \code{plot()} returns a \code{ggplot} object with a histogram displaying the
@@ -57,11 +57,13 @@ distribution of the estimated weights. If the estimand is the ATT or ATC,
 only the weights for the non-focal group(s) will be displayed (since the
 weights for the focal group are all 1). A dotted line is displayed at the
 mean of the weights.
+
+\code{nobs()} returns a single number. Note that even units with \code{weights} or \code{s.weights} of 0 are included.
 }
 \description{
 \code{summary()} generates a summary of the \code{weightit} or
 \code{weightitMSM} object to evaluate the properties of the estimated
-weights. \code{plot()} plots the distribution of the weights.
+weights. \code{plot()} plots the distribution of the weights. \code{nobs()} extracts the number of observations.
 }
 \examples{
 

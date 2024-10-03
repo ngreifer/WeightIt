@@ -72,7 +72,7 @@ summary(W2)
 bal.tab(W2)
 
 # Kernel balancing using the `kbal` package, available
-# using `remotes::install_github("chadhazlett/KBAL")`.
+# using `pak::pak_install("chadhazlett/KBAL")`.
 # Only the ATT and ATC are available.
 
 \dontrun{

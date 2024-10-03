@@ -8,12 +8,12 @@
 \alias{summary.coxph_weightit}
 \alias{print.glm_weightit}
 \alias{vcov.glm_weightit}
-\alias{anova.glm_weightit}
+\alias{update.glm_weightit}
 \title{Methods for \code{glm_weightit()} objects}
 \usage{
-\method{summary}{glm_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
+\method{summary}{glm_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, vcov = NULL, ...)
 
-\method{summary}{multinom_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
+\method{summary}{multinom_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, vcov = NULL, ...)
 
 \method{summary}{ordinal_weightit}(
   object,
@@ -21,19 +21,20 @@
   level = 0.95,
   transform = NULL,
   thresholds = TRUE,
+  vcov = NULL,
   ...
 )
 
-\method{summary}{coxph_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, ...)
+\method{summary}{coxph_weightit}(object, ci = FALSE, level = 0.95, transform = NULL, vcov = NULL, ...)
 
 \method{print}{glm_weightit}(x, digits = max(3L, getOption("digits") - 3L), ...)
 
-\method{vcov}{glm_weightit}(object, complete = TRUE, ...)
+\method{vcov}{glm_weightit}(object, complete = TRUE, vcov = NULL, ...)
 
-\method{anova}{glm_weightit}(object, object2, test = "Chisq", method = "Wald", tolerance = 1e-07, ...)
+\method{update}{glm_weightit}(object, formula. = NULL, ..., evaluate = TRUE)
 }
 \arguments{
-\item{object, object2, x}{an output from one of the above modeling functions. For \code{anova()}, \code{object2} is required.}
+\item{object, x}{an output from one of the above modeling functions.}
 
 \item{ci}{\code{logical}; whether to display Wald confidence intervals for estimated coefficients. Default is \code{FALSE}. (Note: this argument can also be supplied as \code{conf.int}.)}
 
@@ -41,7 +42,9 @@
 
 \item{transform}{the function used to transform the coefficients, e.g., \code{exp} (which can also be supplied as a string, e.g., \code{"exp"}); passed to \code{\link[=match.fun]{match.fun()}} before being used on the coefficients. When \code{ci = TRUE}, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.}
 
-\item{\dots}{ignored.}
+\item{vcov}{either a string indicating the method used to compute the variance of the estimated parameters for \code{object}, a function used to extract the variance, or the variance matrix itself. Default is to use the variance matrix already present in \code{object}. If a string or function, arguments passed to \code{...} are supplied to the method or function. (Note: for \code{vcov()}, can also be supplied as \code{type}.)}
+
+\item{\dots}{for \code{vcov()} or \code{summary()} or \code{confint()} with \code{vcov} supplied, other arguments used to compute the variance matrix depending on the method supplied to \code{vcov}, e.g., \code{cluster}, \code{R}, or \code{fwb.args}. For \code{update()}, additional arguments to the call or arguments with changed values. See \code{\link[=glm_weightit]{glm_weightit()}} for details.}
 
 \item{thresholds}{\code{logical}; whether to include thresholds in the \code{summary()} output for \code{ordinal_weightit} objects. Default is \code{TRUE}.}
 
@@ -51,59 +54,28 @@
 
 \item{complete}{\code{logical}; whether the full variance-covariance matrix should be returned also in case of an over-determined system where some coefficients are undefined and \code{coef(.)} contains \code{NA}s correspondingly. When \code{complete = TRUE}, \code{vcov()} is compatible with \code{coef()} also in this singular case.}
 
-\item{test}{the type of test statistic used to compare models. Currently only \code{"Chisq"} (the chi-square statistic) is allowed.}
+\item{formula.}{changes to the model formula, passed to the \code{new} argument of \code{\link[=udpdate.formula]{udpdate.formula()}}.}
 
-\item{method}{the kind of test used to compare models. Currently only \code{"Wald"} is allowed.}
-
-\item{tolerance}{for the Wald test, the tolerance used to determine if models are symbolically nested.}
+\item{evaluate}{whether to evaluate the call (\code{TRUE}, the default) or just return it.}
 }
 \value{
-\code{summary()} returns a \code{summary.glm_weightit()} object, which has its own \code{print()} method. For \code{coxph_weightit()} objects, the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects then for \code{coxph} objects.
+\code{summary()} returns a \code{summary.glm_weightit()} object, which has its own \code{print()} method. For \code{coxph_weightit()} objects, the \code{print()} and \code{summary()} methods are more like those for \code{glm} objects than for \code{coxph} objects.
 
 Otherwise, all methods return the same type of object as their generics.
 }
 \description{
-This page documents methods for objects returned by \code{\link[=glm_weightit]{glm_weightit()}}, \code{lm_weightit()}, \code{ordinal_weightit()}, \code{multinom_weightit()}, and \code{coxph_weightit()}. \code{predict()} methods are described at \code{\link[=predict.glm_weightit]{predict.glm_weightit()}}.
+This page documents methods for objects returned by \code{\link[=glm_weightit]{glm_weightit()}}, \code{lm_weightit()}, \code{ordinal_weightit()}, \code{multinom_weightit()}, and \code{coxph_weightit()}. \code{predict()} methods are described at \code{\link[=predict.glm_weightit]{predict.glm_weightit()}} and \code{anova()} methods are described at \code{\link[=anova.glm_weightit]{anova.glm_weightit()}}.
 }
 \details{
-\code{vcov()} (which is called by \code{summary()}) simply extracts the covariance matrix already computed by the fitting function. \code{confint()} computes Wald confidence intervals (internally calling \code{\link[=confint.lm]{confint.lm()}}). The \code{estfun()} method for \code{multinom_weightit} and \code{ordinal_weightit} objects (which is used by function in the \pkg{sandwich} package to compute coefficient covariance matrices) simply extracts the \code{gradient} component of the object. For \code{glm_weightit} and \code{coxph_weightit} objects, the \code{glm} and \code{coxph} methods are dispatched instead.
+\code{vcov()} by default extracts the parameter covariance matrix already computed by the fitting function, and \code{summary()} and \code{confint()} uses this covariance matrix to compute standard errors and Wald confidence intervals (internally calling \code{\link[=confint.lm]{confint.lm()}}), respectively. Supplying arguments to \code{vcov} or \code{...} will compute a new covariance matrix. If \code{cluster} was supplied to the original fitting function, it will be incorporated into any newly computed covariance matrix unless \code{cluster = NULL} is specified in \code{vcov()}, \code{summary()}, or \code{confint()}. For other arguments (e.g., \code{R} and \code{fwb.args}), the defaults are those used by \code{\link[=glm_weightit]{glm_weightit()}}. Note that for \code{vcov = "BS"} and \code{vcov = "FWB"} (and \code{vcov = "const"} for \code{multinom_weightit} or \code{ordinal_weightit} objects), the environment for the fitting function is used, so any changes to that environment may affect calculation. It is always safer to simply recompute the fitted object with a new covariance matrix than to modify it with the \code{vcov} argument, but it can be quicker to just request a new covariance matrix when refitting the model is slow.
 
-\code{anova()} performs a Wald test to compare two fitted models. The models must be nested, but they don't have to be nested symbolically (i.e., the names of the coefficients of the smaller model do not have to be a subset of the names of the coefficients of the larger model). The larger model must be supplied to \code{object} and the smaller to \code{object2}. Both models must contain the same units, weights (if any), and outcomes. The variance-covariance matrix of the coefficients of the smaller model is not used, so it can be specified as \code{"none"} in the original model call. Otherwise, a warning be thrown if the covariances were computed using different methods.
+\code{update()} updates a fitted model object with new arguments, e.g., a new model formula, dataset, or variance matrix. When only arguments that control the computation of the variance are supplied, only the variance will be recalculated (i.e., the parameters will not be re-estimated). When \code{data} is supplied, \code{weightit} is not supplied, and a \code{weightit} object was originally passed to the model fitting function, the \code{weightit} object will be re-fit with the new dataset before the model is refit using the new weights and new data. That is, calling \code{update(obj, data = d)} is equivalent to calling \code{update(obj, data = d, weightit = update(obj$weightit, data = d))} when a \code{weightit} object was supplied to the model fitting function.
+
+The \code{estfun()} method for \code{multinom_weightit} and \code{ordinal_weightit} objects (which is used by function in the \pkg{sandwich} package to compute coefficient covariance matrices) simply extracts the \code{gradient} component of the object. For \code{glm_weightit} and \code{coxph_weightit} objects, the \code{glm} and \code{coxph} methods are dispatched instead.
 }
 \examples{
 ## See more examples at ?glm_weightit
-
-data("lalonde", package = "cobalt")
-
-# Model comparison for any relationship between `treat`
-# and `re78` (not the same as testing for the ATE)
-fit1 <- glm_weightit(
-  re78 ~ treat * (age + educ + race + married + nodegree +
-                    re74 + re75), data = lalonde
-)
-
-fit2 <- glm_weightit(
-  re78 ~ age + educ + race + married + nodegree +
-    re74 + re75, data = lalonde
-)
-
-anova(fit1, fit2)
-
-\dontshow{if (requireNamespace("splines", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-# Model comparison between spline model and linear
-# model; note they are nested but not symbolically
-# nested
-fit_s <- glm_weightit(
-  re78 ~ splines::ns(age, df = 4), data = lalonde
-)
-
-fit_l <- glm_weightit(
-  re78 ~ age, data = lalonde
-)
-
-anova(fit_s, fit_l)
-\dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=glm_weightit]{glm_weightit()}} for the page documenting \code{glm_weightit()}, \code{lm_weightit()}, \code{ordinal_weightit()}, \code{multinom_weightit()}, and \code{coxph_weightit()}. \code{\link[=summary.glm]{summary.glm()}}, \link{vcov}, \code{\link[=confint]{confint()}} for the relevant methods pages. \code{\link[=predict.glm_weightit]{predict.glm_weightit()}} for computing predictions from the models.
+\code{\link[=glm_weightit]{glm_weightit()}} for the page documenting \code{glm_weightit()}, \code{lm_weightit()}, \code{ordinal_weightit()}, \code{multinom_weightit()}, and \code{coxph_weightit()}. \code{\link[=summary.glm]{summary.glm()}}, \code{\link[=vcov]{vcov()}}, \code{\link[=confint]{confint()}} for the relevant methods pages. \code{\link[=predict.glm_weightit]{predict.glm_weightit()}} for computing predictions from the models. \code{\link[=anova.glm_weightit]{anova.glm_weightit()}} for comparing models using a Wald test.
 }
