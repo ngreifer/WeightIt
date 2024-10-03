@@ -5,21 +5,21 @@ This method mimics the functionality of functions in the twang package, but has 
 Binary Treatments
 
 
-For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For binary treatments, this method estimates the propensity scores using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 
 Multi-Category Treatments
 
 
-For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For binary treatments, this method estimates the propensity scores using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 
 Continuous Treatments
 
 
-For continuous treatments, this method estimates the generalized propensity score using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument.
+For continuous treatments, this method estimates the generalized propensity score using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the criterion argument.
 
 
 
@@ -64,21 +64,21 @@ This method mimics the functionality of functions in the twang package, but has 
 Binary Treatments
 
 
-For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For binary treatments, this method estimates the propensity scores using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 
 Multi-Category Treatments
 
 
-For binary treatments, this method estimates the propensity scores using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
+For binary treatments, this method estimates the propensity scores using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the criterion argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using get_w_from_ps(), which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
 
 
 
 Continuous Treatments
 
 
-For continuous treatments, this method estimates the generalized propensity score using gbm::gbm.fit() and then selects the optimal tuning parameter values using the method specified in the criterion argument.
+For continuous treatments, this method estimates the generalized propensity score using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the criterion argument.
 
 
 
@@ -125,7 +125,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -163,21 +163,21 @@ M-estimation is not supported.
 <h3 id="binary-treatments">Binary Treatments<a class="anchor" aria-label="anchor" href="#binary-treatments"></a></h3>
 
 
-<p>For binary treatments, this method estimates the propensity scores using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
+<p>For binary treatments, this method estimates the propensity scores using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
 </div>
 
 <div class="section">
 <h3 id="multi-category-treatments">Multi-Category Treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments"></a></h3>
 
 
-<p>For binary treatments, this method estimates the propensity scores using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
+<p>For binary treatments, this method estimates the propensity scores using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code>, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
 </div>
 
 <div class="section">
 <h3 id="continuous-treatments">Continuous Treatments<a class="anchor" aria-label="anchor" href="#continuous-treatments"></a></h3>
 
 
-<p>For continuous treatments, this method estimates the generalized propensity score using <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument.</p>
+<p>For continuous treatments, this method estimates the generalized propensity score using gbmgbm.fit and then selects the optimal tuning parameter values using the method specified in the <code>criterion</code> argument.</p>
 </div>
 
 <div class="section">
@@ -233,13 +233,13 @@ M-estimation is not supported.
 
 
 <p>The following additional arguments can be specified:</p><dl><dt><code>criterion</code></dt>
-<dd><p>A string describing the balance criterion used to select the best weights. See <code><a href="https://ngreifer.github.io/cobalt/reference/bal.compute.html" class="external-link">cobalt::bal.compute()</a></code> for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>criterion</code> can be set as <code>"cv{#}</code>", where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multi-category treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
+<dd><p>A string describing the balance criterion used to select the best weights. See cobaltbal.compute for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, <code>criterion</code> can be set as <code>"cv{#}</code>", where <code>{#}</code> is replaced by a number representing the number of cross-validation folds used (e.g., <code>"cv5"</code> for 5-fold cross-validation). For binary and multi-category treatments, the default is <code>"smd.mean"</code>, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is <code>"p.mean"</code>, which minimizes the average absolute Pearson correlation between the treatment and covariates.</p></dd>
 
 <dt><code>trim.at</code></dt>
 <dd><p>A number supplied to <code>at</code> in <code><a href="trim.html">trim()</a></code> which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).</p></dd>
 
 <dt><code>distribution</code></dt>
-<dd><p>A string with the distribution used in the loss function of the boosted model. This is supplied to the <code>distribution</code> argument in <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code>. For binary treatments, <code>"bernoulli"</code> and <code>"adaboost"</code> are available, with <code>"bernoulli"</code> the default. For multi-category treatments, only <code>"multinomial"</code> is allowed. For continuous treatments <code>"gaussian"</code>, <code>"laplace"</code>, and <code>"tdist"</code> are available, with <code>"gaussian"</code> the default. This argument is tunable.</p></dd>
+<dd><p>A string with the distribution used in the loss function of the boosted model. This is supplied to the <code>distribution</code> argument in gbmgbm.fit. For binary treatments, <code>"bernoulli"</code> and <code>"adaboost"</code> are available, with <code>"bernoulli"</code> the default. For multi-category treatments, only <code>"multinomial"</code> is allowed. For continuous treatments <code>"gaussian"</code>, <code>"laplace"</code>, and <code>"tdist"</code> are available, with <code>"gaussian"</code> the default. This argument is tunable.</p></dd>
 
 <dt><code>n.trees</code></dt>
 <dd><p>The maximum number of trees used. This is passed onto the <code>n.trees</code> argument in <code>gbm.fit()</code>. The default is 10000 for binary and multi-category treatments and 20000 for continuous treatments.</p></dd>
@@ -260,7 +260,7 @@ M-estimation is not supported.
 <dd><p><code>logical</code>; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If <code>TRUE</code>, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the <code>offset</code> argument of <code>gbm.fit()</code>. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over <code>method = "glm"</code> with respect to <code>criterion</code>. Default is <code>FALSE</code> to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.</p></dd>
 
 
-</dl><p>All other arguments take on the defaults of those in <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code>, and some are not used at all. For binary and multi-category treatments with a with cross-validation used as the criterion, <code>class.stratify.cv</code> is set to <code>TRUE</code> by default.</p>
+</dl><p>All other arguments take on the defaults of those in gbmgbm.fit, and some are not used at all. For binary and multi-category treatments with a with cross-validation used as the criterion, <code>class.stratify.cv</code> is set to <code>TRUE</code> by default.</p>
 <p>The <code>w</code> argument in <code>gbm.fit()</code> is ignored because sampling weights are passed using <code>s.weights</code>.</p>
 <p>For continuous treatments only, the following arguments may be supplied:</p><dl><dt><code>density</code></dt>
 <dd><p>A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).</p>
@@ -330,7 +330,7 @@ M-estimation is not supported.
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code>, <code><a href="weightitMSM.html">weightitMSM()</a></code></p>
-<p><code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code> for the fitting function.</p></div>
+<p>gbmgbm.fit for the fitting function.</p></div>
     </div>
 
     <div class="section level2">
@@ -603,7 +603,7 @@ M-estimation is not supported.
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
     </footer></div>
