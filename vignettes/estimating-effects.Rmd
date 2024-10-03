@@ -292,7 +292,7 @@ avg_comparisons(fit,
                 transform = "exp")
 ```
 
-The output displays the marginal RR, its Z-value, the p-value for the Z-test of the log RR against 0, and its confidence interval. (Note that even though the `Contrast` label still suggests the log RR, the RR is actually displayed.) To view the log RR and its standard error, omit the `transform` argument.
+The output displays the marginal RR, its Z-value, the p-value for the Z-test of the log RR against 0, and its confidence interval. (Note that even though the `Comparison` label still suggests the log RR, the RR is actually displayed.) To view the log RR and its standard error, omit the `transform` argument.
 
 For the marginal OR, the only thing that needs to change is that `comparison` should be set to `"lnoravg"`.
 
@@ -450,7 +450,7 @@ p <- avg_predictions(fit,
 
 Although one can examine the expected potential outcomes, it is often more useful to see them plotted. We can generate a plot of the ADRF and its pointwise confidence band using `ggplot2`[^4]:
 
-[^4]: You can also use `plot_predictions()`, though after requesting the predictions in the prior step it is quicker to use `ggplot()`.
+[^4]: You can also use `marginaleffects::plot_predictions()`, though after requesting the predictions in the prior step it is quicker to use `ggplot()`.
 
 ```{r, eval = me_ok, fig.height=3.5, fig.width=7}
 library("ggplot2")
@@ -458,7 +458,7 @@ ggplot(p, aes(x = Ac)) +
   geom_line(aes(y = estimate)) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
               alpha = .3) +
-  labs(x = "Ac", y = "E[Y|A]") +
+  labs(x = "Ac", y = "E[Y|Ac]") +
   theme_bw()
 ```
 
@@ -483,7 +483,7 @@ ggplot(s, aes(x = Ac)) +
   geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
               alpha = .3) +
   geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(x = "Ac", y = "dE[Y|A]/dA") +
+  labs(x = "Ac", y = "dE[Y|Ac]/dAc") +
   theme_bw()
 ```
 

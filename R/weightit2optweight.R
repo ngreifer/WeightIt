@@ -1,6 +1,6 @@
 #' Optimization-Based Weighting
 #' @name method_optweight
-#' @aliases method_optweight method_sbw
+#' @aliases method_optweight
 #' @usage NULL
 #'
 #' @description

@@ -2,7 +2,6 @@
 % Please edit documentation in R/weightit2optweight.R
 \name{method_optweight}
 \alias{method_optweight}
-\alias{method_sbw}
 \title{Optimization-Based Weighting}
 \description{
 This page explains the details of estimating optimization-based weights (also known as stable balancing weights) by setting \code{method = "optweight"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
