@@ -493,7 +493,7 @@ print.weightitMSM <- function(x, ...) {
   }
 
   cat(sprintf(" - number of obs.: %s\n",
-              length(x[["weights"]])))
+              nobs(x)))
 
   cat(sprintf(" - sampling weights: %s\n",
               if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present"))

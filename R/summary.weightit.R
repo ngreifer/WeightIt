@@ -4,7 +4,7 @@
 #' @description
 #' `summary()` generates a summary of the `weightit` or
 #' `weightitMSM` object to evaluate the properties of the estimated
-#' weights. `plot()` plots the distribution of the weights.
+#' weights. `plot()` plots the distribution of the weights. `nobs()` extracts the number of observations.
 #'
 #' @param object a `weightit` or `weightitMSM` object; the output of
 #' a call to [weightit()] or [weightitMSM()].
@@ -24,7 +24,7 @@
 #' determine the number of bins, though [ggplot2::geom_histogram()] is actually used to create the plot.
 #'
 #' @returns
-#' For point treatments (i.e., `weightit` objects), a `summary.weightit` object with the following elements:
+#' For point treatments (i.e., `weightit` objects), `summary()` returns a `summary.weightit` object with the following elements:
 #' \item{weight.range}{The range (minimum and maximum) weight for each treatment group.}
 #' \item{weight.top}{The units with the greatest weights in each treatment group; how many are included is determined by `top`.}
 #' \item{coef.of.var (Coef of Var)}{The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.}
@@ -33,7 +33,7 @@
 #' \item{num.zeros}{The number of weights equal to zero.}
 #' \item{effective.sample.size}{The effective sample size for each treatment group before and after weighting. See [ESS()].}
 #'
-#' For longitudinal treatments (i.e., `weightitMSM` objects), a list of
+#' For longitudinal treatments (i.e., `weightitMSM` objects), `summary()` returns a list of
 #' the above elements for each treatment period.
 #'
 #' `plot()` returns a `ggplot` object with a histogram displaying the
@@ -41,6 +41,8 @@
 #' only the weights for the non-focal group(s) will be displayed (since the
 #' weights for the focal group are all 1). A dotted line is displayed at the
 #' mean of the weights.
+#'
+#' `nobs()` returns a single number. Note that even units with `weights` or `s.weights` of 0 are included.
 #'
 #' @seealso
 #' [weightit()], [weightitMSM()], [summary()]
@@ -58,7 +60,7 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
   out <- make_list(outnames)
 
   sw <- {
-    if (ignore.s.weights  || is_null(object$s.weights)) rep.int(1, length(object$weights))
+    if (ignore.s.weights  || is_null(object$s.weights)) rep.int(1, nobs(object))
     else object$s.weights
   }
 
@@ -251,7 +253,7 @@ summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) 
   out.list <- make_list(names(object$treat.list))
 
   sw <- {
-    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, length(object$weights))
+    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, nobs(object))
     else object$s.weights
   }
 
@@ -293,4 +295,9 @@ plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1, 
 
   plot.summary.weightit(x[[time]], binwidth = binwidth, bins = bins, ...) +
     labs(subtitle = sprintf("For Time %s", time))
+}
+
+#' @exportS3Method nobs weightit
+nobs.weightit <- function(object, ...) {
+  length(object[["weights"]])
 }

@@ -23,7 +23,7 @@
 #' individual pages for each method for more information on which estimands are
 #' allowed with each method and what literature to read to interpret these
 #' estimands.
-#' @param stabilize whether or not and how to stabilize the weights. If `TRUE`, each unit's weight will be multiplied by a standardization factor, which is the the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when `estimand = "ATE"`. Default is `FALSE` for no standardization. See also the `num.formula` argument at [weightitMSM()].
+#' @param stabilize whether or not and how to stabilize the weights. If `TRUE`, each unit's weight will be multiplied by a standardization factor, which is the the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when `estimand = "ATE"`. Default is `FALSE` for no standardization. See also the `num.formula` argument at [weightitMSM()]. For continuous treatments, weights are already stabilized, so setting `stabilize = TRUE` will be ignored with a warning (supplying a formula still works).
 #' @param focal when multi-category treatments are used and ATT weights are
 #' requested, which group to consider the "treated" or focal group. This group
 #' will not be weighted, and the other groups will be weighted to be more like
@@ -266,7 +266,13 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     stabilize <- NULL
   }
   else if (isTRUE(stabilize)) {
-    stabilize <- as.formula("~ 1")
+    if (treat.type == "continuous") {
+      .wrn("setting `stabilize = TRUE` does nothing for continuous treatments, so it will be set to `FALSE`. See `help(\"weightit\")` for details")
+      stabilize <- NULL
+    }
+    else {
+      stabilize <- as.formula("~ 1")
+    }
   }
 
   if (is_not_null(stabilize)) {
@@ -406,7 +412,7 @@ print.weightit <- function(x, ...) {
   }
 
   cat(sprintf(" - number of obs.: %s\n",
-              length(x[["weights"]])))
+              nobs(x)))
 
   cat(sprintf(" - sampling weights: %s\n",
               if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present"))
