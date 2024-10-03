@@ -3,6 +3,12 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
+* `vcov()`, `summary()`, `anova()`, and `confint()` for `glm_weightit` objects (and their relatives) now have a `vcov` argument that can be used to specify how the variance matrix is computed. This makes it possible to compute a variance matrix different from the one specified in the model fitting call without having to refit the model. `anova()` now displays which variance matrix was used.
+
+* Added `update()` methods for `glm_weightit`, `multinom_weightit`, `ordinal_weightit`, and `coxph_weightit` objects to update the model formula, dataset, or variance matrix. Updating the dataset also refits the `weightit` object included, if any.
+
+* `anova()` for `glm_weightit` objects gets its own help page at `help("anova.glm_weightit()")`.
+
 * Changed defaults with `missing = "saem"` for binary and multi-category treatments to bypass a bug in `misaem` code. (#71)
 
 * Preemptively fixed some bugs related to the use of `missing`, including when `missing` is used with `by`.
@@ -10,6 +16,10 @@ WeightIt News and Updates
 * The missingness method (if any) is now included in the output of `weightit()`, `weightitMSM()`, and `weightit.fit()` and is printed when using the `print()` method for these objects.
 
 * When `missing = "saem"`, using `vcov = "FWB"` in `glm_weightit()`, etc., now appropriately results in an error. (#71)
+
+* `model.matrix.ordinal_weightit()` now excludes the `(Intercept)` column.
+
+* Fixed a bug with `predict.multinom_weightit()` and `predict.ordinal_weightit()` when the outcome was not included in `newdata`.
 
 * Typo fixes in documentation.
 
