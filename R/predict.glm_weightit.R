@@ -163,7 +163,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   tt <- terms(object)
 
   Terms <- delete.response(tt)
-  m <- model.frame(tt, newdata, na.action = na.action,
+  m <- model.frame(Terms, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
   if (is_not_null(cl <- attr(Terms, "dataClasses")))
@@ -271,7 +271,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
   tt <- terms(object)
 
   Terms <- delete.response(tt)
-  m <- model.frame(tt, newdata, na.action = na.action,
+  m <- model.frame(Terms, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
   if (is_not_null(cl <- attr(Terms, "dataClasses")))
