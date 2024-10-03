@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,8 +38,8 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
-<code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.3.1" id="weightit-131">
+<code>WeightIt</code> 1.3.1<a class="anchor" aria-label="anchor" href="#weightit-131"></a></h2>
 <ul><li><p><code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code>, and <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for <code>glm_weightit</code> objects (and their relatives) now have a <code>vcov</code> argument that can be used to specify how the variance matrix is computed. This makes it possible to compute a variance matrix different from the one specified in the model fitting call without having to refit the model. <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> now displays which variance matrix was used.</p></li>
 <li><p>Added <code><a href="https://rdrr.io/r/stats/update.html" class="external-link">update()</a></code> methods for <code>glm_weightit</code>, <code>multinom_weightit</code>, <code>ordinal_weightit</code>, and <code>coxph_weightit</code> objects to update the model formula, dataset, or variance matrix. Updating the dataset also refits the <code>weightit</code> object included, if any.</p></li>
 <li><p><code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> for <code>glm_weightit</code> objects gets its own help page at <code>help("anova.glm_weightit()")</code>.</p></li>
