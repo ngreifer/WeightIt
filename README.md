@@ -133,15 +133,15 @@ outcome model, accounting for estimation of the weights in the standard
 error of the effect estimate:
 
 ``` r
-fit <- lm_weightit(re78 ~ treat, data = lalonde,
-                   weightit = W)
+fit <- glm_weightit(re78 ~ treat, data = lalonde,
+                    weightit = W)
 
 summary(fit, ci = TRUE)
 ```
 
     #> 
     #> Call:
-    #> lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = W)
+    #> glm_weightit(formula = re78 ~ treat, data = lalonde, weightit = W)
     #> 
     #> Coefficients:
     #>             Estimate Std. Error z value Pr(>|z|)  2.5 % 97.5 %    
