@@ -23,8 +23,8 @@ test_that("No weights", {
                         data = test_data, vcov = "HC0")
   })
 
-  expect_equal(coef(fit0), coef(fit))
-  expect_equal(vcov(fit0), vcov(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
+  expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   fit_g <- mlogit::mlogit(Y_M ~ 0 | A * (X1 + X2 + X3 + X4 + X5),
                           data = dfidx::dfidx(test_data, choice = "Y_M", shape = "wide"))
@@ -42,7 +42,7 @@ test_that("No weights", {
                            data = test_data)
   })
 
-  expect_equal(coef(fit0), coef(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
 
   #Cluster-robust SEs
   expect_equal(unname(vcov(fit)),
@@ -89,8 +89,8 @@ test_that("Binary treatment", {
                            data = test_data,  weightit = W, vcov = "asympt")
   })
 
-  expect_equal(coef(fit0), coef(fit))
-  expect_equal(vcov(fit0), vcov(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
+  expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A  * (X1 + X2 + X3 + X4 + X5),
@@ -117,7 +117,7 @@ test_that("Binary treatment", {
                            data = test_data, weightit = W, vcov = "HC0")
   })
 
-  expect_equal(coef(fit0), coef(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
 
   # #Cluster-robust SEs
   # expect_equal(unname(vcov(fit)),

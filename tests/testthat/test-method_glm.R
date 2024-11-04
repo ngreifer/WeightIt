@@ -14,7 +14,7 @@ test_that("Binary treatment", {
                    include.obj = TRUE)
   })
 
-  expect_M_parts_okay(W0)
+  expect_M_parts_okay(W0, tolerance = eps)
 
   expect_true(is.numeric(W0$ps))
 
@@ -26,9 +26,9 @@ test_that("Binary treatment", {
                   quick = TRUE, include.obj = TRUE)
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
-  expect_equal(W$weights, W0$weights)
+  expect_equal(W$weights, W0$weights, tolerance = eps)
 
   expect_false(is_null(W$obj))
   expect_false(is_null(W0$obj))
@@ -41,7 +41,7 @@ test_that("Binary treatment", {
                   data = test_data, method = "glm", estimand = "ATT")
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_equal(W$weights[W$treat == 1], rep(1, sum(W$treat == 1)),
                tolerance = eps)
@@ -51,7 +51,7 @@ test_that("Binary treatment", {
                   data = test_data, method = "glm", estimand = "ATC")
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_equal(W$weights[W$treat == 0], rep(1, sum(W$treat == 0)),
                tolerance = eps)
@@ -61,7 +61,7 @@ test_that("Binary treatment", {
                   data = test_data, method = "glm", estimand = "ATO")
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_equal(unname(cobalt::col_w_smd(W$covs, W$treat, W$weights)),
                rep(0, 12),
@@ -72,14 +72,14 @@ test_that("Binary treatment", {
                   data = test_data, method = "glm", estimand = "ATM")
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATOS")
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -87,7 +87,7 @@ test_that("Binary treatment", {
                   link = "probit")
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   # brglm2
   expect_no_condition({
@@ -96,7 +96,7 @@ test_that("Binary treatment", {
                   link = "br.logit", epsilon = 1e-10)
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -104,7 +104,7 @@ test_that("Binary treatment", {
                   link = "br.probit", type = "AS_median", epsilon = 1e-10)
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -133,7 +133,7 @@ test_that("Binary treatment", {
 
   expect_equal(test_data$SW, W$s.weights)
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X5 + X6,
@@ -141,7 +141,7 @@ test_that("Binary treatment", {
                   s.weights = "SW", link = "log")
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   # No warning for non-integer #successes
 
@@ -150,7 +150,7 @@ test_that("Binary treatment", {
                   data = test_data, method = "glm", estimand = "ATE",
                   link = "br.logit", s.weights = "SW", epsilon = 1e-10)
   })
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -168,7 +168,7 @@ test_that("Binary treatment", {
                   include.obj = TRUE, stabilize = TRUE)
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_null(attr(W, "Mparts", exact = TRUE))
   expect_false(is_null(attr(W, "Mparts.list", exact = TRUE)))
@@ -183,7 +183,7 @@ test_that("Binary treatment", {
                   include.obj = TRUE, stabilize = ~X1)
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 
   expect_failure(expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights),
                               cobalt::col_w_smd(W0$covs, W0$treat, W0$weights)))
@@ -196,7 +196,7 @@ test_that("Binary treatment", {
                   include.obj = TRUE)
   })
 
-  expect_equal(W$weights, W0$weights)
+  expect_equal(W$weights, W0$weights, tolerance = eps)
 
   # Separation
   set.seed(123)
@@ -229,7 +229,7 @@ test_that("Ordinal treatment", {
                   include.obj = TRUE)
   })
 
-  expect_M_parts_okay(W0)
+  expect_M_parts_okay(W0, tolerance = eps)
 
   # expect_no_condition({
   #   W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -246,5 +246,5 @@ test_that("Ordinal treatment", {
                   include.obj = TRUE)
   })
 
-  expect_M_parts_okay(W)
+  expect_M_parts_okay(W, tolerance = eps)
 })

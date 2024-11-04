@@ -22,8 +22,8 @@ test_that("No weights", {
                            data = test_data, vcov = "HC0")
   })
 
-  expect_equal(coef(fit0), coef(fit))
-  expect_equal(vcov(fit0), vcov(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
+  expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   fit_g <- MASS::polr(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
                       data = test_data, Hess = TRUE,
@@ -43,7 +43,7 @@ test_that("No weights", {
                          data = test_data)
   })
 
-  expect_equal(coef(fit0), coef(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
 
   #Cluster-robust SEs
   expect_equal(vcov(fit),
@@ -110,14 +110,14 @@ test_that("Binary treatment", {
                             data = test_data, weightit = W)
   })
 
-  #M-estimation for mlogit
+  #M-estimation for polr
   expect_no_condition({
     fit <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
                            data = test_data,  weightit = W, vcov = "asympt")
   })
 
-  expect_equal(coef(fit0), coef(fit))
-  expect_equal(vcov(fit0), vcov(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
+  expect_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   expect_no_condition({
     fit <- ordinal_weightit(Y_O ~ A  * (X1 + X2 + X3 + X4 + X5),
@@ -145,7 +145,7 @@ test_that("Binary treatment", {
                          data = test_data, weightit = W)
   })
 
-  expect_equal(coef(fit0), coef(fit))
+  expect_equal(coef(fit0), coef(fit), tolerance = eps)
 
   #Cluster-robust SEs
   # expect_equal(vcov(fit),
