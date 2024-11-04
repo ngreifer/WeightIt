@@ -288,7 +288,13 @@ between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
   out
 }
 squish <- function(p, lo = 1e-6, hi = 1 - lo) {
-  pmax(pmin(p, hi), lo)
+  if (lo > -Inf)
+    p[p < lo] <- lo
+
+  if (hi < Inf)
+    p[p > hi] <- hi
+
+  p
 }
 
 #Statistics
@@ -326,9 +332,22 @@ binarize <- function(variable, zero = NULL, one = NULL) {
     return(setNames(as.integer(variable == one), names(variable)))
   }
 
+  if (is.logical(variable)) {
+    return(setNames(as.integer(variable), names(variable)))
+  }
+
+  if (is.numeric(variable)) {
+    zero <- {
+      if (any(unique.vals == 0)) 0
+      else min(unique.vals, na.rm = TRUE)
+    }
+
+    return(setNames(as.integer(variable != zero), names(variable)))
+  }
+
   variable.numeric <- {
-    if (can_str2num(unique.vals)) str2num(variable)
-    else as.numeric(as.factor(variable))
+    if (can_str2num(unique.vals)) setNames(str2num(unique.vals), unique.vals)[variable]
+    else as.numeric(factor(variable, levels = unique.vals))
   }
 
   zero <- {

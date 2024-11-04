@@ -142,7 +142,10 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
   },
   warning = function(w) {
     w <- conditionMessage(w)
-    if (w != "non-integer #successes in a binomial glm!") .wrn("(from `glm()`) ", w, tidy = FALSE)
+    if (w != "non-integer #successes in a binomial glm!" &&
+        !startsWith(w, "non-integer")) {
+      .wrn("(from `glm()`) ", w, tidy = FALSE)
+    }
     invokeRestart("muffleWarning")
   })
 

@@ -103,8 +103,8 @@
 
   # Get predicted probabilities for all units for category y
   get_p <- function(y, xb, a) {
-    pmax(.linkinv(c(a, Inf)[y] - xb) - .linkinv(c(-Inf, a)[y] - xb),
-         1e-16)
+    squish(.linkinv(c(a, Inf)[y] - xb) - .linkinv(c(-Inf, a)[y] - xb),
+           lo = 1e-16)
   }
 
   #Ordinal regression LL (cumsum paramaterization)
@@ -393,8 +393,8 @@
 
   # Get predicted probabilities for all units for category y
   get_p <- function(y, xb, a) {
-    pmax(.linkinv(c(a, Inf)[y] - xb) - .linkinv(c(-Inf, a)[y] - xb),
-         1e-16)
+    squish(.linkinv(c(a, Inf)[y] - xb) - .linkinv(c(-Inf, a)[y] - xb),
+           lo = 1e-16)
   }
 
   #Ordinal regression LL (cumsum paramaterization)

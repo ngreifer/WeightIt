@@ -864,7 +864,7 @@
 
       psi <- function(B, Xout, Y, Xtreat, A, SW, offset) {
         Bout <- B[seq_len(pout)]
-        Btreat <- B[-seq_len(pout)]
+        Btreat <- NULL
 
         w <- wfun(Btreat, Xtreat, A)
         psi_out(B, w, Y, Xout, SW, offset)

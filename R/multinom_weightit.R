@@ -274,7 +274,6 @@
                          offset = offset)
   }
 
-
   colnames(hessian) <- rownames(hessian) <- names(theta0)
 
   hessian
