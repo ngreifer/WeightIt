@@ -410,7 +410,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                            weights = s.weights)
 
   #Stabilization - get dens.num
-  dens.num <- densfun(scale_w(treat, s.weights))
+  log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
 
   #Estimate GPS
   for (f in names(formals(SuperLearner::SuperLearner))) {
@@ -454,7 +454,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init,
-                                 dens.num = dens.num,
+                                 log.dens.num = log.dens.num,
                                  densfun = densfun)
     B[["control"]] <- list(trimLogit = sneaky)
 
@@ -488,14 +488,14 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   #Get weights
   r <- treat - gp.score
-  dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
+  log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
 
-  w <- dens.num / dens.denom
+  w <- exp(log.dens.num - log.dens.denom)
 
   if (isTRUE(A[["plot"]])) {
-    d.n <- attr(dens.num, "density")
-    d.d <- attr(dens.denom, "density")
-    plot_density(d.n, d.d)
+    d.n <- attr(log.dens.num, "density")
+    d.d <- attr(log.dens.denom, "density")
+    plot_density(d.n, d.d, log = TRUE)
   }
 
   info <- list(coef = fit$coef,
@@ -564,13 +564,13 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     # 1) coef: the weights (coefficients) for each algorithm
     # 2) cvRisk: the V-fold CV risk for each algorithm
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      dens.num <- attr(control$trimLogit, "vals")$dens.num
+      log.dens.num <- attr(control$trimLogit, "vals")$log.dens.num
       densfun <- attr(control$trimLogit, "vals")$densfun
       init <- attr(control$trimLogit, "vals")$init
 
       w_mat <- apply(Z, 2, function(gp.score) {
         r <- Y - gp.score
-        dens.num / densfun(r / sqrt(col.w.v(r, obsWeights)))
+        exp(log.dens.num - densfun(r / sqrt(col.w.v(r, obsWeights)), log = TRUE))
       })
 
       cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
@@ -579,7 +579,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
       loss <- function(coefs) {
         gp.score <- crossprod(t(Z), coefs/sum(coefs))
         r <- Y - gp.score
-        w <- dens.num / densfun(r / sqrt(col.w.v(r, obsWeights)))
+        w <- exp(log.dens.num - densfun(r / sqrt(col.w.v(r, obsWeights)), log = TRUE))
         cobalt::bal.compute(init, weights = w)
       }
 

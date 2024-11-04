@@ -685,7 +685,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       A[["density"]] <- switch(A[["distribution"]]$name,
                                "gaussian" = "dnorm",
                                "tdist" = "dt_4",
-                               "laplace" = function(x) exp(-abs(x))/2)
+                               "laplace" = "dlaplace")
     }
 
     if (i == 1 || (null_density && !identical(tune[["distribution"]][i], tune[["distribution"]][i - 1]))) {
@@ -696,7 +696,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                                weights = s.weights)
 
       #Stabilization - get dens.num
-      dens.num <- densfun(scale_w(treat, s.weights))
+      log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
     }
 
     gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
@@ -721,7 +721,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
       w <- apply(gps, 2, function(p) {
         r <- treat - p
-        dens.num / densfun(r / sqrt(col.w.v(r, s.weights)))
+        exp(log.dens.num - densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE))
       })
 
       if (trim.at != 0) {
@@ -753,7 +753,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
         w <- apply(gps, 2, function(p) {
           r <- treat - p
-          dens.num / densfun(r / sqrt(col.w.v(r, s.weights)))
+          exp(log.dens.num - densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE))
         })
 
         if (trim.at != 0) {
@@ -815,8 +815,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         if (use.offset) best.gps <- best.gps + A[["offset"]]
 
         r <- treat - best.gps
-        dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
-        best.w <- dens.num / dens.denom
+        log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), lo = TRUE)
+        best.w <- exp(log.dens.num - log.dens.denom)
 
         current.best.loss <- best.loss
         best.tune.index <- i
@@ -831,11 +831,11 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (isTRUE(A[["plot"]])) {
-    d.n <- attr(dens.num, "density")
+    d.n <- attr(log.dens.num, "density")
     r <- treat - best.gps
-    dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
-    d.d <- attr(dens.denom, "density")
-    plot_density(d.n, d.d)
+    log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
+    d.d <- attr(log.dens.denom, "density")
+    plot_density(d.n, d.d, log = TRUE)
   }
 
   if (nrow(tune) > 1) {

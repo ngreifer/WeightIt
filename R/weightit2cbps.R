@@ -643,15 +643,15 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
   psi_bal <- function(B, Xm, Xb = Xm, A, SW) {
     un_s2 <- exp(B[1])
     un_p <- B[2]
-    dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
-                       lo = -squish_tol, hi = squish_tol)
+    log.dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
+                           lo = -squish_tol, hi = squish_tol)
 
     s2 <- exp(B[3])
     p <- drop(Xm %*% B[-(1:3)])
-    dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
-                         lo = -squish_tol, hi = squish_tol)
+    log.dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
+                             lo = -squish_tol, hi = squish_tol)
 
-    w <- exp(dens.num - dens.denom)
+    w <- exp(log.dens.num - log.dens.denom)
 
     cbind(SW * (A - un_p)^2 - un_s2,
           SW * (A - un_p),
@@ -753,13 +753,13 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   un_s2 <- exp(par[1])
   un_p <- par[2]
-  dens.num <- dnorm(treat, un_p, sqrt(un_s2), log = TRUE)
+  log.dens.num <- dnorm(treat, un_p, sqrt(un_s2), log = TRUE)
 
   s2 <- exp(par[3])
   p <- drop(mod_covs %*% par[-(1:3)])
-  dens.denom <- dnorm(treat, p, sqrt(s2), log = TRUE)
+  log.dens.denom <- dnorm(treat, p, sqrt(s2), log = TRUE)
 
-  w <- exp(dens.num - dens.denom)
+  w <- exp(log.dens.num - log.dens.denom)
 
   Mparts <- NULL
 
@@ -877,14 +877,14 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
              un_s2 <- exp(B[1])
              un_p <- B[2]
 
-             dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
-                                lo = -Inf, hi = squish_tol)
+             log.dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
+                                    lo = -Inf, hi = squish_tol)
 
              s2 <- exp(B[3])
-             dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
-                                  lo = -squish_tol, hi = Inf)
+             log.dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
+                                      lo = -squish_tol, hi = Inf)
 
-             exp(dens.num - dens.denom)
+             exp(log.dens.num - log.dens.denom)
            })
   })
 
@@ -936,7 +936,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
            "binary" = glm.fit(covs.list[[i]], treat.list[[i]], family = binomial(),
                               weights = s.weights)$coefficients,
            "multi-category" = .multinom_weightit.fit(covs.list[[i]], treat.list[[i]], hess = FALSE,
-                                                  weights = s.weights)$coefficients,
+                                                     weights = s.weights)$coefficients,
            "continuous" = {
              init.fit <- lm.wfit(covs.list[[i]], treat.list[[i]], w = s.weights)
              b <- c(0, 0, log(var(init.fit$residuals)), init.fit$coefficients)

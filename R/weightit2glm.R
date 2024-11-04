@@ -860,7 +860,7 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   un_p <- mean_fast(s.weights * treat)
   un_s2 <- mean_fast(s.weights * (treat - un_p)^2)
 
-  dens.num <- densfun((treat - un_p) / sqrt(un_s2))
+  log.dens.num <- densfun((treat - un_p) / sqrt(un_s2), log = TRUE)
 
   #Estimate GPS
   if (is_null(A[["link"]])) A[["link"]] <- "identity"
@@ -937,14 +937,14 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   s2 <- mean_fast(s.weights * (treat - p)^2)
 
   #Get weights
-  dens.denom <- densfun((treat - p) / sqrt(s2))
+  log.dens.denom <- densfun((treat - p) / sqrt(s2), log = TRUE)
 
-  w <- dens.num / dens.denom
+  w <- exp(log.dens.num - log.dens.denom)
 
   if (isTRUE(A[["plot"]])) {
-    d.n <- attr(dens.num, "density")
-    d.d <- attr(dens.denom, "density")
-    plot_density(d.n, d.d)
+    d.n <- attr(log.dens.num, "density")
+    d.d <- attr(log.dens.denom, "density")
+    plot_density(d.n, d.d, log = TRUE)
   }
 
   Mparts <- NULL
@@ -968,14 +968,14 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
       wfun = function(Btreat, Xtreat, A) {
         un_s2 <- exp(Btreat[1])
         un_p <- Btreat[2]
-        dens.num <- densfun((A - un_p)/sqrt(un_s2))
+        log.dens.num <- densfun((A - un_p)/sqrt(un_s2), log = TRUE)
 
         s2 <- exp(Btreat[3])
         lin_pred <- drop(Xtreat %*% Btreat[-(1:3)])
         p <- family$linkinv(lin_pred)
-        dens.denom <- densfun((A - p) / sqrt(s2))
+        log.dens.denom <- densfun((A - p) / sqrt(s2), log = TRUE)
 
-        dens.num / dens.denom
+        exp(log.dens.num - log.dens.denom)
       },
       Xtreat = cbind(`(Intercept)` = 1, covs),
       A = treat,

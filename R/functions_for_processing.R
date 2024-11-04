@@ -160,7 +160,7 @@
 
   if (is_null(method) || !.weightit_methods[[method]]$moments_int_ok) {
     if (is_not_null(method) &&
-      any(mi0 <- c(is_not_null(moments), is_not_null(int) && !isFALSE(int), is_not_null(quantile)))) {
+        any(mi0 <- c(is_not_null(moments), is_not_null(int) && !isFALSE(int), is_not_null(quantile)))) {
       .wrn(sprintf("%s not compatible with %s. Ignoring %s",
                    word_list(c("moments", "int", "quantile")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
                    .method_to_phrase(method),
@@ -963,24 +963,32 @@ stabilize_w <- function(weights, treat) {
     if (is_null(bw)) bw <- "nrd0"
     if (is_null(kernel)) kernel <- "gaussian"
 
-    densfun <- function(p) {
+    densfun <- function(p, log = FALSE) {
       d <- stats::density(p, n = n,
                           weights = weights/sum(weights), give.Rkern = FALSE,
                           bw = bw, adjust = adjust, kernel = kernel)
       out <- with(d, approxfun(x = x, y = y))(p)
+
+      if (log) out <- log(out)
+
       attr(out, "density") <- d
       out
     }
   }
   else {
-    if (is_null(density)) .density <- function(x) dnorm(x)
-    else if (is.function(density)) .density <- function(x) density(x)
-    else if (identical(density, "dlaplace")) {
-      .density <- function(x) {
-        mu <- 0
-        b <- 1
+    if (is_null(density)) .density <- function(x, log = FALSE) dnorm(x, log = log)
+    else if (is.function(density)) .density <- function(x, log = FALSE) {
+      if ("log" %in% names(formals(density))) density(x, log = log)
+      else if (log) log(density(x))
+      else density(x)
+    }
+    else if (identical(density, "dlaplace")) .density <- function(x, log = FALSE) {
+      mu <- 0
+      b <- 1
+      if (log)
+        -abs(x - mu)/b - log(2 * b)
+      else
         exp(-abs(x - mu)/b)/(2 * b)
-      }
     }
     else if (is.character(density) && length(density) == 1L) {
       splitdens <- strsplit(density, "_", fixed = TRUE)[[1]]
@@ -995,26 +1003,39 @@ stabilize_w <- function(weights, treat) {
                      density, word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
       }
 
-      .density <- function(x) {
-        tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
-                 error = function(e) {
-                   .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE)
-                 })
-      }
+      .density <- function(x, log = FALSE) {
+        if ("log" %in% names(formals(splitdens1))) {
+          out <- tryCatch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1])))),
+                          error = function(e) {
+                            .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE)
+                          })
+        }
+        else {
+          out <- tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
+                          error = function(e) {
+                            .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE)
+                          })
 
+          if (log) out <- log(out)
+        }
+
+        out
+      }
     }
     else {
       .err("the argument to `density` cannot be evaluated as a density function")
     }
 
-    densfun <- function(p) {
+    densfun <- function(p, log = FALSE) {
       # sd <- sd(p)
       # sd <- sqrt(col.w.v(p, s.weights))
-      dens <- .density(p)
+      dens <- .density(p, log = log)
       if (is_null(dens) || !is.numeric(dens) || anyNA(dens)) {
         .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the Gaussian density")
       }
-      if (any(dens <= 0)) {
+
+      if ((log && !all(is.finite(dens))) ||
+          (!log && !all(dens > 0))) {
         .err("the input to density may not accept the full range of standardized treatment values or residuals")
       }
 
@@ -1022,7 +1043,7 @@ stabilize_w <- function(weights, treat) {
                    max(p) + 3 * adjust * bw.nrd0(p),
                    length.out = n)
       attr(dens, "density") <- data.frame(x = x,
-                                          y = .density(x))
+                                          y = .density(x, log = log))
       dens
     }
   }
@@ -1270,11 +1291,16 @@ stabilize_w <- function(weights, treat) {
   w
 }
 
-plot_density <- function(d.n, d.d) {
+plot_density <- function(d.n, d.d, log = FALSE) {
   d.d <- cbind(as.data.frame(d.d[c("x", "y")]), dens = "Denominator Density", stringsAsfactors = FALSE)
   d.n <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
   d.all <- rbind(d.d, d.n)
   d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
+
+  if (log) {
+    d.all$x <- exp(d.all$x)
+  }
+
   pl <- ggplot(d.all, aes(x = .data$x, y = .data$y)) +
     geom_line() +
     labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
@@ -1345,34 +1371,57 @@ generalized_inverse <- function(sigma) {
 }
 
 #Compute gradient numerically using centered difference
-.gradient <- function(.f, .x, .eps = 1e-8, parm = NULL, ...) {
-  if (is_null(parm)) {
-    parm <- seq_along(.x)
+.gradient <- function(.f, .x, .eps = 1e-8, .parm = NULL, .direction = "center", ...) {
+
+  .direction <- match_arg(.direction, c("center", "left", "right"))
+
+  if (is_null(.parm)) {
+    .parm <- seq_along(.x)
   }
 
   .x0 <- .x
 
-  .eps <- pmax(abs(.x) * .eps, .eps)
+  .eps <- squish(abs(.x) * .eps, lo = .eps, hi = Inf)
 
-  for (j in parm) {
-    # forward
-    .x[j] <- .x0[j] + .eps[j]/2
+  if (.direction != "center") {
+    .f0 <- .f(.x0, ...)
+  }
 
-    # recalculate model function value
-    f_new_forward <- .f(.x, ...)
+  for (j in .parm) {
+    if (.direction == "center") {
+      .x[j] <- .x0[j] + .eps[j]/2
 
-    if (j == 1L) {
-      jacob <- matrix(0, nrow = length(f_new_forward), ncol = length(parm),
-                      dimnames = list(names(f_new_forward), names(.x)[parm]))
+      f_new_r <- .f(.x, ...)
+    }
+    else if (.direction == "left") {
+      f_new_r <- .f0
+    }
+    else if (.direction == "right") {
+      .x[j] <- .x0[j] + .eps[j]
+
+      f_new_r <- .f(.x, ...)
     }
 
-    # backward
-    .x[j] <- .x0[j] - .eps[j]/2
+    if (j == 1L) {
+      jacob <- matrix(0, nrow = length(f_new_r), ncol = length(.parm),
+                      dimnames = list(names(f_new_r), names(.x)[.parm]))
+    }
 
-    # recalculate model function value
-    f_new_backward  <- .f(.x, ...)
+    if (.direction == "center") {
+      .x[j] <- .x0[j] - .eps[j]/2
 
-    jacob[,j] <- (f_new_forward - f_new_backward) / .eps[j]
+      f_new_l <- .f(.x, ...)
+    }
+    else if (.direction == "left") {
+      x[j] <- .x0[j] - .eps[j]
+
+      f_new_l <- .f(.x, ...)
+    }
+    else if (.direction == "right") {
+      f_new_l <- .f0
+    }
+
+    jacob[,j] <- (f_new_r - f_new_l) / .eps[j]
 
     .x[j] <- .x0[j]
   }

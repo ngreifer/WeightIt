@@ -116,18 +116,18 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
                           weights = s.weights)
 
   #Stabilization - get dens.num
-  dens.num <- densfun(scale_w(treat, s.weights))
+  log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
 
   #Get weights
   r <- treat - ps
-  dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)))
+  log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
 
-  w <- dens.num / dens.denom
+  w <- exp(log.dens.num - log.dens.denom)
 
   if (isTRUE(A[["plot"]])) {
-    d.n <- attr(dens.num, "density")
-    d.d <- attr(dens.denom, "density")
-    plot_density(d.n, d.d)
+    d.n <- attr(log.dens.num, "density")
+    d.d <- attr(log.dens.denom, "density")
+    plot_density(d.n, d.d, log = TRUE)
   }
 
   list(w = w)
