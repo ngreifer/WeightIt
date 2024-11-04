@@ -1,6 +1,12 @@
 WeightIt News and Updates
 ======
 
+# `WeightIt` 1.3.2
+
+* Fixes to tests for CRAN.
+
+* Improvements to weight calculation for continuous treatments with small densities.
+
 # `WeightIt` 1.3.1
 
 * `vcov()`, `summary()`, `anova()`, and `confint()` for `glm_weightit` objects (and their relatives) now have a `vcov` argument that can be used to specify how the variance matrix is computed. This makes it possible to compute a variance matrix different from the one specified in the model fitting call without having to refit the model. `anova()` now displays which variance matrix was used.
