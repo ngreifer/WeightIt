@@ -2,13 +2,14 @@
 #' @name calibrate
 #'
 #' @description
-#' `calibrate()` performs Platt scaling to calibrate propensity scores as recommended by Gutman et al. (2024). This involves fitting a new propensity score model using logistic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
+#' `calibrate()` calibrates propensity scores used in weights. This involves fitting a new propensity score model using logistic or isotonic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
 #'
 #' @param x A `weightit` object or a vector of propensity scores. Only binary treatments are supported.
 #' @param treat A vector of treatment status for each unit. Only binary treatments are supported.
 #' @param s.weights A vector of sampling weights or the name of a variable in
 #' `data` that contains sampling weights.
 #' @param data An optional data frame containing the variable named in `s.weights` when supplied as a string.
+#' @param method `character`; the method of calibration used. Allowable options include `"platt"` (default) for Platt scaling as described by Gutman et al. (2024) and `"isoreg"` for isotonic regression as described by van der Laan et al. (2024) and implemented in [isoreg()].
 #' @param \dots Not used.
 #'
 #' @returns
@@ -23,6 +24,8 @@
 #'
 #' @references
 #' Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse Probability Weighting by Post-calibrating Its Propensity Scores. *Epidemiology*, 35(4). \doi{10.1097/EDE.0000000000001733}
+#'
+#' van der Laan, L., Lin, Z., Carone, M., & Luedtke, A. (2024). Stabilized Inverse Probability Weighting via Isotonic Calibration (arXiv:2411.06342). arXiv. \url{http://arxiv.org/abs/2411.06342}
 #'
 #' @examplesIf requireNamespace("gbm", quietly = TRUE)
 #' library("cobalt")
@@ -49,18 +52,39 @@ calibrate <- function(x, ...) {
 
 #' @exportS3Method calibrate default
 #' @rdname calibrate
-calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, ...) {
+calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = "platt", ...) {
   chk::chk_not_missing(treat, "`treat`")
   if (length(unique(treat)) != 2L) {
     .err("`calibrate()` can only be used with binary treatments")
   }
   chk::chk_numeric(x)
 
+  method <- match_arg(method, c("platt", "isoreg"))
+
   s.weights <- .process.s.weights(s.weights, data)
   if (is_null(s.weights)) s.weights <- rep.int(1, length(x))
 
-  p <- glm.fit(cbind(1, x), treat, weights = s.weights,
-               family = quasibinomial())$fitted.values
+  if (method == "platt") {
+    p <- glm.fit(cbind(1, x), treat, weights = s.weights,
+                 family = quasibinomial())$fitted.values
+  }
+  else {
+    if (!all_the_same(s.weights)) {
+      .wrn("sampling weights will not be incorporated into isotonic regression. Use with caution")
+    }
+
+    i0 <- stats::isoreg(1 - x, 1 - treat)
+    i1 <- stats::isoreg(x, treat)
+
+    p0 <- 1 - i0$yf[order(i0$ord)]
+    p1 <- i1$yf[order(i1$ord)]
+
+    p0 <- squish(p0, lo = min(p0[treat == 0]), hi = Inf)
+    p1 <- squish(p1, lo = min(p1[treat == 1]), hi = Inf)
+
+    p <- p0
+    p[treat == 1] <- p1[treat == 1]
+  }
 
   nm <- {
     if (!is_null(names(x))) names(x)
@@ -83,7 +107,7 @@ calibrate.weightit <- function(x, ...) {
   }
 
   x$ps[] <- calibrate.default(x[["ps"]], treat = x[["treat"]],
-                              s.weights = x[["s.weights"]])
+                              s.weights = x[["s.weights"]], ...)
 
   x$weights[] <- get_w_from_ps(x$ps, x[["treat"]],
                                estimand = x[["estimand"]],

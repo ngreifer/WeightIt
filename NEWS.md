@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# `WeightIt` (development version)
+
+* Added new `method` argument to `calibrate()` to support isotonic regression calibration as described by [van der Laan el al. (2024)](http://arxiv.org/abs/2411.06342).
+
 # `WeightIt` 1.3.2
 
 * Fixes to tests for CRAN.
