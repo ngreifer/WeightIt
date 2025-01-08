@@ -8,8 +8,8 @@
 <title>Weighting for Covariate Balance in Observational Studies • WeightIt</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.4.2/css/all.min.css" rel="stylesheet">
-<link href="deps/font-awesome-6.4.2/css/v4-shims.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Weighting for Covariate Balance in Observational Studies">
 <meta name="description" content='Generates balancing weights for causal effect estimation in observational studies with binary, multi-category, or continuous point or longitudinal treatments by easing and extending the functionality of several R packages and providing in-house estimation methods. Available methods include those that rely on parametric modeling, optimization, and machine learning. Also allows for assessment of weights and checking of covariate balance by interfacing directly with the cobalt package. Methods for estimating weighted regression models that take into account uncertainty in the estimation of the weights via M-estimation or bootstrapping are available. See the vignette "Installing Supporting Packages" for instructions on how to install any package WeightIt uses, including those that may not be on CRAN.'>
 <meta property="og:description" content='Generates balancing weights for causal effect estimation in observational studies with binary, multi-category, or continuous point or longitudinal treatments by easing and extending the functionality of several R packages and providing in-house estimation methods. Available methods include those that rely on parametric modeling, optimization, and machine learning. Also allows for assessment of weights and checking of covariate balance by interfacing directly with the cobalt package. Methods for estimating weighted regression models that take into account uncertainty in the estimation of the weights via M-estimation or bootstrapping are available. See the vignette "Installing Supporting Packages" for instructions on how to install any package WeightIt uses, including those that may not be on CRAN.'>
@@ -23,7 +23,7 @@
 
     <a class="navbar-brand me-2" href="index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.2.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.2.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,7 +91,7 @@
 <span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;  - treatment: 2-category</span></span>
 <span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  - estimand: ATT (focal: 1)</span></span>
 <span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  - covariates: age, educ, nodegree, married, race, re74, re75</span></span></code></pre></div>
-<p>Evaluating weights has two components: evaluating the covariate balance produced by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the <code>cobalt</code> package, which are fully compatible with <em>WeightIt</em>, can be used, as demonstrated below:</p>
+<p>Evaluating weights has two components: evaluating the covariate balance produced by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the <em>cobalt</em> package, which are fully compatible with <em>WeightIt</em>, can be used, as demonstrated below:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span>
 <span></span>
@@ -142,16 +142,16 @@
 <span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;            Control Treated</span></span>
 <span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; Unweighted  429.       185</span></span>
 <span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Weighted     99.82     185</span></span></code></pre></div>
-<p>Desirable qualities include small coefficients of variation close to 0 and large effective sample sizes.</p>
+<p>Desirable qualities include large effective sample sizes, which imply low variability in the weights (and therefore increased precision in estimating the treatment effect).</p>
 <p>Finally, we can estimate the effect of the treatment using a weighted outcome model, accounting for estimation of the weights in the standard error of the effect estimate:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">treat</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span>
-<span>                    weightit <span class="op">=</span> <span class="va">W</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">treat</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span>
+<span>                   weightit <span class="op">=</span> <span class="va">W</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; glm_weightit(formula = re78 ~ treat, data = lalonde, weightit = W)</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = W)</span></span>
 <span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
 <span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
 <span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)  2.5 % 97.5 %    </span></span>
@@ -323,7 +323,7 @@
 </tbody>
 </table>
 <p>In addition, <em>WeightIt</em> implements the subgroup balancing propensity score using the function <code><a href="reference/sbps.html">sbps()</a></code>. Several other tools and utilities are available, including <code><a href="reference/trim.html">trim()</a></code> to trim or truncate weights, <code><a href="reference/calibrate.html">calibrate()</a></code> to calibrate propensity scores, <code><a href="reference/get_w_from_ps.html">get_w_from_ps()</a></code> to compute weights from propensity scores.</p>
-<p><em>WeightIt</em> provides functions to fit weighted models that account for the uncertainty in estimating the weights. These include <code><a href="reference/glm_weightit.html">glm_weightit()</a></code> for fitting generalized linear models, <code><a href="reference/glm_weightit.html">ordinal_weightit()</a></code> for ordinal regression models, <code><a href="reference/glm_weightit.html">multinom_weightit()</a></code> for multinomial regression models, and <code><a href="reference/glm_weightit.html">coxph_weightit()</a></code> for Cox proportional hazards models. Several methods are available for computing the parameter variances, including asymptotically correct M-estimation-base variances, robust variances that treat the weights as fixed, and traditional and fractional weighted bootstrap variances. Clustered variances are supported. See <code><a href="articles/estimating-effects.html">vignette("estimating-effects")</a></code> for information on how to use these after weighting to estimate treatment effects.</p>
+<p><em>WeightIt</em> provides functions to fit weighted models that account for the uncertainty in estimating the weights. These include <code><a href="reference/glm_weightit.html">glm_weightit()</a></code> for fitting generalized linear models, <code><a href="reference/glm_weightit.html">ordinal_weightit()</a></code> for ordinal regression models, <code><a href="reference/glm_weightit.html">multinom_weightit()</a></code> for multinomial regression models, and <code><a href="reference/glm_weightit.html">coxph_weightit()</a></code> for Cox proportional hazards models. Several methods are available for computing the parameter variances, including asymptotically correct M-estimation-based variances, robust variances that treat the weights as fixed, and traditional and fractional weighted bootstrap variances. Clustered variances are supported. See <code><a href="articles/estimating-effects.html">vignette("estimating-effects")</a></code> for information on how to use these after weighting to estimate treatment effects.</p>
 <p>Please submit bug reports, questions, comments, or other issues to <a href="https://github.com/ngreifer/WeightIt/issues" class="external-link uri">https://github.com/ngreifer/WeightIt/issues</a>. If you would like to see your package or method integrated into <em>WeightIt</em>, please contact the author. Fan mail is greatly appreciated.</p>
 </div>
 </div>
