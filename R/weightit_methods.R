@@ -204,7 +204,7 @@
     msm_method_available = TRUE,
     subclass_ok = FALSE,
     packages_needed = c("optweight", "osqp"),
-    s.weights_ok = packageVersion("optweight") > "0.2.5", #Note; need to update optweight to ensure s.weights are treated same as entropy balancing.
+    s.weights_ok = tryCatch(packageVersion("optweight") > "0.2.5", error = function(e) FALSE), #Note; need to update optweight to ensure s.weights are treated same as entropy balancing.
     missing = c("ind"),
     moments_int_ok = TRUE,
     moments_default = 1,
