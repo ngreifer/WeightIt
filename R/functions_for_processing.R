@@ -1,5 +1,7 @@
 .method_to_proper_method <- function(method) {
-  if (is_null(method)) return(NULL)
+  if (is_null(method)) {
+    return(NULL)
+  }
 
   if (!is.character(method)) {
     return(method)
@@ -61,9 +63,13 @@
 
 .process.s.weights <- function(s.weights, data = NULL) {
   #Process s.weights
-  if (is_null(s.weights)) return(NULL)
+  if (is_null(s.weights)) {
+    return(NULL)
+  }
 
-  if (is.numeric(s.weights)) return(s.weights)
+  if (is.numeric(s.weights)) {
+    return(s.weights)
+  }
 
   if (!is.character(s.weights) || length(s.weights) != 1) {
     .err("the argument to `s.weights` must be a vector or data frame of sampling weights or the (quoted) names of the variable in `data` that contains sampling weights")
@@ -121,7 +127,6 @@
   }
 
   chk::chk_string(estimand)
-  estimand <- toupper(estimand)
 
   allowable_estimands <- {
     if (is_null(method)) unique(unlist(grab(.weightit_methods, "estimand")))
@@ -132,13 +137,13 @@
     allowable_estimands <- setdiff(allowable_estimands, "ATOS")
   }
 
-  if (estimand %nin% allowable_estimands) {
+  if (toupper(estimand) %nin% allowable_estimands) {
     .err(sprintf("%s is not an allowable estimand for %s with a %s treatment. Only %s allowed",
                  add_quotes(estimand), .method_to_phrase(method), treat.type,
                  word_list(allowable_estimands, quotes = TRUE, and.or = "and", is.are = TRUE)))
   }
 
-  estimand
+  toupper(estimand)
 }
 
 .check_subclass <- function(method, treat.type) {
@@ -240,7 +245,9 @@
   }
 
   if (.weightit_methods[[method]]$msm_method_available) {
-    if (is_null(is.MSM.method)) return(TRUE)
+    if (is_null(is.MSM.method)) {
+      return(TRUE)
+    }
 
     chk::chk_flag(is.MSM.method)
 
@@ -317,7 +324,9 @@
 }
 
 .process_ps <- function(ps, data = NULL, treat) {
-  if (is_null(ps)) return(NULL)
+  if (is_null(ps)) {
+    return(NULL)
+  }
 
   if (chk::vld_string(ps)) {
     if (is_null(data)) {
@@ -352,90 +361,181 @@
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  unique.treat <- unique(treat, nmax = switch(treat.type, "binary" = 2, "multi-category" = length(treat)/4))
-
-  #Check focal
-  if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.treat)) {
-    .err("the argument supplied to `focal` must be the name of a level of treatment")
+  if (treat.type == "continuous") {
+    return(list(focal = NULL,
+                estimand = "ATE",
+                reported.estimand = "ATE"))
   }
 
-  if (treat.type == "multi-category") {
+  if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
+    .wrn(sprintf('`estimand = %s` is not compatible with `focal`. Setting `estimand` to "ATT"',
+                 add_quotes(estimand)))
+    reported.estimand <- estimand <- "ATT"
+  }
 
-    if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      .wrn(sprintf("`estimand = %s` is not compatible with `focal`. Setting `estimand` to \"ATT\"",
-                   add_quotes(estimand)))
-      reported.estimand <- estimand <- "ATT"
+  if (treat.type == "binary") {
+    ct <- .get_control_and_treated_levels(treat, estimand, focal, treated)
+
+    focal <- switch(estimand,
+                    "ATT" = ct["treated"],
+                    "ATC" = ct["control"],
+                    NULL)
+
+    treated <- ct["treated"]
+  }
+  else {
+    unique.vals <- {
+      if (chk::vld_character_or_factor(treat))
+        levels(factor(treat, nmax = ceiling(length(treat)/4)))
+      else
+        sort(unique(treat, nmax = ceiling(length(treat)/4)))
+    }
+
+    #Check focal
+    if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.vals)) {
+      .err("the argument supplied to `focal` must be the name of a level of treatment")
     }
 
     if (estimand == "ATT") {
       if (is_null(focal)) {
-        if (is_null(treated) || treated %nin% unique.treat) {
-          .err("when `estimand = \"ATT\"` for multi-category treatments, an argument must be supplied to `focal`")
+        if (is_null(treated) || treated %nin% unique.vals) {
+          .err('when `estimand = "ATT"` for multi-category treatments, an argument must be supplied to `focal`')
         }
         focal <- treated
       }
     }
     else if (estimand == "ATC") {
       if (is_null(focal)) {
-        .err("when `estimand = \"ATC\"` for multi-category treatments, an argument must be supplied to `focal`")
+        .err('when `estimand = "ATC"` for multi-category treatments, an argument must be supplied to `focal`')
       }
       estimand <- "ATT"
     }
   }
-  else if (treat.type == "binary") {
-    unique.treat.bin <- unique(binarize(treat), nmax = 2)
 
-    if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-      .wrn(sprintf("`estimand = %s` is not compatible with `focal`. Setting `estimand` to \"ATT\"",
-                   add_quotes(estimand)))
-      reported.estimand <- estimand <- "ATT"
+  list(focal = unname(focal),
+       estimand = estimand,
+       reported.estimand = reported.estimand,
+       treated = switch(treat.type, "binary" = unname(treated), NULL))
+}
+
+.get_control_and_treated_levels <- function(treat, estimand, focal = NULL, treated = NULL) {
+
+  if (is_not_null(attr(treat, "control")) &&
+      is_not_null(attr(treat, "treated"))) {
+    return(setNames(c(attr(treat, "control"), attr(treat, "treated")),
+                    c("control", "treated")))
+  }
+
+  control <- NULL
+  message <- FALSE
+
+  unique.vals <- {
+    if (chk::vld_character_or_factor(treat))
+      levels(factor(treat, nmax = 2L))
+    else
+      sort(unique(treat, nmax = 2L))
+  }
+
+  if (is_not_null(focal)) {
+    if (length(focal) > 1L || focal %nin% unique.vals) {
+      .err("the argument supplied to `focal` must be the name of a level of treatment")
     }
 
-    if (is_null(treated) || treated %nin% unique.treat) {
-      if (is_null(focal)) {
-        if (all(as.character(unique.treat.bin) == as.character(unique.treat))) {
-          treated <- unique.treat[unique.treat.bin == 1]
-        }
-        else {
-          treated <- {
-            if (is.factor(treat)) levels(treat)[2]
-            else unique.treat[unique.treat.bin == 1]
-          }
-
-          if (estimand == "ATT") {
-            .msg(sprintf("assuming %s the treated level. If not, supply an argument to `focal`",
-                         word_list(treated, quotes = !is.numeric(treat), is.are = TRUE)))
-
-          }
-          else if (estimand == "ATC") {
-            .msg(sprintf("assuming %s the control level. If not, supply an argument to `focal`",
-                         word_list(setdiff(unique.treat, treated), quotes = !is.numeric(treat), is.are = TRUE)))
-          }
-
-        }
-
-        focal <- switch(estimand,
-                        "ATT" = treated,
-                        "ATC" = setdiff(unique.treat, treated))
-      }
-      else {
-        treated <- switch(estimand,
-                          "ATT" = focal,
-                          "ATC" = setdiff(unique.treat, focal))
-      }
-
+    if (estimand == "ATC") {
+      control <- focal
+      treated <- NULL
     }
-    else if (is_null(focal)) {
-      focal <- switch(estimand,
-                      "ATT" = treated,
-                      "ATC" = setdiff(unique.treat, treated))
+    else {
+      treated <- focal
+    }
+  }
+  else if (is_not_null(attr(treat, "treated", TRUE))) {
+    treated <- attr(treat, "treated", TRUE)
+  }
+  else if (is_not_null(attr(treat, "control", TRUE))) {
+    control <- attr(treat, "control", TRUE)
+  }
+  else if (is_not_null(treated)) {
+    if (length(treated) > 1L || treated %nin% unique.vals) {
+      .err("the argument supplied to `treated` must be the name of a level of treatment")
+    }
+  }
+  else if (is.logical(treat)) {
+    treated <- TRUE
+    control <- FALSE
+  }
+  else if (is.numeric(unique.vals)) {
+    control <- unique.vals[unique.vals == 0]
+
+    if (is_null(control)) {
+      control <- unique.vals[1L]
+
+      message <- TRUE
+    }
+  }
+  else if (can_str2num(unique.vals)) {
+    unique.vals.numeric <- str2num(unique.vals)
+
+    control <- unique.vals[unique.vals.numeric == 0]
+
+    if (is_null(control)) {
+      control <- unique.vals[which.min(unique.vals.numeric)]
+
+      message <- TRUE
+    }
+  }
+  else {
+    treated_options <- c("t", "tr", "treat", "treated", "exposed")
+    control_options <- c("c", "co", "ctrl", "control", "unexposed")
+
+    t_match <- which(unique.vals %in% treated_options)
+    c_match <- which(unique.vals %in% control_options)
+
+    if (length(t_match) == 1L) {
+      treated <- unique.vals[t_match]
+    }
+    else if (length(c_match) == 1L) {
+      control <- unique.vals[c_match]
     }
   }
 
-  list(focal = focal,
-       estimand = estimand,
-       reported.estimand = reported.estimand,
-       treated = if (is.factor(treated)) as.character(treated) else treated)
+  if (is_null(control) && is_null(treated)) {
+    control <- unique.vals[1L]
+    treated <- unique.vals[2L]
+
+    message <- TRUE
+  }
+  else if (is_null(control)) {
+    control <- setdiff(unique.vals, treated)
+  }
+  else if (is_null(treated)) {
+    treated <- setdiff(unique.vals, control)
+  }
+
+  if (message) {
+    if (estimand == "ATT") {
+      .msg(sprintf("assuming %s is the treated level. If not, supply an argument to `focal`",
+                   add_quotes(treated, !is.numeric(unique.vals))))
+
+    }
+    else if (estimand == "ATC") {
+      .msg(sprintf("assuming %s is the control level. If not, supply an argument to `focal`",
+                   add_quotes(control, !is.numeric(unique.vals))))
+    }
+    else {
+      .msg(sprintf("assuming %s is the treated level. If not, recode the treatment so that 1 is treated and 0 is control",
+                   add_quotes(treated, !is.numeric(unique.vals))))
+    }
+  }
+
+  setNames(c(control, treated),
+           c("control", "treated"))
+}
+
+get_treated_level <- function(treat, estimand, focal = NULL) {
+  ct <- .get_control_and_treated_levels(treat, estimand, focal)
+
+  unname(ct["treated"])
 }
 
 .process_by <- function(by, data, treat, treat.name = NULL, by.arg = "by") {
@@ -531,10 +631,11 @@
   #poly=degree of polynomials to include; will also include all below poly. If 1, no polynomial will be included
 
   if (!is.matrix(d)) {
-    if (!is.numeric(d))
+    if (!is.numeric(d)) {
       .err("an error occurred, probably a bug")
+    }
 
-    matrix(d, ncol = 1, dimnames = list(NULL, "x"))
+    matrix(d, ncol = 1L, dimnames = list(NULL, "x"))
   }
 
   if (is_null(ex)) ex <- rep.int(FALSE, ncol(d))
@@ -574,7 +675,7 @@
 
   if (int && nd > 1L) {
     int_terms <- int_co.names <- make_list(1)
-    ints_to_make <- utils::combn(colnames(d)[!ex], 2, simplify = FALSE)
+    ints_to_make <- utils::combn(colnames(d)[!ex], 2L, simplify = FALSE)
 
     if (is_not_null(ints_to_make)) {
       int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]] * d[,i[2]]))
@@ -597,7 +698,7 @@
 
   #Remove single values
   if (is_not_null(out)) {
-    single_value <- apply(out, 2, all_the_same)
+    single_value <- apply(out, 2L, all_the_same)
     out <- out[, !single_value, drop = FALSE]
   }
 
@@ -754,7 +855,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   }
 
   if (any(tw < 0)) {
-    .wrn("some weights are negative; these cannot be used in most model fitting functions, including `(g)lm_weightit()`")
+    .wrn("some weights are negative; these cannot be used in most model fitting functions")
   }
 }
 
@@ -782,7 +883,10 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
                                      all.inside = TRUE))
     }
     else if (estimand == "ATT") {
-      if (i != focal) ps_mat[, as.character(i)] <- 1 - ps_mat[, as.character(i)]
+      if (i != focal) {
+        ps_mat[, as.character(i)] <- 1 - ps_mat[, as.character(i)]
+      }
+
       sub <- as.integer(findInterval(ps_mat[, as.character(i)],
                                      quantile(ps_mat[treat == focal, as.character(i)],
                                               seq(0, 1, length.out = subclass + 1)),
@@ -856,12 +960,12 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   sub_ps
 }
 
-.subclass_scoot <- function(sub, treat, x, min.n = 1) {
+.subclass_scoot <- function(sub, treat, x, min.n = 1L) {
   #Reassigns subclasses so there are no empty subclasses
   #for each treatment group. min.n is the smallest a
   #subclass is allowed to be.
   treat <- as.character(treat)
-  unique.treat <- unique(treat, nmax = 2)
+  unique.treat <- unique(treat, nmax = 2L)
 
   names(x) <- seq_along(x)
   names(sub) <- seq_along(sub)
@@ -885,7 +989,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   sub_tab <- table(treat, sub)
 
-  if (!any(sub_tab == 0)) {
+  if (all(sub_tab > 0)) {
     return(sub)
   }
 
@@ -926,7 +1030,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
         }
       }
 
-      sub_tab[t,] <- sub_tab[t,] - 1
+      sub_tab[t,] <- sub_tab[t,] - 1L
     }
   }
 
@@ -935,11 +1039,15 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 }
 
 stabilize_w <- function(weights, treat) {
-  if (is.factor(treat)) t.levels <- levels(treat)
-  else t.levels <- unique(treat)
+  t.levels <- {
+    if (is.factor(treat)) levels(treat)
+    else unique(treat)
+  }
 
   w.names <- names(weights)
-  tab <- setNames(vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L)), t.levels)
+
+  tab <- setNames(vapply(t.levels, function(x) mean_fast(treat == x), numeric(1L)),
+                  t.levels)
 
   setNames(weights * tab[as.character(treat)], w.names)
 }
@@ -1055,7 +1163,7 @@ stabilize_w <- function(weights, treat) {
                                         subclass = NULL, stabilize = FALSE) {
 
   estimand <- toupper(estimand)
-  w <- rep.int(1, length(treat))
+  w <- rep.int(1.0, length(treat))
 
   #Assume treat is binary
   if (is_not_null(subclass)) {
@@ -1092,10 +1200,10 @@ stabilize_w <- function(weights, treat) {
     q <- ps * (1 - ps)
     alpha.opt <- 0
     for (i in seq_len(sum(ps < .5))) {
-      if (i == 1 || !check_if_zero(ps.sorted[i] - ps.sorted[i-1])) {
+      if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1])) {
         alpha <- ps.sorted[i]
         a <- alpha * (1 - alpha)
-        if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
+        if (2 * a * sum(1 / q[q >= a]) / sum(q >= a) >= 1) {
           alpha.opt <- alpha
           break
         }
@@ -1106,7 +1214,9 @@ stabilize_w <- function(weights, treat) {
 
   names(w) <- if_null_then(names(treat), NULL)
 
-  if (stabilize) w <- stabilize_w(w, treat)
+  if (stabilize) {
+    w <- stabilize_w(w, treat)
+  }
 
   w
 }
@@ -1115,7 +1225,7 @@ stabilize_w <- function(weights, treat) {
                                           subclass = NULL, stabilize = FALSE) {
 
   estimand <- toupper(estimand)
-  w <- rep.int(0, length(treat))
+  w <- rep.int(0.0, length(treat))
 
   ps_mat <- ps
 
@@ -1142,14 +1252,14 @@ stabilize_w <- function(weights, treat) {
   }
   else if (estimand == "ATOS") {
     #Crump et al. (2009)
-    ps.sorted <- sort(c(ps_mat[,2], 1 - ps_mat[,2]))
-    q <- ps_mat[,2]*(1-ps_mat[,2])
+    ps.sorted <- sort(c(ps_mat[, 2L], 1 - ps_mat[, 2L]))
+    q <- ps_mat[, 2L] * (1 - ps_mat[, 2L])
     alpha.opt <- 0
-    for (i in 1:sum(ps_mat[,2] < .5)) {
-      if (i == 1 || !check_if_zero(ps.sorted[i] - ps.sorted[i-1])) {
+    for (i in seq_len(sum(ps_mat[,2] < .5))) {
+      if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1L])) {
         alpha <- ps.sorted[i]
-        a <- alpha*(1-alpha)
-        if (1/a <= 2*sum(1/q[q >= a])/sum(q >= a)) {
+        a <- alpha * (1 - alpha)
+        if (2 * a * sum(1/q[q >= a])/sum(q >= a) >= 1) {
           alpha.opt <- alpha
           break
         }
@@ -1157,9 +1267,13 @@ stabilize_w <- function(weights, treat) {
     }
     w[!between(ps_mat[,2], c(alpha.opt, 1 - alpha.opt))] <- 0
   }
-  else return(numeric(0))
+  else {
+    return(numeric(0))
+  }
 
-  if (stabilize) w <- stabilize_w(w, treat)
+  if (stabilize) {
+    w <- stabilize_w(w, treat)
+  }
 
   names(w) <- if_null_then(rownames(ps_mat), names(treat), NULL)
 
@@ -1171,12 +1285,12 @@ stabilize_w <- function(weights, treat) {
   #Batch turn PS into weights; primarily for output of predict.gbm
   # Assumes a (0,1) treatment if binary
   if (is_null(dim(ps))) {
-    ps <- matrix(ps, ncol = 1)
+    ps <- matrix(ps, ncol = 1L)
   }
 
   eps <- 1e-8
 
-  if (length(dim(ps)) == 2) {
+  if (length(dim(ps)) == 2L) {
     #Binary treatment, vector ps
 
     w <- ps
@@ -1229,7 +1343,7 @@ stabilize_w <- function(weights, treat) {
       w[t0] <- w[t0] * length(t0) / length(treat)
     }
   }
-  else if (length(dim(ps)) == 3) {
+  else if (length(dim(ps)) == 3L) {
     #Multi-category treatment, matrix PS
 
     if (is_not_null(subclass)) {
@@ -1240,7 +1354,7 @@ stabilize_w <- function(weights, treat) {
 
     ps <- squish(ps, eps)
 
-    w <- matrix(0, ncol = dim(ps)[3], nrow = dim(ps)[1])
+    w <- matrix(0.0, ncol = dim(ps)[3L], nrow = dim(ps)[1L])
     t.levs <- unique(treat)
 
     for (i in t.levs) {
@@ -1321,7 +1435,9 @@ neg_ent <- function(w) {
 }
 
 replace_na_with <- function(covs, with = "median") {
-  if (is.na(with) || !anyNA(covs)) return(covs)
+  if (is.na(with) || !anyNA(covs)) {
+    return(covs)
+  }
 
   if (is.character(with)) {
     .with <- match.fun(with)
@@ -1339,20 +1455,26 @@ replace_na_with <- function(covs, with = "median") {
 
 add_missing_indicators <- function(covs, replace_with = "median") {
   covs_w_missing <- which(anyNA_col(covs))
-  if (is_null(covs_w_missing)) return(covs)
+  if (is_null(covs_w_missing)) {
+    return(covs)
+  }
 
   missing_ind <- apply(covs[, covs_w_missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
 
   colnames(missing_ind) <- paste0(colnames(missing_ind), ":<NA>")
   covs <- cbind(covs, missing_ind)
 
-  if (is_null(replace_with) || is.na(replace_with)) return(covs)
+  if (is_null(replace_with) || is.na(replace_with)) {
+    return(covs)
+  }
 
   replace_na_with(covs, replace_with)
 }
 
 verbosely <- function(expr, verbose = TRUE) {
-  if (verbose) return(expr)
+  if (verbose) {
+    return(expr)
+  }
 
   void <- utils::capture.output({
     out <- invisible(expr)
@@ -1371,7 +1493,20 @@ generalized_inverse <- function(sigma) {
 }
 
 #Compute gradient numerically using centered difference
-.gradient <- function(.f, .x, .eps = 1e-8, .parm = NULL, .direction = "center", ...) {
+.gradient <- function(.f, .x, .eps = 1e-8, .parm = NULL, .direction = "center", .method = "fd", ...) {
+  .method <- match_arg(.method, c("fd", "richardson"))
+
+  if (.method == "fd") {
+    .gradientFD(.f = .f, .x = .x, .eps = .eps, .parm = .parm, .direction = .direction, ...)
+  }
+  else if (.method == "richardson") {
+    .gradientRich(.f = .f, .x = .x, .eps = .eps, .parm = .parm, .direction = .direction, ...)
+  }
+
+}
+
+#Finite difference gradient
+.gradientFD <- function(.f, .x, .eps = 1e-8, .parm = NULL, .direction = "center", ...) {
 
   .direction <- match_arg(.direction, c("center", "left", "right"))
 
@@ -1382,12 +1517,15 @@ generalized_inverse <- function(sigma) {
   .x0 <- .x
 
   .eps <- squish(abs(.x) * .eps, lo = .eps, hi = Inf)
+  # .eps <- rep_with(.eps, .x)
 
   if (.direction != "center") {
     .f0 <- .f(.x0, ...)
   }
 
-  for (j in .parm) {
+  for (jj in seq_along(.parm)) {
+    j <- .parm[jj]
+
     if (.direction == "center") {
       .x[j] <- .x0[j] + .eps[j]/2
 
@@ -1421,12 +1559,66 @@ generalized_inverse <- function(sigma) {
       f_new_l <- .f0
     }
 
-    jacob[,j] <- (f_new_r - f_new_l) / .eps[j]
+    jacob[,jj] <- (f_new_r - f_new_l) / .eps[j]
 
     .x[j] <- .x0[j]
   }
 
   jacob
+}
+
+#Using Richardson extrapolation
+.gradientRich <- function(.f, .x, .eps = 1e-8, .parm = NULL, .direction = "center", ...) {
+
+  .direction <- match_arg(.direction, c("center", "left", "right"))
+
+  if (is_null(.parm)) {
+    .parm <- seq_along(.x)
+  }
+
+  if (.direction != "center") {
+    .f0 <- .f(.x, ...)
+  }
+
+  n <- length(.x)
+
+  d <- 1e-4
+  r <- 4
+  v <- 2
+  a <- NULL
+  h <- abs(d * .x) + .eps * (abs(.x) < 1e-5)
+
+  for (k in seq_len(r)) {
+    eps_i <- rep(0, length(.parm))
+
+    for (ii in seq_along(.parm)) {
+      i <- .parm[ii]
+
+      eps_i[i] <- h[i]
+
+      a_k_ii <- switch(.direction,
+                       "center" = (.f(.x + eps_i, ...) - .f(.x - eps_i, ...))/(2 * h[i]),
+                       "right" = (.f(.x + 2 * eps_i, ...) - .f0)/(2 * h[i]),
+                       "left" = (.f0 - .f(.x - 2 * eps_i, ...))/(2 * h[i]))
+
+      if (is_null(a)) {
+        a <- array(NA_real_, dim = c(length(a_k_ii), r, n))
+      }
+
+      a[, k, ii] <- a_k_ii
+
+      eps_i[i] <- 0
+    }
+
+    h <- h/v
+  }
+
+  for (m in seq_len(r - 1)) {
+    a <- (a[, 1 + seq_len(r - m), , drop = FALSE] * (4^m) - a[, seq_len(r - m), , drop = FALSE])/(4^m - 1)
+  }
+
+  array(a, dim = dim(a)[c(1L, 3L)],
+        dimnames = list(names(a_k_ii), names(.x)[.parm]))
 }
 
 #Convert probability to odds
@@ -1438,23 +1630,22 @@ generalized_inverse <- function(sigma) {
 .get_glm_psi <- function(fit) {
   family <- fit$family
 
-  if (!identical(fit$class, "brglmFit") ||
-      identical(fit$type, "ML") || identical(fit$type, "correction")) {
+  if (is_null(family) ||
+      identical(family, gaussian(), ignore.environment = TRUE)) {
     psi <- function(B, X, y, weights, offset = 0) {
-      XB <- drop(X %*% B) + offset
-      p <- family$linkinv(XB)
-      D <- family$mu.eta(XB)
-      V <- family$variance(p)
+      p <- drop(X %*% B) + offset
 
-      X * (weights * D * (y - p) / V)
+      X * (weights * (y - p))
     }
   }
-  else {
+  else if (inherits(fit, "brglmFit") &&
+           !identical(fit$type, "ML") &&
+           !identical(fit$type, "correction")) {
     br_type <- fit$type
 
     if (is_null(fit$control[["a"]])) {
       rlang::check_installed("brglm2")
-      fit$control[["a"]] <- formals(brglm2::brglmControl)[["a"]]
+      fit$control[["a"]] <- eval(formals(brglm2::brglmControl)[["a"]])
     }
 
     br_psi <- function(X, W, D, p, XB, V) {
@@ -1504,6 +1695,16 @@ generalized_inverse <- function(sigma) {
       .psi <- X * (weights * D * (y - p) / V)
 
       .psi + br_psi(X, weights, D, p, XB, V)
+    }
+  }
+  else {
+    psi <- function(B, X, y, weights, offset = 0) {
+      XB <- drop(X %*% B) + offset
+      p <- family$linkinv(XB)
+      D <- family$mu.eta(XB)
+      V <- family$variance(p)
+
+      X * (weights * D * (y - p) / V)
     }
   }
 
