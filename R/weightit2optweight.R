@@ -28,7 +28,7 @@
 #'
 #' ## Sampling Weights
 #'
-#' Sampling weights are supported through `s.weights` in all scenarios.
+#' Sampling weights are supported through `s.weights` in all scenarios, but only for versions of \pkg{optweight} after 0.2.5.
 #'
 #' ## Missing Data
 #'
@@ -130,8 +130,6 @@ NULL
 
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing,
                                moments, int, verbose, ...) {
-  A <- list(...)
-
   rlang::check_installed("optweight")
 
   covs <- covs[subset, , drop = FALSE]
@@ -141,47 +139,54 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   missing <- .process_missing2(missing, covs)
 
   covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                             focal = focal, treat = treat))
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
 
-  new.data <- data.frame(treat, covs)
-  new.formula <- formula(new.data)
+  args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
+                           names(formals(optweight::optweight)),
+                           names(formals(osqp::osqpSettings)))),
+                  c("treat.list", "covs.list", "data",
+                    "estimand", "focal",
+                    "formula", "s.weights", "verbose"))
 
-  for (f in names(formals(optweight::optweight))) {
-    if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
-  }
-  A[names(A) %in% names(formals(weightit2optweight))] <- NULL
+  A <- ...mget(args)
 
-  if ("tols" %in% names(A)) A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
-  if ("targets" %in% names(A)) {
-    .wrn("`targets` cannot be used through WeightIt and will be ignored")
-    A[["targets"]] <- NULL
-  }
-
-  A[["formula"]] <- new.formula
-  A[["data"]] <- new.data
+  A[["data"]] <- data.frame(treat, covs)
+  A[["formula"]] <- formula(A[["data"]])
   A[["estimand"]] <- estimand
   A[["s.weights"]] <- s.weights
   A[["focal"]] <- focal
   A[["verbose"]] <- TRUE
 
+  if (is_not_null(A[["tols"]])) {
+    A[["tols"]] <- optweight::check.tols(A[["formula"]], data = A[["data"]],
+                                         tols = A[["tols"]], stop = TRUE)
+  }
+
+  if (is_not_null(A[["targets"]])) {
+    .wrn("`targets` cannot be used through WeightIt and will be ignored")
+    A[["targets"]] <- NULL
+  }
+
   verbosely({
     out <- do.call(optweight::optweight, A, quote = TRUE)
   }, verbose = verbose)
 
-  list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
+  list(w = out[["weights"]], info = list(duals = out[["duals"]]), fit.obj = out)
 }
 
 weightit2optweight.multi <- weightit2optweight
 
 weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
-  A <- list(...)
+
   rlang::check_installed("optweight")
 
   covs <- covs[subset, , drop = FALSE]
@@ -192,43 +197,45 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 
   covs <- .int_poly_f(covs, poly = moments, int = int)
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
 
-  new.data <- data.frame(treat, covs)
-  new.formula <- formula(new.data)
+  args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
+                           names(formals(optweight::optweight)),
+                           names(formals(osqp::osqpSettings)))),
+                  c("treat.list", "covs.list", "data",
+                    "formula", "s.weights", "verbose"))
 
-  for (f in names(formals(optweight::optweight))) {
-    if (is_null(A[[f]])) A[[f]] <- formals(optweight::optweight)[[f]]
+  A <- ...mget(args)
+
+  A[["data"]] <- data.frame(treat, covs)
+  A[["formula"]] <- formula(A[["data"]])
+  A[["s.weights"]] <- s.weights
+  A[["verbose"]] <- TRUE
+
+  if (is_not_null(A[["tols"]])) {
+    A[["tols"]] <- optweight::check.tols(A[["formula"]], data = A[["data"]],
+                                         tols = A[["tols"]], stop = TRUE)
   }
-  A[names(A) %in% names(formals(weightit2optweight.cont))] <- NULL
 
-  if ("tols" %in% names(A)) {
-    A[["tols"]] <- optweight::check.tols(new.formula, new.data, A[["tols"]], stop = TRUE)
-  }
-
-  if ("targets" %in% names(A)) {
+  if (is_not_null(A[["targets"]])) {
     .wrn("`targets` cannot be used through WeightIt and will be ignored")
     A[["targets"]] <- NULL
   }
-
-  A[["formula"]] <- new.formula
-  A[["data"]] <- new.data
-  A[["s.weights"]] <- s.weights
-  A[["verbose"]] <- TRUE
 
   verbosely({
     out <- do.call(optweight::optweight, A, quote = TRUE)
   }, verbose = verbose)
 
-  list(w = out[["weights"]], info = list(duals = out$duals), fit.obj = out)
+  list(w = out[["weights"]], info = list(duals = out[["duals"]]), fit.obj = out)
 }
 
 weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, verbose, ...) {
-  A <- list(...)
   rlang::check_installed("optweight")
 
   s.weights <- s.weights[subset]
@@ -257,7 +264,7 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
 
     if (treat.types[i] %in% c("binary", "multi-category")) {
       covs.list[[i]] <- cbind(.int_poly_f(covs.list[[i]], poly = moments, int = int, center = TRUE),
-                              .quantile_f(covs.list[[i]], qu = A[["quantile"]], s.weights = s.weights,
+                              .quantile_f(covs.list[[i]], qu = ...get("quantile"), s.weights = s.weights,
                                           treat = treat.list[[i]]))
     }
     else {
@@ -270,28 +277,38 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
     }
   }
 
-  baseline.data <- data.frame(treat.list[[1]], covs.list[[1]])
-  baseline.formula <- formula(baseline.data)
-  if ("tols" %in% names(A)) {
-    A[["tols"]] <- optweight::check.tols(baseline.formula, baseline.data, A[["tols"]], stop = TRUE)
+  args <- setdiff(c(names(formals(optweight::optweight.fit)),
+                    names(formals(osqp::osqpSettings))),
+                  c("treat.list", "covs.list",
+                    "estimand", "focal",
+                    "s.weights", "force", "verbose"))
+
+  A <- ...mget(args)
+
+  A[["treat.list"]] <- treat.list
+  A[["covs.list"]] <- covs.list
+  A[["s.weights"]] <- s.weights
+  A[["force"]] <- TRUE
+  A[["verbose"]] <- TRUE
+
+  if (is_not_null(A[["tols"]])) {
+    baseline.data <- data.frame(treat.list[[1]], covs.list[[1]])
+    baseline.formula <- formula(baseline.data)
+
+    A[["tols"]] <- optweight::check.tols(baseline.formula, data = baseline.data,
+                                         tols = A[["tols"]], stop = TRUE)
   }
 
-  if ("targets" %in% names(A)) {
+  if (is_not_null(A[["targets"]])) {
     .wrn("`targets` cannot be used through WeightIt and will be ignored")
     A[["targets"]] <- NULL
   }
 
   verbosely({
-    out <- do.call(optweight::optweight.fit,
-                   c(list(treat = treat.list,
-                          covs = covs.list,
-                          s.weights = s.weights,
-                          verbose = TRUE),
-                     A),
-                   quote = TRUE)
+    out <- do.call(optweight::optweight.fit, A, quote = TRUE)
   }, verbose = verbose)
 
-  list(w = out$w, fit.obj = out)
+  list(w = out[["w"]], fit.obj = out)
 }
 
 .plot_duals_optweight <- function(info, by = NULL) {
@@ -309,7 +326,7 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
   d$by <- factor(d$by, levels = names(info))
 
   title <- "Dual Variables for Constraints"
-  # }
+
   d$cov <- factor(d$cov, levels = rev(unique(d$cov)))
   d$constraint <- factor(d$constraint, levels = unique(d$constraint, nmax = 2),
                          labels = paste("Constraint:", unique(d$constraint, nmax = 2)))
