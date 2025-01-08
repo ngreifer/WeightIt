@@ -56,7 +56,7 @@ test_that("No weights", {
   fit_g <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                data = test_data, family = binomial)
   expect_equal(coef(fit), coef(fit_g), tolerance = eps)
-  expect_equal(vcov(fit), sandwich::vcovCL(fit_g, cluster = clus),
+  expect_equal(vcov(fit), sandwich::vcovCL(fit_g, cluster = clus, type = "HC0"),
                tolerance = eps)
 
   #BR
@@ -70,7 +70,25 @@ test_that("No weights", {
                method = brglm2::brglmFit)
 
   expect_equal(coef(fit), coef(fit_g), tolerance = eps)
+  expect_equal(vcov(fit), sandwich::sandwich(fit_g),
+               tolerance = eps * 1e3)
 
+  expect_equal(vcov(fit, cluster = clus),
+               sandwich::vcovCL(fit_g, cluster = clus, type = "HC0"),
+               tolerance = eps * 1e3)
+
+  #Test error for missingness
+  expect_error({
+    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                         data = transform(test_data, Y_B = c(NA, Y_B[-1L])),
+                         family = binomial)
+  }, "missing values", ignore.case = TRUE)
+
+  expect_error({
+    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                         data = transform(test_data, X1 = c(NA, X1[-1L])),
+                         family = binomial)
+  }, "missing values", ignore.case = TRUE)
 })
 
 test_that("Binary treatment", {
@@ -135,4 +153,16 @@ test_that("Binary treatment", {
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
   expect_failure(expect_equal(vcov(fit0), vcov(fit)))
 
+  #Test error for missingness
+  expect_error({
+    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                         data = transform(test_data, Y_B = c(NA, Y_B[-1L])),
+                         family = binomial)
+  }, "missing values", ignore.case = TRUE)
+
+  expect_error({
+    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                         data = transform(test_data, X1 = c(NA, X1[-1L])),
+                         family = binomial)
+  }, "missing values", ignore.case = TRUE)
 })

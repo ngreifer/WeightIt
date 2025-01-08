@@ -214,6 +214,113 @@ test_that("Binary treatment", {
   test_data$Xx <- NULL
 })
 
+test_that("Treatment guessing works for non-0/1 treatment", {
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # Non-0/1 treatment
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = factor(A, levels = 0:1, labels = c("A", "B"))),
+                  method = "glm", estimand = "ATT")
+  }, '"B" is the treated')
+
+  expect_ATT_weights_okay(W, focal = "B", tolerance = eps)
+
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = factor(A, levels = 0:1, labels = c("B", "A"))),
+                  method = "glm", estimand = "ATT")
+  }, '"A" is the treated')
+
+  expect_ATT_weights_okay(W, focal = "A", tolerance = eps)
+
+  #When character, Z should always be guessed as treatment
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("Z", "O")))),
+                  method = "glm", estimand = "ATT")
+  }, '"Z" is the treated')
+
+  expect_ATT_weights_okay(W, focal = "Z", tolerance = eps)
+
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("O", "Z")))),
+                  method = "glm", estimand = "ATT")
+  }, '"Z" is the treated')
+
+  expect_ATT_weights_okay(W, focal = "Z", tolerance = eps)
+
+  #ATC
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = factor(A, levels = 0:1, labels = c("A", "B"))),
+                  method = "glm", estimand = "ATC")
+  }, '"A" is the control')
+
+  expect_ATT_weights_okay(W, focal = "A", tolerance = eps)
+
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = factor(A, levels = 0:1, labels = c("B", "A"))),
+                  method = "glm", estimand = "ATC")
+  }, '"B" is the control')
+
+  expect_ATT_weights_okay(W, focal = "B", tolerance = eps)
+
+  #When character, Z should always be guessed as treatment
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("Z", "O")))),
+                  method = "glm", estimand = "ATC")
+  }, '"O" is the control')
+
+  expect_ATT_weights_okay(W, focal = "O", tolerance = eps)
+
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("O", "Z")))),
+                  method = "glm", estimand = "ATC")
+  }, '"O" is the control')
+
+  expect_ATT_weights_okay(W, focal = "O", tolerance = eps)
+
+  #Using "treat" and "control" synonyms should override other rules
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("unexposed", "exposed")))),
+                  method = "glm", estimand = "ATT")
+  })
+
+  expect_ATT_weights_okay(W, focal = "exposed", tolerance = eps)
+
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("unexposed", "control")))),
+                  method = "glm", estimand = "ATT")
+  }, '"unexposed" is the treated')
+
+  expect_ATT_weights_okay(W, focal = "unexposed", tolerance = eps)
+
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("unexposed", "exposed")))),
+                  method = "glm", estimand = "ATC")
+  })
+
+  expect_ATT_weights_okay(W, focal = "unexposed", tolerance = eps)
+
+  expect_message({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = transform(test_data, A = as.character(factor(A, levels = 0:1, labels = c("unexposed", "control")))),
+                  method = "glm", estimand = "ATC")
+  }, '"control" is the control')
+
+  expect_ATT_weights_okay(W, focal = "control", tolerance = eps)
+})
+
 test_that("Ordinal treatment", {
   skip_if_not_installed("rootSolve")
 

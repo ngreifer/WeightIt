@@ -1,4 +1,5 @@
 expect_M_parts_okay <- function(W, tolerance = 1e-5, ...) {
+
   Mparts.list <- {
     if (is_not_null(attr(W, "Mparts", exact = TRUE))) {
       Mparts.list <- list(attr(W, "Mparts"))
@@ -51,7 +52,7 @@ expect_M_parts_okay <- function(W, tolerance = 1e-5, ...) {
 
   out <- rootSolve::multiroot(gradfun, start = start,
                               X = Xtreat.list, A = A.list, SW = SW,
-                              maxiter = 1e5)
+                              maxiter = 1e5, rtol = 1e-8, atol = 1e-8, ctol = 1e-8)
 
   Btreat.list <- btreat.list
   k <- 0
@@ -62,7 +63,8 @@ expect_M_parts_okay <- function(W, tolerance = 1e-5, ...) {
 
   w <- wfun(Btreat.list, A.list, Xtreat.list)
 
-  expect_equal(unname(unlist(Btreat.list)), unname(unlist(btreat.list)),
+  expect_equal(unname(unlist(Btreat.list)),
+               unname(unlist(btreat.list)),
                tolerance = tolerance, ...)
 
   expect_equal(unname(as.vector(w)), unname(as.vector(W$weights)),
