@@ -8,10 +8,12 @@ output:
         toc: true
 vignette: >
   %\VignetteIndexEntry{Estimating Effects After Weighting}
-  %\VignetteEngine{knitr::rmarkdown_notangle}
   %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown_notangle}
 bibliography: references.bib
 link-citations: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{=html}
