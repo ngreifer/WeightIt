@@ -3,7 +3,23 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
+* Entropy balancing works slightly differently when sampling weights are supplied. The negative entropy between the estimated weights and the product of the sampling weights and base weights (if any) is now the quantity minimized in the optimization. Previously, the negative entropy between the product of the sampling weights and estimated weights and the base weights was minimized. The new behavior ensures entropy balancing is consistent with mathematically equivalent methods when it ought to be (i.e., CBPS and IPT for the ATT) and prevents counter-intuitive results, like that the ESS after weighting could be larger than that before weighting. Note this will cause results to differ between this and previous versions of `WeightIt`.
+
 * Added new `method` argument to `calibrate()` to support isotonic regression calibration as described by [van der Laan el al. (2024)](http://arxiv.org/abs/2411.06342).
+
+* Added clearer error and warning messages to several functions, most notably `glm_weightit()` and friends, when missing values are present in the model variables.
+
+* Improved processing of `estimand` and `focal` for binary treatments. `weightit()` is now better at guessing which level of the treatment is considered "treated", and `focal` can be used to identify the focal group when requesting the ATT or ATC. (#77)
+
+* Improved estimation of asymptotic and HC0 covariance matrices after `glm_weightit()` and friends.
+
+* When using `method = "super"` with `SL.method = "method.balance"`, a new algorithm is used to compute the optimal combination of predictions, which should yield better performance. This may cause results to differ from past versions.
+
+* Fixed a bug when using the fractional weighted bootstrap with `glm_weightit()` and friends after entropy balancing. This bug is still present with optimization-based weighting (i.e., `method = "optweight"`), so the fractional weighted bootstrap is no longer allowed with this method.
+
+* Sampling weights can no longer be used with `method = "optweight"` until a bug is sorted out.
+
+* Performance enhancements.
 
 # `WeightIt` 1.3.2
 
