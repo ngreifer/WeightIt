@@ -53,14 +53,18 @@
 make_full_rank <- function(mat, with.intercept = TRUE) {
 
   if (is.data.frame(mat)) {
-    is.mat <- FALSE
     if (!all(vapply(mat, is.numeric, logical(1L)))) {
       .err("all columns in `mat` must be numeric")
     }
+
     mat <- as.matrix(mat)
+    is.mat <- FALSE
   }
   else if (is.matrix(mat)) {
-    if (!is.numeric(mat)) .err("`mat` must be a numeric matrix")
+    if (!is.numeric(mat)) {
+      .err("`mat` must be a numeric matrix")
+    }
+
     is.mat <- TRUE
   }
   else {
@@ -81,7 +85,9 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
     keep[q$pivot[-seq(q$rank)]] <- FALSE
   }
 
-  if (is.mat) return(mat[, keep, drop = FALSE])
+  if (is.mat) {
+    return(mat[, keep, drop = FALSE])
+  }
 
   as.data.frame(mat[, keep, drop = FALSE])
 }

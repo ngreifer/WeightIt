@@ -39,7 +39,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
       }
     }
     else if (!is.cov_like(var)) {
-      stop("If 'var' is not NULL, it must be a covariance matrix with as many entries as supplied variables.", call. = FALSE)
+      .err("if `var` is not `NULL`, it must be a covariance matrix with as many entries as supplied variables")
     }
 
     inv_var <- NULL
@@ -97,7 +97,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
       sds <- sqrt(var)
     }
     else {
-      stop("If 'var' is not NULL, it must be a covariance matrix or a vector of variances with as many entries as supplied variables.", call. = FALSE)
+      .err("if `var` is not `NULL`, it must be a covariance matrix or a vector of variances with as many entries as supplied variables")
     }
 
     for (i in seq_col(X)) {
@@ -184,26 +184,37 @@ get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
 
   X
 }
+
 check_X <- function(X) {
-  if (isTRUE(attr(X, "checked"))) return(X)
+  if (isTRUE(attr(X, "checked"))) {
+    return(X)
+  }
 
   treat <- attr(X, "treat")
 
-  if (is.data.frame(X)) X <- as.matrix(X)
+  if (is.data.frame(X)) {
+    X <- as.matrix(X)
+  }
   else if (is.numeric(X) && is.null(dim(X))) {
     X <- matrix(X, nrow = length(X),
                 dimnames = list(names(X), NULL))
   }
 
-  if (anyNA(X)) stop("Missing values are not allowed in the covariates.", call. = FALSE)
-
-  if (any(!is.finite(X))) stop("Non-finite values are not allowed in the covariates.", call. = FALSE)
-
-  if (!is.numeric(X) || length(dim(X)) != 2) {
-    stop("bad X")
+  if (anyNA(X)) {
+    .err("missing values are not allowed in the covariates")
   }
+
+  if (any(!is.finite(X))) {
+    .err("non-finite values are not allowed in the covariates")
+  }
+
+  if (!is.numeric(X) || length(dim(X)) != 2L) {
+    .err("bad X")
+  }
+
   attr(X, "checked") <- TRUE
   attr(X, "treat") <- treat
+
   X
 }
 
@@ -214,9 +225,11 @@ is.cov_like <- function(var, X) {
     isSymmetric(var) &&
     all(diag(var) >= 0)
 }
+
 weightit_distances <- function() {
   c("mahalanobis", "robust_mahalanobis", "euclidean", "scaled_euclidean")
 }
+
 mahalanobize <- function(X, inv_var) {
   ## Mahalanobize covariates by computing Cholesky decomp,
   ## allowing for NPD cov matrix by pivoting

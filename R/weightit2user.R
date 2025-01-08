@@ -82,7 +82,7 @@
 #'     args <- list(...)
 #'
 #'     if (!estimand %in% c("ATT", "ATC"))
-#'       stop("`estimand` must be \"ATT\" or \"ATC\".", call. = FALSE)
+#'       stop('`estimand` must be "ATT" or "ATC".', call. = FALSE)
 #'
 #'     treat <- as.numeric(treat == focal)
 #'
@@ -180,18 +180,22 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
     .err('the output of the user-provided function must be a list with an entry named "w" or "weights" containing the estimated weights')
   }
 
-  if (is_null(obj[["w"]]))
+  if (is_null(obj[["w"]])) {
     .err("no weights were estimated")
+  }
 
-  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]])))
-    .err("the \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights")
+  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]]))) {
+    .err('the "w" or "weights" entry of the output of the user-provided function must be a numeric vector of weights')
+  }
 
-  if (all(is.na(obj[["w"]])))
+  if (all(is.na(obj[["w"]]))) {
     .err("all weights were generated as `NA`")
+  }
 
-  if (length(obj[["w"]]) != length(treat))
+  if (length(obj[["w"]]) != length(treat)) {
     .err(sprintf("%s weights were estimated, but there are %s units",
                  length(obj[["w"]]), length(treat)))
+  }
 
   obj
 }
@@ -252,18 +256,22 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
     .err('the output of the user-provided function must be a list with an entry named "w" or "weights" containing the estimated weights')
   }
 
-  if (is_null(obj[["w"]]))
+  if (is_null(obj[["w"]])) {
     .err("no weights were estimated")
+  }
 
-  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]])))
-    .err("the \"w\" or \"weights\" entry of the output of the user-provided function must be a numeric vector of weights")
+  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]]))) {
+    .err('the "w" or "weights" entry of the output of the user-provided function must be a numeric vector of weights')
+  }
 
-  if (all(is.na(obj[["w"]])))
+  if (all(is.na(obj[["w"]]))) {
     .err("all weights were generated as `NA`")
+  }
 
-  if (length(obj[["w"]]) != length(treat.list[[1]]))
+  if (length(obj[["w"]]) != length(treat.list[[1L]])) {
     .err(sprintf("%s weights were estimated, but there are %s units",
-                 length(obj[["w"]]), length(treat.list[[1]])))
+                 length(obj[["w"]]), length(treat.list[[1L]])))
+  }
 
   obj
 }

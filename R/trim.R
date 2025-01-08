@@ -117,12 +117,16 @@ trim <- function(x, ...) {
 #' @rdname trim
 trim.weightit <- function(x, at = 0, lower = FALSE, drop = FALSE, ...) {
 
-  if (is_null(at)) return(x)
+  if (is_null(at)) {
+    return(x)
+  }
 
   chk::chk_number(at)
   chk::chk_gte(at, 0)
 
-  if (check_if_zero(at)) return(x)
+  if (check_if_zero(at)) {
+    return(x)
+  }
 
   chk::chk_flag(lower)
   chk::chk_flag(drop)
@@ -144,12 +148,16 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
     .err("`x` must be a numeric vector or `weightit` object")
   }
 
-  if (is_null(at)) return(x)
+  if (is_null(at)) {
+    return(x)
+  }
 
   chk::chk_number(at)
   chk::chk_gte(at, 0)
 
-  if (check_if_zero(at)) return(x)
+  if (check_if_zero(at)) {
+    return(x)
+  }
 
   if (is_not_null(treat)) {
     if (!has_treat_type(treat)) {
@@ -159,6 +167,7 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
   }
 
   groups.not.to.trim <- NULL
+
   if (is_not_null(treat) && treat.type != "continuous") {
     w_all_same <- tapply(x, treat, all_the_same)
     if (all(w_all_same)) {

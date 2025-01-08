@@ -445,7 +445,9 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
               F_try <- F_alt
             }
           }
-          if (identical(s_try_prev, s_try)) break
+          if (identical(s_try_prev, s_try)) {
+            break
+          }
         }
 
         if (F_try < F_min) {

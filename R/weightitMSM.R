@@ -291,7 +291,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
       }
       else if (is.list(num.formula)) {
         if (length(num.formula) != length(formula.list)) {
-          .err("when supplied as a list, `num.formula` must have as many entries as `formula.list`", call. = FALSE)
+          .err("when supplied as a list, `num.formula` must have as many entries as `formula.list`")
         }
 
         if (!all(vapply(num.formula, rlang::is_formula, logical(1L), lhs = FALSE))) {
