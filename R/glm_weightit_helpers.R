@@ -181,7 +181,7 @@
   }
 
   if (is_null(V)) {
-    .err("no variance matrix was found. See the `vcov` argument at `help(\"anova.glm_weightit\")` for details")
+    .err('no variance matrix was found. See the `vcov` argument at `help("anova.glm_weightit")` for details')
   }
 
   if (is_not_null(b1)) {
@@ -214,14 +214,12 @@
 
 # Dispatches computation of vcov; for using in vcov.glm_weightit() and summary.glm_weightit()
 .vcov_glm_weightit.internal <- function(object, vcov. = NULL, ...) {
-  dots <- list(...)
 
   if (is_null(vcov.)) {
-    vcov. <- dots[["type"]]
-    dots[["type"]] <- NULL
+    vcov. <- ...get("type")
   }
 
-  if (is_null(vcov.) && is_null(dots)) {
+  if (is_null(vcov.) && ...length() == 0L) {
     if (is_not_null(object[["vcov"]])) {
       return(.modify_vcov_info(object[["vcov"]],
                                vcov_type = object[["vcov_type"]],
@@ -237,8 +235,8 @@
     return(NULL)
   }
 
-  R <- if_null_then(dots[["R"]], 500)
-  fwb.args <- if_null_then(dots[["fwb.args"]], list())
+  R <- ...get("R", 500)
+  fwb.args <- ...get("fwb.args", list())
 
   vcov. <- .process_vcov(vcov., object[["weightit"]], R, fwb.args)
 
@@ -247,13 +245,13 @@
   }
 
   cluster <- {
-    if ("cluster" %in% names(dots)) dots[["cluster"]]
+    if ("cluster" %in% ...names()) ...get("cluster")
     else attr(object, "cluster")
   }
 
-  glm_call <- .build_model_call(object, vcov = vcov.)
+  internal_model_call <- .build_internal_model_call(object, vcov = vcov.)
 
-  .compute_vcov(object, object[["weightit"]], vcov., cluster, glm_call)
+  .compute_vcov(object, object[["weightit"]], vcov., cluster, object[["call"]], internal_model_call)
 }
 
 .modify_vcov_info <- function(vcov, vcov_type = NULL, cluster = NULL) {
@@ -314,7 +312,7 @@
   if (is_null(P.values)) {
     scp <- getOption("show.coef.Pvalues")
     if (!is.logical(scp) || is.na(scp)) {
-      .wrn("option \"show.coef.Pvalues\" is invalid: assuming `TRUE`")
+      .wrn('option "show.coef.Pvalues" is invalid: assuming `TRUE`')
       scp <- TRUE
     }
     P.values <- has.Pvalue && scp
@@ -455,8 +453,8 @@
 }
 
 # Constructs a model call, used in .compute_vcov() to compute variance
-.build_model_call <- function(object = NULL, model = "glm", model_call,
-                              weightit = NULL, vcov = NULL, br = FALSE) {
+.build_internal_model_call <- function(object = NULL, model = "glm", model_call,
+                                       weightit = NULL, vcov = NULL, br = FALSE) {
 
   if (is_not_null(object)) {
     model <- {
@@ -464,6 +462,7 @@
       else if (inherits(object, "multinom_weightit")) "multinom"
       else if (inherits(object, "ordinal_weightit")) "ordinal"
       else if (inherits(object, "glm_weightit")) "glm"
+      else if (inherits(object, "lm_weightit")) "lm"
       else .err("can't build model call. This is probably a bug")
     }
 
@@ -479,7 +478,7 @@
       vcov <- object[["vcov_type"]]
     }
 
-    br <- object[["br"]]
+    br <- isTRUE(object[["br"]])
   }
 
   if (is_not_null(weightit)) {
@@ -488,14 +487,14 @@
     }
 
     if (is_null(weightit[["s.weights"]])) {
-      weightit[["s.weights"]] <- rep(1, nobs(weightit))
+      weightit[["s.weights"]] <- rep.int(1.0, nobs(weightit))
     }
   }
 
   if (model == "glm") {
     chk::chk_flag(br)
 
-    model_call[[1]] <- quote(stats::glm)
+    model_call[[1L]] <- quote(stats::glm)
 
     if (is_not_null(weightit)) {
       model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
@@ -503,6 +502,7 @@
     model_call$x <- TRUE
     model_call$y <- TRUE
     model_call$model <- TRUE
+    model_call$na.action <- "na.fail"
 
     if (br) {
       rlang::check_installed("brglm2")
@@ -515,6 +515,20 @@
     }
 
     model_call[setdiff(names(model_call), c(names(formals(stats::glm)), names(formals(ctrl))))] <- NULL
+  }
+  else if (model == "lm") {
+    model_call[[1L]] <- quote(stats::glm)
+
+    if (is_not_null(weightit)) {
+      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
+    }
+    model_call$x <- TRUE
+    model_call$y <- TRUE
+    model_call$model <- TRUE
+    model_call$na.action <- "na.fail"
+    model_call$family <- "gaussian"
+
+    model_call[setdiff(names(model_call), c(names(formals(stats::glm)), names(formals(stats::glm.control))))] <- NULL
   }
   else if (model == "ordinal") {
     model_call[[1]] <- .ordinal_weightit
@@ -559,7 +573,13 @@
 }
 
 # Computes variance from model fit and call; used in glm_weightit()
-.compute_vcov <- function(fit, weightit = NULL, vcov, cluster = NULL, glm_call) {
+.compute_vcov <- function(fit, weightit = NULL, vcov, cluster = NULL, model_call,
+                          internal_model_call) {
+  # Check missing
+  if (is_not_null(fit[["na.action"]])) {
+    .err("missing values are not allowed in the model variables")
+  }
+
   if (is_not_null(cluster) && vcov %in% c("none", "const")) {
     .wrn("`cluster` is not used when `vcov = %s`", add_quotes(vcov))
   }
@@ -591,7 +611,7 @@
     }
     else {
       .declass <- function(obj) {
-        class(obj) <- setdiff(class(obj), "glm_weightit")
+        class(obj) <- setdiff(class(obj), c("glm_weightit", "lm_weightit"))
         obj
       }
 
@@ -677,9 +697,9 @@
     R <- attr(vcov, "R")
     fwb.args <- attr(vcov, "fwb.args")
 
-    glm_call$x <- FALSE
-    glm_call$y <- FALSE
-    glm_call$model <- FALSE
+    internal_model_call$x <- FALSE
+    internal_model_call$y <- FALSE
+    internal_model_call$model <- FALSE
 
     if (is_not_null(weightit)) {
       wcall <- weightit[["call"]]
@@ -695,30 +715,19 @@
       if (is_not_null(weightit)) {
         wcall$s.weights <- SW * w
 
-        withCallingHandlers({
-          weightit_boot <- eval(wcall, wenv)
-        },
-        warning = function(w) {
-          w <- conditionMessage(w)
-          if (!startsWith(tolower(w), "some extreme weights were generated"))
-            .wrn("(from `weightit()`) ", w, tidy = FALSE)
-          invokeRestart("muffleWarning")
-        })
 
-        glm_call$weights <- weightit_boot[["weights"]] * SW * w
+
+        weightit_boot <- .eval_fit(wcall, envir = wenv,
+                                   warnings = c("some extreme weights were generated" = NA))
+
+        internal_model_call$weights <- weightit_boot[["weights"]] * SW * w
       }
       else {
-        glm_call$weights <- SW * w
+        internal_model_call$weights <- SW * w
       }
 
-      withCallingHandlers({
-        fit_boot <- eval(glm_call, genv)
-      },
-      warning = function(w) {
-        w <- conditionMessage(w)
-        if (w != "non-integer #successes in a binomial glm!") .wrn("(from `glm()`) ", w, tidy = FALSE)
-        invokeRestart("muffleWarning")
-      })
+      fit_boot <- .eval_fit(internal_model_call, envir = genv,
+                            warnings = c("non-integer" = NA))
 
       fit_boot[["coefficients"]]
     }
@@ -727,7 +736,9 @@
     fwb.args$data <- data.frame(SW)
     fwb.args$statistic <- fwbfun
     fwb.args$R <- R
-    if (is_null(fwb.args$verbose)) fwb.args$verbose <- FALSE
+    if (is_null(fwb.args$verbose)) {
+      fwb.args$verbose <- FALSE
+    }
     fwb.args <- fwb.args[names(fwb.args) %in% names(formals(fwb::fwb))]
 
     if (is_null(cluster)) {
@@ -746,9 +757,9 @@
   else if (vcov == "BS") {
     R <- attr(vcov, "R")
 
-    glm_call$x <- FALSE
-    glm_call$y <- FALSE
-    glm_call$model <- FALSE
+    internal_model_call$x <- FALSE
+    internal_model_call$y <- FALSE
+    internal_model_call$model <- FALSE
 
     genv <- environment(fit$formula)
     if (is_not_null(weightit)) {
@@ -757,15 +768,15 @@
       data <- eval(wcall$data, wenv)
       if (is_null(data)) {
         .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
-                     deparse1(wcall[[1]])))
+                     rlang::call_name(wcall)))
       }
     }
     else {
       weightit_boot <- list(weights = 1)
-      data <- eval(glm_call$data, genv)
+      data <- eval(internal_model_call$data, genv)
       if (is_null(data)) {
         .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
-                     deparse1(glm_call[[1]])))
+                     rlang::call_name(model_call)))
       }
     }
 
@@ -774,31 +785,19 @@
         wcall$data <- data[ind,]
         wcall$s.weights <- SW[ind]
 
-        withCallingHandlers({
-          weightit_boot <- eval(wcall, wenv)
-        },
-        warning = function(w) {
-          w <- conditionMessage(w)
-          if (!startsWith(tolower(w), "some extreme weights were generated"))
-            .wrn("(from `weightit()`) ", w, tidy = FALSE)
-          invokeRestart("muffleWarning")
-        })
-        glm_call$weights <- weightit_boot$weights * SW[ind]
+        weightit_boot <- .eval_fit(wcall, envir = wenv,
+                                   warnings = c("some extreme weights were generated" = NA))
+
+        internal_model_call$weights <- weightit_boot$weights * SW[ind]
       }
       else {
-        glm_call$weights <- SW[ind]
+        internal_model_call$weights <- SW[ind]
       }
 
-      glm_call$data <- data[ind,]
+      internal_model_call$data <- data[ind,]
 
-      withCallingHandlers({
-        fit_boot <- eval(glm_call, genv)
-      },
-      warning = function(w) {
-        w <- conditionMessage(w)
-        if (w != "non-integer #successes in a binomial glm!") .wrn("(from `glm()`) ", w, tidy = FALSE)
-        invokeRestart("muffleWarning")
-      })
+      fit_boot <- .eval_fit(internal_model_call, envir = genv,
+                            warnings = c("non-integer" = NA))
 
       fit_boot$coefficients
     }
@@ -883,6 +882,9 @@
       else if (inherits(fit, "multinom_weightit")) {
         hess <- .get_hess_multinom(fit)
       }
+      else if (inherits(fit, "glm")) {
+        hess <- .get_hess_glm(fit)
+      }
     }
     else if (is_not_null(Mparts)) {
       # Mparts from weightit()
@@ -947,16 +949,16 @@
     }
 
     if (is_not_null(cluster)) {
-      B <- 0
+      B1 <- 0
 
       for (i in seq_along(clu)) {
         adj <- g[i]/(g[i] - 1)
 
-        B <- B + sign[i] * adj * crossprod(rowsum(psi_b, cluster[[i]], reorder = FALSE))
+        B1 <- B1 + sign[i] * adj * crossprod(rowsum(psi_b, cluster[[i]], reorder = FALSE))
       }
     }
     else {
-      B <- crossprod(psi_b)
+      B1 <- crossprod(psi_b)
     }
 
     # Gradient of gradfun -> hessian
@@ -981,22 +983,19 @@
                         offset = offset)
     }
 
-    A1 <- try(solve(hess, t(.chol2(B))), silent = TRUE)
+    V <- solve(hess, t(solve(hess, B1)[seq_len(pout),, drop = FALSE]))
 
-    if (null_or_error(A1)) {
-      .e <- conditionMessage(attr(A1, "condition"))
-      if (startsWith(.e, "system is computationally singular") ||
-          startsWith(.e, "Lapack routine dgesv: system is exactly singular")) {
-        .err('the Hessian could not be inverted, which indicates an estimation failure, likely due to perfect separation. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = "none"`. Simplifying the model can sometimes help')
+    if (null_or_error(V)) {
+      .e <- conditionMessage(attr(V, "condition"))
+      if (grepl("system is computationally singular", .e, fixed = TRUE) ||
+          grepl("Lapack routine dgesv: system is exactly singular", .e, fixed = TRUE)) {
+        .err('the Hessian could not be inverted, which indicates an estimation failure, possibly due to perfect separation. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = "none"`. Simplifying the model can sometimes help')
       }
 
       .err(.e, tidy = FALSE)
     }
 
-    #Subset to just the outcome model coefs
-    A1 <- A1[seq_len(pout), , drop = FALSE]
-
-    V <- tcrossprod(A1)
+    V <- V[seq_len(pout),, drop = FALSE]
   }
 
   colnames(V) <- rownames(V) <- names(aliased)[!aliased]
@@ -1005,7 +1004,7 @@
 }
 
 # Processes fit for output; used in glm_weightit()
-.process_fit <- function(fit, weightit = NULL, vcov, glm_weightit_call, x, y) {
+.process_fit <- function(fit, weightit = NULL, vcov, model_call, x, y) {
   if (is_not_null(weightit) && is_not_null(fit[["model"]])) {
     fit$model[["(s.weights)"]] <- weightit[["s.weights"]]
     fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
@@ -1013,7 +1012,7 @@
 
   fit$vcov_type <- attr(fit[["vcov"]], "vcov_type")
 
-  fit$call <- glm_weightit_call
+  fit$call <- model_call
 
   if (is_not_null(weightit)) {
     fit$weightit <- weightit
@@ -1027,4 +1026,15 @@
   fit[["vcov"]] <- .modify_vcov_info(fit[["vcov"]])
 
   fit
+}
+
+.get_hess_glm <- function(fit) {
+  Xout <- if_null_then(fit[["x"]], model.matrix(fit))
+
+  d1mus <- fit$family$mu.eta(fit$linear.predictors)
+  varmus <- fit$family$variance(fit$fitted.values)
+
+  dx <- Xout * d1mus
+
+  crossprod(dx, dx * fit$prior.weights / varmus)
 }

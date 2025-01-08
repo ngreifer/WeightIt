@@ -118,36 +118,28 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
     cluster <- NULL
   }
 
-  glm_weightit_call <- match.call()
+  model_call <- match.call()
 
   if (identical(family, "multinomial")) {
     .wrn('using `glm_weightit()`  with `family = "multinomial"` is deprecated. Please use `multinom_weightit()` instead')
-    glm_weightit_call[[1]] <- quote(WeightIt::multinom_weightit)
-    glm_weightit_call[["family"]] <- NULL
+    model_call[[1]] <- quote(WeightIt::multinom_weightit)
+    model_call[["family"]] <- NULL
 
-    return(eval.parent(glm_weightit_call))
+    return(eval.parent(model_call))
   }
 
   ###
   chk::chk_flag(br)
 
-  glm_call <- .build_model_call(model = "glm",
-                                model_call = glm_weightit_call,
-                                weightit = weightit,
-                                vcov = vcov,
-                                br = br)
+  internal_model_call <- .build_internal_model_call(model = "glm",
+                                                    model_call = model_call,
+                                                    weightit = weightit,
+                                                    vcov = vcov,
+                                                    br = br)
 
-  withCallingHandlers({
-    fit <- eval.parent(glm_call)
-  },
-  warning = function(w) {
-    w <- conditionMessage(w)
-    if (w != "non-integer #successes in a binomial glm!" &&
-        !startsWith(w, "non-integer")) {
-      .wrn("(from `glm()`) ", w, tidy = FALSE)
-    }
-    invokeRestart("muffleWarning")
-  })
+  fit <- .eval_fit(internal_model_call,
+                   warnings = c("non-integer" = NA),
+                   errors = c("missing values in object" = "missing values are not allowed in the model variables"))
 
   if (br && vcov %in% c("asympt", "HC0") && identical(fit$type, "correction")) {
     .err('`type = "correction"` cannot be used with the specified `vcov`')
@@ -158,9 +150,55 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
 
   ###
 
-  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, glm_call)
+  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
 
-  fit <- .process_fit(fit, weightit, vcov, glm_weightit_call, x, y)
+  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
+
+  class(fit) <- c("glm_weightit", class(fit))
+
+  fit
+}
+
+#' @export
+#' @rdname glm_weightit
+lm_weightit <- function(formula, data, weightit = NULL,
+                        vcov = NULL, cluster, R = 500,
+                        offset,
+                        x = FALSE, y = TRUE,
+                        contrasts = NULL, fwb.args = list(),
+                        ...) {
+
+  vcov <- .process_vcov(vcov, weightit, R, fwb.args)
+
+  if (missing(cluster)) {
+    cluster <- NULL
+  }
+
+  model_call <- match.call()
+
+  ###
+  if (is_not_null(...get("family"))) {
+    .err("`family` cannot be used with `lm_weightit()`. Did you mean to use `glm_weightit()` instead?",
+         tidy = FALSE)
+  }
+
+  internal_model_call <- .build_internal_model_call(model = "lm",
+                                                    model_call = model_call,
+                                                    weightit = weightit,
+                                                    vcov = vcov)
+
+  fit <- .eval_fit(internal_model_call,
+                   errors = c("missing values in object" = "missing values are not allowed in the model variables"))
+
+  fit$psi <- .get_glm_psi(fit)
+
+  fit$family <- gaussian()
+
+  ###
+
+  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
+
+  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
 
   class(fit) <- c("glm_weightit", class(fit))
 
@@ -182,27 +220,29 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
     cluster <- NULL
   }
 
-  ordinal_weightit_call <- match.call()
+  model_call <- match.call()
 
   ###
-  if ("family" %in% names(ordinal_weightit_call)) {
+  if (is_not_null(...get("family"))) {
     .err("`family` cannot be used with `ordinal_weightit()`. Did you mean to use `link` instead?",
          tidy = FALSE)
   }
 
-  ordinal_call <- .build_model_call(model = "ordinal",
-                                    model_call = ordinal_weightit_call,
-                                    weightit = weightit,
-                                    vcov = vcov)
+  internal_model_call <- .build_internal_model_call(model = "ordinal",
+                                                    model_call = model_call,
+                                                    weightit = weightit,
+                                                    vcov = vcov)
 
-  fit <- eval.parent(ordinal_call)
+  fit <- .eval_fit(internal_model_call,
+                   errors = c("missing values in object" = "missing values are not allowed in the model variables"),
+                   from = FALSE)
 
   fit$family$family <- "ordinal"
   ###
 
-  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, ordinal_call)
+  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
 
-  fit <- .process_fit(fit, weightit, vcov, ordinal_weightit_call, x, y)
+  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
 
   class(fit) <- c("ordinal_weightit")
 
@@ -224,28 +264,30 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
     cluster <- NULL
   }
 
-  multinom_weightit_call <- match.call()
+  model_call <- match.call()
 
   ###
-  if ("family" %in% names(multinom_weightit_call)) {
-    .err("`family` cannot be used with `multinom_weightit()`. Did you mean to use `link` instead?",
+  if (is_not_null(...get("family"))) {
+    .err("`family` cannot be used with `multinom_weightit()`.",
          tidy = FALSE)
   }
 
-  multinom_call <- .build_model_call(model = "multinom",
-                                     model_call = multinom_weightit_call,
-                                     weightit = weightit,
-                                     vcov = vcov)
+  internal_model_call <- .build_internal_model_call(model = "multinom",
+                                                    model_call = model_call,
+                                                    weightit = weightit,
+                                                    vcov = vcov)
 
-  fit <- eval.parent(multinom_call)
+  fit <- .eval_fit(internal_model_call,
+                   errors = c("missing values in object" = "missing values are not allowed in the model variables"),
+                   from = FALSE)
 
   fit$family <- list(family = "multinomial",
                      link = "logit")
   ###
 
-  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, multinom_call)
+  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
 
-  fit <- .process_fit(fit, weightit, vcov, multinom_weightit_call, x, y)
+  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
 
   class(fit) <- c("multinom_weightit")
 
@@ -270,38 +312,23 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 
   ##
 
-  coxph_weightit_call <- match.call()
+  model_call <- match.call()
 
-  coxph_call <- .build_model_call(model = "coxph",
-                                  model_call = coxph_weightit_call,
-                                  weightit = weightit,
-                                  vcov = vcov)
+  internal_model_call <- .build_internal_model_call(model = "coxph",
+                                                    model_call = model_call,
+                                                    weightit = weightit,
+                                                    vcov = vcov)
 
-  fit <- eval.parent(coxph_call)
+  fit <- .eval_fit(internal_model_call,
+                   errors = c("missing values in object" = "missing values are not allowed in the model variables"))
 
   ##
 
-  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, coxph_call)
+  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
 
-  fit <- .process_fit(fit, weightit, vcov, coxph_weightit_call, x, y)
+  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
 
   class(fit) <- c("coxph_weightit", class(fit))
 
-  fit
-}
-
-#' @export
-#' @rdname glm_weightit
-lm_weightit <- function(formula, data, weightit = NULL,
-                        vcov = NULL, cluster, R = 500,
-                        offset, start = NULL, etastart, mustart,
-                        control = list(...),
-                        x = FALSE, y = TRUE,
-                        contrasts = NULL, ...) {
-  cal <- cal0 <- match.call()
-  cal[[1]] <- quote(WeightIt::glm_weightit)
-  cal$family <- quote(stats::gaussian())
-  fit <- eval.parent(cal)
-  fit$call <- cal0
   fit
 }
