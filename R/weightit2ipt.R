@@ -100,7 +100,6 @@ NULL
 
 weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
                          stabilize, missing, moments, int, verbose, ...) {
-  A <- list(...)
 
   rlang::check_installed("rootSolve")
 
@@ -115,20 +114,22 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                             focal = focal, treat = treat))
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   C <- cbind(`(Intercept)` = 1, covs)
 
-  t.lev <- get_treated_level(treat)
+  t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
 
-  link <- if_null_then(A$link, "logit")
+  link <- ...get("link", "logit")
   chk::chk_string(link)
   chk::chk_subset(link, c("logit", "probit", "cauchit", "cloglog"))
 
@@ -251,7 +252,6 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
 
 weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                stabilize, missing, moments, int, verbose, ...) {
-  A <- list(...)
 
   rlang::check_installed("rootSolve")
 
@@ -266,17 +266,19 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                             focal = focal, treat = treat))
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   C <- cbind(`(Intercept)` = 1, covs)
 
-  link <- if_null_then(A$link, "logit")
+  link <- ...get("link", "logit")
   chk::chk_string(link)
   link <- match_arg(link, c("logit", "probit", "cauchit", "cloglog"))
 
@@ -412,5 +414,5 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2ipt.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
-  .err("`method = \"ipt\"` cannot be used with continuous treatments")
+  .err('`method = "ipt"` cannot be used with continuous treatments')
 }

@@ -113,7 +113,7 @@ predict.glm_weightit <- function(object, newdata = NULL, type = "response",
 #' @exportS3Method predict ordinal_weightit
 #' @rdname predict.glm_weightit
 predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
-                                  na.action = na.pass, values = NULL, ...) {
+                                     na.action = na.pass, values = NULL, ...) {
 
   chk::chk_string(type)
   type <- switch(type, "probs" = "response", "lp" = "link", type)
@@ -138,7 +138,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
     else if (type == "mean") {
       if (is_null(values)) {
         if (!can_str2num(colnames(object$fitted.values))) {
-          .err("when `type = \"mean\"` and `values` is not set, the outcome levels must be able to be read as numbers")
+          .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
         }
         values <- setNames(str2num(colnames(object$fitted.values)),
                            colnames(object$fitted.values))
@@ -147,7 +147,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
         chk::chk_numeric(values)
         chk::chk_named(values)
         if (!all(colnames(object$fitted.values) %in% names(values))) {
-          .err("when `type = \"mean\"`, all outcome levels must be named in `values`")
+          .err('when `type = "mean"`, all outcome levels must be named in `values`')
         }
       }
 
@@ -201,7 +201,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   else if (type == "mean") {
     if (is_null(values)) {
       if (!can_str2num(colnames(p))) {
-        .err("when `type = \"mean\"` and `values` is not set, the outcome levels must be able to be read as numbers")
+        .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
       }
       values <- setNames(str2num(colnames(p)), colnames(p))
     }
@@ -209,7 +209,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
       chk::chk_numeric(values)
       chk::chk_named(values)
       if (!all(colnames(p) %in% names(values))) {
-        .err("when `type = \"mean\"`, all outcome levels must be named in `values`")
+        .err('when `type = "mean"`, all outcome levels must be named in `values`')
       }
     }
 
@@ -222,7 +222,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 #' @exportS3Method predict multinom_weightit
 #' @rdname predict.glm_weightit
 predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
-                                    na.action = na.pass, values = NULL, ...) {
+                                      na.action = na.pass, values = NULL, ...) {
 
   chk::chk_string(type)
   type <- switch(type, "probs" = "response", type)
@@ -246,7 +246,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
     else if (type == "mean") {
       if (is_null(values)) {
         if (!can_str2num(colnames(object$fitted.values))) {
-          .err("when `type = \"mean\"` and `values` is not set, the outcome levels must be able to be read as numbers")
+          .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
         }
         values <- setNames(str2num(colnames(object$fitted.values)),
                            colnames(object$fitted.values))
@@ -255,7 +255,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
         chk::chk_numeric(values)
         chk::chk_named(values)
         if (!all(colnames(object$fitted.values) %in% names(values))) {
-          .err("when `type = \"mean\"`, all outcome levels must be named in `values`")
+          .err('when `type = "mean"`, all outcome levels must be named in `values`')
         }
       }
 
@@ -303,7 +303,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
   else if (type == "mean") {
     if (is_null(values)) {
       if (!can_str2num(colnames(p))) {
-        .err("when `type = \"mean\"` and `values` is not set, the outcome levels must be able to be read as numbers")
+        .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
       }
       values <- setNames(str2num(colnames(p)), colnames(p))
     }
@@ -311,7 +311,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
       chk::chk_numeric(values)
       chk::chk_named(values)
       if (!all(colnames(p) %in% names(values))) {
-        .err("when `type = \"mean\"`, all outcome levels must be named in `values`")
+        .err('when `type = "mean"`, all outcome levels must be named in `values`')
       }
     }
 

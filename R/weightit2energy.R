@@ -144,16 +144,13 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   rlang::check_installed("osqp")
 
-  A <- list(...)
-
   missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
 
-  d <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
-  A[["dist.mat"]] <- NULL
+  d <- ...get("dist.mat", "scaled_euclidean")
 
   if (chk::vld_string(d)) {
     dist.covs <- transform_covariates(data = covs, method = d,
@@ -178,7 +175,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  t.lev <- get_treated_level(treat)
+  t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
 
   n <- length(treat)
@@ -186,10 +183,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   covs <- scale(covs)
 
-  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  min.w <- ...get("min.w", 1e-8)
   chk::chk_number(min.w)
 
-  lambda <- if_null_then(A[["lambda"]], 1e-4)
+  lambda <- ...get("lambda", 1e-4)
   chk::chk_number(lambda)
 
   t0 <- which(treat == 0)
@@ -206,7 +203,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   s.weights_n_1[t1] <- s.weights[t1] / n1
 
   if (estimand == "ATE") {
-    improved <- if_null_then(A[["improved"]], TRUE)
+    improved <- ...get("improved", TRUE)
     chk::chk_flag(improved)
 
     nn <- tcrossprod(cbind(s.weights_n_0, s.weights_n_1))
@@ -224,10 +221,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(rep.int(min.w, n), 1, 1)
     uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), 1, 1)
 
-    if (moments > 0 || int || is_not_null(A[["quantile"]])) {
+    if (moments > 0 || int || is_not_null(...get("quantile"))) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights))
+                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights))
 
       targets <- col.w.m(covs, s.weights)
 
@@ -247,10 +244,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(rep.int(min.w, n0), 1)
     uvec <- c(ifelse(check_if_zero(s.weights[t0]), min.w, Inf), 1)
 
-    if (moments > 0 || int || is_not_null(A[["quantile"]])) {
+    if (moments > 0 || int || is_not_null(...get("quantile"))) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                                 focal = 1, treat = treat))
 
       targets <- col.w.m(covs[t1,, drop = FALSE], s.weights[t1])
@@ -272,10 +269,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(rep.int(min.w, n1), 1)
     uvec <- c(ifelse(check_if_zero(s.weights[t1]), min.w, Inf), 1)
 
-    if (moments > 0 || int || is_not_null(A[["quantile"]])) {
+    if (moments > 0 || int || is_not_null(...get("quantile"))) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                                 focal = 0, treat = treat))
 
       targets <- col.w.m(covs[t0,, drop = FALSE], s.weights[t0])
@@ -299,12 +296,14 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   diag(P) <- diag(P) + lambda / n^2
 
-  if (is_not_null(A[["eps"]])) {
-    chk::chk_number(A[["eps"]], "`eps`")
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  A <- ...mget(names(formals(osqp::osqpSettings)))
+
+  if (is_not_null(...get("eps"))) {
+    chk::chk_number(...get("eps"), "`eps`")
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- ...get("eps")
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
   }
-  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+
   if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 4e3L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
@@ -337,7 +336,6 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
   }
 
-
   if (estimand == "ATT") {
     w <- rep.int(1, n)
     w[t0] <- opt.out$x
@@ -361,16 +359,13 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
                                   missing, moments, int, verbose, ...) {
   rlang::check_installed("osqp")
 
-  A <- list(...)
-
   missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
 
-  d <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
-  A[["dist.mat"]] <- NULL
+  d <- ...get("dist.mat", "scaled_euclidean")
 
   if (chk::vld_string(d)) {
     dist.covs <- transform_covariates(data = covs, method = d,
@@ -401,10 +396,10 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   covs <- scale(covs)
 
-  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  min.w <- ...get("min.w", 1e-8)
   chk::chk_number(min.w)
 
-  lambda <- if_null_then(A[["lambda"]], 1e-4)
+  lambda <- ...get("lambda", 1e-4)
   chk::chk_number(lambda)
 
   for (t in levels_treat) {
@@ -418,7 +413,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
                           numeric(n))
 
   if (estimand == "ATE") {
-    improved <- if_null_then(A[["improved"]], TRUE)
+    improved <- ...get("improved", TRUE)
     chk::chk_flag(improved)
 
     nn <- tcrossprod(s.weights_n_t)
@@ -439,10 +434,10 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     lvec <- c(rep.int(min.w, n), rep.int(1, length(levels_treat)))
     uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), rep.int(1, length(levels_treat)))
 
-    if (moments > 0 || int || is_not_null(A[["quantile"]])) {
+    if (moments > 0 || int || is_not_null(...get("quantile"))) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights))
+                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights))
 
       targets <- col.w.m(covs, s.weights)
 
@@ -466,10 +461,10 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     lvec <- c(rep.int(min.w, sum(!in_focal)), rep.int(1, length(non_focal)))
     uvec <- c(ifelse(check_if_zero(s.weights[!in_focal]), min.w, Inf), rep.int(1, length(non_focal)))
 
-    if (moments > 0 || int || is_not_null(A[["quantile"]])) {
+    if (moments > 0 || int || is_not_null(...get("quantile"))) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                                 focal = focal, treat = treat))
 
       targets <- col.w.m(covs[in_focal,, drop = FALSE], s.weights[in_focal])
@@ -494,12 +489,14 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   diag(P) <- diag(P) + lambda / n^2
 
-  if (is_not_null(A[["eps"]])) {
-    chk::chk_number(A[["eps"]], "`eps`")
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  A <- ...mget(names(formals(osqp::osqpSettings)))
+
+  if (is_not_null(...get("eps"))) {
+    chk::chk_number(...get("eps"), "`eps`")
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- ...get("eps")
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
   }
-  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+
   if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 4e3L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
@@ -550,16 +547,13 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("osqp")
 
-  A <- list(...)
-
   missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
 
-  Xdist <- if_null_then(A[["dist.mat"]], "scaled_euclidean")
-  A[["dist.mat"]] <- NULL
+  Xdist <- ...get("dist.mat", "scaled_euclidean")
 
   if (chk::vld_string(Xdist)) {
     dist.covs <- transform_covariates(data = covs, method = Xdist,
@@ -579,12 +573,11 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   Xdist <- unname(Xdist[subset, subset])
 
-  if (is_null(A[["treat.dist.mat"]])) {
+  if (is_null(...get("treat.dist.mat"))) {
     Adist <- eucdist_internal(X = treat/sqrt(col.w.v(treat, s.weights)))
   }
   else {
-    Adist <- A[["treat.dist.mat"]]
-    A[["treat.dist.mat"]] <- NULL
+    Adist <- ...get("treat.dist.mat")
 
     if (inherits(Adist, "dist")) Adist <- as.matrix(Adist)
 
@@ -607,16 +600,16 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   s.weights <- n * s.weights/sum(s.weights)
 
-  min.w <- if_null_then(A[["min.w"]], 1e-8)
+  min.w <- ...get("min.w", 1e-8)
   chk::chk_number(min.w)
 
-  lambda <- if_null_then(A[["lambda"]], 1e-4)
+  lambda <- ...get("lambda", 1e-4)
   chk::chk_number(lambda)
 
-  d.moments <- max(if_null_then(A[["d.moments"]], 0), moments)
+  d.moments <- max(...get("d.moments", 0), moments)
   chk::chk_count(d.moments)
 
-  dimension.adj <- if_null_then(A[["dimension.adj"]], TRUE)
+  dimension.adj <- ...get("dimension.adj", TRUE)
   chk::chk_flag(dimension.adj)
 
   Xmeans <- colMeans(Xdist)
@@ -695,12 +688,14 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   diag(P) <- diag(P) + lambda / n^2
 
-  if (is_not_null(A[["eps"]])) {
-    chk::chk_number(A[["eps"]], "`eps`")
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- A[["eps"]]
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- A[["eps"]]
+  A <- ...mget(names(formals(osqp::osqpSettings)))
+
+  if (is_not_null(...get("eps"))) {
+    chk::chk_number(...get("eps"), "`eps`")
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- ...get("eps")
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
   }
-  A[names(A) %nin% names(formals(osqp::osqpSettings))] <- NULL
+
   if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")

@@ -94,8 +94,6 @@ NULL
 weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("CBPS")
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
 
@@ -106,17 +104,19 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, moments, in
   }
 
   covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                             treat = treat))
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   new.data <- data.frame(treat = treat, covs)
 
-  corprior <- if_null_then(A[["corprior"]], .01)
+  corprior <- ...get("corprior", .01)
 
   tryCatch({verbosely({
     fit <- CBPS::npCBPS(formula(new.data),
@@ -141,8 +141,6 @@ weightit2npcbps.multi <- weightit2npcbps
 weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
   rlang::check_installed("CBPS")
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
 
@@ -152,7 +150,9 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   covs <- .int_poly_f(covs, poly = moments, int = int)
 
@@ -161,7 +161,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, moment
 
   new.data <- data.frame(treat = treat, covs)
 
-  corprior <- if_null_then(A[["corprior"]], .01)
+  corprior <- ...get("corprior", .01)
 
   tryCatch({verbosely({
     fit <- CBPS::npCBPS(formula(new.data),

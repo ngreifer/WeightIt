@@ -156,8 +156,6 @@ NULL
 weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
                           stabilize, subclass, missing, moments, int, verbose, ...) {
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -169,10 +167,10 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                             focal = focal, treat = treat))
 
-  t.lev <- get_treated_level(treat)
+  t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
@@ -181,23 +179,23 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   mod_covs <- svd(cbind(`(Intercept)` = 1, scale(covs)))$u
   bal_covs <- mod_covs
 
-  over <- if_null_then(A$over, FALSE)
+  over <- ...get("over", FALSE)
   chk::chk_flag(over)
 
   if (over) {
-    twostep <- if_null_then(A$twostep, TRUE)
+    twostep <- ...get("twostep", TRUE)
     chk::chk_flag(twostep)
   }
 
-  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
+  reltol <- ...get("reltol", sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if_null_then(A$maxit, 1e3)
+  maxit <- ...get("maxit", 1e3)
   chk::chk_count(maxit)
 
   N <- sum(s.weights)
 
-  link <- if_null_then(A$link, "logit")
+  link <- ...get("link", "logit")
   chk::chk_string(link)
   chk::chk_subset(link, c("logit", "probit", "cauchit", "cloglog", "log", "identity"))
 
@@ -315,7 +313,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   p.score <- .fam$linkinv(drop(mod_covs %*% par))
 
   if (out$converge != 0) {
-    .wrn("the optimziation failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
   }
 
   w <- .get_w_from_ps_internal_bin(p.score, treat, estimand = estimand,
@@ -346,8 +344,6 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                                 stabilize, subclass, missing, moments, int, verbose, ...) {
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
@@ -359,7 +355,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = A[["quantile"]], s.weights = s.weights,
+                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
                             focal = focal, treat = treat))
 
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
@@ -368,18 +364,18 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   mod_covs <- svd(cbind(`(Intercept)` = 1, scale(covs)))$u
   bal_covs <- mod_covs
 
-  over <- if_null_then(A$over, FALSE)
+  over <- ...get("over", FALSE)
   chk::chk_flag(over)
 
   if (over) {
-    twostep <- if_null_then(A$twostep, TRUE)
+    twostep <- ...get("twostep", TRUE)
     chk::chk_flag(twostep)
   }
 
-  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
+  reltol <- ...get("reltol", sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if_null_then(A$maxit, 1e3)
+  maxit <- ...get("maxit", 1e3)
   chk::chk_count(maxit)
 
   N <- sum(s.weights)
@@ -401,7 +397,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                                     hess = FALSE)$coefficients
 
   # Balance measured between all combinations of treatment groups
-  combs <- utils::combn(levels(treat), 2, simplify = FALSE)
+  combs <- utils::combn(levels(treat), 2L, simplify = FALSE)
 
   psi_bal <- switch(estimand,
                     "ATE" = function(B, Xm, Xb = Xm, A, SW) {
@@ -555,7 +551,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (out$converge != 0) {
-    .wrn("the optimziation failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
   }
 
   pp <- get_pp(par, mod_covs)
@@ -588,8 +584,6 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
 weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -616,18 +610,18 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   bal_covs <- mod_covs
 
-  over <- if_null_then(A$over, FALSE)
+  over <- ...get("over", FALSE)
   chk::chk_flag(over)
 
   if (over) {
-    twostep <- if_null_then(A$twostep, TRUE)
+    twostep <- ...get("twostep", TRUE)
     chk::chk_flag(twostep)
   }
 
-  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
+  reltol <- ...get("reltol", sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if_null_then(A$maxit, 1e4)
+  maxit <- ...get("maxit", 1e4)
   chk::chk_count(maxit)
 
   s.weights <- s.weights / mean_fast(s.weights)
@@ -748,7 +742,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
   }
 
   if (out$converge != 0) {
-    .wrn("the optimziation failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
   }
 
   un_s2 <- exp(par[1])
@@ -768,7 +762,6 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 }
 
 weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, verbose, ...) {
-  A <- list(...)
 
   s.weights <- s.weights[subset]
   treat.types <- character(length(treat.list))
@@ -790,7 +783,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     if (treat.types[i] %in% c("binary", "multi-category")) {
       covs.list[[i]] <- cbind(.int_poly_f(covs.list[[i]], poly = moments,
                                           int = int, center = TRUE),
-                              .quantile_f(covs.list[[i]], qu = A[["quantile"]],
+                              .quantile_f(covs.list[[i]], qu = ...get("quantile"),
                                           s.weights = s.weights))
     }
     else {
@@ -803,7 +796,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
     treat.list[[i]] <- switch(
       treat.types[i],
-      "binary" = binarize(treat.list[[i]], one = get_treated_level(treat.list[[i]])),
+      "binary" = binarize(treat.list[[i]], one = get_treated_level(treat.list[[i]], "ATE")),
       "multi-category" = factor(treat.list[[i]]),
       "continuous" = scale_w(treat.list[[i]], s.weights)
     )
@@ -816,18 +809,18 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
                             scale(svd(covs.list[[i]])$u))
   }
 
-  over <- if_null_then(A$over, FALSE)
+  over <- ...get("over", FALSE)
   chk::chk_flag(over)
 
   if (over) {
-    twostep <- if_null_then(A$twostep, TRUE)
+    twostep <- ...get("twostep", TRUE)
     chk::chk_flag(twostep)
   }
 
-  reltol <- if_null_then(A$reltol, sqrt(.Machine$double.eps))
+  reltol <- ...get("reltol", sqrt(.Machine$double.eps))
   chk::chk_number(reltol)
 
-  maxit <- if_null_then(A$maxit, 1e4)
+  maxit <- ...get("maxit", 1e4)
   chk::chk_count(maxit)
 
   coef_ind <- vector("list", length(treat.list))
@@ -1036,7 +1029,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   }
 
   if (out$converge != 0) {
-    .wrn("the optimziation failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
   }
 
   w <- Reduce("*", lapply(seq_along(treat.list), function(i) {

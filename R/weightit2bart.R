@@ -114,7 +114,6 @@ NULL
 
 weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
                           subclass, missing, verbose, ...) {
-  A <- list(...)
 
   rlang::check_installed("dbarts", version = "0.9-23")
 
@@ -133,10 +132,16 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
-  t.lev <- get_treated_level(treat)
+  t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
+
+  A <- ...mget(setdiff(c(names(formals(dbarts::bart2)),
+                         names(formals(dbarts::dbartsControl))),
+                       c("offset.test", "weights", "subset", "test")))
 
   A[["data"]] <- treat
   A[["formula"]] <- covs
@@ -144,10 +149,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   A[["combineChains"]] <- TRUE
   A[["verbose"]] <- FALSE #necessary to prevent crash
 
-  bart.call <- as.call(c(list(quote(dbarts::bart2)),
-                         A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                                   names(formals(dbarts::dbartsControl))),
-                                                 c("offset.test", "weights", "subset", "test"))]))
+  bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
 
   tryCatch({verbosely({
     fit <- eval(bart.call)
@@ -167,8 +169,6 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
 weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize,
                                  subclass, missing, verbose, ...) {
-  A <- list(...)
-
   rlang::check_installed("dbarts", version = "0.9-23")
 
   covs <- covs[subset, , drop = FALSE]
@@ -181,14 +181,20 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
     covs <- add_missing_indicators(covs)
   }
 
-  if (ncol(covs) > 1) {
+  if (ncol(covs) > 1L) {
     colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   ps <- make_df(levels(treat), nrow = length(treat))
+
+  A <- ...mget(setdiff(c(names(formals(dbarts::bart2)),
+                         names(formals(dbarts::dbartsControl))),
+                       c("offset.test", "weights", "subset", "test")))
 
   A[["formula"]] <- covs
   A[["keepCall"]] <- FALSE
@@ -199,10 +205,8 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
 
   for (i in levels(treat)) {
     A[["data"]] <- as.integer(treat == i)
-    bart.call <- as.call(c(list(quote(dbarts::bart2)),
-                           A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                                     names(formals(dbarts::dbartsControl))),
-                                                   c("offset.test", "weights", "subset", "test"))]))
+    bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
+
     tryCatch({verbosely({
       fit.list[[i]] <- eval(bart.call)
     }, verbose = verbose)},
@@ -223,7 +227,6 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
 }
 
 weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
-  A <- list(...)
 
   rlang::check_installed("dbarts")
 
@@ -237,13 +240,19 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   #Process density params
-  densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
-                          adjust = A[["adjust"]], kernel = A[["kernel"]],
-                          n = A[["n"]], treat = treat, density = A[["density"]],
+  densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")), bw = ...get("bw"),
+                          adjust = ...get("adjust"), kernel = ...get("kernel"),
+                          n = ...get("n"), treat = treat, density = ...get("density"),
                           weights = s.weights)
+
+  A <- ...mget(setdiff(c(names(formals(dbarts::bart2)),
+                         names(formals(dbarts::dbartsControl))),
+                       c("offset.test", "weights", "subset", "test")))
 
   A[["formula"]] <- covs
   A[["data"]] <- treat
@@ -251,10 +260,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   A[["combineChains"]] <- TRUE
   A[["verbose"]] <- FALSE #necessary to prevent crash
 
-  bart.call <- as.call(c(list(quote(dbarts::bart2)),
-                         A[names(A) %in% setdiff(c(names(formals(dbarts::bart2)),
-                                                   names(formals(dbarts::dbartsControl))),
-                                                 c("offset.test", "weights", "subset", "test"))]))
+  bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
 
   #Estimate GPS
   tryCatch({verbosely({
@@ -273,7 +279,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
 
   w <- exp(log.dens.num - log.dens.denom)
 
-  if (isTRUE(A[["plot"]])) {
+  if (isTRUE(...get("plot"))) {
     d.n <- attr(log.dens.num, "density")
     d.d <- attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)

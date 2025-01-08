@@ -53,14 +53,18 @@
 #'
 
 #' @exportS3Method summary weightit
-summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
+summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
+
+  chk::chk_count(top)
+  chk::chk_flag(ignore.s.weights)
+
   outnames <- c("weight.range", "weight.top", "weight.mean",
                 "coef.of.var", "scaled.mad", "negative.entropy",
                 "effective.sample.size")
   out <- make_list(outnames)
 
   sw <- {
-    if (ignore.s.weights  || is_null(object$s.weights)) rep.int(1, nobs(object))
+    if (ignore.s.weights  || is_null(object$s.weights)) rep.int(1.0, nobs(object))
     else object$s.weights
   }
 
@@ -84,10 +88,9 @@ summary.weightit <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
     nn <- make_df("Total", c("Unweighted", "Weighted"))
     nn["Unweighted", ] <- ESS(sw)
     nn["Weighted", ] <- ESS(w)
-
   }
   else if (treat.type == "binary" && !chk::vld_character_or_factor(t)) {
-    treated <- get_treated_level(t)
+    treated <- get_treated_level(t, object$estimand, object$focal)
     t <- as.integer(t == treated)
     t0 <- which(t == 0L)
     t1 <- which(t == 1L)
@@ -193,18 +196,16 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
   focal <- attr(w, "focal")
   treat.type <- get_treat_type(t)
 
-  A <- list(...)
-  if (is_not_null(A[["breaks"]])) {
-    breaks <- hist(w, breaks = A[["breaks"]], plot = FALSE)$breaks
+  if (is_not_null(breaks <- ...get("breaks"))) {
+    breaks <- hist(w, breaks = breaks, plot = FALSE)[["breaks"]]
     bins <- binwidth <- NULL
   }
-  else {
-    breaks <- NULL
-    if (is_null(bins)) bins <- 20
+  else if (is_null(bins)) {
+    bins <- 20
   }
 
   subtitle <- {
-    if (is_not_null(focal))  sprintf("For Units Not in Treatment Group %s", add_quotes(focal))
+    if (is_not_null(focal)) sprintf("For Units Not in Treatment Group %s", add_quotes(focal))
     else NULL
   }
 
@@ -223,7 +224,10 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
   }
   else {
     d <- data.frame(w, t = factor(t))
-    if (is_not_null(focal)) d <- d[t != focal,]
+
+    if (is_not_null(focal)) {
+      d <- d[t != focal,]
+    }
 
     levels(d$t) <- sprintf("Treat = %s", levels(d$t))
     w_means <- aggregate(w ~ t, data = d, FUN = mean)
@@ -249,11 +253,15 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
 
 #' @exportS3Method summary weightitMSM
 #' @rdname summary.weightit
-summary.weightitMSM <- function(object, top = 5, ignore.s.weights = FALSE, ...) {
+summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
+
+  chk::chk_count(top)
+  chk::chk_flag(ignore.s.weights)
+
   out.list <- make_list(names(object$treat.list))
 
   sw <- {
-    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, nobs(object))
+    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1.0, nobs(object))
     else object$s.weights
   }
 
@@ -278,9 +286,13 @@ print.summary.weightitMSM <- function(x, ...) {
            italic(sprintf(" Time %s ", ti)),
            strikethrough(space(23)), "\n")
     }
+
     print(x[[ti]])
     cat("\n")
-    if (only.one) break
+
+    if (only.one) {
+      break
+    }
   }
 
   invisible(x)

@@ -1,6 +1,5 @@
 weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
                         stabilize, subclass, missing, ps, .data, verbose, ...) {
-  A <- list(...)
 
   fit.obj <- NULL
 
@@ -9,7 +8,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- factor(treat)
   treat_sub <- factor(treat[subset])
 
-  t.lev <- get_treated_level(treat)
+  t.lev <- get_treated_level(treat, estimand, focal)
   c.lev <- setdiff(levels(treat_sub), t.lev)
 
   if (is.matrix(ps) || is.data.frame(ps)) {
@@ -46,7 +45,9 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
     }
   }
 
-  if (is_null(p.score)) .err("`ps` must be a numeric vector with a propensity score for each unit")
+  if (is_null(p.score)) {
+    .err("`ps` must be a numeric vector with a propensity score for each unit")
+  }
 
   #ps should be matrix of probs for each treat
   #Computing weights
@@ -91,9 +92,13 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       bad.ps <- TRUE
     }
   }
-  else bad.ps <- TRUE
+  else {
+    bad.ps <- TRUE
+  }
 
-  if (bad.ps) .err("`ps` must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit")
+  if (bad.ps) {
+    .err("`ps` must be a numeric vector with a propensity score for each unit or a matrix \n\twith the probability of being in each treatment for each unit")
+  }
 
   #ps should be matrix of probs for each treat
   #Computing weights
@@ -104,15 +109,14 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
-  A <- list(...)
 
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
   #Process density params
-  densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
-                          adjust = A[["adjust"]], kernel = A[["kernel"]],
-                          n = A[["n"]], treat = treat, density = A[["density"]],
+  densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")), bw = ...get("bw"),
+                          adjust = ...get("adjust"), kernel = ...get("kernel"),
+                          n = ...get("n"), treat = treat, density = ...get("density"),
                           weights = s.weights)
 
   #Stabilization - get dens.num
@@ -124,7 +128,7 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
 
   w <- exp(log.dens.num - log.dens.denom)
 
-  if (isTRUE(A[["plot"]])) {
+  if (isTRUE(...get("plot"))) {
     d.n <- attr(log.dens.num, "density")
     d.d <- attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)

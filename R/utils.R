@@ -54,18 +54,19 @@ add_quotes <- function(x, quotes = 2L) {
     return(x)
   }
 
-  if (isTRUE(quotes))
+  if (isTRUE(quotes)) {
     quotes <- '"'
+  }
 
   if (chk::vld_string(quotes)) {
-    return(paste0(quotes, x, quotes))
+    return(paste0(quotes, x, str_rev(quotes)))
   }
 
   if (!chk::vld_count(quotes) || quotes > 2) {
     stop("`quotes` must be boolean, 1, 2, or a string.")
   }
 
-  if (quotes == 0L) {
+  if (quotes == 0) {
     return(x)
   }
 
@@ -250,6 +251,9 @@ cat0 <- function(... , file = "", sep = "", fill = FALSE, labels = NULL,
 space <- function(n) {
   paste0(rep.int(" ", n), collapse = "")
 }
+str_rev <- function(x) {
+  vapply(lapply(strsplit(x, NULL), rev), paste, character(1L), collapse = "")
+}
 
 #Numbers
 check_if_zero <- function(x) {
@@ -309,7 +313,7 @@ binarize <- function(variable, zero = NULL, one = NULL) {
   }
 
   if (length(unique.vals) == 1L) {
-    return(setNames(rep.int(1L, length(variable)), names(variable)))
+    return(rep_with(1L, variable))
   }
 
   if (length(unique.vals) != 2L) {
@@ -591,7 +595,6 @@ hasbar <- function(term) {
 
 #treat/covs
 get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep = "", ...) {
-  A <- list(...)
 
   #Check if data exists
   if (is_not_null(data)) {
@@ -647,7 +650,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     }
 
     if (resp.var.failed) {
-      if (is_null(A[["treat"]])) {
+      if (is_null(...get("treat"))) {
         .err(sprintf("the given response variable, %s, is not a variable in %s",
                      add_quotes(resp.var.mentioned.char),
                      word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or")))
@@ -660,7 +663,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
   }
 
   if (resp.var.failed) {
-    treat <- A[["treat"]]
+    treat <- ...get("treat")
     treat.name <- NULL
   }
   else {
@@ -676,15 +679,15 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
   rhs.vars.failed <- vapply(seq_along(rhs.vars.mentioned), function(i) {
     test <- tryCatch(eval(rhs.vars.mentioned[[i]], data, env), error = function(e) e)
     if (!inherits(test, "simpleError")) {
-      is_null(test)
+      return(is_null(test))
     }
-    else if (startsWith(conditionMessage(test), "object") &&
-          endsWith(conditionMessage(test), "not found")) {
-      TRUE
-    }
-    else {
+
+    if (!startsWith(conditionMessage(test), "object") ||
+        !endsWith(conditionMessage(test), "not found")) {
       .err(conditionMessage(test), tidy = FALSE)
     }
+
+    TRUE
   }, logical(1L))
 
   if (any(rhs.vars.failed)) {
@@ -763,7 +766,9 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
                                         na.action = "na.pass"))
 
     tryCatch({covs <- eval(mf.covs)},
-             error = function(e) {.err(conditionMessage(e), tidy = FALSE)})
+             error = function(e) {
+               .err(conditionMessage(e), tidy = FALSE)
+             })
 
     if (is_not_null(treat.name) && treat.name %in% names(covs)) {
       .err("the variable on the left side of the formula appears on the right side too")
@@ -771,7 +776,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
   }
 
   if (eval.model.matrx) {
-    if (!is.character(sep) || length(sep) > 1) {
+    if (!is.character(sep) || length(sep) > 1L) {
       stop("'sep' must be a string of length 1.", call. = FALSE)
     }
 
@@ -822,11 +827,11 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
   #Returns treat with treat.type attribute
   nunique.treat <- nunique(treat)
 
-  if (nunique.treat < 2) {
+  if (nunique.treat < 2L) {
     .err("the treatment must have at least two unique values")
   }
 
-  if (!use.multi && nunique.treat == 2) {
+  if (!use.multi && nunique.treat == 2L) {
     treat.type <- "binary"
   }
   else if (use.multi || chk::vld_character_or_factor(treat)) {
@@ -846,31 +851,6 @@ get_treat_type <- function(treat) {
 }
 has_treat_type <- function(treat) {
   is_not_null(get_treat_type(treat))
-}
-get_treated_level <- function(treat) {
-  if (!is_binary(treat)) {
-    stop("'treat' must be a binary variable.")
-  }
-
-  if (chk::vld_character_or_factor(treat)) {
-    treat <- factor(treat, nmax = 2)
-    unique.vals <- levels(treat)
-  }
-  else {
-    unique.vals <- unique(treat, nmax = 2)
-  }
-
-  unique.vals.numeric <- {
-    if (can_str2num(unique.vals)) str2num(unique.vals)
-    else seq_along(unique.vals)
-  }
-
-  treated <- {
-    if (any(unique.vals.numeric == 0)) unique.vals[unique.vals.numeric != 0]
-    else unique.vals[which.max(unique.vals.numeric)]
-  }
-
-  treated
 }
 
 #Uniqueness
@@ -963,7 +943,9 @@ make_df <- function(ncol, nrow = 0L, types = "numeric") {
     stop("'types' must be an acceptable type. For factors, use NA.")
   }
 
-  if (length(types) == 1) types <- rep.int(types, ncol)
+  if (length(types) == 1L) {
+    types <- rep.int(types, ncol)
+  }
 
   for (i in which(!is.na(types))) {
     if (types[i] != "numeric") {
@@ -972,6 +954,10 @@ make_df <- function(ncol, nrow = 0L, types = "numeric") {
   }
 
   df
+}
+rep_with <- function(x, y) {
+  #Helper function to fill named vectors with x and given names of y
+  setNames(rep.int(x, length(y)), names(y))
 }
 is_null <- function(x) length(x) == 0L
 is_not_null <- function(x) !is_null(x)
@@ -982,11 +968,15 @@ if_null_then <- function(x1 = NULL, x2 = NULL, ...) {
 
   dots_len <- ...length()
 
-  if (is_not_null(x2) || dots_len == 0L) return(x2)
+  if (is_not_null(x2) || dots_len == 0L) {
+    return(x2)
+  }
 
   if (dots_len > 1L) {
     for (k in seq_len(dots_len - 1L)) {
-      if (is_not_null(...elt(k))) return(...elt(k))
+      if (is_not_null(...elt(k))) {
+        return(...elt(k))
+      }
     }
   }
 
@@ -1039,7 +1029,9 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
   }
   else {
     chk::chk_string(arg, x_name = add_quotes(arg.name, "`"))
-    if (identical(arg, choices)) return(arg[1L])
+    if (identical(arg, choices)) {
+      return(arg[1L])
+    }
   }
 
   i <- pmatch(arg, choices, nomatch = 0L, duplicates.ok = TRUE)
@@ -1084,7 +1076,7 @@ seq_col <- function(x) {
     return(integer(0))
   }
 
-  if (length(dim(x)) != 2) {
+  if (length(dim(x)) != 2L) {
     stop("dim(x) must have length 2")
   }
 
@@ -1103,15 +1095,89 @@ check_if_call_from_fun <- function(fun) {
     return(FALSE)
   }
 
-  sp <- sys.parents()
-  sys.funs <- lapply(sp, sys.function)
-  for (x in sys.funs) {
-    if (identical(fun, x)) {
+  for (x in sys.parents()) {
+    if (identical(fun, sys.function(x), ignore.environment = TRUE)) {
       return(TRUE)
     }
   }
 
   FALSE
+}
+
+#Extract variables from ..., similar to ...elt(), by name without evaluating list(...)
+...get <- function(x, ifnotfound = NULL) {
+  eval(quote(if (!anyNA(.m1 <- match(.x, ...names())) && is_not_null(.m2 <- ...elt(.m1))) .m2
+             else .ifnotfound),
+       pairlist(.x = x[1L], .ifnotfound = ifnotfound),
+       parent.frame(1L))
+}
+
+...mget <- function(x) {
+  found <- match(x, eval(quote(...names()), parent.frame(1L)))
+
+  not_found <- is.na(found)
+
+  if (all(not_found)) {
+    return(list())
+  }
+
+  setNames(lapply(found[!not_found], function(z) {
+    eval(quote(...elt(.z)),
+         pairlist(.z = z),
+         parent.frame(3L))
+  }), x[!not_found])
+}
+
+#Evaluate a call (usually a model call) with options for ignoring and recoding
+#warnings and errors.
+.eval_fit <- function(call,
+                      envir = parent.frame(2L),
+                      warnings = c(),
+                      errors = c(),
+                      from = TRUE) {
+  withCallingHandlers({
+    fit <- eval(call, envir = envir)
+  },
+  warning = function(w) {
+    w <- conditionMessage(w)
+
+    if (is_not_null(wmatch <- which(startsWith(tolower(w), tolower(names(warnings)))))) {
+      if (!is.na(warnings[wmatch[1L]])) {
+        .wrn(warnings[wmatch[1L]])
+      }
+    }
+    else if (is_null(from) || isFALSE(from)) {
+      .wrn(w, tidy = FALSE)
+    }
+    else if (isTRUE(from)) {
+      .wrn(sprintf("(from `%s()`) %s", rlang::call_name(call), w), tidy = FALSE)
+    }
+    else {
+      .wrn(sprintf("(from %s) %s", paste(from, collapse = ""), w), tidy = FALSE)
+    }
+
+    invokeRestart("muffleWarning")
+  },
+  error = function(e) {
+    e <- conditionMessage(e)
+
+    if (is_not_null(ematch <- which(startsWith(tolower(e), tolower(names(errors)))))) {
+      if (!is.na(errors[ematch[1L]])) {
+        .err(errors[ematch[1L]])
+      }
+    }
+    else if (is_null(from) || isFALSE(from)) {
+      .err(e, tidy = FALSE)
+    }
+    else if (isTRUE(from)) {
+      .err(sprintf("(from `%s()`) %s", rlang::call_name(call), e), tidy = FALSE)
+    }
+    else {
+      .err(sprintf("(from %s) %s", paste(from, collapse = ""), e), tidy = FALSE)
+    }
+  })
+
+  fit
 }
 
 # Return 1/f

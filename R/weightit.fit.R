@@ -11,9 +11,10 @@
 #' a thinner, slightly faster interface that performs minimal argument
 #' checking.
 #'
+#' @inheritParams weightit
 #' @param covs a numeric matrix of covariates.
 #' @param treat a vector of treatment statuses.
-#' @param method a string of length 1 containing the name of the method that
+#' @param method a string containing the name of the method that
 #' will be used to estimate weights. See [weightit()] for allowable options.
 #' The default is `"glm"` for propensity score weighting using a
 #' generalized linear model to estimate the propensity score.
@@ -22,21 +23,14 @@
 #' supplied.
 #' @param by.factor a factor variable for which weighting is to be done within
 #' levels. Corresponds to the `by` argument in [weightit()].
-#' @param estimand the desired estimand. For binary and multi-category
-#' treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO", "ATM",
-#' or "ATOS". The default for both is "ATE". This argument is ignored for
-#' continuous treatments. See the individual pages for each method for more
-#' information on which estimands are allowed with each method and what
-#' literature to read to interpret these estimands.
 #' @param stabilize `logical`; whether or not to stabilize the weights.
 #' For the methods that involve estimating propensity scores, this involves
 #' multiplying each unit's weight by the proportion of units in their treatment
 #' group. Default is `FALSE`. Note this differs from its use with [weightit()].
-#' @param focal when multi-category treatments are used and ATT weights are
-#' requested, which group to consider the "treated" or focal group. This group
-#' will not be weighted, and the other groups will be weighted to be more like
-#' the focal group. Must be non-`NULL` if `estimand = "ATT"` or
-#' `"ATC"`.
+#' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to consider the "treated" or "control" group. This group
+#' will not be weighted, and the other groups will be weighted to resemble
+#' the focal group. If specified, `estimand` will automatically be set to
+#' `"ATT"` (with a warning if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and `focal`* in Details at [weightit()].
 #' @param ps a vector of propensity scores. If specified, `method` will be
 #' ignored and set to `"glm"`.
 #' @param moments,int,subclass arguments to customize the weight estimation.
@@ -46,12 +40,6 @@
 #' will be checked for `NA` values, and if present, `missing` will be
 #' set to `"ind"`. If `""`, `covs` will not be checked for
 #' `NA` values; this can be faster when it is known there are none.
-#' @param verbose whether to print additional information output by the fitting
-#' function.
-#' @param include.obj whether to include in the output any fit objects created
-#' in the process of estimating the weights. For example, with `method = "glm"`, the `glm` objects containing the propensity score model will be
-#' included. See the individual pages for each method for information on what
-#' object will be included if `TRUE`.
 #' @param ... other arguments for functions called by `weightit.fit()`
 #' that control aspects of fitting that are not covered by the above arguments.
 #'
@@ -59,9 +47,10 @@
 #' A `weightit.fit` object with the following elements:
 #' \item{weights}{The estimated weights, one for each unit.}
 #' \item{treat}{The values of the treatment variable.}
-#' \item{estimand}{The estimand requested. ATC is recoded as ATT.}
+#' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
-#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"super"`, or `"bart"`.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
+#' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details at [weightit()] for how the treated group is determined.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 #' \item{fit.obj}{When `include.obj = TRUE`, the fit object.}
@@ -182,7 +171,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
 
     if (is_null(s.weights)) {
-      s.weights <- rep.int(1, length(treat))
+      s.weights <- rep.int(1.0, length(treat))
     }
     else {
       .chk_basic_vector(s.weights)
@@ -196,7 +185,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
 
     if (is_null(by.factor)) {
-      by.factor <- factor(rep.int(1, length(treat)), levels = 1)
+      by.factor <- factor(rep.int(1L, length(treat)), levels = 1L)
     }
     else {
       chk::chk_factor(by.factor)
@@ -212,6 +201,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     focal <- f.e.r[["focal"]]
     estimand <- f.e.r[["estimand"]]
 
+    if (treat.type == "binary") {
+      attr(treat, "treated") <- f.e.r[["treated"]]
+    }
+
     chk::chk_null_or(missing, vld = chk::vld_string)
 
     if (is_null(missing)) {
@@ -221,10 +214,14 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     else if (missing != "" && anyNA(covs)) {
       missing <- .process_missing(missing, method)
     }
-    else missing <- ""
+    else {
+      missing <- ""
+    }
 
     #Check subclass
-    if (is_not_null(subclass)) .check_subclass(method, treat.type)
+    if (is_not_null(subclass)) {
+      .check_subclass(method, treat.type)
+    }
 
     #Process moments and int
     m.i.q <- .process_moments_int_quantile(moments = moments,

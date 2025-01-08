@@ -214,8 +214,6 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   rlang::check_installed("gbm")
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -225,19 +223,19 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
-  criterion <- A[["criterion"]]
-  if (is_null(criterion)) {
-    criterion <- A[["stop.method"]]
-  }
+  criterion <- if_null_then(...get("criterion"),
+                            ...get("stop.method"))
 
   if (is_null(criterion)) {
-    .wrn("no `criterion` was provided. Using \"smd.mean\"")
+    .wrn('no `criterion` was provided. Using "smd.mean"')
     criterion <- "smd.mean"
   }
   else {
@@ -275,29 +273,29 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   tunable <- c("interaction.depth", "shrinkage", "distribution", "use.offset")
 
-  trim.at <- if_null_then(A[["trim.at"]], 0)
+  trim.at <- ...get("trim.at", 0)
 
-  for (f in names(formals(gbm::gbm.fit))) {
-    if (is_null(A[[f]])) {
-      if (f %in% c("x", "y", "misc", "w", "verbose", "var.names",
-                   "response.name", "group", "distribution")) A[f] <- list(NULL)
-      else A[f] <- list(switch(f, n.trees = 1e4,
-                               interaction.depth = 3,
-                               shrinkage = .01,
-                               bag.fraction = 1,
-                               keep.data = FALSE,
-                               class.stratify.cv = if (cv > 0) TRUE else NULL,
-                               formals(gbm::gbm.fit)[[f]]))
-    }
-  }
-
-  n.trees <- A[["n.trees"]]
+  n.trees <- ...get("n.trees", 1e4)
   chk::chk_count(n.trees)
   chk::chk_gt(n.trees, 1)
 
+  A <- ...mget(setdiff(names(formals(gbm::gbm.fit)),
+                       c("x", "y", "misc", "w", "verbose", "var.names",
+                         "response.name", "group",
+                         "n.trees", tunable)))
+
+  for (f in names(A)) {
+    if (is_null(A[[f]])) {
+      A[f] <- list(switch(f,
+                          bag.fraction = 1,
+                          keep.data = FALSE,
+                          formals(gbm::gbm.fit)[[f]]))
+    }
+  }
+
   if (treat.type == "binary")  {
     available.distributions <- c("bernoulli", "adaboost")
-    t.lev <- get_treated_level(treat)
+    t.lev <- get_treated_level(treat, estimand, focal)
     treat <- binarize(treat, one = t.lev)
   }
   else {
@@ -306,12 +304,12 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (cv == 0) {
-    start.tree <- if_null_then(A[["start.tree"]], 1)
+    start.tree <- ...get("start.tree", 1)
     chk::chk_count(start.tree)
     chk::chk_range(start.tree, c(1, n.trees))
 
-    n.grid <- if_null_then(A[["n.grid"]],
-                           round(1 + sqrt(2 * (n.trees - start.tree + 1))))
+    n.grid <- ...get("n.grid",
+                     round(1 + sqrt(2 * (n.trees - start.tree + 1))))
     chk::chk_count(n.grid)
     chk::chk_range(n.grid, c(2, n.trees))
 
@@ -326,27 +324,39 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   A[["x"]] <- covs
   A[["y"]] <- treat
-  A[["distribution"]] <- {
-    if (is_null(distribution <- A[["distribution"]])) available.distributions[1]
-    else match_arg(distribution, available.distributions, several.ok = TRUE)
-  }
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
   A[["n.trees"]] <- n.trees
 
-  # Offset
-  if (is_not_null(A[["use.offset"]])) {
-    chk::chk_logical(A[["use.offset"]], "`use.offset`")
-    chk::chk_not_any_na(A[["use.offset"]], "`use.offset`")
+  # Tunable parameters
+  B <- make_list(tunable)
+
+  ## Interaction depth
+  B[["interaction.depth"]] <- ...get("interaction.depth", 3)
+
+  ## Shrinkage
+  B[["shrinkage"]] <- ...get("shrinkage", .01)
+
+  ## Distribution
+  if (is_not_null(distribution <- ...get("distribution"))) {
+    B[["distribution"]] <- match_arg(distribution, available.distributions, several.ok = TRUE)
+  }
+  else {
+    B[["distribution"]] <- available.distributions[1L]
   }
 
-  if (any(A[["use.offset"]])) {
+  ## Offset
+  use.offset <- ...get("use.offset", FALSE)
+  chk::chk_logical(use.offset)
+  chk::chk_not_any_na(use.offset)
+
+  if (any(use.offset)) {
     if (treat.type == "multi-category") {
       .err("`use.offset` cannot be used with multi-category treatments")
     }
 
-    if (!identical(A[["distribution"]], "bernoulli")) {
-      .err("`use.offset` can only be used with `distribution = \"bernoulli\"`")
+    if (!identical(B[["distribution"]], "bernoulli")) {
+      .err('`use.offset` can only be used with `distribution = "bernoulli"`')
     }
 
     fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
@@ -354,14 +364,15 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     offset <- fit$linear.predictors
   }
   else {
-    A[["use.offset"]] <- FALSE
     offset <- NULL
   }
 
-  tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
-                                   list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
+  B[["use.offset"]] <- use.offset
 
-  tune <- unique(tune)
+  B[["stringsAsFactors"]] <- FALSE
+  B[["KEEP.OUT.ATTRS"]] <- FALSE
+
+  tune <- unique(do.call("expand.grid", B))
 
   info <- list()
 
@@ -407,10 +418,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
                                          focal = focal, stabilize = stabilize, subclass = subclass)
       if (trim.at != 0) {
-        w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+        w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
       }
 
-      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
+      iter.grid.balance <- apply(w, 2L, cobalt::bal.compute, x = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -440,10 +451,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
                                            focal = focal, stabilize = stabilize, subclass = subclass)
         if (trim.at != 0) {
-          w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+          w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
         }
 
-        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
+        iter.grid.balance.fine <- apply(w, 2L, cobalt::bal.compute, x = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
@@ -475,9 +486,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       if (i == 1) {
         A["data"] <- list(data.frame(treat, covs))
         A[["cv.folds"]] <- cv
-        A["n.cores"] <- list(A[["n.cores"]])
-        A["var.names"] <- list(A[["var.names"]])
+        A["n.cores"] <- list(...get("n.cores", 1))
+        A["var.names"] <- list(NULL)
         A[["nTrain"]] <- nrow(covs)
+        A[["class.stratify.cv"]] <- ...get("class.stratify.cv", TRUE)
       }
 
       gbmCrossVal.call <- as.call(c(list(quote(gbm::gbmCrossVal)),
@@ -539,27 +551,25 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   rlang::check_installed("gbm")
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
   missing <- .process_missing2(missing, covs)
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
-  criterion <- A[["criterion"]]
-  if (is_null(criterion)) {
-    criterion <- A[["stop.method"]]
-  }
+  criterion <- if_null_then(...get("criterion"),
+                            ...get("stop.method"))
 
   if (is_null(criterion)) {
-    .wrn("no `criterion` was provided. Using \"p.mean\"")
+    .wrn('no `criterion` was provided. Using "p.mean"')
     criterion <- "p.mean"
   }
   else {
@@ -589,33 +599,32 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   tunable <- c("interaction.depth", "shrinkage", "use.offset", "distribution")
 
-  trim.at <- if_null_then(A[["trim.at"]], 0)
+  trim.at <- ...get("trim.at", 0)
 
-  for (f in names(formals(gbm::gbm.fit))) {
-    if (is_null(A[[f]])) {
-      if (f %in% c("x", "y", "misc", "w", "verbose", "var.names",
-                   "response.name", "group", "distribution")) A[f] <- list(NULL)
-      else A[f] <- list(switch(f, n.trees = 2e4,
-                               interaction.depth = 4,
-                               shrinkage = 0.0005,
-                               bag.fraction = 1,
-                               formals(gbm::gbm.fit)[[f]]))
-    }
-  }
-
-  n.trees <- A[["n.trees"]]
+  n.trees <- ...get("n.trees", 2e4)
   chk::chk_count(n.trees)
   chk::chk_gt(n.trees, 1)
+
+  A <- ...mget(setdiff(names(formals(gbm::gbm.fit)),
+                       c("x", "y", "misc", "w", "verbose", "var.names",
+                         "response.name", "group",
+                         "n.trees", tunable)))
+
+  for (f in names(formals(gbm::gbm.fit))) {
+    A[f] <- list(switch(f,
+                        bag.fraction = 1,
+                        formals(gbm::gbm.fit)[[f]]))
+  }
 
   available.distributions <- c("gaussian", "laplace", "tdist")
 
   if (cv == 0) {
-    start.tree <- if_null_then(A[["start.tree"]], 1)
+    start.tree <- ...get("start.tree", 1)
     chk::chk_count(start.tree)
     chk::chk_range(start.tree, c(1, n.trees))
 
-    n.grid <- if_null_then(A[["n.grid"]],
-                           round(1 + sqrt(2 * (n.trees - start.tree + 1))))
+    n.grid <- ...get("n.grid",
+                     round(1 + sqrt(2 * (n.trees - start.tree + 1))))
     chk::chk_count(n.grid)
     chk::chk_range(n.grid, c(2, n.trees))
 
@@ -629,40 +638,51 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   A[["x"]] <- covs
   A[["y"]] <- treat
-  A[["distribution"]] <- {
-    if (is_null(distribution <- A[["distribution"]])) {
-      available.distributions[1]
-    }
-    else {
-      match_arg(distribution, available.distributions, several.ok = TRUE)
-    }
-  }
   A[["w"]] <- s.weights
   A[["verbose"]] <- FALSE
   A[["n.trees"]] <- n.trees
 
-  # Offset
-  if (is_not_null(A[["use.offset"]])) {
-    chk::chk_logical(A[["use.offset"]], "`use.offset`")
-    chk::chk_not_any_na(A[["use.offset"]], "`use.offset`")
+  # Tunable parameters
+  B <- make_list(tunable)
+
+  ## Interaction depth
+  B[["interaction.depth"]] <- ...get("interaction.depth", 4)
+
+  ## Shrinkage
+  B[["shrinkage"]] <- ...get("shrinkage", 0.0005)
+
+  ## Distribution
+  if (is_not_null(distribution <- ...get("distribution"))) {
+    B[["distribution"]] <- match_arg(distribution, available.distributions, several.ok = TRUE)
+  }
+  else {
+    B[["distribution"]] <- available.distributions[1L]
   }
 
-  if (any(A[["use.offset"]])) {
+  ## Offset
+  use.offset <- ...get("use.offset", FALSE)
+  chk::chk_logical(use.offset)
+  chk::chk_not_any_na(use.offset)
+
+  if (any(use.offset)) {
     fit <- lm.wfit(x = as.matrix(cbind(1, covs)), y = treat,
                    w = s.weights)
     offset <- fit$fitted.values
   }
   else {
-    A[["use.offset"]] <- FALSE
     offset <- NULL
   }
 
-  tune <- do.call("expand.grid", c(A[names(A) %in% tunable],
-                                   list(stringsAsFactors = FALSE, KEEP.OUT.ATTRS = FALSE)))
+  B[["use.offset"]] <- use.offset
 
-  tune <- unique(tune)
+  B[["stringsAsFactors"]] <- FALSE
+  B[["KEEP.OUT.ATTRS"]] <- FALSE
 
-  null_density <- !isTRUE(A[["use.kernel"]]) && is_null(A[["density"]])
+  tune <- unique(do.call("expand.grid", B))
+
+  use.kernel <- ...get("use.kernel", FALSE)
+  density <- ...get("density")
+  null_density <- !isTRUE(use.kernel) && is_null(density)
 
   info <- list()
   current.best.loss <- Inf
@@ -681,18 +701,18 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     tune_args <- as.list(tune[i, setdiff(tunable, c("distribution", "use.offset"))])
 
     if (null_density) {
-      A[["use.kernel"]] <- FALSE
-      A[["density"]] <- switch(A[["distribution"]]$name,
-                               "gaussian" = "dnorm",
-                               "tdist" = "dt_4",
-                               "laplace" = "dlaplace")
+      use.kernel <- FALSE
+      density <- switch(A[["distribution"]]$name,
+                        "gaussian" = "dnorm",
+                        "tdist" = "dt_4",
+                        "laplace" = "dlaplace")
     }
 
     if (i == 1 || (null_density && !identical(tune[["distribution"]][i], tune[["distribution"]][i - 1]))) {
       #Process density params
-      densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
-                               adjust = A[["adjust"]], kernel = A[["kernel"]],
-                               n = A[["n"]], treat = treat, density = A[["density"]],
+      densfun <- .get_dens_fun(use.kernel = isTRUE(use.kernel), bw = ...get("bw"),
+                               adjust = ...get("adjust"), kernel = ...get("kernel"),
+                               n = ...get("n"), treat = treat, density = density,
                                weights = s.weights)
 
       #Stabilization - get dens.num
@@ -830,7 +850,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                  tree.val = rbind(info$tree.val, cbind(tune = i, tree.val)))
   }
 
-  if (isTRUE(A[["plot"]])) {
+  if (isTRUE(...get("plot"))) {
     d.n <- attr(log.dens.num, "density")
     r <- treat - best.gps
     log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
