@@ -76,15 +76,13 @@
     sum(weights * log(p))
   }
 
-  dots <- list(...)
-
   control <- list(fnscale = -1, #maximize likelihood; optim() minimizes by default
                   trace = 0,
                   maxit = 1e3,
                   reltol = 1e-12)
 
   control <- utils::modifyList(control,
-                               dots[intersect(names(dots), c("trace", "maxit", "reltol", "ndeps", "REPORT"))])
+                               ...mget(c("trace", "maxit", "reltol", "ndeps", "REPORT")))
 
   out <- optim(par = start[!aliased_B],
                ll,
@@ -110,7 +108,7 @@
 
   res <- setNames(1 - pp[ind_mat], rownames(x))
 
-  coefs <- setNames(rep.int(NA_real_, length(start)), names(start))
+  coefs <- rep_with(NA_real_, start)
   coefs[!aliased_B] <- out$par
 
   list(coefficients = coefs,
@@ -129,7 +127,7 @@
 }
 
 .multinom_weightit <- function(formula, data, weights, subset, start = NULL, na.action,
-                             hess = TRUE, model = TRUE, x = FALSE, y = TRUE, contrasts = NULL, ...) {
+                               hess = TRUE, model = TRUE, x = FALSE, y = TRUE, contrasts = NULL, ...) {
   cal <- match.call()
 
   chk::chk_flag(hess)
@@ -193,7 +191,6 @@
   x <- if_null_then(fit[["x"]], model.matrix(fit))
   y <- if_null_then(fit[["y"]], model.response(model.frame(fit)))
   weights <- weights(fit)
-  offset <- fit$offset
   coefs <- coef(fit)
 
   y <- as.factor(y)
@@ -202,76 +199,35 @@
     colnames(x) <- paste0("x", seq_col(x))
   }
 
-  nobs <- length(y)
+  if (is_null(weights)) {
+    weights <- rep.int(1, length(y))
+  }
 
-  if (is_null(weights)) weights <- rep.int(1, nobs)
-
-  if (is.null(offset)) offset <- rep.int(0, nobs)
-
+  K <- nlevels(y) - 1
 
   aliased_X <- colnames(x) %nin% colnames(make_full_rank(x, with.intercept = FALSE))
 
   x_ <- x[, !aliased_X, drop = FALSE]
 
-  get_pp <- function(B, X, offset = NULL) {
-    if (length(offset) == 0) offset <- 0
-
-    qq <- exp(offset + X %*% matrix(B, nrow = ncol(X)))
-
-    pp <- cbind(1, qq) / (1 + rowSums(qq))
-
-    colnames(pp) <- levels(y)
-    rownames(pp) <- rownames(X)
-
-    pp
-  }
-
-  #Multinomial logistic regression score
-  psi <- function(B, X, y, weights, offset = NULL) {
-    pp <- get_pp(B, X, offset)
-
-    out <- do.call("cbind", lapply(levels(y)[-1], function(i) {
-      weights * ((y == i) - pp[,i]) * X
-    }))
-
-    if (is_not_null(names(B)))
-      colnames(out) <- names(B)
-
-    out
-  }
-
-  gr <- function(B, X, y, weights, offset) {
-    colSums(psi(B, X, y, weights, offset))
-  }
-
-  ind_mat <- cbind(seq_along(y), as.integer(y))
-
-  ll <- function(B, X, y, weights, offset) {
-    p <- get_pp(B, X, offset)[ind_mat]
-
-    sum(weights * log(p))
-  }
-
   theta0 <- na.rem(coefs)
 
-  # Estimate using natural parameterization to get hessian
-  hessian <- try(optimHess(par = theta0,
-                           ll,
-                           X = x_,
-                           y = y,
-                           weights = weights,
-                           offset = offset,
-                           gr = gr,
-                           control = list(fnscale = -1)),
-                 silent = TRUE)
+  p <- fit$fitted.values
 
-  # If optimization fails, use numeric differentiation of gradient to get hessian
-  if (null_or_error(hessian)) {
-    hessian <- .gradient(gr, theta0,
-                         X = x_,
-                         y = y,
-                         weights = weights,
-                         offset = offset)
+  hessian <- matrix(NA_real_, nrow = length(theta0), ncol = length(theta0))
+
+  for (i in 1:K) {
+    i_ind <- (i - 1) * ncol(x_) + seq_len(ncol(x_))
+    for (j in 1:i) {
+      if (i == j) {
+        hessian[i_ind, i_ind] <- -crossprod(x_ * ((1 - p[,i + 1]) * p[,i + 1] * weights), x_)
+      }
+      else {
+        j_ind <- (j - 1) * ncol(x_) + seq_len(ncol(x_))
+
+        hessian[i_ind, j_ind] <- -crossprod(x_ * (-p[,i + 1] * p[,j + 1] * weights), x_)
+        hessian[j_ind, i_ind] <- t(hessian[i_ind, j_ind])
+      }
+    }
   }
 
   colnames(hessian) <- rownames(hessian) <- names(theta0)
