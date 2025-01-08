@@ -1,23 +1,30 @@
 #chk utilities
 
-pkg_caller_call <- function(start = 1) {
+#Note: this version seems to do better when used inside tryCatch()
+pkg_caller_call <- function() {
   pn <- utils::packageName()
   package.funs <- c(getNamespaceExports(pn),
                     .getNamespaceInfo(asNamespace(pn), "S3methods")[, 3])
-  k <- start #skip checking pkg_caller_call()
-  e_max <- start
-  while (!is.null(e <- rlang::caller_call(k))) {
-    if (!is.null(n <- rlang::call_name(e)) &&
-        n %in% package.funs) e_max <- k
-    k <- k + 1
+
+  for (i in seq_len(sys.nframe())) {
+    e <- sys.call(i)
+
+    if (is_null(n <- rlang::call_name(e))) {
+      next
+    }
+
+    if (n %in% package.funs) {
+      return(e)
+    }
   }
-  rlang::caller_call(e_max)
+
+  NULL
 }
 
 .err <- function(..., n = NULL, tidy = TRUE) {
   m <- chk::message_chk(..., n = n, tidy = tidy)
   rlang::abort(paste(strwrap(m), collapse = "\n"),
-               call = pkg_caller_call(start = 2))
+               call = pkg_caller_call())
 }
 .wrn <- function(..., n = NULL, tidy = TRUE, immediate = TRUE) {
   if (immediate && isTRUE(all.equal(0, getOption("warn")))) {
