@@ -24,24 +24,19 @@
 #' allowed with each method and what literature to read to interpret these
 #' estimands.
 #' @param stabilize whether or not and how to stabilize the weights. If `TRUE`, each unit's weight will be multiplied by a standardization factor, which is the the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when `estimand = "ATE"`. Default is `FALSE` for no standardization. See also the `num.formula` argument at [weightitMSM()]. For continuous treatments, weights are already stabilized, so setting `stabilize = TRUE` will be ignored with a warning (supplying a formula still works).
-#' @param focal when multi-category treatments are used and ATT weights are
-#' requested, which group to consider the "treated" or focal group. This group
-#' will not be weighted, and the other groups will be weighted to be more like
+#' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to consider the "treated" or "control" group. This group
+#' will not be weighted, and the other groups will be weighted to resemble
 #' the focal group. If specified, `estimand` will automatically be set to
-#' `"ATT"`.
+#' `"ATT"` (with a warning if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and `focal`* in Details below.
 #' @param by a string containing the name of the variable in `data` for
 #' which weighting is to be done within categories or a one-sided formula with
-#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, a separate propensity score model or optimization will occur within each level of the variable `"gender"`. Only one
-#' `by` variable is allowed; to stratify by multiply variables
-#' simultaneously, create a new variable that is a full cross of those
-#' variables using [interaction()].
+#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, a separate propensity score model or optimization will occur within each level of the variable `"gender"`. Only one `by` variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using [interaction()].
 #' @param s.weights A vector of sampling weights or the name of a variable in
 #' `data` that contains sampling weights. These can also be matching
 #' weights if weighting is to be used on matched data. See the individual pages
 #' for each method for information on whether sampling weights can be supplied.
 #' @param ps A vector of propensity scores or the name of a variable in
-#' `data` containing propensity scores. If not `NULL`, `method`
-#' is ignored unless it is a user-supplied function, and the propensity scores will be used to create weights.
+#' `data` containing propensity scores. If not `NULL`, `method` is ignored unless it is a user-supplied function, and the propensity scores will be used to create weights.
 #' `formula` must include the treatment variable in `data`, but the
 #' listed covariates will play no role in the weight estimation. Using
 #' `ps` is similar to calling [get_w_from_ps()] directly, but produces a
@@ -93,7 +88,7 @@
 #' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
 #' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
-#' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`.}
+#' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 #' \item{by}{A data.frame containing the `by` variable when specified.}
@@ -126,6 +121,19 @@
 #' `method` can also be supplied as a user-defined function; see
 #' [`method_user`] for instructions and examples. Setting `method = NULL` computes unit weights.
 #'
+#' ## `estimand` and `focal`
+#' For binary and multi-category treatments, the argument to `estimand` determines what distribution the weighted sample should resemble. When set to `"ATE"`, this requests that each group resemble the full sample. When set to `"ATO"`, `"ATM"`, or `"ATOS"` (for the methods that allow them), this requests that each group resemble an "overlap" sample. When set to `"ATT"` or `"ATC"`, this requests that each group resemble the treated or control group, respectively (termed the "focal" group). Weights are set to 1 for the focal group.
+#'
+#' How does `weightit()` decide which group is the treated and which group is the control? For binary treatments, several heuristics are used. The first is be checking whether a valid argument to `focal` was supplied containing the name of the focal group, which is the treated group when `estimand = "ATT"` and the control group when `estimand = "ATC"`. If `focal` is not supplied, guesses are made using the following criteria, evaluated in order:
+#' * If the treatment variable is `logical`, `TRUE` is considered treated and `FALSE` control.
+#' * If the treatment is numeric (or a string or factor with values that can be coerced to numeric values), if 0 is one of the values, it is considered the control, and otherwise, the lower value is considered the control (with the other considered treated).
+#' * If exactly one of the treatment values is `"t"`, `"tr"`, `"treat"`, `"treated"`, or `"exposed"`, it is considered the treated (and the other control).
+#' * If exactly one of the treatment values is `"c"`, `"co"`, `"ctrl"`, `"control"`, or `"unexposed"`, it is considered the control (and the other treated).
+#' * If the treatment variable is a factor, the first level is considered control and the second treated.
+#' * The lowest value after sorting with [sort()] is considered control and the other treated.
+#' To be safe, it is best to code your binary treatment variable as `0` for control and `1` for treated. Otherwise, `focal` should be supplied when requesting the ATT or ATC. For multi-category treatments, `focal` is required when requesting the ATT or ATC; none of the heuristics above are used.
+#'
+#' ## Citing \pkg{WeightIt}
 #' When using `weightit()`, please cite both the \pkg{WeightIt} package
 #' (using `citation("WeightIt")`) and the paper(s) in the references
 #' section of the method used.
@@ -246,6 +254,10 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   estimand <- f.e.r[["reported.estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
 
+  if (treat.type == "binary") {
+    attr(treat, "treated") <- f.e.r[["treated"]]
+  }
+
   #Process missing
   missing <- {
     if (is_null(method) || !anyNA(reported.covs)) ""
@@ -253,7 +265,9 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   #Check subclass
-  if (is_not_null(subclass)) .check_subclass(method, treat.type)
+  if (is_not_null(subclass)) {
+    .check_subclass(method, treat.type)
+  }
 
   #Process s.weights
   s.weights <- .process.s.weights(s.weights, data)
@@ -267,7 +281,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
   else if (isTRUE(stabilize)) {
     if (treat.type == "continuous") {
-      .wrn("setting `stabilize = TRUE` does nothing for continuous treatments, so it will be set to `FALSE`. See `help(\"weightit\")` for details")
+      .wrn('setting `stabilize = TRUE` does nothing for continuous treatments, so it will be set to `FALSE`. See `help("weightit")` for details')
       stabilize <- NULL
     }
     else {
@@ -283,7 +297,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     }
     else {
       if (treat.type != "continuous" && estimand != "ATE") {
-        .err("`stabilize` can only be supplied when `estimand = \"ATE\"`")
+        .err('`stabilize` can only be supplied when `estimand = "ATE"`')
       }
 
       if (!rlang::is_formula(stabilize)) {
@@ -300,9 +314,10 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     by <- A[["exact"]]
     by.arg <- "exact"
   }
-  else by.arg <- "by"
+  else {
+    by.arg <- "by"
+  }
 
-  # processed.by <- .process_by(by.name, data = data, treat = treat)
   processed.by <- .process_by(by, data = data, treat = treat, by.arg = by.arg)
 
   #Process moments and int

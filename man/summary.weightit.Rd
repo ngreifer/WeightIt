@@ -7,11 +7,11 @@
 \alias{plot.summary.weightitMSM}
 \title{Print and Summarize Output}
 \usage{
-\method{summary}{weightit}(object, top = 5, ignore.s.weights = FALSE, ...)
+\method{summary}{weightit}(object, top = 5L, ignore.s.weights = FALSE, ...)
 
 \method{plot}{summary.weightit}(x, binwidth = NULL, bins = NULL, ...)
 
-\method{summary}{weightitMSM}(object, top = 5, ignore.s.weights = FALSE, ...)
+\method{summary}{weightitMSM}(object, top = 5L, ignore.s.weights = FALSE, ...)
 
 \method{plot}{summary.weightitMSM}(x, binwidth = NULL, bins = NULL, time = 1, ...)
 }

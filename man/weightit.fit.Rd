@@ -28,7 +28,7 @@ weightit.fit(
 
 \item{treat}{a vector of treatment statuses.}
 
-\item{method}{a string of length 1 containing the name of the method that
+\item{method}{a string containing the name of the method that
 will be used to estimate weights. See \code{\link[=weightit]{weightit()}} for allowable options.
 The default is \code{"glm"} for propensity score weighting using a
 generalized linear model to estimate the propensity score.}
@@ -41,17 +41,17 @@ supplied.}
 levels. Corresponds to the \code{by} argument in \code{\link[=weightit]{weightit()}}.}
 
 \item{estimand}{the desired estimand. For binary and multi-category
-treatments, can be "ATE", "ATT", "ATC", and, for some methods, "ATO", "ATM",
-or "ATOS". The default for both is "ATE". This argument is ignored for
-continuous treatments. See the individual pages for each method for more
-information on which estimands are allowed with each method and what
-literature to read to interpret these estimands.}
+treatments, can be \code{"ATE"}, \code{"ATT"}, \code{"ATC"}, and, for some
+methods, \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"}. The default for both
+is \code{"ATE"}. This argument is ignored for continuous treatments. See the
+individual pages for each method for more information on which estimands are
+allowed with each method and what literature to read to interpret these
+estimands.}
 
-\item{focal}{when multi-category treatments are used and ATT weights are
-requested, which group to consider the "treated" or focal group. This group
-will not be weighted, and the other groups will be weighted to be more like
-the focal group. Must be non-\code{NULL} if \code{estimand = "ATT"} or
-\code{"ATC"}.}
+\item{focal}{when \code{estimand} is set to \code{"ATT"} or \code{"ATC"}, which group to consider the "treated" or "control" group. This group
+will not be weighted, and the other groups will be weighted to resemble
+the focal group. If specified, \code{estimand} will automatically be set to
+\code{"ATT"} (with a warning if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}}.}
 
 \item{stabilize}{\code{logical}; whether or not to stabilize the weights.
 For the methods that involve estimating propensity scores, this involves
@@ -70,13 +70,14 @@ will be checked for \code{NA} values, and if present, \code{missing} will be
 set to \code{"ind"}. If \code{""}, \code{covs} will not be checked for
 \code{NA} values; this can be faster when it is known there are none.}
 
-\item{verbose}{whether to print additional information output by the fitting
-function.}
+\item{verbose}{\code{logical}; whether to print additional information
+output by the fitting function.}
 
-\item{include.obj}{whether to include in the output any fit objects created
-in the process of estimating the weights. For example, with \code{method = "glm"}, the \code{glm} objects containing the propensity score model will be
-included. See the individual pages for each method for information on what
-object will be included if \code{TRUE}.}
+\item{include.obj}{\code{logical}; whether to include in the output any fit
+objects created in the process of estimating the weights. For example, with
+\code{method = "glm"}, the \code{glm} objects containing the propensity
+score model will be included. See the individual pages for each method for
+information on what object will be included if \code{TRUE}.}
 
 \item{...}{other arguments for functions called by \code{weightit.fit()}
 that control aspects of fitting that are not covered by the above arguments.}
@@ -85,9 +86,10 @@ that control aspects of fitting that are not covered by the above arguments.}
 A \code{weightit.fit} object with the following elements:
 \item{weights}{The estimated weights, one for each unit.}
 \item{treat}{The values of the treatment variable.}
-\item{estimand}{The estimand requested. ATC is recoded as ATT.}
+\item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
-\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"super"}, or \code{"bart"}.}
+\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
+returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined.}
 \item{s.weights}{The provided sampling weights.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{fit.obj}{When \code{include.obj = TRUE}, the fit object.}

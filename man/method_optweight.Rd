@@ -31,7 +31,7 @@ For longitudinal treatments, \code{optweight()} estimates weights that simultane
 
 \subsection{Sampling Weights}{
 
-Sampling weights are supported through \code{s.weights} in all scenarios.
+Sampling weights are supported through \code{s.weights} in all scenarios, but only for versions of \pkg{optweight} after 0.2.5.
 }
 
 \subsection{Missing Data}{

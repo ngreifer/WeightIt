@@ -53,10 +53,7 @@ saturated models may be time-consuming or impossible to fit.}
 
 \item{by}{a string containing the name of the variable in \code{data} for
 which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. Only one
-\code{by} variable is allowed; to stratify by multiply variables
-simultaneously, create a new variable that is a full cross of those
-variables using \code{\link[=interaction]{interaction()}}.}
+the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. Only one \code{by} variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using \code{\link[=interaction]{interaction()}}.}
 
 \item{s.weights}{A vector of sampling weights or the name of a variable in
 \code{data} that contains sampling weights. These can also be matching

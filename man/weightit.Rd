@@ -47,18 +47,14 @@ estimands.}
 
 \item{stabilize}{whether or not and how to stabilize the weights. If \code{TRUE}, each unit's weight will be multiplied by a standardization factor, which is the the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when \code{estimand = "ATE"}. Default is \code{FALSE} for no standardization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}. For continuous treatments, weights are already stabilized, so setting \code{stabilize = TRUE} will be ignored with a warning (supplying a formula still works).}
 
-\item{focal}{when multi-category treatments are used and ATT weights are
-requested, which group to consider the "treated" or focal group. This group
-will not be weighted, and the other groups will be weighted to be more like
+\item{focal}{when \code{estimand} is set to \code{"ATT"} or \code{"ATC"}, which group to consider the "treated" or "control" group. This group
+will not be weighted, and the other groups will be weighted to resemble
 the focal group. If specified, \code{estimand} will automatically be set to
-\code{"ATT"}.}
+\code{"ATT"} (with a warning if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and \code{focal}} in Details below.}
 
 \item{by}{a string containing the name of the variable in \code{data} for
 which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. Only one
-\code{by} variable is allowed; to stratify by multiply variables
-simultaneously, create a new variable that is a full cross of those
-variables using \code{\link[=interaction]{interaction()}}.}
+the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. Only one \code{by} variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using \code{\link[=interaction]{interaction()}}.}
 
 \item{s.weights}{A vector of sampling weights or the name of a variable in
 \code{data} that contains sampling weights. These can also be matching
@@ -66,8 +62,7 @@ weights if weighting is to be used on matched data. See the individual pages
 for each method for information on whether sampling weights can be supplied.}
 
 \item{ps}{A vector of propensity scores or the name of a variable in
-\code{data} containing propensity scores. If not \code{NULL}, \code{method}
-is ignored unless it is a user-supplied function, and the propensity scores will be used to create weights.
+\code{data} containing propensity scores. If not \code{NULL}, \code{method} is ignored unless it is a user-supplied function, and the propensity scores will be used to create weights.
 \code{formula} must include the treatment variable in \code{data}, but the
 listed covariates will play no role in the weight estimation. Using
 \code{ps} is similar to calling \code{\link[=get_w_from_ps]{get_w_from_ps()}} directly, but produces a
@@ -127,7 +122,7 @@ the fitting process.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
 \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
-returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}.}
+returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
 \item{s.weights}{The provided sampling weights.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{by}{A data.frame containing the \code{by} variable when specified.}
@@ -166,10 +161,28 @@ which estimands are allowed, and whether sampling weights are allowed.\tabular{l
 
 \code{method} can also be supplied as a user-defined function; see
 \code{\link{method_user}} for instructions and examples. Setting \code{method = NULL} computes unit weights.
+\subsection{\code{estimand} and \code{focal}}{
+
+For binary and multi-category treatments, the argument to \code{estimand} determines what distribution the weighted sample should resemble. When set to \code{"ATE"}, this requests that each group resemble the full sample. When set to \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"} (for the methods that allow them), this requests that each group resemble an "overlap" sample. When set to \code{"ATT"} or \code{"ATC"}, this requests that each group resemble the treated or control group, respectively (termed the "focal" group). Weights are set to 1 for the focal group.
+
+How does \code{weightit()} decide which group is the treated and which group is the control? For binary treatments, several heuristics are used. The first is be checking whether a valid argument to \code{focal} was supplied containing the name of the focal group, which is the treated group when \code{estimand = "ATT"} and the control group when \code{estimand = "ATC"}. If \code{focal} is not supplied, guesses are made using the following criteria, evaluated in order:
+\itemize{
+\item If the treatment variable is \code{logical}, \code{TRUE} is considered treated and \code{FALSE} control.
+\item If the treatment is numeric (or a string or factor with values that can be coerced to numeric values), if 0 is one of the values, it is considered the control, and otherwise, the lower value is considered the control (with the other considered treated).
+\item If exactly one of the treatment values is \code{"t"}, \code{"tr"}, \code{"treat"}, \code{"treated"}, or \code{"exposed"}, it is considered the treated (and the other control).
+\item If exactly one of the treatment values is \code{"c"}, \code{"co"}, \code{"ctrl"}, \code{"control"}, or \code{"unexposed"}, it is considered the control (and the other treated).
+\item If the treatment variable is a factor, the first level is considered control and the second treated.
+\item The lowest value after sorting with \code{\link[=sort]{sort()}} is considered control and the other treated.
+To be safe, it is best to code your binary treatment variable as \code{0} for control and \code{1} for treated. Otherwise, \code{focal} should be supplied when requesting the ATT or ATC. For multi-category treatments, \code{focal} is required when requesting the ATT or ATC; none of the heuristics above are used.
+}
+}
+
+\subsection{Citing \pkg{WeightIt}}{
 
 When using \code{weightit()}, please cite both the \pkg{WeightIt} package
 (using \code{citation("WeightIt")}) and the paper(s) in the references
 section of the method used.
+}
 }
 \examples{
 library("cobalt")

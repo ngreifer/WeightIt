@@ -80,7 +80,7 @@ bal.tab(W2)
     args <- list(...)
 
     if (!estimand \%in\% c("ATT", "ATC"))
-      stop("`estimand` must be \"ATT\" or \"ATC\".", call. = FALSE)
+      stop('`estimand` must be "ATT" or "ATC".', call. = FALSE)
 
     treat <- as.numeric(treat == focal)
 

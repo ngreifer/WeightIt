@@ -47,7 +47,7 @@ M-estimation is not supported.
 }
 }
 \details{
-SuperLearner works by fitting several machine learning models to the treatment and covariates and then taking a weighted combination of the generated predicted values to use as the propensity scores, which are then used to construct weights. The machine learning models used are supplied using the \code{SL.library} argument; the more models are supplied, the higher the chance of correctly modeling the propensity score. The predicted values are combined using the method supplied in the \code{SL.method} argument (which is nonnegative least squares by default). A benefit of SuperLearner is that, asymptotically, it is guaranteed to perform as well as or better than the best-performing method included in the library. Using Balance SuperLearner by setting \code{SL.method = "method.balance"} works by selecting the combination of predicted values that minimizes an imbalance measure.
+SuperLearner works by fitting several machine learning models to the treatment and covariates and then taking a weighted combination of the generated predicted values to use as the propensity scores, which are then used to construct weights. The machine learning models used are supplied using the \code{SL.library} argument; the more models are supplied, the higher the chance of correctly modeling the propensity score. It is a good idea to include parameteric models, flexible and tree-based models, and regularized models among the models selected. The predicted values are combined using the method supplied in the \code{SL.method} argument (which is nonnegative least squares by default). A benefit of SuperLearner is that, asymptotically, it is guaranteed to perform as well as or better than the best-performing method included in the library. Using Balance SuperLearner by setting \code{SL.method = "method.balance"} works by selecting the combination of predicted values that minimizes an imbalance measure.
 }
 \note{
 Some methods formerly available in \pkg{SuperLearner} are now in \pkg{SuperLearnerExtra}, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
@@ -113,6 +113,12 @@ When \code{include.obj = TRUE}, the SuperLearner fit(s) used to generate the pre
 \dontshow{if (all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 \donttest{library("cobalt")
 data("lalonde", package = "cobalt")
+
+#Note: for time, all exmaples use a small set of
+#      learners. Many more should be added if
+#      possible, including a variety of model
+#      types (e.g., parametric, flexible, tree-
+#.     based, regularized, etc.)
 
 #Balancing covariates between treatment groups (binary)
 (W1 <- weightit(treat ~ age + educ + married +

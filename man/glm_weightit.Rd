@@ -2,10 +2,10 @@
 % Please edit documentation in R/glm_weightit.R
 \name{glm_weightit}
 \alias{glm_weightit}
+\alias{lm_weightit}
 \alias{ordinal_weightit}
 \alias{multinom_weightit}
 \alias{coxph_weightit}
-\alias{lm_weightit}
 \title{Fitting Weighted Generalized Linear Models}
 \usage{
 glm_weightit(
@@ -26,6 +26,21 @@ glm_weightit(
   contrasts = NULL,
   fwb.args = list(),
   br = FALSE,
+  ...
+)
+
+lm_weightit(
+  formula,
+  data,
+  weightit = NULL,
+  vcov = NULL,
+  cluster,
+  R = 500,
+  offset,
+  x = FALSE,
+  y = TRUE,
+  contrasts = NULL,
+  fwb.args = list(),
   ...
 )
 
@@ -75,24 +90,6 @@ coxph_weightit(
   x = FALSE,
   y = TRUE,
   fwb.args = list(),
-  ...
-)
-
-lm_weightit(
-  formula,
-  data,
-  weightit = NULL,
-  vcov = NULL,
-  cluster,
-  R = 500,
-  offset,
-  start = NULL,
-  etastart,
-  mustart,
-  control = list(...),
-  x = FALSE,
-  y = TRUE,
-  contrasts = NULL,
   ...
 )
 }
