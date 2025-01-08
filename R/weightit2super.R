@@ -89,7 +89,7 @@
 #' }
 #'
 #' @details
-#' SuperLearner works by fitting several machine learning models to the treatment and covariates and then taking a weighted combination of the generated predicted values to use as the propensity scores, which are then used to construct weights. The machine learning models used are supplied using the `SL.library` argument; the more models are supplied, the higher the chance of correctly modeling the propensity score. The predicted values are combined using the method supplied in the `SL.method` argument (which is nonnegative least squares by default). A benefit of SuperLearner is that, asymptotically, it is guaranteed to perform as well as or better than the best-performing method included in the library. Using Balance SuperLearner by setting `SL.method = "method.balance"` works by selecting the combination of predicted values that minimizes an imbalance measure.
+#' SuperLearner works by fitting several machine learning models to the treatment and covariates and then taking a weighted combination of the generated predicted values to use as the propensity scores, which are then used to construct weights. The machine learning models used are supplied using the `SL.library` argument; the more models are supplied, the higher the chance of correctly modeling the propensity score. It is a good idea to include parameteric models, flexible and tree-based models, and regularized models among the models selected. The predicted values are combined using the method supplied in the `SL.method` argument (which is nonnegative least squares by default). A benefit of SuperLearner is that, asymptotically, it is guaranteed to perform as well as or better than the best-performing method included in the library. Using Balance SuperLearner by setting `SL.method = "method.balance"` works by selecting the combination of predicted values that minimizes an imbalance measure.
 #'
 #' @note
 #' Some methods formerly available in \pkg{SuperLearner} are now in \pkg{SuperLearnerExtra}, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
@@ -119,6 +119,12 @@
 #' @examplesIf all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))
 #' \donttest{library("cobalt")
 #' data("lalonde", package = "cobalt")
+#'
+#' #Note: for time, all exmaples use a small set of
+#' #      learners. Many more should be added if
+#' #      possible, including a variety of model
+#' #      types (e.g., parametric, flexible, tree-
+#' #.     based, regularized, etc.)
 #'
 #' #Balancing covariates between treatment groups (binary)
 #' (W1 <- weightit(treat ~ age + educ + married +
@@ -166,8 +172,6 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
                            stabilize, subclass, missing, verbose, ...) {
   rlang::check_installed("SuperLearner")
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
@@ -178,7 +182,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   covs <- as.data.frame(covs)
 
@@ -187,33 +193,28 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
-  for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {
-      if (is_null(A[["SL.method"]]))
-        A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]
-    }
-    else if (f == "env") {
-      if (is_null(A[["env"]]))
-        A[["env"]] <- environment(SuperLearner::SuperLearner)
-    }
-    else if (is_null(A[[f]])) {
-      A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
-    }
+  SL.method <- ...get("SL.method", eval(formals(SuperLearner::SuperLearner)[["method"]]))
+  env <- ...get("env", environment(SuperLearner::SuperLearner))
+  cvControl <- ...get("cvControl", eval(formals(SuperLearner::SuperLearner)[["cvControl"]]))
+  control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
+
+  SL.library <- ...get("SL.library")
+  chk::chk_character(SL.library)
+
+  if (is_null(cvControl[["stratifyCV"]])) {
+    cvControl[["stratifyCV"]] <- TRUE
   }
 
-  if (is_null(A[["cvControl"]][["stratifyCV"]])) {
-    A[["cvControl"]][["stratifyCV"]] <- TRUE
-  }
-
-  discrete <- if_null_then(A[["discrete"]], FALSE)
+  discrete <- ...get("discrete", FALSE)
   chk::chk_flag(discrete)
 
-  if (identical(A[["SL.method"]], "method.balance")) {
+  if (identical(SL.method, "method.balance")) {
 
-    criterion <- if_null_then(A[["criterion"]], A[["stop.method"]])
+    criterion <- if_null_then(...get("criterion"),
+                              ...get("stop.method"))
 
     if (is_null(criterion)) {
-      .wrn("no `criterion` was provided. Using \"smd.mean\"")
+      .wrn('no `criterion` was provided. Using "smd.mean"')
       criterion <- "smd.mean"
     }
     else {
@@ -242,12 +243,12 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init, estimand = estimand)
-    A[["control"]] <- list(trimLogit = sneaky)
+    control <- list(trimLogit = sneaky)
 
-    A[["SL.method"]] <- .method.balance()
+    SL.method <- .method.balance()
   }
 
-  t.lev <- get_treated_level(treat)
+  t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
 
   tryCatch({verbosely({
@@ -256,14 +257,14 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
                    list(Y = treat,
                         X = as.data.frame(covs),
                         family = binomial(),
-                        SL.library = A[["SL.library"]],
+                        SL.library = SL.library,
                         verbose = FALSE,
-                        method = A[["SL.method"]],
+                        method = SL.method,
                         id = NULL,
                         obsWeights = s.weights,
-                        control = A[["control"]],
-                        cvControl = A[["cvControl"]],
-                        env = A[["env"]]))
+                        control = control,
+                        cvControl = cvControl,
+                        env = env))
   }, verbose = verbose)},
   error = function(e) {
     e. <- conditionMessage(e)
@@ -290,8 +291,6 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
                                  stabilize, subclass, missing, verbose, ...) {
   rlang::check_installed("SuperLearner")
 
-  A <- list(...)
-
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
@@ -302,7 +301,9 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   covs <- as.data.frame(covs)
 
@@ -311,29 +312,18 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
+  SL.method <- ...get("SL.method", eval(formals(SuperLearner::SuperLearner)[["method"]]))
+  env <- ...get("env", environment(SuperLearner::SuperLearner))
+  cvControl <- ...get("cvControl", eval(formals(SuperLearner::SuperLearner)[["cvControl"]]))
+  control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
-  for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {
-      if (is_null(A[["SL.method"]]))
-        A[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]
-    }
-    else if (f == "env") {
-      if (is_null(A[["env"]]))
-        A[["env"]] <- environment(SuperLearner::SuperLearner)
-    }
-    else if (is_null(A[[f]])) {
-      A[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
-    }
-  }
+  SL.library <- ...get("SL.library")
+  chk::chk_character(SL.library)
 
-  if (is_null(A[["cvControl"]][["stratifyCV"]])) {
-    A[["cvControl"]][["stratifyCV"]] <- TRUE
-  }
-
-  discrete <- if_null_then(A[["discrete"]], FALSE)
+  discrete <- ...get("discrete", FALSE)
   chk::chk_flag(discrete)
 
-  if (identical(A[["SL.method"]], "method.balance")) {
+  if (identical(SL.method, "method.balance")) {
     .err('"method.balance" cannot be used with multi-category treatments')
   }
 
@@ -349,14 +339,14 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
                                list(Y = treat_i,
                                     X = as.data.frame(covs),
                                     family = binomial(),
-                                    SL.library = A[["SL.library"]],
+                                    SL.library = SL.library,
                                     verbose = FALSE,
-                                    method = A[["SL.method"]],
+                                    method = SL.method,
                                     id = NULL,
                                     obsWeights = s.weights,
-                                    control = A[["control"]],
-                                    cvControl = A[["cvControl"]],
-                                    env = A[["env"]]))
+                                    control = control,
+                                    cvControl = cvControl,
+                                    env = env))
     }, verbose = verbose)},
     error = function(e) {
       e. <- conditionMessage(e)
@@ -374,7 +364,8 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal, stabilize = stabilize, subclass = subclass)
+  w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal,
+                     stabilize = stabilize, subclass = subclass)
 
   p.score <- NULL
 
@@ -383,8 +374,6 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
 
 weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
   rlang::check_installed("SuperLearner")
-
-  A <- B <- list(...)
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -396,7 +385,9 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) covs[,i] <- .make_closer_to_1(covs[,i])
+  for (i in seq_col(covs)) {
+    covs[,i] <- .make_closer_to_1(covs[,i])
+  }
 
   if (ncol(covs) > 1) {
     colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
@@ -404,38 +395,33 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   }
 
   #Process density params
-  densfun <- .get_dens_fun(use.kernel = isTRUE(A[["use.kernel"]]), bw = A[["bw"]],
-                           adjust = A[["adjust"]], kernel = A[["kernel"]],
-                           n = A[["n"]], treat = treat, density = A[["density"]],
+  densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")), bw = ...get("bw"),
+                           adjust = ...get("adjust"), kernel = ...get("kernel"),
+                           n = ...get("n"), treat = treat, density = ...get("density"),
                            weights = s.weights)
 
   #Stabilization - get dens.num
   log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
 
   #Estimate GPS
-  for (f in names(formals(SuperLearner::SuperLearner))) {
-    if (f == "method") {
-      if (is_null(B[["SL.method"]]))
-        B[["SL.method"]] <- formals(SuperLearner::SuperLearner)[["method"]]
-    }
-    else if (f == "env") {
-      if (is_null(B[["env"]]))
-        B[["env"]] <- environment(SuperLearner::SuperLearner)
-    }
-    else if (is_null(B[[f]])) {
-      B[[f]] <- formals(SuperLearner::SuperLearner)[[f]]
-    }
-  }
+  SL.method <- ...get("SL.method", eval(formals(SuperLearner::SuperLearner)[["method"]]))
+  env <- ...get("env", environment(SuperLearner::SuperLearner))
+  cvControl <- ...get("cvControl", eval(formals(SuperLearner::SuperLearner)[["cvControl"]]))
+  control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
-  discrete <- if_null_then(A[["discrete"]], FALSE)
+  SL.library <- ...get("SL.library")
+  chk::chk_character(SL.library)
+
+  discrete <- ...get("discrete", FALSE)
   chk::chk_flag(discrete)
 
-  if (identical(B[["SL.method"]], "method.balance")) {
+  if (identical(SL.method, "method.balance")) {
 
-    criterion <- if_null_then(A[["criterion"]], A[["stop.method"]])
+    criterion <- if_null_then(...get("criterion"),
+                              ...get("stop.method"))
 
     if (is_null(criterion)) {
-      .wrn("no `criterion` was provided. Using \"p.mean\"")
+      .wrn('no `criterion` was provided. Using "p.mean"')
       criterion <- "p.mean"
     }
     else {
@@ -456,9 +442,9 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     attr(sneaky, "vals") <- list(init = init,
                                  log.dens.num = log.dens.num,
                                  densfun = densfun)
-    B[["control"]] <- list(trimLogit = sneaky)
+    control <- list(trimLogit = sneaky)
 
-    B[["SL.method"]] <- .method.balance.cont()
+    SL.method <- .method.balance.cont()
   }
 
   tryCatch({verbosely({
@@ -467,14 +453,14 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                    list(Y = treat,
                         X = as.data.frame(covs),
                         family = gaussian(),
-                        SL.library = B[["SL.library"]],
+                        SL.library = SL.library,
                         verbose = FALSE,
-                        method = B[["SL.method"]],
+                        method = SL.method,
                         id = NULL,
                         obsWeights = s.weights,
-                        control = B[["control"]],
-                        cvControl = B[["cvControl"]],
-                        env = B[["env"]]))
+                        control = control,
+                        cvControl = cvControl,
+                        env = env))
   }, verbose = verbose)},
   error = function(e) {
     e. <- conditionMessage(e)
@@ -492,7 +478,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   w <- exp(log.dens.num - log.dens.denom)
 
-  if (isTRUE(A[["plot"]])) {
+  if (isTRUE(...get("plot"))) {
     d.n <- attr(log.dens.num, "density")
     d.d <- attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)
@@ -528,25 +514,38 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
       names(cvRisk) <- libraryNames
 
-      loss <- function(coefs) {
-        ps <- crossprod(t(Z), coefs/sum(coefs))
-        w <- get_w_from_ps(ps, Y, estimand)
-        cobalt::bal.compute(init, weights = w)
+      p <- ncol(Z)
+
+      if (p == 1L) {
+        coefs <- 1L
+      }
+      else {
+        loss <- function(par) {
+          coefs <- c(par, 1 - sum(par))
+          ps <- crossprod(t(Z), coefs)
+          w <- get_w_from_ps(ps, Y, estimand)
+          cobalt::bal.compute(init, weights = w)
+        }
+
+        #Constraints: all coefs greater than 0, sum to less than 1
+        ui <- rbind(diag(p - 1), -1)
+        ci <- c(rep.int(0, p - 1), -1)
+
+        fit <- constrOptim(rep.int(1/p, p - 1),
+                           f = loss, grad = NULL,
+                           ui = ui, ci = ci)
+
+        coefs <- c(fit$par, 1 - sum(fit$par))
       }
 
-      fit <- optim(rep.int(1/ncol(Z), ncol(Z)), loss,
-                   method = "L-BFGS-B", lower = 0, upper = 1)
-
-      coef <- fit$par
-
-      list(cvRisk = cvRisk, coef = coef/sum(coef))
+      list(cvRisk = cvRisk, coef = coefs)
     },
 
     # computePred is a function that takes the weights and the predicted values
     # from each algorithm in the library and combines them based on the model to
     # output the super learner predicted values
     computePred = function(predY, coef, control, ...) {
-      crossprod(t(predY), coef/sum(coef))
+      crossprod(t(predY), coef)
     }
   )
 
@@ -576,26 +575,39 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
       cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
       names(cvRisk) <- libraryNames
 
-      loss <- function(coefs) {
-        gp.score <- crossprod(t(Z), coefs/sum(coefs))
-        r <- Y - gp.score
-        w <- exp(log.dens.num - densfun(r / sqrt(col.w.v(r, obsWeights)), log = TRUE))
-        cobalt::bal.compute(init, weights = w)
+      p <- ncol(Z)
+
+      if (p == 1L) {
+        coefs <- 1
+      }
+      else {
+        loss <- function(par) {
+          coefs <- c(par, 1 - sum(par))
+          gp.score <- crossprod(t(Z), coefs)
+          r <- Y - gp.score
+          w <- exp(log.dens.num - densfun(r / sqrt(col.w.v(r, obsWeights)), log = TRUE))
+          cobalt::bal.compute(init, weights = w)
+        }
+
+        #Constraints: all coefs greater than 0, sum to less than 1
+        ui <- rbind(diag(p - 1), -1)
+        ci <- c(rep.int(0, p - 1), -1)
+
+        fit <- constrOptim(rep.int(1/p, p - 1),
+                           f = loss, grad = NULL,
+                           ui = ui, ci = ci)
+
+        coefs <- c(fit$par, 1 - sum(fit$par))
       }
 
-      fit <- optim(rep.int(1/ncol(Z), ncol(Z)), loss,
-                   method = "L-BFGS-B", lower = 0, upper = 1)
-
-      coef <- fit$par
-
-      list(cvRisk = cvRisk, coef = coef/sum(coef))
+      list(cvRisk = cvRisk, coef = coefs)
     },
 
     # computePred is a function that takes the weights and the predicted values
     # from each algorithm in the library and combines them based on the model to
     # output the super learner predicted values
     computePred = function(predY, coef, control, ...) {
-      crossprod(t(predY), coef/sum(coef))
+      crossprod(t(predY), coef)
     }
   )
 
