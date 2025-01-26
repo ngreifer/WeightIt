@@ -15,6 +15,7 @@ Description: Generates balancing weights for causal effect estimation in observa
              with the 'cobalt' package. Methods for estimating weighted regression models that take into account 
              uncertainty in the estimation of the weights via M-estimation or bootstrapping are available. See the vignette "Installing Supporting Packages" for instructions on how
              to install any package 'WeightIt' uses, including those that may not be on CRAN.
+Remotes: vincentarelbundock/marginaleffects
 Depends:
     R (>= 4.0.0)
 Imports:
@@ -40,7 +41,7 @@ Suggests:
     survival (>= 3.6-2),
     fwb (>= 0.2.0),
     splines,
-    marginaleffects (>= 0.19.0),
+    marginaleffects (>= 0.25.0),
     sandwich,
     MASS,
     gbm (>= 2.1.3),
