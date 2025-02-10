@@ -58,7 +58,7 @@ test_that("update.glm_weightit() works", {
   expect_no_condition({
     fit2 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data, family = binomial,
-                         control = if (i) stop("bad error") else list())
+                         control = if (i) list(stop("bad error")) else list())
   })
 
   i <- TRUE
@@ -240,7 +240,7 @@ test_that("update.glm_weightit() works with weightit", {
   expect_no_condition({
     fit2 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data, family = binomial, weightit = W0,
-                         control = if (i) stop("bad error") else list())
+                         control = if (i) list(stop("bad error")) else list())
   })
 
   i <- TRUE
@@ -389,7 +389,7 @@ test_that("update.multinom_weightit() works with weightit", {
   expect_no_condition({
     fit2 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
                               data = test_data, weightit = W0,
-                              control = if (i) stop("bad error") else list())
+                              control = if (i) list(stop("bad error")) else list())
   })
 
   i <- TRUE
@@ -534,7 +534,7 @@ test_that("update.ordinal_weightit() works with weightit", {
   expect_no_condition({
     fit2 <- ordinal_weightit(Y_O ~ A * (X1 + X2 + X3 + X4 + X5),
                              data = test_data, weightit = W0,
-                             control = if (i) stop("bad error") else list())
+                             control = if (i) list(stop("bad error")) else list())
   })
 
   i <- TRUE
@@ -680,7 +680,7 @@ test_that("update.coxph_weightit() works with weightit", {
   expect_no_condition({
     fit2 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data, weightit = W0,
-                         control = if (i) stop("bad error") else list())
+                         control = if (i) list(stop("bad error")) else list())
   })
 
   i <- TRUE
