@@ -1,4 +1,5 @@
 test_that("update.glm_weightit() works", {
+  skip_if(!capabilities("long.double"))
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -114,6 +115,7 @@ test_that("update.glm_weightit() works", {
 })
 
 test_that("update.weightit() works", {
+  skip_if(!capabilities("long.double"))
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -173,6 +175,7 @@ test_that("update.weightit() works", {
 })
 
 test_that("update.glm_weightit() works with weightit", {
+  skip_if(!capabilities("long.double"))
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -319,6 +322,7 @@ test_that("update.glm_weightit() works with weightit", {
 })
 
 test_that("update.multinom_weightit() works with weightit", {
+  skip_if(!capabilities("long.double"))
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -463,6 +467,7 @@ test_that("update.multinom_weightit() works with weightit", {
 })
 
 test_that("update.ordinal_weightit() works with weightit", {
+  skip_if(!capabilities("long.double"))
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -607,6 +612,9 @@ test_that("update.ordinal_weightit() works with weightit", {
 })
 
 test_that("update.coxph_weightit() works with weightit", {
+  skip_if(!capabilities("long.double"))
+  skip_if_not_installed("survival")
+
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
@@ -617,13 +625,13 @@ test_that("update.coxph_weightit() works with weightit", {
   })
 
   expect_no_condition({
-    fit0 <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit0 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data, weightit = W0)
   })
 
   #Updating weightit
   expect_no_condition({
-    fit1 <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data)
   })
 
@@ -642,7 +650,7 @@ test_that("update.coxph_weightit() works with weightit", {
   })
 
   expect_no_condition({
-    fit1 <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data_s, weightit = W1)
   })
 
@@ -655,7 +663,7 @@ test_that("update.coxph_weightit() works with weightit", {
   clus <- sample(1:50, nrow(test_data), replace = TRUE)
 
   expect_no_condition({
-    fit1 <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data, weightit = W0,
                          cluster = ~clus)
   })
@@ -670,7 +678,7 @@ test_that("update.coxph_weightit() works with weightit", {
   #Model should not be refit when only vcov is changed
   i <- FALSE
   expect_no_condition({
-    fit2 <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit2 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data, weightit = W0,
                          control = if (i) stop("bad error") else list())
   })
@@ -702,12 +710,12 @@ test_that("update.coxph_weightit() works with weightit", {
   })
 
   expect_no_condition({
-    fit1 <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = test_data, weightit = W1)
   })
 
   expect_no_condition({
-    fit1s <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit1s <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                           data = test_data,
                           weightit = update(object = W0, s.weights = "SW"))
   })
@@ -739,7 +747,7 @@ test_that("update.coxph_weightit() works with weightit", {
   })
 
   expect_no_condition({
-    fit1 <- coxph_weightit(Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+    fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
                          data = boot_dat, weightit = W1)
   })
 
