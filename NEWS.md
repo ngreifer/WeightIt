@@ -1,13 +1,25 @@
 WeightIt News and Updates
 ======
 
-# `WeightIt` (development version)
+# `WeightIt` 1.4.0
 
 * Entropy balancing works slightly differently when sampling weights are supplied. The negative entropy between the estimated weights and the product of the sampling weights and base weights (if any) is now the quantity minimized in the optimization. Previously, the negative entropy between the product of the sampling weights and estimated weights and the base weights was minimized. The new behavior ensures entropy balancing is consistent with mathematically equivalent methods when it ought to be (i.e., CBPS and IPT for the ATT) and prevents counter-intuitive results, like that the ESS after weighting could be larger than that before weighting. Note this will cause results to differ between this and previous versions of `WeightIt`.
+
+* With `method = "cbps"`, `estimand` can now be set to `"ATO"` for binary and multi-category treatments. For binary treatments with the default link, this will yield identical weights to using `method = "glm"` with `estimand = "ATO"`.
+
+* Two new links can be supplied with `method = "glm", `"cbps"`, and `"ipt"`: `"loglog"` for the log-log link and `"clog"` for the complementary log link. The `link` argument can also now be supplied as a `link-glm` object (e.g., the output of a call to `make.link()`). This allows for more flexibility in the link function used to estimate the propensity score.
+
+* A new `solver` argument can be supplied to `weightit()` with `method = "ebal"` and with `method = "cbps"` with `over = FALSE` (the default); this argument controls whether to use `rootSolve::multiroot()` or `stats::optim()` solve the optimization problem for the weights. `multiroot()` is used by default when `rootSolve` is installed as it is quicker and more accurate.
+
+* For some methods, analytic formulas for the derivatives used in M-estimation are now used instead of relying on numeric differentiation. This increases speed and accuracy in computing standard errors that adjust for estimation of the weights. The formulas are benchmarked against numeric differentiation results.
 
 * Added new `method` argument to `calibrate()` to support isotonic regression calibration as described by [van der Laan el al. (2024)](http://arxiv.org/abs/2411.06342).
 
 * Added clearer error and warning messages to several functions, most notably `glm_weightit()` and friends, when missing values are present in the model variables.
+
+* The `update()` method for `glm_weightit` objects and friends is now a bit more sophisticated. When `data` or `s.weights` are supplied, the `weightit` object (if any) is refit before refitting the `glm_weightit` model. This makes it easy to performing bootstrapping by simply calling `update()` on a fitted object with a new dataset or bootstrap weights.
+
+* Improved estimation and convergence for `method = "cbps"`. In particular, for the over-identified CBPS, the generalized inverse is now used only when the GMM weight matrix is singular. Previously, it was always used.
 
 * Improved processing of `estimand` and `focal` for binary treatments. `weightit()` is now better at guessing which level of the treatment is considered "treated", and `focal` can be used to identify the focal group when requesting the ATT or ATC. (#77)
 
@@ -20,6 +32,8 @@ WeightIt News and Updates
 * Sampling weights can no longer be used with `method = "optweight"` until a bug is sorted out.
 
 * Performance enhancements.
+
+* Added new tests for CBPS, IPT, and entropy balancing.
 
 # `WeightIt` 1.3.2
 
