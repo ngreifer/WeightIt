@@ -88,7 +88,8 @@ gen_dat_cf <- function(n, A_1 = 0, A_2 = 0, A_3 = 0) {
 }
 
 grid <- expand.grid(A_1 = 0:1, A_2 = 0:1, A_3 = 0:1)
-apply(grid, 1, function(i) do.call(gen_dat_cf, c(list(n = 1e6), i))$Y_B |> mean()) |>
+apply(grid, 1, function(i) do.call(gen_dat_cf, c(list(n = 1e6), i))$Y_B |>
+        mean()) |>
   matrix(ncol = 1, dimnames = list(do.call(paste, c(as.list(grid), list(sep = "|"))), "E[Y_B(A)]"))
 
 marginaleffects::avg_predictions(fit, newdata = datagridcf(A_1 = 0:1, A_2 = 0:1, A_3 = 0:1),
