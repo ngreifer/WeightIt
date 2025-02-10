@@ -3,35 +3,27 @@
   switch(vcov_type,
          "const" = "maximum likelihood",
          "asympt" = {
-           if (!cluster)
-             "HC0 robust (adjusted for estimation of weights)"
-           else
-             "HC0 cluster-robust (adjusted for estimation of weights)"
+           if (cluster) "HC0 cluster-robust (adjusted for estimation of weights)"
+           else"HC0 robust (adjusted for estimation of weights)"
          },
          "HC0" = {
-           if (!cluster)
-             "HC0 robust"
-           else
-             "HC0 cluster-robust"
+           if (cluster) "HC0 cluster-robust"
+           else "HC0 robust"
          },
          "BS" = {
-           if (!cluster)
-             "traditional bootstrap"
-           else
-             "traditional cluster bootstrap"
+           if (cluster) "traditional cluster bootstrap"
+           else "traditional bootstrap"
          },
          "FWB" = {
-           if (!cluster)
-             "fractional weighted bootstrap"
-           else
-             "fractional weighted cluster bootstrap"
+           if (cluster) "fractional weighted cluster bootstrap"
+           else "fractional weighted bootstrap"
          },
          "none" = "none",
          "user-supplied")
 }
 
 # Processes the vcov argument from glm_weightit(); returns vcov_type with attributes
-.process_vcov <- function(vcov = NULL, weightit = NULL, R, fwb.args = list(),
+.process_vcov <- function(vcov = NULL, weightit = NULL, R = 500L, fwb.args = list(),
                           m_est_supported = TRUE) {
   if (is_null(weightit)) {
     if (is_null(vcov)) {
@@ -73,7 +65,7 @@
 
   if (bootstrap) {
     chk::chk_count(R)
-    chk::chk_gt(R, 0)
+    chk::chk_gt(R, 0L)
     attr(vcov, "R") <- R
 
     if (vcov == "FWB") {
@@ -235,7 +227,7 @@
     return(NULL)
   }
 
-  R <- ...get("R", 500)
+  R <- ...get("R", 500L)
   fwb.args <- ...get("fwb.args", list())
 
   vcov. <- .process_vcov(vcov., object[["weightit"]], R, fwb.args)
@@ -278,7 +270,9 @@
                                        quote = FALSE,
                                        right = TRUE,
                                        ...) {
-  if (is_null(d <- dim(x)) || length(d) != 2L) {
+  d <- dim(x)
+
+  if (is_null(d) || length(d) != 2L) {
     .err("'x' must be coefficient matrix/data frame")
   }
 
@@ -357,18 +351,24 @@
 
   Cf <- array("", dim = d, dimnames = dimnames(xm))
 
-  ok <- !(ina <- is.na(xm))
+  ina <- is.na(xm)
+  ok <- !ina
 
   for (i in zap.ind) {
     xm[, i] <- zapsmall(xm[, i], digits)
   }
 
   if (is_not_null(cs.ind)) {
-    acs <- abs(coef.se <- xm[, cs.ind, drop = FALSE])
-    if (any(ia <- is.finite(acs))) {
-      digmin <- 1 + if (length(acs <- acs[ia & acs != 0]))
-        floor(log10(range(acs[acs != 0], finite = TRUE)))
-      else 0
+    coef.se <- xm[, cs.ind, drop = FALSE]
+    acs <- abs(coef.se)
+    ia <- is.finite(acs)
+    if (any(ia)) {
+      acs <- acs[ia & acs != 0]
+
+      digmin <- {
+        if (is_null(acs)) 1
+        else 1 + floor(log10(range(acs[acs != 0], finite = TRUE)))
+      }
 
       Cf[, cs.ind] <- format(round(coef.se, max(1L, digits - digmin)), digits = digits)
     }
@@ -379,7 +379,8 @@
                             digits = digits)
   }
 
-  if (is_not_null(r.ind <- setdiff(seq_col(xm), c(cs.ind, tst.ind, p.ind)))) {
+  r.ind <- setdiff(seq_col(xm), c(cs.ind, tst.ind, p.ind))
+  if (is_not_null(r.ind)) {
     for (i in r.ind) {
       Cf[, i] <- format(xm[, i], digits = digits)
     }
@@ -397,7 +398,8 @@
 
   x0 <- (xm[okP] == 0) != (as.numeric(x1) == 0)
 
-  if (is_not_null(not.both.0 <- which(x0 & !is.na(x0)))) {
+  not.both.0 <- which(x0 & !is.na(x0))
+  if (is_not_null(not.both.0)) {
     Cf[okP][not.both.0] <- format(xm[okP][not.both.0], digits = max(1L, digits - 1L))
   }
 
@@ -405,14 +407,17 @@
     Cf[ina] <- na.print
   }
 
-  if (any(inan <- is.nan(xm))) {
+  inan <- is.nan(xm)
+  if (any(inan)) {
     Cf[inan] <- "NaN"
   }
 
   if (P.values) {
     chk::chk_flag(signif.stars)
 
-    if (any(okP <- ok[, p.ind])) {
+    okP <- ok[, p.ind]
+
+    if (any(okP)) {
       pv <- as.vector(xm[, p.ind])
       Cf[okP, p.ind] <- format.pval(pv[okP], digits = dig.tst,
                                     eps = eps.Pvalue)
@@ -441,11 +446,14 @@
     chk::chk_flag(signif.legend)
 
     if (signif.legend) {
-      if ((w <- getOption("width")) < nchar(sleg <- attr(Signif, "legend"))) {
-        sleg <- strwrap(sleg, width = w - 2, prefix = space(2))
+      w <- getOption("width")
+      sleg <- attr(Signif, "legend")
+
+      if (w < nchar(sleg)) {
+        sleg <- strwrap(sleg, width = w - 2L, prefix = space(2L))
       }
 
-      cat0("---\nSignif. codes:  ", sleg, fill = w + 4 + max(nchar(sleg, "bytes") - nchar(sleg)))
+      cat0("---\nSignif. codes:  ", sleg, fill = w + 4L + max(nchar(sleg, "bytes") - nchar(sleg)))
     }
   }
 
@@ -487,7 +495,7 @@
     }
 
     if (is_null(weightit[["s.weights"]])) {
-      weightit[["s.weights"]] <- rep.int(1.0, nobs(weightit))
+      weightit[["s.weights"]] <- rep.int(1, nobs(weightit))
     }
   }
 
@@ -531,7 +539,7 @@
     model_call[setdiff(names(model_call), c(names(formals(stats::glm)), names(formals(stats::glm.control))))] <- NULL
   }
   else if (model == "ordinal") {
-    model_call[[1]] <- .ordinal_weightit
+    model_call[[1L]] <- .ordinal_weightit
     model_call[setdiff(names(model_call), names(formals(.ordinal_weightit)))] <- NULL
 
     if (is_not_null(weightit)) {
@@ -543,7 +551,7 @@
     model_call$hess <- vcov %nin% c("none", "BS", "FWB")
   }
   else if (model == "multinom") {
-    model_call[[1]] <- .multinom_weightit
+    model_call[[1L]] <- .multinom_weightit
     model_call[setdiff(names(model_call), names(formals(.multinom_weightit)))] <- NULL
 
     if (is_not_null(weightit)) {
@@ -555,7 +563,7 @@
     model_call$hess <- vcov %nin% c("none", "BS", "FWB")
   }
   else if (model == "coxph") {
-    model_call[[1]] <- quote(survival::coxph)
+    model_call[[1L]] <- quote(survival::coxph)
 
     if (is_not_null(weightit)) {
       model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
@@ -597,14 +605,14 @@
         fit[["hessian"]] <- .get_hess_ordinal(fit)
       }
 
-      V <- solve(-fit[["hessian"]])
+      V <- .solve_hessian(-fit[["hessian"]])
     }
     else if (inherits(fit, "multinom_weightit")) {
       if (is_null(fit[["hessian"]])) {
         fit[["hessian"]] <- .get_hess_multinom(fit)
       }
 
-      V <- solve(-fit[["hessian"]])
+      V <- .solve_hessian(-fit[["hessian"]])
     }
     else if (inherits(fit, "coxph_weightit")) {
       V <- if_null_then(fit[["naive.var"]], fit[["var"]])
@@ -634,6 +642,10 @@
     W <- SW <- NULL
   }
 
+  if (is_null(W)) {
+    W <- rep.int(1, length(Y))
+  }
+
   if (is_null(SW)) {
     SW <- rep.int(1, length(Y))
   }
@@ -641,7 +653,7 @@
   offset <- if_null_then(fit[["offset"]], rep.int(0, length(Y)))
 
   if (any(aliased)) {
-    if (!is_null(attr(fit[["qr"]][["qr"]], "aliased"))) {
+    if (is_not_null(attr(fit[["qr"]][["qr"]], "aliased"))) {
       Xout <- Xout[, !attr(fit[["qr"]][["qr"]], "aliased"), drop = FALSE]
     }
     else {
@@ -649,8 +661,6 @@
     }
     bout <- bout[!aliased]
   }
-
-  pout <- sum(!aliased)
 
   if (is_not_null(cluster) && vcov %in% c("asympt", "HC0", "BS", "FWB")) {
     if (inherits(cluster, "formula")) {
@@ -671,7 +681,7 @@
     if (p > 1L) {
       clu <- lapply(seq_len(p), function(i) utils::combn(seq_len(p), i, simplify = FALSE))
       clu <- unlist(clu, recursive = FALSE)
-      sign <- vapply(clu, function(i) (-1)^(length(i) + 1), numeric(1L))
+      sign <- vapply(clu, function(i) (-1)^(length(i) + 1L), numeric(1L))
       paste_ <- function(...) paste(..., sep = "_")
       for (i in (p + 1L):length(clu)) {
         cluster <- cbind(cluster, Reduce(paste_, unclass(cluster[, clu[[i]]])))
@@ -685,7 +695,7 @@
     #Small sample adjustment (setting cadjust = TRUE in vcovCL)
     g <- vapply(seq_along(clu), function(i) {
       if (is.factor(cluster[[i]])) {
-        length(levels(cluster[[i]]))
+        nlevels(cluster[[i]])
       }
       else {
         length(unique(cluster[[i]]))
@@ -714,8 +724,6 @@
     fwbfun <- function(data, w) {
       if (is_not_null(weightit)) {
         wcall$s.weights <- SW * w
-
-
 
         weightit_boot <- .eval_fit(wcall, envir = wenv,
                                    warnings = c("some extreme weights were generated" = NA))
@@ -782,7 +790,7 @@
 
     bootfun <- function(data, ind) {
       if (is_not_null(weightit)) {
-        wcall$data <- data[ind,]
+        wcall$data <- data[ind, ]
         wcall$s.weights <- SW[ind]
 
         weightit_boot <- .eval_fit(wcall, envir = wenv,
@@ -794,7 +802,7 @@
         internal_model_call$weights <- SW[ind]
       }
 
-      internal_model_call$data <- data[ind,]
+      internal_model_call$data <- data[ind, ]
 
       fit_boot <- .eval_fit(internal_model_call, envir = genv,
                             warnings = c("non-integer" = NA))
@@ -832,7 +840,7 @@
       V <- 0
 
       for (i in seq_along(clu)) {
-        adj <- g[i]/(g[i] - 1)
+        adj <- g[i] / (g[i] - 1)
         temp <- residuals(fit, type = "dfbeta",
                           collapse = cluster[[i]],
                           weighted = TRUE)
@@ -842,117 +850,145 @@
     }
   }
   else {
-    hess <- NULL
     if (vcov == "asympt") {
       Mparts <- attr(weightit, "Mparts", exact = TRUE)
       Mparts.list <- attr(weightit, "Mparts.list", exact = TRUE)
+    }
+    else {
+      Mparts <- Mparts.list <- NULL
     }
 
     psi_out <- function(Bout, w, Y, Xout, SW, offset) {
       fit$psi(Bout, Xout, Y, w * SW, offset = offset)
     }
 
-    if (vcov == "HC0") {
-      wfun <- {
-        if (is_null(W)) function(Btreat, Xtreat, A) 1
-        else function(Btreat, Xtreat, A) W
-      }
+    psi_b <- if_null_then(fit[["gradient"]],
+                          psi_out(bout, W, Y, Xout, SW, offset))
 
-      Xtreat <- NULL
-      A <- NULL
-
-      psi <- function(B, Xout, Y, Xtreat, A, SW, offset) {
-        Bout <- B[seq_len(pout)]
-        Btreat <- NULL
-
-        w <- wfun(Btreat, Xtreat, A)
-        psi_out(B, w, Y, Xout, SW, offset)
-      }
-
-      b <- bout
-
-      psi_b <- if_null_then(fit[["gradient"]], psi(b, Xout, Y, Xtreat, A, SW, offset))
-
+    H <- {
       if (is_not_null(fit[["hessian"]])) {
-        hess <- fit$hessian
+        fit$hessian
       }
       else if (inherits(fit, "ordinal_weightit")) {
-        hess <- .get_hess_ordinal(fit)
+        .get_hess_ordinal(fit)
       }
       else if (inherits(fit, "multinom_weightit")) {
-        hess <- .get_hess_multinom(fit)
+        .get_hess_multinom(fit)
       }
       else if (inherits(fit, "glm")) {
-        hess <- .get_hess_glm(fit)
+        .get_hess_glm(fit)
+      }
+      else {
+        .gradient(function(Bout) {
+          colSums(psi_out(Bout, W, Y, Xout, SW, offset))
+        }, .x = bout)
       }
     }
-    else if (is_not_null(Mparts)) {
+
+    if (is_not_null(Mparts)) {
       # Mparts from weightit()
       psi_treat <- Mparts[["psi_treat"]]
       wfun <- Mparts[["wfun"]]
       Xtreat <- Mparts[["Xtreat"]]
       A <- Mparts[["A"]]
       btreat <- Mparts[["btreat"]]
+      hess_treat <- Mparts[["hess_treat"]]
+      dw_dBtreat <- Mparts[["dw_dBtreat"]]
 
-      psi <- function(B, Xout, Y, Xtreat, A, SW, offset) {
-        Bout <- B[seq_len(pout)]
-        Btreat <- B[-seq_len(pout)]
-
-        w <- wfun(Btreat, Xtreat, A)
-
-        cbind(psi_out(Bout, w, Y, Xout, SW, offset),
-              psi_treat(Btreat, A, Xtreat, SW))
+      H_treat <- {
+        if (is_not_null(hess_treat)) {
+          hess_treat(btreat, Xtreat, A, SW)
+        }
+        else {
+          .gradient(function(Btreat) {
+            colSums(psi_treat(Btreat, Xtreat, A, SW))
+          }, .x = btreat)
+        }
       }
 
-      b <- c(bout, btreat)
+      H_out_treat <- {
+        if (is_not_null(dw_dBtreat)) {
+          crossprod(psi_out(bout, 1, Y, Xout, SW, offset),
+                    dw_dBtreat(btreat, Xtreat, A, SW))
+        }
+        else {
+          .gradient(function(Btreat) {
+            w <- wfun(Btreat, Xtreat, A)
+            colSums(psi_out(bout, w, Y, Xout, SW, offset))
+          }, .x = btreat)
+        }
+      }
 
-      psi_b <- psi(b, Xout, Y, Xtreat, A, SW, offset)
+      #Using formula from Wooldridge (2010) p. 419
+      psi_b <- psi_b + psi_treat(btreat, Xtreat, A, SW) %*%
+        .solve_hessian(-H_treat, t(H_out_treat), model = "weights")
     }
-    else {
+    else if (is_not_null(Mparts.list)) {
       # Mparts.list from weightitMSM() or weightit()
       psi_treat.list <- grab(Mparts.list, "psi_treat")
       wfun.list <- grab(Mparts.list, "wfun")
       Xtreat.list <- grab(Mparts.list, "Xtreat")
       A.list <- grab(Mparts.list, "A")
       btreat.list <- grab(Mparts.list, "btreat")
+      hess_treat.list <- grab(Mparts.list, "hess_treat")
+      dw_dBtreat.list <- grab(Mparts.list, "dw_dBtreat")
 
-      psi_treat <- function(Btreat, A, Xtreat, SW) {
-        do.call("cbind", lapply(seq_along(Btreat), function(i) {
-          psi_treat.list[[i]](Btreat[[i]], A[[i]], Xtreat[[i]], SW)
+      psi_treat <- function(Btreat.list, Xtreat.list, A.list, SW) {
+        do.call("cbind", lapply(seq_along(Btreat.list), function(i) {
+          psi_treat.list[[i]](Btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW)
         }))
       }
 
-      wfun <- function(Btreat, Xtreat, A) {
-        Reduce("*", lapply(seq_along(Btreat), function(i) {
-          wfun.list[[i]](Btreat[[i]], Xtreat[[i]], A[[i]])
+      wfun <- function(Btreat.list, Xtreat.list, A.list) {
+        Reduce("*", lapply(seq_along(Btreat.list), function(i) {
+          wfun.list[[i]](Btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
         }), init = 1)
       }
 
-      psi <- function(B, Xout, Y, Xtreat, A, SW, offset) {
-        Bout <- B[seq_len(pout)]
-        Btreat <- btreat.list
-        k <- 0
-        for (i in seq_along(btreat.list)) {
-          Btreat[[i]] <- B[-seq_len(pout)][k + seq_along(btreat.list[[i]])]
-          k <- k + length(btreat.list[[i]])
+      H_treat <- {
+        if (all(lengths(hess_treat.list) > 0L)) {
+          .block_diag(lapply(seq_along(hess_treat.list), function(i) {
+            hess_treat.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW)
+          }))
         }
-
-        w <- wfun(Btreat, Xtreat, A)
-
-        cbind(psi_out(Bout, w, Y, Xout, SW, offset),
-              psi_treat(Btreat, A, Xtreat, SW))
+        else {
+          .gradient(function(Btreat) {
+            Btreat.list <- .vec2list(Btreat, lengths(btreat.list))
+            colSums(psi_treat(Btreat.list, Xtreat.list, A.list, SW))
+          }, .x = unlist(btreat.list))
+        }
       }
 
-      b <- c(bout, unlist(btreat.list))
+      if (all(lengths(dw_dBtreat.list) > 0L)) {
+        w.list <- c(lapply(seq_along(btreat.list), function(i) {
+          wfun.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
+        }), list(rep(1, length(A.list[[1L]]))))
 
-      psi_b <- psi(b, Xout, Y, Xtreat.list, A.list, SW, offset)
+        dw_dBtreat <- do.call("cbind", lapply(seq_along(btreat.list), function(i) {
+          dw_dBtreat.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW) *
+            Reduce("*", w.list[-i])
+        }))
+
+        H_out_treat <- crossprod(psi_out(bout, 1, Y, Xout, SW, offset), dw_dBtreat)
+      }
+      else {
+        H_out_treat <- .gradient(function(Btreat) {
+          Btreat.list <- .vec2list(Btreat, lengths(btreat.list))
+          w <- wfun(Btreat.list, Xtreat.list, A.list)
+          colSums(psi_out(bout, w, Y, Xout, SW, offset))
+        }, .x = unlist(btreat.list))
+      }
+
+      #Using formula from Wooldridge (2010) p. 419
+      psi_b <- psi_b + psi_treat(btreat.list, Xtreat.list, A.list, SW) %*%
+        .solve_hessian(-H_treat, t(H_out_treat), model = "weights")
     }
 
     if (is_not_null(cluster)) {
       B1 <- 0
 
       for (i in seq_along(clu)) {
-        adj <- g[i]/(g[i] - 1)
+        adj <- g[i] / (g[i] - 1)
 
         B1 <- B1 + sign[i] * adj * crossprod(rowsum(psi_b, cluster[[i]], reorder = FALSE))
       }
@@ -961,41 +997,12 @@
       B1 <- crossprod(psi_b)
     }
 
-    # Gradient of gradfun -> hessian
-    gradfun <- function(B, Xout, Y, Xtreat, A, SW, offset) {
-      colSums(psi(B, Xout, Y, Xtreat, A, SW, offset))
-    }
+    A1 <- .solve_hessian(H)
 
-    if (is_null(hess)) {
-      hess <- .gradient(gradfun,
-                        .x = b,
-                        Xout = Xout,
-                        Y = Y,
-                        Xtreat = {
-                          if (is_not_null(Mparts.list)) Xtreat.list
-                          else Xtreat
-                        },
-                        A = {
-                          if (is_not_null(Mparts.list)) A.list
-                          else A
-                        },
-                        SW = SW,
-                        offset = offset)
-    }
+    V <- A1 %*% tcrossprod(B1, A1)
 
-    V <- solve(hess, t(solve(hess, B1)[seq_len(pout),, drop = FALSE]))
-
-    if (null_or_error(V)) {
-      .e <- conditionMessage(attr(V, "condition"))
-      if (grepl("system is computationally singular", .e, fixed = TRUE) ||
-          grepl("Lapack routine dgesv: system is exactly singular", .e, fixed = TRUE)) {
-        .err('the Hessian could not be inverted, which indicates an estimation failure, possibly due to perfect separation. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = "none"`. Simplifying the model can sometimes help')
-      }
-
-      .err(.e, tidy = FALSE)
-    }
-
-    V <- V[seq_len(pout),, drop = FALSE]
+    # inf <- psi_b %*% A1
+    # V <- crossprod(inf)
   }
 
   colnames(V) <- rownames(V) <- names(aliased)[!aliased]
@@ -1029,12 +1036,37 @@
 }
 
 .get_hess_glm <- function(fit) {
-  Xout <- if_null_then(fit[["x"]], model.matrix(fit))
+  X <- if_null_then(fit[["x"]], model.matrix(fit))
 
   d1mus <- fit$family$mu.eta(fit$linear.predictors)
   varmus <- fit$family$variance(fit$fitted.values)
 
-  dx <- Xout * d1mus
+  crossprod(X, X * (-d1mus^2 * fit$prior.weights / varmus))
+}
 
-  crossprod(dx, dx * fit$prior.weights / varmus)
+.solve_hessian <- function(h, ..., model = "out") {
+  model <- match_arg(model, c("out", "weights"))
+
+  withCallingHandlers({
+    solve(h, ...)
+  },
+  warning = function(w) {
+    .wrn(conditionMessage(w), tidy = FALSE)
+    invokeRestart("muffleWarning")
+  },
+  error = function(e) {
+    .e <- conditionMessage(e)
+    if (grepl("system is computationally singular", .e, fixed = TRUE) ||
+        grepl("Lapack routine dgesv: system is exactly singular", .e, fixed = TRUE)) {
+      if (model == "out") {
+        .err('the Hessian for the outcome model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or a model that is too complex. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = "none"`. Simplifying the model can sometimes help')
+      }
+
+      if (model == "weights") {
+        .err('the Hessian for the weighting model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or failure to converge. Consider treating the weights as fixed by setting `vcov = "HC0"`')
+      }
+    }
+
+    .err(.e, tidy = FALSE)
+  })
 }
