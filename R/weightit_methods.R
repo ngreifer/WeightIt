@@ -1,12 +1,18 @@
 #' Weighting methods
 #'
-#' @description
-#' `.weightit_methods` is a list containing the allowable weighting methods that can be supplied by name to the `method` argument of [weightit()], [weightitMSM()], and [weightit.fit()]. Each entry corresponds to an allowed method and contains information about what options are and are not allowed for each method. While this list is primarily for internal use by checking functions in \pkg{WeightIt}, it might be of use for package authors that want to support different weighting methods.
+#' @description `.weightit_methods` is a list containing the allowable weighting
+#'   methods that can be supplied by name to the `method` argument of
+#'   [weightit()], [weightitMSM()], and [weightit.fit()]. Each entry corresponds
+#'   to an allowed method and contains information about what options are and
+#'   are not allowed for each method. While this list is primarily for internal
+#'   use by checking functions in \pkg{WeightIt}, it might be of use for package
+#'   authors that want to support different weighting methods.
 #'
-#' @details
-#' Each component is itself a list containing the following components:
+#' @details Each component is itself a list containing the following components:
 #' \describe{
-#' \item{`treat_type`}{at least one of `"binary"`, `"multi-category"`, or `"continuous"` indicating which treatment types are available for this method.}
+#' \item{`treat_type`}{at least one of `"binary"`, `"multi-category"`, or
+#'                     `"continuous"` indicating which treatment types are
+#'                     available for this method.}
 #' \item{`estimand`}{which estimands are available for this method. All methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
 #' \item{`alias`}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is `"ebal"`, but `"ebalance"` and `"entropy"` also work. The first value is the canonical name.}
 #' \item{`description`}{a string containing the description of the name in English.}
@@ -24,8 +30,9 @@
 #' \item{`plot.weightit_ok`}{a logical for whether `plot()` can be used on the `weightit` output with the method.}
 #' }
 #'
-#' @seealso
-#' [weightit()] and [weightitMSM()] for how the methods are used. Also see the individual methods pages for information on whether and how each option can be used.
+#' @seealso [weightit()] and [weightitMSM()] for how the methods are used. Also
+#'   see the individual methods pages for information on whether and how each
+#'   option can be used.
 #'
 #' @examples
 #' # Get all acceptable names
@@ -71,7 +78,7 @@
   "bart" = list(
     treat_type = c("binary", "multi-category", "continuous"),
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
-    alias = c("bart"),
+    alias = "bart",
     description = "propensity score weighting with BART",
     ps = TRUE,
     msm_valid = TRUE,
@@ -79,7 +86,7 @@
     subclass_ok = TRUE,
     packages_needed = "dbarts",
     s.weights_ok = FALSE,
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = FALSE,
     moments_default = NULL,
     density_ok = TRUE,
@@ -88,7 +95,7 @@
   ),
   "cbps" = list(
     treat_type = c("binary", "multi-category", "continuous"),
-    estimand = c("ATE", "ATT", "ATC"),
+    estimand = c("ATE", "ATT", "ATC", "ATO"),
     alias = c("cbps", "cbgps"),
     description = "covariate balancing propensity score weighting",
     ps = TRUE,
@@ -97,7 +104,7 @@
     subclass_ok = FALSE,
     packages_needed = character(),
     s.weights_ok = TRUE,
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = TRUE,
     moments_default = 1,
     density_ok = FALSE,
@@ -115,7 +122,7 @@
     subclass_ok = FALSE,
     packages_needed = character(),
     s.weights_ok = TRUE,
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = TRUE,
     moments_default = 1,
     density_ok = FALSE,
@@ -133,7 +140,7 @@
     subclass_ok = FALSE,
     packages_needed = "osqp",
     s.weights_ok = TRUE,
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = TRUE,
     moments_default = 0,
     density_ok = FALSE,
@@ -161,7 +168,7 @@
   "ipt" = list(
     treat_type = c("binary", "multi-category"),
     estimand = c("ATE", "ATT", "ATC"),
-    alias = c("ipt"),
+    alias = "ipt",
     description = "inverse probability tilting",
     ps = TRUE,
     msm_valid = TRUE,
@@ -169,7 +176,7 @@
     subclass_ok = FALSE,
     packages_needed = "rootSolve",
     s.weights_ok = TRUE,
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = TRUE,
     moments_default = 1,
     density_ok = FALSE,
@@ -178,7 +185,7 @@
   ),
   "npcbps" = list(
     treat_type = c("binary", "multi-category", "continuous"),
-    estimand = c("ATE"),
+    estimand = "ATE",
     alias = c("npcbps", "npcbgps"),
     description = "non-parametric covariate balancing propensity score weighting",
     ps = FALSE,
@@ -187,7 +194,7 @@
     subclass_ok = FALSE,
     packages_needed = "CBPS",
     s.weights_ok = FALSE,
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = TRUE,
     moments_default = 1,
     density_ok = FALSE,
@@ -205,7 +212,7 @@
     subclass_ok = FALSE,
     packages_needed = c("optweight", "osqp"),
     s.weights_ok = tryCatch(packageVersion("optweight") > "0.2.5", error = function(e) FALSE), #Note; need to update optweight to ensure s.weights are treated same as entropy balancing.
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = TRUE,
     moments_default = 1,
     density_ok = FALSE,
@@ -223,7 +230,7 @@
     subclass_ok = TRUE,
     packages_needed = "SuperLearner",
     s.weights_ok = TRUE,
-    missing = c("ind"),
+    missing = "ind",
     moments_int_ok = FALSE,
     moments_default = NULL,
     density_ok = TRUE,
