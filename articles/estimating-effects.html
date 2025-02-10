@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.2.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2025-01-08</h4>
+            <h4 data-toc-skip class="date">2025-02-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -530,8 +530,7 @@ estimate the ATE.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Term: A</span></span>
 <span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Comparison: 1 - 0</span></span>
-<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted</span></span></code></pre>
+<span><span class="co">## Comparison: 1 - 0</span></span></code></pre>
 <p>If, in addition to the effect estimate, we want the average estimated
 potential outcomes, we can use
 <code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>, which we demonstrate
@@ -545,12 +544,11 @@ the outcome model (if any) are interacted with the treatment.</p>
 <span><span class="co">##  0     1.42      0.135 10.5   &lt;0.001 84.0  1.16   1.68</span></span>
 <span><span class="co">##  1     3.38      0.318 10.6   &lt;0.001 84.8  2.75   4.00</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Columns: A, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Type:  probs</span></span></code></pre>
 <p>We can see that the difference in potential outcome means is equal to
 the average treatment effect computed previously<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;To verify that they are equal, supply the output of
 &lt;code&gt;&lt;a href="https://marginaleffects.com/man/r/predictions.html" class="external-link"&gt;avg_predictions()&lt;/a&gt;&lt;/code&gt; to &lt;code&gt;&lt;a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link"&gt;hypotheses()&lt;/a&gt;&lt;/code&gt;, e.g.,
-&lt;code&gt;avg_predictions(...) |&amp;gt; hypotheses("revpairwise")&lt;/code&gt;; this
+&lt;code&gt;avg_predictions(...) |&amp;gt; hypotheses(~pairwise)&lt;/code&gt;; this
 explicitly compares the average potential outcomes and should yield
 identical estimates to the &lt;code&gt;&lt;a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link"&gt;avg_comparisons()&lt;/a&gt;&lt;/code&gt; call.&lt;/p&gt;'><sup>2</sup></a>. The arguments to
 <code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions()</a></code> are the same as those to
@@ -637,8 +635,7 @@ for a binary outcome <code>Y_B</code>:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Term: A</span></span>
 <span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Comparison: ln(mean(1) / mean(0))</span></span>
-<span><span class="co">## Columns: term, contrast, estimate, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted</span></span></code></pre>
+<span><span class="co">## Comparison: ln(mean(1) / mean(0))</span></span></code></pre>
 <p>The output displays the marginal RR, its Z-value, the p-value for the
 Z-test of the log RR against 0, and its confidence interval. (Note that
 even though the <code>Comparison</code> label still suggests the log RR,
@@ -835,25 +832,9 @@ outcome under each treatment for the focal group, and the use
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
 <span>                     variables <span class="op">=</span> <span class="st">"Am"</span>,</span>
 <span>                     newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">Am</span> <span class="op">==</span> <span class="st">"T"</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="va">p</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Am Estimate Std. Error     z Pr(&gt;|z|)     S 2.5 % 97.5 %</span></span>
-<span><span class="co">##  C1     1.64      0.355  4.62   &lt;0.001  18.0 0.945   2.34</span></span>
-<span><span class="co">##  C2     1.84      0.301  6.12   &lt;0.001  30.0 1.252   2.43</span></span>
-<span><span class="co">##  T      3.75      0.217 17.27   &lt;0.001 219.7 3.324   4.17</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Columns: Am, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
-<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"revpairwise"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">##     Term Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
-<span><span class="co">##  C2 - C1     0.20      0.465 0.431    0.667  0.6 -0.712   1.11</span></span>
-<span><span class="co">##  T - C1      2.11      0.416 5.064   &lt;0.001 21.2  1.292   2.92</span></span>
-<span><span class="co">##  T - C2      1.91      0.371 5.144   &lt;0.001 21.8  1.181   2.63</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="va">p</span></span>
+<span></span>
+<span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="op">~</span><span class="va">pairwise</span><span class="op">)</span></span></code></pre></div>
 <p>We find significant ATTs between the focal treatment and control
 levels (<code>T - C1</code> and <code>T - C2</code>), but the difference
 between control levels (<code>C2 - C1</code>), which can be interpreted
@@ -874,7 +855,7 @@ which ranges from -10.37 to 6.26, and estimate its effect on the
 continuous outcome <code>Y_C</code>.</p>
 <p>First, we’ll estimate entropy balancing weights <span class="citation">(<a href="#ref-vegetabileNonparametricEstimationPopulation2021">Vegetabile
 et al. 2021</a>)</span> using <code><a href="../reference/weightit.html">weightit()</a></code>.</p>
-<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">Ac</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
 <span>                <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
 <span>              moments <span class="op">=</span> <span class="fl">2</span>, int <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -898,7 +879,7 @@ challenging. Covariates can be included in the model, but with many
 covariates, many basis functions for the treatment, and a full set of
 treatment-covariate interactions, the resulting estimates may be
 imprecise.</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Fit the outcome model</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="fu">splines</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/splines/ns.html" class="external-link">ns</a></span><span class="op">(</span><span class="va">Ac</span>, df <span class="op">=</span> <span class="fl">4</span><span class="op">)</span> <span class="op">*</span></span>
 <span>                     <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
@@ -909,7 +890,7 @@ expected potential outcome under a representative set of treatment
 values. We’ll examine 31 treatment values from the 10th to 90th
 percentiles of <code>Ac</code> because estimates outside those ranges
 tend to be imprecise.</p>
-<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Represenative values of Ac:</span></span>
 <span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">d</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">Ac</span>, <span class="fl">.1</span><span class="op">)</span>,</span>
 <span>                      <span class="fu"><a href="https://rdrr.io/r/stats/quantile.html" class="external-link">quantile</a></span><span class="op">(</span><span class="va">Ac</span>, <span class="fl">.9</span><span class="op">)</span>,</span>
@@ -924,7 +905,7 @@ its pointwise confidence band using <code>ggplot2</code><a class="footnote-ref" 
 &lt;code&gt;&lt;a href="https://marginaleffects.com/man/r/plot_predictions.html" class="external-link"&gt;marginaleffects::plot_predictions()&lt;/a&gt;&lt;/code&gt;, though after
 requesting the predictions in the prior step it is quicker to use
 &lt;code&gt;&lt;a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link"&gt;ggplot()&lt;/a&gt;&lt;/code&gt;.&lt;/p&gt;'><sup>4</sup></a>:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ggplot2.tidyverse.org" class="external-link">"ggplot2"</a></span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Ac</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y <span class="op">=</span> <span class="va">estimate</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -943,7 +924,7 @@ this derivative is different from zero, there is evidence of a treatment
 effect at the corresponding value of treatment. Below, we use
 <code><a href="https://marginaleffects.com/man/r/slopes.html" class="external-link">avg_slopes()</a></code> to compute the pointwise derivatives of the
 ADRF across levels of <code>Ac</code> and then plot it<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;You can also use &lt;code&gt;&lt;a href="https://marginaleffects.com/man/r/plot_slopes.html" class="external-link"&gt;plot_slopes()&lt;/a&gt;&lt;/code&gt;&lt;/p&gt;'><sup>5</sup></a>.</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Estimate the pointwise derivatives at representative</span></span>
 <span><span class="co"># values of Ac</span></span>
 <span><span class="va">s</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://marginaleffects.com/man/r/slopes.html" class="external-link">avg_slopes</a></span><span class="op">(</span><span class="va">fit</span>,</span>
@@ -992,7 +973,7 @@ M-estimation to adjust for their estimation in computing the parameter
 covariance matrix. This also includes estimation of the standardization
 factor, if any. We’ll use the toy dataset <code>msmdata</code> that
 comes with <code>WeightIt</code>.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"msmdata"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">Wmsm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
@@ -1006,16 +987,18 @@ comes with <code>WeightIt</code>.</p>
 <p>Next we’ll fit the outcome model using <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>,
 which includes the baseline covariates (i.e., only those measured prior
 the first treatment).</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">Y_B</span> <span class="op">~</span> <span class="va">A_1</span> <span class="op">*</span> <span class="va">A_2</span> <span class="op">*</span> <span class="va">A_3</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
 <span>                    data <span class="op">=</span> <span class="va">msmdata</span>, weightit <span class="op">=</span> <span class="va">Wmsm</span>,</span>
 <span>                    family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span></code></pre></div>
 <p>Then, we compute the average expected potential outcomes under each
 treatment regime using
 <code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>:</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="op">(</span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
-<span>                      variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>,</span>
+<span>                     variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  A_1 A_2 A_3 Estimate Std. Error    z Pr(&gt;|z|)     S 2.5 % 97.5 %</span></span>
 <span><span class="co">##    0   0   0    0.687     0.0166 41.4   &lt;0.001   Inf 0.654  0.719</span></span>
@@ -1027,27 +1010,14 @@ treatment regime using
 <span><span class="co">##    1   1   0    0.378     0.0163 23.2   &lt;0.001 393.1 0.346  0.410</span></span>
 <span><span class="co">##    1   1   1    0.422     0.0261 16.1   &lt;0.001 192.3 0.371  0.473</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Columns: A_1, A_2, A_3, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Type:  probs</span></span></code></pre>
 <p>We can compare individual predictions using
 <code><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">marginaleffects::hypotheses()</a></code>. For example, to compare all
 treatment histories to just the first treatment history (i.e., in which
 all units are untreated for all time periods), we can run the
 following:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"reference"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">##               Term Estimate Std. Error      z Pr(&gt;|z|)     S  2.5 %  97.5 %</span></span>
-<span><span class="co">##  0, 0, 1 - 0, 0, 0  -0.1658     0.0414  -4.00  &lt; 0.001  14.0 -0.247 -0.0846</span></span>
-<span><span class="co">##  0, 1, 0 - 0, 0, 0  -0.1960     0.0269  -7.29  &lt; 0.001  41.5 -0.249 -0.1433</span></span>
-<span><span class="co">##  0, 1, 1 - 0, 0, 0  -0.2488     0.0337  -7.38  &lt; 0.001  42.6 -0.315 -0.1828</span></span>
-<span><span class="co">##  1, 0, 0 - 0, 0, 0  -0.0842     0.0270  -3.12  0.00179   9.1 -0.137 -0.0314</span></span>
-<span><span class="co">##  1, 0, 1 - 0, 0, 0  -0.1428     0.0356  -4.02  &lt; 0.001  14.0 -0.212 -0.0731</span></span>
-<span><span class="co">##  1, 1, 0 - 0, 0, 0  -0.3083     0.0232 -13.30  &lt; 0.001 131.6 -0.354 -0.2629</span></span>
-<span><span class="co">##  1, 1, 1 - 0, 0, 0  -0.2647     0.0308  -8.61  &lt; 0.001  56.9 -0.325 -0.2044</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="op">~</span><span class="va">reference</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="moderation-analysis">Moderation Analysis<a class="anchor" aria-label="anchor" href="#moderation-analysis"></a>
@@ -1082,7 +1052,7 @@ estimation.</p>
 potential moderator of the effect of <code>A</code> on <code>Y_C</code>.
 Below, we’ll estimate weights using CBPS for the ATE within each level
 of <code>X5</code> by supplying it to the <code>by</code> argument.</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Wm</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">A</span> <span class="op">~</span> <span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span> <span class="op">+</span> <span class="va">X4</span> <span class="op">+</span> <span class="va">X5</span> <span class="op">+</span> </span>
 <span>                 <span class="va">X6</span> <span class="op">+</span> <span class="va">X7</span> <span class="op">+</span> <span class="va">X8</span> <span class="op">+</span> <span class="va">X9</span>, data <span class="op">=</span> <span class="va">d</span>,</span>
 <span>               method <span class="op">=</span> <span class="st">"cbps"</span>, estimand <span class="op">=</span> <span class="st">"ATE"</span>,</span>
@@ -1117,51 +1087,41 @@ treatment and moderator. Here, we’ll fit a linear regression model
 including the just the first three covariates in addition to the
 treatment and moderator (allowing the covariates to interact with
 both).</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">Y_C</span> <span class="op">~</span> <span class="va">A</span> <span class="op">*</span> <span class="va">X5</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1</span> <span class="op">+</span> <span class="va">X2</span> <span class="op">+</span> <span class="va">X3</span><span class="op">)</span>,</span>
 <span>                    data <span class="op">=</span> <span class="va">d</span>, weightit <span class="op">=</span> <span class="va">Wm</span><span class="op">)</span></span></code></pre></div>
 <p>To estimate the subgroup ATEs, we can use
 <code><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons()</a></code>, this time specifying the <code>by</code>
 argument to signify that we want treatment effects stratified by the
 moderator.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
-<span>                by <span class="op">=</span> <span class="st">"X5"</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">a</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
+<span>                     by <span class="op">=</span> <span class="st">"X5"</span><span class="op">)</span></span>
+<span><span class="va">a</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##  Term X5 Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
-<span><span class="co">##     A  0     1.16      0.480 2.41   0.0159  6.0 0.217   2.10</span></span>
-<span><span class="co">##     A  1     2.38      0.454 5.24   &lt;0.001 22.5 1.487   3.27</span></span>
+<span><span class="co">##  X5 Estimate Std. Error    z Pr(&gt;|z|)    S 2.5 % 97.5 %</span></span>
+<span><span class="co">##   0     1.16      0.480 2.41   0.0159  6.0 0.217   2.10</span></span>
+<span><span class="co">##   1     2.38      0.454 5.24   &lt;0.001 22.5 1.487   3.27</span></span>
 <span><span class="co">## </span></span>
+<span><span class="co">## Term: A</span></span>
 <span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Comparison: 1 - 0</span></span>
-<span><span class="co">## Columns: term, contrast, X5, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Comparison: 1 - 0</span></span></code></pre>
 <p>We can see that the subgroup mean differences differ from each other,
-and we can formally test for moderation using another call to
-<code><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons()</a></code>, this time using the
-<code>hypothesis</code> argument to signify that we want to compare
-effects between subgroups:</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
-<span>                by <span class="op">=</span> <span class="st">"X5"</span>,</span>
-<span>                hypothesis <span class="op">=</span> <span class="st">"pairwise"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## </span></span>
-<span><span class="co">##   Term Estimate Std. Error     z Pr(&gt;|z|)   S 2.5 % 97.5 %</span></span>
-<span><span class="co">##  0 - 1    -1.22       0.66 -1.85    0.065 3.9 -2.51 0.0759</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+and we can formally test for moderation using
+<code><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses()</a></code>:</p>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">a</span>, <span class="op">~</span><span class="va">pairwise</span><span class="op">)</span></span></code></pre></div>
 <p>Though the subgroup effects differ from each other in the sample,
 this difference is not statistically significant at the .05 level, so
 there is no evidence of moderation by <code>X5</code>.</p>
 <p>When the moderator has more than two levels, it is possible to run an
 omnibus test for moderation by changing <code>hypothesis</code> to
 <code>"reference"</code> and supplying the output to
-<code><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">marginaleffects::hypotheses()</a></code> with
-<code>joint = TRUE</code>, e.g.,</p>
-<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<code><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses()</a></code> with <code>joint = TRUE</code>, e.g.,</p>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                by <span class="op">=</span> <span class="st">"X5"</span>,</span>
-<span>                hypothesis <span class="op">=</span> <span class="st">"reference"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>                hypothesis <span class="op">=</span> <span class="op">~</span><span class="va">pairwise</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span>joint <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 <p>This produces a single p-value for the test that all pairwise
 differences between subgroups are equal to zero.</p>
@@ -1373,7 +1333,7 @@ Bootstrap.”</span> <em>The American Statistician</em> 74 (4): 345–58. <a hre
 <div class="section level2">
 <h2 id="code-to-generate-data-used-in-examples">Code to Generate Data used in Examples<a class="anchor" aria-label="anchor" href="#code-to-generate-data-used-in-examples"></a>
 </h2>
-<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#Generating data similar to Austin (2009) for demonstrating treatment effect estimation</span></span>
 <span><span class="va">gen_X</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">9</span> <span class="op">*</span> <span class="va">n</span><span class="op">)</span>, nrow <span class="op">=</span> <span class="va">n</span>, ncol <span class="op">=</span> <span class="fl">9</span><span class="op">)</span></span>

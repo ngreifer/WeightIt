@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.2.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,17 +38,25 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
-<code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.4.0" id="weightit-140">
+<code>WeightIt</code> 1.4.0<a class="anchor" aria-label="anchor" href="#weightit-140"></a></h2>
 <ul><li><p>Entropy balancing works slightly differently when sampling weights are supplied. The negative entropy between the estimated weights and the product of the sampling weights and base weights (if any) is now the quantity minimized in the optimization. Previously, the negative entropy between the product of the sampling weights and estimated weights and the base weights was minimized. The new behavior ensures entropy balancing is consistent with mathematically equivalent methods when it ought to be (i.e., CBPS and IPT for the ATT) and prevents counter-intuitive results, like that the ESS after weighting could be larger than that before weighting. Note this will cause results to differ between this and previous versions of <code>WeightIt</code>.</p></li>
+<li><p>With <code>method = "cbps"</code>, <code>estimand</code> can now be set to <code>"ATO"</code> for binary and multi-category treatments. For binary treatments with the default link, this will yield identical weights to using <code>method = "glm"</code> with <code>estimand = "ATO"</code>.</p></li>
+<li><p>Two new links can be supplied with <code>method = "glm",</code>“cbps”<code>, and</code>“ipt”<code>:</code>“loglog”<code>for the log-log link and</code>“clog”<code>for the complementary log link. The</code>link<code>argument can also now be supplied as a</code>link-glm<code>object (e.g., the output of a call to</code>make.link()`). This allows for more flexibility in the link function used to estimate the propensity score.</p></li>
+<li><p>A new <code>solver</code> argument can be supplied to <code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "ebal"</code> and with <code>method = "cbps"</code> with <code>over = FALSE</code> (the default); this argument controls whether to use <code><a href="https://rdrr.io/pkg/rootSolve/man/multiroot.html" class="external-link">rootSolve::multiroot()</a></code> or <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code> solve the optimization problem for the weights. <code>multiroot()</code> is used by default when <code>rootSolve</code> is installed as it is quicker and more accurate.</p></li>
+<li><p>For some methods, analytic formulas for the derivatives used in M-estimation are now used instead of relying on numeric differentiation. This increases speed and accuracy in computing standard errors that adjust for estimation of the weights. The formulas are benchmarked against numeric differentiation results.</p></li>
 <li><p>Added new <code>method</code> argument to <code><a href="../reference/calibrate.html">calibrate()</a></code> to support isotonic regression calibration as described by <a href="http://arxiv.org/abs/2411.06342" class="external-link">van der Laan el al. (2024)</a>.</p></li>
 <li><p>Added clearer error and warning messages to several functions, most notably <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> and friends, when missing values are present in the model variables.</p></li>
+<li><p>The <code><a href="https://rdrr.io/r/stats/update.html" class="external-link">update()</a></code> method for <code>glm_weightit</code> objects and friends is now a bit more sophisticated. When <code>data</code> or <code>s.weights</code> are supplied, the <code>weightit</code> object (if any) is refit before refitting the <code>glm_weightit</code> model. This makes it easy to performing bootstrapping by simply calling <code><a href="https://rdrr.io/r/stats/update.html" class="external-link">update()</a></code> on a fitted object with a new dataset or bootstrap weights.</p></li>
+<li><p>Improved estimation and convergence for <code>method = "cbps"</code>. In particular, for the over-identified CBPS, the generalized inverse is now used only when the GMM weight matrix is singular. Previously, it was always used.</p></li>
 <li><p>Improved processing of <code>estimand</code> and <code>focal</code> for binary treatments. <code><a href="../reference/weightit.html">weightit()</a></code> is now better at guessing which level of the treatment is considered “treated”, and <code>focal</code> can be used to identify the focal group when requesting the ATT or ATC. (<a href="https://github.com/ngreifer/WeightIt/issues/77" class="external-link">#77</a>)</p></li>
 <li><p>Improved estimation of asymptotic and HC0 covariance matrices after <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> and friends.</p></li>
 <li><p>When using <code>method = "super"</code> with <code>SL.method = "method.balance"</code>, a new algorithm is used to compute the optimal combination of predictions, which should yield better performance. This may cause results to differ from past versions.</p></li>
 <li><p>Fixed a bug when using the fractional weighted bootstrap with <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> and friends after entropy balancing. This bug is still present with optimization-based weighting (i.e., <code>method = "optweight"</code>), so the fractional weighted bootstrap is no longer allowed with this method.</p></li>
 <li><p>Sampling weights can no longer be used with <code>method = "optweight"</code> until a bug is sorted out.</p></li>
 <li><p>Performance enhancements.</p></li>
+<li><p>Added new tests for CBPS, IPT, and entropy balancing.</p></li>
+<li><p>Updated the documentation for <code>msmdata</code>. Thanks to <a href="https://github.com/larsentom" class="external-link">@larsentom</a>. (<a href="https://github.com/ngreifer/WeightIt/issues/79" class="external-link">#79</a>)</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.3.2" id="weightit-132">

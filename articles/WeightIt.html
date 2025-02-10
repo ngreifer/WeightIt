@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.3.2.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2025-01-08</h4>
+            <h4 data-toc-skip class="date">2025-02-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -260,16 +260,16 @@ of the weights.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##            Min                                 Max</span></span>
-<span><span class="co">## treated 1.0000    ||                         1.000</span></span>
-<span><span class="co">## control 0.0187 |---------------------------| 9.421</span></span>
+<span><span class="co">##            Min                                Max</span></span>
+<span><span class="co">## treated 1.0000    ||                         1.00</span></span>
+<span><span class="co">## control 0.0188 |---------------------------| 9.42</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
-<span><span class="co">##                                           </span></span>
-<span><span class="co">##               5      4      3     2      1</span></span>
-<span><span class="co">##  treated      1      1      1     1      1</span></span>
-<span><span class="co">##             608    381    597   303    411</span></span>
-<span><span class="co">##  control 7.1272 7.5014 7.9998 9.036 9.4206</span></span>
+<span><span class="co">##                                            </span></span>
+<span><span class="co">##               5      4      3      2      1</span></span>
+<span><span class="co">##  treated      1      1      1      1      1</span></span>
+<span><span class="co">##             608    381    597    303    411</span></span>
+<span><span class="co">##  control 7.1271 7.5013 7.9999 9.0357 9.4204</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
@@ -292,10 +292,10 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## educ        Contin.        0 Balanced, &lt;0.05       0.664</span></span>
 <span><span class="co">## race_black   Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_hispan  Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## race_white   Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## married      Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## re74        Contin.        0 Balanced, &lt;0.05       1.326</span></span>
+<span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance tally for mean differences</span></span></span>
@@ -305,7 +305,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Variable with the greatest mean difference</span></span></span>
 <span><span class="co">##  Variable Diff.Adj     M.Threshold</span></span>
-<span><span class="co">##      re75       -0 Balanced, &lt;0.05</span></span>
+<span><span class="co">##      re74       -0 Balanced, &lt;0.05</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Effective sample sizes</span></span></span>
 <span><span class="co">##            Control Treated</span></span>
@@ -340,8 +340,7 @@ treatment effect estimation from the outcome model.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## Term: treat</span></span>
 <span><span class="co">## Type:  probs </span></span>
-<span><span class="co">## Comparison: 1 - 0</span></span>
-<span><span class="co">## Columns: term, contrast, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high, predicted_lo, predicted_hi, predicted</span></span></code></pre>
+<span><span class="co">## Comparison: 1 - 0</span></span></code></pre>
 <p>Our confidence interval for <code>treat</code> contains 0, so there
 isn’t evidence that <code>treat</code> has an effect on
 <code>re78</code>. Several types of standard errors are available in
@@ -628,8 +627,7 @@ treatment regime using
 <span><span class="co">##    1   1   0    0.378     0.0163 23.2   &lt;0.001 393.1 0.346  0.410</span></span>
 <span><span class="co">##    1   1   1    0.422     0.0261 16.1   &lt;0.001 192.3 0.371  0.473</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## Type:  response </span></span>
-<span><span class="co">## Columns: A_1, A_2, A_3, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">## Type:  response</span></span></code></pre>
 <p>We can compare the expected potential outcomes under each regime
 using <code><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">marginaleffects::hypotheses()</a></code>. To get all pairwise
 comparisons, supply the <code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions()</a></code> output to
@@ -640,30 +638,9 @@ regimes with no treatment for all three time points vs. the regime with
 treatment for all three time points, we would run</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"b8 - b1 = 0"</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Warning: </span></span>
-<span><span class="co">## It is essential to check the order of estimates when specifying hypothesis tests using positional indices like b1, b2, etc. The indices of estimates can change depending on the order of rows in the original dataset, user-supplied arguments, model-fitting package, and version of `marginaleffects`. </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## It is also good practice to use assertions that ensure the order of estimates is consistent across different runs of the same code. Example:</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## ```r</span></span>
-<span><span class="co">## mod &lt;- lm(mpg ~ am * carb, data = mtcars)</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## # assertion for safety</span></span>
-<span><span class="co">## p &lt;- avg_predictions(mod, by = 'carb')</span></span>
-<span><span class="co">## stopifnot(p$carb[1] != 1 || p$carb[2] != 2)</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## # hypothesis test</span></span>
-<span><span class="co">## avg_predictions(mod, by = 'carb', hypothesis = 'b1 - b2 = 0')</span></span>
-<span><span class="co">## ```</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Disable this warning with: `options(marginaleffects_safe = FALSE)`</span></span>
-<span><span class="co">## This warning appears once per session.</span></span></code></pre>
 <pre><code><span><span class="co">## </span></span>
-<span><span class="co">##     Term Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
-<span><span class="co">##  b8-b1=0   -0.265     0.0308 -8.61   &lt;0.001 56.9 -0.325 -0.204</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## Type:  response </span></span>
-<span><span class="co">## Columns: term, estimate, std.error, statistic, p.value, s.value, conf.low, conf.high</span></span></code></pre>
+<span><span class="co">##  Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
+<span><span class="co">##     b8-b1=0   -0.265     0.0308 -8.61   &lt;0.001 56.9 -0.325 -0.204</span></span></code></pre>
 <p>These results indicate that receiving treatment at all time points
 reduces the risk of the outcome relative to not receiving treatment at
 all.</p>
