@@ -129,17 +129,17 @@
 #' when `include.obj = TRUE`), how missing values are treated, which estimands
 #' are allowed, and whether sampling weights are allowed.
 #'
-#' | [`"glm"`][method_glm] | Propensity score weighting using generalized linear
-#' models | | :---- | :---- | | [`"gbm"`][method_gbm] | Propensity score
-#' weighting using generalized boosted modeling | | [`"cbps"`][method_cbps]|
-#' Covariate Balancing Propensity Score weighting | |
-#' [`"npcbps"`][method_npcbps]| Non-parametric Covariate Balancing Propensity
-#' Score weighting | | [`"ebal"`][method_ebal] | Entropy balancing | |
-#' [`"ipt"`][method_ipt] | Inverse probability tilting | |
-#' [`"optweight"`][method_optweight] | Optimization-based weighting | |
-#' [`"super"`][method_super] | Propensity score weighting using SuperLearner | |
-#' [`"bart"`][method_bart] | Propensity score weighting using Bayesian additive
-#' regression trees (BART) | | [`"energy"`][method_energy] | Energy balancing |
+#' | [`"glm"`][method_glm] | Propensity score weighting using generalized linear models |
+#' | :---- | :---- |
+#' | [`"gbm"`][method_gbm] | Propensity score weighting using generalized boosted modeling |
+#' | [`"cbps"`][method_cbps] | Covariate Balancing Propensity Score weighting |
+#' | [`"npcbps"`][method_npcbps]| Non-parametric Covariate Balancing Propensity Score weighting |
+#' | [`"ebal"`][method_ebal] | Entropy balancing |
+#' | [`"ipt"`][method_ipt] | Inverse probability tilting |
+#' | [`"optweight"`][method_optweight] | Optimization-based weighting |
+#' | [`"super"`][method_super] | Propensity score weighting using SuperLearner |
+#' | [`"bart"`][method_bart] | Propensity score weighting using Bayesian additive regression trees (BART) |
+#' | [`"energy"`][method_energy] | Energy balancing |
 #'
 #' `method` can also be supplied as a user-defined function; see [`method_user`]
 #' for instructions and examples. Setting `method = NULL` computes unit weights.

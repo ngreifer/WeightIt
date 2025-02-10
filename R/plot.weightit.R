@@ -13,7 +13,7 @@
 #'
 #' @details
 #'
-#' ## `method = "gbm"`
+#' ## [`method = "gbm"`](method_gbm)
 #'
 #' After weighting with generalized boosted modeling, `plot()` displays the
 #' results of the tuning process used to find the optimal number of trees (and
@@ -25,7 +25,7 @@
 #' `weightit()`, the plot is faceted by the `by` variable. See [`method_gbm`]
 #' for more information on selecting tuning parameters.
 #'
-#' ## `method = "optweight"`
+#' ## [`method = "optweight"`](method_optweight)
 #'
 #' After estimating stable balancing weights, `plot()` displays the values of
 #' the dual variables for each balance constraint in a bar graph. Large values

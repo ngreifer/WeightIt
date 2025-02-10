@@ -115,8 +115,7 @@ Additionally, the criteria formerly named as \code{"es.mean"}, \code{"es.max"}, 
 The former are used in \pkg{twang} and will still work with \code{weightit()} for
 backward compatibility.
 
-Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 -
-10^{-8}} to ensure balance statistics can be computed.
+Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 - 10^{-8}} to ensure balance statistics can be computed.
 }
 \section{Additional Arguments}{
  The following additional arguments can be

@@ -169,19 +169,19 @@ that perform the estimation of balancing weights using the requested
 \code{method}. Below are the methods allowed and links to pages containing more
 information about them, including additional arguments and outputs (e.g.,
 when \code{include.obj = TRUE}), how missing values are treated, which estimands
-are allowed, and whether sampling weights are allowed.
+are allowed, and whether sampling weights are allowed.\tabular{ll}{
+   \code{\link[=method_glm]{"glm"}} \tab Propensity score weighting using generalized linear models \cr
+   \code{\link[=method_gbm]{"gbm"}} \tab Propensity score weighting using generalized boosted modeling \cr
+   \code{\link[=method_cbps]{"cbps"}} \tab Covariate Balancing Propensity Score weighting \cr
+   \code{\link[=method_npcbps]{"npcbps"}} \tab Non-parametric Covariate Balancing Propensity Score weighting \cr
+   \code{\link[=method_ebal]{"ebal"}} \tab Entropy balancing \cr
+   \code{\link[=method_ipt]{"ipt"}} \tab Inverse probability tilting \cr
+   \code{\link[=method_optweight]{"optweight"}} \tab Optimization-based weighting \cr
+   \code{\link[=method_super]{"super"}} \tab Propensity score weighting using SuperLearner \cr
+   \code{\link[=method_bart]{"bart"}} \tab Propensity score weighting using Bayesian additive regression trees (BART) \cr
+   \code{\link[=method_energy]{"energy"}} \tab Energy balancing \cr
+}
 
-| \code{\link[=method_glm]{"glm"}} | Propensity score weighting using generalized linear
-models | | :---- | :---- | | \code{\link[=method_gbm]{"gbm"}} | Propensity score
-weighting using generalized boosted modeling | | \code{\link[=method_cbps]{"cbps"}}|
-Covariate Balancing Propensity Score weighting | |
-\code{\link[=method_npcbps]{"npcbps"}}| Non-parametric Covariate Balancing Propensity
-Score weighting | | \code{\link[=method_ebal]{"ebal"}} | Entropy balancing | |
-\code{\link[=method_ipt]{"ipt"}} | Inverse probability tilting | |
-\code{\link[=method_optweight]{"optweight"}} | Optimization-based weighting | |
-\code{\link[=method_super]{"super"}} | Propensity score weighting using SuperLearner | |
-\code{\link[=method_bart]{"bart"}} | Propensity score weighting using Bayesian additive
-regression trees (BART) | | \code{\link[=method_energy]{"energy"}} | Energy balancing |
 
 \code{method} can also be supplied as a user-defined function; see \code{\link{method_user}}
 for instructions and examples. Setting \code{method = NULL} computes unit weights.

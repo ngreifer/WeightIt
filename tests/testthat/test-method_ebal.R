@@ -1,4 +1,5 @@
 test_that("Binary treatment", {
+  skip_if
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
