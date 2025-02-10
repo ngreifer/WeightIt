@@ -4,27 +4,56 @@
 \alias{method_super}
 \title{Propensity Score Weighting Using SuperLearner}
 \description{
-This page explains the details of estimating weights from SuperLearner-based propensity scores by setting \code{method = "super"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
+This page explains the details of estimating weights from
+SuperLearner-based propensity scores by setting \code{method = "super"} in the
+call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary,
+multi-category, and continuous treatments.
 
-In general, this method relies on estimating propensity scores using the SuperLearner algorithm for stacking predictions and then converting those propensity scores into weights using a formula that depends on the desired estimand. For binary and multi-category treatments, one or more binary classification algorithms are used to estimate the propensity scores as the predicted probability of being in each treatment given the covariates. For continuous treatments, regression algorithms are used to estimate generalized propensity scores as the conditional density of treatment given the covariates. This method relies on \pkgfun{SuperLearner}{SuperLearner} from the \CRANpkg{SuperLearner} package.
+In general, this method relies on estimating propensity scores using the
+SuperLearner algorithm for stacking predictions and then converting those
+propensity scores into weights using a formula that depends on the desired
+estimand. For binary and multi-category treatments, one or more binary
+classification algorithms are used to estimate the propensity scores as the
+predicted probability of being in each treatment given the covariates. For
+continuous treatments, regression algorithms are used to estimate generalized
+propensity scores as the conditional density of treatment given the
+covariates. This method relies on \pkgfun{SuperLearner}{SuperLearner} from
+the \CRANpkg{SuperLearner} package.
 \subsection{Binary Treatments}{
 
-For binary treatments, this method estimates the propensity scores using \pkgfun{SuperLearner}{SuperLearner}. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For binary treatments, this method estimates the propensity scores using
+\pkgfun{SuperLearner}{SuperLearner}. The following estimands are allowed:
+ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using
+marginal mean weighting through stratification for the ATE, ATT, and ATC. See
+\code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, the propensity scores are estimated using several calls to \pkgfun{SuperLearner}{SuperLearner}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For multi-category treatments, the propensity scores are estimated using
+several calls to \pkgfun{SuperLearner}{SuperLearner}, one for each treatment
+group; the treatment probabilities are not normalized to sum to 1. The
+following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for
+each estimand are computed using the standard formulas or those mentioned
+above. Weights can also be computed using marginal mean weighting through
+stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, the generalized propensity score is estimated using \pkgfun{SuperLearner}{SuperLearner}. In addition, kernel density estimation can be used instead of assuming a normal density for the numerator and denominator of the generalized propensity score by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters. \code{plot = TRUE} can be specified to plot the density for the numerator and denominator, which can be helpful in diagnosing extreme weights.
+For continuous treatments, the generalized propensity score is estimated
+using \pkgfun{SuperLearner}{SuperLearner}. In addition, kernel density
+estimation can be used instead of assuming a normal density for the numerator
+and denominator of the generalized propensity score by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the
+density estimation parameters. \code{plot = TRUE} can be specified to plot the
+density for the numerator and denominator, which can be helpful in diagnosing
+extreme weights.
 }
 
 \subsection{Longitudinal Treatments}{
 
-For longitudinal treatments, the weights are the product of the weights estimated at each time point.
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point.
 }
 
 \subsection{Sampling Weights}{
@@ -34,7 +63,8 @@ Sampling weights are supported through \code{s.weights} in all scenarios.
 
 \subsection{Missing Data}{
 
-In the presence of missing data, the following value(s) for \code{missing} are allowed:
+In the presence of missing data, the following value(s) for \code{missing} are
+allowed:
 \describe{
 \item{\code{"ind"} (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
 }
@@ -47,14 +77,36 @@ M-estimation is not supported.
 }
 }
 \details{
-SuperLearner works by fitting several machine learning models to the treatment and covariates and then taking a weighted combination of the generated predicted values to use as the propensity scores, which are then used to construct weights. The machine learning models used are supplied using the \code{SL.library} argument; the more models are supplied, the higher the chance of correctly modeling the propensity score. It is a good idea to include parameteric models, flexible and tree-based models, and regularized models among the models selected. The predicted values are combined using the method supplied in the \code{SL.method} argument (which is nonnegative least squares by default). A benefit of SuperLearner is that, asymptotically, it is guaranteed to perform as well as or better than the best-performing method included in the library. Using Balance SuperLearner by setting \code{SL.method = "method.balance"} works by selecting the combination of predicted values that minimizes an imbalance measure.
+SuperLearner works by fitting several machine learning models to the
+treatment and covariates and then taking a weighted combination of the
+generated predicted values to use as the propensity scores, which are then
+used to construct weights. The machine learning models used are supplied
+using the \code{SL.library} argument; the more models are supplied, the higher the
+chance of correctly modeling the propensity score. It is a good idea to
+include parameteric models, flexible and tree-based models, and regularized
+models among the models selected. The predicted values are combined using the
+method supplied in the \code{SL.method} argument (which is nonnegative least
+squares by default). A benefit of SuperLearner is that, asymptotically, it is
+guaranteed to perform as well as or better than the best-performing method
+included in the library. Using Balance SuperLearner by setting \code{SL.method = "method.balance"} works by selecting the combination of predicted values that
+minimizes an imbalance measure.
 }
 \note{
-Some methods formerly available in \pkg{SuperLearner} are now in \pkg{SuperLearnerExtra}, which can be found on GitHub at \url{https://github.com/ecpolley/SuperLearnerExtra}.
+Some methods formerly available in \pkg{SuperLearner} are now in
+\pkg{SuperLearnerExtra}, which can be found on GitHub at
+\url{https://github.com/ecpolley/SuperLearnerExtra}.
 
-The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{es.mean}, \code{es.max}, and \code{es.rms} have been renamed to \code{smd.mean}, \code{smd.max}, and \code{smd.rms}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
+The \code{criterion} argument used to be called \code{stop.method}, which is its name
+in \pkg{twang}. \code{stop.method} still works for backward compatibility.
+Additionally, the criteria formerly named as \code{es.mean}, \code{es.max}, and
+\code{es.rms} have been renamed to \code{smd.mean}, \code{smd.max}, and \code{smd.rms}. The
+former are used in \pkg{twang} and will still work with \code{weightit()} for
+backward compatibility.
 
-As of version 1.2.0, the default behavior for binary and multi-category treatments is to stratify on the treatment when performing cross-validation to ensure all treatment groups are represented in cross-validation. To recover previous behavior, set \code{cvControl = list(stratifyCV = FALSE)}.
+As of version 1.2.0, the default behavior for binary and multi-category
+treatments is to stratify on the treatment when performing cross-validation
+to ensure all treatment groups are represented in cross-validation. To
+recover previous behavior, set \code{cvControl = list(stratifyCV = FALSE)}.
 }
 \section{Additional Arguments}{
 
@@ -62,9 +114,11 @@ As of version 1.2.0, the default behavior for binary and multi-category treatmen
 \item{\code{discrete}}{if \code{TRUE}, uses discrete SuperLearner, which simply selects the best performing method. Default \code{FALSE}, which finds the optimal combination of predictions for the libraries using \code{SL.method}.}
 }
 
-An argument to \code{SL.library} \strong{must} be supplied. To see a list of available entries, use \pkgfun{SuperLearner}{listWrappers}.
+An argument to \code{SL.library} \strong{must} be supplied. To see a list of
+available entries, use \pkgfun{SuperLearner}{listWrappers}.
 
-All arguments to \pkgfun{SuperLearner}{SuperLearner} can be passed through \code{weightit()} or \code{weightitMSM()}, with the following exceptions:
+All arguments to \pkgfun{SuperLearner}{SuperLearner} can be passed through
+\code{weightit()} or \code{weightitMSM()}, with the following exceptions:
 \itemize{
 \item \code{obsWeights} is ignored because sampling weights are passed using \code{s.weights}.
 \item \code{method} in \code{SuperLearner()} is replaced with the argument \code{SL.method} in \code{weightit()}.
@@ -80,12 +134,25 @@ Can also be \code{"kernel"} to use kernel density estimation, which calls \code{
 }
 \subsection{Balance SuperLearner}{
 
-In addition to the methods allowed by \code{SuperLearner()}, one can specify \code{SL.method = "method.balance"} to use "Balance SuperLearner" as described by Pirracchio and Carone (2018), wherein covariate balance is used to choose the optimal combination of the predictions from the methods specified with \code{SL.library}. Coefficients are chosen (one for each prediction method) so that the weights generated from the weighted combination of the predictions optimize a balance criterion, which must be set with the \code{criterion} argument, described below.
+In addition to the methods allowed by \code{SuperLearner()}, one can specify
+\code{SL.method = "method.balance"} to use "Balance SuperLearner" as described
+by Pirracchio and Carone (2018), wherein covariate balance is used to
+choose the optimal combination of the predictions from the methods
+specified with \code{SL.library}. Coefficients are chosen (one for each
+prediction method) so that the weights generated from the weighted
+combination of the predictions optimize a balance criterion, which must be
+set with the \code{criterion} argument, described below.
 \describe{
 \item{\code{criterion}}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. For binary and multi-category treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
 }
-Note that this implementation differs from that of Pirracchio and Carone (2018) in that here, balance is measured only on the terms included in the model formula (i.e., and not their interactions unless specifically included), and balance results from a sample weighted using the estimated predicted values as propensity scores, not a sample matched using propensity score matching on the predicted values. Binary and continuous treatments are supported, but currently multi-category treatments are not.
+Note that this implementation differs from that of Pirracchio and Carone
+(2018) in that here, balance is measured only on the terms included in the
+model formula (i.e., and not their interactions unless specifically
+included), and balance results from a sample weighted using the estimated
+predicted values as propensity scores, not a sample matched using
+propensity score matching on the predicted values. Binary and continuous
+treatments are supported, but currently multi-category treatments are not.
 }
 }
 
@@ -165,17 +232,27 @@ bal.tab(W4, stats = c("m", "ks"))}
 \references{
 \subsection{Binary treatments}{
 
-Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving Propensity Score Estimators’ Robustness to Model Misspecification Using Super Learner. \emph{American Journal of Epidemiology}, 181(2), 108–119. \doi{10.1093/aje/kwu253}
+Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving
+Propensity Score Estimators’ Robustness to Model Misspecification Using Super
+Learner. \emph{American Journal of Epidemiology}, 181(2), 108–119.
+\doi{10.1093/aje/kwu253}
 }
 
 \subsection{Continuous treatments}{
 
-Kreif, N., Grieve, R., Díaz, I., & Harrison, D. (2015). Evaluation of the Effect of a Continuous Treatment: A Machine Learning Approach with an Application to Treatment for Traumatic Brain Injury. \emph{Health Economics}, 24(9), 1213–1228. \doi{10.1002/hec.3189}
+Kreif, N., Grieve, R., Díaz, I., & Harrison, D. (2015). Evaluation of the
+Effect of a Continuous Treatment: A Machine Learning Approach with an
+Application to Treatment for Traumatic Brain Injury. \emph{Health Economics},
+24(9), 1213–1228. \doi{10.1002/hec.3189}
 }
 
 \subsection{Balance SuperLearner (\code{SL.method = "method.balance"})}{
 
-Pirracchio, R., & Carone, M. (2018). The Balance Super Learner: A robust adaptation of the Super Learner to improve estimation of the average treatment effect in the treated based on propensity score matching. \emph{Statistical Methods in Medical Research}, 27(8), 2504–2518. \doi{10.1177/0962280216682055}
+Pirracchio, R., & Carone, M. (2018). The Balance Super Learner: A robust
+adaptation of the Super Learner to improve estimation of the average
+treatment effect in the treated based on propensity score matching.
+\emph{Statistical Methods in Medical Research}, 27(8), 2504–2518.
+\doi{10.1177/0962280216682055}
 
 See \code{\link{method_glm}} for additional references.
 }

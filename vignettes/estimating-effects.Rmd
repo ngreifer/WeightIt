@@ -32,6 +32,8 @@ knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 options(width = 200, digits= 4)
 
 me_ok <- requireNamespace("marginaleffects", quietly = TRUE)
+me_ok_new <- me_ok && utils::packageVersion("marginaleffects") >= "0.25.0"
+me_ok_old <- me_ok && utils::packageVersion("marginaleffects") < "0.25.0"
 su_ok <- requireNamespace("survival", quietly = TRUE)
 ```
 
@@ -246,7 +248,7 @@ avg_predictions(fit, variables = "A")
 
 We can see that the difference in potential outcome means is equal to the average treatment effect computed previously[^2]. The arguments to `avg_predictions()` are the same as those to `avg_comparisons()`.
 
-[^2]: To verify that they are equal, supply the output of `avg_predictions()` to `hypotheses()`, e.g., `avg_predictions(...) |> hypotheses("revpairwise")`; this explicitly compares the average potential outcomes and should yield identical estimates to the `avg_comparisons()` call.
+[^2]: To verify that they are equal, supply the output of `avg_predictions()` to `hypotheses()`, e.g., `avg_predictions(...) |> hypotheses(~pairwise)`; this explicitly compares the average potential outcomes and should yield identical estimates to the `avg_comparisons()` call.
 
 ### Adjustments to the Standard Case
 
@@ -396,7 +398,7 @@ W
 
 Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model and perform weighted g-computation. We use `avg_predictions()` first to compute the expected potential outcome under each treatment for the focal group, and the use `hypotheses()` to test all pairwise comparisons.
 
-```{r, eval=me_ok}
+```{r, eval=me_ok_new}
 #Fit the outcome model
 fit <- lm_weightit(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 + 
                                  X6 + X7 + X8 + X9),
@@ -408,7 +410,7 @@ p <- avg_predictions(fit,
                      newdata = subset(Am == "T"))
 p
 
-hypotheses(p, "revpairwise")
+hypotheses(p, ~pairwise)
 ```
 
 We find significant ATTs between the focal treatment and control levels (`T - C1` and `T - C2`), but the difference between control levels (`C2 - C1`), which can be interpreted as the difference between these ATTs, is nonsignificant, as expected.
@@ -523,14 +525,16 @@ fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
 Then, we compute the average expected potential outcomes under each treatment regime using `marginaleffects::avg_predictions()`:
 
 ```{r, eval = me_ok}
-(p <- avg_predictions(fit,
-                      variables = c("A_1", "A_2", "A_3")))
+p <- avg_predictions(fit,
+                     variables = c("A_1", "A_2", "A_3"))
+
+p
 ```
 
 We can compare individual predictions using `marginaleffects::hypotheses()`. For example, to compare all treatment histories to just the first treatment history (i.e., in which all units are untreated for all time periods), we can run the following:
 
-```{r, eval = me_ok}
-hypotheses(p, "reference")
+```{r, eval = me_ok_new}
+hypotheses(p, ~reference)
 ```
 
 ### Moderation Analysis
@@ -566,26 +570,25 @@ fit <- lm_weightit(Y_C ~ A * X5 * (X1 + X2 + X3),
 To estimate the subgroup ATEs, we can use `avg_comparisons()`, this time specifying the `by` argument to signify that we want treatment effects stratified by the moderator.
 
 ```{r, eval = me_ok}
-avg_comparisons(fit, variables = "A",
-                by = "X5")
+a <- avg_comparisons(fit, variables = "A",
+                     by = "X5")
+a
 ```
 
-We can see that the subgroup mean differences differ from each other, and we can formally test for moderation using another call to `avg_comparisons()`, this time using the `hypothesis` argument to signify that we want to compare effects between subgroups:
+We can see that the subgroup mean differences differ from each other, and we can formally test for moderation using `hypotheses()`:
 
-```{r, eval = me_ok}
-avg_comparisons(fit, variables = "A",
-                by = "X5",
-                hypothesis = "pairwise")
+```{r, eval = me_ok_new}
+hypotheses(a, ~pairwise)
 ```
 
 Though the subgroup effects differ from each other in the sample, this difference is not statistically significant at the .05 level, so there is no evidence of moderation by `X5`.
 
-When the moderator has more than two levels, it is possible to run an omnibus test for moderation by changing `hypothesis` to `"reference"` and supplying the output to `marginaleffects::hypotheses()` with `joint = TRUE`, e.g.,
+When the moderator has more than two levels, it is possible to run an omnibus test for moderation by changing `hypothesis` to `"reference"` and supplying the output to `hypotheses()` with `joint = TRUE`, e.g.,
 
 ```{r, eval=FALSE}
 avg_comparisons(fit, variables = "A",
                 by = "X5",
-                hypothesis = "reference") |>
+                hypothesis = ~pairwise) |>
   hypotheses(joint = TRUE)
 ```
 

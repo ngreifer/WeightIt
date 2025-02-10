@@ -25,15 +25,16 @@ weightitMSM(
 }
 \arguments{
 \item{formula.list}{a list of formulas corresponding to each time point with
-the time-specific treatment variable on the left hand side and pre-treatment
-covariates to be balanced on the right hand side. The formulas must be in
-temporal order, and must contain all covariates to be balanced at that time
-point (i.e., treatments and covariates featured in early formulas should
-appear in later ones). Interactions and functions of covariates are allowed.}
+the time-specific treatment variable on the left hand side and
+pre-treatment covariates to be balanced on the right hand side. The
+formulas must be in temporal order, and must contain all covariates to be
+balanced at that time point (i.e., treatments and covariates featured in
+early formulas should appear in later ones). Interactions and functions of
+covariates are allowed.}
 
 \item{data}{an optional data set in the form of a data frame that contains
-the variables in the formulas in \code{formula.list}. This must be a wide
-data set with exactly one row per unit.}
+the variables in the formulas in \code{formula.list}. This must be a wide data
+set with exactly one row per unit.}
 
 \item{method}{a string of length 1 containing the name of the method that
 will be used to estimate weights. See \code{\link[=weightit]{weightit()}} for allowable options.
@@ -42,23 +43,27 @@ linear models.}
 
 \item{stabilize}{\code{logical}; whether or not to stabilize the weights.
 Stabilizing the weights involves fitting a model predicting treatment at
-each time point from treatment status at prior time points. If \code{TRUE},
-a fully saturated model will be fit (i.e., all interactions between all
+each time point from treatment status at prior time points. If \code{TRUE}, a
+fully saturated model will be fit (i.e., all interactions between all
 treatments up to each time point), essentially using the observed treatment
-probabilities in the numerator (for binary and multi-category treatments). This
-may yield an error if some combinations are not observed. Default is
-\code{FALSE}. To manually specify stabilization model formulas, e.g., to
-specify non-saturated models, use \code{num.formula}. With many time points,
-saturated models may be time-consuming or impossible to fit.}
+probabilities in the numerator (for binary and multi-category treatments).
+This may yield an error if some combinations are not observed. Default is
+\code{FALSE}. To manually specify stabilization model formulas, e.g., to specify
+non-saturated models, use \code{num.formula}. With many time points, saturated
+models may be time-consuming or impossible to fit.}
 
-\item{by}{a string containing the name of the variable in \code{data} for
-which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. Only one \code{by} variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using \code{\link[=interaction]{interaction()}}.}
+\item{by}{a string containing the name of the variable in \code{data} for which
+weighting is to be done within categories or a one-sided formula with the
+stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or
+optimization will occur within each level of the variable \code{"gender"}. Only
+one \code{by} variable is allowed; to stratify by multiply variables
+simultaneously, create a new variable that is a full cross of those
+variables using \code{\link[=interaction]{interaction()}}.}
 
 \item{s.weights}{A vector of sampling weights or the name of a variable in
-\code{data} that contains sampling weights. These can also be matching
-weights if weighting is to be used on matched data. See the individual pages
-for each method for information on whether sampling weights can be supplied.}
+\code{data} that contains sampling weights. These can also be matching weights
+if weighting is to be used on matched data. See the individual pages for
+each method for information on whether sampling weights can be supplied.}
 
 \item{num.formula}{optional; a one-sided formula with the stabilization
 factors (other than the previous treatments) on the right hand side, which
@@ -74,93 +79,102 @@ ignoring \code{num.formula}.}
 covariate to be balanced. For example, if \code{moments = 3}, for each
 non-categorical covariate, the covariate, its square, and its cube will be
 balanced. This argument is ignored for other methods; to balance powers of
-the covariates, appropriate functions must be entered in \code{formula}. See
-the individual pages for each method for information on whether they accept
+the covariates, appropriate functions must be entered in \code{formula}. See the
+individual pages for each method for information on whether they accept
 \code{moments}.}
 
-\item{int}{\code{logical}; for some methods, whether first-order
-interactions of the covariates are to be balanced. This argument is ignored
-for other methods; to balance interactions between the variables,
-appropriate functions must be entered in \code{formula}. See the individual
-pages for each method for information on whether they accept \code{int}.}
+\item{int}{\code{logical}; for some methods, whether first-order interactions of
+the covariates are to be balanced. This argument is ignored for other
+methods; to balance interactions between the variables, appropriate
+functions must be entered in \code{formula}. See the individual pages for each
+method for information on whether they accept \code{int}.}
 
-\item{missing}{\code{character}; how missing data should be handled. The
-options and defaults depend on the \code{method} used. Ignored if no missing
-data is present. It should be noted that multiple imputation outperforms all
-available missingness methods available in \code{weightit()} and should
-probably be used instead. Consider the \CRANpkg{MatchThem}
-package for the use of \code{weightit()} with multiply imputed data.}
+\item{missing}{\code{character}; how missing data should be handled. The options
+and defaults depend on the \code{method} used. Ignored if no missing data is
+present. It should be noted that multiple imputation outperforms all
+available missingness methods available in \code{weightit()} and should probably
+be used instead. Consider the \CRANpkg{MatchThem} package for the use of
+\code{weightit()} with multiply imputed data.}
 
-\item{verbose}{\code{logical}; whether to print additional information
-output by the fitting function.}
+\item{verbose}{\code{logical}; whether to print additional information output by
+the fitting function.}
 
-\item{include.obj}{whether to include in the output a list of the fit
-objects created in the process of estimating the weights at each time point.
-For example, with \code{method = "glm"}, a list of the \code{glm} objects
-containing the propensity score models at each time point will be included.
-See the help pages for each method for information on what object will be
-included if \code{TRUE}.}
+\item{include.obj}{whether to include in the output a list of the fit objects
+created in the process of estimating the weights at each time point. For
+example, with \code{method = "glm"}, a list of the \code{glm} objects containing the
+propensity score models at each time point will be included. See the help
+pages for each method for information on what object will be included if
+\code{TRUE}.}
 
-\item{keep.mparts}{\code{logical}; whether to include in the output components necessary to estimate standard errors that account for estimation of the weights in \code{\link[=glm_weightit]{glm_weightit()}}. Default is \code{TRUE} if such parts are present. See the individual pages for each method for whether these components are produced. Set to \code{FALSE} to keep the output object smaller, e.g., if standard errors will not be computed using \code{glm_weightit()}.}
+\item{keep.mparts}{\code{logical}; whether to include in the output components
+necessary to estimate standard errors that account for estimation of the
+weights in \code{\link[=glm_weightit]{glm_weightit()}}. Default is \code{TRUE} if such parts are present.
+See the individual pages for each method for whether these components are
+produced. Set to \code{FALSE} to keep the output object smaller, e.g., if
+standard errors will not be computed using \code{glm_weightit()}.}
 
 \item{is.MSM.method}{whether the method estimates weights for multiple time
-points all at once (\code{TRUE}) or by estimating weights at each time point
-and then multiplying them together (\code{FALSE}). This is only relevant for user-specified functions.}
+points all at once (\code{TRUE}) or by estimating weights at each time point and
+then multiplying them together (\code{FALSE}). This is only relevant for
+user-specified functions.}
 
 \item{weightit.force}{several methods are not valid for estimating weights
 with longitudinal treatments, and will produce an error message if
 attempted. Set to \code{TRUE} to bypass this error message.}
 
-\item{...}{other arguments for functions called by \code{weightit()} that
-control aspects of fitting that are not covered by the above arguments. See
-Details at \code{\link[=weightit]{weightit()}}.}
+\item{...}{other arguments for functions called by \code{weightit()} that control
+aspects of fitting that are not covered by the above arguments. See Details
+at \code{\link[=weightit]{weightit()}}.}
 }
 \value{
 A \code{weightitMSM} object with the following elements:
-\item{weights}{The estimated weights, one for each unit.}
-\item{treat.list}{A list of the values of the time-varying treatment variables.}
-\item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
-\item{data}{The data.frame originally entered to \code{weightitMSM()}.}
-\item{estimand}{"ATE", currently the only estimand for MSMs with binary or multi-category treatments.}
-\item{method}{The weight estimation method specified.}
-\item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
-\item{s.weights}{The provided sampling weights.}
-\item{by}{A data.frame containing the \code{by} variable when specified.}
-\item{stabilization}{The stabilization factors, if any.}
+\item{weights}{The estimated weights, one for each unit.} \item{treat.list}{A
+list of the values of the time-varying treatment variables.}
+\item{covs.list}{A list of the covariates used in the fitting at each time
+point. Only includes the raw covariates, which may have been altered in the
+fitting process.} \item{data}{The data.frame originally entered to
+\code{weightitMSM()}.} \item{estimand}{"ATE", currently the only estimand for MSMs
+with binary or multi-category treatments.} \item{method}{The weight
+estimation method specified.} \item{ps.list}{A list of the estimated
+propensity scores (if any) at each time point.} \item{s.weights}{The provided
+sampling weights.} \item{by}{A data.frame containing the \code{by} variable when
+specified.} \item{stabilization}{The stabilization factors, if any.}
 
-When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts.list"} attribute. When \code{by} is specified, \code{keep.mparts} is set to \code{FALSE}.
+When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is
+compatible with M-estimation, the components related to M-estimation for use
+in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts.list"} attribute. When \code{by} is
+specified, \code{keep.mparts} is set to \code{FALSE}.
 }
 \description{
-\code{weightitMSM()} allows for the easy generation of balancing weights for
-marginal structural models for time-varying treatments using a variety of
-available methods for binary, continuous, and multi-category treatments. Many
-of these methods exist in other packages, which \code{\link[=weightit]{weightit()}} calls; these
-packages must be installed to use the desired method.
+\code{weightitMSM()} allows for the easy generation of balancing
+weights for marginal structural models for time-varying treatments using a
+variety of available methods for binary, continuous, and multi-category
+treatments. Many of these methods exist in other packages, which \code{\link[=weightit]{weightit()}}
+calls; these packages must be installed to use the desired method.
 }
 \details{
-Currently only "wide" data sets, where each row corresponds to a unit's
-entire variable history, are supported. You can use \code{\link[=reshape]{reshape()}} or other
-functions to transform your data into this format; see example below.
+Currently only "wide" data sets, where each row corresponds to a
+unit's entire variable history, are supported. You can use \code{\link[=reshape]{reshape()}} or
+other functions to transform your data into this format; see example below.
 
-In general, \code{weightitMSM()} works by separating the estimation of
-weights into separate procedures for each time period based on the formulas
-provided. For each formula, \code{weightitMSM()} simply calls
-\code{weightit()} to that formula, collects the weights for each time
-period, and multiplies them together to arrive at longitudinal balancing
-weights.
+In general, \code{weightitMSM()} works by separating the estimation of weights
+into separate procedures for each time period based on the formulas provided.
+For each formula, \code{weightitMSM()} simply calls \code{weightit()} to that formula,
+collects the weights for each time period, and multiplies them together to
+arrive at longitudinal balancing weights.
 
 Each formula should contain all the covariates to be balanced on. For
 example, the formula corresponding to the second time period should contain
-all the baseline covariates, the treatment variable at the first time
-period, and the time-varying covariates that took on values after the first
-treatment and before the second. Currently, only wide data sets are
-supported, where each unit is represented by exactly one row that contains
-the covariate and treatment history encoded in separate variables.
+all the baseline covariates, the treatment variable at the first time period,
+and the time-varying covariates that took on values after the first treatment
+and before the second. Currently, only wide data sets are supported, where
+each unit is represented by exactly one row that contains the covariate and
+treatment history encoded in separate variables.
 
-The \code{"cbps"} method, which calls \code{CBPS()} in \pkg{CBPS}, will
-yield different results from \code{CBMSM()} in \pkg{CBPS} because
-\code{CBMSM()} takes a different approach to generating weights than simply
-estimating several time-specific models.
+The \code{"cbps"} method, which calls \code{CBPS()} in \pkg{CBPS}, will yield different
+results from \code{CBMSM()} in \pkg{CBPS} because \code{CBMSM()} takes a different
+approach to generating weights than simply estimating several time-specific
+models.
 }
 \examples{
 

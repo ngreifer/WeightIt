@@ -4,17 +4,32 @@
 \alias{method_ipt}
 \title{Inverse Probability Tilting}
 \description{
-This page explains the details of estimating weights using inverse probability tilting by setting \code{method = "ipt"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary and multi-category treatments.
+This page explains the details of estimating weights using
+inverse probability tilting by setting \code{method = "ipt"} in the call to
+\code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary and
+multi-category treatments.
 
-In general, this method relies on estimating propensity scores using a modification of the usual generalized linear model score equations to enforce balance and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on code written for \pkg{WeightIt} using \pkgfun{rootSolve}{multiroot}.
+In general, this method relies on estimating propensity scores using a
+modification of the usual generalized linear model score equations to enforce
+balance and then converting those propensity scores into weights using a
+formula that depends on the desired estimand. This method relies on code
+written for \pkg{WeightIt} using \pkgfun{rootSolve}{multiroot}.
 \subsection{Binary Treatments}{
 
-For binary treatments, this method estimates the weights using formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is run twice, once for each treatment group.
+For binary treatments, this method estimates the weights using formulas
+described by Graham, Pinto, and Egel (2012). The following estimands are
+allowed: ATE, ATT, and ATC. When the ATE is requested, the optimization is
+run twice, once for each treatment group.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, this method estimates the weights using modifications of the formulas described by Graham, Pinto, and Egel (2012). The following estimands are allowed: ATE and ATT. When the ATE is requested, estimation is performed once for each treatment group. When the ATT is requested, estimation is performed once for each non-focal (i.e., control) group.
+For multi-category treatments, this method estimates the weights using
+modifications of the formulas described by Graham, Pinto, and Egel (2012).
+The following estimands are allowed: ATE and ATT. When the ATE is requested,
+estimation is performed once for each treatment group. When the ATT is
+requested, estimation is performed once for each non-focal (i.e., control)
+group.
 }
 
 \subsection{Continuous Treatments}{
@@ -24,7 +39,10 @@ Inverse probability tilting is not compatible with continuous treatments.
 
 \subsection{Longitudinal Treatments}{
 
-For longitudinal treatments, the weights are the product of the weights estimated at each time point. This method is not guaranteed to yield exact balance at each time point. NOTE: the use of inverse probability tilting with longitudinal treatments has not been validated!
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point. This method is not guaranteed to yield exact
+balance at each time point. NOTE: the use of inverse probability tilting with
+longitudinal treatments has not been validated!
 }
 
 \subsection{Sampling Weights}{
@@ -34,7 +52,8 @@ Sampling weights are supported through \code{s.weights} in all scenarios.
 
 \subsection{Missing Data}{
 
-In the presence of missing data, the following value(s) for \code{missing} are allowed:
+In the presence of missing data, the following value(s) for \code{missing} are
+allowed:
 \describe{
 \item{\code{"ind"} (default)}{
 First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
@@ -44,23 +63,38 @@ First, for each variable with missingness, a new missingness indicator variable 
 
 \subsection{M-estimation}{
 
-M-estimation is supported for all scenarios. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details.
+M-estimation is supported for all scenarios. See \code{\link[=glm_weightit]{glm_weightit()}} and
+\code{vignette("estimating-effects")} for details.
 }
 }
 \details{
-Inverse probability tilting (IPT) involves specifying estimating equations that fit the parameters of two or more generalized linear models with a modification that ensures exact balance on the covariate means. These estimating equations are solved, and the estimated parameters are used in the (generalized) propensity score, which is used to compute the weights. Conceptually and mathematically, IPT is very similar to entropy balancing and just-identified CBPS. For the ATT and ATC, entropy balancing, just-identified CBPS, and IPT will yield identical results. For the ATE or when \code{link} is specified as something other than \code{"logit"}, the three methods differ.
+Inverse probability tilting (IPT) involves specifying estimating
+equations that fit the parameters of two or more generalized linear models
+with a modification that ensures exact balance on the covariate means. These
+estimating equations are solved, and the estimated parameters are used in the
+(generalized) propensity score, which is used to compute the weights.
+Conceptually and mathematically, IPT is very similar to entropy balancing and
+just-identified CBPS. For the ATT and ATC, entropy balancing, just-identified
+CBPS, and IPT will yield identical results. For the ATE or when \code{link} is
+specified as something other than \code{"logit"}, the three methods differ.
 
-Treatment effect estimates for binary treatments are consistent if the true propensity score is a logistic regression or the outcome model is linear in the covariates and their interaction with treatments. For entropy balancing, this is only true for the ATT, and for just-identified CBPS, this is only true if there is no effect modification by covariates. In this way, IPT provides additional theoretical guarantees over the other two methods, though potentially with some cost in precision.
+Treatment effect estimates for binary treatments are consistent if the true
+propensity score is a logistic regression or the outcome model is linear in
+the covariates and their interaction with treatments. For entropy balancing,
+this is only true for the ATT, and for just-identified CBPS, this is only
+true if there is no effect modification by covariates. In this way, IPT
+provides additional theoretical guarantees over the other two methods, though
+potentially with some cost in precision.
 }
 \section{Additional Arguments}{
-
-\code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.
+ \code{moments} and \code{int} are accepted. See
+\code{\link[=weightit]{weightit()}} for details.
 
 \describe{
 \item{\code{quantile}}{
 A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate.
 }
-\item{\code{link}}{string; the link used to determine the inverse link for computing the (generalized) propensity scores. Default is \code{"logit"}, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but \code{"probit"}, \code{"cauchit"}, and \code{"cloglog"} are also allowed.
+\item{\code{link}}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is \code{"logit"}, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but \code{"probit"}, \code{"cauchit"}, \code{"cloglog"}, \code{"loglog"}, \code{"log"}, and \code{"clog"} are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class \code{"link-glm"} can also be supplied. The argument is passed to \code{\link[=quasibinomial]{quasibinomial()}}.
 }
 }
 
@@ -97,16 +131,21 @@ cobalt::bal.tab(W2)
 \references{
 \subsection{\code{estimand = "ATE"}}{
 
-Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability Tilting for Moment Condition Models with Missing Data. \emph{The Review of Economic Studies}, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
+Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability
+Tilting for Moment Condition Models with Missing Data. \emph{The Review of
+Economic Studies}, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
 }
 
 \subsection{\code{estimand = "ATT"}}{
 
-Sant'Anna, P. H. C., & Zhao, J. (2020). Doubly robust difference-in-differences estimators. \emph{Journal of Econometrics}, 219(1), 101–122. \doi{10.1016/j.jeconom.2020.06.003}
+Sant'Anna, P. H. C., & Zhao, J. (2020). Doubly robust
+difference-in-differences estimators. \emph{Journal of Econometrics}, 219(1),
+101–122. \doi{10.1016/j.jeconom.2020.06.003}
 }
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
 
-\link{method_ebal} and \link{method_cbps} for entropy balancing and CBPS, which work similarly.
+\link{method_ebal} and \link{method_cbps} for entropy balancing and CBPS, which work
+similarly.
 }

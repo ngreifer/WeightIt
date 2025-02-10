@@ -4,29 +4,56 @@
 \alias{method_gbm}
 \title{Propensity Score Weighting Using Generalized Boosted Models}
 \description{
-This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting \code{method = "gbm"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
+This page explains the details of estimating weights from
+generalized boosted model-based propensity scores by setting \code{method = "gbm"}
+in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with
+binary, multi-category, and continuous treatments.
 
-In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). The method relies on the \CRANpkg{gbm} package.
+In general, this method relies on estimating propensity scores using
+generalized boosted modeling and then converting those propensity scores into
+weights using a formula that depends on the desired estimand. The algorithm
+involves using a balance-based or prediction-based criterion to optimize in
+choosing the value of tuning parameters (the number of trees and possibly
+others). The method relies on the \CRANpkg{gbm} package.
 
-This method mimics the functionality of functions in the \pkg{twang} package, but has improved performance and more flexible options. See Details section for more details.
+This method mimics the functionality of functions in the \pkg{twang} package,
+but has improved performance and more flexible options. See Details section
+for more details.
 \subsection{Binary Treatments}{
 
-For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link[=get_w_from_ps]{get_w_from_ps()}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For binary treatments, this method estimates the propensity scores using
+\pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values
+using the method specified in the \code{criterion} argument. The following
+estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed
+from the estimated propensity scores using \code{\link[=get_w_from_ps]{get_w_from_ps()}}, which
+implements the standard formulas. Weights can also be computed using marginal
+mean weighting through stratification for the ATE, ATT, and ATC. See
+\code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using \code{\link[=get_w_from_ps]{get_w_from_ps()}}, which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For binary treatments, this method estimates the propensity scores using
+\pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values
+using the method specified in the \code{criterion} argument. The following
+estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed
+from the estimated propensity scores using \code{\link[=get_w_from_ps]{get_w_from_ps()}}, which
+implements the standard formulas. Weights can also be computed using marginal
+mean weighting through stratification for the ATE, ATT, and ATC. See
+\code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, this method estimates the generalized propensity score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the \code{criterion} argument.
+For continuous treatments, this method estimates the generalized propensity
+score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning
+parameter values using the method specified in the \code{criterion} argument.
 }
 
 \subsection{Longitudinal Treatments}{
 
-For longitudinal treatments, the weights are the product of the weights estimated at each time point.
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point.
 }
 
 \subsection{Sampling Weights}{
@@ -36,7 +63,8 @@ Sampling weights are supported through \code{s.weights} in all scenarios.
 
 \subsection{Missing Data}{
 
-In the presence of missing data, the following value(s) for \code{missing} are allowed:
+In the presence of missing data, the following value(s) for \code{missing} are
+allowed:
 \describe{
 \item{\code{"ind"} (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.}
 \item{\code{"surr"}}{Surrogate splitting is used to process \code{NA}s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.}
@@ -49,20 +77,50 @@ M-estimation is not supported.
 }
 }
 \details{
-Generalized boosted modeling (GBM, also known as gradient boosting machines) is a machine learning method that generates predicted values from a flexible regression of the treatment on the covariates, which are treated as propensity scores and used to compute weights. It does this by building a series of regression trees, each fit to the residuals of the last, minimizing a loss function that depends on the distribution chosen. The optimal number of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004) were innovative in using covariate balance to select this value rather than traditional machine learning performance metrics such as cross-validation accuracy. GBM is particularly effective for fitting nonlinear treatment models characterized by curves and interactions, but performs worse for simpler treatment models. It is unclear which balance measure should be used to select the number of trees, though research has indicated that balance measures tend to perform better than cross-validation accuracy for estimating effective propensity score weights.
+Generalized boosted modeling (GBM, also known as gradient boosting
+machines) is a machine learning method that generates predicted values from a
+flexible regression of the treatment on the covariates, which are treated as
+propensity scores and used to compute weights. It does this by building a
+series of regression trees, each fit to the residuals of the last, minimizing
+a loss function that depends on the distribution chosen. The optimal number
+of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004)
+were innovative in using covariate balance to select this value rather than
+traditional machine learning performance metrics such as cross-validation
+accuracy. GBM is particularly effective for fitting nonlinear treatment
+models characterized by curves and interactions, but performs worse for
+simpler treatment models. It is unclear which balance measure should be used
+to select the number of trees, though research has indicated that balance
+measures tend to perform better than cross-validation accuracy for estimating
+effective propensity score weights.
 
-\pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multi-category treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multi-category treatments.
+\pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the
+first package to implement this method. Compared to the current version of
+\pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance
+used to select the number of trees, improved performance, tuning of
+hyperparameters, more estimands, and support for continuous treatments.
+\pkg{WeightIt} computes weights for multi-category treatments differently
+from how \pkg{twang} does; rather than fitting a separate binary GBM for each
+pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and
+uses balance measures appropriate for multi-category treatments.
 
-\code{plot()} can be used on the output of \code{weightit()} with \code{method = "gbm"} to display the results of the tuning process; see Examples and \code{\link[=plot.weightit]{plot.weightit()}} for more details.
+\code{plot()} can be used on the output of \code{weightit()} with \code{method = "gbm"} to
+display the results of the tuning process; see Examples and \code{\link[=plot.weightit]{plot.weightit()}}
+for more details.
 }
 \note{
-The \code{criterion} argument used to be called \code{stop.method}, which is its name in \pkg{twang}. \code{stop.method} still works for backward compatibility. Additionally, the criteria formerly named as \code{"es.mean"}, \code{"es.max"}, and \code{"es.rms"} have been renamed to \code{"smd.mean"}, \code{"smd.max"}, and \code{"smd.rms"}. The former are used in \pkg{twang} and will still work with \code{weightit()} for backward compatibility.
+The \code{criterion} argument used to be called \code{stop.method}, which is its
+name in \pkg{twang}. \code{stop.method} still works for backward compatibility.
+Additionally, the criteria formerly named as \code{"es.mean"}, \code{"es.max"}, and
+\code{"es.rms"} have been renamed to \code{"smd.mean"}, \code{"smd.max"}, and \code{"smd.rms"}.
+The former are used in \pkg{twang} and will still work with \code{weightit()} for
+backward compatibility.
 
-Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 - 10^{-8}} to ensure balance statistics can be computed.
+Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 -
+10^{-8}} to ensure balance statistics can be computed.
 }
 \section{Additional Arguments}{
-
-The following additional arguments can be specified:
+ The following additional arguments can be
+specified:
 \describe{
 \item{\code{criterion}}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, \code{criterion} can be set as \verb{"cv\{#\}}", where \verb{\{#\}} is replaced by a number representing the number of cross-validation folds used (e.g., \code{"cv5"} for 5-fold cross-validation). For binary and multi-category treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
@@ -84,9 +142,13 @@ The following additional arguments can be specified:
 }
 }
 
-All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit}, and some are not used at all. For binary and multi-category treatments with a with cross-validation used as the criterion, \code{class.stratify.cv} is set to \code{TRUE} by default.
+All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit},
+and some are not used at all. For binary and multi-category treatments with
+a with cross-validation used as the criterion, \code{class.stratify.cv} is set
+to \code{TRUE} by default.
 
-The \code{w} argument in \code{gbm.fit()} is ignored because sampling weights are passed using \code{s.weights}.
+The \code{w} argument in \code{gbm.fit()} is ignored because sampling weights are
+passed using \code{s.weights}.
 
 For continuous treatments only, the following arguments may be supplied:
 \describe{
@@ -99,7 +161,15 @@ If unspecified, a density corresponding to the argument passed to \code{distribu
 \item{\code{plot}}{If \code{density = "kernel"}, whether to plot the estimated densities.}
 }
 
-For tunable arguments, multiple entries may be supplied, and \code{weightit()} will choose the best value by optimizing the criterion specified in \code{criterion}. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning. The same seed is used for every run to ensure any variation in performance across tuning parameters is due to the specification and not to using a random seed. This only matters when \code{bag.fraction} differs from 1 (its default) or cross-validation is used as the criterion; otherwise, there are no random components in the model.
+For tunable arguments, multiple entries may be supplied, and \code{weightit()}
+will choose the best value by optimizing the criterion specified in
+\code{criterion}. See below for additional outputs that are included when
+arguments are supplied to be tuned. See Examples for an example of tuning.
+The same seed is used for every run to ensure any variation in performance
+across tuning parameters is due to the specification and not to using a
+random seed. This only matters when \code{bag.fraction} differs from 1 (its
+default) or cross-validation is used as the criterion; otherwise, there are
+no random components in the model.
 }
 
 \section{Additional Outputs}{
@@ -205,17 +275,25 @@ plot(W1) #plot of criterion value against number of trees
 \references{
 \subsection{Binary treatments}{
 
-McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. \emph{Psychological Methods}, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
+McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score
+Estimation With Boosted Regression for Evaluating Causal Effects in
+Observational Studies. \emph{Psychological Methods}, 9(4), 403–425.
+\doi{10.1037/1082-989X.9.4.403}
 }
 
 \subsection{Multi-Category Treatments}{
 
-McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. \emph{Statistics in Medicine}, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
+R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
+Multiple Treatments Using Generalized Boosted Models. \emph{Statistics in
+Medicine}, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 }
 
 \subsection{Continuous treatments}{
 
-Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. \emph{Journal of Causal Inference}, 3(1). \doi{10.1515/jci-2014-0022}
+Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for
+Estimating Generalized Propensity Scores with Continuous Treatments. \emph{Journal
+of Causal Inference}, 3(1). \doi{10.1515/jci-2014-0022}
 }
 }
 \seealso{

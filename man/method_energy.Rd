@@ -4,37 +4,60 @@
 \alias{method_energy}
 \title{Energy Balancing}
 \description{
-This page explains the details of estimating weights using energy balancing by setting \code{method = "energy"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
+This page explains the details of estimating weights using
+energy balancing by setting \code{method = "energy"} in the call to \code{\link[=weightit]{weightit()}}
+or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and
+continuous treatments.
 
-In general, this method relies on estimating weights by minimizing an energy statistic related to covariate balance. For binary and multi-category treatments, this is the energy distance, which is a multivariate distance between distributions, between treatment groups. For continuous treatments, this is the sum of the distance covariance between the treatment variable and the covariates and the energy distances between the treatment and covariates in the weighted sample and their distributions in the original sample. This method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp} from the \CRANpkg{osqp} package to perform the optimization. This method may be slow or memory-intensive for large datasets.
+In general, this method relies on estimating weights by minimizing an energy
+statistic related to covariate balance. For binary and multi-category
+treatments, this is the energy distance, which is a multivariate distance
+between distributions, between treatment groups. For continuous treatments,
+this is the sum of the distance covariance between the treatment variable and
+the covariates and the energy distances between the treatment and covariates
+in the weighted sample and their distributions in the original sample. This
+method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp}
+from the \CRANpkg{osqp} package to perform the optimization. This method may
+be slow or memory-intensive for large datasets.
 \subsection{Binary Treatments}{
 
-For binary treatments, this method estimates the weights using \code{osqp()} using formulas described by Huling and Mak (2024). The following estimands are allowed: ATE, ATT, and ATC.
+For binary treatments, this method estimates the weights using \code{osqp()} using
+formulas described by Huling and Mak (2024). The following estimands are
+allowed: ATE, ATT, and ATC.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, this method estimates the weights using \code{osqp()} using formulas described by Huling and Mak (2024). The following estimands are allowed: ATE and ATT.
+For multi-category treatments, this method estimates the weights using
+\code{osqp()} using formulas described by Huling and Mak (2024). The following
+estimands are allowed: ATE and ATT.
 }
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, this method estimates the weights using \code{osqp()} using formulas described by Huling, Greifer, and Chen (2023).
+For continuous treatments, this method estimates the weights using \code{osqp()}
+using formulas described by Huling, Greifer, and Chen (2023).
 }
 
 \subsection{Longitudinal Treatments}{
 
-For longitudinal treatments, the weights are the product of the weights estimated at each time point. This method is not guaranteed to yield optimal balance at each time point. NOTE: the use of energy balancing with longitudinal treatments has not been validated!
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point. This method is not guaranteed to yield optimal
+balance at each time point. NOTE: the use of energy balancing with
+longitudinal treatments has not been validated!
 }
 
 \subsection{Sampling Weights}{
 
-Sampling weights are supported through \code{s.weights} in all scenarios. In some cases, sampling weights will cause the optimization to fail due to lack of convexity or infeasible constraints.
+Sampling weights are supported through \code{s.weights} in all scenarios. In some
+cases, sampling weights will cause the optimization to fail due to lack of
+convexity or infeasible constraints.
 }
 
 \subsection{Missing Data}{
 
-In the presence of missing data, the following value(s) for \code{missing} are allowed:
+In the presence of missing data, the following value(s) for \code{missing} are
+allowed:
 \describe{
 \item{\code{"ind"} (default)}{
 First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
@@ -48,33 +71,72 @@ M-estimation is not supported.
 }
 }
 \details{
-Energy balancing is a method of estimating weights using optimization without a propensity score. The weights are the solution to a constrain quadratic optimization problem where the objective function concerns covariate balance as measured by the energy distance and (for continuous treatments) the distance covariance.
+Energy balancing is a method of estimating weights using
+optimization without a propensity score. The weights are the solution to a
+constrain quadratic optimization problem where the objective function
+concerns covariate balance as measured by the energy distance and (for
+continuous treatments) the distance covariance.
 
-Energy balancing for binary and multi-category treatments involves minimizing the energy distance between the treatment groups and between each treatment group and a target group (e.g., the full sample for the ATE). The energy distance is a scalar measure of the difference between two multivariate distributions and is equal to 0 when the two distributions are identical.
+Energy balancing for binary and multi-category treatments involves minimizing
+the energy distance between the treatment groups and between each treatment
+group and a target group (e.g., the full sample for the ATE). The energy
+distance is a scalar measure of the difference between two multivariate
+distributions and is equal to 0 when the two distributions are identical.
 
-Energy balancing for continuous treatments involves minimizing the distance covariance between the treatment and the covariates; the distance covariance is a scalar measure of the association between two (possibly multivariate) distributions that is equal to 0 when the two distributions are independent. In addition, the energy distances between the treatment and covariate distributions in the weighted sample and the treatment and covariate distributions in the original sample are minimized.
+Energy balancing for continuous treatments involves minimizing the distance
+covariance between the treatment and the covariates; the distance covariance
+is a scalar measure of the association between two (possibly multivariate)
+distributions that is equal to 0 when the two distributions are independent.
+In addition, the energy distances between the treatment and covariate
+distributions in the weighted sample and the treatment and covariate
+distributions in the original sample are minimized.
 
-The primary benefit of energy balancing is that all features of the covariate distribution are balanced, not just means, as with other optimization-based methods like entropy balancing. Still, it is possible to add additional balance constraints to require balance on individual terms using the \code{moments} argument, just like with entropy balancing. Energy balancing can sometimes yield weights with high variability; the \code{lambda} argument can be supplied to penalize highly variable weights to increase the effective sample size at the expense of balance.
+The primary benefit of energy balancing is that all features of the covariate
+distribution are balanced, not just means, as with other optimization-based
+methods like entropy balancing. Still, it is possible to add additional
+balance constraints to require balance on individual terms using the
+\code{moments} argument, just like with entropy balancing. Energy balancing can
+sometimes yield weights with high variability; the \code{lambda} argument can be
+supplied to penalize highly variable weights to increase the effective sample
+size at the expense of balance.
 \subsection{Reproducibility}{
 
-Although there are no stochastic components to the optimization, a feature turned off by default is to update the optimization based on how long the optimization has been running, which will vary across runs even when a seed is set and no parameters have been changed. See the discussion \href{https://github.com/osqp/osqp-r/issues/19}{here} for more details. To ensure reproducibility by default, \code{adaptive_rho_interval} is set to 10. See \pkgfun{osqp}{osqpSettings} for details.
+Although there are no stochastic components to the optimization, a feature
+turned off by default is to update the optimization based on how long the
+optimization has been running, which will vary across runs even when a seed
+is set and no parameters have been changed. See the discussion
+\href{https://github.com/osqp/osqp-r/issues/19}{here} for more details. To ensure
+reproducibility by default, \code{adaptive_rho_interval} is set to 10. See
+\pkgfun{osqp}{osqpSettings} for details.
 }
 }
 \note{
-Sometimes the optimization can fail to converge because the problem is not convex. A warning will be displayed if so. In these cases, try simply re-fitting the weights without changing anything (but see the \emph{Reproducibility} section above). If the method repeatedly fails, you should try another method or change the supplied parameters (though this is uncommon). Increasing \code{max_iter} or changing \code{adaptive_rho_interval} might help.
+Sometimes the optimization can fail to converge because the problem is
+not convex. A warning will be displayed if so. In these cases, try simply
+re-fitting the weights without changing anything (but see the
+\emph{Reproducibility} section above). If the method repeatedly fails, you should
+try another method or change the supplied parameters (though this is
+uncommon). Increasing \code{max_iter} or changing \code{adaptive_rho_interval} might
+help.
 
-If it seems like the weights are balancing the covariates but you still get a failure to converge, this usually indicates that more iterations are needs to find the optimal solutions. This can occur when \code{moments} or \code{int} are specified. \code{max_iter} should be increased, and setting \code{verbose = TRUE} allows you to monitor the process and examine if the optimization is approaching convergence.
+If it seems like the weights are balancing the covariates but you still get a
+failure to converge, this usually indicates that more iterations are needs to
+find the optimal solutions. This can occur when \code{moments} or \code{int} are
+specified. \code{max_iter} should be increased, and setting \code{verbose = TRUE}
+allows you to monitor the process and examine if the optimization is
+approaching convergence.
 }
 \section{Additional Arguments}{
-
-The following following additional arguments can be specified:
+ The following following additional arguments
+can be specified:
 \describe{
 \item{\code{dist.mat}}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include \code{"scaled_euclidean"} for the Euclidean (L2) distance on the scaled covariates (the default), \code{"mahalanobis"} for the Mahalanobis distance, and \code{"euclidean"} for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to \code{\link[=dist]{dist()}}.
 }
 \item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.
 }
 }
-For binary and multi-category treatments, the following additional arguments can be specified:
+For binary and multi-category treatments, the following additional
+arguments can be specified:
 \describe{
 \item{\code{improved}}{\code{logical}; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when \code{estimand = "ATE"}. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is \code{TRUE}; set to \code{FALSE} to use the standard energy balancing weights instead (not recommended).
 }
@@ -83,7 +145,8 @@ A named list of quantiles (values between 0 and 1) for each continuous covariate
 }
 }
 
-For continuous treatments, the following additional arguments can be specified:
+For continuous treatments, the following additional arguments can be
+specified:
 \describe{
 \item{\code{d.moments}}{
 The number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified).
@@ -93,9 +156,21 @@ The number of moments of the treatment and covariate distributions that are cons
 }
 }
 
-The \code{moments} argument functions differently for \code{method = "energy"} from how it does with other methods. When unspecified or set to zero, energy balancing weights are estimated as described by Huling and Mak (2024) for binary and multi-category treatments or by Huling et al. (2023) for continuous treatments. When \code{moments} is set to an integer larger than 0, additional balance constraints on the requested moments of the covariates are also included, guaranteeing exact moment balance on these covariates while minimizing the energy distance of the weighted sample. For binary and multi-category treatments, this involves exact balance on the means of the entered covariates; for continuous treatments, this involves exact balance on the treatment-covariate correlations of the entered covariates.
+The \code{moments} argument functions differently for \code{method = "energy"} from
+how it does with other methods. When unspecified or set to zero, energy
+balancing weights are estimated as described by Huling and Mak (2024) for
+binary and multi-category treatments or by Huling et al. (2023) for
+continuous treatments. When \code{moments} is set to an integer larger than 0,
+additional balance constraints on the requested moments of the covariates
+are also included, guaranteeing exact moment balance on these covariates
+while minimizing the energy distance of the weighted sample. For binary and
+multi-category treatments, this involves exact balance on the means of the
+entered covariates; for continuous treatments, this involves exact balance
+on the treatment-covariate correlations of the entered covariates.
 
-Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some defaults differ from those in \code{osqpSettings()}; see \emph{Reproducibility} below.
+Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some
+defaults differ from those in \code{osqpSettings()}; see \emph{Reproducibility}
+below.
 }
 
 \section{Additional Outputs}{
@@ -138,17 +213,21 @@ bal.tab(W2)
 \references{
 \subsection{Binary and multi-category treatments}{
 
-Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions. \emph{Journal of Causal Inference}, 12(1). \doi{10.1515/jci-2022-0029}
+Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions.
+\emph{Journal of Causal Inference}, 12(1). \doi{10.1515/jci-2022-0029}
 }
 
 \subsection{Continuous treatments}{
 
-Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. \emph{Journal of the American Statistical Association}, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
+Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for
+causal inference with continuous treatments. \emph{Journal of the American
+Statistical Association}, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 }
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
 }
 \author{
-Noah Greifer, using code from Jared Huling's \CRANpkg{independenceWeights} package for continuous treatments.
+Noah Greifer, using code from Jared Huling's
+\CRANpkg{independenceWeights} package for continuous treatments.
 }

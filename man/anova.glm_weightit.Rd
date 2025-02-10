@@ -15,26 +15,47 @@
 )
 }
 \arguments{
-\item{object, object2}{an output from one of the above modeling functions. \code{object2} is required.}
+\item{object, object2}{an output from one of the above modeling functions.
+\code{object2} is required.}
 
-\item{test}{the type of test statistic used to compare models. Currently only \code{"Chisq"} (the chi-square statistic) is allowed.}
+\item{test}{the type of test statistic used to compare models. Currently only
+\code{"Chisq"} (the chi-square statistic) is allowed.}
 
-\item{method}{the kind of test used to compare models. Currently only \code{"Wald"} is allowed.}
+\item{method}{the kind of test used to compare models. Currently only
+\code{"Wald"} is allowed.}
 
-\item{tolerance}{for the Wald test, the tolerance used to determine if models are symbolically nested.}
+\item{tolerance}{for the Wald test, the tolerance used to determine if models
+are symbolically nested.}
 
-\item{vcov}{either a string indicating the method used to compute the variance of the estimated parameters for \code{object}, a function used to extract the variance, or the variance matrix itself. Default is to use the variance matrix already present in \code{object}. If a string or function, arguments passed to \code{...} are supplied to the method or function. (Note: for \code{vcov()}, can also be supplied as \code{type}.)}
+\item{vcov}{either a string indicating the method used to compute the
+variance of the estimated parameters for \code{object}, a function used to
+extract the variance, or the variance matrix itself. Default is to use the
+variance matrix already present in \code{object}. If a string or function,
+arguments passed to \code{...} are supplied to the method or function. (Note:
+for \code{vcov()}, can also be supplied as \code{type}.)}
 
-\item{\dots}{other arguments passed to the function used for computing the parameter variance matrix, if supplied as a string or function, e.g., \code{cluster}, \code{R}, or \code{fwb.args}.}
+\item{\dots}{other arguments passed to the function used for computing the
+parameter variance matrix, if supplied as a string or function, e.g.,
+\code{cluster}, \code{R}, or \code{fwb.args}.}
 }
 \value{
 An object of class \code{"anova"} inheriting from class \code{"data.frame"}.
 }
 \description{
-\code{anova()} is used to compare nested models fit with \code{glm_weightit()}, \code{mutinom_weightit()}, \code{ordinal_weightit()}, or \code{coxph_weightit()} using a Wald test that incorporates uncertainty in estimating the weights (if any).
+\code{anova()} is used to compare nested models fit with
+\code{glm_weightit()}, \code{mutinom_weightit()}, \code{ordinal_weightit()}, or
+\code{coxph_weightit()} using a Wald test that incorporates uncertainty in
+estimating the weights (if any).
 }
 \details{
-\code{anova()} performs a Wald test to compare two fitted models. The models must be nested, but they don't have to be nested symbolically (i.e., the names of the coefficients of the smaller model do not have to be a subset of the names of the coefficients of the larger model). The larger model must be supplied to \code{object} and the smaller to \code{object2}. Both models must contain the same units, weights (if any), and outcomes. The variance-covariance matrix of the coefficients of the smaller model is not used.
+\code{anova()} performs a Wald test to compare two fitted models. The
+models must be nested, but they don't have to be nested symbolically (i.e.,
+the names of the coefficients of the smaller model do not have to be a subset
+of the names of the coefficients of the larger model). The larger model must
+be supplied to \code{object} and the smaller to \code{object2}. Both models must
+contain the same units, weights (if any), and outcomes. The
+variance-covariance matrix of the coefficients of the smaller model is not
+used.
 }
 \examples{
 data("lalonde", package = "cobalt")
@@ -63,17 +84,16 @@ anova(fit1, fit2, vcov = "BS", R = 100)
 # Model comparison between spline model and linear
 # model; note they are nested but not symbolically
 # nested
-fit_s <- glm_weightit(
-  re78 ~ splines::ns(age, df = 4), data = lalonde
-)
+fit_s <- glm_weightit(re78 ~ splines::ns(age, df =4),
+                      data = lalonde )
 
-fit_l <- glm_weightit(
-  re78 ~ age, data = lalonde
-)
+fit_l <- glm_weightit( re78 ~ age, data = lalonde )
 
 anova(fit_s, fit_l)
 \dontshow{\}) # examplesIf}
 }
 \seealso{
-\code{\link[=glm_weightit]{glm_weightit()}} for the page documenting \code{glm_weightit()}, \code{lm_weightit()}, \code{ordinal_weightit()}, \code{multinom_weightit()}, and \code{coxph_weightit()}. \code{\link[=anova.glm]{anova.glm()}} for model comparison of \code{glm} objects.
+\code{\link[=glm_weightit]{glm_weightit()}} for the page documenting \code{glm_weightit()},
+\code{lm_weightit()}, \code{ordinal_weightit()}, \code{multinom_weightit()}, and
+\code{coxph_weightit()}. \code{\link[=anova.glm]{anova.glm()}} for model comparison of \code{glm} objects.
 }

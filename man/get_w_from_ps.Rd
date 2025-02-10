@@ -20,11 +20,11 @@ get_w_from_ps(
 \item{treat}{a vector of treatment status for each individual. See Details.}
 
 \item{estimand}{the desired estimand that the weights should target. Current
-options include \code{"ATE"} (average treatment effect), \code{"ATT"} (average treatment
-effect on the treated), \code{"ATC"} (average treatment effect on the control),
-\code{"ATO"} (average treatment effect in the overlap), \code{"ATM"} (average treatment
-effect in the matched sample), and \code{"ATOS"} (average treatment effect in the
-optimal subset). See Details.}
+options include \code{"ATE"} (average treatment effect), \code{"ATT"} (average
+treatment effect on the treated), \code{"ATC"} (average treatment effect on the
+control), \code{"ATO"} (average treatment effect in the overlap), \code{"ATM"}
+(average treatment effect in the matched sample), and \code{"ATOS"} (average
+treatment effect in the optimal subset). See Details.}
 
 \item{focal}{when \code{estimand} is \code{"ATT"} or \code{"ATC"}, which group should be
 consider the (focal) "treated" or "control" group, respectively. If not
@@ -33,40 +33,42 @@ automatically be set to \code{"ATT"}.}
 
 \item{treated}{when treatment is binary, the value of \code{treat} that is
 considered the "treated" group (i.e., the group for which the propensity
-scores are the probability of being in). If \code{NULL},
-\code{get_w_from_ps()} will attempt to figure it out on its own using some
-heuristics. This really only matters when \code{treat} has values other than
-0 and 1 and when \code{ps} is given as a vector or an unnamed single-column
-matrix or data frame.}
+scores are the probability of being in). If \code{NULL}, \code{get_w_from_ps()} will
+attempt to figure it out on its own using some heuristics. This really only
+matters when \code{treat} has values other than 0 and 1 and when \code{ps} is given
+as a vector or an unnamed single-column matrix or data frame.}
 
-\item{subclass}{\code{numeric}; the number of subclasses to use when
-computing weights using marginal mean weighting through stratification (also
-known as fine stratification). If \code{NULL}, standard inverse probability
-weights (and their extensions) will be computed; if a number greater than 1,
-subclasses will be formed and weights will be computed based on subclass
-membership. \code{estimand} must be \code{"ATE"}, \code{"ATT"}, or \code{"ATC"} if \code{subclass} is
+\item{subclass}{\code{numeric}; the number of subclasses to use when computing
+weights using marginal mean weighting through stratification (also known as
+fine stratification). If \code{NULL}, standard inverse probability weights (and
+their extensions) will be computed; if a number greater than 1, subclasses
+will be formed and weights will be computed based on subclass membership.
+\code{estimand} must be \code{"ATE"}, \code{"ATT"}, or \code{"ATC"} if \code{subclass} is
 non-\code{NULL}. See Details.}
 
-\item{stabilize}{\code{logical}; whether to compute stabilized weights or
-not. This simply involves multiplying each unit's weight by the proportion
-of units in their treatment group. For saturated outcome models and in
-balance checking, this won't make a difference; otherwise, this can improve
+\item{stabilize}{\code{logical}; whether to compute stabilized weights or not.
+This simply involves multiplying each unit's weight by the proportion of
+units in their treatment group. For saturated outcome models and in balance
+checking, this won't make a difference; otherwise, this can improve
 performance.}
 }
 \value{
-A vector of weights. When \code{subclass} is not \code{NULL}, the
-subclasses are returned as the \code{"subclass"} attribute. When
-\code{estimand = "ATOS"}, the chosen value of \code{alpha} (the smallest
-propensity score allowed to remain in the sample) is returned in the
-\code{"alpha"} attribute.
+A vector of weights. When \code{subclass} is not \code{NULL}, the subclasses
+are returned as the \code{"subclass"} attribute. When \code{estimand = "ATOS"}, the
+chosen value of \code{alpha} (the smallest propensity score allowed to remain in
+the sample) is returned in the \code{"alpha"} attribute.
 }
 \description{
-Given a vector or matrix of propensity scores, outputs a vector of weights
-that target the provided estimand.
+Given a vector or matrix of propensity scores, outputs a vector
+of weights that target the provided estimand.
 }
 \details{
 \code{get_w_from_ps()} applies the formula for computing weights from
-propensity scores for the desired estimand. The formula for each estimand is below, with \eqn{A_i} the treatment value for unit \eqn{i} taking on values \eqn{\mathcal{A} = (1, \ldots, g)}, \eqn{p_{a, i}} the probability of receiving treatment level \eqn{a} for unit \eqn{i}, and \eqn{f} is the focal group (the treated group for the ATT and the control group for the ATC):
+propensity scores for the desired estimand. The formula for each estimand is
+below, with \eqn{A_i} the treatment value for unit \eqn{i} taking on values
+\eqn{\mathcal{A} = (1, \ldots, g)}, \eqn{p_{a, i}} the probability of
+receiving treatment level \eqn{a} for unit \eqn{i}, and \eqn{f} is the focal
+group (the treated group for the ATT and the control group for the ATC):
 
 \deqn{
 \begin{aligned}
@@ -87,51 +89,49 @@ The \code{ps} argument can be entered in two ways:
 \item A numeric vector with a value for each unit corresponding to the probability of being "treated" (only allowed for binary treatments)
 }
 
-When supplied as a vector, \code{get_w_from_ps()} has to know which value of \code{treat}
-corresponds to the "treated" group. For 0/1 variables, 1 will be considered
-treated. For other types of variables, \code{get_w_from_ps()} will try to
-figure it out using heuristics, but it's safer to supply an argument to
+When supplied as a vector, \code{get_w_from_ps()} has to know which value of
+\code{treat} corresponds to the "treated" group. For 0/1 variables, 1 will be
+considered treated. For other types of variables, \code{get_w_from_ps()} will try
+to figure it out using heuristics, but it's safer to supply an argument to
 \code{treated}. When \code{estimand} is \code{"ATT"} or \code{"ATC"}, supplying a value to
-\code{focal} is sufficient (for ATT, \code{focal} is the treated group, and
-for ATC, \code{focal} is the control group).
+\code{focal} is sufficient (for ATT, \code{focal} is the treated group, and for ATC,
+\code{focal} is the control group).
 
-When supplied as a matrix, the columns must be named with the levels of the treatment, and
-it is assumed that each column corresponds to the probability of being in
-that treatment group. This is the safest way to supply \code{ps} unless
-\code{treat} is a 0/1 variable. When \code{estimand} is \code{"ATT"} or \code{"ATC"}, a value for \code{focal}
-must be specified.
+When supplied as a matrix, the columns must be named with the levels of the
+treatment, and it is assumed that each column corresponds to the probability
+of being in that treatment group. This is the safest way to supply \code{ps}
+unless \code{treat} is a 0/1 variable. When \code{estimand} is \code{"ATT"} or \code{"ATC"}, a
+value for \code{focal} must be specified.
 }
 
 \subsection{Marginal mean weighting through stratification (MMWS)}{
 
-When \code{subclass} is not \code{NULL}, MMWS weights are computed. The implementation differs
-slightly from that described in Hong (2010, 2012). First, subclasses are
-formed by finding the quantiles of the propensity scores in the target group
-(for the ATE, all units; for the ATT or ATC, just the units in the focal
-group). Any subclasses lacking members of a treatment group will be filled
-in with them from neighboring subclasses so each subclass will always have
-at least one member of each treatment group. A new subclass-propensity score
-matrix is formed, where each unit's subclass-propensity score for each
+When \code{subclass} is not \code{NULL}, MMWS weights are computed. The implementation
+differs slightly from that described in Hong (2010, 2012). First, subclasses
+are formed by finding the quantiles of the propensity scores in the target
+group (for the ATE, all units; for the ATT or ATC, just the units in the
+focal group). Any subclasses lacking members of a treatment group will be
+filled in with them from neighboring subclasses so each subclass will always
+have at least one member of each treatment group. A new subclass-propensity
+score matrix is formed, where each unit's subclass-propensity score for each
 treatment value is computed as the proportion of units with that treatment
-value in the unit's subclass. For example, if a subclass had 10 treated
-units and 90 control units in it, the subclass-propensity score for being
-treated would be .1 and the subclass-propensity score for being control
-would be .9 for all units in the subclass.
+value in the unit's subclass. For example, if a subclass had 10 treated units
+and 90 control units in it, the subclass-propensity score for being treated
+would be .1 and the subclass-propensity score for being control would be .9
+for all units in the subclass.
 
-For multi-category treatments,
-the propensity scores for each treatment are stratified separately as
-described in Hong (2012); for binary treatments, only one set of propensity
-scores are stratified and the subclass-propensity scores for the other
-treatment are computed as the complement of the propensity scores for the
-stratified treatment.
+For multi-category treatments, the propensity scores for each treatment are
+stratified separately as described in Hong (2012); for binary treatments,
+only one set of propensity scores are stratified and the subclass-propensity
+scores for the other treatment are computed as the complement of the
+propensity scores for the stratified treatment.
 
-After the subclass-propensity scores have been
-computed, the standard propensity score weighting formulas are used to
-compute the unstabilized MMWS weights. To estimate MMWS weights equivalent
-to those described in Hong (2010, 2012), \code{stabilize} must be set to
-\code{TRUE}, but, as with standard propensity score weights, this is
-optional. Note that MMWS weights are also known as fine stratification
-weights and described by Desai et al. (2017).
+After the subclass-propensity scores have been computed, the standard
+propensity score weighting formulas are used to compute the unstabilized MMWS
+weights. To estimate MMWS weights equivalent to those described in Hong
+(2010, 2012), \code{stabilize} must be set to \code{TRUE}, but, as with standard
+propensity score weights, this is optional. Note that MMWS weights are also
+known as fine stratification weights and described by Desai et al. (2017).
 }
 }
 \examples{
@@ -191,7 +191,8 @@ propensity score weighting. Journal of the American Statistical Association,
 }
 
 Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in
-Propensity Score Analysis. The International Journal of Biostatistics, 9(2). \doi{10.1515/ijb-2012-0030}
+Propensity Score Analysis. The International Journal of Biostatistics, 9(2).
+\doi{10.1515/ijb-2012-0030}
 \itemize{
 \item \code{estimand = "ATOS"}
 }
@@ -225,9 +226,9 @@ Epidemiology, 28(2), 249–257. \doi{10.1097/EDE.0000000000000595}
 \item \code{estimand = "ATO"}
 }
 
-Li, F., & Li, F. (2019). Propensity score weighting for causal inference
-with multiple treatments. The Annals of Applied Statistics, 13(4),
-2389–2415. \doi{10.1214/19-AOAS1282}
+Li, F., & Li, F. (2019). Propensity score weighting for causal inference with
+multiple treatments. The Annals of Applied Statistics, 13(4), 2389–2415.
+\doi{10.1214/19-AOAS1282}
 \itemize{
 \item \code{estimand = "ATM"}
 }
@@ -235,22 +236,24 @@ with multiple treatments. The Annals of Applied Statistics, 13(4),
 Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J.
 J., Glynn, R. J., & Franklin, J. M. (2017). Matching weights to
 simultaneously compare three treatment groups: Comparison to three-way
-matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395. \doi{10.1097/EDE.0000000000000627}
+matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395.
+\doi{10.1097/EDE.0000000000000627}
 \itemize{
 \item Other estimands
 }
 
 McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
 R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
-Multiple Treatments Using Generalized Boosted Models. Statistics in
-Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine,
+32(19), 3388–3414. \doi{10.1002/sim.5753}
 \itemize{
 \item Marginal mean weighting through stratification
 }
 
 Hong, G. (2012). Marginal mean weighting through stratification: A
 generalized method for evaluating multivalued and multiple treatments with
-nonexperimental data. \emph{Psychological Methods}, 17(1), 44–60. \doi{10.1037/a0024918}
+nonexperimental data. \emph{Psychological Methods}, 17(1), 44–60.
+\doi{10.1037/a0024918}
 }
 }
 \seealso{

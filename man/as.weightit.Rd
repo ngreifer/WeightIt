@@ -35,26 +35,30 @@ as.weightitMSM(x, ...)
 )
 }
 \arguments{
-\item{x}{required; a \code{numeric} vector of weights, one for each
-unit, or a \code{weightit.fit} object from \code{\link[=weightit.fit]{weightit.fit()}}.}
+\item{x}{required; a \code{numeric} vector of weights, one for each unit, or a
+\code{weightit.fit} object from \code{\link[=weightit.fit]{weightit.fit()}}.}
 
 \item{...}{additional arguments. These must be named. They will be included
 in the output object.}
 
-\item{covs}{an optional \code{data.frame} of covariates. For using
-\pkg{WeightIt} functions, this is not necessary, but for use with
-\pkg{cobalt} it is. Note that when using with a \code{weightit.fit} object, this should not be the matrix supplied to the \code{covs} argument of \code{weightit.fit()} unless there are no factor/character variables in it. Ideally this is the original, unprocessed covariate data frame with factor variables included.}
+\item{covs}{an optional \code{data.frame} of covariates. For using \pkg{WeightIt}
+functions, this is not necessary, but for use with \pkg{cobalt} it is. Note
+that when using with a \code{weightit.fit} object, this should not be the matrix
+supplied to the \code{covs} argument of \code{weightit.fit()} unless there are no
+factor/character variables in it. Ideally this is the original, unprocessed
+covariate data frame with factor variables included.}
 
-\item{treat}{a vector of treatment statuses, one for each unit. Required when \code{x} is a vector of weights.}
+\item{treat}{a vector of treatment statuses, one for each unit. Required when
+\code{x} is a vector of weights.}
 
-\item{estimand}{an optional \code{character} of length 1 giving the
-estimand. The text is not checked.}
+\item{estimand}{an optional \code{character} of length 1 giving the estimand. The
+text is not checked.}
 
-\item{s.weights}{an optional \code{numeric} vector of sampling weights, one
-for each unit.}
-
-\item{ps}{an optional \code{numeric} vector of propensity scores, one for
+\item{s.weights}{an optional \code{numeric} vector of sampling weights, one for
 each unit.}
+
+\item{ps}{an optional \code{numeric} vector of propensity scores, one for each
+unit.}
 
 \item{treat.list}{a list of treatment statuses at each time point.}
 
@@ -62,16 +66,17 @@ each unit.}
 covariates at each time point. For using \pkg{WeightIt} functions, this is
 not necessary, but for use with \pkg{cobalt} it is.}
 
-\item{ps.list}{an optional list of \code{numeric} vectors of propensity
-scores at each time point.}
+\item{ps.list}{an optional list of \code{numeric} vectors of propensity scores at
+each time point.}
 }
 \value{
-An object of class \code{weightit} (for \code{as.weightit()}) or \code{weightitMSM} (for \code{as.weightitMSM()}).
+An object of class \code{weightit} (for \code{as.weightit()}) or \code{weightitMSM}
+(for \code{as.weightitMSM()}).
 }
 \description{
-This function allows users to get the benefits of a \code{weightit} object
-when using weights not estimated with \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. These
-benefits include diagnostics, plots, and direct compatibility with
+This function allows users to get the benefits of a \code{weightit}
+object when using weights not estimated with \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}.
+These benefits include diagnostics, plots, and direct compatibility with
 \pkg{cobalt} for assessing balance.
 }
 \examples{

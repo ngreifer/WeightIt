@@ -11,9 +11,9 @@ make_full_rank(mat, with.intercept = TRUE)
 contains covariates. \code{NA}s are not allowed.}
 
 \item{with.intercept}{whether an intercept (i.e., a vector of 1s) should be
-added to \code{mat} before making it full rank. If \code{TRUE}, the
-intercept will be used in determining whether a column is linearly dependent
-on others. Regardless, no intercept will be included in the output.}
+added to \code{mat} before making it full rank. If \code{TRUE}, the intercept will be
+used in determining whether a column is linearly dependent on others.
+Regardless, no intercept will be included in the output.}
 }
 \value{
 An object of the same type as \code{mat} containing only linearly
@@ -22,24 +22,23 @@ independent columns.
 \description{
 When writing \link[=method_user]{user-defined methods} for use with
 \code{\link[=weightit]{weightit()}}, it may be necessary to take the potentially non-full rank
-\code{covs} data frame and make it full rank for use in a downstream
-function. This function performs that operation.
+\code{covs} data frame and make it full rank for use in a downstream function.
+This function performs that operation.
 }
 \details{
 \code{make_full_rank()} calls \code{\link[=qr]{qr()}} to find the rank and linearly
-independent columns of \code{mat}, which are retained while others are
-dropped. If \code{with.intercept} is set to \code{TRUE}, an intercept column
-is added to the matrix before calling \code{qr()}. Note that dependent
-columns that appear later in \code{mat} will be dropped first.
+independent columns of \code{mat}, which are retained while others are dropped. If
+\code{with.intercept} is set to \code{TRUE}, an intercept column is added to the matrix
+before calling \code{qr()}. Note that dependent columns that appear later in \code{mat}
+will be dropped first.
 
 See example at \code{\link{method_user}}.
 }
 \note{
 Older versions would drop all columns that only had one value. With
-\code{with.intercept = FALSE}, if only one column has only one value, it
-will not be removed, and it will function as though there was an intercept
-present; if more than only column has only one value, only the first one
-will remain.
+\code{with.intercept = FALSE}, if only one column has only one value, it will not
+be removed, and it will function as though there was an intercept present; if
+more than only column has only one value, only the first one will remain.
 }
 \examples{
 

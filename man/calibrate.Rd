@@ -13,28 +13,39 @@ calibrate(x, ...)
 \method{calibrate}{weightit}(x, ...)
 }
 \arguments{
-\item{x}{A \code{weightit} object or a vector of propensity scores. Only binary treatments are supported.}
+\item{x}{A \code{weightit} object or a vector of propensity scores. Only binary
+treatments are supported.}
 
 \item{\dots}{Not used.}
 
-\item{treat}{A vector of treatment status for each unit. Only binary treatments are supported.}
+\item{treat}{A vector of treatment status for each unit. Only binary
+treatments are supported.}
 
 \item{s.weights}{A vector of sampling weights or the name of a variable in
 \code{data} that contains sampling weights.}
 
-\item{data}{An optional data frame containing the variable named in \code{s.weights} when supplied as a string.}
+\item{data}{An optional data frame containing the variable named in
+\code{s.weights} when supplied as a string.}
 
-\item{method}{\code{character}; the method of calibration used. Allowable options include \code{"platt"} (default) for Platt scaling as described by Gutman et al. (2024) and \code{"isoreg"} for isotonic regression as described by van der Laan et al. (2024) and implemented in \code{\link[=isoreg]{isoreg()}}.}
+\item{method}{\code{character}; the method of calibration used. Allowable options
+include \code{"platt"} (default) for Platt scaling as described by Gutman et al.
+(2024) and \code{"isoreg"} for isotonic regression as described by van der Laan
+et al. (2024) and implemented in \code{\link[=isoreg]{isoreg()}}.}
 }
 \value{
-If the input is a \code{weightit} object, the output will be a
-\code{weightit} object with the propensity scores replaced with the calibrated propensity scores and the weights replaced by weights computed from the calibrated propensity scores.
+If the input is a \code{weightit} object, the output will be a \code{weightit}
+object with the propensity scores replaced with the calibrated propensity
+scores and the weights replaced by weights computed from the calibrated
+propensity scores.
 
 If the input is a numeric vector of weights, the output will be a numeric
 vector of the calibrated propensity scores.
 }
 \description{
-\code{calibrate()} calibrates propensity scores used in weights. This involves fitting a new propensity score model using logistic or isotonic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
+\code{calibrate()} calibrates propensity scores used in weights. This
+involves fitting a new propensity score model using logistic or isotonic
+regression with the previously estimated propensity score as the sole
+predictor. Weights are computed using this new propensity score.
 }
 \examples{
 \dontshow{if (requireNamespace("gbm", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
@@ -56,9 +67,13 @@ PSc <- calibrate(W$ps, treat = lalonde$treat)
 \dontshow{\}) # examplesIf}
 }
 \references{
-Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse Probability Weighting by Post-calibrating Its Propensity Scores. \emph{Epidemiology}, 35(4). \doi{10.1097/EDE.0000000000001733}
+Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse
+Probability Weighting by Post-calibrating Its Propensity Scores.
+\emph{Epidemiology}, 35(4). \doi{10.1097/EDE.0000000000001733}
 
-van der Laan, L., Lin, Z., Carone, M., & Luedtke, A. (2024). Stabilized Inverse Probability Weighting via Isotonic Calibration (arXiv:2411.06342). arXiv. \url{http://arxiv.org/abs/2411.06342}
+van der Laan, L., Lin, Z., Carone, M., & Luedtke, A. (2024). Stabilized
+Inverse Probability Weighting via Isotonic Calibration (arXiv:2411.06342).
+arXiv. \url{http://arxiv.org/abs/2411.06342}
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}

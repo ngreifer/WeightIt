@@ -11,12 +11,20 @@ An object of class \code{list} of length 10.
 .weightit_methods
 }
 \description{
-\code{.weightit_methods} is a list containing the allowable weighting methods that can be supplied by name to the \code{method} argument of \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, and \code{\link[=weightit.fit]{weightit.fit()}}. Each entry corresponds to an allowed method and contains information about what options are and are not allowed for each method. While this list is primarily for internal use by checking functions in \pkg{WeightIt}, it might be of use for package authors that want to support different weighting methods.
+\code{.weightit_methods} is a list containing the allowable weighting
+methods that can be supplied by name to the \code{method} argument of
+\code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, and \code{\link[=weightit.fit]{weightit.fit()}}. Each entry corresponds
+to an allowed method and contains information about what options are and
+are not allowed for each method. While this list is primarily for internal
+use by checking functions in \pkg{WeightIt}, it might be of use for package
+authors that want to support different weighting methods.
 }
 \details{
 Each component is itself a list containing the following components:
 \describe{
-\item{\code{treat_type}}{at least one of \code{"binary"}, \code{"multi-category"}, or \code{"continuous"} indicating which treatment types are available for this method.}
+\item{\code{treat_type}}{at least one of \code{"binary"}, \code{"multi-category"}, or
+\code{"continuous"} indicating which treatment types are
+available for this method.}
 \item{\code{estimand}}{which estimands are available for this method. All methods that support binary and multi-category treatments accept \code{"ATE"}, \code{"ATT"}, and \code{"ATC"}, as well as some other estimands depending on the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for more details about what each estimand means.}
 \item{\code{alias}}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is \code{"ebal"}, but \code{"ebalance"} and \code{"entropy"} also work. The first value is the canonical name.}
 \item{\code{description}}{a string containing the description of the name in English.}
@@ -56,6 +64,8 @@ supp <- sapply(.weightit_methods, `[[`, "ps")
 names(.weightit_methods)[supp]
 }
 \seealso{
-\code{\link[=weightit]{weightit()}} and \code{\link[=weightitMSM]{weightitMSM()}} for how the methods are used. Also see the individual methods pages for information on whether and how each option can be used.
+\code{\link[=weightit]{weightit()}} and \code{\link[=weightitMSM]{weightitMSM()}} for how the methods are used. Also
+see the individual methods pages for information on whether and how each
+option can be used.
 }
 \keyword{datasets}

@@ -34,138 +34,173 @@ the variables in \code{formula}.}
 
 \item{method}{a string of length 1 containing the name of the method that
 will be used to estimate weights. See Details below for allowable options.
-The default is \code{"glm"} for propensity score weighting using a
-generalized linear model to estimate the propensity score.}
+The default is \code{"glm"} for propensity score weighting using a generalized
+linear model to estimate the propensity score.}
 
 \item{estimand}{the desired estimand. For binary and multi-category
-treatments, can be \code{"ATE"}, \code{"ATT"}, \code{"ATC"}, and, for some
-methods, \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"}. The default for both
-is \code{"ATE"}. This argument is ignored for continuous treatments. See the
-individual pages for each method for more information on which estimands are
-allowed with each method and what literature to read to interpret these
-estimands.}
+treatments, can be \code{"ATE"}, \code{"ATT"}, \code{"ATC"}, and, for some methods,
+\code{"ATO"}, \code{"ATM"}, or \code{"ATOS"}. The default for both is \code{"ATE"}. This
+argument is ignored for continuous treatments. See the individual pages for
+each method for more information on which estimands are allowed with each
+method and what literature to read to interpret these estimands.}
 
-\item{stabilize}{whether or not and how to stabilize the weights. If \code{TRUE}, each unit's weight will be multiplied by a standardization factor, which is the the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when \code{estimand = "ATE"}. Default is \code{FALSE} for no standardization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}. For continuous treatments, weights are already stabilized, so setting \code{stabilize = TRUE} will be ignored with a warning (supplying a formula still works).}
+\item{stabilize}{whether or not and how to stabilize the weights. If \code{TRUE},
+each unit's weight will be multiplied by a standardization factor, which is
+the the unconditional probability (or density) of each unit's observed
+treatment value. If a formula, a generalized linear model will be fit with
+the included predictors, and the inverse of the corresponding weight will
+be used as the standardization factor. Can only be used with continuous
+treatments or when \code{estimand = "ATE"}. Default is \code{FALSE} for no
+standardization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}.
+For continuous treatments, weights are already stabilized, so setting
+\code{stabilize = TRUE} will be ignored with a warning (supplying a formula
+still works).}
 
-\item{focal}{when \code{estimand} is set to \code{"ATT"} or \code{"ATC"}, which group to consider the "treated" or "control" group. This group
-will not be weighted, and the other groups will be weighted to resemble
-the focal group. If specified, \code{estimand} will automatically be set to
-\code{"ATT"} (with a warning if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and \code{focal}} in Details below.}
+\item{focal}{when \code{estimand} is set to \code{"ATT"} or \code{"ATC"}, which group to
+consider the "treated" or "control" group. This group will not be weighted,
+and the other groups will be weighted to resemble the focal group. If
+specified, \code{estimand} will automatically be set to \code{"ATT"} (with a warning
+if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and
+\code{focal}} in Details below.}
 
-\item{by}{a string containing the name of the variable in \code{data} for
-which weighting is to be done within categories or a one-sided formula with
-the stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or optimization will occur within each level of the variable \code{"gender"}. Only one \code{by} variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using \code{\link[=interaction]{interaction()}}.}
+\item{by}{a string containing the name of the variable in \code{data} for which
+weighting is to be done within categories or a one-sided formula with the
+stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or
+optimization will occur within each level of the variable \code{"gender"}. Only
+one \code{by} variable is allowed; to stratify by multiply variables
+simultaneously, create a new variable that is a full cross of those
+variables using \code{\link[=interaction]{interaction()}}.}
 
 \item{s.weights}{A vector of sampling weights or the name of a variable in
-\code{data} that contains sampling weights. These can also be matching
-weights if weighting is to be used on matched data. See the individual pages
-for each method for information on whether sampling weights can be supplied.}
+\code{data} that contains sampling weights. These can also be matching weights
+if weighting is to be used on matched data. See the individual pages for
+each method for information on whether sampling weights can be supplied.}
 
-\item{ps}{A vector of propensity scores or the name of a variable in
-\code{data} containing propensity scores. If not \code{NULL}, \code{method} is ignored unless it is a user-supplied function, and the propensity scores will be used to create weights.
-\code{formula} must include the treatment variable in \code{data}, but the
-listed covariates will play no role in the weight estimation. Using
-\code{ps} is similar to calling \code{\link[=get_w_from_ps]{get_w_from_ps()}} directly, but produces a
-full \code{weightit} object rather than just producing weights.}
+\item{ps}{A vector of propensity scores or the name of a variable in \code{data}
+containing propensity scores. If not \code{NULL}, \code{method} is ignored unless it
+is a user-supplied function, and the propensity scores will be used to
+create weights. \code{formula} must include the treatment variable in \code{data},
+but the listed covariates will play no role in the weight estimation. Using
+\code{ps} is similar to calling \code{\link[=get_w_from_ps]{get_w_from_ps()}} directly, but produces a full
+\code{weightit} object rather than just producing weights.}
 
 \item{moments}{\code{numeric}; for some methods, the greatest power of each
 covariate to be balanced. For example, if \code{moments = 3}, for each
 non-categorical covariate, the covariate, its square, and its cube will be
 balanced. This argument is ignored for other methods; to balance powers of
-the covariates, appropriate functions must be entered in \code{formula}. See
-the individual pages for each method for information on whether they accept
+the covariates, appropriate functions must be entered in \code{formula}. See the
+individual pages for each method for information on whether they accept
 \code{moments}.}
 
-\item{int}{\code{logical}; for some methods, whether first-order
-interactions of the covariates are to be balanced. This argument is ignored
-for other methods; to balance interactions between the variables,
-appropriate functions must be entered in \code{formula}. See the individual
-pages for each method for information on whether they accept \code{int}.}
+\item{int}{\code{logical}; for some methods, whether first-order interactions of
+the covariates are to be balanced. This argument is ignored for other
+methods; to balance interactions between the variables, appropriate
+functions must be entered in \code{formula}. See the individual pages for each
+method for information on whether they accept \code{int}.}
 
-\item{subclass}{\code{numeric}; the number of subclasses to use for
-computing weights using marginal mean weighting with subclasses (MMWS). If
-\code{NULL}, standard inverse probability weights (and their extensions)
-will be computed; if a number greater than 1, subclasses will be formed and
-weights will be computed based on subclass membership. Attempting to set a
+\item{subclass}{\code{numeric}; the number of subclasses to use for computing
+weights using marginal mean weighting with subclasses (MMWS). If \code{NULL},
+standard inverse probability weights (and their extensions) will be
+computed; if a number greater than 1, subclasses will be formed and weights
+will be computed based on subclass membership. Attempting to set a
 non-\code{NULL} value for methods that don't compute a propensity score will
 result in an error; see each method's help page for information on whether
 MMWS weights are compatible with the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for
 details and references.}
 
-\item{missing}{\code{character}; how missing data should be handled. The
-options and defaults depend on the \code{method} used. Ignored if no missing
-data is present. It should be noted that multiple imputation outperforms all
-available missingness methods available in \code{weightit()} and should
-probably be used instead. Consider the \CRANpkg{MatchThem}
-package for the use of \code{weightit()} with multiply imputed data.}
+\item{missing}{\code{character}; how missing data should be handled. The options
+and defaults depend on the \code{method} used. Ignored if no missing data is
+present. It should be noted that multiple imputation outperforms all
+available missingness methods available in \code{weightit()} and should probably
+be used instead. Consider the \CRANpkg{MatchThem} package for the use of
+\code{weightit()} with multiply imputed data.}
 
-\item{verbose}{\code{logical}; whether to print additional information
-output by the fitting function.}
+\item{verbose}{\code{logical}; whether to print additional information output by
+the fitting function.}
 
 \item{include.obj}{\code{logical}; whether to include in the output any fit
 objects created in the process of estimating the weights. For example, with
-\code{method = "glm"}, the \code{glm} objects containing the propensity
-score model will be included. See the individual pages for each method for
-information on what object will be included if \code{TRUE}.}
+\code{method = "glm"}, the \code{glm} objects containing the propensity score model
+will be included. See the individual pages for each method for information
+on what object will be included if \code{TRUE}.}
 
-\item{keep.mparts}{\code{logical}; whether to include in the output components necessary to estimate standard errors that account for estimation of the weights in \code{\link[=glm_weightit]{glm_weightit()}}. Default is \code{TRUE} if such parts are present. See the individual pages for each method for whether these components are produced. Set to \code{FALSE} to keep the output object smaller, e.g., if standard errors will not be computed using \code{glm_weightit()}.}
+\item{keep.mparts}{\code{logical}; whether to include in the output components
+necessary to estimate standard errors that account for estimation of the
+weights in \code{\link[=glm_weightit]{glm_weightit()}}. Default is \code{TRUE} if such parts are present.
+See the individual pages for each method for whether these components are
+produced. Set to \code{FALSE} to keep the output object smaller, e.g., if
+standard errors will not be computed using \code{glm_weightit()}.}
 
-\item{...}{other arguments for functions called by \code{weightit()} that
-control aspects of fitting that are not covered by the above arguments. See Details.}
+\item{...}{other arguments for functions called by \code{weightit()} that control
+aspects of fitting that are not covered by the above arguments. See
+Details.}
 }
 \value{
-A \code{weightit} object with the following elements:
-\item{weights}{The estimated weights, one for each unit.}
-\item{treat}{The values of the treatment variable.}
+A \code{weightit} object with the following elements: \item{weights}{The
+estimated weights, one for each unit.} \item{treat}{The values of the
+treatment variable.}
 \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
 the fitting process.}
-\item{estimand}{The estimand requested.}
-\item{method}{The weight estimation method specified.}
+\item{estimand}{The estimand requested.} \item{method}{The weight estimation
+method specified.}
 \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
 returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
-\item{s.weights}{The provided sampling weights.}
-\item{focal}{The focal treatment level if the ATT or ATC was requested.}
-\item{by}{A data.frame containing the \code{by} variable when specified.}
-\item{obj}{When \code{include.obj = TRUE}, the fit object.}
+\item{s.weights}{The provided sampling weights.} \item{focal}{The focal
+treatment level if the ATT or ATC was requested.} \item{by}{A data.frame
+containing the \code{by} variable when specified.} \item{obj}{When \code{include.obj = TRUE}, the fit object.}
 \item{info}{Additional information about the fitting. See the individual
 methods pages for what is included.}
 
-When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts"} attribute. When \code{by} is specified, \code{keep.mparts} is set to \code{FALSE}.
+When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is
+compatible with M-estimation, the components related to M-estimation for use
+in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts"} attribute. When \code{by} is
+specified, \code{keep.mparts} is set to \code{FALSE}.
 }
 \description{
-\code{weightit()} allows for the easy generation of balancing weights using
-a variety of available methods for binary, continuous, and multi-category
-treatments. Many of these methods exist in other packages, which
-\code{weightit()} calls; these packages must be installed to use the desired
+\code{weightit()} allows for the easy generation of balancing weights
+using a variety of available methods for binary, continuous, and
+multi-category treatments. Many of these methods exist in other packages,
+which \code{weightit()} calls; these packages must be installed to use the desired
 method.
 }
 \details{
 The primary purpose of \code{weightit()} is as a dispatcher to functions
 that perform the estimation of balancing weights using the requested
-\code{method}. Below are the methods allowed and links to pages containing
-more information about them, including additional arguments and outputs
-(e.g., when \code{include.obj = TRUE}), how missing values are treated,
-which estimands are allowed, and whether sampling weights are allowed.\tabular{ll}{
-   \code{\link[=method_glm]{"glm"}} \tab Propensity score weighting using generalized linear models \cr
-   \code{\link[=method_gbm]{"gbm"}} \tab Propensity score weighting using generalized boosted modeling \cr
-   \code{\link[=method_cbps]{"cbps"}} \tab Covariate Balancing Propensity Score weighting \cr
-   \code{\link[=method_npcbps]{"npcbps"}} \tab Non-parametric Covariate Balancing Propensity Score weighting \cr
-   \code{\link[=method_ebal]{"ebal"}} \tab Entropy balancing \cr
-   \code{\link[=method_ipt]{"ipt"}} \tab Inverse probability tilting \cr
-   \code{\link[=method_optweight]{"optweight"}} \tab Optimization-based weighting \cr
-   \code{\link[=method_super]{"super"}} \tab Propensity score weighting using SuperLearner \cr
-   \code{\link[=method_bart]{"bart"}} \tab Propensity score weighting using Bayesian additive regression trees (BART) \cr
-   \code{\link[=method_energy]{"energy"}} \tab Energy balancing \cr
-}
+\code{method}. Below are the methods allowed and links to pages containing more
+information about them, including additional arguments and outputs (e.g.,
+when \code{include.obj = TRUE}), how missing values are treated, which estimands
+are allowed, and whether sampling weights are allowed.
 
+| \code{\link[=method_glm]{"glm"}} | Propensity score weighting using generalized linear
+models | | :---- | :---- | | \code{\link[=method_gbm]{"gbm"}} | Propensity score
+weighting using generalized boosted modeling | | \code{\link[=method_cbps]{"cbps"}}|
+Covariate Balancing Propensity Score weighting | |
+\code{\link[=method_npcbps]{"npcbps"}}| Non-parametric Covariate Balancing Propensity
+Score weighting | | \code{\link[=method_ebal]{"ebal"}} | Entropy balancing | |
+\code{\link[=method_ipt]{"ipt"}} | Inverse probability tilting | |
+\code{\link[=method_optweight]{"optweight"}} | Optimization-based weighting | |
+\code{\link[=method_super]{"super"}} | Propensity score weighting using SuperLearner | |
+\code{\link[=method_bart]{"bart"}} | Propensity score weighting using Bayesian additive
+regression trees (BART) | | \code{\link[=method_energy]{"energy"}} | Energy balancing |
 
-\code{method} can also be supplied as a user-defined function; see
-\code{\link{method_user}} for instructions and examples. Setting \code{method = NULL} computes unit weights.
-\subsection{\code{estimand} and \code{focal}}{
+\code{method} can also be supplied as a user-defined function; see \code{\link{method_user}}
+for instructions and examples. Setting \code{method = NULL} computes unit weights.
+\subsection{\code{estimand} and \code{focal} For binary and multi-category treatments, the}{
 
-For binary and multi-category treatments, the argument to \code{estimand} determines what distribution the weighted sample should resemble. When set to \code{"ATE"}, this requests that each group resemble the full sample. When set to \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"} (for the methods that allow them), this requests that each group resemble an "overlap" sample. When set to \code{"ATT"} or \code{"ATC"}, this requests that each group resemble the treated or control group, respectively (termed the "focal" group). Weights are set to 1 for the focal group.
+argument to \code{estimand} determines what distribution the weighted sample
+should resemble. When set to \code{"ATE"}, this requests that each group resemble
+the full sample. When set to \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"} (for the methods
+that allow them), this requests that each group resemble an "overlap" sample.
+When set to \code{"ATT"} or \code{"ATC"}, this requests that each group resemble the
+treated or control group, respectively (termed the "focal" group). Weights
+are set to 1 for the focal group.
 
-How does \code{weightit()} decide which group is the treated and which group is the control? For binary treatments, several heuristics are used. The first is be checking whether a valid argument to \code{focal} was supplied containing the name of the focal group, which is the treated group when \code{estimand = "ATT"} and the control group when \code{estimand = "ATC"}. If \code{focal} is not supplied, guesses are made using the following criteria, evaluated in order:
+How does \code{weightit()} decide which group is the treated and which group is
+the control? For binary treatments, several heuristics are used. The first is
+by checking whether a valid argument to \code{focal} was supplied containing the
+name of the focal group, which is the treated group when \code{estimand = "ATT"}
+and the control group when \code{estimand = "ATC"}. If \code{focal} is not supplied,
+guesses are made using the following criteria, evaluated in order:
 \itemize{
 \item If the treatment variable is \code{logical}, \code{TRUE} is considered treated and \code{FALSE} control.
 \item If the treatment is numeric (or a string or factor with values that can be coerced to numeric values), if 0 is one of the values, it is considered the control, and otherwise, the lower value is considered the control (with the other considered treated).
@@ -173,15 +208,17 @@ How does \code{weightit()} decide which group is the treated and which group is 
 \item If exactly one of the treatment values is \code{"c"}, \code{"co"}, \code{"ctrl"}, \code{"control"}, or \code{"unexposed"}, it is considered the control (and the other treated).
 \item If the treatment variable is a factor, the first level is considered control and the second treated.
 \item The lowest value after sorting with \code{\link[=sort]{sort()}} is considered control and the other treated.
-To be safe, it is best to code your binary treatment variable as \code{0} for control and \code{1} for treated. Otherwise, \code{focal} should be supplied when requesting the ATT or ATC. For multi-category treatments, \code{focal} is required when requesting the ATT or ATC; none of the heuristics above are used.
+To be safe, it is best to code your binary treatment variable as \code{0} for
+control and \code{1} for treated. Otherwise, \code{focal} should be supplied when
+requesting the ATT or ATC. For multi-category treatments, \code{focal} is required
+when requesting the ATT or ATC; none of the heuristics above are used.
 }
 }
 
-\subsection{Citing \pkg{WeightIt}}{
+\subsection{Citing \pkg{WeightIt} When using \code{weightit()}, please cite both the}{
 
-When using \code{weightit()}, please cite both the \pkg{WeightIt} package
-(using \code{citation("WeightIt")}) and the paper(s) in the references
-section of the method used.
+\pkg{WeightIt} package (using \code{citation("WeightIt")}) and the paper(s) in the
+references section of the method used.
 }
 }
 \examples{
@@ -215,11 +252,10 @@ longitudinal) treatments for use in estimating marginal structural models
 (MSMs).
 
 \code{\link[=weightit.fit]{weightit.fit()}}, which is a lower-level dispatcher function that accepts a
-matrix of covariates and a vector of treatment statuses rather than a
-formula and data frame and performs minimal argument checking and
-processing. It may be useful for speeding up simulation studies for which
-the correct arguments are known. In general, \code{weightit()} should be
-used.
+matrix of covariates and a vector of treatment statuses rather than a formula
+and data frame and performs minimal argument checking and processing. It may
+be useful for speeding up simulation studies for which the correct arguments
+are known. In general, \code{weightit()} should be used.
 
 \code{\link[=summary.weightit]{summary.weightit()}} for summarizing the weights
 }

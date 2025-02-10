@@ -4,27 +4,55 @@
 \alias{method_bart}
 \title{Propensity Score Weighting Using BART}
 \description{
-This page explains the details of estimating weights from Bayesian additive regression trees (BART)-based propensity scores by setting \code{method = "bart"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
+This page explains the details of estimating weights from
+Bayesian additive regression trees (BART)-based propensity scores by setting
+\code{method = "bart"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method
+can be used with binary, multi-category, and continuous treatments.
 
-In general, this method relies on estimating propensity scores using BART and then converting those propensity scores into weights using a formula that depends on the desired estimand. This method relies on \pkgfun{dbarts}{bart2} from the \CRANpkg{dbarts} package.
+In general, this method relies on estimating propensity scores using BART and
+then converting those propensity scores into weights using a formula that
+depends on the desired estimand. This method relies on \pkgfun{dbarts}{bart2}
+from the \CRANpkg{dbarts} package.
 \subsection{Binary Treatments}{
 
-For binary treatments, this method estimates the propensity scores using \pkgfun{dbarts}{bart2}. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For binary treatments, this method estimates the propensity scores using
+\pkgfun{dbarts}{bart2}. The following estimands are allowed: ATE, ATT, ATC,
+ATO, ATM, and ATOS. Weights can also be computed using marginal mean
+weighting through stratification for the ATE, ATT, and ATC. See
+\code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
 \subsection{Multi-Category Treatments}{
 
-For multi-category treatments, the propensity scores are estimated using several calls to \pkgfun{dbarts}{bart2}, one for each treatment group; the treatment probabilities are not normalized to sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each estimand are computed using the standard formulas or those mentioned above. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
+For multi-category treatments, the propensity scores are estimated using
+several calls to \pkgfun{dbarts}{bart2}, one for each treatment group; the
+treatment probabilities are not normalized to sum to 1. The following
+estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
+estimand are computed using the standard formulas or those mentioned above.
+Weights can also be computed using marginal mean weighting through
+stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
 
-\subsection{Continuous Treatments}{
+\subsection{Continuous Treatments For continuous treatments, weights are estimated as}{
 
-For continuous treatments, weights are estimated as \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the stabilization factor) is the unconditional density of treatment evaluated the observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized propensity score) is the conditional density of treatment given the covariates evaluated at the observed value of treatment. The shape of \eqn{f_A(.)} and \eqn{f_{A|X}(.)} is controlled by the \code{density} argument described below (normal distributions by default), and the predicted values used for the mean of the conditional density are estimated using BART as implemented in \pkgfun{dbarts}{bart2}. Kernel density estimation can be used instead of assuming a specific density for the numerator and denominator by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified to refine the density estimation parameters.
+\eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
+stabilization factor) is the unconditional density of treatment evaluated the
+observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed value of treatment. The shape of
+\eqn{f_A(.)} and \eqn{f_{A|X}(.)} is controlled by the \code{density} argument
+described below (normal distributions by default), and the predicted values
+used for the mean of the conditional density are estimated using BART as
+implemented in \pkgfun{dbarts}{bart2}. Kernel density estimation can be used
+instead of assuming a specific density for the numerator and denominator by
+setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
+to refine the density estimation parameters.
 }
 
 \subsection{Longitudinal Treatments}{
 
-For longitudinal treatments, the weights are the product of the weights estimated at each time point.
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point.
 }
 
 \subsection{Sampling Weights}{
@@ -34,7 +62,8 @@ Sampling weights are not supported.
 
 \subsection{Missing Data}{
 
-In the presence of missing data, the following value(s) for \code{missing} are allowed:
+In the presence of missing data, the following value(s) for \code{missing} are
+allowed:
 \describe{
 \item{\code{"ind"} (default)}{
 First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is \code{NA} and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians. The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting \code{weightit} object will be the original covariates with the \code{NA}s.
@@ -48,16 +77,41 @@ M-estimation is not supported.
 }
 }
 \details{
-BART works by fitting a sum-of-trees model for the treatment or probability of treatment. The number of trees is determined by the \code{n.trees} argument. Bayesian priors are used for the hyperparameters, so the result is a posterior distribution of predicted values for each unit. The mean of these for each unit is taken for use in computing the (generalized) propensity score. Although the hyperparameters governing the priors can be modified by supplying arguments to \code{weightit()} that are passed to the BART fitting function, the default values tend to work well and require little modification (though the defaults differ for continuous and categorical treatments; see the \pkgfun{dbarts}{bart2} documentation for details). Unlike many other machine learning methods, no loss function is optimized and the hyperparameters do not need to be tuned (e.g., using cross-validation), though performance can benefit from tuning. BART tends to balance sparseness with flexibility by using very weak learners as the trees, which makes it suitable for capturing complex functions without specifying a particular functional form and without overfitting.
+BART works by fitting a sum-of-trees model for the treatment or
+probability of treatment. The number of trees is determined by the \code{n.trees}
+argument. Bayesian priors are used for the hyperparameters, so the result is
+a posterior distribution of predicted values for each unit. The mean of these
+for each unit is taken for use in computing the (generalized) propensity
+score. Although the hyperparameters governing the priors can be modified by
+supplying arguments to \code{weightit()} that are passed to the BART fitting
+function, the default values tend to work well and require little
+modification (though the defaults differ for continuous and categorical
+treatments; see the \pkgfun{dbarts}{bart2} documentation for details). Unlike
+many other machine learning methods, no loss function is optimized and the
+hyperparameters do not need to be tuned (e.g., using cross-validation),
+though performance can benefit from tuning. BART tends to balance sparseness
+with flexibility by using very weak learners as the trees, which makes it
+suitable for capturing complex functions without specifying a particular
+functional form and without overfitting.
 \subsection{Reproducibility}{
 
-BART has a random component, so some work must be done to ensure reproducibility across runs. See the \emph{Reproducibility} section at \pkgfun{dbarts}{bart2} for more details. To ensure reproducibility, one can do one of two things: 1) supply an argument to \code{seed}, which is passed to \code{dbarts::bart2()} and sets the seed for single- and multi-threaded uses, or 2) call \code{\link[=set.seed]{set.seed()}}, though this only ensures reproducibility when using single-threading, which can be requested by setting \code{n.threads = 1}. Note that to ensure reproducibility on any machine, regardless of the number of cores available, one should use single-threading and either supply \code{seed} or call \code{set.seed()}.
+BART has a random component, so some work must be done to ensure
+reproducibility across runs. See the \emph{Reproducibility} section at
+\pkgfun{dbarts}{bart2} for more details. To ensure reproducibility, one can
+do one of two things: 1) supply an argument to \code{seed}, which is passed to
+\code{dbarts::bart2()} and sets the seed for single- and multi-threaded uses, or
+2) call \code{\link[=set.seed]{set.seed()}}, though this only ensures reproducibility when using
+single-threading, which can be requested by setting \code{n.threads = 1}. Note
+that to ensure reproducibility on any machine, regardless of the number of
+cores available, one should use single-threading and either supply \code{seed} or
+call \code{set.seed()}.
 }
 }
 \section{Additional Arguments}{
 
 
-All arguments to \pkgfun{dbarts}{bart2} can be passed through \code{weightit()} or \code{weightitMSM()}, with the following exceptions:
+All arguments to \pkgfun{dbarts}{bart2} can be passed through \code{weightit()}
+or \code{weightitMSM()}, with the following exceptions:
 \itemize{
 \item \code{test}, \code{weights},\code{subset}, \code{offset.test} are ignored
 \item \code{combine.chains} is always set to \code{TRUE}
@@ -113,16 +167,26 @@ bal.tab(W2)
 \dontshow{\}) # examplesIf}
 }
 \references{
-Hill, J., Weiss, C., & Zhai, F. (2011). Challenges With Propensity Score Strategies in a High-Dimensional Setting and a Potential Alternative. \emph{Multivariate Behavioral Research}, 46(3), 477–513. \doi{10.1080/00273171.2011.570161}
+Hill, J., Weiss, C., & Zhai, F. (2011). Challenges With
+Propensity Score Strategies in a High-Dimensional Setting and a Potential
+Alternative. \emph{Multivariate Behavioral Research}, 46(3), 477–513.
+\doi{10.1080/00273171.2011.570161}
 
-Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian additive regression trees. \emph{The Annals of Applied Statistics}, 4(1), 266–298. \doi{10.1214/09-AOAS285}
+Chipman, H. A., George, E. I., & McCulloch, R. E. (2010). BART: Bayesian
+additive regression trees. \emph{The Annals of Applied Statistics}, 4(1), 266–298.
+\doi{10.1214/09-AOAS285}
 
-Note that many references that deal with BART for causal inference focus on estimating potential outcomes with BART, not the propensity scores, and so are not directly relevant when using BART to estimate propensity scores for weights.
+Note that many references that deal with BART for causal inference focus on
+estimating potential outcomes with BART, not the propensity scores, and so
+are not directly relevant when using BART to estimate propensity scores for
+weights.
 
-See \code{\link{method_glm}} for additional references on propensity score weighting more generally.
+See \code{\link{method_glm}} for additional references on propensity score weighting
+more generally.
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, \code{\link[=get_w_from_ps]{get_w_from_ps()}}
 
-\code{\link{method_super}} for stacking predictions from several machine learning methods, including BART.
+\code{\link{method_super}} for stacking predictions from several machine learning
+methods, including BART.
 }
