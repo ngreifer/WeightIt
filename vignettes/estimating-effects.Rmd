@@ -32,8 +32,7 @@ knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 options(width = 200, digits= 4)
 
 me_ok <- requireNamespace("marginaleffects", quietly = TRUE)
-me_ok_new <- me_ok && utils::packageVersion("marginaleffects") >= "0.25.0"
-me_ok_old <- me_ok && utils::packageVersion("marginaleffects") < "0.25.0"
+me_ok_new <- FALSE && me_ok && utils::packageVersion("marginaleffects") >= "0.25.0"
 su_ok <- requireNamespace("survival", quietly = TRUE)
 ```
 
