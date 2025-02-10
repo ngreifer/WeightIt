@@ -126,14 +126,14 @@ test_that("Binary treatment", {
   # s.weights
 
   expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+    WS<- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
                   s.weights = "SW")
   })
 
-  expect_equal(test_data$SW, W$s.weights)
+  expect_equal(test_data$SW, WS$s.weights)
 
-  expect_M_parts_okay(W, tolerance = eps)
+  expect_M_parts_okay(WS, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X5 + X6,
@@ -187,6 +187,31 @@ test_that("Binary treatment", {
 
   expect_failure(expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights),
                               cobalt::col_w_smd(W0$covs, W0$treat, W0$weights)))
+
+  #Stab + s.weights
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  s.weights = "SW", stabilize = TRUE)
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+
+  expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights, s.weights = W$s.weights),
+               cobalt::col_w_smd(WS$covs, WS$treat, WS$weights, s.weights = WS$s.weights),
+               tolerance = eps)
+
+  expect_no_condition({
+    WSs <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  s.weights = "SW", stabilize = ~X1)
+  })
+
+  expect_M_parts_okay(WSs, tolerance = eps)
+
+  expect_failure(expect_equal(cobalt::col_w_smd(WSs$covs, WSs$treat, WSs$weights, s.weights = WSs$s.weights),
+                              cobalt::col_w_smd(W$covs, W$treat, W$weights, s.weights = W$s.weights),
+                              tolerance = eps))
 
   #Non-full rank
   expect_no_condition({

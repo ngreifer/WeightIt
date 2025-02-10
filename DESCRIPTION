@@ -51,7 +51,8 @@ Suggests:
     broom,
     knitr,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    waldo
 License: GPL (>=2)
 Encoding: UTF-8
 URL: https://ngreifer.github.io/WeightIt/,
