@@ -35,6 +35,8 @@ WeightIt News and Updates
 
 * Added new tests for CBPS, IPT, and entropy balancing.
 
+* Updated the documentation for `msmdata`. Thanks to @larsentom. (#79)
+
 # `WeightIt` 1.3.2
 
 * Fixes to tests for CRAN.

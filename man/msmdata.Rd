@@ -24,9 +24,20 @@ msmdata
 }
 \description{
 This is a simulated dataset of 7500 units with covariates and treatment
-measured three times and the outcome measured at the end from a hypothetical
-observational study examining the effect of treatment delivered at each time
-point on an adverse event.
+measured three times and the outcome measured at the end from a
+hypothetical observational study examining the effect of treatment
+delivered at each time point on an adverse event.
+
+The data were generated using a simple simulation mechanism.
+For further details on how the dataset was built, see the code
+at \href{https://github.com/ngreifer/Weightit/blob/master/data-raw/msmdata.R}{data-raw/msmdata.R}.
+
+The dataset is provided to illustrate the features of
+\code{weightitMSM()} and is not based on a realistic data-generating
+process, so it should not be used as a benchmark.
+
+For simulating realistic data with a
+known data-generating mechanism, consider using the \pkg{simcausal} package.
 }
 \examples{
 
