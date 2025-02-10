@@ -1,37 +1,99 @@
 #' Methods for `glm_weightit()` objects
 #' @name glm_weightit-methods
 #'
-#' @description
-#' This page documents methods for objects returned by [glm_weightit()], `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and `coxph_weightit()`. `predict()` methods are described at [predict.glm_weightit()] and `anova()` methods are described at [anova.glm_weightit()].
+#' @description This page documents methods for objects returned by
+#' [glm_weightit()], `lm_weightit()`, `ordinal_weightit()`,
+#' `multinom_weightit()`, and `coxph_weightit()`. `predict()` methods are
+#' described at [predict.glm_weightit()] and `anova()` methods are described at
+#' [anova.glm_weightit()].
 #'
 #' @inheritParams stats::vcov
 #' @inheritParams stats::confint
 #' @inheritParams stats::print.lm
 #' @param object,x an output from one of the above modeling functions.
-#' @param ci `logical`; whether to display Wald confidence intervals for estimated coefficients. Default is `FALSE`. (Note: this argument can also be supplied as `conf.int`.)
+#' @param ci `logical`; whether to display Wald confidence intervals for
+#'   estimated coefficients. Default is `FALSE`. (Note: this argument can also
+#'   be supplied as `conf.int`.)
 #' @param level when `ci = TRUE`, the desired confidence level.
-#' @param transform the function used to transform the coefficients, e.g., `exp` (which can also be supplied as a string, e.g., `"exp"`); passed to [match.fun()] before being used on the coefficients. When `ci = TRUE`, this is also applied to the confidence interval bounds. If specified, the standard error will be omitted from the output. Default is no transformation.
-#' @param thresholds `logical`; whether to include thresholds in the `summary()` output for `ordinal_weightit` objects. Default is `TRUE`.
-#' @param vcov either a string indicating the method used to compute the variance of the estimated parameters for `object`, a function used to extract the variance, or the variance matrix itself. Default is to use the variance matrix already present in `object`. If a string or function, arguments passed to `...` are supplied to the method or function. (Note: for `vcov()`, can also be supplied as `type`.)
-#' @param complete `logical`; whether the full variance-covariance matrix should be returned also in case of an over-determined system where some coefficients are undefined and `coef(.)` contains `NA`s correspondingly. When `complete = TRUE`, `vcov()` is compatible with `coef()` also in this singular case.
-#' @param formula. changes to the model formula, passed to the `new` argument of [update.formula()].
-#' @param \dots for `vcov()` or `summary()` or `confint()` with `vcov` supplied, other arguments used to compute the variance matrix depending on the method supplied to `vcov`, e.g., `cluster`, `R`, or `fwb.args`. For `update()`, additional arguments to the call or arguments with changed values. See [glm_weightit()] for details.
-#' @param evaluate whether to evaluate the call (`TRUE`, the default) or just return it.
+#' @param transform the function used to transform the coefficients, e.g., `exp`
+#'   (which can also be supplied as a string, e.g., `"exp"`); passed to
+#'   [match.fun()] before being used on the coefficients. When `ci = TRUE`, this
+#'   is also applied to the confidence interval bounds. If specified, the
+#'   standard error will be omitted from the output. Default is no
+#'   transformation.
+#' @param thresholds `logical`; whether to include thresholds in the `summary()`
+#'   output for `ordinal_weightit` objects. Default is `TRUE`.
+#' @param vcov either a string indicating the method used to compute the
+#'   variance of the estimated parameters for `object`, a function used to
+#'   extract the variance, or the variance matrix itself. Default is to use the
+#'   variance matrix already present in `object`. If a string or function,
+#'   arguments passed to `...` are supplied to the method or function. (Note:
+#'   for `vcov()`, can also be supplied as `type`.)
+#' @param complete `logical`; whether the full variance-covariance matrix should
+#'   be returned also in case of an over-determined system where some
+#'   coefficients are undefined and `coef(.)` contains `NA`s correspondingly.
+#'   When `complete = TRUE`, `vcov()` is compatible with `coef()` also in this
+#'   singular case.
+#' @param formula. changes to the model formula, passed to the `new` argument of
+#'   [update.formula()].
+#' @param \dots for `vcov()` or `summary()` or `confint()` with `vcov` supplied,
+#'   other arguments used to compute the variance matrix depending on the method
+#'   supplied to `vcov`, e.g., `cluster`, `R`, or `fwb.args`. For `update()`,
+#'   additional arguments to the call or arguments with changed values. See
+#'   [glm_weightit()] for details.
+#' @param evaluate whether to evaluate the call (`TRUE`, the default) or just
+#'   return it.
 #'
-#' @returns
-#' `summary()` returns a `summary.glm_weightit()` object, which has its own `print()` method. For `coxph_weightit()` objects, the `print()` and `summary()` methods are more like those for `glm` objects than for `coxph` objects.
+#' @returns `summary()` returns a `summary.glm_weightit()` object, which has its
+#' own `print()` method. For `coxph_weightit()` objects, the `print()` and
+#' `summary()` methods are more like those for `glm` objects than for `coxph`
+#' objects.
 #'
 #' Otherwise, all methods return the same type of object as their generics.
 #'
-#' @details
-#' `vcov()` by default extracts the parameter covariance matrix already computed by the fitting function, and `summary()` and `confint()` uses this covariance matrix to compute standard errors and Wald confidence intervals (internally calling [confint.lm()]), respectively. Supplying arguments to `vcov` or `...` will compute a new covariance matrix. If `cluster` was supplied to the original fitting function, it will be incorporated into any newly computed covariance matrix unless `cluster = NULL` is specified in `vcov()`, `summary()`, or `confint()`. For other arguments (e.g., `R` and `fwb.args`), the defaults are those used by [glm_weightit()]. Note that for `vcov = "BS"` and `vcov = "FWB"` (and `vcov = "const"` for `multinom_weightit` or `ordinal_weightit` objects), the environment for the fitting function is used, so any changes to that environment may affect calculation. It is always safer to simply recompute the fitted object with a new covariance matrix than to modify it with the `vcov` argument, but it can be quicker to just request a new covariance matrix when refitting the model is slow.
+#' @details `vcov()` by default extracts the parameter covariance matrix already
+#' computed by the fitting function, and `summary()` and `confint()` uses this
+#' covariance matrix to compute standard errors and Wald confidence intervals
+#' (internally calling [confint.lm()]), respectively. Supplying arguments to
+#' `vcov` or `...` will compute a new covariance matrix. If `cluster` was
+#' supplied to the original fitting function, it will be incorporated into any
+#' newly computed covariance matrix unless `cluster = NULL` is specified in
+#' `vcov()`, `summary()`, or `confint()`. For other arguments (e.g., `R` and
+#' `fwb.args`), the defaults are those used by [glm_weightit()]. Note that for
+#' `vcov = "BS"` and `vcov = "FWB"` (and `vcov = "const"` for
+#' `multinom_weightit` or `ordinal_weightit` objects), the environment for the
+#' fitting function is used, so any changes to that environment may affect
+#' calculation. It is always safer to simply recompute the fitted object with a
+#' new covariance matrix than to modify it with the `vcov` argument, but it can
+#' be quicker to just request a new covariance matrix when refitting the model
+#' is slow.
 #'
-#' `update()` updates a fitted model object with new arguments, e.g., a new model formula, dataset, or variance matrix. When only arguments that control the computation of the variance are supplied, only the variance will be recalculated (i.e., the parameters will not be re-estimated). When `data` is supplied, `weightit` is not supplied, and a `weightit` object was originally passed to the model fitting function, the `weightit` object will be re-fit with the new dataset before the model is refit using the new weights and new data. That is, calling `update(obj, data = d)` is equivalent to calling `update(obj, data = d, weightit = update(obj$weightit, data = d))` when a `weightit` object was supplied to the model fitting function.
+#' `update()` updates a fitted model object with new arguments, e.g., a new
+#' model formula, dataset, or variance matrix. When only arguments that control
+#' the computation of the variance are supplied, only the variance will be
+#' recalculated (i.e., the parameters will not be re-estimated). When `data` is
+#' supplied, `weightit` is not supplied, and a `weightit` object was originally
+#' passed to the model fitting function, the `weightit` object will be re-fit
+#' with the new dataset before the model is refit using the new weights and new
+#' data. That is, calling `update(obj, data = d)` is equivalent to calling
+#' `update(obj, data = d, weightit = update(obj$weightit, data = d))` when a
+#' `weightit` object was supplied to the model fitting function. Similarly,
+#' supplying `s.weights` or `weights` passes the argument through to
+#' `weightit()` to be refit. When `s.weights` or `weights` are supplied and no
+#' `weightit` object is present, a fake one containing just the supplied weights
+#' will be created.
 #'
-#' The `estfun()` method for `multinom_weightit` and `ordinal_weightit` objects (which is used by function in the \pkg{sandwich} package to compute coefficient covariance matrices) simply extracts the `gradient` component of the object. For `glm_weightit` and `coxph_weightit` objects, the `glm` and `coxph` methods are dispatched instead.
+#' The `estfun()` method for `multinom_weightit` and `ordinal_weightit` objects
+#' (which is used by function in the \pkg{sandwich} package to compute
+#' coefficient covariance matrices) simply extracts the `gradient` component of
+#' the object. For `glm_weightit` and `coxph_weightit` objects, the `glm` and
+#' `coxph` methods are dispatched instead.
 #'
-#' @seealso
-#' [glm_weightit()] for the page documenting `glm_weightit()`, `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and `coxph_weightit()`. [summary.glm()], [vcov()], [confint()] for the relevant methods pages. [predict.glm_weightit()] for computing predictions from the models. [anova.glm_weightit()] for comparing models using a Wald test.
+#' @seealso [glm_weightit()] for the page documenting `glm_weightit()`,
+#' `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and
+#' `coxph_weightit()`. [summary.glm()], [vcov()], [confint()] for the relevant
+#' methods pages. [predict.glm_weightit()] for computing predictions from the
+#' models. [anova.glm_weightit()] for comparing models using a Wald test.
 #'
 #' @examples
 #' ## See more examples at ?glm_weightit
@@ -65,7 +127,7 @@ summary.glm_weightit <- function(object,
       if (any(object$weights == 0)) {
         .wrn("observations with zero weight not used for calculating dispersion")
       }
-      sum((object$weights * object$residuals^2)[object$weights > 0])/df.r
+      sum((object$weights * object$residuals^2)[object$weights > 0]) / df.r
     }
     else {
       NaN
@@ -79,7 +141,7 @@ summary.glm_weightit <- function(object,
   aliased <- is.na(coef.p)
   p <- sum(!aliased)
 
-  if (p > 0) {
+  if (p > 0L) {
     p1 <- seq_len(p)
     Qr <- object$qr
     coef.p <- object$coefficients[!aliased]
@@ -99,7 +161,7 @@ summary.glm_weightit <- function(object,
     }
     else {
       s.err <- sqrt(diag(covmat)[!aliased])
-      tvalue <- coef.p/s.err
+      tvalue <- coef.p / s.err
       pvalue <- 2 * pnorm(-abs(tvalue))
     }
 
@@ -114,15 +176,15 @@ summary.glm_weightit <- function(object,
     covmat <- matrix(NA_real_, 0L, 0L)
   }
 
-  transformed_coefs <- transform(coef.table[,"Estimate"])
-  if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[,"Estimate"])) {
+  transformed_coefs <- transform(coef.table[, "Estimate"])
+  if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
     .err("`transform` must return a numeric vector")
   }
 
-  identity_transform <- all(transformed_coefs == coef.table[,"Estimate"])
+  identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
   if (!identity_transform) {
-    coef.table[,"Estimate"] <- transformed_coefs
-    coef.table <- coef.table[, -2, drop = FALSE]
+    coef.table[, "Estimate"] <- transformed_coefs
+    coef.table <- coef.table[, -2L, drop = FALSE]
   }
 
   if (ci) {
@@ -172,7 +234,7 @@ summary.multinom_weightit <- function(object,
   coef.p <- coef(object)
   aliased <- is.na(coef.p)
   p <- sum(!aliased)
-  if (p > 0) {
+  if (p > 0L) {
     Qr <- object$qr
     coef.p <- object$coefficients[!aliased]
 
@@ -190,7 +252,7 @@ summary.multinom_weightit <- function(object,
     }
     else {
       s.err <- sqrt(diag(covmat)[!aliased])
-      tvalue <- coef.p/s.err
+      tvalue <- coef.p / s.err
       pvalue <- 2 * pnorm(-abs(tvalue))
     }
 
@@ -205,15 +267,15 @@ summary.multinom_weightit <- function(object,
     covmat <- matrix(NA_real_, 0L, 0L)
   }
 
-  transformed_coefs <- transform(coef.table[,"Estimate"])
-  if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[,"Estimate"])) {
+  transformed_coefs <- transform(coef.table[, "Estimate"])
+  if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
     .err("`transform` must return a numeric vector")
   }
 
-  identity_transform <- all(transformed_coefs == coef.table[,"Estimate"])
+  identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
   if (!identity_transform) {
-    coef.table[,"Estimate"] <- transformed_coefs
-    coef.table <- coef.table[, -2, drop = FALSE]
+    coef.table[, "Estimate"] <- transformed_coefs
+    coef.table <- coef.table[, -2L, drop = FALSE]
   }
 
   if (ci) {
@@ -253,7 +315,7 @@ summary.ordinal_weightit <- function(object,
 
   nthreshold <- ncol(object$fitted.values) - 1L
 
-  thresholds_ind <- seq(nrow(out$coefficients) - nthreshold + 1, nrow(out$coefficients))
+  thresholds_ind <- seq(nrow(out$coefficients) - nthreshold + 1L, nrow(out$coefficients))
 
   if (thresholds) {
     attr(out, "thresholds") <- rownames(out$coefficients)[thresholds_ind]
@@ -292,7 +354,7 @@ summary.coxph_weightit <- function(object,
   coef.p <- coef(object)
   aliased <- is.na(coef.p)
   p <- sum(!aliased)
-  if (p > 0) {
+  if (p > 0L) {
     coef.p <- object$coefficients[!aliased]
 
     covmat.unscaled <- NULL
@@ -309,7 +371,7 @@ summary.coxph_weightit <- function(object,
     }
     else {
       s.err <- sqrt(diag(covmat)[!aliased])
-      tvalue <- coef.p/s.err
+      tvalue <- coef.p / s.err
       pvalue <- 2 * pnorm(-abs(tvalue))
     }
     dn <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
@@ -323,15 +385,15 @@ summary.coxph_weightit <- function(object,
     covmat <- matrix(NA_real_, 0L, 0L)
   }
 
-  transformed_coefs <- transform(coef.table[,"Estimate"])
-  if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[,"Estimate"])) {
+  transformed_coefs <- transform(coef.table[, "Estimate"])
+  if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
     .err("`transform` must return a numeric vector")
   }
 
-  identity_transform <- all(transformed_coefs == coef.table[,"Estimate"])
+  identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
   if (!identity_transform) {
-    coef.table[,"Estimate"] <- transformed_coefs
-    coef.table <- coef.table[, -2, drop = FALSE]
+    coef.table[, "Estimate"] <- transformed_coefs
+    coef.table <- coef.table[, -2L, drop = FALSE]
   }
 
   if (ci) {
@@ -379,10 +441,11 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
   coefs <- x$coefficients
 
   if (is_not_null(attr(x, "thresholds"))) {
-    coefs <- coefs[-match(attr(x, "thresholds"), rownames(x$coefficients)),, drop = FALSE]
+    coefs <- coefs[-match(attr(x, "thresholds"), rownames(x$coefficients)), , drop = FALSE]
   }
 
-  if (is_not_null(aliased <- x$aliased) && any(aliased)) {
+  aliased <- x$aliased
+  if (is_not_null(aliased) && any(aliased)) {
     if (is_not_null(attr(x, "thresholds"))) {
       aliased <- aliased[-match(attr(x, "thresholds"), names(aliased))]
     }
@@ -403,7 +466,7 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
                                      is_not_null(x[["cluster"]])))))
 
   if (is_not_null(attr(x, "thresholds"))) {
-    thresholds <- x$coefficients[attr(x, "thresholds"),, drop = FALSE]
+    thresholds <- x$coefficients[attr(x, "thresholds"), , drop = FALSE]
 
     cat0("\n", underline(sprintf("Thresholds%s:", if (x$transformed) " (transformed)" else "")),
          "\n")
@@ -426,14 +489,15 @@ print.glm_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ..
        "\n")
 
   if (is_not_null(coef(x))) {
+    co <- x$contrasts
     cat0("\n", underline(sprintf("Coefficients%s:",
-                                 if (is.character(co <- x$contrasts))
+                                 if (is.character(co))
                                    paste("  [contrasts: ", apply(cbind(names(co), co), 1L, paste, collapse = "="), "]")
                                  else "")),
          "\n")
 
     print.default(format(x$coefficients, digits = digits),
-                  print.gap = 2, quote = FALSE)
+                  print.gap = 2L, quote = FALSE)
     cat(italic(sprintf("Standard error: %s\n",
                        .vcov_to_phrase(x$vcov_type,
                                        is_not_null(attr(x, "cluster"))))))
@@ -530,7 +594,7 @@ model.matrix.multinom_weightit <- function(object, ...) {
 model.matrix.ordinal_weightit <- function(object, ...) {
   x <- model.matrix.multinom_weightit(object, ...)
 
-  x[,colnames(x) != "(Intercept)", drop = FALSE]
+  x[, colnames(x) != "(Intercept)", drop = FALSE]
 }
 
 #' @exportS3Method stats::nobs ordinal_weightit
@@ -634,13 +698,22 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
     extras$formula <- update(formula(object), formula.)
   }
 
+  if (all(c("weights", "s.weights") %in% names(extras))) {
+    .err("`weights` and `s.weights` can not both be supplied to `update()`")
+  }
+
+  if (any(names(extras) == "weights")) {
+    names(extras)[names(extras) == "weights"] <- "s.weights"
+  }
+
   vcov_args <- c("vcov", "R", "fwb.args", "cluster")
 
-  weightit_args <- c("data")
+  weightit_args <- c("data", "s.weights")
   orig_weightit <- NULL
 
   if (is_not_null(extras)) {
     if (evaluate && all(names(extras) %in% vcov_args)) {
+      #Just re-estimate vcov, don't change anything else
       ucall[[1L]] <- .vcov_glm_weightit.internal
 
       vn_in_extras <- which(names(extras) %in% vcov_args)
@@ -650,7 +723,7 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
                          as.list(extras[vn_in_extras]),
                          as.list(call[vn_in_call])))
 
-      if ("vcov" %in% names(extras)) {
+      if (any(names(extras) == "vcov")) {
         names(ucall)[names(ucall) == "vcov"] <- "vcov."
       }
       else {
@@ -663,24 +736,60 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
 
       refit <- FALSE
     }
+    else if (any(names(extras) %in% weightit_args)) {
+      if (any(names(extras) == "weightit")) {
+        .err(sprintf("when `weightit` is supplied, %s cannot be supplied",
+                     word_list(intersect(weightit_args, names(extras)), and.or = "and",
+                               is.are = TRUE, quotes = "`")))
+      }
 
-    if (any(names(extras) %in% weightit_args)) {
-      if (is_not_null(object[["weightit"]]) && "weightit" %nin% names(extras)) {
-        if (!evaluate) {
-          .err(sprintf("`evaluate` must be `TRUE` when %s supplied, `weightit` is not supplied, and the object has a `weightit` component",
-                       word_list(intersect(weightit_args, names(extras)), and.or = "or",
-                                 is.are = TRUE, quotes = "`")))
-        }
+      if (!evaluate) {
+        .err(sprintf("`evaluate` must be `TRUE` when %s supplied",
+                     word_list(intersect(weightit_args, names(extras)), and.or = "or",
+                               is.are = TRUE, quotes = "`")))
+      }
 
+      weightit_args <- intersect(weightit_args, names(extras))
+
+      if (is_not_null(object[["weightit"]])) {
+        #Refit weightit object with new args
         wucall <- ucall
-        wucall[[1L]] <- update
+        wucall[[1L]] <- quote(stats::update)
         wucall[["object"]] <- object[["weightit"]]
         wucall[weightit_args] <- extras[weightit_args]
         wucall <- wucall[c(1L, match(c("object", weightit_args), names(wucall)))]
 
-        orig_weightit <- call[["weightit"]]
+        extras[["weightit"]] <- eval(wucall, envir = object[["weightit"]]$env)
 
-        call[["weightit"]] <- eval.parent(wucall)
+        wucall[[1L]] <- quote(update)
+        wucall[["object"]] <- call[["weightit"]]
+
+        orig_weightit <- wucall
+      }
+      else if (any(names(extras) == "s.weights")) {
+        #Construct a fake weightit object with just the new components
+        if (any(names(extras) == "data")) {
+          data <- eval.parent(extras[["data"]])
+        }
+        else {
+          data <- object[["data"]]
+        }
+
+        s.weights <- eval.parent(extras[["s.weights"]])
+
+        s.weights <- .process.s.weights(s.weights, data)
+
+        if (is_not_null(s.weights)) {
+          extras[["weightit"]] <- list(s.weights = s.weights,
+                                       weights = rep_with(1, s.weights),
+                                       method = NULL)
+
+          class(extras[["weightit"]]) <- "weightit"
+        }
+      }
+
+      if ("s.weights" %in% names(extras)) {
+        extras[["s.weights"]] <- NULL
       }
     }
 
@@ -690,7 +799,7 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
       call[[a]] <- extras[[a]]
     }
 
-    if (any(!existing)) {
+    if (!all(existing)) {
       call <- c(as.list(call), extras[!existing])
       call <- as.call(call)
     }
