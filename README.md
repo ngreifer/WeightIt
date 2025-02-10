@@ -178,7 +178,7 @@ install packages that are used.
 | Multinomial regression PS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
 | Generalized boosted modeling PS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
 | Covariate balancing PS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
-| Non-Parametric covariate balancing PS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) |
+| Non-parametric covariate balancing PS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) |
 | Entropy balancing | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html) |
 | Inverse probability tilting | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html) |
 | Stable balancing weights | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
@@ -193,7 +193,7 @@ install packages that are used.
 | Generalized linear model GPS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
 | Generalized boosted modeling GPS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
 | Covariate balancing GPS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
-| Non-Parametric covariate balancing GPS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) |
+| Non-parametric covariate balancing GPS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) |
 | Entropy balancing | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html) |
 | Stable balancing weights | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
 | SuperLearner GPS | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html) |
