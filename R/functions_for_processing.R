@@ -38,7 +38,7 @@
       (is.character(method) && (length(method) > 1L ||
                                 .method_to_proper_method(method) %nin% names(.weightit_methods)))) {
     .err(sprintf("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n%s",
-                 word_list(names(.weightit_methods), and.or = FALSE, quotes = 2)),
+                 word_list(names(.weightit_methods), and.or = FALSE, quotes = 2L)),
          tidy = FALSE)
   }
 
@@ -61,6 +61,20 @@
   }
 }
 
+.check_required_packages <- function(method) {
+  if (is_not_null(method) && is.character(method) &&
+      (method %in% names(.weightit_methods))) {
+
+    pkgs <- .weightit_methods[[method]]$packages_needed
+
+    if (is_not_null(pkgs)) {
+      rlang::check_installed(pkgs)
+    }
+  }
+
+  invisible(NULL)
+}
+
 .process.s.weights <- function(s.weights, data = NULL) {
   #Process s.weights
   if (is_null(s.weights)) {
@@ -71,7 +85,7 @@
     return(s.weights)
   }
 
-  if (!is.character(s.weights) || length(s.weights) != 1) {
+  if (!is.character(s.weights) || length(s.weights) != 1L) {
     .err("the argument to `s.weights` must be a vector or data frame of sampling weights or the (quoted) names of the variable in `data` that contains sampling weights")
   }
 
@@ -158,18 +172,21 @@
   }
 }
 
-.process_moments_int_quantile <- function(moments, int, quantile = NULL, method) {
+.process_moments_int_quantile <- function(moments, int, quantile = NULL, method = NULL) {
   if (is.function(method)) {
     return(list(moments = moments, int = int, quantile = quantile))
   }
 
   if (is_null(method) || !.weightit_methods[[method]]$moments_int_ok) {
-    if (is_not_null(method) &&
-        any(mi0 <- c(is_not_null(moments), is_not_null(int) && !isFALSE(int), is_not_null(quantile)))) {
-      .wrn(sprintf("%s not compatible with %s. Ignoring %s",
-                   word_list(c("moments", "int", "quantile")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
-                   .method_to_phrase(method),
-                   word_list(c("moments", "int", "quantile")[mi0], and.or = "and", quotes = "`")))
+    if (is_not_null(method)) {
+      mi0 <- c(is_not_null(moments), is_not_null(int) && !isFALSE(int), is_not_null(quantile))
+
+      if (any(mi0)) {
+        .wrn(sprintf("%s not compatible with %s. Ignoring %s",
+                     word_list(c("moments", "int", "quantile")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
+                     .method_to_phrase(method),
+                     word_list(c("moments", "int", "quantile")[mi0], and.or = "and", quotes = "`")))
+      }
     }
 
     return(list(moments = integer(), int = FALSE, quantile = list()))
@@ -282,14 +299,14 @@
   if (is_null(missing)) {
     .wrn(sprintf("missing values are present in the covariates. See `?WeightIt::method_%s` for information on how these are handled",
                  method))
-    return(allowable.missings[1])
+    return(allowable.missings[1L])
   }
 
   chk::chk_string(missing)
 
   if (missing %nin% allowable.missings) {
     .err(sprintf("only %s allowed for `missing` with %s",
-                 word_list(allowable.missings, quotes = 2, is.are = TRUE),
+                 word_list(allowable.missings, quotes = 2L, is.are = TRUE),
                  .method_to_phrase(method)))
   }
 
@@ -323,7 +340,7 @@
   }
 }
 
-.process_ps <- function(ps, data = NULL, treat) {
+.process_ps <- function(ps, data = NULL, treat = NULL) {
   if (is_null(ps)) {
     return(NULL)
   }
@@ -386,9 +403,9 @@
   else {
     unique.vals <- {
       if (chk::vld_character_or_factor(treat))
-        levels(factor(treat, nmax = ceiling(length(treat)/4)))
+        levels(factor(treat, nmax = ceiling(length(treat) / 4)))
       else
-        sort(unique(treat, nmax = ceiling(length(treat)/4)))
+        sort(unique(treat, nmax = ceiling(length(treat) / 4)))
     }
 
     #Check focal
@@ -559,13 +576,13 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     by <- data[[by]]
   }
   else if (length(dim(by)) == 2L && len(by) == n) {
-    by.name <- colnames(by)[1]
-    by <- drop(by[, 1])
+    by.name <- colnames(by)[1L]
+    by <- drop(by[, 1L])
   }
   else if (rlang::is_formula(by, lhs = FALSE)) {
     t.c <- get_covs_and_treat_from_formula(by, data)
     by <- t.c[["reported.covs"]]
-    if (NCOL(by) != 1) {
+    if (NCOL(by) != 1L) {
       .err(sprintf("only one variable can be on the right-hand side of the formula for `%s`",
                    by.arg))
     }
@@ -594,8 +611,8 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
 
   by.factor <- {
     if (is_null(by)) factor(rep.int(1L, n), levels = 1L)
-    else factor(by.components[[1]], levels = sort(unique(by.components[[1]])),
-                labels = paste(names(by.components), "=", sort(unique(by.components[[1]]))))
+    else factor(by.components[[1L]], levels = sort(unique(by.components[[1L]])),
+                labels = paste(names(by.components), "=", sort(unique(by.components[[1L]]))))
   }
 
   if (treat.type != "continuous" &&
@@ -620,7 +637,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     return(as.numeric(x == max(x, na.rm = TRUE)))
   }
 
-  (x - mean_fast(x, TRUE))/sd(x, na.rm = TRUE)
+  (x - mean_fast(x, TRUE)) / sd(x, na.rm = TRUE)
 }
 
 .int_poly_f <- function(d, ex = NULL, int = FALSE, poly = 1, center = TRUE, orthogonal_poly = TRUE) {
@@ -643,7 +660,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   binary.vars <- is_binary_col(d)
 
   if (center && (int || !orthogonal_poly)) {
-    d[,!binary.vars] <- center(d[, !binary.vars, drop = FALSE])
+    d[, !binary.vars] <- center(d[, !binary.vars, drop = FALSE])
   }
 
   nd <- NCOL(d)
@@ -674,13 +691,13 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 
   if (int && nd > 1L) {
-    int_terms <- int_co.names <- make_list(1)
+    int_terms <- int_co.names <- make_list(1L)
     ints_to_make <- utils::combn(colnames(d)[!ex], 2L, simplify = FALSE)
 
     if (is_not_null(ints_to_make)) {
-      int_terms[[1]] <- do.call("cbind", lapply(ints_to_make, function(i) d[,i[1]] * d[,i[2]]))
+      int_terms[[1L]] <- do.call("cbind", lapply(ints_to_make, function(i) d[, i[1L]] * d[, i[2L]]))
 
-      int_co.names[[1]] <- vapply(ints_to_make, paste, character(1L), collapse = " * ")
+      int_co.names[[1L]] <- vapply(ints_to_make, paste, character(1L), collapse = " * ")
     }
   }
   else {
@@ -741,9 +758,9 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 
   do.call("cbind", lapply(names(qu), function(i) {
-    target <- if (is_null(focal)) d[,i] else d[treat == focal, i]
+    target <- if (is_null(focal)) d[, i] else d[treat == focal, i]
     out <- do.call("cbind", lapply(qu[[i]], function(q) {
-      plogis(const * (d[,i] - w.quantile(target, q, s.weights)))
+      plogis(const * (d[, i] - w.quantile(target, q, s.weights)))
     }))
 
     colnames(out) <- paste0(i, "_", qu[[i]])
@@ -822,10 +839,10 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   extreme.warn <- FALSE
   if (all_the_same(w)) {
-    .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1]))
+    .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1L]))
   }
   else if (treat.type == "continuous") {
-    w.cv <- sd(tw, na.rm = TRUE)/mean(tw, na.rm = TRUE)
+    w.cv <- sd(tw, na.rm = TRUE) / mean(tw, na.rm = TRUE)
     if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
   }
   else {
@@ -836,9 +853,11 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
       if (all(is.na(w[ti])) || all(check_if_zero(w[ti]))) {
         bad.treat.groups[as.character(i)] <- TRUE
       }
-      else if (!extreme.warn && sum(is.finite(tw[ti])) > 1) {
-        w.cv <- sd(tw[ti], na.rm = TRUE)/mean(tw[ti], na.rm = TRUE)
-        if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
+      else if (!extreme.warn && sum(is.finite(tw[ti])) > 1L) {
+        w.cv <- sd(tw[ti], na.rm = TRUE) / mean(tw[ti], na.rm = TRUE)
+        if (!is.finite(w.cv) || w.cv > 4) {
+          extreme.warn <- TRUE
+        }
       }
     }
 
@@ -870,7 +889,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   }
 
   if (is_not_null(focal)) {
-    ps_mat <- ps_mat[,c(focal, setdiff(colnames(ps_mat), focal))]
+    ps_mat <- ps_mat[, c(focal, setdiff(colnames(ps_mat), focal))]
   }
 
   ps_sub <- sub_mat <- ps_mat * 0
@@ -879,7 +898,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
     if (estimand == "ATE") {
       sub <- as.integer(findInterval(ps_mat[, as.character(i)],
                                      quantile(ps_mat[, as.character(i)],
-                                              seq(0, 1, length.out = subclass + 1)),
+                                              seq(0, 1, length.out = subclass + 1L)),
                                      all.inside = TRUE))
     }
     else if (estimand == "ATT") {
@@ -889,15 +908,14 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
       sub <- as.integer(findInterval(ps_mat[, as.character(i)],
                                      quantile(ps_mat[treat == focal, as.character(i)],
-                                              seq(0, 1, length.out = subclass + 1)),
+                                              seq(0, 1, length.out = subclass + 1L)),
                                      all.inside = TRUE))
     }
 
     sub_tab <- table(treat, sub)
 
-    if (any(sub_tab == 0)) {
-      # .err("Too many subclasses were requested")
-      sub <- .subclass_scoot(sub, treat, ps_mat[,i])
+    if (any(sub_tab == 0L)) {
+      sub <- .subclass_scoot(sub, treat, ps_mat[, i])
       sub_tab <- table(treat, sub)
     }
 
@@ -907,12 +925,12 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
     sub_ps <- setNames(sub_tab[as.character(i), ] / sub_totals,
                        colnames(sub_tab))
 
-    ps_sub[,i] <- sub_ps[sub]
-    sub_mat[,i] <- sub
+    ps_sub[, i] <- sub_ps[sub]
+    sub_mat[, i] <- sub
 
     if (ncol(ps_sub) == 2L) {
-      ps_sub[,colnames(ps_sub) != i] <- 1 - ps_sub[,i]
-      sub_mat[,colnames(sub_mat) != i] <- sub
+      ps_sub[, colnames(ps_sub) != i] <- 1 - ps_sub[, i]
+      sub_mat[, colnames(sub_mat) != i] <- sub
       break
     }
   }
@@ -937,14 +955,14 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
                                                  "ATE" = ps,
                                                  "ATT" = ps[treat == 1],
                                                  "ATC" = ps[treat == 0]),
-                                          seq(0, 1, length.out = subclass + 1)),
+                                          seq(0, 1, length.out = subclass + 1L)),
                                  all.inside = TRUE))
 
   max_sub <- max(sub)
   sub_tab1 <- tabulate(sub[treat == 1], max_sub)
   sub_tab0 <- tabulate(sub[treat == 0], max_sub)
 
-  if (any(sub_tab1 == 0) || any(sub_tab0 == 0)) {
+  if (any(sub_tab1 == 0L) || any(sub_tab0 == 0L)) {
     sub <- .subclass_scoot(sub, treat, ps)
     sub_tab1 <- tabulate(sub[treat == 1], max_sub)
     sub_tab0 <- tabulate(sub[treat == 0], max_sub)
@@ -989,7 +1007,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   sub_tab <- table(treat, sub)
 
-  if (all(sub_tab > 0)) {
+  if (all(sub_tab > 0L)) {
     return(sub)
   }
 
@@ -1001,18 +1019,18 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
 
   for (t in unique.treat) {
     for (n in seq_len(min.n)) {
-      while (any(sub_tab[t,] == 0)) {
-        first_0 <- which(sub_tab[t,] == 0)[1]
+      while (any(sub_tab[t, ] == 0L)) {
+        first_0 <- which(sub_tab[t, ] == 0L)[1L]
 
         if (first_0 == nsub ||
-            (first_0 != 1 &&
-             sum(.soft_thresh(sub_tab[t, seq(1, first_0 - 1)]) / abs(first_0 - seq(1, first_0 - 1))) >=
-             sum(.soft_thresh(sub_tab[t, seq(first_0 + 1, nsub)]) / abs(first_0 - seq(first_0 + 1, nsub))))) {
+            (first_0 != 1L &&
+             sum(.soft_thresh(sub_tab[t, seq_len(first_0 - 1L)]) / abs(first_0 - seq_len(first_0 - 1L))) >=
+             sum(.soft_thresh(sub_tab[t, seq(first_0 + 1L, nsub)]) / abs(first_0 - seq(first_0 + 1L, nsub))))) {
           #If there are more and closer nonzero subs to the left...
-          first_non0_to_left <- max(seq(1, first_0 - 1)[sub_tab[t, seq(1, first_0 - 1)] > 0])
+          first_non0_to_left <- max(seq_len(first_0 - 1L)[sub_tab[t, seq_len(first_0 - 1L)] > 0])
 
           name_to_move <- names(sub)[which(x == max(x[treat == t & sub == first_non0_to_left]) &
-                                             treat == t & sub == first_non0_to_left)[1]]
+                                             treat == t & sub == first_non0_to_left)[1L]]
 
           sub[name_to_move] <- first_0
           sub_tab[t, first_0] <- 1L
@@ -1021,16 +1039,16 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
         }
         else {
           #If there are more and closer nonzero subs to the right...
-          first_non0_to_right <- min(seq(first_0 + 1, nsub)[sub_tab[t, seq(first_0 + 1, nsub)] > 0])
+          first_non0_to_right <- min(seq(first_0 + 1L, nsub)[sub_tab[t, seq(first_0 + 1L, nsub)] > 0])
           name_to_move <- names(sub)[which(x == min(x[treat == t & sub == first_non0_to_right]) &
-                                             treat == t & sub == first_non0_to_right)[1]]
+                                             treat == t & sub == first_non0_to_right)[1L]]
           sub[name_to_move] <- first_0
           sub_tab[t, first_0] <- 1L
           sub_tab[t, first_non0_to_right] <- sub_tab[t, first_non0_to_right] - 1L
         }
       }
 
-      sub_tab[t,] <- sub_tab[t,] - 1L
+      sub_tab[t, ] <- sub_tab[t, ] - 1L
     }
   }
 
@@ -1054,7 +1072,7 @@ stabilize_w <- function(weights, treat) {
 
 .get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = NULL,
                           n = NULL, treat = NULL, density = NULL, weights = NULL) {
-  if (is_null(n)) n <- 10 * length(treat)
+  if (is_null(n)) n <- 10L * length(treat)
   if (is_null(adjust)) adjust <- 1
 
   if (!isFALSE(use.kernel)) {
@@ -1073,8 +1091,12 @@ stabilize_w <- function(weights, treat) {
 
     densfun <- function(p, log = FALSE) {
       d <- stats::density(p, n = n,
-                          weights = weights/sum(weights), give.Rkern = FALSE,
-                          bw = bw, adjust = adjust, kernel = kernel)
+                          weights = weights / sum(weights),
+                          give.Rkern = FALSE,
+                          bw = bw,
+                          adjust = adjust,
+                          kernel = kernel)
+
       out <- with(d, approxfun(x = x, y = y))(p)
 
       if (log) out <- log(out)
@@ -1094,34 +1116,40 @@ stabilize_w <- function(weights, treat) {
       mu <- 0
       b <- 1
       if (log)
-        -abs(x - mu)/b - log(2 * b)
+        -abs(x - mu) / b - log(2 * b)
       else
-        exp(-abs(x - mu)/b)/(2 * b)
+        exp(-abs(x - mu) / b) / (2 * b)
     }
     else if (is.character(density) && length(density) == 1L) {
-      splitdens <- strsplit(density, "_", fixed = TRUE)[[1]]
+      splitdens <- strsplit(density, "_", fixed = TRUE)[[1L]]
 
-      if (is_null(splitdens1 <- get0(splitdens[1], mode = "function", envir = parent.frame()))) {
+      splitdens1 <- get0(splitdens[1L], mode = "function", envir = parent.frame())
+
+      if (is_null(splitdens1)) {
         .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
-                     density, splitdens[1]))
+                     density, splitdens[1L]))
       }
 
-      if (length(splitdens) > 1L && !can_str2num(splitdens[-1])) {
+      if (length(splitdens) > 1L && !can_str2num(splitdens[-1L])) {
         .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
-                     density, word_list(splitdens[-1], and.or = "or", quotes = TRUE)))
+                     density, word_list(splitdens[-1L], and.or = "or", quotes = TRUE)))
       }
 
       .density <- function(x, log = FALSE) {
         if ("log" %in% names(formals(splitdens1))) {
-          out <- tryCatch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1])))),
+          out <- tryCatch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1L])))),
                           error = function(e) {
-                            .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE)
+                            .err(sprintf("Error in applying density:\n  %s",
+                                         conditionMessage(e)),
+                                 tidy = FALSE)
                           })
         }
         else {
-          out <- tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1])))),
+          out <- tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1L])))),
                           error = function(e) {
-                            .err(sprintf("Error in applying density:\n  %s", conditionMessage(e)), tidy = FALSE)
+                            .err(sprintf("Error in applying density:\n  %s",
+                                         conditionMessage(e)),
+                                 tidy = FALSE)
                           })
 
           if (log) out <- log(out)
@@ -1163,7 +1191,7 @@ stabilize_w <- function(weights, treat) {
                                         subclass = NULL, stabilize = FALSE) {
 
   estimand <- toupper(estimand)
-  w <- rep.int(1.0, length(treat))
+  w <- rep.int(1, length(treat))
 
   #Assume treat is binary
   if (is_not_null(subclass)) {
@@ -1172,35 +1200,34 @@ stabilize_w <- function(weights, treat) {
   }
 
   i0 <- which(treat == 0)
-  i1 <- which(treat == 1)
 
   if (estimand == "ATE") {
     w[i0] <- 1 / (1 - ps[i0])
-    w[i1] <- 1 / ps[i1]
+    w[-i0] <- 1 / ps[-i0]
   }
   else if (estimand == "ATT") {
     w[i0] <- .p2o(ps[i0])
   }
   else if (estimand == "ATC") {
-    w[i1] <- .p2o(1 - ps[i1])
+    w[-i0] <- .p2o(1 - ps[-i0])
   }
   else if (estimand == "ATO") {
     w[i0] <- ps[i0]
-    w[i1] <- (1 - ps[i1])
+    w[-i0] <- 1 - ps[-i0]
   }
   else if (estimand == "ATM") {
     w[i0][ps[i0] < .5] <- .p2o(ps[i0][ps[i0] < .5])
-    w[i1][ps[i1] > .5] <- .p2o(1 - ps[i1][ps[i1] > .5])
+    w[-i0][ps[-i0] > .5] <- .p2o(1 - ps[-i0][ps[-i0] > .5])
   }
   else if (estimand == "ATOS") {
     w[i0] <- 1 / (1 - ps[i0])
-    w[i1] <- 1 / ps[i1]
+    w[-i0] <- 1 / ps[-i0]
 
     ps.sorted <- sort(c(ps, 1 - ps))
     q <- ps * (1 - ps)
     alpha.opt <- 0
     for (i in seq_len(sum(ps < .5))) {
-      if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1])) {
+      if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1L])) {
         alpha <- ps.sorted[i]
         a <- alpha * (1 - alpha)
         if (2 * a * sum(1 / q[q >= a]) / sum(q >= a) >= 1) {
@@ -1235,40 +1262,42 @@ stabilize_w <- function(weights, treat) {
   }
 
   for (i in colnames(ps_mat)) {
-    w[treat == i] <- 1/ps_mat[treat == i, i]
+    w[treat == i] <- 1 / ps_mat[treat == i, i]
   }
 
   if (estimand == "ATE") {
     # w <- w
   }
   else if (estimand %in% c("ATT", "ATC")) {
-    w <- w * ps_mat[, as.character(focal)]
+    in_f <- which(treat == focal)
+    w[in_f] <- 1
+    w[-in_f] <- w[-in_f] * ps_mat[-in_f, as.character(focal)]
   }
   else if (estimand == "ATO") {
     w <- w / rowSums(1 / ps_mat) #Li & Li (2019)
   }
   else if (estimand == "ATM") {
-    w <- w * do.call("pmin", lapply(seq_col(ps_mat), function(x) ps_mat[,x]), quote = TRUE)
+    w <- w * do.call("pmin", lapply(seq_col(ps_mat), function(x) ps_mat[, x]), quote = TRUE)
   }
   else if (estimand == "ATOS") {
     #Crump et al. (2009)
     ps.sorted <- sort(c(ps_mat[, 2L], 1 - ps_mat[, 2L]))
     q <- ps_mat[, 2L] * (1 - ps_mat[, 2L])
     alpha.opt <- 0
-    for (i in seq_len(sum(ps_mat[,2] < .5))) {
+    for (i in seq_len(sum(ps_mat[, 2L] < .5))) {
       if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1L])) {
         alpha <- ps.sorted[i]
         a <- alpha * (1 - alpha)
-        if (2 * a * sum(1/q[q >= a])/sum(q >= a) >= 1) {
+        if (2 * a * sum(1 / q[q >= a]) / sum(q >= a) >= 1) {
           alpha.opt <- alpha
           break
         }
       }
     }
-    w[!between(ps_mat[,2], c(alpha.opt, 1 - alpha.opt))] <- 0
+    w[!between(ps_mat[, 2L], c(alpha.opt, 1 - alpha.opt))] <- 0
   }
   else {
-    return(numeric(0))
+    return(numeric(0L))
   }
 
   if (stabilize) {
@@ -1299,7 +1328,7 @@ stabilize_w <- function(weights, treat) {
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
       for (p in seq_col(ps)) {
-        ps[,p] <- .subclass_ps_bin(ps[,p], treat, estimand, subclass)
+        ps[, p] <- .subclass_ps_bin(ps[, p], treat, estimand, subclass)
       }
     }
 
@@ -1307,35 +1336,35 @@ stabilize_w <- function(weights, treat) {
     t0 <- which(treat == 0)
 
     if (estimand == "ATE") {
-      ps[t1,][ps[t1,] < eps] <- eps
-      ps[t0,][ps[t0,] > 1 - eps] <- 1 - eps
+      ps[t1, ][ps[t1, ] < eps] <- eps
+      ps[t0, ][ps[t0, ] > 1 - eps] <- 1 - eps
 
-      w[t1,] <- 1 / ps[t1,]
-      w[t0,] <- 1 / (1 - ps[t0,])
+      w[t1, ] <- 1 / ps[t1, ]
+      w[t0, ] <- 1 / (1 - ps[t0, ])
     }
     else if (estimand == "ATT") {
-      ps[t0,][ps[t0,] > 1 - eps] <- 1 - eps
+      ps[t0, ][ps[t0, ] > 1 - eps] <- 1 - eps
 
-      w[t1,] <- 1
-      w[t0,] <- .p2o(ps[t0,])
+      w[t1, ] <- 1
+      w[t0, ] <- .p2o(ps[t0, ])
     }
     else if (estimand == "ATC") {
-      ps[t1,][ps[t1,] < eps] <- eps
+      ps[t1, ][ps[t1, ] < eps] <- eps
 
-      w[t1,] <- .p2o(1 - ps[t1,])
-      w[t0,] <- 1
+      w[t1, ] <- .p2o(1 - ps[t1, ])
+      w[t0, ] <- 1
     }
     else if (estimand == "ATO") {
-      w[t1,] <- 1 - ps[t1,]
-      w[t0,] <- ps[t0,]
+      w[t1, ] <- 1 - ps[t1, ]
+      w[t0, ] <- ps[t0, ]
     }
     else if (estimand == "ATM") {
       pslt.5 <- ps < .5
-      w[t1,][pslt.5[t1,]] <- 1
-      w[t1,][!pslt.5[t1,]] <- .p2o(1 - ps[t1,][!pslt.5[t1,]])
+      w[t1, ][pslt.5[t1, ]] <- 1
+      w[t1, ][!pslt.5[t1, ]] <- .p2o(1 - ps[t1, ][!pslt.5[t1, ]])
 
-      w[t0,][pslt.5[t0,]] <- .p2o(ps[t0,][pslt.5[t0,]])
-      w[t0,][!pslt.5[t0,]] <- 1
+      w[t0, ][pslt.5[t0, ]] <- .p2o(ps[t0, ][pslt.5[t0, ]])
+      w[t0, ][!pslt.5[t0, ]] <- 1
     }
 
     if (stabilize) {
@@ -1349,7 +1378,7 @@ stabilize_w <- function(weights, treat) {
     if (is_not_null(subclass)) {
       #Get MMW subclass propensity scores
       for (p in seq_len(last(dim(ps))))
-        ps[,,p] <- .subclass_ps_multi(ps[,,p], treat, estimand, focal, subclass)
+        ps[, , p] <- .subclass_ps_multi(ps[, , p], treat, estimand, focal, subclass)
     }
 
     ps <- squish(ps, eps)
@@ -1358,7 +1387,7 @@ stabilize_w <- function(weights, treat) {
     t.levs <- unique(treat)
 
     for (i in t.levs) {
-      w[treat == i,] <- 1 / ps[treat == i, as.character(i),]
+      w[treat == i, ] <- 1 / ps[treat == i, as.character(i), ]
     }
 
     if (estimand == "ATE") {
@@ -1366,19 +1395,17 @@ stabilize_w <- function(weights, treat) {
     }
     else if (estimand %in% c("ATT", "ATC")) {
       not_focal <- which(treat != focal)
-      w[-not_focal,] <- 1
-      w[not_focal,] <- w[not_focal,] * ps[not_focal, as.character(focal),]
+      w[-not_focal, ] <- 1
+      w[not_focal, ] <- w[not_focal, ] * ps[not_focal, as.character(focal), ]
     }
     else if (estimand == "ATO") {
-      w <- w / colSums(aperm(1/ps, c(2, 1, 3)))
+      w <- w / colSums(aperm(1 / ps, c(2L, 1L, 3L)))
     }
     else if (estimand == "ATM") {
       treat <- as.integer(treat)
 
-      for (p in seq_len(dim(ps)[3])) {
-        # w[,p] <- w[,p] * do.call("pmin", lapply(seq_len(dim(ps)[2]), function(i) ps[,i,p]))
-
-        ps_p <- ps[,,p]
+      for (p in seq_len(dim(ps)[3L])) {
+        ps_p <- ps[, , p]
         min_ind <- max.col(-ps_p, ties.method = "first")
         no_match <- which(ps_p[cbind(seq_along(treat), treat)] != ps_p[cbind(seq_along(treat), min_ind)])
 
@@ -1386,7 +1413,7 @@ stabilize_w <- function(weights, treat) {
           w[-no_match, p] <- 1
         }
 
-        if (length(no_match) > 0) {
+        if (is_not_null(no_match)) {
           w[no_match, p] <- w[no_match, p] * ps_p[cbind(no_match, min_ind[no_match])]
         }
       }
@@ -1394,7 +1421,7 @@ stabilize_w <- function(weights, treat) {
 
     if (stabilize) {
       for (i in t.levs) {
-        w[treat == i,] <- mean_fast(treat == i) * w[treat == i,]
+        w[treat == i, ] <- mean_fast(treat == i) * w[treat == i, ]
       }
     }
   }
@@ -1403,6 +1430,86 @@ stabilize_w <- function(weights, treat) {
   }
 
   w
+}
+
+#Derivative of weights wrt ps for different estimands
+.dw_dp_bin <- function(p, treat, estimand = "ATE") {
+  estimand <- toupper(estimand)
+
+  dw <- rep.int(0, length(treat))
+
+  i0 <- which(treat == 0)
+
+  if (estimand == "ATE") {
+    dw[i0] <- (1 - p[i0])^(-2)
+    dw[-i0] <- -p[-i0]^(-2)
+  }
+  else if (estimand == "ATT") {
+    dw[i0] <- (1 - p[i0])^(-2)
+  }
+  else if (estimand == "ATC") {
+    dw[-i0] <- -p[-i0]^(-2)
+  }
+  else if (estimand == "ATO") {
+    dw[i0] <- 1
+    dw[-i0] <- -1
+  }
+  else if (estimand == "ATM") {
+    dw[i0][p[i0] < .5] <- (1 - p[i0][p[i0] < .5])^(-2)
+    dw[-i0][p[-i0] > .5] <- -p[-i0][p[-i0] > .5]^(-2)
+  }
+
+  dw
+}
+
+#Derivative of weights wrt ps for different estimands
+.dw_dp_multi <- function(p, treat, estimand = "ATE", focal = NULL) {
+  estimand <- toupper(estimand)
+
+  dw <- array(0, dim = dim(p), dimnames = dimnames(p))
+
+  pA <- numeric(nrow(p))
+
+  for (k in levels(treat)) {
+    pA[treat == k] <- p[treat == k, k]
+  }
+
+  if (is_not_null(focal)) {
+    pF <- p[, focal]
+
+    for (i in setdiff(levels(treat), focal)) {
+      dw[treat == i, focal] <- 1 / pA[treat == i]
+      dw[treat == i, i] <- -pF[treat == i] / pA[treat == i]^2
+    }
+  }
+  else if (estimand == "ATE") {
+    for (k in levels(treat)) {
+      dw[treat == k, k] <- -1 / pA[treat == k]^2
+    }
+  }
+  else if (estimand == "ATO") {
+    S <- 1 / rowSums(1 / p)
+    for (k in levels(treat)) {
+      dw[treat == k, k] <- (S[treat == k] / pA[treat == k]^2) * (S[treat == k] / pA[treat == k] - 1)
+
+      for (j in setdiff(levels(treat), k)) {
+        dw[treat == k, j] <- (1 / pA[treat == k]) * (S[treat == k] / p[treat == k, j])^2
+      }
+    }
+  }
+  else if (estimand == "ATM") {
+    M <- do.call("pmin", as.data.frame(p))
+
+    for (k in levels(treat)) {
+      m1 <- p[, k] == M & treat != k
+      dw[m1, k] <- 1 / pA[m1]
+
+      m2 <- p[, k] != M & treat == k
+      dw[m2, k] <- -M[m2] / pA[m2]^2
+    }
+  }
+
+  dw
 }
 
 plot_density <- function(d.n, d.d, log = FALSE) {
@@ -1430,8 +1537,8 @@ plot_density <- function(d.n, d.d, log = FALSE) {
 
 neg_ent <- function(w) {
   w <- w[w > 0]
-  w <- w/mean_fast(w)
-  mean(w*log(w))
+  w <- w / mean_fast(w)
+  mean(w * log(w))
 }
 
 replace_na_with <- function(covs, with = "median") {
@@ -1442,8 +1549,8 @@ replace_na_with <- function(covs, with = "median") {
   if (is.character(with)) {
     .with <- match.fun(with)
     for (i in colnames(covs)[anyNA_col(covs)]) {
-      if (all(is.na(covs[,i]))) covs <- covs[, colnames(covs) != i, drop = FALSE]
-      else covs[is.na(covs[,i]), i] <- .with(covs[, i], na.rm = TRUE)
+      if (all(is.na(covs[, i]))) covs <- covs[, colnames(covs) != i, drop = FALSE]
+      else covs[is.na(covs[, i]), i] <- .with(covs[, i], na.rm = TRUE)
     }
   }
   else {
@@ -1459,7 +1566,7 @@ add_missing_indicators <- function(covs, replace_with = "median") {
     return(covs)
   }
 
-  missing_ind <- apply(covs[, covs_w_missing, drop = FALSE], 2, function(x) as.numeric(is.na(x)))
+  missing_ind <- apply(covs[, covs_w_missing, drop = FALSE], 2L, function(x) as.numeric(is.na(x)))
 
   colnames(missing_ind) <- paste0(colnames(missing_ind), ":<NA>")
   covs <- cbind(covs, missing_ind)
@@ -1476,20 +1583,28 @@ verbosely <- function(expr, verbose = TRUE) {
     return(expr)
   }
 
-  void <- utils::capture.output({
+  invisible(utils::capture.output({
     out <- invisible(expr)
-  })
+  }))
 
   out
 }
 
 #Generalized matrix inverse (port of MASS::ginv)
-generalized_inverse <- function(sigma) {
-  sigmasvd <- svd(sigma)
-  pos <- sigmasvd$d > max(1e-9 * sigmasvd$d[1L], 0)
-  sigma_inv <- sigmasvd$v[, pos, drop = FALSE] %*% (sigmasvd$d[pos]^-1 * t(sigmasvd$u[, pos, drop = FALSE]))
+generalized_inverse <- function(sigma, .try = TRUE) {
 
-  sigma_inv
+  if (!.try) {
+    sigmasvd <- svd(sigma)
+    pos <- sigmasvd$d > max(1e-9 * sigmasvd$d[1L], 0)
+    sigma_inv <- sigmasvd$v[, pos, drop = FALSE] %*% (sigmasvd$d[pos]^(-1) * t(sigmasvd$u[, pos, drop = FALSE]))
+
+    return(sigma_inv)
+  }
+
+  tryCatch(solve(sigma),
+           error = function(e) {
+             generalized_inverse(sigma, .try = FALSE)
+           })
 }
 
 #Compute gradient numerically using centered difference
@@ -1517,7 +1632,6 @@ generalized_inverse <- function(sigma) {
   .x0 <- .x
 
   .eps <- squish(abs(.x) * .eps, lo = .eps, hi = Inf)
-  # .eps <- rep_with(.eps, .x)
 
   if (.direction != "center") {
     .f0 <- .f(.x0, ...)
@@ -1527,7 +1641,7 @@ generalized_inverse <- function(sigma) {
     j <- .parm[jj]
 
     if (.direction == "center") {
-      .x[j] <- .x0[j] + .eps[j]/2
+      .x[j] <- .x0[j] + .eps[j] / 2
 
       f_new_r <- .f(.x, ...)
     }
@@ -1546,7 +1660,7 @@ generalized_inverse <- function(sigma) {
     }
 
     if (.direction == "center") {
-      .x[j] <- .x0[j] - .eps[j]/2
+      .x[j] <- .x0[j] - .eps[j] / 2
 
       f_new_l <- .f(.x, ...)
     }
@@ -1559,7 +1673,7 @@ generalized_inverse <- function(sigma) {
       f_new_l <- .f0
     }
 
-    jacob[,jj] <- (f_new_r - f_new_l) / .eps[j]
+    jacob[, jj] <- (f_new_r - f_new_l) / .eps[j]
 
     .x[j] <- .x0[j]
   }
@@ -1597,9 +1711,9 @@ generalized_inverse <- function(sigma) {
       eps_i[i] <- h[i]
 
       a_k_ii <- switch(.direction,
-                       "center" = (.f(.x + eps_i, ...) - .f(.x - eps_i, ...))/(2 * h[i]),
-                       "right" = (.f(.x + 2 * eps_i, ...) - .f0)/(2 * h[i]),
-                       "left" = (.f0 - .f(.x - 2 * eps_i, ...))/(2 * h[i]))
+                       "center" = (.f(.x + eps_i, ...) - .f(.x - eps_i, ...)) / (2 * h[i]),
+                       "right" = (.f(.x + 2 * eps_i, ...) - .f0) / (2 * h[i]),
+                       "left" = (.f0 - .f(.x - 2 * eps_i, ...)) / (2 * h[i]))
 
       if (is_null(a)) {
         a <- array(NA_real_, dim = c(length(a_k_ii), r, n))
@@ -1610,11 +1724,11 @@ generalized_inverse <- function(sigma) {
       eps_i[i] <- 0
     }
 
-    h <- h/v
+    h <- h / v
   }
 
-  for (m in seq_len(r - 1)) {
-    a <- (a[, 1 + seq_len(r - m), , drop = FALSE] * (4^m) - a[, seq_len(r - m), , drop = FALSE])/(4^m - 1)
+  for (m in seq_len(r - 1L)) {
+    a <- (a[, 1L + seq_len(r - m), , drop = FALSE] * (4^m) - a[, seq_len(r - m), , drop = FALSE]) / (4^m - 1)
   }
 
   array(a, dim = dim(a)[c(1L, 3L)],
@@ -1683,7 +1797,7 @@ generalized_inverse <- function(sigma) {
       }, numeric(1L))
 
       AA <- .5 * X * H * DD / D
-      sweep(AA, 2, info_unscaled %*% b_vector / nrow(X), "+")
+      sweep(AA, 2L, info_unscaled %*% b_vector / nrow(X), "+")
     }
 
     psi <-  function(B, X, y, weights, offset = 0) {
@@ -1695,6 +1809,17 @@ generalized_inverse <- function(sigma) {
       .psi <- X * (weights * D * (y - p) / V)
 
       .psi + br_psi(X, weights, D, p, XB, V)
+    }
+  }
+  else if (identical(family, binomial(), ignore.environment = TRUE) ||
+           identical(family, quasibinomial(), ignore.environment = TRUE) ||
+           identical(family, poisson(), ignore.environment = TRUE) ||
+           identical(family, quasipoisson(), ignore.environment = TRUE)) {
+    psi <- function(B, X, y, weights, offset = 0) {
+      XB <- drop(X %*% B) + offset
+      p <- family$linkinv(XB)
+
+      X * (weights * (y - p))
     }
   }
   else {
@@ -1709,4 +1834,77 @@ generalized_inverse <- function(sigma) {
   }
 
   psi
+}
+
+.make_link <- function(link) {
+  link0 <- try(make.link(link), silent = TRUE)
+
+  if (!null_or_error(link0)) {
+    return(link)
+  }
+
+  if (!chk::vld_string(link) || !link %in% c("clog", "loglog")) {
+    .err("link function not recognized")
+  }
+
+  if (link == "clog") {
+    linkfun <- function(mu) -log(1 - mu)
+    linkinv <- function(eta) squish(1 - exp(-eta), -Inf, 1 - .Machine$double.eps)
+    mu.eta <- function(eta) squish(exp(-eta), .Machine$double.eps, Inf)
+    valideta <- function(eta) TRUE
+    name <- "clog"
+  }
+  else if (link == "loglog") {
+    linkfun <- function(mu) -log(-log(mu))
+    linkinv <- function(eta) squish(exp(-exp(-eta)), .Machine$double.eps)
+    mu.eta <- function(eta) {
+      eta <- squish(eta, -Inf, 700)
+      squish(exp(-eta - exp(-eta)), .Machine$double.eps, Inf)
+    }
+    valideta <- function(eta) TRUE
+    name <- "loglog"
+  }
+
+  out <- list(linkfun = linkfun,
+              linkinv = linkinv,
+              mu.eta = mu.eta,
+              valideta = valideta,
+              name = name)
+  class(out) <- "link-glm"
+  out
+}
+
+.get_glm_starting_values <- function(X, Y, w, family, offset = NULL) {
+
+  if (is_null(w)) {
+    w <- rep.int(1, length(Y))
+  }
+
+  if (is_null(offset)) {
+    offset <- rep.int(0, length(Y))
+  }
+
+  mustart <- .25 + .5 * Y
+
+  suppressWarnings({
+    fit <- try(glm.fit(X, Y, weights = w, offset = offset, family = family,
+                       mustart = mustart, control = list(maxit = 1e4L)), silent = TRUE)
+  })
+
+  if (!null_or_error(fit) && isTRUE(fit$converged)) {
+    return(fit$coefficients)
+  }
+
+  start <- c(family$linkfun(w.m(Y, w)), rep.int(0, ncol(X) - 1L))
+
+  suppressWarnings({
+    fit <- try(glm.fit(X, Y, weights = w, offset = offset, family = family,
+                       start = start, control = list(maxit = 1e4L)), silent = TRUE)
+  })
+
+  if (null_or_error(fit) || !isTRUE(fit$converged)) {
+    return(start)
+  }
+
+  fit$coefficients
 }

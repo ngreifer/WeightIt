@@ -1,35 +1,38 @@
 #' Create a `weightit` object manually
 #' @name as.weightit
 #'
-#' @description
-#' This function allows users to get the benefits of a `weightit` object
-#' when using weights not estimated with [weightit()] or [weightitMSM()]. These
-#' benefits include diagnostics, plots, and direct compatibility with
+#' @description This function allows users to get the benefits of a `weightit`
+#' object when using weights not estimated with [weightit()] or [weightitMSM()].
+#' These benefits include diagnostics, plots, and direct compatibility with
 #' \pkg{cobalt} for assessing balance.
 #'
-#' @param x required; a `numeric` vector of weights, one for each
-#' unit, or a `weightit.fit` object from [weightit.fit()].
-#' @param treat a vector of treatment statuses, one for each unit. Required when `x` is a vector of weights.
-#' @param covs an optional `data.frame` of covariates. For using
-#' \pkg{WeightIt} functions, this is not necessary, but for use with
-#' \pkg{cobalt} it is. Note that when using with a `weightit.fit` object, this should not be the matrix supplied to the `covs` argument of `weightit.fit()` unless there are no factor/character variables in it. Ideally this is the original, unprocessed covariate data frame with factor variables included.
-#' @param estimand an optional `character` of length 1 giving the
-#' estimand. The text is not checked.
-#' @param s.weights an optional `numeric` vector of sampling weights, one
-#' for each unit.
-#' @param ps an optional `numeric` vector of propensity scores, one for
-#' each unit.
+#' @param x required; a `numeric` vector of weights, one for each unit, or a
+#'   `weightit.fit` object from [weightit.fit()].
+#' @param treat a vector of treatment statuses, one for each unit. Required when
+#'   `x` is a vector of weights.
+#' @param covs an optional `data.frame` of covariates. For using \pkg{WeightIt}
+#'   functions, this is not necessary, but for use with \pkg{cobalt} it is. Note
+#'   that when using with a `weightit.fit` object, this should not be the matrix
+#'   supplied to the `covs` argument of `weightit.fit()` unless there are no
+#'   factor/character variables in it. Ideally this is the original, unprocessed
+#'   covariate data frame with factor variables included.
+#' @param estimand an optional `character` of length 1 giving the estimand. The
+#'   text is not checked.
+#' @param s.weights an optional `numeric` vector of sampling weights, one for
+#'   each unit.
+#' @param ps an optional `numeric` vector of propensity scores, one for each
+#'   unit.
 #' @param treat.list a list of treatment statuses at each time point.
 #' @param covs.list an optional list of `data.frame`s of covariates of
-#' covariates at each time point. For using \pkg{WeightIt} functions, this is
-#' not necessary, but for use with \pkg{cobalt} it is.
-#' @param ps.list an optional list of `numeric` vectors of propensity
-#' scores at each time point.
+#'   covariates at each time point. For using \pkg{WeightIt} functions, this is
+#'   not necessary, but for use with \pkg{cobalt} it is.
+#' @param ps.list an optional list of `numeric` vectors of propensity scores at
+#'   each time point.
 #' @param ...  additional arguments. These must be named. They will be included
-#' in the output object.
+#'   in the output object.
 #'
-#' @returns
-#' An object of class `weightit` (for `as.weightit()`) or `weightitMSM` (for `as.weightitMSM()`).
+#' @returns An object of class `weightit` (for `as.weightit()`) or `weightitMSM`
+#' (for `as.weightitMSM()`).
 #'
 #' @examples
 #'
@@ -168,7 +171,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
     .err("each component of `treat.list` must have the same length")
   }
 
-  if (length(x) != length(treat.list[[1]])) {
+  if (length(x) != length(treat.list[[1L]])) {
     .err("`x` and each component of `treat.list` must be the same length")
   }
 
@@ -189,7 +192,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
     if (!all_the_same(vapply(covs.list, nrow, numeric(1L)))) {
       .err("each component of `covs.list` must have the same number of rows")
     }
-    if (length(weights) != nrow(covs.list[[1]])) {
+    if (length(weights) != nrow(covs.list[[1L]])) {
       .err("`x` and each component of `covs.list` must be the same length")
     }
   }
@@ -216,7 +219,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
       .err("each component of `ps.list` must have the same length")
     }
 
-    if (length(weights) != length(ps.list[[1]])) {
+    if (length(weights) != length(ps.list[[1L]])) {
       .err("`x` and each component of `ps.list` must be the same length")
     }
   }

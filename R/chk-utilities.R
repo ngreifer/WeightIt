@@ -4,12 +4,14 @@
 pkg_caller_call <- function() {
   pn <- utils::packageName()
   package.funs <- c(getNamespaceExports(pn),
-                    .getNamespaceInfo(asNamespace(pn), "S3methods")[, 3])
+                    .getNamespaceInfo(asNamespace(pn), "S3methods")[, 3L])
 
   for (i in seq_len(sys.nframe())) {
     e <- sys.call(i)
 
-    if (is_null(n <- rlang::call_name(e))) {
+    n <- rlang::call_name(e)
+
+    if (is_null(n)) {
       next
     }
 
@@ -27,12 +29,16 @@ pkg_caller_call <- function() {
                call = pkg_caller_call())
 }
 .wrn <- function(..., n = NULL, tidy = TRUE, immediate = TRUE) {
-  if (immediate && isTRUE(all.equal(0, getOption("warn")))) {
-    op <- options(warn = 1)
-    on.exit(options(op))
-  }
   m <- chk::message_chk(..., n = n, tidy = tidy)
-  rlang::warn(paste(strwrap(m), collapse = "\n"))
+
+  if (immediate && isTRUE(all.equal(0, getOption("warn")))) {
+    rlang::with_options({
+      rlang::warn(paste(strwrap(m), collapse = "\n"))
+    }, warn = 1)
+  }
+  else {
+    rlang::warn(paste(strwrap(m), collapse = "\n"))
+  }
 }
 .msg <- function(..., n = NULL, tidy = TRUE) {
   m <- chk::message_chk(..., n = n, tidy = tidy)

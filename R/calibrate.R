@@ -1,31 +1,42 @@
 #' Calibrate Propensity Score Weights
 #' @name calibrate
 #'
-#' @description
-#' `calibrate()` calibrates propensity scores used in weights. This involves fitting a new propensity score model using logistic or isotonic regression with the previously estimated propensity score as the sole predictor. Weights are computed using this new propensity score.
+#' @description `calibrate()` calibrates propensity scores used in weights. This
+#' involves fitting a new propensity score model using logistic or isotonic
+#' regression with the previously estimated propensity score as the sole
+#' predictor. Weights are computed using this new propensity score.
 #'
-#' @param x A `weightit` object or a vector of propensity scores. Only binary treatments are supported.
-#' @param treat A vector of treatment status for each unit. Only binary treatments are supported.
+#' @param x A `weightit` object or a vector of propensity scores. Only binary
+#'   treatments are supported.
+#' @param treat A vector of treatment status for each unit. Only binary
+#'   treatments are supported.
 #' @param s.weights A vector of sampling weights or the name of a variable in
-#' `data` that contains sampling weights.
-#' @param data An optional data frame containing the variable named in `s.weights` when supplied as a string.
-#' @param method `character`; the method of calibration used. Allowable options include `"platt"` (default) for Platt scaling as described by Gutman et al. (2024) and `"isoreg"` for isotonic regression as described by van der Laan et al. (2024) and implemented in [isoreg()].
+#'   `data` that contains sampling weights.
+#' @param data An optional data frame containing the variable named in
+#'   `s.weights` when supplied as a string.
+#' @param method `character`; the method of calibration used. Allowable options
+#'   include `"platt"` (default) for Platt scaling as described by Gutman et al.
+#'   (2024) and `"isoreg"` for isotonic regression as described by van der Laan
+#'   et al. (2024) and implemented in [isoreg()].
 #' @param \dots Not used.
 #'
-#' @returns
-#' If the input is a `weightit` object, the output will be a
-#' `weightit` object with the propensity scores replaced with the calibrated propensity scores and the weights replaced by weights computed from the calibrated propensity scores.
+#' @returns If the input is a `weightit` object, the output will be a `weightit`
+#' object with the propensity scores replaced with the calibrated propensity
+#' scores and the weights replaced by weights computed from the calibrated
+#' propensity scores.
 #'
 #' If the input is a numeric vector of weights, the output will be a numeric
 #' vector of the calibrated propensity scores.
 #'
-#' @seealso
-#' [weightit()], [weightitMSM()]
+#' @seealso [weightit()], [weightitMSM()]
 #'
-#' @references
-#' Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse Probability Weighting by Post-calibrating Its Propensity Scores. *Epidemiology*, 35(4). \doi{10.1097/EDE.0000000000001733}
+#' @references Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse
+#' Probability Weighting by Post-calibrating Its Propensity Scores.
+#' *Epidemiology*, 35(4). \doi{10.1097/EDE.0000000000001733}
 #'
-#' van der Laan, L., Lin, Z., Carone, M., & Luedtke, A. (2024). Stabilized Inverse Probability Weighting via Isotonic Calibration (arXiv:2411.06342). arXiv. \url{http://arxiv.org/abs/2411.06342}
+#' van der Laan, L., Lin, Z., Carone, M., & Luedtke, A. (2024). Stabilized
+#' Inverse Probability Weighting via Isotonic Calibration (arXiv:2411.06342).
+#' arXiv. \url{http://arxiv.org/abs/2411.06342}
 #'
 #' @examplesIf requireNamespace("gbm", quietly = TRUE)
 #' library("cobalt")
@@ -87,9 +98,9 @@ calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = 
   }
 
   nm <- {
-    if (!is_null(names(x))) names(x)
-    else if (!is_null(data)) rownames(data)
-    else names(treat)
+    if (is_not_null(names(x))) names(x)
+    else if (is_null(data)) names(treat)
+    else rownames(data)
   }
 
   setNames(p, nm)
