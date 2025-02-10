@@ -56,7 +56,7 @@ test_that("No weights", {
                            data = test_data)
   })
 
-  expect_failure(expect_equal(coef(fit0), coef(fit)))
+  expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
   fit_g <- MASS::polr(Y_O ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
                       data = test_data, Hess = TRUE,
@@ -158,7 +158,7 @@ test_that("Binary treatment", {
                            data = test_data, weightit = W)
   })
 
-  expect_failure(expect_equal(coef(fit0), coef(fit)))
+  expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
   suppressWarnings({
     fit_g <- MASS::polr(Y_O ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),

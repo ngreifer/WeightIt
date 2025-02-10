@@ -35,7 +35,7 @@ test_that("No weights", {
                         data = test_data, family = binomial)
   })
 
-  expect_failure(expect_equal(coef(fit0), coef(fit)))
+  expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
   fit_g <- glm(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9) + offset(off),
                data = test_data, family = binomial)
@@ -124,7 +124,7 @@ test_that("Binary treatment", {
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
-  expect_failure(expect_equal(vcov(fit0), vcov(fit)))
+  expect_not_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   set.seed(123)
   expect_no_condition({
@@ -133,7 +133,7 @@ test_that("Binary treatment", {
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
-  expect_failure(expect_equal(vcov(fit0), vcov(fit)))
+  expect_not_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   set.seed(123)
   expect_no_condition({
@@ -143,7 +143,7 @@ test_that("Binary treatment", {
   })
 
   expect_equal(coef(fit), coef(fit_), tolerance = eps)
-  expect_failure(expect_equal(vcov(fit), vcov(fit_)))
+  expect_not_equal(vcov(fit), vcov(fit_), tolerance = eps)
 
   expect_no_condition({
     fit <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
@@ -151,7 +151,7 @@ test_that("Binary treatment", {
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
-  expect_failure(expect_equal(vcov(fit0), vcov(fit)))
+  expect_not_equal(vcov(fit0), vcov(fit), tolerance = eps)
 
   #Test error for missingness
   expect_error({

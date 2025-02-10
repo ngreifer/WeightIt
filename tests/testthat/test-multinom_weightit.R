@@ -55,7 +55,7 @@ test_that("No weights", {
                         data = test_data)
   })
 
-  expect_failure(expect_equal(coef(fit0), coef(fit)))
+  expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
 })
 
@@ -130,6 +130,6 @@ test_that("Binary treatment", {
                            data = test_data)
   })
 
-  expect_failure(expect_equal(coef(fit0), coef(fit)))
+  expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
 })

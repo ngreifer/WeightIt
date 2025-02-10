@@ -32,7 +32,7 @@ test_that("Binary treatment", {
 
   expect_false(is_null(W$obj))
   expect_false(is_null(W0$obj))
-  expect_failure(expect_equal(W$obj, W0$obj))
+  expect_not_equal(W$obj, W0$obj)
 
   # Estimands
 
@@ -185,8 +185,9 @@ test_that("Binary treatment", {
 
   expect_M_parts_okay(W, tolerance = eps)
 
-  expect_failure(expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights),
-                              cobalt::col_w_smd(W0$covs, W0$treat, W0$weights)))
+  expect_not_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights),
+                   cobalt::col_w_smd(W0$covs, W0$treat, W0$weights),
+                   tolerance = eps)
 
   #Stab + s.weights
   expect_no_condition({
@@ -203,15 +204,15 @@ test_that("Binary treatment", {
 
   expect_no_condition({
     WSs <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "glm", estimand = "ATE",
-                  s.weights = "SW", stabilize = ~X1)
+                    data = test_data, method = "glm", estimand = "ATE",
+                    s.weights = "SW", stabilize = ~X1)
   })
 
   expect_M_parts_okay(WSs, tolerance = eps)
 
-  expect_failure(expect_equal(cobalt::col_w_smd(WSs$covs, WSs$treat, WSs$weights, s.weights = WSs$s.weights),
-                              cobalt::col_w_smd(W$covs, W$treat, W$weights, s.weights = W$s.weights),
-                              tolerance = eps))
+  expect_not_equal(cobalt::col_w_smd(WSs$covs, WSs$treat, WSs$weights, s.weights = WSs$s.weights),
+                   cobalt::col_w_smd(W$covs, W$treat, W$weights, s.weights = W$s.weights),
+                   tolerance = eps)
 
   #Non-full rank
   expect_no_condition({
@@ -357,8 +358,8 @@ test_that("Ordinal treatment", {
 
   expect_no_condition({
     W0 <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                  data = test_data, method = "glm", estimand = "ATE",
-                  include.obj = TRUE)
+                   data = test_data, method = "glm", estimand = "ATE",
+                   include.obj = TRUE)
   })
 
   expect_M_parts_okay(W0, tolerance = eps)

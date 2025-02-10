@@ -10,13 +10,17 @@ expect_ATT_weights_okay <- function(W, focal = NULL, ...) {
 
   expect_equal(ESS(W$weights[W$treat == focal]), sum(W$treat == focal), ...)
   for (i in setdiff(unique(W$treat), focal)) {
-    expect_failure(expect_equal(ESS(W$weights[W$treat == i]), sum(W$treat == i), ...))
+    expect_not_equal(ESS(W$weights[W$treat == i]), sum(W$treat == i), ...)
   }
 }
 
 expect_not_equal <- function(object, expected, ...,
                              tolerance = if (edition_get() >= 3) testthat_tolerance(),
                              info = NULL, label = NULL, expected.label = NULL) {
+
+  if (!capabilities("long.double")) {
+    return(NULL)
+  }
 
   act <- quasi_label(enquo(object), label, arg = "object")
   exp <- quasi_label(enquo(expected), expected.label, arg = "expected")

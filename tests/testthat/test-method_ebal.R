@@ -1,5 +1,4 @@
 test_that("Binary treatment", {
-  skip_if(!capabilities("long.double"))
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
@@ -148,7 +147,6 @@ test_that("Binary treatment", {
 })
 
 test_that("Multi-category treatment", {
-  skip_if(!capabilities("long.double"))
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
@@ -237,7 +235,6 @@ test_that("Multi-category treatment", {
 })
 
 test_that("Continuous treatment", {
-  skip_if(!capabilities("long.double"))
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
