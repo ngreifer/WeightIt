@@ -1,51 +1,50 @@
 #' Compute weights from propensity scores
 #'
-#' @description
-#' Given a vector or matrix of propensity scores, outputs a vector of weights
-#' that target the provided estimand.
+#' @description Given a vector or matrix of propensity scores, outputs a vector
+#' of weights that target the provided estimand.
 #'
 #' @param ps a vector, matrix, or data frame of propensity scores. See Details.
 #' @param treat a vector of treatment status for each individual. See Details.
 #' @param estimand the desired estimand that the weights should target. Current
-#' options include `"ATE"` (average treatment effect), `"ATT"` (average treatment
-#' effect on the treated), `"ATC"` (average treatment effect on the control),
-#' `"ATO"` (average treatment effect in the overlap), `"ATM"` (average treatment
-#' effect in the matched sample), and `"ATOS"` (average treatment effect in the
-#' optimal subset). See Details.
+#'   options include `"ATE"` (average treatment effect), `"ATT"` (average
+#'   treatment effect on the treated), `"ATC"` (average treatment effect on the
+#'   control), `"ATO"` (average treatment effect in the overlap), `"ATM"`
+#'   (average treatment effect in the matched sample), and `"ATOS"` (average
+#'   treatment effect in the optimal subset). See Details.
 #' @param focal when `estimand` is `"ATT"` or `"ATC"`, which group should be
-#' consider the (focal) "treated" or "control" group, respectively. If not
-#' `NULL` and `estimand` is not `"ATT"` or `"ATC"`, `estimand` will
-#' automatically be set to `"ATT"`.
+#'   consider the (focal) "treated" or "control" group, respectively. If not
+#'   `NULL` and `estimand` is not `"ATT"` or `"ATC"`, `estimand` will
+#'   automatically be set to `"ATT"`.
 #' @param treated when treatment is binary, the value of `treat` that is
-#' considered the "treated" group (i.e., the group for which the propensity
-#' scores are the probability of being in). If `NULL`,
-#' `get_w_from_ps()` will attempt to figure it out on its own using some
-#' heuristics. This really only matters when `treat` has values other than
-#' 0 and 1 and when `ps` is given as a vector or an unnamed single-column
-#' matrix or data frame.
-#' @param subclass `numeric`; the number of subclasses to use when
-#' computing weights using marginal mean weighting through stratification (also
-#' known as fine stratification). If `NULL`, standard inverse probability
-#' weights (and their extensions) will be computed; if a number greater than 1,
-#' subclasses will be formed and weights will be computed based on subclass
-#' membership. `estimand` must be `"ATE"`, `"ATT"`, or `"ATC"` if `subclass` is
-#' non-`NULL`. See Details.
-#' @param stabilize `logical`; whether to compute stabilized weights or
-#' not. This simply involves multiplying each unit's weight by the proportion
-#' of units in their treatment group. For saturated outcome models and in
-#' balance checking, this won't make a difference; otherwise, this can improve
-#' performance.
+#'   considered the "treated" group (i.e., the group for which the propensity
+#'   scores are the probability of being in). If `NULL`, `get_w_from_ps()` will
+#'   attempt to figure it out on its own using some heuristics. This really only
+#'   matters when `treat` has values other than 0 and 1 and when `ps` is given
+#'   as a vector or an unnamed single-column matrix or data frame.
+#' @param subclass `numeric`; the number of subclasses to use when computing
+#'   weights using marginal mean weighting through stratification (also known as
+#'   fine stratification). If `NULL`, standard inverse probability weights (and
+#'   their extensions) will be computed; if a number greater than 1, subclasses
+#'   will be formed and weights will be computed based on subclass membership.
+#'   `estimand` must be `"ATE"`, `"ATT"`, or `"ATC"` if `subclass` is
+#'   non-`NULL`. See Details.
+#' @param stabilize `logical`; whether to compute stabilized weights or not.
+#'   This simply involves multiplying each unit's weight by the proportion of
+#'   units in their treatment group. For saturated outcome models and in balance
+#'   checking, this won't make a difference; otherwise, this can improve
+#'   performance.
 #'
-#' @returns
-#' A vector of weights. When `subclass` is not `NULL`, the
-#' subclasses are returned as the `"subclass"` attribute. When
-#' `estimand = "ATOS"`, the chosen value of `alpha` (the smallest
-#' propensity score allowed to remain in the sample) is returned in the
-#' `"alpha"` attribute.
+#' @returns A vector of weights. When `subclass` is not `NULL`, the subclasses
+#' are returned as the `"subclass"` attribute. When `estimand = "ATOS"`, the
+#' chosen value of `alpha` (the smallest propensity score allowed to remain in
+#' the sample) is returned in the `"alpha"` attribute.
 #'
-#' @details
-#' `get_w_from_ps()` applies the formula for computing weights from
-#' propensity scores for the desired estimand. The formula for each estimand is below, with \eqn{A_i} the treatment value for unit \eqn{i} taking on values \eqn{\mathcal{A} = (1, \ldots, g)}, \eqn{p_{a, i}} the probability of receiving treatment level \eqn{a} for unit \eqn{i}, and \eqn{f} is the focal group (the treated group for the ATT and the control group for the ATC):
+#' @details `get_w_from_ps()` applies the formula for computing weights from
+#' propensity scores for the desired estimand. The formula for each estimand is
+#' below, with \eqn{A_i} the treatment value for unit \eqn{i} taking on values
+#' \eqn{\mathcal{A} = (1, \ldots, g)}, \eqn{p_{a, i}} the probability of
+#' receiving treatment level \eqn{a} for unit \eqn{i}, and \eqn{f} is the focal
+#' group (the treated group for the ATT and the control group for the ATC):
 #'
 #' \deqn{
 #' \begin{aligned}
@@ -65,56 +64,52 @@
 #' * A numeric matrix with a row for each unit and a (named) column for each treatment level, with each cell corresponding to the probability of receiving the corresponding treatment level
 #' * A numeric vector with a value for each unit corresponding to the probability of being "treated" (only allowed for binary treatments)
 #'
-#' When supplied as a vector, `get_w_from_ps()` has to know which value of `treat`
-#' corresponds to the "treated" group. For 0/1 variables, 1 will be considered
-#' treated. For other types of variables, `get_w_from_ps()` will try to
-#' figure it out using heuristics, but it's safer to supply an argument to
+#' When supplied as a vector, `get_w_from_ps()` has to know which value of
+#' `treat` corresponds to the "treated" group. For 0/1 variables, 1 will be
+#' considered treated. For other types of variables, `get_w_from_ps()` will try
+#' to figure it out using heuristics, but it's safer to supply an argument to
 #' `treated`. When `estimand` is `"ATT"` or `"ATC"`, supplying a value to
-#' `focal` is sufficient (for ATT, `focal` is the treated group, and
-#' for ATC, `focal` is the control group).
+#' `focal` is sufficient (for ATT, `focal` is the treated group, and for ATC,
+#' `focal` is the control group).
 #'
-#' When supplied as a matrix, the columns must be named with the levels of the treatment, and
-#' it is assumed that each column corresponds to the probability of being in
-#' that treatment group. This is the safest way to supply `ps` unless
-#' `treat` is a 0/1 variable. When `estimand` is `"ATT"` or `"ATC"`, a value for `focal`
-#' must be specified.
+#' When supplied as a matrix, the columns must be named with the levels of the
+#' treatment, and it is assumed that each column corresponds to the probability
+#' of being in that treatment group. This is the safest way to supply `ps`
+#' unless `treat` is a 0/1 variable. When `estimand` is `"ATT"` or `"ATC"`, a
+#' value for `focal` must be specified.
 #'
 #' ## Marginal mean weighting through stratification (MMWS)
 #'
-#' When `subclass` is not `NULL`, MMWS weights are computed. The implementation differs
-#' slightly from that described in Hong (2010, 2012). First, subclasses are
-#' formed by finding the quantiles of the propensity scores in the target group
-#' (for the ATE, all units; for the ATT or ATC, just the units in the focal
-#' group). Any subclasses lacking members of a treatment group will be filled
-#' in with them from neighboring subclasses so each subclass will always have
-#' at least one member of each treatment group. A new subclass-propensity score
-#' matrix is formed, where each unit's subclass-propensity score for each
+#' When `subclass` is not `NULL`, MMWS weights are computed. The implementation
+#' differs slightly from that described in Hong (2010, 2012). First, subclasses
+#' are formed by finding the quantiles of the propensity scores in the target
+#' group (for the ATE, all units; for the ATT or ATC, just the units in the
+#' focal group). Any subclasses lacking members of a treatment group will be
+#' filled in with them from neighboring subclasses so each subclass will always
+#' have at least one member of each treatment group. A new subclass-propensity
+#' score matrix is formed, where each unit's subclass-propensity score for each
 #' treatment value is computed as the proportion of units with that treatment
-#' value in the unit's subclass. For example, if a subclass had 10 treated
-#' units and 90 control units in it, the subclass-propensity score for being
-#' treated would be .1 and the subclass-propensity score for being control
-#' would be .9 for all units in the subclass.
+#' value in the unit's subclass. For example, if a subclass had 10 treated units
+#' and 90 control units in it, the subclass-propensity score for being treated
+#' would be .1 and the subclass-propensity score for being control would be .9
+#' for all units in the subclass.
 #'
-#' For multi-category treatments,
-#' the propensity scores for each treatment are stratified separately as
-#' described in Hong (2012); for binary treatments, only one set of propensity
-#' scores are stratified and the subclass-propensity scores for the other
-#' treatment are computed as the complement of the propensity scores for the
-#' stratified treatment.
+#' For multi-category treatments, the propensity scores for each treatment are
+#' stratified separately as described in Hong (2012); for binary treatments,
+#' only one set of propensity scores are stratified and the subclass-propensity
+#' scores for the other treatment are computed as the complement of the
+#' propensity scores for the stratified treatment.
 #'
-#' After the subclass-propensity scores have been
-#' computed, the standard propensity score weighting formulas are used to
-#' compute the unstabilized MMWS weights. To estimate MMWS weights equivalent
-#' to those described in Hong (2010, 2012), `stabilize` must be set to
-#' `TRUE`, but, as with standard propensity score weights, this is
-#' optional. Note that MMWS weights are also known as fine stratification
-#' weights and described by Desai et al. (2017).
+#' After the subclass-propensity scores have been computed, the standard
+#' propensity score weighting formulas are used to compute the unstabilized MMWS
+#' weights. To estimate MMWS weights equivalent to those described in Hong
+#' (2010, 2012), `stabilize` must be set to `TRUE`, but, as with standard
+#' propensity score weights, this is optional. Note that MMWS weights are also
+#' known as fine stratification weights and described by Desai et al. (2017).
 #'
-#' @seealso
-#' [`method_glm`]
+#' @seealso [`method_glm`]
 #'
-#' @references
-#' ## Binary treatments
+#' @references ## Binary treatments
 #'
 #' - `estimand = "ATO"`
 #'
@@ -125,7 +120,8 @@
 #' - `estimand = "ATM"`
 #'
 #' Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in
-#' Propensity Score Analysis. The International Journal of Biostatistics, 9(2). \doi{10.1515/ijb-2012-0030}
+#' Propensity Score Analysis. The International Journal of Biostatistics, 9(2).
+#' \doi{10.1515/ijb-2012-0030}
 #'
 #' - `estimand = "ATOS"`
 #'
@@ -154,29 +150,31 @@
 #'
 #' - `estimand = "ATO"`
 #'
-#' Li, F., & Li, F. (2019). Propensity score weighting for causal inference
-#' with multiple treatments. The Annals of Applied Statistics, 13(4),
-#' 2389–2415. \doi{10.1214/19-AOAS1282}
+#' Li, F., & Li, F. (2019). Propensity score weighting for causal inference with
+#' multiple treatments. The Annals of Applied Statistics, 13(4), 2389–2415.
+#' \doi{10.1214/19-AOAS1282}
 #'
 #' - `estimand = "ATM"`
 #'
 #' Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J.
 #' J., Glynn, R. J., & Franklin, J. M. (2017). Matching weights to
 #' simultaneously compare three treatment groups: Comparison to three-way
-#' matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395. \doi{10.1097/EDE.0000000000000627}
+#' matching. Epidemiology (Cambridge, Mass.), 28(3), 387–395.
+#' \doi{10.1097/EDE.0000000000000627}
 #'
 #' - Other estimands
 #'
 #' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
 #' R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
-#' Multiple Treatments Using Generalized Boosted Models. Statistics in
-#' Medicine, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+#' Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine,
+#' 32(19), 3388–3414. \doi{10.1002/sim.5753}
 #'
 #' - Marginal mean weighting through stratification
 #'
 #' Hong, G. (2012). Marginal mean weighting through stratification: A
 #' generalized method for evaluating multivalued and multiple treatments with
-#' nonexperimental data. *Psychological Methods*, 17(1), 44–60. \doi{10.1037/a0024918}
+#' nonexperimental data. *Psychological Methods*, 17(1), 44–60.
+#' \doi{10.1037/a0024918}
 #'
 #' @examples
 #'
@@ -282,7 +280,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     min_ind <- max.col(-ps_mat, ties.method = "first")
     no_match <- which(ps_mat[cbind(seq_len(n), treat)] != ps_mat[cbind(seq_len(n), min_ind)])
 
-    if (length(no_match) > 0) {
+    if (length(no_match) > 0L) {
       w[no_match] <- ps_mat[cbind(no_match, min_ind[no_match])] /
         ps_mat[cbind(no_match, treat[no_match])]
     }
@@ -290,13 +288,13 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   else if (estimand == "ATOS") {
     #Crump et al. (2009)
     ps.sorted <- sort(ps_mat)
-    q <- ps_mat[,1] * ps_mat[,2]
+    q <- ps_mat[, 1L] * ps_mat[, 2L]
     alpha.opt <- 0
-    for (i in seq_len(sum(ps_mat[,2] < .5))) {
-      if (i == 1 || !check_if_zero(ps.sorted[i] - ps.sorted[i-1])) {
+    for (i in seq_len(sum(ps_mat[, 2L] < .5))) {
+      if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1L])) {
         alpha <- ps.sorted[i]
         a <- alpha * (1 - alpha)
-        if (1 / a <= 2 * sum(1/q[q >= a]) / sum(q >= a)) {
+        if (2 * a * sum(1 / q[q >= a]) / sum(q >= a) >= 1) {
           alpha.opt <- alpha
           break
         }
@@ -304,7 +302,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     }
 
     w[] <- 1 / ps_mat[cbind(seq_len(n), treat)]
-    w[!between(ps_mat[,2], c(alpha.opt, 1 - alpha.opt))] <- 0
+    w[!between(ps_mat[, 2L], c(alpha.opt, 1 - alpha.opt))] <- 0
   }
 
   if (stabilize) w <- stabilize_w(w, treat)
@@ -322,7 +320,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 
   t.levels <- {
     if (is.factor(treat)) levels(treat)
-    else unique(treat, nmax = switch(treat.type, "binary" = 2, length(treat)/4))
+    else unique(treat, nmax = switch(treat.type, binary = 2L, length(treat) / 4))
   }
 
   if (treat.type == "binary") {
@@ -341,7 +339,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     }
     else if (is.numeric(ps) && is_null(dim(ps))) {
       ps.names <- names(ps)
-      ps <- matrix(ps, ncol = 1)
+      ps <- matrix(ps, ncol = 1L)
     }
     else {
       .err("`ps` must be a matrix, data frame, or vector of propensity scores")
@@ -369,7 +367,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       }
 
       t.levels <- c(setdiff(t.levels, treated.level), treated.level)
-      ps <- matrix(c(1 - ps[, 1], ps[, 1]), ncol = 2,
+      ps <- matrix(c(1 - ps[, 1L], ps[, 1L]), ncol = 2L,
                    dimnames = list(ps.names, as.character(t.levels)))
     }
     else if (ncol(ps) == 2L) {

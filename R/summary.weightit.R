@@ -1,40 +1,47 @@
 #' Print and Summarize Output
 #' @name summary.weightit
 #'
-#' @description
-#' `summary()` generates a summary of the `weightit` or
-#' `weightitMSM` object to evaluate the properties of the estimated
-#' weights. `plot()` plots the distribution of the weights. `nobs()` extracts the number of observations.
+#' @description `summary()` generates a summary of the `weightit` or
+#' `weightitMSM` object to evaluate the properties of the estimated weights.
+#' `plot()` plots the distribution of the weights. `nobs()` extracts the number
+#' of observations.
 #'
-#' @param object a `weightit` or `weightitMSM` object; the output of
-#' a call to [weightit()] or [weightitMSM()].
+#' @param object a `weightit` or `weightitMSM` object; the output of a call to
+#'   [weightit()] or [weightitMSM()].
 #' @param top how many of the largest and smallest weights to display. Default
-#' is 5.
+#'   is 5.
 #' @param ignore.s.weights whether or not to ignore sampling weights when
-#' computing the weight summary. If `FALSE`, the default, the estimated
-#' weights will be multiplied by the sampling weights (if any) before values
-#' are computed.
+#'   computing the weight summary. If `FALSE`, the default, the estimated
+#'   weights will be multiplied by the sampling weights (if any) before values
+#'   are computed.
 #' @param binwidth,bins arguments passed to [ggplot2::geom_histogram()] to
-#' control the size and/or number of bins.
-#' @param x a `summary.weightit` or `summary.weightitMSM` object; the
-#' output of a call to `summary.weightit()` or
-#' `summary.weightitMSM()`.
-#' @param time `numeric`; the time point for which to display the distribution of weights. Default is to plot the distribution for the first time points.
+#'   control the size and/or number of bins.
+#' @param x a `summary.weightit` or `summary.weightitMSM` object; the output of
+#'   a call to `summary.weightit()` or `summary.weightitMSM()`.
+#' @param time `numeric`; the time point for which to display the distribution
+#'   of weights. Default is to plot the distribution for the first time points.
 #' @param ... For `plot()`, additional arguments passed to [graphics::hist()] to
-#' determine the number of bins, though [ggplot2::geom_histogram()] is actually used to create the plot.
+#'   determine the number of bins, though [ggplot2::geom_histogram()] is
+#'   actually used to create the plot.
 #'
-#' @returns
-#' For point treatments (i.e., `weightit` objects), `summary()` returns a `summary.weightit` object with the following elements:
-#' \item{weight.range}{The range (minimum and maximum) weight for each treatment group.}
-#' \item{weight.top}{The units with the greatest weights in each treatment group; how many are included is determined by `top`.}
-#' \item{coef.of.var (Coef of Var)}{The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.}
-#' \item{scaled.mad (MAD)}{The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
-#' \item{negative entropy (Entropy)}{The negative entropy (\eqn{\sum w log(w)}) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
+#' @returns For point treatments (i.e., `weightit` objects), `summary()` returns
+#' a `summary.weightit` object with the following elements:
+#' \item{weight.range}{The range (minimum and maximum) weight for each treatment
+#' group.} \item{weight.top}{The units with the greatest weights in each
+#' treatment group; how many are included is determined by `top`.}
+#' \item{coef.of.var (Coef of Var)}{The coefficient of variation (standard
+#' deviation divided by mean) of the weights in each treatment group and
+#' overall.} \item{scaled.mad (MAD)}{The mean absolute deviation of the weights
+#' in each treatment group and overall divided by the mean of the weights in the
+#' corresponding group.} \item{negative entropy (Entropy)}{The negative entropy
+#' (\eqn{\sum w log(w)}) of the weights in each treatment group and overall
+#' divided by the mean of the weights in the corresponding group.}
 #' \item{num.zeros}{The number of weights equal to zero.}
-#' \item{effective.sample.size}{The effective sample size for each treatment group before and after weighting. See [ESS()].}
+#' \item{effective.sample.size}{The effective sample size for each treatment
+#' group before and after weighting. See [ESS()].}
 #'
-#' For longitudinal treatments (i.e., `weightitMSM` objects), `summary()` returns a list of
-#' the above elements for each treatment period.
+#' For longitudinal treatments (i.e., `weightitMSM` objects), `summary()`
+#' returns a list of the above elements for each treatment period.
 #'
 #' `plot()` returns a `ggplot` object with a histogram displaying the
 #' distribution of the estimated weights. If the estimand is the ATT or ATC,
@@ -42,10 +49,10 @@
 #' weights for the focal group are all 1). A dotted line is displayed at the
 #' mean of the weights.
 #'
-#' `nobs()` returns a single number. Note that even units with `weights` or `s.weights` of 0 are included.
+#' `nobs()` returns a single number. Note that even units with `weights` or
+#' `s.weights` of 0 are included.
 #'
-#' @seealso
-#' [weightit()], [weightitMSM()], [summary()]
+#' @seealso [weightit()], [weightitMSM()], [summary()]
 #'
 #' @examples
 #'
@@ -79,8 +86,8 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
   if (treat.type == "continuous") {
     out$weight.range <- list(all = range(w[w != 0]))
     out$weight.top <- list(all = rev(w[order(abs(w), decreasing = TRUE)][seq_len(top)]))
-    out$coef.of.var <- c(all = sd(w)/mean_fast(w))
-    out$scaled.mad <- c(all = mean_abs_dev(w/mean_fast(w)))
+    out$coef.of.var <- c(all = sd(w) / mean_fast(w))
+    out$scaled.mad <- c(all = mean_abs_dev(w / mean_fast(w)))
     out$negative.entropy <- c(all = neg_ent(w))
     out$num.zeros <- c(overall = sum(check_if_zero(w)))
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
@@ -101,17 +108,15 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
                              control = range(w[t0][w[t0] != 0]))
     out$weight.top <- list(treated = rev(w[t1][order(abs(w[t1]), decreasing = TRUE)][seq_len(top0["treated"])]),
                            control = rev(w[t0][order(abs(w[t0]), decreasing = TRUE)][seq_len(top0["control"])]))
-    out$coef.of.var <- c(treated = sd(w[t1])/mean_fast(w[t1]),
-                         control = sd(w[t0])/mean_fast(w[t0]))
-    out$scaled.mad <- c(treated = mean_abs_dev(w[t1]/mean_fast(w[t1])),
-                        control = mean_abs_dev(w[t0]/mean_fast(w[t0])))
+    out$coef.of.var <- c(treated = sd(w[t1]) / mean_fast(w[t1]),
+                         control = sd(w[t0]) / mean_fast(w[t0]))
+    out$scaled.mad <- c(treated = mean_abs_dev(w[t1] / mean_fast(w[t1])),
+                        control = mean_abs_dev(w[t0] / mean_fast(w[t0])))
     out$negative.entropy <- c(treated = neg_ent(w[t1]),
                               control = neg_ent(w[t0]))
     out$num.zeros <- c(treated = sum(check_if_zero(w[t1])),
                        control = sum(check_if_zero(w[t0])))
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
-
-    #dc <- weightit$discarded
 
     nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
     nn["Unweighted", ] <- c(ESS(sw[t0]),
@@ -128,16 +133,16 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
     out$weight.top <- setNames(lapply(levels(t), function(x) {
       rev(w[t == x][order(abs(w[t == x]), decreasing = TRUE)][seq_len(top0[[x]])])
     }), levels(t))
-    out$coef.of.var <- vapply(levels(t), function(x) sd(w[t==x])/mean_fast(w[t==x]), numeric(1L))
-    out$scaled.mad <- vapply(levels(t), function(x) mean_abs_dev(w[t==x])/mean_fast(w[t==x]), numeric(1L))
-    out$negative.entropy <- vapply(levels(t), function(x) neg_ent(w[t==x]), numeric(1L))
-    out$num.zeros <- vapply(levels(t), function(x) sum(check_if_zero(w[t==x])), numeric(1L))
+    out$coef.of.var <- vapply(levels(t), function(x) sd(w[t == x]) / mean_fast(w[t == x]), numeric(1L))
+    out$scaled.mad <- vapply(levels(t), function(x) mean_abs_dev(w[t == x]) / mean_fast(w[t == x]), numeric(1L))
+    out$negative.entropy <- vapply(levels(t), function(x) neg_ent(w[t == x]), numeric(1L))
+    out$num.zeros <- vapply(levels(t), function(x) sum(check_if_zero(w[t == x])), numeric(1L))
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     nn <- make_df(levels(t), c("Unweighted", "Weighted"))
     for (i in levels(t)) {
-      nn["Unweighted", i] <- ESS(sw[t==i])
-      nn["Weighted", i] <- ESS(w[t==i])
+      nn["Unweighted", i] <- ESS(sw[t == i])
+      nn["Weighted", i] <- ESS(w[t == i])
     }
   }
 
@@ -155,16 +160,16 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
 #' @exportS3Method print summary.weightit
 print.summary.weightit <- function(x, ...) {
   top <- max(lengths(x$weight.top))
-  cat0(space(18), underline("Summary of weights"), "\n\n")
+  cat0(space(18L), underline("Summary of weights"), "\n\n")
 
   tryCatch({
     cat0("- ", italic("Weight ranges"), ":\n\n")
-    print.data.frame(round_df_char(text_box_plot(x$weight.range, 28), 4), ...)
+    print.data.frame(round_df_char(text_box_plot(x$weight.range, 28L), 4L), ...)
   })
   df <- setNames(data.frame(unlist(lapply(names(x$weight.top), function(x) c(" ", x))),
                             matrix(unlist(lapply(x$weight.top, function(x) {
-                              c(names(x), rep.int("", top - length(x)), round(x, 4), rep.int("", top - length(x)))
-                            })), byrow = TRUE, nrow = 2 * length(x$weight.top))),
+                              c(names(x), rep.int("", top - length(x)), round(x, 4L), rep.int("", top - length(x)))
+                            })), byrow = TRUE, nrow = 2L * length(x$weight.top))),
                  rep.int("", 1L + top))
   cat0("\n- ", italic(sprintf("Units with the %s most extreme weights%s",
                               top,
@@ -176,14 +181,14 @@ print.summary.weightit <- function(x, ...) {
                                                               x$scaled.mad,
                                                               x$negative.entropy,
                                                               x$num.zeros)),
-                                          c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3))
+                                          c("Coef of Var", "MAD", "Entropy", "# Zeros")), 3L))
   if (is_not_null(x$weight.mean)) {
-    cat0("\n- ", italic("Mean of Weights"), " = ", round(x$weight.mean, 2), "\n")
+    cat0("\n- ", italic("Mean of Weights"), " = ", round(x$weight.mean, 2L), "\n")
   }
 
   cat0("\n- ", italic("Effective Sample Sizes"), ":\n\n")
 
-  print.data.frame(round_df_char(x$effective.sample.size, 2, pad = " "))
+  print.data.frame(round_df_char(x$effective.sample.size, 2L, pad = " "))
 
   invisible(x)
 }
@@ -196,12 +201,13 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
   focal <- attr(w, "focal")
   treat.type <- get_treat_type(t)
 
-  if (is_not_null(breaks <- ...get("breaks"))) {
+  breaks <- ...get("breaks")
+  if (is_null(breaks)) {
+    bins <- 20
+  }
+  else {
     breaks <- hist(w, breaks = breaks, plot = FALSE)[["breaks"]]
     bins <- binwidth <- NULL
-  }
-  else if (is_null(bins)) {
-    bins <- 20
   }
 
   subtitle <- {
@@ -226,7 +232,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
     d <- data.frame(w, t = factor(t))
 
     if (is_not_null(focal)) {
-      d <- d[t != focal,]
+      d <- d[t != focal, ]
     }
 
     levels(d$t) <- sprintf("Treat = %s", levels(d$t))
@@ -236,14 +242,13 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
       geom_histogram(binwidth = binwidth,
                      bins = bins,
                      breaks = breaks,
-                     # center = mean(w),
                      color = "gray70",
                      fill = "gray70", alpha = 1) +
       scale_y_continuous(expand = expansion(c(0, .05))) +
       geom_vline(data = w_means, aes(xintercept = w), linetype = "12", color = "red") +
       labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
       theme_bw() +
-      facet_wrap(vars(t), ncol = 1, scales = "free") +
+      facet_wrap(vars(t), ncol = 1L, scales = "free") +
       theme(panel.background = element_blank(),
             panel.border = element_rect(fill = NA, color = "black", size = .25))
   }
@@ -278,13 +283,13 @@ summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, ...)
 
 #' @exportS3Method print summary.weightitMSM
 print.summary.weightitMSM <- function(x, ...) {
-  only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1]], y)), logical(1L)))
+  only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1L]], y)), logical(1L)))
 
   for (ti in seq_along(x)) {
     if (!only.one) {
-      cat0(strikethrough(space(23)),
+      cat0(strikethrough(space(23L)),
            italic(sprintf(" Time %s ", ti)),
-           strikethrough(space(23)), "\n")
+           strikethrough(space(23L)), "\n")
     }
 
     print(x[[ti]])

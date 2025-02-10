@@ -13,15 +13,15 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (is.matrix(ps) || is.data.frame(ps)) {
     if (nrow(ps) == n) {
-      if (ncol(ps) == 1) {
+      if (ncol(ps) == 1L) {
 
-        ps <- data.frame(ps[subset,1], 1-ps[subset,1])
+        ps <- data.frame(ps[subset, 1L], 1 - ps[subset, 1L])
 
         names(ps) <- c(t.lev, c.lev)
 
         p.score <- ps[[t.lev]]
       }
-      else if (ncol(ps) == 2) {
+      else if (ncol(ps) == 2L) {
 
         if (all(colnames(ps) %in% levels(treat_sub))) {
           ps <- as.data.frame(ps[subset, , drop = FALSE])
@@ -35,14 +35,12 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
       }
     }
   }
-  else if (is.numeric(ps)) {
-    if (length(ps) == n) {
-      ps <- data.frame(ps[subset], 1-ps[subset])
+  else if (is.numeric(ps) && length(ps) == n) {
+    ps <- data.frame(ps[subset], 1 - ps[subset])
 
-      names(ps) <- c(t.lev, c.lev)
+    names(ps) <- c(t.lev, c.lev)
 
-      p.score <- ps[[t.lev]]
-    }
+    p.score <- ps[[t.lev]]
   }
 
   if (is_null(p.score)) {
@@ -69,10 +67,10 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     if (all(dim(ps) == c(n, nunique(treat)))) {
       ps <- setNames(as.data.frame(ps), levels(treat))[subset, , drop = FALSE]
     }
-    else if (all(dim(ps) == c(n, 1))) {
+    else if (nrow(ps) == n && ncol(ps) == 1L) {
       ps <- setNames(list2DF(lapply(levels(treat), function(x) {
         p_ <- rep.int(1, length(treat))
-        p_[treat == x] <- ps[treat == x, 1]
+        p_[treat == x] <- ps[treat == x, 1L]
         p_
       })), levels(treat))[subset, , drop = FALSE]
     }

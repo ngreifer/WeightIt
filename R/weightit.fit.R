@@ -1,97 +1,95 @@
 #' Generate Balancing Weights with Minimal Input Processing
 #'
-#' @description
-#' `weightit.fit()` dispatches one of the weight estimation methods
-#' determined by `method`. It is an internal function called by
-#' [weightit()] and should probably not be used except in special cases. Unlike
-#' `weightit()`, `weightit.fit()` does not accept a formula and data
-#' frame interface and instead requires the covariates and treatment to be
-#' supplied as a numeric matrix and atomic vector, respectively. In this way,
-#' `weightit.fit()` is to `weightit()` what [lm.fit()] is to [lm()] -
-#' a thinner, slightly faster interface that performs minimal argument
-#' checking.
+#' @description `weightit.fit()` dispatches one of the weight estimation methods
+#' determined by `method`. It is an internal function called by [weightit()] and
+#' should probably not be used except in special cases. Unlike `weightit()`,
+#' `weightit.fit()` does not accept a formula and data frame interface and
+#' instead requires the covariates and treatment to be supplied as a numeric
+#' matrix and atomic vector, respectively. In this way, `weightit.fit()` is to
+#' `weightit()` what [lm.fit()] is to [lm()] - a thinner, slightly faster
+#' interface that performs minimal argument checking.
 #'
 #' @inheritParams weightit
 #' @param covs a numeric matrix of covariates.
 #' @param treat a vector of treatment statuses.
-#' @param method a string containing the name of the method that
-#' will be used to estimate weights. See [weightit()] for allowable options.
-#' The default is `"glm"` for propensity score weighting using a
-#' generalized linear model to estimate the propensity score.
+#' @param method a string containing the name of the method that will be used to
+#'   estimate weights. See [weightit()] for allowable options. The default is
+#'   `"glm"` for propensity score weighting using a generalized linear model to
+#'   estimate the propensity score.
 #' @param s.weights a numeric vector of sampling weights. See the individual
-#' pages for each method for information on whether sampling weights can be
-#' supplied.
+#'   pages for each method for information on whether sampling weights can be
+#'   supplied.
 #' @param by.factor a factor variable for which weighting is to be done within
-#' levels. Corresponds to the `by` argument in [weightit()].
-#' @param stabilize `logical`; whether or not to stabilize the weights.
-#' For the methods that involve estimating propensity scores, this involves
-#' multiplying each unit's weight by the proportion of units in their treatment
-#' group. Default is `FALSE`. Note this differs from its use with [weightit()].
-#' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to consider the "treated" or "control" group. This group
-#' will not be weighted, and the other groups will be weighted to resemble
-#' the focal group. If specified, `estimand` will automatically be set to
-#' `"ATT"` (with a warning if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and `focal`* in Details at [weightit()].
+#'   levels. Corresponds to the `by` argument in [weightit()].
+#' @param stabilize `logical`; whether or not to stabilize the weights. For the
+#'   methods that involve estimating propensity scores, this involves
+#'   multiplying each unit's weight by the proportion of units in their
+#'   treatment group. Default is `FALSE`. Note this differs from its use with
+#'   [weightit()].
+#' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to
+#'   consider the "treated" or "control" group. This group will not be weighted,
+#'   and the other groups will be weighted to resemble the focal group. If
+#'   specified, `estimand` will automatically be set to `"ATT"` (with a warning
+#'   if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and
+#'   `focal`* in Details at [weightit()].
 #' @param ps a vector of propensity scores. If specified, `method` will be
-#' ignored and set to `"glm"`.
-#' @param moments,int,subclass arguments to customize the weight estimation.
-#' See [weightit()] for details.
-#' @param missing `character`; how missing data should be handled. The
-#' options depend on the `method` used. If `NULL`, `covs`
-#' will be checked for `NA` values, and if present, `missing` will be
-#' set to `"ind"`. If `""`, `covs` will not be checked for
-#' `NA` values; this can be faster when it is known there are none.
-#' @param ... other arguments for functions called by `weightit.fit()`
-#' that control aspects of fitting that are not covered by the above arguments.
+#'   ignored and set to `"glm"`.
+#' @param moments,int,subclass arguments to customize the weight estimation. See
+#'   [weightit()] for details.
+#' @param missing `character`; how missing data should be handled. The options
+#'   depend on the `method` used. If `NULL`, `covs` will be checked for `NA`
+#'   values, and if present, `missing` will be set to `"ind"`. If `""`, `covs`
+#'   will not be checked for `NA` values; this can be faster when it is known
+#'   there are none.
+#' @param ... other arguments for functions called by `weightit.fit()` that
+#'   control aspects of fitting that are not covered by the above arguments.
 #'
-#' @returns
-#' A `weightit.fit` object with the following elements:
-#' \item{weights}{The estimated weights, one for each unit.}
-#' \item{treat}{The values of the treatment variable.}
-#' \item{estimand}{The estimand requested.}
+#' @returns A `weightit.fit` object with the following elements:
+#' \item{weights}{The estimated weights, one for each unit.} \item{treat}{The
+#' values of the treatment variable.} \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
 #' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
 #' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details at [weightit()] for how the treated group is determined.}
-#' \item{s.weights}{The provided sampling weights.}
-#' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
-#' \item{fit.obj}{When `include.obj = TRUE`, the fit object.}
-#' \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
+#' \item{s.weights}{The provided sampling weights.} \item{focal}{The focal
+#' treatment level if the ATT or ATC was requested.} \item{fit.obj}{When
+#' `include.obj = TRUE`, the fit object.} \item{info}{Additional information
+#' about the fitting. See the individual methods pages for what is included.}
 #'
-#' The `weightit.fit` object does not have specialized `print()`,
-#' `summary()`, or `plot()` methods. It is simply a list containing
-#' the above components. Use [as.weightit()] to convert it to a `weightit` object, which does have these methods. See Examples.
+#' The `weightit.fit` object does not have specialized `print()`, `summary()`,
+#' or `plot()` methods. It is simply a list containing the above components. Use
+#' [as.weightit()] to convert it to a `weightit` object, which does have these
+#' methods. See Examples.
 #'
-#' @details
-#' `weightit.fit()` is called by [weightit()] after the arguments to
-#' `weightit()` have been checked and processed. `weightit.fit()`
-#' dispatches the function used to actually estimate the weights, passing on
-#' the supplied arguments directly. `weightit.fit()` is not meant to be
-#' used by anyone other than experienced users who have a specific use case in
-#' mind. The returned object contains limited information about the supplied
-#' arguments or details of the estimation method; all that is processed by
-#' `weightit()`.
+#' @details `weightit.fit()` is called by [weightit()] after the arguments to
+#' `weightit()` have been checked and processed. `weightit.fit()` dispatches the
+#' function used to actually estimate the weights, passing on the supplied
+#' arguments directly. `weightit.fit()` is not meant to be used by anyone other
+#' than experienced users who have a specific use case in mind. The returned
+#' object contains limited information about the supplied arguments or details
+#' of the estimation method; all that is processed by `weightit()`.
 #'
-#' Less argument checking or processing occurs in `weightit.fit()` than
-#' does in `weightit()`, which means supplying incorrect arguments can
-#' result in errors, crashes, and invalid weights, and error and warning
-#' messages may not be helpful in diagnosing the problem. `weightit.fit()`
-#' does check to make sure weights were actually estimated, though.
+#' Less argument checking or processing occurs in `weightit.fit()` than does in
+#' `weightit()`, which means supplying incorrect arguments can result in errors,
+#' crashes, and invalid weights, and error and warning messages may not be
+#' helpful in diagnosing the problem. `weightit.fit()` does check to make sure
+#' weights were actually estimated, though.
 #'
-#' `weightit.fit()` may be most useful in speeding up simulation
-#' simulation studies that use `weightit()` because the covariates can be
-#' supplied as a numeric matrix, which is often how they are generated in
-#' simulations, without having to go through the potentially slow process of
-#' extracting the covariates and treatment from a formula and data frame. If
-#' the user is certain the arguments are valid (e.g., by ensuring the estimated
-#' weights are consistent with those estimated from `weightit()` with the
-#' same arguments), less time needs to be spent on processing the arguments.
-#' Also, the returned object is much smaller than a `weightit` object
-#' because the covariates are not returned alongside the weights.
+#' `weightit.fit()` may be most useful in speeding up simulation simulation
+#' studies that use `weightit()` because the covariates can be supplied as a
+#' numeric matrix, which is often how they are generated in simulations, without
+#' having to go through the potentially slow process of extracting the
+#' covariates and treatment from a formula and data frame. If the user is
+#' certain the arguments are valid (e.g., by ensuring the estimated weights are
+#' consistent with those estimated from `weightit()` with the same arguments),
+#' less time needs to be spent on processing the arguments. Also, the returned
+#' object is much smaller than a `weightit` object because the covariates are
+#' not returned alongside the weights.
 #'
-#' @seealso
-#' [weightit()], which you should use for estimating weights unless
-#' you know better.
+#' @seealso [weightit()], which you should use for estimating weights unless you
+#' know better.
 #'
-#' [as.weightit()] for converting a `weightit.fit` object to a `weightit` object.
+#' [as.weightit()] for converting a `weightit.fit` object to a `weightit`
+#' object.
 #'
 #' @examples
 #'
@@ -251,6 +249,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
   obj <- NULL
 
+  .check_required_packages(method)
+
   if (is.function(method)) {
     fun <- "weightit2user"
   }
@@ -299,7 +299,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       .wrn("no weights were estimated. This is probably a bug, and you should report it at https://github.com/ngreifer/WeightIt/issues")
     }
 
-    if (any(!is.finite(obj$w))) {
+    if (!all(is.finite(obj$w))) {
       .wrn("some weights were estimated as `NA`, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
       obj$w[!is.finite(obj$w)] <- 0
     }
@@ -318,9 +318,9 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   }
 
   if (include.obj) {
-    if (any(lengths(fit.obj) > 0)) {
-      if (nlevels(by.factor) == 1) {
-        fit.obj <- fit.obj[[1]]
+    if (any(lengths(fit.obj) > 0L)) {
+      if (nlevels(by.factor) == 1L) {
+        fit.obj <- fit.obj[[1L]]
       }
       out$fit.obj <- fit.obj
     }
@@ -329,12 +329,12 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
   }
 
-  if (nlevels(by.factor) == 1) {
+  if (nlevels(by.factor) == 1L) {
     attr(out, "Mparts") <- obj$Mparts
   }
 
-  if (is_not_null(info) && nlevels(by.factor) == 1) {
-    info <- info[[1]]
+  if (is_not_null(info) && nlevels(by.factor) == 1L) {
+    info <- info[[1L]]
   }
   out$info <- info
 
@@ -363,7 +363,14 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
   A <- list(...)
 
   #Checks
-  if (!check_if_call_from_fun(weightitMSM)) {
+  if (check_if_call_from_fun(weightitMSM)) {
+    for (i in seq_along(treat.list)) {
+      if (!has_treat_type(treat.list[[i]])) {
+        treat.list[[i]] <- assign_treat_type(treat.list[[i]])
+      }
+    }
+  }
+  else {
 
     chk::chk_not_missing(covs.list, "`covs.list`")
     chk::chk_list(covs.list)
@@ -387,7 +394,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     for (i in seq_along(treat.list)) {
       n <- length(treat.list[[i]])
 
-      if (n != length(treat.list[[1]])) {
+      if (n != length(treat.list[[1L]])) {
         .err("the number of units must be the same for each time point")
       }
 
@@ -424,7 +431,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     }
 
     if (is_null(by.factor)) {
-      by.factor <- factor(rep.int(1, n), levels = 1)
+      by.factor <- factor(rep.int(1, n), levels = 1L)
     }
     else {
       chk::chk_factor(by.factor)
@@ -444,17 +451,10 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     int <- m.i.q[["int"]]
     A["quantile"] <- m.i.q["quantile"]
   }
-  else {
-    for (i in seq_along(treat.list)) {
-      if (!has_treat_type(treat.list[[i]])) {
-        treat.list[[i]] <- assign_treat_type(treat.list[[i]])
-      }
-    }
-  }
 
   out <- make_list(c("weights", "treat.list", "method", "s.weights", "missing",
                      "fit.obj", "info"))
-  out$weights <- rep.int(NA_real_, length(treat.list[[1]]))
+  out$weights <- rep.int(NA_real_, length(treat.list[[1L]]))
 
   if (include.obj) {
     fit.obj <- make_list(levels(by.factor))
@@ -499,10 +499,12 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     if (is_null(obj)) {
       .err("no object was created. This is probably a bug, and you should report it at https://github.com/ngreifer/WeightIt/issues")
     }
+
     if (is_null(obj$w) || all(is.na(obj$w))) {
       .wrn("no weights were estimated. This is probably a bug, and you should report it at https://github.com/ngreifer/WeightIt/issues")
     }
-    if (any(!is.finite(obj$w))) {
+
+    if (!all(is.finite(obj$w))) {
       .wrn("some weights were estimated as `NA`, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
       obj$w[!is.finite(obj$w)] <- 0
     }
@@ -518,9 +520,9 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
   }
 
   if (include.obj) {
-    if (any(lengths(fit.obj) > 0)) {
-      if (nlevels(by.factor) == 1) {
-        fit.obj <- fit.obj[[1]]
+    if (any(lengths(fit.obj) > 0L)) {
+      if (nlevels(by.factor) == 1L) {
+        fit.obj <- fit.obj[[1L]]
       }
       out$fit.obj <- fit.obj
     }
@@ -529,15 +531,14 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     }
   }
 
-  if (nlevels(by.factor) == 1) {
+  if (nlevels(by.factor) == 1L) {
     attr(out, "Mparts") <- obj$Mparts
   }
 
-  if (is_not_null(info) && nlevels(by.factor) == 1) {
-    info <- info[[1]]
+  if (is_not_null(info) && nlevels(by.factor) == 1L) {
+    info <- info[[1L]]
   }
   out$info <- info
-
 
   out$treat.list <- treat.list
   out$method <- method

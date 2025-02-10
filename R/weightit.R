@@ -1,154 +1,188 @@
 #' Estimate Balancing Weights
 #'
-#' @description
-#' `weightit()` allows for the easy generation of balancing weights using
-#' a variety of available methods for binary, continuous, and multi-category
-#' treatments. Many of these methods exist in other packages, which
-#' `weightit()` calls; these packages must be installed to use the desired
+#' @description `weightit()` allows for the easy generation of balancing weights
+#' using a variety of available methods for binary, continuous, and
+#' multi-category treatments. Many of these methods exist in other packages,
+#' which `weightit()` calls; these packages must be installed to use the desired
 #' method.
 #'
 #' @param formula a formula with a treatment variable on the left hand side and
-#' the covariates to be balanced on the right hand side. See [glm()] for more
-#' details. Interactions and functions of covariates are allowed.
+#'   the covariates to be balanced on the right hand side. See [glm()] for more
+#'   details. Interactions and functions of covariates are allowed.
 #' @param data an optional data set in the form of a data frame that contains
-#' the variables in `formula`.
+#'   the variables in `formula`.
 #' @param method a string of length 1 containing the name of the method that
-#' will be used to estimate weights. See Details below for allowable options.
-#' The default is `"glm"` for propensity score weighting using a
-#' generalized linear model to estimate the propensity score.
+#'   will be used to estimate weights. See Details below for allowable options.
+#'   The default is `"glm"` for propensity score weighting using a generalized
+#'   linear model to estimate the propensity score.
 #' @param estimand the desired estimand. For binary and multi-category
-#' treatments, can be `"ATE"`, `"ATT"`, `"ATC"`, and, for some
-#' methods, `"ATO"`, `"ATM"`, or `"ATOS"`. The default for both
-#' is `"ATE"`. This argument is ignored for continuous treatments. See the
-#' individual pages for each method for more information on which estimands are
-#' allowed with each method and what literature to read to interpret these
-#' estimands.
-#' @param stabilize whether or not and how to stabilize the weights. If `TRUE`, each unit's weight will be multiplied by a standardization factor, which is the the unconditional probability (or density) of each unit's observed treatment value. If a formula, a generalized linear model will be fit with the included predictors, and the inverse of the corresponding weight will be used as the standardization factor. Can only be used with continuous treatments or when `estimand = "ATE"`. Default is `FALSE` for no standardization. See also the `num.formula` argument at [weightitMSM()]. For continuous treatments, weights are already stabilized, so setting `stabilize = TRUE` will be ignored with a warning (supplying a formula still works).
-#' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to consider the "treated" or "control" group. This group
-#' will not be weighted, and the other groups will be weighted to resemble
-#' the focal group. If specified, `estimand` will automatically be set to
-#' `"ATT"` (with a warning if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and `focal`* in Details below.
-#' @param by a string containing the name of the variable in `data` for
-#' which weighting is to be done within categories or a one-sided formula with
-#' the stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`, a separate propensity score model or optimization will occur within each level of the variable `"gender"`. Only one `by` variable is allowed; to stratify by multiply variables simultaneously, create a new variable that is a full cross of those variables using [interaction()].
+#'   treatments, can be `"ATE"`, `"ATT"`, `"ATC"`, and, for some methods,
+#'   `"ATO"`, `"ATM"`, or `"ATOS"`. The default for both is `"ATE"`. This
+#'   argument is ignored for continuous treatments. See the individual pages for
+#'   each method for more information on which estimands are allowed with each
+#'   method and what literature to read to interpret these estimands.
+#' @param stabilize whether or not and how to stabilize the weights. If `TRUE`,
+#'   each unit's weight will be multiplied by a standardization factor, which is
+#'   the the unconditional probability (or density) of each unit's observed
+#'   treatment value. If a formula, a generalized linear model will be fit with
+#'   the included predictors, and the inverse of the corresponding weight will
+#'   be used as the standardization factor. Can only be used with continuous
+#'   treatments or when `estimand = "ATE"`. Default is `FALSE` for no
+#'   standardization. See also the `num.formula` argument at [weightitMSM()].
+#'   For continuous treatments, weights are already stabilized, so setting
+#'   `stabilize = TRUE` will be ignored with a warning (supplying a formula
+#'   still works).
+#' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to
+#'   consider the "treated" or "control" group. This group will not be weighted,
+#'   and the other groups will be weighted to resemble the focal group. If
+#'   specified, `estimand` will automatically be set to `"ATT"` (with a warning
+#'   if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and
+#'   `focal`* in Details below.
+#' @param by a string containing the name of the variable in `data` for which
+#'   weighting is to be done within categories or a one-sided formula with the
+#'   stratifying variable on the right-hand side. For example, if `by =
+#'   "gender"` or `by = ~gender`, a separate propensity score model or
+#'   optimization will occur within each level of the variable `"gender"`. Only
+#'   one `by` variable is allowed; to stratify by multiply variables
+#'   simultaneously, create a new variable that is a full cross of those
+#'   variables using [interaction()].
 #' @param s.weights A vector of sampling weights or the name of a variable in
-#' `data` that contains sampling weights. These can also be matching
-#' weights if weighting is to be used on matched data. See the individual pages
-#' for each method for information on whether sampling weights can be supplied.
-#' @param ps A vector of propensity scores or the name of a variable in
-#' `data` containing propensity scores. If not `NULL`, `method` is ignored unless it is a user-supplied function, and the propensity scores will be used to create weights.
-#' `formula` must include the treatment variable in `data`, but the
-#' listed covariates will play no role in the weight estimation. Using
-#' `ps` is similar to calling [get_w_from_ps()] directly, but produces a
-#' full `weightit` object rather than just producing weights.
+#'   `data` that contains sampling weights. These can also be matching weights
+#'   if weighting is to be used on matched data. See the individual pages for
+#'   each method for information on whether sampling weights can be supplied.
+#' @param ps A vector of propensity scores or the name of a variable in `data`
+#'   containing propensity scores. If not `NULL`, `method` is ignored unless it
+#'   is a user-supplied function, and the propensity scores will be used to
+#'   create weights. `formula` must include the treatment variable in `data`,
+#'   but the listed covariates will play no role in the weight estimation. Using
+#'   `ps` is similar to calling [get_w_from_ps()] directly, but produces a full
+#'   `weightit` object rather than just producing weights.
 #' @param moments `numeric`; for some methods, the greatest power of each
-#' covariate to be balanced. For example, if `moments = 3`, for each
-#' non-categorical covariate, the covariate, its square, and its cube will be
-#' balanced. This argument is ignored for other methods; to balance powers of
-#' the covariates, appropriate functions must be entered in `formula`. See
-#' the individual pages for each method for information on whether they accept
-#' `moments`.
-#' @param int `logical`; for some methods, whether first-order
-#' interactions of the covariates are to be balanced. This argument is ignored
-#' for other methods; to balance interactions between the variables,
-#' appropriate functions must be entered in `formula`. See the individual
-#' pages for each method for information on whether they accept `int`.
-#' @param subclass `numeric`; the number of subclasses to use for
-#' computing weights using marginal mean weighting with subclasses (MMWS). If
-#' `NULL`, standard inverse probability weights (and their extensions)
-#' will be computed; if a number greater than 1, subclasses will be formed and
-#' weights will be computed based on subclass membership. Attempting to set a
-#' non-`NULL` value for methods that don't compute a propensity score will
-#' result in an error; see each method's help page for information on whether
-#' MMWS weights are compatible with the method. See [get_w_from_ps()] for
-#' details and references.
-#' @param missing `character`; how missing data should be handled. The
-#' options and defaults depend on the `method` used. Ignored if no missing
-#' data is present. It should be noted that multiple imputation outperforms all
-#' available missingness methods available in `weightit()` and should
-#' probably be used instead. Consider the \CRANpkg{MatchThem}
-#' package for the use of `weightit()` with multiply imputed data.
-#' @param verbose `logical`; whether to print additional information
-#' output by the fitting function.
+#'   covariate to be balanced. For example, if `moments = 3`, for each
+#'   non-categorical covariate, the covariate, its square, and its cube will be
+#'   balanced. This argument is ignored for other methods; to balance powers of
+#'   the covariates, appropriate functions must be entered in `formula`. See the
+#'   individual pages for each method for information on whether they accept
+#'   `moments`.
+#' @param int `logical`; for some methods, whether first-order interactions of
+#'   the covariates are to be balanced. This argument is ignored for other
+#'   methods; to balance interactions between the variables, appropriate
+#'   functions must be entered in `formula`. See the individual pages for each
+#'   method for information on whether they accept `int`.
+#' @param subclass `numeric`; the number of subclasses to use for computing
+#'   weights using marginal mean weighting with subclasses (MMWS). If `NULL`,
+#'   standard inverse probability weights (and their extensions) will be
+#'   computed; if a number greater than 1, subclasses will be formed and weights
+#'   will be computed based on subclass membership. Attempting to set a
+#'   non-`NULL` value for methods that don't compute a propensity score will
+#'   result in an error; see each method's help page for information on whether
+#'   MMWS weights are compatible with the method. See [get_w_from_ps()] for
+#'   details and references.
+#' @param missing `character`; how missing data should be handled. The options
+#'   and defaults depend on the `method` used. Ignored if no missing data is
+#'   present. It should be noted that multiple imputation outperforms all
+#'   available missingness methods available in `weightit()` and should probably
+#'   be used instead. Consider the \CRANpkg{MatchThem} package for the use of
+#'   `weightit()` with multiply imputed data.
+#' @param verbose `logical`; whether to print additional information output by
+#'   the fitting function.
 #' @param include.obj `logical`; whether to include in the output any fit
-#' objects created in the process of estimating the weights. For example, with
-#' `method = "glm"`, the `glm` objects containing the propensity
-#' score model will be included. See the individual pages for each method for
-#' information on what object will be included if `TRUE`.
-#' @param keep.mparts `logical`; whether to include in the output components necessary to estimate standard errors that account for estimation of the weights in [glm_weightit()]. Default is `TRUE` if such parts are present. See the individual pages for each method for whether these components are produced. Set to `FALSE` to keep the output object smaller, e.g., if standard errors will not be computed using `glm_weightit()`.
-#' @param ... other arguments for functions called by `weightit()` that
-#' control aspects of fitting that are not covered by the above arguments. See Details.
+#'   objects created in the process of estimating the weights. For example, with
+#'   `method = "glm"`, the `glm` objects containing the propensity score model
+#'   will be included. See the individual pages for each method for information
+#'   on what object will be included if `TRUE`.
+#' @param keep.mparts `logical`; whether to include in the output components
+#'   necessary to estimate standard errors that account for estimation of the
+#'   weights in [glm_weightit()]. Default is `TRUE` if such parts are present.
+#'   See the individual pages for each method for whether these components are
+#'   produced. Set to `FALSE` to keep the output object smaller, e.g., if
+#'   standard errors will not be computed using `glm_weightit()`.
+#' @param ... other arguments for functions called by `weightit()` that control
+#'   aspects of fitting that are not covered by the above arguments. See
+#'   Details.
 #'
-#' @returns
-#' A `weightit` object with the following elements:
-#' \item{weights}{The estimated weights, one for each unit.}
-#' \item{treat}{The values of the treatment variable.}
+#' @returns A `weightit` object with the following elements: \item{weights}{The
+#' estimated weights, one for each unit.} \item{treat}{The values of the
+#' treatment variable.}
 #' \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
 #' the fitting process.}
-#' \item{estimand}{The estimand requested.}
-#' \item{method}{The weight estimation method specified.}
+#' \item{estimand}{The estimand requested.} \item{method}{The weight estimation
+#' method specified.}
 #' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
 #' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
-#' \item{s.weights}{The provided sampling weights.}
-#' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
-#' \item{by}{A data.frame containing the `by` variable when specified.}
-#' \item{obj}{When `include.obj = TRUE`, the fit object.}
+#' \item{s.weights}{The provided sampling weights.} \item{focal}{The focal
+#' treatment level if the ATT or ATC was requested.} \item{by}{A data.frame
+#' containing the `by` variable when specified.} \item{obj}{When `include.obj =
+#' TRUE`, the fit object.}
 #' \item{info}{Additional information about the fitting. See the individual
 #' methods pages for what is included.}
 #'
-#' When `keep.mparts` is `TRUE` (the default) and the chosen method is compatible with M-estimation, the components related to M-estimation for use in [glm_weightit()] are stored in the `"Mparts"` attribute. When `by` is specified, `keep.mparts` is set to `FALSE`.
+#' When `keep.mparts` is `TRUE` (the default) and the chosen method is
+#' compatible with M-estimation, the components related to M-estimation for use
+#' in [glm_weightit()] are stored in the `"Mparts"` attribute. When `by` is
+#' specified, `keep.mparts` is set to `FALSE`.
 #'
-#' @details
-#' The primary purpose of `weightit()` is as a dispatcher to functions
+#' @details The primary purpose of `weightit()` is as a dispatcher to functions
 #' that perform the estimation of balancing weights using the requested
-#' `method`. Below are the methods allowed and links to pages containing
-#' more information about them, including additional arguments and outputs
-#' (e.g., when `include.obj = TRUE`), how missing values are treated,
-#' which estimands are allowed, and whether sampling weights are allowed.
+#' `method`. Below are the methods allowed and links to pages containing more
+#' information about them, including additional arguments and outputs (e.g.,
+#' when `include.obj = TRUE`), how missing values are treated, which estimands
+#' are allowed, and whether sampling weights are allowed.
 #'
-#' | [`"glm"`][method_glm] | Propensity score weighting using generalized linear models |
-#' | :---- | :---- |
-#' | [`"gbm"`][method_gbm] | Propensity score weighting using generalized boosted modeling |
-#' | [`"cbps"`][method_cbps]| Covariate Balancing Propensity Score weighting |
-#' | [`"npcbps"`][method_npcbps]| Non-parametric Covariate Balancing Propensity Score weighting |
-#' | [`"ebal"`][method_ebal] | Entropy balancing |
-#' | [`"ipt"`][method_ipt] | Inverse probability tilting |
-#' | [`"optweight"`][method_optweight] | Optimization-based weighting |
-#' | [`"super"`][method_super] | Propensity score weighting using SuperLearner |
-#' | [`"bart"`][method_bart] | Propensity score weighting using Bayesian additive regression trees (BART) |
-#' | [`"energy"`][method_energy] | Energy balancing |
+#' | [`"glm"`][method_glm] | Propensity score weighting using generalized linear
+#' models | | :---- | :---- | | [`"gbm"`][method_gbm] | Propensity score
+#' weighting using generalized boosted modeling | | [`"cbps"`][method_cbps]|
+#' Covariate Balancing Propensity Score weighting | |
+#' [`"npcbps"`][method_npcbps]| Non-parametric Covariate Balancing Propensity
+#' Score weighting | | [`"ebal"`][method_ebal] | Entropy balancing | |
+#' [`"ipt"`][method_ipt] | Inverse probability tilting | |
+#' [`"optweight"`][method_optweight] | Optimization-based weighting | |
+#' [`"super"`][method_super] | Propensity score weighting using SuperLearner | |
+#' [`"bart"`][method_bart] | Propensity score weighting using Bayesian additive
+#' regression trees (BART) | | [`"energy"`][method_energy] | Energy balancing |
 #'
-#' `method` can also be supplied as a user-defined function; see
-#' [`method_user`] for instructions and examples. Setting `method = NULL` computes unit weights.
+#' `method` can also be supplied as a user-defined function; see [`method_user`]
+#' for instructions and examples. Setting `method = NULL` computes unit weights.
 #'
-#' ## `estimand` and `focal`
-#' For binary and multi-category treatments, the argument to `estimand` determines what distribution the weighted sample should resemble. When set to `"ATE"`, this requests that each group resemble the full sample. When set to `"ATO"`, `"ATM"`, or `"ATOS"` (for the methods that allow them), this requests that each group resemble an "overlap" sample. When set to `"ATT"` or `"ATC"`, this requests that each group resemble the treated or control group, respectively (termed the "focal" group). Weights are set to 1 for the focal group.
+#' ## `estimand` and `focal` For binary and multi-category treatments, the
+#' argument to `estimand` determines what distribution the weighted sample
+#' should resemble. When set to `"ATE"`, this requests that each group resemble
+#' the full sample. When set to `"ATO"`, `"ATM"`, or `"ATOS"` (for the methods
+#' that allow them), this requests that each group resemble an "overlap" sample.
+#' When set to `"ATT"` or `"ATC"`, this requests that each group resemble the
+#' treated or control group, respectively (termed the "focal" group). Weights
+#' are set to 1 for the focal group.
 #'
-#' How does `weightit()` decide which group is the treated and which group is the control? For binary treatments, several heuristics are used. The first is be checking whether a valid argument to `focal` was supplied containing the name of the focal group, which is the treated group when `estimand = "ATT"` and the control group when `estimand = "ATC"`. If `focal` is not supplied, guesses are made using the following criteria, evaluated in order:
+#' How does `weightit()` decide which group is the treated and which group is
+#' the control? For binary treatments, several heuristics are used. The first is
+#' by checking whether a valid argument to `focal` was supplied containing the
+#' name of the focal group, which is the treated group when `estimand = "ATT"`
+#' and the control group when `estimand = "ATC"`. If `focal` is not supplied,
+#' guesses are made using the following criteria, evaluated in order:
 #' * If the treatment variable is `logical`, `TRUE` is considered treated and `FALSE` control.
 #' * If the treatment is numeric (or a string or factor with values that can be coerced to numeric values), if 0 is one of the values, it is considered the control, and otherwise, the lower value is considered the control (with the other considered treated).
 #' * If exactly one of the treatment values is `"t"`, `"tr"`, `"treat"`, `"treated"`, or `"exposed"`, it is considered the treated (and the other control).
 #' * If exactly one of the treatment values is `"c"`, `"co"`, `"ctrl"`, `"control"`, or `"unexposed"`, it is considered the control (and the other treated).
 #' * If the treatment variable is a factor, the first level is considered control and the second treated.
 #' * The lowest value after sorting with [sort()] is considered control and the other treated.
-#' To be safe, it is best to code your binary treatment variable as `0` for control and `1` for treated. Otherwise, `focal` should be supplied when requesting the ATT or ATC. For multi-category treatments, `focal` is required when requesting the ATT or ATC; none of the heuristics above are used.
+#' To be safe, it is best to code your binary treatment variable as `0` for
+#' control and `1` for treated. Otherwise, `focal` should be supplied when
+#' requesting the ATT or ATC. For multi-category treatments, `focal` is required
+#' when requesting the ATT or ATC; none of the heuristics above are used.
 #'
-#' ## Citing \pkg{WeightIt}
-#' When using `weightit()`, please cite both the \pkg{WeightIt} package
-#' (using `citation("WeightIt")`) and the paper(s) in the references
-#' section of the method used.
+#' ## Citing \pkg{WeightIt} When using `weightit()`, please cite both the
+#' \pkg{WeightIt} package (using `citation("WeightIt")`) and the paper(s) in the
+#' references section of the method used.
 #'
-#' @seealso
-#' [weightitMSM()] for estimating weights with sequential (i.e.,
+#' @seealso [weightitMSM()] for estimating weights with sequential (i.e.,
 #' longitudinal) treatments for use in estimating marginal structural models
 #' (MSMs).
 #'
 #' [weightit.fit()], which is a lower-level dispatcher function that accepts a
-#' matrix of covariates and a vector of treatment statuses rather than a
-#' formula and data frame and performs minimal argument checking and
-#' processing. It may be useful for speeding up simulation studies for which
-#' the correct arguments are known. In general, `weightit()` should be
-#' used.
+#' matrix of covariates and a vector of treatment statuses rather than a formula
+#' and data frame and performs minimal argument checking and processing. It may
+#' be useful for speeding up simulation studies for which the correct arguments
+#' are known. In general, `weightit()` should be used.
 #'
 #' [summary.weightit()] for summarizing the weights
 #'
@@ -196,7 +230,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   reported.covs <- t.c[["reported.covs"]]
   covs <- t.c[["model.covs"]]
   treat <- t.c[["treat"]]
-  # treat.name <- t.c[["treat.name"]]
 
   if (is_null(treat)) {
     .err("no treatment variable was specified")
@@ -250,7 +283,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   estimand <- .process_estimand(estimand, method, treat.type)
   f.e.r <- .process_focal_and_estimand(focal, estimand, treat)
   focal <- f.e.r[["focal"]]
-  # estimand <- f.e.r[["estimand"]]
   estimand <- f.e.r[["reported.estimand"]]
   reported.estimand <- f.e.r[["reported.estimand"]]
 
@@ -380,7 +412,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               method = method,
               ps = if (is_null(obj$ps) || all(is.na(obj$ps))) NULL else obj$ps,
               s.weights = s.weights,
-              #discarded = NULL,
               focal = if (reported.estimand %in% c("ATT", "ATC")) focal else NULL,
               by = processed.by,
               call = call,
@@ -398,8 +429,19 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
       attr(out, "Mparts") <- attr(obj, "Mparts")
     }
     else {
-      attr(sw_obj, "Mparts")$wfun <- Invert(attr(sw_obj, "Mparts")$wfun)
-      attr(out, "Mparts.list") <- list(attr(obj, "Mparts"), attr(sw_obj, "Mparts"))
+      stab.Mparts <- attr(sw_obj, "Mparts")
+      #Invert wfun and compute derivative of inverted wfun
+      .wfun <- stab.Mparts$wfun
+      stab.Mparts$wfun <- Invert(.wfun)
+
+      if (is_not_null(stab.Mparts$dw_dBtreat)) {
+        .dw_dBtreat <- stab.Mparts$dw_dBtreat
+        stab.Mparts$dw_dBtreat <- function(Btreat, Xtreat, A, SW) {
+          -.dw_dBtreat(Btreat, Xtreat, A, SW) / .wfun(Btreat, Xtreat, A)^2
+        }
+      }
+
+      attr(out, "Mparts.list") <- list(attr(obj, "Mparts"), stab.Mparts)
     }
   }
 
@@ -412,7 +454,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 print.weightit <- function(x, ...) {
   treat.type <- get_treat_type(x[["treat"]])
 
-  cat(sprintf("A %s object\n", italic(class(x)[1])))
+  cat(sprintf("A %s object\n", italic(class(x)[1L])))
 
   if (is_not_null(x[["method"]])) {
     cat(sprintf(" - method: %s (%s)\n",
@@ -448,7 +490,7 @@ print.weightit <- function(x, ...) {
 
   if (is_not_null(x[["covs"]])) {
     cat(sprintf(" - covariates: %s\n",
-                if (length(names(x[["covs"]])) > 60) "too many to name"
+                if (length(names(x[["covs"]])) > 60L) "too many to name"
                 else word_list(names(x[["covs"]]), and.or = FALSE)))
   }
 
@@ -468,10 +510,11 @@ print.weightit <- function(x, ...) {
                 nsubgroups))
   }
 
-  if (is_not_null(trim <- attr(x[["weights"]], "trim"))) {
+  trim <- attr(x[["weights"]], "trim")
+  if (is_not_null(trim)) {
     if (trim < 1) {
       if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(sprintf(" - weights trimmed at %s\n", word_list(paste0(round(100*trim, 2), "%"))))
+      cat(sprintf(" - weights trimmed at %s\n", word_list(paste0(round(100 * trim, 2L), "%"))))
     }
     else {
       cat(sprintf(" - weights trimmed at the %s %s\n",

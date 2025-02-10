@@ -1,11 +1,28 @@
 # Ordinal regression
 .ordinal_weightit.fit <- function(x, y, weights = NULL, start = NULL, offset = NULL,
-                                  link = "logit", hess = TRUE, ...) {
+                                  link = "logit", hess = TRUE, control = list(), ...) {
   chk::chk_atomic(y)
   chk::chk_numeric(x)
   chk::chk_matrix(x)
 
-  chk::chk_string(link)
+  if (chk::vld_string(link)) {
+    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
+
+    link <- .make_link(link)
+  }
+  else if (inherits(link, "family") && is_not_null(link$linkfun) &&
+           is_not_null(link$linkinv) && is_not_null(link$mu.eta) &&
+           is_not_null(link$valideta)) {
+    link <- list(linkfun = link$linkfun,
+                 linkinv = link$linkinv,
+                 mu.eta = link$mu.eta,
+                 valideta = link$valideta,
+                 name = link$link)
+    class(link) <- "link-glm"
+  }
+  else if (!inherits(link, "link-glm")) {
+    .err('`link` must be a string or an object of class "link-glm"')
+  }
 
   family <- binomial(link)
 
@@ -28,12 +45,12 @@
 
   chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
 
-  x <- x[,colnames(x) != "(Intercept)", drop = FALSE]
+  x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
 
   m <- nlevels(y) #num. thresholds
-  k0 <- ncol(x) + m - 1 #num. params
+  k0 <- ncol(x) + m - 1L #num. params
 
-  nm <- c(colnames(x), paste(levels(y)[-m], levels(y)[-1], sep = "|"))
+  nm <- c(colnames(x), paste(levels(y)[-m], levels(y)[-1L], sep = "|"))
 
   aliased_X <- !colnames(x) %in% colnames(make_full_rank(x, with.intercept = TRUE))
   aliased_B <- c(aliased_X, rep.int(FALSE, m - 1L))
@@ -44,21 +61,16 @@
   no_x <- is_null(x_)
 
   if (no_x) {
-    start <- .linkfun(cumsum(tabulate(y_)[-m]/n))
+    start <- .linkfun(cumsum(tabulate(y_)[-m] / n))
   }
   else if (is_null(start)) {
     q1 <- floor(median(y_))
     y1 <- as.numeric(y_ > q1)
-    X <- cbind(1, x_)
-    fit <- suppressWarnings(glm.fit(X, y1, weights, family = family, offset = offset))
-
-    coefs <- {
-      if (!fit$converged) c(.linkfun(weighted.mean(y1, weights)), rep.int(0, ncol(x_)))
-      else fit$coefficients
-    }
+    coefs <- .get_glm_starting_values(X = cbind(1, x_), Y = y1, w = weights,
+                                      family = family, offset = offset)
 
     if (m > 2L) {
-      spacing <- .linkfun(cumsum(tabulate(y_)[-m]/n))
+      spacing <- .linkfun(cumsum(tabulate(y_)[-m] / n))
       start <- c(coefs[-1L], -coefs[1L] + spacing - spacing[q1])
     }
     else {
@@ -77,7 +89,7 @@
   }
 
   # Adjust start to use cumsum parameterization
-  if (m > 2) {
+  if (m > 2L) {
     if (no_x) {
       start[-1L] <- log(diff(start))
     }
@@ -129,13 +141,12 @@
     sum(weights * log(p))
   }
 
-  control <- list(fnscale = -1, #maximize likelihood; optim() minimizes by default
-                  trace = 0,
-                  maxit = 1e3,
-                  reltol = 1e-12)
+  m_control <- list(fnscale = -1, #maximize likelihood; optim() minimizes by default
+                    trace = 0,
+                    maxit = 1e3,
+                    reltol = 1e-12)
 
-  control <- utils::modifyList(control,
-                               ...mget(c("trace", "maxit", "reltol", "ndeps", "REPORT")))
+  control <- utils::modifyList(m_control, control)
 
   # Estimate using cumsum parameterization to get estimates
   out0 <- optim(par = start,
@@ -222,6 +233,7 @@
     }
 
     if (!no_x) {
+      #Rescale hessian to be on original scale of predictors
       hessian <- hessian * tcrossprod(c(sds, rep.int(1, m - 1L)))
     }
 
@@ -236,7 +248,9 @@
   # Get predicted probabilities for all units for all categories,
   # natural parameterization of `a`
   get_pp <- function(B, X, offset = NULL) {
-    if (length(offset) == 0L) offset <- rep.int(0, n)
+    if (length(offset) == 0L) {
+      offset <- rep.int(0, n)
+    }
 
     if (ncol(X) == 0L) {
       a <- B
@@ -267,7 +281,7 @@
   # Adjust estimates and gradient to be put on original scale
   if (!no_x) {
     theta <- theta / c(sds, rep.int(1, m - 1L))
-    grad <- sweep(grad, 2, c(sds, rep.int(1, m - 1L)), "*")
+    grad <- sweep(grad, 2L, c(sds, rep.int(1, m - 1L)), "*")
   }
 
   coefs <- setNames(rep.int(NA_real_, ncol(x) + m - 1L), nm)
@@ -282,7 +296,7 @@
        psi = psi,
        f = gr,
        get_p = get_pp,
-       df.residual = length(res) - ncol(x_) - (m - 1),
+       df.residual = length(res) - ncol(x_) - (m - 1L),
        x = x,
        y = y,
        weights = weights,
@@ -291,7 +305,8 @@
 }
 
 .ordinal_weightit <- function(formula, data, link = "logit", weights, subset, start = NULL, na.action,
-                              hess = TRUE, model = TRUE, x = FALSE, y = TRUE, contrasts = NULL, ...) {
+                              hess = TRUE, control = list(), model = TRUE,
+                              x = FALSE, y = TRUE, contrasts = NULL, ...) {
   cal <- match.call()
 
   chk::chk_flag(hess)
@@ -318,8 +333,8 @@
       names(Y) <- nm
   }
   X <- {
-    if (!is.empty.model(mt)) model.matrix(mt, mf, contrasts)
-    else matrix(NA_real_, NROW(Y), 0L)
+    if (is.empty.model(mt)) matrix(NA_real_, NROW(Y), 0L)
+    else model.matrix(mt, mf, contrasts)
   }
 
   weights <- as.vector(model.weights(mf))
@@ -339,7 +354,7 @@
   fit <- eval(call(".ordinal_weightit.fit",
                    x = X, y = Y, link = link, weights = weights,
                    offset = offset, start = start,
-                   hess = hess))
+                   hess = hess, control = control))
 
   if (model) fit$model <- mf
   fit$na.action <- attr(mf, "na.action")

@@ -1,49 +1,70 @@
-#' Optimization-Based Weighting
-#' @name method_optweight
-#' @aliases method_optweight
-#' @usage NULL
+#'Optimization-Based Weighting
+#'@name method_optweight
+#'@aliases method_optweight
+#'@usage NULL
 #'
-#' @description
-#'This page explains the details of estimating optimization-based weights (also known as stable balancing weights) by setting `method = "optweight"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
+#'@description This page explains the details of estimating optimization-based
+#'weights (also known as stable balancing weights) by setting `method =
+#'"optweight"` in the call to [weightit()] or [weightitMSM()]. This method can
+#'be used with binary, multi-category, and continuous treatments.
 #'
-#' In general, this method relies on estimating weights by solving a quadratic programming problem subject to approximate or exact balance constraints. This method relies on \pkgfun{optweight}{optweight} from the \CRANpkg{optweight} package.
+#'In general, this method relies on estimating weights by solving a quadratic
+#'programming problem subject to approximate or exact balance constraints. This
+#'method relies on \pkgfun{optweight}{optweight} from the \CRANpkg{optweight}
+#'package.
 #'
-#' Because `optweight()` offers finer control and uses the same syntax as `weightit()`, it is recommended that \pkgfun{optweight}{optweight} be used instead of `weightit()` with `method = "optweight"`.
+#'Because `optweight()` offers finer control and uses the same syntax as
+#'`weightit()`, it is recommended that \pkgfun{optweight}{optweight} be used
+#'instead of `weightit()` with `method = "optweight"`.
 #'
-#' ## Binary Treatments
+#'## Binary Treatments
 #'
-#' For binary treatments, this method estimates the weights using \pkgfun{optweight}{optweight}. The following estimands are allowed: ATE, ATT, and ATC. The weights are taken from the output of the `optweight` fit object.
+#'For binary treatments, this method estimates the weights using
+#'\pkgfun{optweight}{optweight}. The following estimands are allowed: ATE, ATT,
+#'and ATC. The weights are taken from the output of the `optweight` fit object.
 #'
-#' ## Multi-Category Treatments
+#'## Multi-Category Treatments
 #'
-#' For multi-category treatments, this method estimates the weights using \pkgfun{optweight}{optweight}. The following estimands are allowed: ATE and ATT. The weights are taken from the output of the `optweight` fit object.
+#'For multi-category treatments, this method estimates the weights using
+#'\pkgfun{optweight}{optweight}. The following estimands are allowed: ATE and
+#'ATT. The weights are taken from the output of the `optweight` fit object.
 #'
-#' ## Continuous Treatments
+#'## Continuous Treatments
 #'
-#' For binary treatments, this method estimates the weights using \pkgfun{optweight}{optweight}. The weights are taken from the output of the `optweight` fit object.
+#'For binary treatments, this method estimates the weights using
+#'\pkgfun{optweight}{optweight}. The weights are taken from the output of the
+#'`optweight` fit object.
 #'
-#' ## Longitudinal Treatments
+#'## Longitudinal Treatments
 #'
-#' For longitudinal treatments, `optweight()` estimates weights that simultaneously satisfy balance constraints at all time points, so only one model is fit to obtain the weights. Using `method = "optweight"` in `weightitMSM()` causes `is.MSM.method` to be set to `TRUE` by default. Setting it to `FALSE` will run one model for each time point and multiply the weights together, a method that is not recommended. NOTE: neither use of optimization-based weights with longitudinal treatments has been validated!
+#'For longitudinal treatments, `optweight()` estimates weights that
+#'simultaneously satisfy balance constraints at all time points, so only one
+#'model is fit to obtain the weights. Using `method = "optweight"` in
+#'`weightitMSM()` causes `is.MSM.method` to be set to `TRUE` by default. Setting
+#'it to `FALSE` will run one model for each time point and multiply the weights
+#'together, a method that is not recommended. NOTE: neither use of
+#'optimization-based weights with longitudinal treatments has been validated!
 #'
-#' ## Sampling Weights
+#'## Sampling Weights
 #'
-#' Sampling weights are supported through `s.weights` in all scenarios, but only for versions of \pkg{optweight} after 0.2.5.
+#'Sampling weights are supported through `s.weights` in all scenarios, but only
+#'for versions of \pkg{optweight} after 0.2.5.
 #'
-#' ## Missing Data
+#'## Missing Data
 #'
-#' In the presence of missing data, the following value(s) for `missing` are allowed:
+#'In the presence of missing data, the following value(s) for `missing` are
+#'allowed:
 #'     \describe{
 #'       \item{`"ind"` (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.
 #'       }
 #'     }
 #'
-#' ## M-estimation
+#'## M-estimation
 #'
-#' M-estimation is not supported.
+#'M-estimation is not supported.
 #'
-#' @section Additional Arguments:
-#' `moments` and `int` are accepted. See [weightit()] for details.
+#'@section Additional Arguments: `moments` and `int` are accepted. See
+#'  [weightit()] for details.
 #'
 #' \describe{
 #'   \item{`quantile`}{
@@ -51,13 +72,14 @@
 #'   }
 #' }
 #'
-#' All arguments to `optweight()` can be passed through `weightit()` or `weightitMSM()`, with the following exception:
+#'  All arguments to `optweight()` can be passed through `weightit()` or
+#'  `weightitMSM()`, with the following exception:
 #'
 #' * `targets` cannot be used and is ignored.
 #'
-#' All arguments take on the defaults of those in `optweight()`.
+#'  All arguments take on the defaults of those in `optweight()`.
 #'
-#' @section Additional Outputs:
+#'@section Additional Outputs:
 #' \describe{
 #' \item{`info`}{
 #' A list with one entry:
@@ -68,35 +90,56 @@
 #' \item{`obj`}{When `include.obj = TRUE`, the output of the call to \pkgfun{optweight}{optweight}.}
 #' }
 #'
-#' @details
-#' Stable balancing weights are weights that solve a constrained optimization problem, where the constraints correspond to covariate balance and the loss function is the variance (or other norm) of the weights. These weights maximize the effective sample size of the weighted sample subject to user-supplied balance constraints. An advantage of this method over entropy balancing is the ability to allow approximate, rather than exact, balance through the `tols` argument, which can increase precision even for slight relaxations of the constraints.
+#'@details Stable balancing weights are weights that solve a constrained
+#'optimization problem, where the constraints correspond to covariate balance
+#'and the loss function is the variance (or other norm) of the weights. These
+#'weights maximize the effective sample size of the weighted sample subject to
+#'user-supplied balance constraints. An advantage of this method over entropy
+#'balancing is the ability to allow approximate, rather than exact, balance
+#'through the `tols` argument, which can increase precision even for slight
+#'relaxations of the constraints.
 #'
-#' `plot()` can be used on the output of `weightit()` with `method = "optweight"` to display the dual variables; see Examples and [plot.weightit()] for more details.
+#'`plot()` can be used on the output of `weightit()` with `method = "optweight"`
+#'to display the dual variables; see Examples and [plot.weightit()] for more
+#'details.
 #'
-#' @note
-#' The specification of `tols` differs between `weightit()` and `optweight()`. In `weightit()`, one tolerance value should be included per level of each factor variable, whereas in `optweight()`, all levels of a factor are given the same tolerance, and only one value needs to be supplied for a factor variable. Because of the potential for confusion and ambiguity, it is recommended to only supply one value for `tols` in `weightit()` that applies to all variables. For finer control, use `optweight()` directly.
+#'@note The specification of `tols` differs between `weightit()` and
+#'`optweight()`. In `weightit()`, one tolerance value should be included per
+#'level of each factor variable, whereas in `optweight()`, all levels of a
+#'factor are given the same tolerance, and only one value needs to be supplied
+#'for a factor variable. Because of the potential for confusion and ambiguity,
+#'it is recommended to only supply one value for `tols` in `weightit()` that
+#'applies to all variables. For finer control, use `optweight()` directly.
 #'
-#' Seriously, just use \pkgfun{optweight}{optweight}. The syntax is almost identical and it's compatible with \pkg{cobalt}, too.
+#'Seriously, just use \pkgfun{optweight}{optweight}. The syntax is almost
+#'identical and it's compatible with \pkg{cobalt}, too.
 #'
-#' @seealso
-#' [weightit()], [weightitMSM()]
+#'@seealso [weightit()], [weightitMSM()]
 #'
-#' \pkgfun{optweight}{optweight} for the fitting function
+#'\pkgfun{optweight}{optweight} for the fitting function
 #'
-#' @references
-#' ## Binary treatments
+#'@references ## Binary treatments
 #'
-#' Wang, Y., & Zubizarreta, J. R. (2020). Minimal dispersion approximately balancing weights: Asymptotic properties and practical considerations. *Biometrika*, 107(1), 93–105. \doi{10.1093/biomet/asz050}
+#'Wang, Y., & Zubizarreta, J. R. (2020). Minimal dispersion approximately
+#'balancing weights: Asymptotic properties and practical considerations.
+#'*Biometrika*, 107(1), 93–105. \doi{10.1093/biomet/asz050}
 #'
-#' Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for Estimation With Incomplete Outcome Data. *Journal of the American Statistical Association*, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
+#'Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for
+#'Estimation With Incomplete Outcome Data. *Journal of the American Statistical
+#'Association*, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
 #'
-#' ## Multi-Category Treatments
+#'## Multi-Category Treatments
 #'
-#' de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight adjustment in non-experimental studies with multivalued treatments: Analysis of the effect of an earthquake on post-traumatic stress. *Journal of the Royal Statistical Society: Series A (Statistics in Society)*, n/a(n/a). \doi{10.1111/rssa.12561}
+#'de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight
+#'adjustment in non-experimental studies with multivalued treatments: Analysis
+#'of the effect of an earthquake on post-traumatic stress. *Journal of the Royal
+#'Statistical Society: Series A (Statistics in Society)*, n/a(n/a).
+#'\doi{10.1111/rssa.12561}
 #'
-#' ## Continuous treatments
+#'## Continuous treatments
 #'
-#' Greifer, N. (2020). *Estimating Balancing Weights for Continuous Treatments Using Constrained Optimization*. \doi{10.17615/DYSS-B342}
+#'Greifer, N. (2020). *Estimating Balancing Weights for Continuous Treatments
+#'Using Constrained Optimization*. \doi{10.17615/DYSS-B342}
 #'
 #' @examplesIf all(sapply(c("optweight", "osqp"), requireNamespace, quietly = TRUE))
 #' data("lalonde", package = "cobalt")
@@ -130,7 +173,6 @@ NULL
 
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing,
                                moments, int, verbose, ...) {
-  rlang::check_installed("optweight")
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -143,7 +185,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
                             focal = focal, treat = treat))
 
   for (i in seq_col(covs)) {
-    covs[,i] <- .make_closer_to_1(covs[,i])
+    covs[, i] <- .make_closer_to_1(covs[, i])
   }
 
   if (missing == "ind") {
@@ -187,8 +229,6 @@ weightit2optweight.multi <- weightit2optweight
 
 weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
 
-  rlang::check_installed("optweight")
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -198,7 +238,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   covs <- .int_poly_f(covs, poly = moments, int = int)
 
   for (i in seq_col(covs)) {
-    covs[,i] <- .make_closer_to_1(covs[,i])
+    covs[, i] <- .make_closer_to_1(covs[, i])
   }
 
   if (missing == "ind") {
@@ -236,7 +276,6 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 }
 
 weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, verbose, ...) {
-  rlang::check_installed("optweight")
 
   s.weights <- s.weights[subset]
   treat.types <- character(length(treat.list))
@@ -273,7 +312,7 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
     }
 
     for (j in seq_col(covs.list[[i]])) {
-      covs.list[[i]][,j] <- .make_closer_to_1(covs.list[[i]][,j])
+      covs.list[[i]][, j] <- .make_closer_to_1(covs.list[[i]][, j])
     }
   }
 
@@ -292,7 +331,7 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
   A[["verbose"]] <- TRUE
 
   if (is_not_null(A[["tols"]])) {
-    baseline.data <- data.frame(treat.list[[1]], covs.list[[1]])
+    baseline.data <- data.frame(treat.list[[1L]], covs.list[[1L]])
     baseline.formula <- formula(baseline.data)
 
     A[["tols"]] <- optweight::check.tols(baseline.formula, data = baseline.data,
@@ -328,8 +367,8 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
   title <- "Dual Variables for Constraints"
 
   d$cov <- factor(d$cov, levels = rev(unique(d$cov)))
-  d$constraint <- factor(d$constraint, levels = unique(d$constraint, nmax = 2),
-                         labels = paste("Constraint:", unique(d$constraint, nmax = 2)))
+  d$constraint <- factor(d$constraint, levels = unique(d$constraint, nmax = 2L),
+                         labels = paste("Constraint:", unique(d$constraint, nmax = 2L)))
 
   p <- ggplot(d, aes(y = .data$cov, x = .data$dual)) +
     geom_col() +

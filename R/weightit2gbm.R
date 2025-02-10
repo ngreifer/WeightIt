@@ -3,28 +3,54 @@
 #' @aliases method_gbm
 #' @usage NULL
 #'
-#' @description
-#' This page explains the details of estimating weights from generalized boosted model-based propensity scores by setting `method = "gbm"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
+#' @description This page explains the details of estimating weights from
+#' generalized boosted model-based propensity scores by setting `method = "gbm"`
+#' in the call to [weightit()] or [weightitMSM()]. This method can be used with
+#' binary, multi-category, and continuous treatments.
 #'
-#' In general, this method relies on estimating propensity scores using generalized boosted modeling and then converting those propensity scores into weights using a formula that depends on the desired estimand. The algorithm involves using a balance-based or prediction-based criterion to optimize in choosing the value of tuning parameters (the number of trees and possibly others). The method relies on the \CRANpkg{gbm} package.
+#' In general, this method relies on estimating propensity scores using
+#' generalized boosted modeling and then converting those propensity scores into
+#' weights using a formula that depends on the desired estimand. The algorithm
+#' involves using a balance-based or prediction-based criterion to optimize in
+#' choosing the value of tuning parameters (the number of trees and possibly
+#' others). The method relies on the \CRANpkg{gbm} package.
 #'
-#' This method mimics the functionality of functions in the \pkg{twang} package, but has improved performance and more flexible options. See Details section for more details.
+#' This method mimics the functionality of functions in the \pkg{twang} package,
+#' but has improved performance and more flexible options. See Details section
+#' for more details.
 #'
 #' ## Binary Treatments
 #'
-#' For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the `criterion` argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using [get_w_from_ps()], which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
+#' For binary treatments, this method estimates the propensity scores using
+#' \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values
+#' using the method specified in the `criterion` argument. The following
+#' estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed
+#' from the estimated propensity scores using [get_w_from_ps()], which
+#' implements the standard formulas. Weights can also be computed using marginal
+#' mean weighting through stratification for the ATE, ATT, and ATC. See
+#' [get_w_from_ps()] for details.
 #'
 #' ## Multi-Category Treatments
 #'
-#' For binary treatments, this method estimates the propensity scores using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the `criterion` argument. The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the estimated propensity scores using [get_w_from_ps()], which implements the standard formulas. Weights can also be computed using marginal mean weighting through stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
+#' For binary treatments, this method estimates the propensity scores using
+#' \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values
+#' using the method specified in the `criterion` argument. The following
+#' estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed
+#' from the estimated propensity scores using [get_w_from_ps()], which
+#' implements the standard formulas. Weights can also be computed using marginal
+#' mean weighting through stratification for the ATE, ATT, and ATC. See
+#' [get_w_from_ps()] for details.
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, this method estimates the generalized propensity score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values using the method specified in the `criterion` argument.
+#' For continuous treatments, this method estimates the generalized propensity
+#' score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning
+#' parameter values using the method specified in the `criterion` argument.
 #'
 #' ## Longitudinal Treatments
 #'
-#' For longitudinal treatments, the weights are the product of the weights estimated at each time point.
+#' For longitudinal treatments, the weights are the product of the weights
+#' estimated at each time point.
 #'
 #' ## Sampling Weights
 #'
@@ -32,7 +58,8 @@
 #'
 #' ## Missing Data
 #'
-#' In the presence of missing data, the following value(s) for `missing` are allowed:
+#' In the presence of missing data, the following value(s) for `missing` are
+#' allowed:
 #'     \describe{
 #'       \item{`"ind"` (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.}
 #'       \item{`"surr"`}{Surrogate splitting is used to process `NA`s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.}
@@ -42,8 +69,8 @@
 #'
 #' M-estimation is not supported.
 #'
-#' @section Additional Arguments:
-#' The following additional arguments can be specified:
+#' @section Additional Arguments: The following additional arguments can be
+#'   specified:
 #'   \describe{
 #'     \item{`criterion`}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, `criterion` can be set as `"cv{#}`", where `{#}` is replaced by a number representing the number of cross-validation folds used (e.g., `"cv5"` for 5-fold cross-validation). For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 #'     }
@@ -65,11 +92,15 @@
 #'        }
 #' }
 #'
-#' All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit}, and some are not used at all. For binary and multi-category treatments with a with cross-validation used as the criterion, `class.stratify.cv` is set to `TRUE` by default.
+#'   All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit},
+#'   and some are not used at all. For binary and multi-category treatments with
+#'   a with cross-validation used as the criterion, `class.stratify.cv` is set
+#'   to `TRUE` by default.
 #'
-#' The `w` argument in `gbm.fit()` is ignored because sampling weights are passed using `s.weights`.
+#'   The `w` argument in `gbm.fit()` is ignored because sampling weights are
+#'   passed using `s.weights`.
 #'
-#' For continuous treatments only, the following arguments may be supplied:
+#'   For continuous treatments only, the following arguments may be supplied:
 #' \describe{
 #'       \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 #'
@@ -80,7 +111,15 @@
 #'       \item{`plot`}{If `density = "kernel"`, whether to plot the estimated densities.}
 #' }
 #'
-#' For tunable arguments, multiple entries may be supplied, and `weightit()` will choose the best value by optimizing the criterion specified in `criterion`. See below for additional outputs that are included when arguments are supplied to be tuned. See Examples for an example of tuning. The same seed is used for every run to ensure any variation in performance across tuning parameters is due to the specification and not to using a random seed. This only matters when `bag.fraction` differs from 1 (its default) or cross-validation is used as the criterion; otherwise, there are no random components in the model.
+#'   For tunable arguments, multiple entries may be supplied, and `weightit()`
+#'   will choose the best value by optimizing the criterion specified in
+#'   `criterion`. See below for additional outputs that are included when
+#'   arguments are supplied to be tuned. See Examples for an example of tuning.
+#'   The same seed is used for every run to ensure any variation in performance
+#'   across tuning parameters is due to the specification and not to using a
+#'   random seed. This only matters when `bag.fraction` differs from 1 (its
+#'   default) or cross-validation is used as the criterion; otherwise, there are
+#'   no random components in the model.
 #'
 #' @section Additional Outputs:
 #' \describe{
@@ -105,35 +144,69 @@
 #' }
 #' }
 #'
-#' @details
-#' Generalized boosted modeling (GBM, also known as gradient boosting machines) is a machine learning method that generates predicted values from a flexible regression of the treatment on the covariates, which are treated as propensity scores and used to compute weights. It does this by building a series of regression trees, each fit to the residuals of the last, minimizing a loss function that depends on the distribution chosen. The optimal number of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004) were innovative in using covariate balance to select this value rather than traditional machine learning performance metrics such as cross-validation accuracy. GBM is particularly effective for fitting nonlinear treatment models characterized by curves and interactions, but performs worse for simpler treatment models. It is unclear which balance measure should be used to select the number of trees, though research has indicated that balance measures tend to perform better than cross-validation accuracy for estimating effective propensity score weights.
+#' @details Generalized boosted modeling (GBM, also known as gradient boosting
+#' machines) is a machine learning method that generates predicted values from a
+#' flexible regression of the treatment on the covariates, which are treated as
+#' propensity scores and used to compute weights. It does this by building a
+#' series of regression trees, each fit to the residuals of the last, minimizing
+#' a loss function that depends on the distribution chosen. The optimal number
+#' of trees is a tuning parameter that must be chosen; McCaffrey et al. (2004)
+#' were innovative in using covariate balance to select this value rather than
+#' traditional machine learning performance metrics such as cross-validation
+#' accuracy. GBM is particularly effective for fitting nonlinear treatment
+#' models characterized by curves and interactions, but performs worse for
+#' simpler treatment models. It is unclear which balance measure should be used
+#' to select the number of trees, though research has indicated that balance
+#' measures tend to perform better than cross-validation accuracy for estimating
+#' effective propensity score weights.
 #'
-#' \pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the first package to implement this method. Compared to the current version of \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance used to select the number of trees, improved performance, tuning of hyperparameters, more estimands, and support for continuous treatments. \pkg{WeightIt} computes weights for multi-category treatments differently from how \pkg{twang} does; rather than fitting a separate binary GBM for each pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and uses balance measures appropriate for multi-category treatments.
+#' \pkg{WeightIt} offers almost identical functionality to \pkg{twang}, the
+#' first package to implement this method. Compared to the current version of
+#' \pkg{twang}, \pkg{WeightIt} offers more options for the measure of balance
+#' used to select the number of trees, improved performance, tuning of
+#' hyperparameters, more estimands, and support for continuous treatments.
+#' \pkg{WeightIt} computes weights for multi-category treatments differently
+#' from how \pkg{twang} does; rather than fitting a separate binary GBM for each
+#' pair of treatments, \pkg{WeightIt} fits a single multi-class GBM model and
+#' uses balance measures appropriate for multi-category treatments.
 #'
-#' `plot()` can be used on the output of `weightit()` with `method = "gbm"` to display the results of the tuning process; see Examples and [plot.weightit()] for more details.
+#' `plot()` can be used on the output of `weightit()` with `method = "gbm"` to
+#' display the results of the tuning process; see Examples and [plot.weightit()]
+#' for more details.
 #'
-#' @note
-#' The `criterion` argument used to be called `stop.method`, which is its name in \pkg{twang}. `stop.method` still works for backward compatibility. Additionally, the criteria formerly named as `"es.mean"`, `"es.max"`, and `"es.rms"` have been renamed to `"smd.mean"`, `"smd.max"`, and `"smd.rms"`. The former are used in \pkg{twang} and will still work with `weightit()` for backward compatibility.
+#' @note The `criterion` argument used to be called `stop.method`, which is its
+#' name in \pkg{twang}. `stop.method` still works for backward compatibility.
+#' Additionally, the criteria formerly named as `"es.mean"`, `"es.max"`, and
+#' `"es.rms"` have been renamed to `"smd.mean"`, `"smd.max"`, and `"smd.rms"`.
+#' The former are used in \pkg{twang} and will still work with `weightit()` for
+#' backward compatibility.
 #'
-#' Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 - 10^{-8}} to ensure balance statistics can be computed.
+#' Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 -
+#' 10^{-8}} to ensure balance statistics can be computed.
 #'
-#' @seealso
-#' [weightit()], [weightitMSM()]
+#' @seealso [weightit()], [weightitMSM()]
 #'
 #' \pkgfun{gbm}{gbm.fit} for the fitting function.
 #'
-#' @references
-#' ## Binary treatments
+#' @references ## Binary treatments
 #'
-#' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. *Psychological Methods*, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
+#' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score
+#' Estimation With Boosted Regression for Evaluating Causal Effects in
+#' Observational Studies. *Psychological Methods*, 9(4), 403–425.
+#' \doi{10.1037/1082-989X.9.4.403}
 #'
 #' ## Multi-Category Treatments
 #'
-#' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. *Statistics in Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+#' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
+#' R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
+#' Multiple Treatments Using Generalized Boosted Models. *Statistics in
+#' Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 #'
 #' ## Continuous treatments
 #'
-#' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
+#' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for
+#' Estimating Generalized Propensity Scores with Continuous Treatments. *Journal
+#' of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
 #'
 #' @examplesIf requireNamespace("gbm", quietly = TRUE)
 #' library("cobalt")
@@ -212,8 +285,6 @@ NULL
 weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                          stabilize, subclass, missing, verbose, ...) {
 
-  rlang::check_installed("gbm")
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -224,7 +295,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   treat.type <- get_treat_type(treat)
 
   for (i in seq_col(covs)) {
-    covs[,i] <- .make_closer_to_1(covs[,i])
+    covs[, i] <- .make_closer_to_1(covs[, i])
   }
 
   if (missing == "ind") {
@@ -257,15 +328,16 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   s.m.matches <- charmatch(criterion, available.criteria)
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
     if (!startsWith(criterion, "cv") ||
-        !can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
+        !can_str2num(substr(criterion, 3L, nchar(criterion)))) {
       .err(sprintf("`criterion` must be one of %s",
                    word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
     }
 
-    cv <- round(str2num(numcv))
+    cv <- round(str2num(substr(criterion, 3L, nchar(criterion))))
 
-    if (cv < 2)
+    if (cv < 2) {
       .err("at least 2 CV-folds must be specified in `criterion`")
+    }
   }
   else {
     criterion <- available.criteria[s.m.matches]
@@ -275,9 +347,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   trim.at <- ...get("trim.at", 0)
 
-  n.trees <- ...get("n.trees", 1e4)
+  n.trees <- ...get("n.trees", 1e4L)
   chk::chk_count(n.trees)
-  chk::chk_gt(n.trees, 1)
+  chk::chk_gt(n.trees, 1L)
 
   A <- ...mget(setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
@@ -304,14 +376,14 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (cv == 0) {
-    start.tree <- ...get("start.tree", 1)
+    start.tree <- ...get("start.tree", 1L)
     chk::chk_count(start.tree)
-    chk::chk_range(start.tree, c(1, n.trees))
+    chk::chk_range(start.tree, c(1L, n.trees))
 
     n.grid <- ...get("n.grid",
                      round(1 + sqrt(2 * (n.trees - start.tree + 1))))
     chk::chk_count(n.grid)
-    chk::chk_range(n.grid, c(2, n.trees))
+    chk::chk_range(n.grid, c(2L, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -332,17 +404,16 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   B <- make_list(tunable)
 
   ## Interaction depth
-  B[["interaction.depth"]] <- ...get("interaction.depth", 3)
+  B[["interaction.depth"]] <- ...get("interaction.depth", 3L)
 
   ## Shrinkage
   B[["shrinkage"]] <- ...get("shrinkage", .01)
 
   ## Distribution
-  if (is_not_null(distribution <- ...get("distribution"))) {
-    B[["distribution"]] <- match_arg(distribution, available.distributions, several.ok = TRUE)
-  }
-  else {
-    B[["distribution"]] <- available.distributions[1L]
+  distribution <- ...get("distribution")
+  B[["distribution"]] <- {
+    if (is_null(distribution)) available.distributions[1L]
+    else match_arg(distribution, available.distributions, several.ok = TRUE)
   }
 
   ## Offset
@@ -380,7 +451,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   # Maintain seed across tunable params
   genv <- globalenv()
-  if (is_null(genv$.Random.seed)) runif(1)
+  if (is_null(genv$.Random.seed)) runif(1L)
   curr_seed <- genv$.Random.seed
 
   for (i in seq_row(tune)) {
@@ -432,9 +503,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                              c("tree", criterion))
       }
       else {
-        it <- which.min(iter.grid.balance) + c(-1, 1)
-        it[1] <- iters.grid[max(1, it[1])]
-        it[2] <- iters.grid[min(length(iters.grid), it[2])]
+        it <- which.min(iter.grid.balance) + c(-1L, 1L)
+        it[1L] <- iters.grid[max(1L, it[1L])]
+        it[2L] <- iters.grid[min(length(iters.grid), it[2L])]
         iters.to.check <- iters[between(iters, iters[it])]
 
         if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) {
@@ -464,9 +535,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                              c("tree", criterion))
       }
 
-      tree.val <- unique(tree.val[order(tree.val$tree),])
-      w <- w[,best.tree.index]
-      ps <- if (treat.type == "binary") ps[,best.tree.index] else NULL
+      tree.val <- unique(tree.val[order(tree.val$tree), ])
+      w <- w[, best.tree.index]
+      ps <- if (treat.type == "binary") ps[, best.tree.index] else NULL
 
       tune[[paste.("best", criterion)]][i] <- best.loss
       tune[["best.tree"]][i] <- best.tree
@@ -483,10 +554,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                    tree.val = rbind(info$tree.val, cbind(tune = i, tree.val)))
     }
     else {
-      if (i == 1) {
+      if (i == 1L) {
         A["data"] <- list(data.frame(treat, covs))
         A[["cv.folds"]] <- cv
-        A["n.cores"] <- list(...get("n.cores", 1))
+        A["n.cores"] <- list(...get("n.cores", 1L))
         A["var.names"] <- list(NULL)
         A[["nTrain"]] <- nrow(covs)
         A[["class.stratify.cv"]] <- ...get("class.stratify.cv", TRUE)
@@ -518,8 +589,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         }
 
         best.w <- drop(.get_w_from_ps_internal_array(best.ps, treat = treat, estimand = estimand,
-                                                     focal = focal, stabilize = stabilize, subclass = subclass))
-        # if (trim.at != 0) best.w <- suppressMessages(trim(best.w, at = trim.at, treat = treat))
+                                                     focal = focal, stabilize = stabilize,
+                                                     subclass = subclass))
+
         current.best.loss <- best.loss
         best.tune.index <- i
 
@@ -536,9 +608,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     if (treat.type == "multi-category") ps <- NULL
   }
 
-  if (nrow(tune) > 1) {
+  if (nrow(tune) > 1L) {
     info[["tune"]] <- tune
-    info[["best.tune"]] <- tune[best.tune.index,]
+    info[["best.tune"]] <- tune[best.tune.index, ]
   }
 
   list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
@@ -549,8 +621,6 @@ weightit2gbm.multi <- weightit2gbm
 weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                               stabilize, subclass, missing, verbose, ...) {
 
-  rlang::check_installed("gbm")
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -558,7 +628,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   missing <- .process_missing2(missing, covs)
 
   for (i in seq_col(covs)) {
-    covs[,i] <- .make_closer_to_1(covs[,i])
+    covs[, i] <- .make_closer_to_1(covs[, i])
   }
 
   if (missing == "ind") {
@@ -583,15 +653,16 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   s.m.matches <- charmatch(criterion, available.criteria)
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
     if (!startsWith(criterion, "cv") ||
-        !can_str2num(numcv <- substr(criterion, 3, nchar(criterion)))) {
+        !can_str2num(substr(criterion, 3L, nchar(criterion)))) {
       .err(sprintf("`criterion` must be one of %s",
                    word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
     }
 
-    cv <- round(str2num(numcv))
+    cv <- round(str2num(substr(criterion, 3L, nchar(criterion))))
 
-    if (cv < 2)
+    if (cv < 2) {
       .err("at least 2 CV-folds must be specified in `criterion`")
+    }
   }
   else {
     criterion <- available.criteria[s.m.matches]
@@ -601,9 +672,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   trim.at <- ...get("trim.at", 0)
 
-  n.trees <- ...get("n.trees", 2e4)
+  n.trees <- ...get("n.trees", 2e4L)
   chk::chk_count(n.trees)
-  chk::chk_gt(n.trees, 1)
+  chk::chk_gt(n.trees, 1L)
 
   A <- ...mget(setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
@@ -619,14 +690,14 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   available.distributions <- c("gaussian", "laplace", "tdist")
 
   if (cv == 0) {
-    start.tree <- ...get("start.tree", 1)
+    start.tree <- ...get("start.tree", 1L)
     chk::chk_count(start.tree)
-    chk::chk_range(start.tree, c(1, n.trees))
+    chk::chk_range(start.tree, c(1L, n.trees))
 
     n.grid <- ...get("n.grid",
                      round(1 + sqrt(2 * (n.trees - start.tree + 1))))
     chk::chk_count(n.grid)
-    chk::chk_range(n.grid, c(2, n.trees))
+    chk::chk_range(n.grid, c(2L, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -646,17 +717,16 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   B <- make_list(tunable)
 
   ## Interaction depth
-  B[["interaction.depth"]] <- ...get("interaction.depth", 4)
+  B[["interaction.depth"]] <- ...get("interaction.depth", 4L)
 
   ## Shrinkage
   B[["shrinkage"]] <- ...get("shrinkage", 0.0005)
 
   ## Distribution
-  if (is_not_null(distribution <- ...get("distribution"))) {
-    B[["distribution"]] <- match_arg(distribution, available.distributions, several.ok = TRUE)
-  }
-  else {
-    B[["distribution"]] <- available.distributions[1L]
+  distribution <- ...get("distribution")
+  B[["distribution"]] <- {
+    if (is_null(distribution)) available.distributions[1L]
+    else match_arg(distribution, available.distributions, several.ok = TRUE)
   }
 
   ## Offset
@@ -689,7 +759,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   # Maintain seed across tunable params
   genv <- globalenv()
-  if (is_null(genv$.Random.seed)) runif(1)
+  if (is_null(genv$.Random.seed)) runif(1L)
   curr_seed <- genv$.Random.seed
 
   for (i in seq_row(tune)) {
@@ -708,7 +778,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                         "laplace" = "dlaplace")
     }
 
-    if (i == 1 || (null_density && !identical(tune[["distribution"]][i], tune[["distribution"]][i - 1]))) {
+    if (i == 1L || (null_density && !identical(tune[["distribution"]][i], tune[["distribution"]][i - 1L]))) {
       #Process density params
       densfun <- .get_dens_fun(use.kernel = isTRUE(use.kernel), bw = ...get("bw"),
                                adjust = ...get("adjust"), kernel = ...get("kernel"),
@@ -739,16 +809,16 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
       if (use.offset) gps <- gps + A[["offset"]]
 
-      w <- apply(gps, 2, function(p) {
+      w <- apply(gps, 2L, function(p) {
         r <- treat - p
         exp(log.dens.num - densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE))
       })
 
       if (trim.at != 0) {
-        w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+        w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
       }
 
-      iter.grid.balance <- apply(w, 2, cobalt::bal.compute, x = init)
+      iter.grid.balance <- apply(w, 2L, cobalt::bal.compute, x = init)
 
       if (n.grid == n.trees) {
         best.tree.index <- which.min(iter.grid.balance)
@@ -759,9 +829,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                              c("tree", criterion))
       }
       else {
-        it <- which.min(iter.grid.balance) + c(-1, 1)
-        it[1] <- iters.grid[max(1, it[1])]
-        it[2] <- iters.grid[min(length(iters.grid), it[2])]
+        it <- which.min(iter.grid.balance) + c(-1L, 1L)
+        it[1L] <- iters.grid[max(1L, it[1L])]
+        it[2L] <- iters.grid[min(length(iters.grid), it[2L])]
         iters.to.check <- iters[between(iters, iters[it])]
 
         if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) {
@@ -771,16 +841,16 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
         if (use.offset) gps <- gps + A[["offset"]]
 
-        w <- apply(gps, 2, function(p) {
+        w <- apply(gps, 2L, function(p) {
           r <- treat - p
           exp(log.dens.num - densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE))
         })
 
         if (trim.at != 0) {
-          w <- suppressMessages(apply(w, 2, trim, at = trim.at, treat = treat))
+          w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
         }
 
-        iter.grid.balance.fine <- apply(w, 2, cobalt::bal.compute, x = init)
+        iter.grid.balance.fine <- apply(w, 2L, cobalt::bal.compute, x = init)
 
         best.tree.index <- which.min(iter.grid.balance.fine)
         best.loss <- iter.grid.balance.fine[best.tree.index]
@@ -790,9 +860,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                              c("tree", criterion))
       }
 
-      tree.val <- unique(tree.val[order(tree.val$tree),])
-      w <- w[,best.tree.index]
-      gps <- gps[,as.character(best.tree)]
+      tree.val <- unique(tree.val[order(tree.val$tree), ])
+      w <- w[, best.tree.index]
+      gps <- gps[, as.character(best.tree)]
 
       tune[[paste.("best", criterion)]][i] <- best.loss
       tune[["best.tree"]][i] <- best.tree
@@ -804,7 +874,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         current.best.loss <- best.loss
         best.tune.index <- i
       }
-
     }
     else {
       A["data"] <- list(data.frame(treat, covs))
@@ -858,9 +927,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     plot_density(d.n, d.d, log = TRUE)
   }
 
-  if (nrow(tune) > 1) {
+  if (nrow(tune) > 1L) {
     info[["tune"]] <- tune
-    info[["best.tune"]] <- tune[best.tune.index,]
+    info[["best.tune"]] <- tune[best.tune.index, ]
   }
 
   list(w = best.w, info = info, fit.obj = best.fit)
@@ -870,7 +939,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   use.by <- is_not_null(by)
   use.tune <- {
-    if (use.by) is_not_null(info[[1]]$tune)
+    if (use.by) is_not_null(info[[1L]]$tune)
     else is_not_null(info$tune)
   }
 
@@ -885,7 +954,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
     d$by <- factor(d$by, levels = names(info))
 
-    criterion <- names(d)[3]
+    criterion <- names(d)[3L]
 
     if (use.tune) {
       best <- do.call("rbind", lapply(names(info), function(i) {
@@ -900,8 +969,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       #Subsample if too big
       ind <- unlist(lapply(split(seq_row(d), d[c("by", "tune")]), function(i) {
         if (length(i) <= subsample) return(i)
-        b <- d$by[i][1]
-        t <- d$tune[i][1]
+        b <- d$by[i][1L]
+        t <- d$tune[i][1L]
 
         trees <- round(seq(min(d$tree[i]), max(d$tree[i]), length.out = round(subsample * .8)))
         trees <- c(trees, d$tree[i][d$tree[i] >= best$best.tree[best$by == b & best$tune == t] - subsample * .1 &
@@ -910,7 +979,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         i[d$tree[i] %in% trees]
       }))
 
-      d <- d[sort(ind),]
+      d <- d[sort(ind), ]
     }
     else {
       best <- do.call("rbind", lapply(names(info), function(i) {
@@ -922,7 +991,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       #Subsample if too big
       ind <- unlist(lapply(split(seq_row(d), d["by"]), function(i) {
         if (length(i) <= subsample) return(i)
-        b <- d$by[i][1]
+        b <- d$by[i][1L]
 
         trees <- round(seq(min(d$tree[i]), max(d$tree[i]), length.out = round(subsample * .8)))
         trees <- c(trees, d$tree[i][d$tree[i] >= best$best.tree[best$by == b] - subsample * .1 &
@@ -931,14 +1000,14 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         i[d$tree[i] %in% trees]
       }))
 
-      d <- d[sort(ind),]
+      d <- d[sort(ind), ]
     }
 
     best$by <- factor(best$by, levels = names(info))
   }
   else {
     d <- info$tree.val
-    criterion <- names(d)[3]
+    criterion <- names(d)[3L]
 
     if (use.tune) {
       best <- data.frame(tune = factor(seq_along(info$best.tree)),
@@ -950,7 +1019,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       #Subsample if too big
       ind <- unlist(lapply(split(seq_row(d), d["tune"]), function(i) {
         if (length(i) <= subsample) return(i)
-        t <- d$tune[i][1]
+        t <- d$tune[i][1L]
 
         trees <- round(seq(min(d$tree[i]), max(d$tree[i]), length.out = round(subsample * .8)))
         trees <- c(trees, d$tree[i][d$tree[i] >= best$best.tree[best$tune == t] - subsample * .1 &
@@ -959,7 +1028,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         i[d$tree[i] %in% trees]
       }))
 
-      d <- d[sort(ind),]
+      d <- d[sort(ind), ]
     }
     else {
       best <- data.frame(best.tree = info$best.tree,
@@ -971,7 +1040,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         trees <- c(trees, d$tree[d$tree >= best$best.tree - subsample * .1 &
                                    d$tree <= best$best.tree + subsample * .1])
 
-        d <- d[d$tree %in% trees,]
+        d <- d[d$tree %in% trees, ]
       }
     }
   }
@@ -981,7 +1050,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (use.tune) {
     tune <- {
-      if (use.by) info[[1]]$tune
+      if (use.by) info[[1L]]$tune
       else info$tune
     }
 
@@ -1001,7 +1070,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                                   color = .data$tune),
                  shape = shape, size = size) +
       labs(color = "Parameters") +
-      guides(color = guide_legend(position = "bottom", ncol = 1, direction = "vertical"))
+      guides(color = guide_legend(position = "bottom", ncol = 1L, direction = "vertical"))
   }
   else {
     p <- p +
@@ -1017,4 +1086,3 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   p +
     theme_bw()
 }
-
