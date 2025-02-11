@@ -394,7 +394,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     for (i in seq_along(treat.list)) {
       n <- length(treat.list[[i]])
 
-      if (n != length(treat.list[[1L]])) {
+      if (i > 1L && n != length(treat.list[[1L]])) {
         .err("the number of units must be the same for each time point")
       }
 
