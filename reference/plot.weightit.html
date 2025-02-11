@@ -77,7 +77,7 @@ or <code>"optweight"</code> is supported. To plot the distribution of weights, s
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
 
 <div class="section">
-<h3 id="method-gbm-"><a href="method_gbm"><code>method = "gbm"</code></a><a class="anchor" aria-label="anchor" href="#method-gbm-"></a></h3>
+<h3 id="method-gbm-"><code>method = "gbm"</code><a class="anchor" aria-label="anchor" href="#method-gbm-"></a></h3>
 
 
 <p>After weighting with generalized boosted modeling, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> displays the
@@ -92,7 +92,7 @@ for more information on selecting tuning parameters.</p>
 </div>
 
 <div class="section">
-<h3 id="method-optweight-"><a href="method_optweight"><code>method = "optweight"</code></a><a class="anchor" aria-label="anchor" href="#method-optweight-"></a></h3>
+<h3 id="method-optweight-"><code>method = "optweight"</code><a class="anchor" aria-label="anchor" href="#method-optweight-"></a></h3>
 
 
 <p>After estimating stable balancing weights, <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> displays the values of
@@ -105,7 +105,7 @@ variables are split into those for the target (i.e., ensuring the mean of
 each covariate after weighting is equal to its unweighted mean) and those for
 balance (i.e., ensuring the treatment-covariate correlations are no larger
 than the imbalance tolerance). This is essentially a wrapper for
-optweightplot.optweight.</p>
+optweightplot.optweight. See <code><a href="method_optweight.html">method_optweight</a></code> for details.</p>
 </div>
 
     </div>
