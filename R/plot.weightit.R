@@ -13,7 +13,7 @@
 #'
 #' @details
 #'
-#' ## [`method = "gbm"`](method_gbm)
+#' ## `method = "gbm"`
 #'
 #' After weighting with generalized boosted modeling, `plot()` displays the
 #' results of the tuning process used to find the optimal number of trees (and
@@ -25,7 +25,7 @@
 #' `weightit()`, the plot is faceted by the `by` variable. See [`method_gbm`]
 #' for more information on selecting tuning parameters.
 #'
-#' ## [`method = "optweight"`](method_optweight)
+#' ## `method = "optweight"`
 #'
 #' After estimating stable balancing weights, `plot()` displays the values of
 #' the dual variables for each balance constraint in a bar graph. Large values
@@ -37,7 +37,7 @@
 #' each covariate after weighting is equal to its unweighted mean) and those for
 #' balance (i.e., ensuring the treatment-covariate correlations are no larger
 #' than the imbalance tolerance). This is essentially a wrapper for
-#' \pkgfun{optweight}{plot.optweight}.
+#' \pkgfun{optweight}{plot.optweight}. See [`method_optweight`] for details.
 #'
 #' @seealso [weightit()], [plot.summary.weightit()]
 #'
@@ -52,13 +52,13 @@ plot.weightit <- function(x, ...) {
     .err("`plot(.)` can currently only be used with `weightit()` output objects. To view the distribution of weights, use `plot(summary(.))`")
   }
 
-  if (!is.character(x$method) || !.weightit_methods[[x$method]]$plot.weightit_ok) {
+  if (!chk::vld_string(x$method) || !.weightit_methods[[x$method]]$plot.weightit_ok) {
     .err(sprintf("`plot(.)` cannot be used with %s. To view the distribution of weights, use `plot(summary(.))`",
                  .method_to_phrase(x$method)))
   }
 
   switch(x$method,
-         "gbm" = .plot_tune_gbm(x$info, x$by),
-         "optweight" = .plot_duals_optweight(x$info, x$by)
+         gbm = .plot_tune_gbm(x$info, x$by),
+         optweight = .plot_duals_optweight(x$info, x$by)
   )
 }

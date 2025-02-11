@@ -463,6 +463,8 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
 
   obj <- NULL
 
+  .check_required_packages(method)
+
   if (is.function(method)) {
     fun <- "weightitMSM2user"
   }

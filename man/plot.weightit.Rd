@@ -21,7 +21,7 @@ or \code{"optweight"} is supported. To plot the distribution of weights, see
 \code{\link[=plot.summary.weightit]{plot.summary.weightit()}}.
 }
 \details{
-\subsection{\href{method_gbm}{\code{method = "gbm"}}}{
+\subsection{\code{method = "gbm"}}{
 
 After weighting with generalized boosted modeling, \code{plot()} displays the
 results of the tuning process used to find the optimal number of trees (and
@@ -34,7 +34,7 @@ for each combination of tuning parameters. When \code{by} is used in the call to
 for more information on selecting tuning parameters.
 }
 
-\subsection{\href{method_optweight}{\code{method = "optweight"}}}{
+\subsection{\code{method = "optweight"}}{
 
 After estimating stable balancing weights, \code{plot()} displays the values of
 the dual variables for each balance constraint in a bar graph. Large values
@@ -46,7 +46,7 @@ variables are split into those for the target (i.e., ensuring the mean of
 each covariate after weighting is equal to its unweighted mean) and those for
 balance (i.e., ensuring the treatment-covariate correlations are no larger
 than the imbalance tolerance). This is essentially a wrapper for
-\pkgfun{optweight}{plot.optweight}.
+\pkgfun{optweight}{plot.optweight}. See \code{\link{method_optweight}} for details.
 }
 }
 \examples{

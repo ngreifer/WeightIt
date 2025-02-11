@@ -36,7 +36,8 @@
 
   if ((!is.character(method) && !is.function(method)) ||
       (is.character(method) && (length(method) > 1L ||
-                                .method_to_proper_method(method) %nin% names(.weightit_methods)))) {
+                                !utils::hasName(.weightit_methods,
+                                                .method_to_proper_method(method))))) {
     .err(sprintf("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n%s",
                  word_list(names(.weightit_methods), and.or = FALSE, quotes = 2L)),
          tidy = FALSE)
@@ -53,7 +54,7 @@
 
 .check_method_treat.type <- function(method, treat.type) {
   if (is_not_null(method) && is.character(method) &&
-      (method %in% names(.weightit_methods)) &&
+      utils::hasName(.weightit_methods, method) &&
       (treat.type %nin% .weightit_methods[[method]]$treat_type)) {
     .err(sprintf("%s can only be used with a %s treatment",
                  .method_to_phrase(method),
@@ -63,7 +64,7 @@
 
 .check_required_packages <- function(method) {
   if (is_not_null(method) && is.character(method) &&
-      (method %in% names(.weightit_methods))) {
+      utils::hasName(.weightit_methods, method)) {
 
     pkgs <- .weightit_methods[[method]]$packages_needed
 
@@ -85,7 +86,7 @@
     return(s.weights)
   }
 
-  if (!is.character(s.weights) || length(s.weights) != 1L) {
+  if (!chk::vld_string(s.weights)) {
     .err("the argument to `s.weights` must be a vector or data frame of sampling weights or the (quoted) names of the variable in `data` that contains sampling weights")
   }
 
@@ -93,7 +94,7 @@
     .err("`s.weights` was specified as a string but there was no argument to `data`")
   }
 
-  if (s.weights %nin% names(data)) {
+  if (!utils::hasName(data, s.weights)) {
     .err("the name supplied to `s.weights` is not the name of a variable in `data`")
   }
 
@@ -111,16 +112,19 @@
 
 .method_to_phrase <- function(method) {
 
-  if (is_null(method))
+  if (is_null(method)) {
     return("no weighting")
+  }
 
-  if (is.function(method))
+  if (is.function(method)) {
     return("a user-defined method")
+  }
 
   method <- .method_to_proper_method(method)
 
-  if (method %nin% names(.weightit_methods))
+  if (!utils::hasName(.weightit_methods, method)) {
     return("the chosen method of weighting")
+  }
 
   .weightit_methods[[method]]$description
 }
@@ -315,9 +319,9 @@
 
 .missing_to_phrase <- function(missing) {
   switch(missing,
-         "ind" = "missingness indicators",
-         "saem" = "SAEM",
-         "surr" = "surrogate splitting",
+         ind = "missingness indicators",
+         saem = "SAEM",
+         surr = "surrogate splitting",
          missing)
 }
 
@@ -350,7 +354,7 @@
       .err("`ps` was specified as a string but there was no argument to `data`")
     }
 
-    if (ps %nin% names(data)) {
+    if (!utils::hasName(data, ps)) {
       .err("the name supplied to `ps` is not the name of a variable in `data`")
     }
 
@@ -571,7 +575,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     by <- NULL
     by.name <- NULL
   }
-  else if (chk::vld_string(by) && by %in% names(data)) {
+  else if (chk::vld_string(by) && utils::hasName(data, by)) {
     by.name <- by
     by <- data[[by]]
   }
@@ -1108,7 +1112,7 @@ stabilize_w <- function(weights, treat) {
   else {
     if (is_null(density)) .density <- function(x, log = FALSE) dnorm(x, log = log)
     else if (is.function(density)) .density <- function(x, log = FALSE) {
-      if ("log" %in% names(formals(density))) density(x, log = log)
+      if (utils::hasName(formals(density), "log")) density(x, log = log)
       else if (log) log(density(x))
       else density(x)
     }
@@ -1136,7 +1140,7 @@ stabilize_w <- function(weights, treat) {
       }
 
       .density <- function(x, log = FALSE) {
-        if ("log" %in% names(formals(splitdens1))) {
+        if (utils::hasName(formals(splitdens1), "log")) {
           out <- tryCatch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1L])))),
                           error = function(e) {
                             .err(sprintf("Error in applying density:\n  %s",

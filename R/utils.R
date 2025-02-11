@@ -170,8 +170,8 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   df[nas] <- na_vals
   df[infs] <- "N/A"
 
-  if (length(rn) > 0L) rownames(df) <- rn
-  if (length(cn) > 0L) names(df) <- cn
+  if (is_not_null(rn)) rownames(df) <- rn
+  if (is_not_null(cn)) names(df) <- cn
 
   df
 }
@@ -591,6 +591,12 @@ hasbar <- function(term) {
 #treat/covs
 get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep = "", ...) {
 
+  if (!rlang::is_formula(f)) {
+    .err("`formula` must be a formula")
+  }
+
+  env <- environment(f)
+
   #Check if data exists
   if (is_not_null(data)) {
     if (is.data.frame(data)) {
@@ -598,19 +604,13 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     }
     else {
       .wrn("the argument supplied to `data` is not a data.frame object. This may causes errors or unexpected results")
-      data <- environment(f)
+      data <- env
       data.specified <- FALSE
     }
   }
   else {
-    data <- environment(f)
+    data <- env
     data.specified <- FALSE
-  }
-
-  env <- environment(f)
-
-  if (!rlang::is_formula(f)) {
-    .err("`formula` must be a formula")
   }
 
   eval.model.matrx <- !hasbar(f)
@@ -627,6 +627,9 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     }
     .err(msg)
   })
+
+  treat <- ...get("treat")
+  treat.name <- NULL
 
   #Check if response exists
   if (rlang::is_formula(tt, lhs = TRUE)) {
@@ -648,25 +651,18 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     }
 
     if (resp.var.failed) {
-      if (is_null(...get("treat"))) {
+      if (is_null(treat)) {
         .err(sprintf("the given response variable, %s, is not a variable in %s",
                      add_quotes(resp.var.mentioned.char),
                      word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or")))
       }
       tt <- delete.response(tt)
     }
-  }
-  else {
-    resp.var.failed <- TRUE
-  }
 
-  if (resp.var.failed) {
-    treat <- ...get("treat")
-    treat.name <- NULL
-  }
-  else {
-    treat.name <- resp.var.mentioned.char
-    treat <- eval(resp.var.mentioned, data, env)
+    if (!resp.var.failed) {
+      treat.name <- resp.var.mentioned.char
+      treat <- eval(resp.var.mentioned, data, env)
+    }
   }
 
   #Check if RHS variables exist
@@ -762,7 +758,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
       .err(conditionMessage(e), tidy = FALSE)
     })
 
-    if (is_not_null(treat.name) && treat.name %in% names(covs)) {
+    if (is_not_null(treat.name) && utils::hasName(covs, treat.name)) {
       .err("the variable on the left side of the formula appears on the right side too")
     }
   }

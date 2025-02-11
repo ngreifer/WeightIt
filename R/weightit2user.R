@@ -150,7 +150,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
 
   #Get a list of function args for the user-defined function Fun
   Fun_formal <- as.list(formals(Fun))
-  has_dots <- ("..." %in% names(Fun_formal))
+  has_dots <- utils::hasName(Fun_formal, "...")
   if (has_dots) {
     Fun_formal[["..."]] <- NULL
   }
@@ -160,7 +160,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
     if (exists(i, inherits = FALSE)) {
       fun_args[i] <- list(get0(i, inherits = FALSE))
     }
-    else if (i %in% names(A)) {
+    else if (utils::hasName(A, i)) {
       fun_args[i] <- A[i]
       A[[i]] <- NULL
     }
@@ -227,7 +227,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
 
   #Get a list of function args for the user-defined function Fun
   Fun_formal <- as.list(formals(Fun))
-  has_dots <- ("..." %in% names(Fun_formal))
+  has_dots <- utils::hasName(Fun_formal, "...")
   if (has_dots) {
     Fun_formal[["..."]] <- NULL
   }

@@ -788,7 +788,7 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
         }
       }
 
-      if ("s.weights" %in% names(extras)) {
+      if (utils::hasName(extras, "s.weights")) {
         extras[["s.weights"]] <- NULL
       }
     }

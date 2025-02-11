@@ -324,7 +324,7 @@ process.ps <- function(ps, data = NULL, treat) {
       if (is_null(data)) {
         stop("'ps' was specified as a string but there was no argument to 'data'.", call. = FALSE)
       }
-      else if (ps %in% names(data)) {
+      else if (utils::hasName(data, ps)) {
         ps <- data[[ps]]
       }
       else stop("The name supplied to 'ps' is not the name of a variable in 'ps'.", call. = FALSE)
