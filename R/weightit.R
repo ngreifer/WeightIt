@@ -342,7 +342,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
-    .msg("`by` has replaced `exact` in the `weightit()` syntax, but `exact` will always work")
+    .wrn("`by` has replaced `exact` in the `weightit()` syntax, but `exact` will always work")
     by <- A[["exact"]]
     by.arg <- "exact"
   }
@@ -417,7 +417,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               call = call,
               formula = formula,
               stabilize = stabilize,
-              missing = if (missing == "") NULL else missing,
+              missing = if (nzchar(missing)) missing else NULL,
               env = parent.frame(),
               info = obj$info,
               obj = obj$fit.obj)

@@ -47,7 +47,7 @@
 make_full_rank <- function(mat, with.intercept = TRUE) {
 
   if (is.data.frame(mat)) {
-    if (!all(vapply(mat, is.numeric, logical(1L)))) {
+    if (!all_apply(mat, is.numeric)) {
       .err("all columns in `mat` must be numeric")
     }
 
@@ -71,12 +71,12 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
 
   #If intercept is to be included in check, add column of 1s
   if (with.intercept) {
-    q <- qr(cbind(1, mat))
-    keep[q$pivot[-seq(q$rank)] - 1L] <- FALSE
+    mat_qr <- qr(cbind(1, mat))
+    keep[mat_qr$pivot[-seq(mat_qr$rank)] - 1L] <- FALSE
   }
   else {
-    q <- qr(mat)
-    keep[q$pivot[-seq(q$rank)]] <- FALSE
+    mat_qr <- qr(mat)
+    keep[mat_qr$pivot[-seq(mat_qr$rank)]] <- FALSE
   }
 
   if (is.mat) {

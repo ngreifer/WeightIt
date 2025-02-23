@@ -24,15 +24,15 @@
     .err('`link` must be a string or an object of class "link-glm"')
   }
 
-  family <- binomial(link)
+  fam <- binomial(link)
 
-  if (!is.function(family$linkinv)) {
+  if (!is.function(fam$linkinv)) {
     .err("the supplied link seems not to create a valid binomial family object")
   }
 
-  .linkfun <- family$linkfun
-  .linkinv <- family$linkinv
-  .mu.eta <- family$mu.eta
+  .linkfun <- fam$linkfun
+  .linkinv <- fam$linkinv
+  .mu.eta <- fam$mu.eta
 
   y <- droplevels(as.factor(y))
   n <- length(y)
@@ -67,7 +67,7 @@
     q1 <- floor(median(y_))
     y1 <- as.numeric(y_ > q1)
     coefs <- .get_glm_starting_values(X = cbind(1, x_), Y = y1, w = weights,
-                                      family = family, offset = offset)
+                                      family = fam, offset = offset)
 
     if (m > 2L) {
       spacing <- .linkfun(cumsum(tabulate(y_)[-m] / n))
@@ -290,7 +290,7 @@
   list(coefficients = coefs,
        residuals = res,
        fitted.values = pp,
-       family = family,
+       family = fam,
        linear.predictors = offset + drop(x_ %*% theta[seq_col(x_)]),
        solve = out0,
        psi = psi,
@@ -370,13 +370,13 @@
 .get_hess_ordinal <- function(fit) {
   x <- if_null_then(fit[["x"]], model.matrix(fit))
   y <- if_null_then(fit[["y"]], model.response(model.frame(fit)))
-  family <- fit[["family"]]
+  fam <- fit[["family"]]
   weights <- weights(fit)
   offset <- fit$offset
   coefs <- coef(fit)
 
-  .linkinv <- family$linkinv
-  .mu.eta <- family$mu.eta
+  .linkinv <- fam$linkinv
+  .mu.eta <- fam$mu.eta
 
   y <- droplevels(as.factor(y))
   n <- length(y)

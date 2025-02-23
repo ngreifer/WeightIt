@@ -14,8 +14,8 @@
   }
 
   .allowable.methods <- unlist(lapply(names(.weightit_methods), function(m) {
-    alias <- .weightit_methods[[m]]$alias
-    setNames(rep(m, length(alias)), alias)
+    aliases <- .weightit_methods[[m]]$alias
+    setNames(rep(m, length(aliases)), aliases)
   }))
 
   unname(.allowable.methods[method])
@@ -205,7 +205,7 @@
 
     bad.q <- FALSE
     if (is.numeric(quantile) && .vld_qu(quantile)) {
-      if (length(quantile) == 1L || (is_not_null(names(quantile)) && !any(names(quantile) == ""))) {
+      if (length(quantile) == 1L || (is_not_null(names(quantile)) && all(nzchar(names(quantile))))) {
         quantile <- as.list(quantile)
       }
       else {
@@ -213,8 +213,8 @@
       }
     }
     else if (is.list(quantile)) {
-      if ((length(quantile) > 1L && (is_null(names(quantile)) || any(names(quantile) == ""))) ||
-          !all(vapply(quantile, .vld_qu, logical(1L)))) {
+      if ((length(quantile) > 1L && (is_null(names(quantile)) || !all(nzchar(names(quantile))))) ||
+          !all_apply(quantile, .vld_qu)) {
         bad.q <- TRUE
       }
     }
@@ -448,7 +448,7 @@
   }
 
   control <- NULL
-  message <- FALSE
+  throw_message <- FALSE
 
   unique.vals <- {
     if (chk::vld_character_or_factor(treat))
@@ -491,7 +491,7 @@
     if (is_null(control)) {
       control <- unique.vals[1L]
 
-      message <- TRUE
+      throw_message <- TRUE
     }
   }
   else if (can_str2num(unique.vals)) {
@@ -502,7 +502,7 @@
     if (is_null(control)) {
       control <- unique.vals[which.min(unique.vals.numeric)]
 
-      message <- TRUE
+      throw_message <- TRUE
     }
   }
   else {
@@ -524,7 +524,7 @@
     control <- unique.vals[1L]
     treated <- unique.vals[2L]
 
-    message <- TRUE
+    throw_message <- TRUE
   }
   else if (is_null(control)) {
     control <- setdiff(unique.vals, treated)
@@ -533,7 +533,7 @@
     treated <- setdiff(unique.vals, control)
   }
 
-  if (message) {
+  if (throw_message) {
     if (estimand == "ATT") {
       .msg(sprintf("assuming %s is the treated level. If not, supply an argument to `focal`",
                    add_quotes(treated, !is.numeric(unique.vals))))
@@ -620,7 +620,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 
   if (treat.type != "continuous" &&
-      any(vapply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]), logical(1L)))) {
+      any_apply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]))) {
     .err(sprintf("not all the groups formed by `%s` contain all treatment levels%s. Consider coarsening `%s`",
                  by.arg,
                  if (is_not_null(treat.name)) sprintf(" in %s", treat.name) else "",
@@ -1031,7 +1031,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
              sum(.soft_thresh(sub_tab[t, seq_len(first_0 - 1L)]) / abs(first_0 - seq_len(first_0 - 1L))) >=
              sum(.soft_thresh(sub_tab[t, seq(first_0 + 1L, nsub)]) / abs(first_0 - seq(first_0 + 1L, nsub))))) {
           #If there are more and closer nonzero subs to the left...
-          first_non0_to_left <- max(seq_len(first_0 - 1L)[sub_tab[t, seq_len(first_0 - 1L)] > 0])
+          first_non0_to_left <- max(seq_len(first_0 - 1L)[sub_tab[t, seq_len(first_0 - 1L)] > 0L])
 
           name_to_move <- names(sub)[which(x == max(x[treat == t & sub == first_non0_to_left]) &
                                              treat == t & sub == first_non0_to_left)[1L]]
@@ -1043,7 +1043,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
         }
         else {
           #If there are more and closer nonzero subs to the right...
-          first_non0_to_right <- min(seq(first_0 + 1L, nsub)[sub_tab[t, seq(first_0 + 1L, nsub)] > 0])
+          first_non0_to_right <- min(seq(first_0 + 1L, nsub)[sub_tab[t, seq(first_0 + 1L, nsub)] > 0L])
           name_to_move <- names(sub)[which(x == min(x[treat == t & sub == first_non0_to_right]) &
                                              treat == t & sub == first_non0_to_right)[1L]]
           sub[name_to_move] <- first_0
@@ -1228,13 +1228,13 @@ stabilize_w <- function(weights, treat) {
     w[-i0] <- 1 / ps[-i0]
 
     ps.sorted <- sort(c(ps, 1 - ps))
-    q <- ps * (1 - ps)
+    z <- ps * (1 - ps)
     alpha.opt <- 0
     for (i in seq_len(sum(ps < .5))) {
       if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1L])) {
         alpha <- ps.sorted[i]
         a <- alpha * (1 - alpha)
-        if (2 * a * sum(1 / q[q >= a]) / sum(q >= a) >= 1) {
+        if (2 * a * sum(1 / z[z >= a]) / sum(z >= a) >= 1) {
           alpha.opt <- alpha
           break
         }
@@ -1286,13 +1286,13 @@ stabilize_w <- function(weights, treat) {
   else if (estimand == "ATOS") {
     #Crump et al. (2009)
     ps.sorted <- sort(c(ps_mat[, 2L], 1 - ps_mat[, 2L]))
-    q <- ps_mat[, 2L] * (1 - ps_mat[, 2L])
+    z <- ps_mat[, 2L] * (1 - ps_mat[, 2L])
     alpha.opt <- 0
     for (i in seq_len(sum(ps_mat[, 2L] < .5))) {
       if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1L])) {
         alpha <- ps.sorted[i]
         a <- alpha * (1 - alpha)
-        if (2 * a * sum(1 / q[q >= a]) / sum(q >= a) >= 1) {
+        if (2 * a * sum(1 / z[z >= a]) / sum(z >= a) >= 1) {
           alpha.opt <- alpha
           break
         }
@@ -1746,10 +1746,10 @@ generalized_inverse <- function(sigma, .try = TRUE) {
 
 #Get psi function (individual contributions to gradient) from glm fit
 .get_glm_psi <- function(fit) {
-  family <- fit$family
+  fam <- fit$family
 
-  if (is_null(family) ||
-      identical(family, gaussian(), ignore.environment = TRUE)) {
+  if (is_null(fam) ||
+      identical(fam, gaussian(), ignore.environment = TRUE)) {
     psi <- function(B, X, y, weights, offset = 0) {
       p <- drop(X %*% B) + offset
 
@@ -1766,29 +1766,29 @@ generalized_inverse <- function(sigma, .try = TRUE) {
       fit$control[["a"]] <- eval(formals(brglm2::brglmControl)[["a"]])
     }
 
-    br_psi <- function(X, W, D, p, XB, V) {
-      DD <- family$d2mu.deta(XB)
-      Wt <- W * D^2 / V #"working weight"
+    br_psi <- function(X, W, d, p, XB, V) {
+      DD <- fam$d2mu.deta(XB)
+      Wt <- W * d^2 / V #"working weight"
 
       ## Compute hat values
       XWt <- sqrt(Wt) * X
-      q <- qr(XWt)
-      Q <- qr.Q(q)
+      qrXWT <- qr(XWt)
+      Q <- qr.Q(qrXWT)
       H <- rowSums(Q * Q)
 
       if (br_type %in% c("AS_mixed", "AS_mean")) {
-        AA <- .5 * X * H * DD / D
+        AA <- .5 * X * H * DD / d
         return(AA)
       }
 
-      V1 <- family$d1variance(p)
+      V1 <- fam$d1variance(p)
 
       if (br_type == "MPL_Jeffreys") {
-        return(fit$control[["a"]] * X * H * (2 * DD / D - V1 * D / V))
+        return(fit$control[["a"]] * X * H * (2 * DD / d - V1 * d / V))
       }
 
       #br_type == "AS_median"
-      R_matrix <- qr.R(q)
+      R_matrix <- qr.R(qrXWT)
       info_unscaled <- crossprod(R_matrix)
       inverse_info_unscaled <- chol2inv(R_matrix)
 
@@ -1797,31 +1797,31 @@ generalized_inverse <- function(sigma, .try = TRUE) {
         vcov_j <- tcrossprod(inverse_info_unscaled_j) / inverse_info_unscaled_j[j]
         hats_j <- rowSums((X %*% vcov_j) * X) * Wt
 
-        inverse_info_unscaled_j %*% colSums(X * (hats_j * (D * V1 / (6 * V) - DD / (2 * D))))
+        inverse_info_unscaled_j %*% colSums(X * (hats_j * (d * V1 / (6 * V) - DD / (2 * d))))
       }, numeric(1L))
 
-      AA <- .5 * X * H * DD / D
+      AA <- .5 * X * H * DD / d
       sweep(AA, 2L, info_unscaled %*% b_vector / nrow(X), "+")
     }
 
     psi <-  function(B, X, y, weights, offset = 0) {
       XB <- drop(X %*% B) + offset
-      p <- family$linkinv(XB)
-      D <- family$mu.eta(XB)
-      V <- family$variance(p)
+      p <- fam$linkinv(XB)
+      d <- fam$mu.eta(XB)
+      V <- fam$variance(p)
 
-      .psi <- X * (weights * D * (y - p) / V)
+      .psi <- X * (weights * d * (y - p) / V)
 
-      .psi + br_psi(X, weights, D, p, XB, V)
+      .psi + br_psi(X, weights, d, p, XB, V)
     }
   }
-  else if (identical(family, binomial(), ignore.environment = TRUE) ||
-           identical(family, quasibinomial(), ignore.environment = TRUE) ||
-           identical(family, poisson(), ignore.environment = TRUE) ||
-           identical(family, quasipoisson(), ignore.environment = TRUE)) {
+  else if (identical(fam, binomial(), ignore.environment = TRUE) ||
+           identical(fam, quasibinomial(), ignore.environment = TRUE) ||
+           identical(fam, poisson(), ignore.environment = TRUE) ||
+           identical(fam, quasipoisson(), ignore.environment = TRUE)) {
     psi <- function(B, X, y, weights, offset = 0) {
       XB <- drop(X %*% B) + offset
-      p <- family$linkinv(XB)
+      p <- fam$linkinv(XB)
 
       X * (weights * (y - p))
     }
@@ -1829,11 +1829,11 @@ generalized_inverse <- function(sigma, .try = TRUE) {
   else {
     psi <- function(B, X, y, weights, offset = 0) {
       XB <- drop(X %*% B) + offset
-      p <- family$linkinv(XB)
-      D <- family$mu.eta(XB)
-      V <- family$variance(p)
+      p <- fam$linkinv(XB)
+      d <- fam$mu.eta(XB)
+      V <- fam$variance(p)
 
-      X * (weights * D * (y - p) / V)
+      X * (weights * d * (y - p) / V)
     }
   }
 
@@ -1899,15 +1899,15 @@ generalized_inverse <- function(sigma, .try = TRUE) {
     return(fit$coefficients)
   }
 
-  start <- c(family$linkfun(w.m(Y, w)), rep.int(0, ncol(X) - 1L))
+  coef_start <- c(family$linkfun(w.m(Y, w)), rep.int(0, ncol(X) - 1L))
 
   suppressWarnings({
     fit <- try(glm.fit(X, Y, weights = w, offset = offset, family = family,
-                       start = start, control = list(maxit = 1e4L)), silent = TRUE)
+                       start = coef_start, control = list(maxit = 1e4L)), silent = TRUE)
   })
 
   if (null_or_error(fit) || !isTRUE(fit$converged)) {
-    return(start)
+    return(coef_start)
   }
 
   fit$coefficients

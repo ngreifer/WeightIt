@@ -184,7 +184,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   mod.split <- cobalt::splitfactor(moderator.factor, drop.first = "if2")
   same.as.moderator <- apply(covs, 2L, function(c) {
-    any(vapply(mod.split, equivalent.factors, logical(1L), c))
+    any_apply(mod.split, equivalent.factors, c)
   })
   covs <- covs[, !same.as.moderator, drop = FALSE]
 
@@ -256,8 +256,10 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
             treat_i <- c(rep.int(1, nrow(covs)), rep.int(0, sum(treat == t)))
             w_i <- c(rep.int(1, nrow(covs)), w_[treat == t])
             moderator.factor_i <- c(moderator.factor, moderator.factor[treat == t])
-            if (is_not_null(s.weights)) s.weights_i <- c(s.weights, s.weights[treat == t])
-            else s.weights_i <- NULL
+            s.weights_i <- {
+              if (is_null(s.weights)) NULL
+              else c(s.weights, s.weights[treat == t])
+            }
             unlist(lapply(R, function(g) cobalt::col_w_smd(covs_i[moderator.factor_i == g, , drop = FALSE],
                                                            treat_i[moderator.factor_i == g], w_i[moderator.factor_i == g],
                                                            std = TRUE, s.d.denom = "treated",

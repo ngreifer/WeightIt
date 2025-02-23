@@ -283,7 +283,7 @@ summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, ...)
 
 #' @exportS3Method print summary.weightitMSM
 print.summary.weightitMSM <- function(x, ...) {
-  only.one <- all(vapply(x, function(y) isTRUE(all.equal(x[[1L]], y)), logical(1L)))
+  only.one <- all_apply(x, function(y) isTRUE(all.equal(x[[1L]], y)))
 
   for (ti in seq_along(x)) {
     if (!only.one) {

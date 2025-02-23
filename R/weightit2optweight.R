@@ -192,14 +192,14 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
     covs <- add_missing_indicators(covs)
   }
 
-  args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
+  .args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
                            names(formals(optweight::optweight)),
                            names(formals(osqp::osqpSettings)))),
                   c("treat.list", "covs.list", "data",
                     "estimand", "focal",
                     "formula", "s.weights", "verbose"))
 
-  A <- ...mget(args)
+  A <- ...mget(.args)
 
   A[["data"]] <- data.frame(treat, covs)
   A[["formula"]] <- formula(A[["data"]])
@@ -245,13 +245,13 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
     covs <- add_missing_indicators(covs)
   }
 
-  args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
+  .args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
                            names(formals(optweight::optweight)),
                            names(formals(osqp::osqpSettings)))),
                   c("treat.list", "covs.list", "data",
                     "formula", "s.weights", "verbose"))
 
-  A <- ...mget(args)
+  A <- ...mget(.args)
 
   A[["data"]] <- data.frame(treat, covs)
   A[["formula"]] <- formula(A[["data"]])
@@ -316,13 +316,13 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
     }
   }
 
-  args <- setdiff(c(names(formals(optweight::optweight.fit)),
+  .args <- setdiff(c(names(formals(optweight::optweight.fit)),
                     names(formals(osqp::osqpSettings))),
                   c("treat.list", "covs.list",
                     "estimand", "focal",
                     "s.weights", "force", "verbose"))
 
-  A <- ...mget(args)
+  A <- ...mget(.args)
 
   A[["treat.list"]] <- treat.list
   A[["covs.list"]] <- covs.list
@@ -364,19 +364,17 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
 
   d$by <- factor(d$by, levels = names(info))
 
-  title <- "Dual Variables for Constraints"
-
   d$cov <- factor(d$cov, levels = rev(unique(d$cov)))
   d$constraint <- factor(d$constraint, levels = unique(d$constraint, nmax = 2L),
                          labels = paste("Constraint:", unique(d$constraint, nmax = 2L)))
 
-  p <- ggplot(d, aes(y = .data$cov, x = .data$dual)) +
+  ggplot(d, aes(y = .data$cov, x = .data$dual)) +
     geom_col() +
     geom_vline(xintercept = 0) +
-    labs(x = "Absolute Dual Variable", y = "Covariate", title = title) +
+    labs(x = "Absolute Dual Variable", y = "Covariate",
+         title = "Dual Variables for Constraints") +
     scale_x_continuous(expand = expansion(c(0, 0.05))) +
     facet_grid(rows = vars(.data$constraint),
                if (use.by) vars(.data$by) else NULL) +
     theme_bw()
-  p
 }

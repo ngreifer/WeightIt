@@ -130,7 +130,7 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
 
   if (...length() > 0L) {
     nm <- ...names()
-    if (is_null(nm) || any(nm == "")) {
+    if (is_null(nm) || !all(nzchar(nm))) {
       .err("all arguments in `...` must be named")
     }
 
@@ -162,8 +162,8 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
   chk::chk_not_missing(treat.list, "`treat.list`")
   chk::chk_list(treat.list)
 
-  if (!all(vapply(treat.list, is.atomic, logical(1L))) ||
-      !all(vapply(treat.list, function(z) is_null(dim(z)), logical(1L)))) {
+  if (!all_apply(treat.list, is.atomic) ||
+      any_apply(treat.list, function(z) is_not_null(dim(z)))) {
     .err("`treat.list` must be a list of atomic vectors (i.e., numeric, logical, or character) or factors")
   }
 
@@ -183,7 +183,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
 
   chk::chk_null_or(covs.list, vld = chk::vld_list)
   if (is_not_null(covs.list)) {
-    if (!all(vapply(covs.list, is.data.frame, logical(1L)))) {
+    if (!all_apply(covs.list, is.data.frame)) {
       .err("`covs.list` must be a list of data.frames for each time point")
     }
     if (length(covs.list) != length(treat.list)) {
@@ -210,8 +210,8 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
       .err("`ps.list` must have the same number of time points as `treat.list`")
     }
 
-    if (!all(vapply(ps.list, is.numeric, logical(1L))) ||
-        !all(vapply(ps.list, function(z) is_null(dim(z)), logical(1L)))) {
+    if (!all_apply(ps.list, is.numeric) ||
+        any_apply(ps.list, function(z) is_not_null(dim(z)))) {
       .err("`ps.list` must be a list of numeric vectors")
     }
 
@@ -234,7 +234,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
 
   if (...length() > 0L) {
     nm <- ...names()
-    if (is_null(nm) || any(nm == "")) {
+    if (is_null(nm) || !all(nzchar(nm))) {
       .err("all arguments in `...` must be named")
     }
 

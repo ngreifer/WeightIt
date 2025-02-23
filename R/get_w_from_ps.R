@@ -288,13 +288,13 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   else if (estimand == "ATOS") {
     #Crump et al. (2009)
     ps.sorted <- sort(ps_mat)
-    q <- ps_mat[, 1L] * ps_mat[, 2L]
+    z <- ps_mat[, 1L] * ps_mat[, 2L]
     alpha.opt <- 0
     for (i in seq_len(sum(ps_mat[, 2L] < .5))) {
       if (i == 1L || !check_if_zero(ps.sorted[i] - ps.sorted[i - 1L])) {
         alpha <- ps.sorted[i]
         a <- alpha * (1 - alpha)
-        if (2 * a * sum(1 / q[q >= a]) / sum(q >= a) >= 1) {
+        if (2 * a * sum(1 / z[z >= a]) / sum(z >= a) >= 1) {
           alpha.opt <- alpha
           break
         }
@@ -331,7 +331,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       ps.names <- rownames(ps)
     }
     else if (is.data.frame(ps)) {
-      if (!all(vapply(ps, is.numeric, logical(1L)))) {
+      if (!all_apply(ps, is.numeric)) {
         .err("all columns of `ps` must be numeric when supplied as a data.frame")
       }
       ps.names <- rownames(ps)
@@ -388,7 +388,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       ps.names <- rownames(ps)
     }
     else if (is.data.frame(ps)) {
-      if (!all(vapply(ps, is.numeric, logical(1L)))) {
+      if (!all_apply(ps, is.numeric)) {
         .err("all columns of `ps` must be numeric when supplied as a data.frame")
       }
       ps.names <- rownames(ps)

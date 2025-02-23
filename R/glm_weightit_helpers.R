@@ -297,10 +297,8 @@
       chk::chk_subset(p.ind, seq_col(x))
     }
   }
-  else {
-    if (is_not_null(p.ind)) {
-      .err("`has.Pvalue` set to `FALSE` but `p.ind` is not `NULL`")
-    }
+  else if (is_not_null(p.ind)) {
+    .err("`has.Pvalue` set to `FALSE` but `p.ind` is not `NULL`")
   }
 
   if (is_null(P.values)) {
@@ -681,7 +679,7 @@
     if (p > 1L) {
       clu <- lapply(seq_len(p), function(i) utils::combn(seq_len(p), i, simplify = FALSE))
       clu <- unlist(clu, recursive = FALSE)
-      sign <- vapply(clu, function(i) (-1)^(length(i) + 1L), numeric(1L))
+      sgn <- vapply(clu, function(i) (-1)^(length(i) + 1L), numeric(1L))
       paste_ <- function(...) paste(..., sep = "_")
       for (i in (p + 1L):length(clu)) {
         cluster <- cbind(cluster, Reduce(paste_, unclass(cluster[, clu[[i]]])))
@@ -689,7 +687,7 @@
     }
     else {
       clu <- list(1)
-      sign <- 1
+      sgn <- 1
     }
 
     #Small sample adjustment (setting cadjust = TRUE in vcovCL)
@@ -758,7 +756,7 @@
       for (i in seq_along(clu)) {
         fwb.args$cluster <- cluster[[i]]
         fwb_out <- eval(as.call(c(list(quote(fwb::fwb)), fwb.args)))
-        V <- V + sign[i] * cov(fwb_out[["t"]])
+        V <- V + sgn[i] * cov(fwb_out[["t"]])
       }
     }
   }
@@ -828,7 +826,7 @@
           bootfun(data, ind)
         }))
 
-        V <- V + sign[i] * cov(boot_out)
+        V <- V + sgn[i] * cov(boot_out)
       }
     }
   }
@@ -845,7 +843,7 @@
                           collapse = cluster[[i]],
                           weighted = TRUE)
 
-        V <- V + sign[i] * adj * crossprod(temp)
+        V <- V + sgn[i] * adj * crossprod(temp)
       }
     }
   }
@@ -990,7 +988,7 @@
       for (i in seq_along(clu)) {
         adj <- g[i] / (g[i] - 1)
 
-        B1 <- B1 + sign[i] * adj * crossprod(rowsum(psi_b, cluster[[i]], reorder = FALSE))
+        B1 <- B1 + sgn[i] * adj * crossprod(rowsum(psi_b, cluster[[i]], reorder = FALSE))
       }
     }
     else {

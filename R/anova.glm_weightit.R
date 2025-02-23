@@ -112,9 +112,9 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
 
   Z1_svd <- svd(Z1)
   keep <- Z1_svd[["d"]] > tolerance
-  q <- sum(keep)
+  .q <- sum(keep)
 
-  if (q > df2 - df1) {
+  if (.q > df2 - df1) {
     .err("`object2` does not appear to be nested within `object`")
   }
 
@@ -132,24 +132,24 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  title <- paste0("\n", underline("Wald test"))
-  topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
-                     deparse1(formula(object)),
-                     deparse1(formula(object2)))
+  .title <- paste0("\n", underline("Wald test"))
+  .topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
+                      deparse1(formula(object)),
+                      deparse1(formula(object2)))
 
-  varnote <- paste(italic(sprintf("Variance: %s\n",
-                                  .vcov_to_phrase(object[["vcov_type"]],
-                                                  is_not_null(attr(object, "cluster"))))))
+  .varnote <- paste(italic(sprintf("Variance: %s\n",
+                                   .vcov_to_phrase(object[["vcov_type"]],
+                                                   is_not_null(attr(object, "cluster"))))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
 
   result[[1L]] <- c(df1, df2)
-  result[[2L]] <- c(NA_integer_, as.integer(q))
+  result[[2L]] <- c(NA_integer_, as.integer(.q))
   result[[3L]][2L] <- SSH
-  result[[4L]][2L] <- pchisq(SSH, q, lower.tail = FALSE)
+  result[[4L]][2L] <- pchisq(SSH, .q, lower.tail = FALSE)
 
-  attr(result, "heading") <- c(title, varnote, topnote)
+  attr(result, "heading") <- c(.title, .varnote, .topnote)
   attr(result, "value") <- value.hyp
   attr(result, "vcov") <- vcov.hyp
 
@@ -213,9 +213,9 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 
   Z1_svd <- svd(Z1)
   keep <- Z1_svd$d > tolerance
-  q <- sum(keep)
+  .q <- sum(keep)
 
-  if (q > df2 - df1) {
+  if (.q > df2 - df1) {
     .err("`object2` does not appear to be nested within `object`")
   }
 
@@ -235,24 +235,24 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  title <- paste0("\n", underline("Wald test"))
-  topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
-                     deparse1(formula(object)),
-                     deparse1(formula(object2)))
+  .title <- paste0("\n", underline("Wald test"))
+  .topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
+                      deparse1(formula(object)),
+                      deparse1(formula(object2)))
 
-  varnote <- paste(italic(sprintf("Variance: %s\n",
-                                  .vcov_to_phrase(object$vcov_type,
-                                                  is_not_null(attr(object, "cluster"))))))
+  .varnote <- paste(italic(sprintf("Variance: %s\n",
+                                   .vcov_to_phrase(object$vcov_type,
+                                                   is_not_null(attr(object, "cluster"))))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
 
   result[[1L]] <- c(df1, df2)
-  result[[2L]] <- c(NA_integer_, as.integer(q))
+  result[[2L]] <- c(NA_integer_, as.integer(.q))
   result[[3L]][2L] <- SSH
-  result[[4L]][2L] <- pchisq(SSH, q, lower.tail = FALSE)
+  result[[4L]][2L] <- pchisq(SSH, .q, lower.tail = FALSE)
 
-  attr(result, "heading") <- c(title, varnote, topnote)
+  attr(result, "heading") <- c(.title, .varnote, .topnote)
   attr(result, "value") <- value.hyp
   attr(result, "vcov") <- vcov.hyp
 
@@ -325,9 +325,9 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
 
   Z1_svd <- svd(Z1)
   keep <- which(Z1_svd$d > tolerance)
-  q <- length(keep)
+  .q <- length(keep)
 
-  if (q > df2 - df1) {
+  if (.q > df2 - df1) {
     .err("`object2` does not appear to be nested within `object`")
   }
 
@@ -347,24 +347,24 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  title <- paste0("\n", underline("Wald test"))
-  topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
-                     deparse1(formula(object)),
-                     deparse1(formula(object2)))
+  .title <- paste0("\n", underline("Wald test"))
+  .topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
+                      deparse1(formula(object)),
+                      deparse1(formula(object2)))
 
-  varnote <- paste(italic(sprintf("Variance: %s\n",
-                                  .vcov_to_phrase(object$vcov_type,
-                                                  is_not_null(attr(object, "cluster"))))))
+  .varnote <- paste(italic(sprintf("Variance: %s\n",
+                                   .vcov_to_phrase(object$vcov_type,
+                                                   is_not_null(attr(object, "cluster"))))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
 
   result[[1L]] <- c(df1, df2)
-  result[[2L]] <- c(NA_integer_, as.integer(q))
+  result[[2L]] <- c(NA_integer_, as.integer(.q))
   result[[3L]][2L] <- SSH
-  result[[4L]][2L] <- pchisq(SSH, q, lower.tail = FALSE)
+  result[[4L]][2L] <- pchisq(SSH, .q, lower.tail = FALSE)
 
-  attr(result, "heading") <- c(title, varnote, topnote)
+  attr(result, "heading") <- c(.title, .varnote, .topnote)
   attr(result, "value") <- value.hyp
   attr(result, "vcov") <- vcov.hyp
 

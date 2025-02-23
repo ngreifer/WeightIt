@@ -242,12 +242,12 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
       drop(w %*% C) / sum(w)
     }
 
-    start <- rep.int(0, ncol(C))
+    coef_start <- rep.int(0, ncol(C))
 
     if (solver == "multiroot") {
       out <- suppressWarnings({
         try(rootSolve::multiroot(f = gradient.EB,
-                                 start = start,
+                                 start = coef_start,
                                  S = s.weights_t, C = C, Q = Q,
                                  rtol = reltol,
                                  atol = reltol,
@@ -256,11 +256,11 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
       })
 
       if (!null_or_error(out) && out$estim.precis < 1e-5) {
-        start <- out$root
+        coef_start <- out$root
       }
     }
 
-    opt.out <- optim(par = start,
+    opt.out <- optim(par = coef_start,
                      fn = objective.EB,
                      gr = gradient.EB,
                      method = "BFGS",
@@ -525,12 +525,12 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
       drop(w %*% C) / sum(w)
     }
 
-    start <- rep.int(0, ncol(C))
+    coef_start <- rep.int(0, ncol(C))
 
     if (solver == "multiroot") {
       out <- suppressWarnings({
         try(rootSolve::multiroot(f = gradient.EB,
-                                 start = start,
+                                 start = coef_start,
                                  S = s.weights, C = C, Q = Q,
                                  maxiter = 20),
             silent = TRUE)
@@ -538,11 +538,11 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
       if (!null_or_error(out) && is.finite(out$estim.precis) &&
           out$estim.precis < 1e-5) {
-        start <- out$root
+        coef_start <- out$root
       }
     }
 
-    opt.out <- optim(par = start,
+    opt.out <- optim(par = coef_start,
                      fn = objective.EB,
                      gr = gradient.EB,
                      method = "BFGS",

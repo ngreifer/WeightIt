@@ -209,7 +209,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       if (is_not_null(method) && anyNA(covs)) missing <- "ind"
       else missing <- ""
     }
-    else if (missing != "" && anyNA(covs)) {
+    else if (nzchar(missing) && anyNA(covs)) {
       missing <- .process_missing(missing, method)
     }
     else {
@@ -412,7 +412,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     .check_acceptable_method(method, msm = TRUE, force = FALSE)
 
     missing <- {
-      if (is_null(method) || !any(vapply(covs.list, anyNA, logical(1L)))) ""
+      if (is_null(method) || !any_apply(covs.list, anyNA)) ""
       else .process_missing(missing, method)
     }
 

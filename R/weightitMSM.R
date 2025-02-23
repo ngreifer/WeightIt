@@ -149,10 +149,11 @@
 #'                    stabilize = TRUE)
 
 #' @export
-weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = FALSE, by = NULL,
-                        s.weights = NULL,
-                        num.formula = NULL, moments = NULL, int = FALSE, missing = NULL,
-                        verbose = FALSE, include.obj = FALSE, keep.mparts = TRUE,
+weightitMSM <- function(formula.list, data = NULL, method = "glm",
+                        stabilize = FALSE, by = NULL,
+                        s.weights = NULL, num.formula = NULL, moments = NULL,
+                        int = FALSE, missing = NULL, verbose = FALSE,
+                        include.obj = FALSE, keep.mparts = TRUE,
                         is.MSM.method, weightit.force = FALSE, ...) {
 
   A <- list(...)
@@ -186,7 +187,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
-    .msg("`by` has replaced `exact` in the `weightit()` syntax, but `exact` will always work")
+    .wrn("`by` has replaced `exact` in the `weightit()` syntax, but `exact` will always work")
     by <- A[["exact"]]
     by.arg <- "exact"
   }
@@ -198,7 +199,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     stabout <- sw.list <- Mparts.list <- stab.Mparts.list <- make_list(length(formula.list))
 
   if (is_null(formula.list) || !is.list(formula.list) ||
-      !all(vapply(formula.list, rlang::is_formula, logical(1L), lhs = TRUE))) {
+      !all_apply(formula.list, rlang::is_formula, lhs = TRUE)) {
     .err("`formula.list` must be a list of formulas")
   }
 
@@ -213,19 +214,23 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     names(treat.list)[i] <- treat.name
     names(reported.covs.list)[i] <- treat.name
 
-    if (is_null(covs.list[[i]]))
+    if (is_null(covs.list[[i]])) {
       .err(sprintf("no covariates were specified in the %s formula", ordinal(i)))
+    }
 
-    if (is_null(treat.list[[i]]))
+    if (is_null(treat.list[[i]])) {
       .err(sprintf("no treatment variable was specified in the %s formula", ordinal(i)))
+    }
 
     n <- length(treat.list[[i]])
 
-    if (nrow(covs.list[[i]]) != n)
+    if (nrow(covs.list[[i]]) != n) {
       .err("treatment and covariates must have the same number of units")
+    }
 
-    if (anyNA(treat.list[[i]]))
+    if (anyNA(treat.list[[i]])) {
       .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s", treat.name))
+    }
 
     treat.list[[i]] <- assign_treat_type(treat.list[[i]])
 
@@ -242,7 +247,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
 
   #Process missing
   missing <- {
-    if (is_null(method) || !any(vapply(reported.covs.list, anyNA, logical(1L)))) ""
+    if (is_null(method) || !any_apply(reported.covs.list, anyNA)) ""
     else .process_missing(missing, method)
   }
 
@@ -293,12 +298,13 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
           .err("when supplied as a list, `num.formula` must have as many entries as `formula.list`")
         }
 
-        if (!all(vapply(num.formula, rlang::is_formula, logical(1L), lhs = FALSE))) {
+        if (!all_apply(num.formula, rlang::is_formula, lhs = FALSE)) {
           .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
         }
 
         rhs.vars.mentioned.lang.list <- lapply(num.formula, function(nf) attr(terms(nf), "variables")[-1L])
-        rhs.vars.mentioned <- unique(unlist(lapply(rhs.vars.mentioned.lang.list, function(r) vapply(r, deparse1, character(1L)))))
+        rhs.vars.mentioned <- unique(unlist(lapply(rhs.vars.mentioned.lang.list,
+                                                   function(r) vapply(r, deparse1, character(1L)))))
         rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
           null_or_error(try(eval(parse(text = v), c(data, .GlobalEnv)), silent = TRUE))
         }, logical(1L))
@@ -344,12 +350,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     Mparts.list <- attr(obj, "Mparts")
   }
   else {
-    if (length(A[["link"]]) %nin% c(0L, 1L, length(formula.list))) {
-      .err(sprintf("the argument to `link` must have length 1 or %s", length(formula.list)))
-    }
 
-    if (length(A[["link"]]) == 1L) {
-      A[["link"]] <- rep.int(A[["link"]], length(formula.list))
+    if (is_not_null(A[["link"]])) {
+      if (length(A[["link"]]) == 1L) {
+        A[["link"]] <- rep.int(A[["link"]], length(formula.list))
+      }
+      else if (length(A[["link"]]) != length(formula.list)) {
+        .err(sprintf("the argument to `link` must have length 1 or %s", length(formula.list)))
+      }
     }
 
     obj.list <- make_list(length(formula.list))
@@ -390,7 +398,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
                                      as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
           }
           else {
-            stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * "))),
+            stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~",
+                                                      paste(names(treat.list)[seq_along(names(treat.list)) < i],
+                                                            collapse = " * "))),
                                      as.formula(paste(num.formula, "+ .")))
           }
         }
@@ -403,7 +413,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
             stab.f <- as.formula(paste(names(treat.list)[i], "~ 1"))
           }
           else {
-            stab.f <- as.formula(paste(names(treat.list)[i], "~", paste(names(treat.list)[seq_along(names(treat.list)) < i], collapse = " * ")))
+            stab.f <- as.formula(paste(names(treat.list)[i], "~",
+                                       paste(names(treat.list)[seq_along(names(treat.list)) < i],
+                                             collapse = " * ")))
           }
         }
 
@@ -440,9 +452,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
     w <- Reduce("*", w.list, init = 1)
 
     if (stabilize) {
-      w <- w * Reduce("*", sw.list, init = 1)
+      w <-  Reduce("*", sw.list, init = w)
 
       unique.stabout <- unique(stabout)
+
       if (length(unique.stabout) <= 1L) stabout <- unique.stabout
     }
     else {
@@ -467,7 +480,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm", stabilize = F
               call = call,
               formula.list = formula.list,
               stabilization = stabout,
-              missing = if (missing == "") NULL else missing,
+              missing = if (nzchar(missing)) missing else NULL,
               env = parent.frame(),
               obj = obj.list
   )
@@ -547,14 +560,14 @@ print.weightitMSM <- function(x, ...) {
 
   if (is_not_null(x$stabilization)) {
     cat(" - stabilized")
-    if (any(vapply(x$stabilization, function(s) is_not_null(all.vars(s)), logical(1L)))) {
+    if (any_apply(x$stabilization, function(s) is_not_null(all.vars(s)))) {
       cat(paste0("; stabilization factors:\n",
                  if (length(x$stabilization) == 1L) {
                    sprintf("      %s", word_list(attr(terms(x[["stabilization"]][[1L]]), "term.labels"),
                                                  and.or = FALSE))
                  }
                  else {
-                   paste0(vapply(seq_along(x$stabilization), function(i) {
+                   paste(vapply(seq_along(x$stabilization), function(i) {
                      if (i == 1L) {
                        sprintf("    + baseline: %s",
                                if (is_null(attr(terms(x[["stabilization"]][[i]]), "term.labels"))) "(none)"

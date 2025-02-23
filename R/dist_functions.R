@@ -12,7 +12,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 
   #If all variables have no variance, use Euclidean to avoid errors
   #If some have no variance, removes those to avoid messing up distances
-  no_variance <- apply(X, 2L, function(x) abs(max(x) - min(x)) < sqrt(.Machine$double.eps))
+  no_variance <- apply(X, 2L, all_the_same)
 
   if (sum(no_variance) == ncol(X)) {
     method <- "euclidean"
@@ -165,10 +165,10 @@ get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
                                            function(x) contrasts(x, contrasts = FALSE) / sqrt(2)))
 
   if (ncol(X) > 1L) {
-    assign <- attr(X, "assign")[-1L]
+    .assign <- attr(X, "assign")[-1L]
     X <- X[, -1L, drop = FALSE]
   }
-  attr(X, "assign") <- assign
+  attr(X, "assign") <- .assign
 
   attr(X, "treat") <-  model.response(mf)
 

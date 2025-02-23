@@ -635,7 +635,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     link <- acceptable.links[1L]
   }
   else if (link.ignored) {
-    if (!any(vapply(acceptable.links, identical, logical(1L), link))) {
+    if (!any_apply(acceptable.links, identical, link)) {
       .wrn(sprintf("`link` is ignored when `%s = %s`",
                    if (missing == "saem") "missing" else "multi.method",
                    add_quotes(multi.method)))
