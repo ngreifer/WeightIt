@@ -95,7 +95,7 @@ num_to_superscript <- function(x) {
   x <- as.character(x)
   splitx <- strsplit(x, "", fixed = TRUE)
 
-  vapply(splitx, function(y) paste0(nums[y], collapse = ""), character(1L))
+  vapply(splitx, function(y) paste(nums[y], collapse = ""), character(1L))
 }
 ordinal <- function(x) {
   if (is_null(x) || !is.numeric(x)) {
@@ -152,12 +152,12 @@ round_df_char <- function(df, digits, pad = "0", na_vals = "") {
 
     if (!identical(as.character(pad), "0") && any(grepl(".", df[[i]], fixed = TRUE))) {
       s <- strsplit(df[[i]], ".", fixed = TRUE)
-      lengths <- lengths(s)
+      s_lengths <- lengths(s)
       digits.r.of.. <- rep.int(0, NROW(df))
-      digits.r.of..[lengths > 1L] <- nchar(vapply(s[lengths > 1L], `[[`, character(1L), 2L))
+      digits.r.of..[s_lengths > 1L] <- nchar(vapply(s[s_lengths > 1L], `[[`, character(1L), 2L))
       max.dig <- max(digits.r.of..)
 
-      dots <- ifelse(lengths > 1L, "", if (as.character(pad) != "") "." else pad)
+      dots <- ifelse(s_lengths > 1L, "", if (nzchar(as.character(pad))) "." else pad)
       pads <- vapply(max.dig - digits.r.of.., function(n) strrep(pad, n), character(1L))
 
       df[[i]] <- paste0(df[[i]], dots, pads)
@@ -407,7 +407,7 @@ col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
 col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
   if (!is.matrix(mat)) {
     if (is.data.frame(mat)) {
-      if (any(vapply(mat, chk::vld_character_or_factor, logical(1L)))) {
+      if (any_apply(mat, chk::vld_character_or_factor)) {
         stop("'mat' must be a numeric matrix.")
       }
 
@@ -556,16 +556,16 @@ w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...)
     }
   }
 
-  order <- order(x)
-  x <- x[order]
-  w <- w[order]
+  ord <- order(x)
+  x <- x[ord]
+  w <- w[ord]
 
   rw <- {
     if (is_null(w)) seq_len(n) / n
     else cumsum(w) / sum(w)
   }
 
-  q <- vapply(probs, function(p) {
+  unname(vapply(probs, function(p) {
     if (p == 0) {
       return(x[1L])
     }
@@ -578,9 +578,7 @@ w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...)
 
     if (rw[select] == p) mean(x[c(select, select + 1L)])
     else x[select]
-  }, x[1L])
-
-  unname(q)
+  }, x[1L]))
 }
 
 #Formulas
@@ -768,7 +766,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
       stop("'sep' must be a string of length 1.", call. = FALSE)
     }
 
-    s <- !identical(sep, "")
+    s <- nzchar(sep)
 
     if (s) original.covs.levels <- make_list(names(covs))
 
@@ -1208,10 +1206,10 @@ Invert <- function(f) {
     return(mat.list[[1L]])
   }
 
-  nrow <- sum(vapply(mat.list, nrow, numeric(1L)))
-  ncol <- sum(vapply(mat.list, ncol, numeric(1L)))
+  out <- matrix(0,
+                nrow = sum(vapply(mat.list, nrow, numeric(1L))),
+                ncol = sum(vapply(mat.list, ncol, numeric(1L))))
 
-  out <- matrix(0, nrow = nrow, ncol = ncol)
   row_start <- 1L
   col_start <- 1L
 
@@ -1237,4 +1235,34 @@ Invert <- function(f) {
   lapply(seq_along(n), function(i) {
     vec[start[i]:end[i]]
   })
+}
+
+any_apply <- function(X, FUN, ...) {
+  FUN <- match.fun(FUN)
+  if (!is.vector(X) || is.object(X)) {
+    X <- as.list(X)
+  }
+
+  for (x in X) {
+    if (isTRUE(FUN(x, ...))) {
+      return(TRUE)
+    }
+  }
+
+  FALSE
+}
+
+all_apply <- function(X, FUN, ...) {
+  FUN <- match.fun(FUN)
+  if (!is.vector(X) || is.object(X)) {
+    X <- as.list(X)
+  }
+
+  for (x in X) {
+    if (isFALSE(FUN(x, ...))) {
+      return(FALSE)
+    }
+  }
+
+  TRUE
 }
