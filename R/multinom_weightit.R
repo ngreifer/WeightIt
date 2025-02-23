@@ -10,20 +10,22 @@
     colnames(x) <- paste0("x", seq_col(x))
   }
 
-  nobs <- length(y)
+  N <- length(y)
 
-  if (is_null(weights)) weights <- rep.int(1, nobs)
+  if (is_null(weights)) weights <- rep.int(1, N)
   else chk::chk_numeric(weights)
 
-  if (is.null(offset)) offset <- rep.int(0, nobs)
+  if (is.null(offset)) offset <- rep.int(0, N)
   else chk::chk_numeric(offset)
 
   chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
 
-  aliased_X <- colnames(x) %nin% colnames(make_full_rank(x, with.intercept = FALSE))
-  aliased_B <- rep.int(aliased_X, nlevels(y) - 1L)
+  K <- nlevels(y) - 1L
 
-  k0 <- (nlevels(y) - 1L) * ncol(x)
+  aliased_X <- colnames(x) %nin% colnames(make_full_rank(x, with.intercept = FALSE))
+  aliased_B <- rep.int(aliased_X, K)
+
+  k0 <- K * ncol(x)
 
   if (is_null(start)) {
     start <- rep.int(0, k0)
@@ -92,17 +94,10 @@
                offset = offset,
                gr = gr,
                method = "BFGS",
-               hessian = hess,
                control = control)
 
   grad <- psi(out$par, X = x_, y = y,
               weights = weights, offset = offset)
-
-  hessian <- NULL
-  if (hess) {
-    hessian <- out$hessian
-    colnames(hessian) <- rownames(hessian) <- nm[!aliased_B]
-  }
 
   pp <- get_pp(out$par, x_, offset)
 
@@ -111,19 +106,43 @@
   coefs <- rep_with(NA_real_, start)
   coefs[!aliased_B] <- out$par
 
-  list(coefficients = coefs,
-       residuals = res,
-       fitted.values = pp,
-       solve = out,
-       psi = psi,
-       f = gr,
-       get_p = get_pp,
-       df.residual = length(res) - sum(!is.na(coefs)),
-       x = x,
-       y = y,
-       weights = weights,
-       gradient = grad,
-       hessian = hessian)
+  fit <- list(coefficients = coefs,
+              residuals = res,
+              fitted.values = pp,
+              solve = out,
+              psi = psi,
+              f = gr,
+              get_p = get_pp,
+              df.residual = length(res) - sum(!is.na(coefs)),
+              x = x,
+              y = y,
+              weights = weights,
+              gradient = grad)
+
+  if (hess) {
+    hessian <- matrix(NA_real_, nrow = sum(!aliased_B), ncol = sum(!aliased_B))
+
+    for (i in seq_len(K)) {
+      i_ind <- (i - 1L) * ncol(x_) + seq_len(ncol(x_))
+      for (j in seq_len(i)) {
+        if (i == j) {
+          hessian[i_ind, i_ind] <- -crossprod(x_ * ((1 - pp[, i + 1L]) * pp[, i + 1L] * weights), x_)
+        }
+        else {
+          j_ind <- (j - 1L) * ncol(x_) + seq_len(ncol(x_))
+
+          hessian[i_ind, j_ind] <- -crossprod(x_ * (-pp[, i + 1L] * pp[, j + 1L] * weights), x_)
+          hessian[j_ind, i_ind] <- t(hessian[i_ind, j_ind])
+        }
+      }
+    }
+
+    colnames(hessian) <- rownames(hessian) <- nm[!aliased_B]
+
+    fit$hessian <- hessian
+  }
+
+  fit
 }
 
 .multinom_weightit <- function(formula, data, weights, subset, start = NULL, na.action,
@@ -211,7 +230,7 @@
 
   theta0 <- na.rem(coefs)
 
-  p <- fit$fitted.values
+  pp <- fit$fitted.values
 
   hessian <- matrix(NA_real_, nrow = length(theta0), ncol = length(theta0))
 
@@ -219,12 +238,12 @@
     i_ind <- (i - 1L) * ncol(x_) + seq_len(ncol(x_))
     for (j in seq_len(i)) {
       if (i == j) {
-        hessian[i_ind, i_ind] <- -crossprod(x_ * ((1 - p[, i + 1L]) * p[, i + 1L] * weights), x_)
+        hessian[i_ind, i_ind] <- -crossprod(x_ * ((1 - pp[, i + 1L]) * pp[, i + 1L] * weights), x_)
       }
       else {
         j_ind <- (j - 1L) * ncol(x_) + seq_len(ncol(x_))
 
-        hessian[i_ind, j_ind] <- -crossprod(x_ * (-p[, i + 1L] * p[, j + 1L] * weights), x_)
+        hessian[i_ind, j_ind] <- -crossprod(x_ * (-pp[, i + 1L] * pp[, j + 1L] * weights), x_)
         hessian[j_ind, i_ind] <- t(hessian[i_ind, j_ind])
       }
     }
