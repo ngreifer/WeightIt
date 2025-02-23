@@ -19,7 +19,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
 options(width = 200, digits= 4)
 
-me_ok <- requireNamespace("marginaleffects", quietly = TRUE)
+me_ok <- requireNamespace("marginaleffects", quietly = TRUE) && !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 set.seed(1000)
 ```
 
@@ -97,7 +97,7 @@ fit <- lm_weightit(re78 ~ treat * (age + educ + race + married +
 # G-computation for the treatment effect
 library("marginaleffects")
 avg_comparisons(fit, variables = "treat",
-                newdata = subset(lalonde, treat == 1))
+                newdata = subset(treat == 1))
 ```
 
 Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`. Several types of standard errors are available in `WeightIt`, including analytical standard errors that account for estimation of the weights using M-estimation, robust standard errors that treat the weights as fixed, and bootstrapping. All type are described in detail at `vignette("estimating-effects")`.
@@ -141,7 +141,7 @@ Wmsm.out <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
 Wmsm.out
 ```
 
-No matter which method is selected, `weightitMSM()` estimates separate weights for each time period and then takes the product of the weights for each individual to arrive at the final estimated weights. Printing the output of `weightitMSM()` provides some details about the function call and the output. We can take a look at the quality of the weights with `summary()`, just as we could for point treatments.
+`weightitMSM()` estimates separate weights for each time period and then takes the product of the weights for each individual to arrive at the final estimated weights. Printing the output of `weightitMSM()` provides some details about the function call and the output. We can take a look at the quality of the weights with `summary()`, just as we could for point treatments.
 
 ```{r}
 summary(Wmsm.out)
@@ -171,11 +171,10 @@ Then, we compute the average expected potential outcomes under each treatment re
 ```{r, eval = me_ok}
 library("marginaleffects")
 (p <- avg_predictions(fit,
-                      variables = c("A_1", "A_2", "A_3"),
-                      type = "response"))
+                      variables = c("A_1", "A_2", "A_3")))
 ```
 
-We can compare the expected potential outcomes under each regime using `marginaleffects::hypotheses()`. To get all pairwise comparisons, supply the `avg_predictions()` output to `hypotheses(., "pairwise")`. To compare individual regimes, we can use `hypotheses()`, identifying the rows of the `avg_predictions()` output. For example, to compare the regimes with no treatment for all three time points vs. the regime with treatment for all three time points, we would run
+We can compare the expected potential outcomes under each regime using `marginaleffects::hypotheses()`. To get all pairwise comparisons, supply the `avg_predictions()` output to `hypotheses(., ~ pairwise)`. To compare individual regimes, we can use `hypotheses()`, identifying the rows of the `avg_predictions()` output. For example, to compare the regimes with no treatment for all three time points vs. the regime with treatment for all three time points, we would run
 
 ```{r, eval = me_ok}
 hypotheses(p, "b8 - b1 = 0")

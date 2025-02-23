@@ -8,6 +8,7 @@
 \alias{summary.coxph_weightit}
 \alias{print.glm_weightit}
 \alias{vcov.glm_weightit}
+\alias{estfun.glm_weightit}
 \alias{update.glm_weightit}
 \title{Methods for \code{glm_weightit()} objects}
 \usage{
@@ -30,6 +31,8 @@
 \method{print}{glm_weightit}(x, digits = max(3L, getOption("digits") - 3L), ...)
 
 \method{vcov}{glm_weightit}(object, complete = TRUE, vcov = NULL, ...)
+
+\method{estfun}{glm_weightit}(x, asympt = TRUE, ...)
 
 \method{update}{glm_weightit}(object, formula. = NULL, ..., evaluate = TRUE)
 }
@@ -74,6 +77,12 @@ be returned also in case of an over-determined system where some
 coefficients are undefined and \code{coef(.)} contains \code{NA}s correspondingly.
 When \code{complete = TRUE}, \code{vcov()} is compatible with \code{coef()} also in this
 singular case.}
+
+\item{asympt}{\code{logical}; for \code{estfun()}, whether to use the asymptotic
+empirical estimating functions that account for estimation of the weights
+(when \code{Mparts} is available). Default is \code{TRUE}. Set to \code{FALSE} to ignore
+estimation of the weights. Ignored when \code{Mparts} is not available or no
+argument was supplied to \code{weightit} in the fitting function.}
 
 \item{formula.}{changes to the model formula, passed to the \code{new} argument of
 \code{\link[=update.formula]{update.formula()}}.}
@@ -129,11 +138,7 @@ supplying \code{s.weights} or \code{weights} passes the argument through to
 \code{weightit} object is present, a fake one containing just the supplied weights
 will be created.
 
-The \code{estfun()} method for \code{multinom_weightit} and \code{ordinal_weightit} objects
-(which is used by function in the \pkg{sandwich} package to compute
-coefficient covariance matrices) simply extracts the \code{gradient} component of
-the object. For \code{glm_weightit} and \code{coxph_weightit} objects, the \code{glm} and
-\code{coxph} methods are dispatched instead.
+\code{estfun()} extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with \code{bread()}, is used by \code{\link[sandwich:sandwich]{sandwich::sandwich()}} to compute the robust covariance matrix of the estimated coefficients. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vcov()} above for more details.
 }
 \examples{
 ## See more examples at ?glm_weightit
@@ -144,4 +149,6 @@ the object. For \code{glm_weightit} and \code{coxph_weightit} objects, the \code
 \code{coxph_weightit()}. \code{\link[=summary.glm]{summary.glm()}}, \code{\link[=vcov]{vcov()}}, \code{\link[=confint]{confint()}} for the relevant
 methods pages. \code{\link[=predict.glm_weightit]{predict.glm_weightit()}} for computing predictions from the
 models. \code{\link[=anova.glm_weightit]{anova.glm_weightit()}} for comparing models using a Wald test.
+
+\code{\link[sandwich:estfun]{sandwich::estfun()}} and \code{\link[sandwich:bread]{sandwich::bread()}} for the \code{estfun()} and \code{bread()} generics.
 }

@@ -31,7 +31,7 @@ pre code {
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 options(width = 200, digits= 4)
 
-me_ok <- requireNamespace("marginaleffects", quietly = TRUE)
+me_ok <- requireNamespace("marginaleffects", quietly = TRUE) && !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
 me_ok_new <- me_ok && utils::packageVersion("marginaleffects") > "0.25.0.1"
 su_ok <- requireNamespace("survival", quietly = TRUE)
 ```
@@ -582,12 +582,12 @@ hypotheses(a, ~pairwise)
 
 Though the subgroup effects differ from each other in the sample, this difference is not statistically significant at the .05 level, so there is no evidence of moderation by `X5`.
 
-When the moderator has more than two levels, it is possible to run an omnibus test for moderation by changing `hypothesis` to `"reference"` and supplying the output to `hypotheses()` with `joint = TRUE`, e.g.,
+When the moderator has more than two levels, it is possible to run an omnibus test for moderation by changing `hypothesis` to `~reference` and supplying the output to `hypotheses()` with `joint = TRUE`, e.g.,
 
 ```{r, eval=FALSE}
 avg_comparisons(fit, variables = "A",
                 by = "X5",
-                hypothesis = ~pairwise) |>
+                hypothesis = ~reference) |>
   hypotheses(joint = TRUE)
 ```
 
