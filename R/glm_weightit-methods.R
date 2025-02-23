@@ -36,6 +36,11 @@
 #'   singular case.
 #' @param formula. changes to the model formula, passed to the `new` argument of
 #'   [update.formula()].
+#' @param asympt `logical`; for `estfun()`, whether to use the asymptotic
+#'   empirical estimating functions that account for estimation of the weights
+#'   (when `Mparts` is available). Default is `TRUE`. Set to `FALSE` to ignore
+#'   estimation of the weights. Ignored when `Mparts` is not available or no
+#'   argument was supplied to `weightit` in the fitting function.
 #' @param \dots for `vcov()` or `summary()` or `confint()` with `vcov` supplied,
 #'   other arguments used to compute the variance matrix depending on the method
 #'   supplied to `vcov`, e.g., `cluster`, `R`, or `fwb.args`. For `update()`,
@@ -83,17 +88,15 @@
 #' `weightit` object is present, a fake one containing just the supplied weights
 #' will be created.
 #'
-#' The `estfun()` method for `multinom_weightit` and `ordinal_weightit` objects
-#' (which is used by function in the \pkg{sandwich} package to compute
-#' coefficient covariance matrices) simply extracts the `gradient` component of
-#' the object. For `glm_weightit` and `coxph_weightit` objects, the `glm` and
-#' `coxph` methods are dispatched instead.
+#' `estfun()` extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with `bread()`, is used by [sandwich::sandwich()] to compute the robust covariance matrix of the estimated coefficients. See [glm_weightit()] and `vcov()` above for more details.
 #'
 #' @seealso [glm_weightit()] for the page documenting `glm_weightit()`,
 #' `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and
 #' `coxph_weightit()`. [summary.glm()], [vcov()], [confint()] for the relevant
 #' methods pages. [predict.glm_weightit()] for computing predictions from the
 #' models. [anova.glm_weightit()] for comparing models using a Wald test.
+#'
+#' [sandwich::estfun()] and [sandwich::bread()] for the `estfun()` and `bread()` generics.
 #'
 #' @examples
 #' ## See more examples at ?glm_weightit
@@ -485,7 +488,8 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
 #' @rdname glm_weightit-methods
 print.glm_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
 
-  cat0("\n", underline("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
+  cat0("\n", underline("Call:"), "\n",
+       paste(deparse(x$call), collapse = "\n"),
        "\n")
 
   if (is_not_null(coef(x))) {
@@ -612,15 +616,260 @@ nobs.multinom_weightit <- function(object, ...) {
   nobs.ordinal_weightit(object, ...)
 }
 
-#' @importFrom generics estfun
-#' @exportS3Method generics::estfun multinom_weightit
-estfun.multinom_weightit <- function(x, ...) {
-  x$gradient
+#' @importFrom sandwich estfun
+#' @exportS3Method sandwich::estfun glm_weightit
+#' @rdname glm_weightit-methods
+estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
+
+  # Check missing
+  if (is_not_null(x[["na.action"]])) {
+    .err("missing values are not allowed in the model variables")
+  }
+
+  bout <- x[["coefficients"]]
+  aliased <- is.na(bout)
+
+  Xout <- if_null_then(x[["x"]], model.matrix(x))
+  Y <- if_null_then(x[["y"]], model.response(model.frame(x)))
+
+  if (is_not_null(x[["weightit"]])) {
+    W <- x[["weightit"]][["weights"]]
+    SW <- x[["weightit"]][["s.weights"]]
+  }
+  else {
+    W <- SW <- NULL
+  }
+
+  if (is_null(W)) {
+    W <- rep.int(1, length(Y))
+  }
+
+  if (is_null(SW)) {
+    SW <- rep.int(1, length(Y))
+  }
+
+  offset <- if_null_then(x[["offset"]], rep.int(0, length(Y)))
+
+  if (any(aliased)) {
+    if (is_not_null(attr(x[["qr"]][["qr"]], "aliased"))) {
+      Xout <- Xout[, !attr(x[["qr"]][["qr"]], "aliased"), drop = FALSE]
+    }
+    else {
+      Xout <- make_full_rank(Xout, with.intercept = FALSE)
+    }
+    bout <- bout[!aliased]
+  }
+
+  Mparts <- attr(x[["weightit"]], "Mparts", exact = TRUE)
+  Mparts.list <- attr(x[["weightit"]], "Mparts.list", exact = TRUE)
+
+  if (is_not_null(Mparts) || is_not_null(Mparts.list)) {
+    chk::chk_flag(asympt)
+  }
+  else {
+    asympt <- FALSE
+  }
+
+  if (!asympt) {
+    Mparts <- Mparts.list <- NULL
+  }
+
+  psi_out <- function(Bout, w, Y, Xout, SW, offset) {
+    x$psi(Bout, Xout, Y, w * SW, offset = offset)
+  }
+
+  psi_b <- if_null_then(x[["gradient"]],
+                        psi_out(bout, W, Y, Xout, SW, offset))
+
+  if (is_not_null(Mparts)) {
+    # Mparts from weightit()
+    psi_treat <- Mparts[["psi_treat"]]
+    wfun <- Mparts[["wfun"]]
+    Xtreat <- Mparts[["Xtreat"]]
+    A <- Mparts[["A"]]
+    btreat <- Mparts[["btreat"]]
+    hess_treat <- Mparts[["hess_treat"]]
+    dw_dBtreat <- Mparts[["dw_dBtreat"]]
+
+    H_treat <- {
+      if (is_not_null(hess_treat)) {
+        hess_treat(btreat, Xtreat, A, SW)
+      }
+      else {
+        .gradient(function(Btreat) {
+          colSums(psi_treat(Btreat, Xtreat, A, SW))
+        }, .x = btreat)
+      }
+    }
+
+    H_out_treat <- {
+      if (is_not_null(dw_dBtreat)) {
+        crossprod(psi_out(bout, 1, Y, Xout, SW, offset),
+                  dw_dBtreat(btreat, Xtreat, A, SW))
+      }
+      else {
+        .gradient(function(Btreat) {
+          w <- wfun(Btreat, Xtreat, A)
+          colSums(psi_out(bout, w, Y, Xout, SW, offset))
+        }, .x = btreat)
+      }
+    }
+
+    #Using formula from Wooldridge (2010) p. 419
+    psi_b <- psi_b + psi_treat(btreat, Xtreat, A, SW) %*%
+      .solve_hessian(-H_treat, t(H_out_treat), model = "weights")
+  }
+  else if (is_not_null(Mparts.list)) {
+    # Mparts.list from weightitMSM() or weightit()
+    psi_treat.list <- grab(Mparts.list, "psi_treat")
+    wfun.list <- grab(Mparts.list, "wfun")
+    Xtreat.list <- grab(Mparts.list, "Xtreat")
+    A.list <- grab(Mparts.list, "A")
+    btreat.list <- grab(Mparts.list, "btreat")
+    hess_treat.list <- grab(Mparts.list, "hess_treat")
+    dw_dBtreat.list <- grab(Mparts.list, "dw_dBtreat")
+
+    psi_treat <- function(Btreat.list, Xtreat.list, A.list, SW) {
+      do.call("cbind", lapply(seq_along(Btreat.list), function(i) {
+        psi_treat.list[[i]](Btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW)
+      }))
+    }
+
+    wfun <- function(Btreat.list, Xtreat.list, A.list) {
+      Reduce("*", lapply(seq_along(Btreat.list), function(i) {
+        wfun.list[[i]](Btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
+      }), init = 1)
+    }
+
+    H_treat <- {
+      if (all(lengths(hess_treat.list) > 0L)) {
+        .block_diag(lapply(seq_along(hess_treat.list), function(i) {
+          hess_treat.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW)
+        }))
+      }
+      else {
+        .gradient(function(Btreat) {
+          Btreat.list <- .vec2list(Btreat, lengths(btreat.list))
+          colSums(psi_treat(Btreat.list, Xtreat.list, A.list, SW))
+        }, .x = unlist(btreat.list))
+      }
+    }
+
+    if (all(lengths(dw_dBtreat.list) > 0L)) {
+      w.list <- c(lapply(seq_along(btreat.list), function(i) {
+        wfun.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
+      }), list(rep(1, length(A.list[[1L]]))))
+
+      dw_dBtreat <- do.call("cbind", lapply(seq_along(btreat.list), function(i) {
+        dw_dBtreat.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW) *
+          Reduce("*", w.list[-i])
+      }))
+
+      H_out_treat <- crossprod(psi_out(bout, 1, Y, Xout, SW, offset), dw_dBtreat)
+    }
+    else {
+      H_out_treat <- .gradient(function(Btreat) {
+        Btreat.list <- .vec2list(Btreat, lengths(btreat.list))
+        w <- wfun(Btreat.list, Xtreat.list, A.list)
+        colSums(psi_out(bout, w, Y, Xout, SW, offset))
+      }, .x = unlist(btreat.list))
+    }
+
+    #Using formula from Wooldridge (2010) p. 419
+    psi_b <- psi_b + psi_treat(btreat.list, Xtreat.list, A.list, SW) %*%
+      .solve_hessian(-H_treat, t(H_out_treat), model = "weights")
+  }
+
+  colnames(psi_b) <- names(aliased)[!aliased]
+
+  psi_b
 }
 
-#' @exportS3Method generics::estfun ordinal_weightit
-estfun.ordinal_weightit <- function(x, ...) {
-  estfun.multinom_weightit(x, ...)
+#' @exportS3Method sandwich::estfun multinom_weightit
+estfun.multinom_weightit <- function(x, asympt = TRUE, ...) {
+  estfun.glm_weightit(x, asympt = asympt, ...)
+}
+
+#' @exportS3Method sandwich::estfun ordinal_weightit
+estfun.ordinal_weightit <- function(x, asympt = TRUE, ...) {
+  estfun.glm_weightit(x, asympt = asympt, ...)
+}
+
+#' @importFrom sandwich bread
+#' @exportS3Method sandwich::bread glm_weightit
+bread.glm_weightit <- function(x, ...) {
+
+  bout <- x[["coefficients"]]
+  aliased <- is.na(bout)
+
+  if (is_not_null(x[["hessian"]])) {
+    H <- x$hessian
+  }
+  else if (inherits(x, "ordinal_weightit")) {
+    H <- .get_hess_ordinal(x)
+  }
+  else if (inherits(x, "multinom_weightit")) {
+    H <- .get_hess_multinom(x)
+  }
+  else if (inherits(x, "glm")) {
+    H <- .get_hess_glm(x)
+  }
+  else {
+    Xout <- if_null_then(x[["x"]], model.matrix(x))
+    Y <- if_null_then(x[["y"]], model.response(model.frame(x)))
+
+    if (is_not_null(x[["weightit"]])) {
+      W <- x[["weightit"]][["weights"]]
+      SW <- x[["weightit"]][["s.weights"]]
+    }
+    else {
+      W <- SW <- NULL
+    }
+
+    if (is_null(W)) {
+      W <- rep.int(1, length(Y))
+    }
+
+    if (is_null(SW)) {
+      SW <- rep.int(1, length(Y))
+    }
+
+    offset <- if_null_then(x[["offset"]], rep.int(0, length(Y)))
+
+    if (any(aliased)) {
+      if (is_not_null(attr(x[["qr"]][["qr"]], "aliased"))) {
+        Xout <- Xout[, !attr(x[["qr"]][["qr"]], "aliased"), drop = FALSE]
+      }
+      else {
+        Xout <- make_full_rank(Xout, with.intercept = FALSE)
+      }
+      bout <- bout[!aliased]
+    }
+
+    psi_out <- function(Bout, w, Y, Xout, SW, offset) {
+      x$psi(Bout, Xout, Y, w * SW, offset = offset)
+    }
+
+    H <- .gradient(function(Bout) {
+      colSums(psi_out(Bout, W, Y, Xout, SW, offset))
+    }, .x = bout)
+  }
+
+  A1 <- .solve_hessian(H) * nobs(x)
+
+  colnames(A1) <- rownames(A1) <- names(aliased)[!aliased]
+
+  A1
+}
+
+#' @exportS3Method sandwich::bread multinom_weightit
+bread.multinom_weightit <- function(x, ...) {
+  bread.glm_weightit(x, ...)
+}
+
+#' @exportS3Method sandwich::bread ordinal_weightit
+bread.ordinal_weightit <- function(x, ...) {
+  bread.glm_weightit(x, ...)
 }
 
 #' @importFrom generics tidy
@@ -657,7 +906,7 @@ tidy.coxph_weightit <- function(x, conf.int = FALSE, conf.level = 0.95, exponent
 #' @importFrom generics glance
 #' @exportS3Method generics::glance glm_weightit
 glance.glm_weightit <- function(x, ...) {
-  ret <- data.frame(nobs = stats::nobs(x))
+  ret <- data.frame(nobs = nobs(x))
 
   class(ret) <- c("tbl_df", "tbl", "data.frame")
   ret
@@ -681,9 +930,9 @@ glance.coxph_weightit <- function(x, ...) {
 #' @exportS3Method stats::update glm_weightit
 #' @rdname glm_weightit-methods
 update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
-  call <- getCall(object)
+  obj_call <- getCall(object)
 
-  if (is_null(call)) {
+  if (is_null(obj_call)) {
     .err("need an object with `call` component")
   }
 
@@ -691,8 +940,8 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
 
   refit <- TRUE
 
-  ucall <- match.call(expand.dots = FALSE)
-  extras <- ucall$...
+  update_call <- match.call(expand.dots = FALSE)
+  extras <- update_call$...
 
   if (is_not_null(formula.)) {
     extras$formula <- update(formula(object), formula.)
@@ -702,7 +951,7 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
     .err("`weights` and `s.weights` can not both be supplied to `update()`")
   }
 
-  if (any(names(extras) == "weights")) {
+  if (utils::hasName(extras, "weights")) {
     names(extras)[names(extras) == "weights"] <- "s.weights"
   }
 
@@ -714,23 +963,23 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
   if (is_not_null(extras)) {
     if (evaluate && all(names(extras) %in% vcov_args)) {
       #Just re-estimate vcov, don't change anything else
-      ucall[[1L]] <- .vcov_glm_weightit.internal
+      update_call[[1L]] <- .vcov_glm_weightit.internal
 
       vn_in_extras <- which(names(extras) %in% vcov_args)
-      vn_in_call <- which(names(call) %in% vcov_args & names(call) %nin% names(extras))
+      vn_in_call <- which(names(obj_call) %in% vcov_args & names(obj_call) %nin% names(extras))
 
-      ucall <- as.call(c(as.list(ucall[c(1L, match("object", names(ucall)))]),
+      update_call <- as.call(c(as.list(update_call[c(1L, match("object", names(update_call)))]),
                          as.list(extras[vn_in_extras]),
-                         as.list(call[vn_in_call])))
+                         as.list(obj_call[vn_in_call])))
 
       if (any(names(extras) == "vcov")) {
-        names(ucall)[names(ucall) == "vcov"] <- "vcov."
+        names(update_call)[names(update_call) == "vcov"] <- "vcov."
       }
       else {
-        ucall[["vcov."]] <- object[["vcov_type"]]
+        update_call[["vcov."]] <- object[["vcov_type"]]
       }
 
-      V <- eval.parent(ucall)
+      V <- eval.parent(update_call)
 
       object <- .set_vcov(object, V)
 
@@ -751,9 +1000,9 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
 
       weightit_args <- intersect(weightit_args, names(extras))
 
-      if (is_not_null(object[["weightit"]])) {
+      if (is_not_null(object[["weightit"]]) && !inherits(object[["weightit"]], "fake_weightit")) {
         #Refit weightit object with new args
-        wucall <- ucall
+        wucall <- update_call
         wucall[[1L]] <- quote(stats::update)
         wucall[["object"]] <- object[["weightit"]]
         wucall[weightit_args] <- extras[weightit_args]
@@ -762,17 +1011,15 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
         extras[["weightit"]] <- eval(wucall, envir = object[["weightit"]]$env)
 
         wucall[[1L]] <- quote(update)
-        wucall[["object"]] <- call[["weightit"]]
+        wucall[["object"]] <- obj_call[["weightit"]]
 
         orig_weightit <- wucall
       }
-      else if (any(names(extras) == "s.weights")) {
+      else if (utils::hasName(extras, "s.weights")) {
         #Construct a fake weightit object with just the new components
-        if (any(names(extras) == "data")) {
-          data <- eval.parent(extras[["data"]])
-        }
-        else {
-          data <- object[["data"]]
+        data <- {
+          if (utils::hasName(extras, "data")) eval.parent(extras[["data"]])
+          else object[["data"]]
         }
 
         s.weights <- eval.parent(extras[["s.weights"]])
@@ -784,7 +1031,13 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
                                        weights = rep_with(1, s.weights),
                                        method = NULL)
 
-          class(extras[["weightit"]]) <- "weightit"
+          class(extras[["weightit"]]) <- c("weightit", "fake_weightit")
+
+          orig_weightit <- str2lang("(fake_weightit)")
+        }
+        else if (is_not_null(object[["weightit"]])) {
+          obj_call[["weightit"]] <- NULL
+          object[["weightit"]] <- NULL
         }
       }
 
@@ -793,28 +1046,35 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
       }
     }
 
-    existing <- names(extras) %in% names(call)
+    existing <- names(extras) %in% names(obj_call)
 
     for (a in names(extras)[existing]) {
-      call[[a]] <- extras[[a]]
+      obj_call[[a]] <- extras[[a]]
     }
 
     if (!all(existing)) {
-      call <- c(as.list(call), extras[!existing])
-      call <- as.call(call)
+      obj_call <- c(as.list(obj_call), extras[!existing])
+      obj_call <- as.call(obj_call)
     }
   }
 
   if (!evaluate) {
-    return(call)
+    return(obj_call)
   }
 
   if (!refit) {
-    object$call <- call
+    object$call <- obj_call
     return(object)
   }
 
-  object <- eval.parent(call)
+  if (is_not_null(object[["weightit"]]) &&
+      inherits(object[["weightit"]], "fake_weightit") &&
+      utils::hasName(obj_call, "weightit")) {
+    obj_call[["weightit"]] <- object[["weightit"]]
+    orig_weightit <- as.name("<fake_weightit>")
+  }
+
+  object <- eval.parent(obj_call)
 
   if (is_not_null(orig_weightit)) {
     object[["call"]][["weightit"]] <- orig_weightit
