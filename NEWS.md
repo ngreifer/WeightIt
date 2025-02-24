@@ -19,6 +19,8 @@ WeightIt News and Updates
 
 * The `update()` method for `glm_weightit` objects and friends is now a bit more sophisticated. When `data` or `s.weights` are supplied, the `weightit` object (if any) is refit before refitting the `glm_weightit` model. This makes it easy to performing bootstrapping by simply calling `update()` on a fitted object with a new dataset or bootstrap weights.
 
+* The `estfun()` and `bread()` methods for `glm_weightit` objects and friends now correctly extract the estimating function and bread matrices to be used when computing the sandwich covariance matrix using `sandwich::sandwich()`. `estfun()` (and thereby `sandwich()`) have an optional `asympt` argument, which, controls whether the asymptotic covariance matrix accounting for estimation of the weights is used.
+
 * Improved estimation and convergence for `method = "cbps"`. In particular, for the over-identified CBPS, the generalized inverse is now used only when the GMM weight matrix is singular. Previously, it was always used.
 
 * Improved processing of `estimand` and `focal` for binary treatments. `weightit()` is now better at guessing which level of the treatment is considered "treated", and `focal` can be used to identify the focal group when requesting the ATT or ATC. (#77)
