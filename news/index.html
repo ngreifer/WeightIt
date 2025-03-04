@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,8 +38,13 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
+<code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<ul><li>Fixed a bug in which the output of <code>bread()</code> was off by a factor of -1. This doesn’t affect its use in <code><a href="https://sandwich.R-Forge.R-project.org/reference/sandwich.html" class="external-link">sandwich::sandwich()</a></code>.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.4.0" id="weightit-140">
-<code>WeightIt</code> 1.4.0<a class="anchor" aria-label="anchor" href="#weightit-140"></a></h2>
+<code>WeightIt</code> 1.4.0<a class="anchor" aria-label="anchor" href="#weightit-140"></a></h2><p class="text-muted">CRAN release: 2025-02-24</p>
 <ul><li><p>Entropy balancing works slightly differently when sampling weights are supplied. The negative entropy between the estimated weights and the product of the sampling weights and base weights (if any) is now the quantity minimized in the optimization. Previously, the negative entropy between the product of the sampling weights and estimated weights and the base weights was minimized. The new behavior ensures entropy balancing is consistent with mathematically equivalent methods when it ought to be (i.e., CBPS and IPT for the ATT) and prevents counter-intuitive results, like that the ESS after weighting could be larger than that before weighting. Note this will cause results to differ between this and previous versions of <code>WeightIt</code>.</p></li>
 <li><p>With <code>method = "cbps"</code>, <code>estimand</code> can now be set to <code>"ATO"</code> for binary and multi-category treatments. For binary treatments with the default link, this will yield identical weights to using <code>method = "glm"</code> with <code>estimand = "ATO"</code>.</p></li>
 <li><p>Two new links can be supplied with <code>method = "glm",</code>“cbps”<code>, and</code>“ipt”<code>:</code>“loglog”<code>for the log-log link and</code>“clog”<code>for the complementary log link. The</code>link<code>argument can also now be supplied as a</code>link-glm<code>object (e.g., the output of a call to</code>make.link()`). This allows for more flexibility in the link function used to estimate the propensity score.</p></li>
