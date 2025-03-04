@@ -855,7 +855,7 @@ bread.glm_weightit <- function(x, ...) {
     }, .x = bout)
   }
 
-  A1 <- .solve_hessian(H) * nobs(x)
+  A1 <- -.solve_hessian(H) * nobs(x)
 
   colnames(A1) <- rownames(A1) <- names(aliased)[!aliased]
 
