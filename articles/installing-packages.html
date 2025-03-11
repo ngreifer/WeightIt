@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2025-03-10</h4>
+            <h4 data-toc-skip class="date">2025-03-11</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/installing-packages.Rmd" class="external-link"><code>vignettes/installing-packages.Rmd</code></a></small>
       <div class="d-none name"><code>installing-packages.Rmd</code></div>
@@ -75,30 +75,29 @@ Greifer</h4>
 
     
     
-<p><code>WeightIt</code> is a wrapper for several other packages that
-aid in estimating balancing weights. In many ways, this is
-<code>WeigthIt</code>’s strength, because it is easy to try out several
-weighting methods without having to learn a completely new syntax for
-each one. One weakness of this is that when one of these packages is not
-available (e.g., on CRAN), the method that relies on that package cannot
-be used.</p>
-<p>This document explains how to install each package
-<code>WeightIt</code> uses. You do not need to install every single one;
-you only need the one you want to use. For example, the
-<code>miseam</code> package provides support for logistic regression
-with missing data, but if you have no missing data or you don’t want to
-use the approach implemented in <code>miseam</code>, you don’t need to
-install it. <code>WeightIt</code> strongly depends on a few packages,
-which are automatically installed along with <code>WeightIt</code>, so
-you don’t need to worry about installing them separately; these are not
-listed here.</p>
+<p><em>WeightIt</em> is a wrapper for several other packages that aid in
+estimating balancing weights. In many ways, this is <em>WeightIt</em>’s
+strength, because it is easy to try out several weighting methods
+without having to learn a completely new syntax for each one. One
+weakness of this is that when one of these packages is not available
+(e.g., on CRAN), the method that relies on that package cannot be
+used.</p>
+<p>This document explains how to install each package <em>WeightIt</em>
+uses. You do not need to install every single one; you only need the one
+you want to use. For example, the <em>miseam</em> package provides
+support for logistic regression with missing data, but if you have no
+missing data or you don’t want to use the approach implemented in
+<em>miseam</em>, you don’t need to install it. <em>WeightIt</em>
+strongly depends on a few packages, which are automatically installed
+along with <em>WeightIt</em>, so you don’t need to worry about
+installing them separately; these are not listed here.</p>
 <p>Below we note each method (by name and by the input to the
 <code>method</code> argument of <code><a href="../reference/weightit.html">weightit()</a></code>) and how to
 install the required packages either from CRAN or otherwise when the
 CRAN version is not available. In many cases, this involves installing
-the package from the author’s GitHub repository, which requires either
-the <code>remotes</code> or <code>devtools</code> package, which both
-contain the function <code>install_github()</code>.</p>
+the package from the author’s GitHub repository, which requires the
+<em>pak</em> package, which contains the function
+<code>pkg_install()</code>.</p>
 <div class="section level2">
 <h2 id="propensity-score-weighting-using-glms-method-glm">Propensity score weighting using GLMs
 (<code>method = "glm"</code>)<a class="anchor" aria-label="anchor" href="#propensity-score-weighting-using-glms-method-glm"></a>
@@ -116,11 +115,11 @@ additional packages are required. For multi-category treatments with
 <code>missing = "saem"</code><a class="anchor" aria-label="anchor" href="#missing-saem"></a>
 </h3>
 <p>When missing data is present and <code>missing = "saem"</code> is
-supplied, the <code>misaem</code> package is required. To install
-<code>misaem</code> from CRAN, run</p>
+supplied, the <em>misaem</em> package is required. To install
+<em>misaem</em> from CRAN, run</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"misaem"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>misaem</code> is not on CRAN, or if you want to install the
+<p>If <em>misaem</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer’s <a href="https://github.com/julierennes/misaem" class="external-link">GitHub repo</a> using the
 following code:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
@@ -132,17 +131,17 @@ following code:</p>
 </h3>
 <p>For binary and multi-category treatments, when <code>link</code> is
 supplied as <code>"br.logit"</code> or another link beginning with
-<code>"br."</code>, the <code>brglm2</code> package is required. To
-install <code>brglm2</code> from CRAN, run</p>
+<code>"br."</code>, the <em>brglm2</em> package is required. To install
+<em>brglm2</em> from CRAN, run</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"brglm2"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>brglm2</code> is not on CRAN, or if you want to install the
+<p>If <em>brglm2</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Ioannis Kosmidis’s, <a href="https://github.com/ikosmidis/brglm2" class="external-link">GitHub
 repo</a> using the following code:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"ikosmidis/brglm2"</span><span class="op">)</span></span></code></pre></div>
-<p><code>brglm2</code> requires compilation, which means you may need
+<p><em>brglm2</em> requires compilation, which means you may need
 additional software installed on your computer to install it from
 source.</p>
 </div>
@@ -151,12 +150,12 @@ source.</p>
 <code>multi.method = "mclogit"</code><a class="anchor" aria-label="anchor" href="#multi-category-treatments-with-multi-method-mclogit"></a>
 </h3>
 <p>For multi-category treatments, when
-<code>multi.method = "mclogit"</code>, the <code>mclogit</code> package
-is required for multinomial logistic regression. To install
-<code>mclogit</code> from CRAN, run</p>
+<code>multi.method = "mclogit"</code>, the <em>mclogit</em> package is
+required for multinomial logistic regression. To install
+<em>mclogit</em> from CRAN, run</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"mclogit"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>mclogit</code> is not on CRAN, or if you want to install the
+<p>If <em>mclogit</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Martin Elff’s, <a href="https://github.com/melff/mclogit/" class="external-link">GitHub
 repo</a> using the following code:</p>
@@ -168,18 +167,18 @@ repo</a> using the following code:</p>
 <code>multi.method = "mnp"</code><a class="anchor" aria-label="anchor" href="#multi-category-treatments-with-multi-method-mnp"></a>
 </h3>
 <p>For multi-category treatments, when
-<code>multi.method = "mnp"</code>, the <code>MNP</code> package is
-required for Bayesian multinomial probit regression. To install
-<code>MNP</code> from CRAN, run</p>
+<code>multi.method = "mnp"</code>, the <em>MNP</em> package is required
+for Bayesian multinomial probit regression. To install <em>MNP</em> from
+CRAN, run</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"MNP"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>MNP</code> is not on CRAN, or if you want to install the
+<p>If <em>MNP</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Kosuke Imai’s, <a href="https://github.com/kosukeimai/MNP" class="external-link">GitHub
 repo</a> using the following code:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"kosukeimai/MNP"</span><span class="op">)</span></span></code></pre></div>
-<p><code>MNP</code> requires compilation, which means you may need
+<p><em>MNP</em> requires compilation, which means you may need
 additional software installed on your computer to install it from
 source.</p>
 </div>
@@ -188,18 +187,18 @@ source.</p>
 <h2 id="propensity-score-weighting-using-gbm-method-gbm">Propensity Score weighting using GBM
 (<code>method = "gbm"</code>)<a class="anchor" aria-label="anchor" href="#propensity-score-weighting-using-gbm-method-gbm"></a>
 </h2>
-<p><code>WeightIt</code> uses the R package <code>gbm</code> to estimate
+<p><em>WeightIt</em> uses the R package <em>gbm</em> to estimate
 propensity score weights using GBM. It does <em>not</em> rely on the
-<code>twang</code> package at all. To install <code>gbm</code> from
-CRAN, run</p>
+<code>twang</code> package at all. To install <em>gbm</em> from CRAN,
+run</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"gbm"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>gbm</code> is not on CRAN, or if you want to install the
+<p>If <em>gbm</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer’s <a href="https://github.com/gbm-developers/gbm" class="external-link">GitHub repo</a> using the
 following code:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"gbm-developers/gbm"</span><span class="op">)</span></span></code></pre></div>
-<p><code>gbm</code> requires compilation, which means you may need
+<p><em>gbm</em> requires compilation, which means you may need
 additional software installed on your computer to install it from
 source.</p>
 </div>
@@ -207,21 +206,21 @@ source.</p>
 <h2 id="covariate-balancing-propensity-score-weighting-method-cbps">Covariate Balancing Propensity Score weighting
 (<code>method = "cbps"</code>)<a class="anchor" aria-label="anchor" href="#covariate-balancing-propensity-score-weighting-method-cbps"></a>
 </h2>
-<p>For <code>method = "cbps"</code>, <code>WeightIt</code> uses code
-written for <code>WeightIt</code>, so no additional packages need to be
-installed to use CBPS.</p>
+<p>For <code>method = "cbps"</code>, <em>WeightIt</em> uses code written
+for <em>WeightIt</em>, so no additional packages need to be installed to
+use CBPS. Installing <em>rootSolve</em> can improve estimation, but is
+not necessary.</p>
 </div>
 <div class="section level2">
 <h2 id="nonparametric-covariate-balancing-propensity-score-weighting-method-npcbps">Nonparametric Covariate Balancing Propensity Score weighting
 (<code>method = "npcbps"</code>)<a class="anchor" aria-label="anchor" href="#nonparametric-covariate-balancing-propensity-score-weighting-method-npcbps"></a>
 </h2>
-<p>For <code>method = "npcbps"</code>, <code>WeightIt</code> uses the R
-package <code>CBPS</code> to perform nonparametric covariate balancing
-propensity score weighting. To install <code>CBPS</code> from CRAN,
-run</p>
+<p>For <code>method = "npcbps"</code>, <em>WeightIt</em> uses the R
+package <em>CBPS</em> to perform nonparametric covariate balancing
+propensity score weighting. To install <em>CBPS</em> from CRAN, run</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"CBPS"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>CBPS</code> is not on CRAN, or if you want to install the
+<p>If <em>CBPS</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Kosuke Imai’s, <a href="https://github.com/kosukeimai/CBPS" class="external-link">GitHub
 repo</a> using the following code:</p>
@@ -231,27 +230,20 @@ repo</a> using the following code:</p>
 <div class="section level2">
 <h2 id="entropy-balancing-method-ebal">Entropy balancing (<code>method = "ebal"</code>)<a class="anchor" aria-label="anchor" href="#entropy-balancing-method-ebal"></a>
 </h2>
-<p><code>WeightIt</code> uses code written for <code>WeightIt</code>, so
-no additional packages need to be installed to use entropy
-balancing.</p>
+<p><em>WeightIt</em> uses code written for <em>WeightIt</em>, so no
+additional packages need to be installed to use entropy balancing.
+Installing <em>rootSolve</em> can improve estimation, but is not
+necessary.</p>
 </div>
 <div class="section level2">
 <h2 id="inverse-probability-tilting-method-ipt">Inverse probability tilting (<code>method = "ipt"</code>)<a class="anchor" aria-label="anchor" href="#inverse-probability-tilting-method-ipt"></a>
 </h2>
-<p><code>WeightIt</code> uses the R package <code>rootSolve</code> to
-perform the root finding required for inverse probability tilting. To
-install <code>rootSolve</code> from CRAN, run</p>
+<p><em>WeightIt</em> uses the R package <em>rootSolve</em> to perform
+the root finding required for inverse probability tilting. To install
+<em>rootSolve</em> from CRAN, run</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"rootSolve"</span><span class="op">)</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="empirical-balancing-calibration-weighting-method-ebcw">Empirical balancing calibration weighting
-(<code>method = "ebcw"</code>)<a class="anchor" aria-label="anchor" href="#empirical-balancing-calibration-weighting-method-ebcw"></a>
-</h2>
-<p>Empirical balancing calibration weighting is no longer available with
-<code>WeightIt</code>. Use entropy balancing, which in most cases is
-mathematically identical.</p>
-<!-- `WeightIt` uses the R package `ATE` to perform empirical balancing calibration weighting. To install `ATE` from CRAN, run -->
+<!-- *WeightIt* uses the R package `ATE` to perform empirical balancing calibration weighting. To install `ATE` from CRAN, run -->
 <!-- ```{r} -->
 <!-- pak::pkg_install("ATE") -->
 <!-- ``` -->
@@ -265,45 +257,45 @@ mathematically identical.</p>
 <h2 id="optimization-based-weighting-method-optweight">Optimization-based weighting
 (<code>method = "optweight"</code>)<a class="anchor" aria-label="anchor" href="#optimization-based-weighting-method-optweight"></a>
 </h2>
-<p><code>WeightIt</code> uses the R package <code>optweight</code> to
-perform optimization-based weighting. To install <code>optweight</code>
-from CRAN, run</p>
+<p><em>WeightIt</em> uses the R package <em>optweight</em> to perform
+optimization-based weighting. To install <em>optweight</em> from CRAN,
+run</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"optweight"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>optweight</code> is not on CRAN, or if you want to install
-the development version from source, you can do so from the developer,
-Noah Greifer’s (my), <a href="https://github.com/ngreifer/optweight" class="external-link">GitHub repo</a> using the
-following code:</p>
+<p>If <em>optweight</em> is not on CRAN, or if you want to install the
+development version from source, you can do so from the developer, Noah
+Greifer’s (my), <a href="https://github.com/ngreifer/optweight" class="external-link">GitHub
+repo</a> using the following code:</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"ngreifer/optweight"</span><span class="op">)</span></span></code></pre></div>
-<p><code>optweight</code> depends on the <code>osqp</code> package,
-which requires compilation, which means you may need additional software
+<p><em>optweight</em> depends on the <em>osqp</em> package, which
+requires compilation, which means you may need additional software
 installed on your computer to install it from source.</p>
 </div>
 <div class="section level2">
 <h2 id="propensity-score-weighting-using-superlearner-method-super">Propensity score weighting using SuperLearner
 (<code>method = "super"</code>)<a class="anchor" aria-label="anchor" href="#propensity-score-weighting-using-superlearner-method-super"></a>
 </h2>
-<p><code>WeightIt</code> uses the R package <code>SuperLearner</code> to
+<p><em>WeightIt</em> uses the R package <em>SuperLearner</em> to
 estimate propensity score weights using SuperLearner. To install
-<code>SuperLearner</code> from CRAN, run</p>
+<em>SuperLearner</em> from CRAN, run</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"SuperLearner"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>SuperLearner</code> is not on CRAN, or if you want to
-install the development version from source, you can do so from the
-developer, Eric Polley’s, <a href="https://github.com/ecpolley/SuperLearner" class="external-link">GitHub repo</a> using
-the following code:</p>
+<p>If <em>SuperLearner</em> is not on CRAN, or if you want to install
+the development version from source, you can do so from the developer,
+Eric Polley’s, <a href="https://github.com/ecpolley/SuperLearner" class="external-link">GitHub
+repo</a> using the following code:</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"ecpolley/SuperLearner"</span><span class="op">)</span></span></code></pre></div>
-<p><code>SuperLearner</code> itself is a wrapper for many other
-packages. The whole point of using SuperLearner is to include many
-different machine learning algorithms to combine them into a
-well-fitting stacked model. These algorithms exist in many different R
-packages, which each need to be installed to use them. See the Suggested
-packages on the <code>SuperLearner</code> <a href="https://cran.r-project.org/package=SuperLearner" class="external-link">CRAN page</a> to
-see which packages might be used with <code>SuperLearner</code>.</p>
-<p>There are additional functions for use with <code>SuperLearner</code>
-in the <code>SuperLearnerExtra</code> <a href="https://github.com/ecpolley/SuperLearnerExtra" class="external-link">repository</a>. To
+<p><em>SuperLearner</em> itself is a wrapper for many other packages.
+The whole point of using SuperLearner is to include many different
+machine learning algorithms to combine them into a well-fitting stacked
+model. These algorithms exist in many different R packages, which each
+need to be installed to use them. See the Suggested packages on the
+<em>SuperLearner</em> <a href="https://cran.r-project.org/package=SuperLearner" class="external-link">CRAN page</a> to
+see which packages might be used with <em>SuperLearner</em>.</p>
+<p>There are additional functions for use with <em>SuperLearner</em> in
+the <code>SuperLearnerExtra</code> <a href="https://github.com/ecpolley/SuperLearnerExtra" class="external-link">repository</a>. To
 read these into your R session to be used with
 <code>method = "super"</code>, use <code><a href="https://rdrr.io/r/base/source.html" class="external-link">source()</a></code> on the raw text
 file URL. For example, to read in the code for <code>SL.dbarts</code>,
@@ -315,30 +307,30 @@ run</p>
 <h2 id="propensity-score-weighting-using-bart-method-bart">Propensity score weighting using BART
 (<code>method = "bart"</code>)<a class="anchor" aria-label="anchor" href="#propensity-score-weighting-using-bart-method-bart"></a>
 </h2>
-<p><code>WeightIt</code> uses the R package <code>dbarts</code> to
-estimate propensity score weights using BART. To install
-<code>dbarts</code> from CRAN, run</p>
+<p><em>WeightIt</em> uses the R package <em>dbarts</em> to estimate
+propensity score weights using BART. To install <em>dbarts</em> from
+CRAN, run</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"dbarts"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>dbarts</code> is not on CRAN, or if you want to install the
+<p>If <em>dbarts</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer,
 Vincent Dorie’s, <a href="https://github.com/vdorie/dbarts" class="external-link">GitHub
 repo</a> using the following code:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"vdorie/dbarts"</span><span class="op">)</span></span></code></pre></div>
-<p><code>dbarts</code> requires compilation, which means you may need
+<p><em>dbarts</em> requires compilation, which means you may need
 additional software installed on your computer to install it from
 source.</p>
 </div>
 <div class="section level2">
 <h2 id="energy-balancing-method-energy">Energy Balancing (<code>method = "energy"</code>)<a class="anchor" aria-label="anchor" href="#energy-balancing-method-energy"></a>
 </h2>
-<p><code>WeightIt</code> uses the R package <code>osqp</code> to perform
-the optimization required for energy balancing. To install
-<code>osqp</code> from CRAN, run</p>
+<p><em>WeightIt</em> uses the R package <em>osqp</em> to perform the
+optimization required for energy balancing. To install <em>osqp</em>
+from CRAN, run</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"osqp"</span><span class="op">)</span></span></code></pre></div>
-<p>If <code>osqp</code> is not on CRAN, or if you want to install the
+<p>If <em>osqp</em> is not on CRAN, or if you want to install the
 development version from source, you can do so from the developer’s site
 using the instructions given <a href="https://osqp.org/docs/get_started/r.html" class="external-link">here</a>, though it is a
 bit more involved than other installations from source.</p>

@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2025-03-10</h4>
+            <h4 data-toc-skip class="date">2025-03-11</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -176,17 +176,17 @@ desired) is the estimate of the treatment effect.</p>
 considerations are required. First, the outcome model should be fit
 incorporating the estimated weights (e.g., using weighted least squares
 or weighted maximum likelihood estimation) <span class="citation">(<a href="#ref-vansteelandtInvitedCommentaryGComputation2011">Vansteelandt
-and Keiding 2011</a>)</span>. Second, when we take the average of the
-estimated potential outcomes under each treatment level, if an estimand
-other than the ATT, ATC, or ATE is used or sampling weights are
-included, this must be a weighted average that incorporates the
-weights<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;Note: Previously, this guide recommended always
+and Keiding 2011</a>; <a href="#ref-gabrielInverseProbabilityTreatment2024">Gabriel et al.
+2024</a>)</span>. Second, when we take the average of the estimated
+potential outcomes under each treatment level, if an estimand other than
+the ATT, ATC, or ATE is used or sampling weights are included, this must
+be a weighted average that incorporates the weights<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;Note: Previously, this guide recommended always
 including the weights. We believe best practice is to omit them, though
 this does not mean previous analyses using weighted averages are
-invalid.&lt;/p&gt;"><sup>1</sup></a>.
-Third, if we want to target the ATT or ATC, we only estimate potential
-outcomes for the treated or control group, respectively (though we still
-generate predicted values under both treatment and control) <span class="citation">(<a href="#ref-wangGcomputationAverageTreatment2017">Wang, Nianogo, and Arah
+invalid.&lt;/p&gt;"><sup>1</sup></a>. Third, if we want to
+target the ATT or ATC, we only estimate potential outcomes for the
+treated or control group, respectively (though we still generate
+predicted values under both treatment and control) <span class="citation">(<a href="#ref-wangGcomputationAverageTreatment2017">Wang, Nianogo, and Arah
 2017</a>)</span>.</p>
 <p>G-computation as a framework for estimating effects after weighting
 has a number of advantages over other approaches. It works the same
@@ -202,7 +202,8 @@ a linear model for the outcome. There are analytic and bootstrap
 approximations to the SEs of the g-computation estimate. The analytic
 approximation is computed using the delta method, a technique for
 computing the SE of a quantity derived from the regression model
-parameters, such as the g-computation estimate.</p>
+parameters, such as the g-computation estimate <span class="citation">(<a href="#ref-hansenVarianceEstimationAverage2024">Hansen and Overgaard
+2024</a>)</span>.</p>
 <p>For the reasons above, we use weighted g-computation when possible
 for all effect estimates, even if there are simpler methods that would
 yield the same estimates. Using a single workflow (with some slight
@@ -277,7 +278,7 @@ the analysis, including (but not limited to!) estimation of the
 propensity score (if used) and estimation of the treatment effect (i.e.,
 because of sampling error). For some methods, methods for analytically
 computing the correct asymptotic SE have been described and are
-implement in <code>WeightIt</code> when available. These methods rely on
+implement in <em>WeightIt</em> when available. These methods rely on
 M-estimation <span class="citation">(<a href="#ref-stefanskiCalculusMEstimation2002">Stefanski and Boos
 2002</a>; <a href="#ref-rossMestimationCommonEpidemiological2024">Ross
 et al. 2024</a>)</span>, a method of combining estimation of multiple
@@ -348,10 +349,10 @@ for other weighting methods and estimands, such as for the ATT <span class="cita
 fixed and known, ignoring uncertainty in their estimation that is
 otherwise accounted for by the asymptotically correct standard errors
 described above. Although they are quick and simple to estimate using
-functionality in the <code>sandwich</code> and <code>survey</code>
-packages or using <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, they should be used with
-caution, and the bootstrap (described below) or asymptotically correct
-standard errors should be preferred in most cases.</p>
+functionality in the <em>sandwich</em> and <em>survey</em> packages or
+using <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, they should be used with caution, and
+the bootstrap (described below) or asymptotically correct standard
+errors should be preferred in most cases.</p>
 </div>
 <div class="section level4">
 <h4 id="bootstrapping">Bootstrapping<a class="anchor" aria-label="anchor" href="#bootstrapping"></a>
@@ -388,16 +389,15 @@ replication. Both are equally valid in most cases, but the fractional
 weighted bootstrap can outperform the traditional bootstrap when sparse
 categorical variables are present in the data.</p>
 <p>Bootstrap standard errors can be computed manually using
-<code>boot</code> (for the traditional bootstrap) or <code>fwb</code>
-(for the fractional weighted bootstrap) or automatically using
-functionality in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, which, in each bootstrap
-sample, re-estimates the weights and then uses those weights to fit the
-outcome model. The covariance of the bootstrap estimates is used as the
+<em>boot</em> (for the traditional bootstrap) or <em>fwb</em> (for the
+fractional weighted bootstrap) or automatically using functionality in
+<code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, which, in each bootstrap sample,
+re-estimates the weights and then uses those weights to fit the outcome
+model. The covariance of the bootstrap estimates is used as the
 parameter variance matrix. There are some methods of computing bootstrap
 confidence intervals that use the bootstrap replications themselves,
 e.g., by using the quantiles of the bootstrap distribution. Those are
-not available in <code>WeightIt</code> and must be programmed
-manually.</p>
+not available in <em>WeightIt</em> and must be programmed manually.</p>
 <p>Because bootstrap standard errors involve a random component, it is
 imperative to set a seed using <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> to ensure
 reproducibility.</p>
@@ -432,17 +432,17 @@ through <code>X9</code> are covariates, <code>Y_C</code> is a continuous
 outcome, <code>Y_B</code> is a binary outcome, and <code>Y_S</code> is a
 survival outcome. <code>Am</code> and <code>Ac</code> are multi-category
 and continuous treatment variables, respectively.</p>
-<p>In addition to <code>WeightIt</code> and whatever package may be
-required to estimate the weights, we will need the following packages to
-perform the analyses:</p>
+<p>In addition to <em>WeightIt</em> and whatever package may be required
+to estimate the weights, we will need the following packages to perform
+the analyses:</p>
 <ul>
 <li>
-<code>marginaleffects</code> provides the
-<code>avg_comparisons()</code> function for performing g-computation and
-estimating the SEs and confidence intervals of the average estimate
-potential outcomes and treatment effects</li>
+<em>marginaleffects</em> provides the <code>avg_comparisons()</code>
+function for performing g-computation and estimating the SEs and
+confidence intervals of the average estimate potential outcomes and
+treatment effects</li>
 <li>
-<code>survival</code> provides <code>coxph()</code> to estimate the
+<em>survival</em> provides <code>coxph()</code> to estimate the
 coefficients in a Cox-proportional hazards model for the marginal hazard
 ratio, which is called internally by <code><a href="../reference/glm_weightit.html">coxph_weightit()</a></code> for
 survival outcomes</li>
@@ -461,13 +461,13 @@ alternatives are simple: it only provides the effect estimate and not
 other coefficients, and it always produces average marginal effects for
 the correct population if requested.</p>
 <p>Other packages may be of use but are not used here. There are
-alternatives to the <code>marginaleffects</code> package for computing
-average marginal effects, including <code>margins</code> and
-<code>stdReg</code>. The <code>survey</code> package can be used to
-estimate robust SEs incorporating weights and provides functions for
+alternatives to the <em>marginaleffects</em> package for computing
+average marginal effects, including <em>margins</em> and
+<em>stdReg</em>. The <em>survey</em> package can be used to estimate
+robust SEs incorporating weights and provides functions for
 survey-weighted generalized linear models and Cox-proportional hazards
 models. Much of the code here can be adapted to be used with
-<code>survey</code>, and we will demonstrate that as well.</p>
+<em>survey</em>, and we will demonstrate that as well.</p>
 <div class="section level3">
 <h3 id="the-standard-case-binary-treatment-with-asymptotically-correct-ses">The Standard Case: Binary Treatment with Asymptotically Correct
 SEs<a class="anchor" aria-label="anchor" href="#the-standard-case-binary-treatment-with-asymptotically-correct-ses"></a>
@@ -598,8 +598,8 @@ to <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> and 
 for binary outcomes or <code>family = poisson</code> for count outcomes.
 To compute the marginal RD or mean difference, we can use exactly the
 same syntax as in the Standard Case; nothing needs to change<a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content="&lt;p&gt;Note that for low or high average expected risks
-computed with &lt;code&gt;predictions()&lt;/code&gt;, the confidence intervals may
-go below 0 or above 1; this is because an approximation is used. To
+computed with &lt;code&gt;avg_predictions()&lt;/code&gt;, the confidence intervals
+may go below 0 or above 1; this is because an approximation is used. To
 avoid this problem, bootstrapping or simulation-based inference can be
 used instead.&lt;/p&gt;"><sup>3</sup></a>.</p>
 <p>To compute the marginal RR or count/incidence ratio, first we need to
@@ -649,11 +649,11 @@ like continuous and binary outcomes as previously described.</p>
 the coefficient on treatment in a Cox model fit without covariates. This
 means that we cannot use the procedures from the Standard Case. Here we
 describe estimating the marginal HR using <code><a href="../reference/glm_weightit.html">coxph_weightit()</a></code>,
-which adapts <code>coxph()</code> from the <code>survival</code> package
-but allows for estimation of SEs that account for estimation of the
-weights. Robust SEs for HRs were studied by <span class="citation">Austin (<a href="#ref-austin2016">2016</a>)</span> and
-were found to be conservative. Other formulas have been developed for
-estimating standard errors more accurately <span class="citation">(<a href="#ref-mao2018">Mao et al. 2018</a>; <a href="#ref-hajage2018">Hajage et al. 2018</a>)</span>, though <span class="citation">Austin (<a href="#ref-austin2016">2016</a>)</span> also
+which adapts <code>coxph()</code> from the <em>survival</em> package but
+allows for estimation of SEs that account for estimation of the weights.
+Robust SEs for HRs were studied by <span class="citation">Austin (<a href="#ref-austin2016">2016</a>)</span> and were found to be
+conservative. Other formulas have been developed for estimating standard
+errors more accurately <span class="citation">(<a href="#ref-mao2018">Mao et al. 2018</a>; <a href="#ref-hajage2018">Hajage et al. 2018</a>)</span>, though <span class="citation">Austin (<a href="#ref-austin2016">2016</a>)</span> also
 found the bootstrap to be adequate. The HC0 robust standard error is
 requested by default, and bootstrap standard errors can be requested by
 setting <code>vcov</code> to <code>"BS"</code> or
@@ -691,10 +691,10 @@ the call to <code><a href="https://rdrr.io/r/base/summary.html" class="external-
 <span><span class="co">## A     1.47    4.02  5.9e-05  1.22   1.78 ***</span></span>
 <span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust</span></span></span>
 <span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
-<p>The <a href="https://cran.r-project.org/package=adjustedCurves" class="external-link"><code>adjustedCurves</code></a>
-package provides integration with <code>WeightIt</code> to estimate
-adjusted survival estimands. We strongly recommend using this package to
-estimate effects after weighting.</p>
+<p>The <a href="https://cran.r-project.org/package=adjustedCurves" class="external-link"><em>adjustedCurves</em></a>
+package provides integration with <em>WeightIt</em> to estimate adjusted
+survival estimands. We strongly recommend using this package to estimate
+effects after weighting.</p>
 </div>
 <div class="section level4">
 <h4 id="using-sampling-weights-andor-clustered-data">Using sampling weights and/or clustered data<a class="anchor" aria-label="anchor" href="#using-sampling-weights-andor-clustered-data"></a>
@@ -732,13 +732,13 @@ traditional or fractional weighted bootstrap as well.</p>
 <span>                variables <span class="op">=</span> <span class="st">"A"</span>,</span>
 <span>                wts <span class="op">=</span> <span class="va">W</span><span class="op">$</span><span class="va">s.weights</span><span class="op">)</span></span></code></pre></div>
 <p>More complicated survey designs might require the use of the
-<code>survey</code> package to handle them; it is important to note that
+<em>survey</em> package to handle them; it is important to note that
 using <code>survey::svyglm()</code> instead of
 <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> will produce standard errors that do not
 account for estimation of the balancing weights. See an example below
-for using <code>survey</code> to estimate effects after weighting.</p>
+for using <em>survey</em> to estimate effects after weighting.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://r-survey.r-forge.r-project.org/survey/" class="external-link">survey</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="http://r-survey.r-forge.r-project.org/survey/" class="external-link">"survey"</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#Multiply sampling weights and estimated weights</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">weights</span> <span class="op">&lt;-</span> <span class="va">W</span><span class="op">$</span><span class="va">weights</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">sw</span></span>
@@ -887,7 +887,7 @@ tend to be imprecise.</p>
 <span>                     variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Ac <span class="op">=</span> <span class="va">values</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Although one can examine the expected potential outcomes, it is often
 more useful to see them plotted. We can generate a plot of the ADRF and
-its pointwise confidence band using <code>ggplot2</code><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;You can also use
+its pointwise confidence band using <em>ggplot2</em><a class="footnote-ref" tabindex="0" data-bs-toggle="popover" data-bs-content='&lt;p&gt;You can also use
 &lt;code&gt;&lt;a href="https://marginaleffects.com/man/r/plot_predictions.html" class="external-link"&gt;marginaleffects::plot_predictions()&lt;/a&gt;&lt;/code&gt;, though after
 requesting the predictions in the prior step it is quicker to use
 &lt;code&gt;&lt;a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link"&gt;ggplot()&lt;/a&gt;&lt;/code&gt;.&lt;/p&gt;'><sup>4</sup></a>:</p>
@@ -956,7 +956,7 @@ propensity scores estimated with logistic regression, we can use
 M-estimation to adjust for their estimation in computing the parameter
 covariance matrix. This also includes estimation of the standardization
 factor, if any. We’ll use the toy dataset <code>msmdata</code> that
-comes with <code>WeightIt</code>.</p>
+comes with <em>WeightIt</em>.</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"msmdata"</span><span class="op">)</span></span>
 <span></span>
@@ -1118,8 +1118,8 @@ SEs that treat the weights as fixed, using the fractional weighted
 bootstrap with 1000 bootstrap replications and the entire process of
 weighting and effect estimation included in each replication)</li>
 <li>R packages and functions used in estimating the effect and its SE
-(e.g., <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> in <code>WeightIt</code>,
-<code>avg_comparisons()</code> in <code>marginaleffects</code>)</li>
+(e.g., <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> in <em>WeightIt</em>,
+<code>avg_comparisons()</code> in <em>marginaleffects</em>)</li>
 <li>The effect and its SE and confidence interval</li>
 </ul>
 <p>All this is in addition to information about the weighting method,
@@ -1188,6 +1188,11 @@ Hajage, David, Guillaume Chauvet, Lisa Belin, Alexandre Lafourcade,
 Florence Tubach, and Yann De Rycke. 2018. <span>“Closed-Form Variance
 Estimator for Weighted Propensity Score Estimators with Survival
 Outcome.”</span> <em>Biometrical Journal</em> 60 (6): 1151–63. <a href="https://doi.org/10.1002/bimj.201700330" class="external-link">https://doi.org/10.1002/bimj.201700330</a>.
+</div>
+<div id="ref-hansenVarianceEstimationAverage2024" class="csl-entry">
+Hansen, Stefan Nygaard, and Morten Overgaard. 2024. <span>“Variance
+Estimation for Average Treatment Effects Estimated by
+g-Computation.”</span> <em>Metrika</em>, April. <a href="https://doi.org/10.1007/s00184-024-00962-4" class="external-link">https://doi.org/10.1007/s00184-024-00962-4</a>.
 </div>
 <div id="ref-hoMatchingNonparametricPreprocessing2007" class="csl-entry">
 Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.

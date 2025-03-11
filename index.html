@@ -29,7 +29,7 @@
 
     <a class="navbar-brand me-2" href="index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
 </h3>
 <p><em>WeightIt</em> is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety of estimands including the ATE, ATT, ATC, ATO, and others, and support for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. <em>WeightIt</em> also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. <em>WeightIt</em> uses a familiar formula interface and is meant to complement <code>MatchIt</code> as a package that provides a unified interface to basic and advanced weighting methods.</p>
 <p>For a complete vignette, see the <a href="https://ngreifer.github.io/WeightIt/articles/WeightIt.html">website</a> for <em>WeightIt</em> or <code><a href="articles/WeightIt.html">vignette("WeightIt")</a></code>.</p>
-<p>To install and load <em>WeightIt</em> , use the code below:</p>
+<p>To install and load <em>WeightIt</em>, use the code below:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#CRAN version</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"WeightIt"</span><span class="op">)</span></span>
@@ -148,7 +148,7 @@
 <span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;            Control Treated</span></span>
 <span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; Unweighted  429.       185</span></span>
 <span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Weighted     99.82     185</span></span></code></pre></div>
-<p>Desirable qualities include large effective sample sizes, which imply low variability in the weights (and therefore increased precision in estimating the treatment effect).</p>
+<p>Large effective sample sizes imply low variability in the weights, and therefore increased precision in estimating the treatment effect.</p>
 <p>Finally, we can estimate the effect of the treatment using a weighted outcome model, accounting for estimation of the weights in the standard error of the effect estimate:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">treat</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span>
@@ -164,7 +164,7 @@
 <span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; (Intercept)   5135.1      583.8   8.797   &lt;1e-06 3990.9 6279.2 ***</span></span>
 <span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; treat         1214.1      798.2   1.521    0.128 -350.3 2778.4    </span></span>
 <span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; Standard error: HC0 robust (adjusted for estimation of weights)</span></span></code></pre></div>
-<p>The tables below contains the available methods in <em>WeightIt</em> for estimating weights for binary, multi-category, and continuous treatments. Many of these methods do not require any other package to use; see <code><a href="articles/installing-packages.html">vignette("installing-packages")</a></code> for information on how to install packages that are used.</p>
+<p>The tables below contain the available methods in <em>WeightIt</em> for estimating weights for binary, multi-category, and continuous treatments. Some of these methods require installing other packages to use; see <code><a href="articles/installing-packages.html">vignette("installing-packages")</a></code> for information on how to install them.</p>
 <div class="section level4">
 <h4 id="binary-treatments">Binary Treatments<a class="anchor" aria-label="anchor" href="#binary-treatments"></a>
 </h4>
@@ -328,7 +328,7 @@
 </tr>
 </tbody>
 </table>
-<p>In addition, <em>WeightIt</em> implements the subgroup balancing propensity score using the function <code><a href="reference/sbps.html">sbps()</a></code>. Several other tools and utilities are available, including <code><a href="reference/trim.html">trim()</a></code> to trim or truncate weights, <code><a href="reference/calibrate.html">calibrate()</a></code> to calibrate propensity scores, <code><a href="reference/get_w_from_ps.html">get_w_from_ps()</a></code> to compute weights from propensity scores.</p>
+<p>In addition, <em>WeightIt</em> implements the subgroup balancing propensity score using the function <code><a href="reference/sbps.html">sbps()</a></code>. Several other tools and utilities are available, including <code><a href="reference/trim.html">trim()</a></code> to trim or truncate weights, <code><a href="reference/calibrate.html">calibrate()</a></code> to calibrate propensity scores, and <code><a href="reference/get_w_from_ps.html">get_w_from_ps()</a></code> to compute weights from propensity scores.</p>
 <p><em>WeightIt</em> provides functions to fit weighted models that account for the uncertainty in estimating the weights. These include <code><a href="reference/glm_weightit.html">glm_weightit()</a></code> for fitting generalized linear models, <code><a href="reference/glm_weightit.html">ordinal_weightit()</a></code> for ordinal regression models, <code><a href="reference/glm_weightit.html">multinom_weightit()</a></code> for multinomial regression models, and <code><a href="reference/glm_weightit.html">coxph_weightit()</a></code> for Cox proportional hazards models. Several methods are available for computing the parameter variances, including asymptotically correct M-estimation-based variances, robust variances that treat the weights as fixed, and traditional and fractional weighted bootstrap variances. Clustered variances are supported. See <code><a href="articles/estimating-effects.html">vignette("estimating-effects")</a></code> for information on how to use these after weighting to estimate treatment effects.</p>
 <p>Please submit bug reports, questions, comments, or other issues to <a href="https://github.com/ngreifer/WeightIt/issues" class="external-link uri">https://github.com/ngreifer/WeightIt/issues</a>. If you would like to see your package or method integrated into <em>WeightIt</em>, please contact the author. Fan mail is greatly appreciated.</p>
 </div>
