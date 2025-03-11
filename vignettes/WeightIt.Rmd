@@ -25,13 +25,13 @@ set.seed(1000)
 
 ## Introduction
 
-`WeightIt` contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see @austinIntroductionPropensityScore2011, @austinMovingBestPractice2015, @robinsMarginalStructuralModels2000, or @thoemmesPrimerInverseProbability2016.
+*WeightIt* contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see @austinIntroductionPropensityScore2011, @austinMovingBestPractice2015, @robinsMarginalStructuralModels2000, or @thoemmesPrimerInverseProbability2016.
 
-Typically, the analysis of an observation study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through all these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a definitive guide, but rather an introduction to the relevant issues.
+Typically, the analysis of an observational study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a definitive guide, but rather an introduction to the relevant issues.
 
 ## Balancing Weights for a Point Treatment
 
-First we will use the Lalonde dataset to estimate the effect of a point treatment. We'll use the version of the data set that resides within the `cobalt` package, which we will use later on as well. Here, we are interested in the average treatment effect on the treated (ATT).
+First we will use the Lalonde dataset to estimate the effect of a point treatment. We'll use the version of the data set that comes with the *cobalt* package, which we will use later on as well. Here, we are interested in the average treatment effect on the treated (ATT).
 
 ```{r}
 library("cobalt")
@@ -39,7 +39,7 @@ data("lalonde", package = "cobalt")
 head(lalonde)
 ```
 
-We have our outcome (`re78`), our treatment (`treat`), and the covariates for which balance is desired (`age`, `educ`, `race`, `married`, `nodegree`, `re74`, and `re75`). Using `cobalt`, we can examine the initial imbalance on the covariates:
+We have our outcome (`re78`), our treatment (`treat`), and the covariates for which balance is desired (`age`, `educ`, `race`, `married`, `nodegree`, `re74`, and `re75`). Using *cobalt*, we can examine the initial imbalance on the covariates:
 
 ```{r}
 bal.tab(treat ~ age + educ + race + married + nodegree + re74 + re75,
@@ -48,7 +48,7 @@ bal.tab(treat ~ age + educ + race + married + nodegree + re74 + re75,
 
 Based on this output, we can see that all variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .05 for all variables. In particular, `re74` and `re75` are quite imbalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using `weightit()` to try to attain balance on these covariates.
 
-First, we'll start simple, and use inverse probability weights from propensity scores generated through logistic regression. We need to supply `weightit()` with the formula for the model, the data set, the estimand (ATT), and the method of estimation (`"glm"`) for generalized linear model propensity score weights).
+First, we'll start simple, and use inverse probability weights from propensity scores generated through logistic regression. We need to supply `weightit()` with the formula for the model, the data set, the estimand (ATT), and the method of estimation (`"glm"` for generalized linear model propensity score weights).
 
 ```{r}
 library("WeightIt")
@@ -57,7 +57,7 @@ W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
 W.out #print the output
 ```
 
-Printing the output of `weightit()` displays a summary of how the weights were estimated. Let's examine the quality of the weights using `summary()`. Weights with low variability are desirable because they improve the precision of the estimator. This variability is presented in several ways: by the ratio of the largest weight to the smallest in each group, the coefficient of variation (standard deviation divided by the mean) of the weights in each group, and the effective sample size computed from the weights. We want a small ratio, a smaller coefficient of variation, and a large effective sample size (ESS). What constitutes these values is mostly relative, though, and must be balanced with other constraints, including covariate balance. These metrics are best used when comparing weighting methods, but the ESS can give a sense of how much information remains in the weighted sample on a familiar scale.
+Printing the output of `weightit()` displays a summary of how the weights were estimated. Let's examine the quality of the weights using `summary()`. Weights with low variability are desirable because they improve the precision of the estimator. This variability is presented in several ways, but the most important is the effective sample size (ESS) computed from the weights, which we hope is as close to the original sample size as possible. What constitutes a "large enough" ESS is mostly relative, though, and must be considered with respect other constraints, including covariate balance.
 
 ```{r}
 summary(W.out)
@@ -69,7 +69,7 @@ These weights have quite high variability, and yield an ESS of close to 100 in t
 bal.tab(W.out, stats = c("m", "v"), thresholds = c(m = .05))
 ```
 
-For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing [@hainmuellerEntropyBalancingCausal2012], which guarantees perfect balance on specified moments of the covariates while minimizing the entropy (a measure of dispersion) of the weights.
+For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing [@hainmuellerEntropyBalancingCausal2012], which guarantees perfect balance on specified moments of the covariates while minimizing the negative entropy (a measure of dispersion) of the weights.
 
 ```{r}
 W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
@@ -85,7 +85,7 @@ bal.tab(W.out, stats = c("m", "v"), thresholds = c(m = .05))
 
 Indeed, we have achieved perfect balance on the means of the covariates. However, the variance ratio of `age` is still quite high. We could continue to try to adjust for this imbalance, but if there is reason to believe it is unlikely to affect the outcome, it may be best to leave it as is. (You can try adding `I(age^2)` to the formula and see what changes this causes.)
 
-Now that we have our weights stored in `W.out`, let's extract them and estimate our treatment effect. The functions `lm_weightit()` and `glm_weightit()` make it easy to fit (generalized) linear models that account for estimation of of the weights in their standard errors. We can then use functions in `marginaleffects` to perform g-computation to extract a treatment effect estimation from the outcome model.
+Now that we have our weights stored in `W.out`, let's estimate our treatment effect in the weighted sample. The functions `lm_weightit()`, `glm_weightit()`, and friends make it easy to fit (generalized) linear models that account for estimation of of the weights in their standard errors. We can then use functions in *marginaleffects* to perform g-computation to extract a treatment effect estimation from the outcome model.
 
 ```{r, message=FALSE}
 # Fit outcome model
@@ -100,11 +100,11 @@ avg_comparisons(fit, variables = "treat",
                 newdata = subset(treat == 1))
 ```
 
-Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`. Several types of standard errors are available in `WeightIt`, including analytical standard errors that account for estimation of the weights using M-estimation, robust standard errors that treat the weights as fixed, and bootstrapping. All type are described in detail at `vignette("estimating-effects")`.
+Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`. Several types of standard errors are available in *WeightIt*, including analytical standard errors that account for estimation of the weights using M-estimation, robust standard errors that treat the weights as fixed, and bootstrapping. All type are described in detail at `vignette("estimating-effects")`.
 
 ## Balancing Weights for a Longitudinal Treatment
 
-`WeightIt` can estimate weights for longitudinal treatment marginal structural models as well. This time, we'll use the sample data set `msmdata` to estimate our weights. Data must be in "wide" format, with one row per unit.
+*WeightIt* can estimate weights marginal structural models with longitudinal treatment as well. This time, we'll use the sample data set `msmdata` to estimate our weights. Data must be in "wide" format, with one row per unit.
 
 ```{r}
 data("msmdata")
@@ -113,7 +113,7 @@ head(msmdata)
 
 We have a binary outcome variable (`Y_B`), pre-treatment time-varying variables (`X1_0` and `X2_0`, measured before the first treatment, `X1_1` and `X2_1` measured between the first and second treatments, and `X1_2` and `X2_2` measured between the second and third treatments), and three time-varying binary treatment variables (`A_1`, `A_2`, and `A_3`). We are interested in the joint, unique, causal effects of each treatment period on the outcome. At each treatment time point, we need to achieve balance on all variables measured prior to that treatment, including previous treatments.
 
-Using `cobalt`, we can examine the initial imbalance at each time point and overall:
+Using *cobalt*, we can examine the initial imbalance at each time point and overall:
 
 ```{r}
 library("cobalt") #if not already attached
@@ -156,7 +156,7 @@ bal.tab(Wmsm.out, stats = c("m", "ks"),
 
 By setting `which.time = .none` in `bal.tab()`, we can focus on the overall balance assessment, which displays the greatest imbalance for each covariate across time points. We can see that our estimated weights balance all covariates all time points with respect to means and KS statistics. Now we can estimate our treatment effects.
 
-First, we fit a marginal structural model for the outcome using `glm()` with the weights included:
+First, we fit a marginal structural model for the outcome using `glm_weightit()` with the `weightit` object supplied:
 
 ```{r}
 # Fit outcome model

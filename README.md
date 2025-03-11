@@ -25,7 +25,7 @@ For a complete vignette, see the
 [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html)
 for *WeightIt* or `vignette("WeightIt")`.
 
-To install and load *WeightIt* , use the code below:
+To install and load *WeightIt*, use the code below:
 
 ``` r
 #CRAN version
@@ -125,9 +125,8 @@ summary(W)
     #> Unweighted  429.       185
     #> Weighted     99.82     185
 
-Desirable qualities include large effective sample sizes, which imply
-low variability in the weights (and therefore increased precision in
-estimating the treatment effect).
+Large effective sample sizes imply low variability in the weights, and
+therefore increased precision in estimating the treatment effect.
 
 Finally, we can estimate the effect of the treatment using a weighted
 outcome model, accounting for estimation of the weights in the standard
@@ -150,11 +149,11 @@ summary(fit, ci = TRUE)
     #> treat         1214.1      798.2   1.521    0.128 -350.3 2778.4    
     #> Standard error: HC0 robust (adjusted for estimation of weights)
 
-The tables below contains the available methods in *WeightIt* for
+The tables below contain the available methods in *WeightIt* for
 estimating weights for binary, multi-category, and continuous
-treatments. Many of these methods do not require any other package to
+treatments. Some of these methods require installing other packages to
 use; see `vignette("installing-packages")` for information on how to
-install packages that are used.
+install them.
 
 #### Binary Treatments
 
@@ -203,7 +202,7 @@ install packages that are used.
 In addition, *WeightIt* implements the subgroup balancing propensity
 score using the function `sbps()`. Several other tools and utilities are
 available, including `trim()` to trim or truncate weights, `calibrate()`
-to calibrate propensity scores, `get_w_from_ps()` to compute weights
+to calibrate propensity scores, and `get_w_from_ps()` to compute weights
 from propensity scores.
 
 *WeightIt* provides functions to fit weighted models that account for

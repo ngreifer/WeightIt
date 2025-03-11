@@ -26,7 +26,7 @@ knitr::opts_chunk$set(
 
 For a complete vignette, see the [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html) for *WeightIt* or `vignette("WeightIt")`.
 
-To install and load *WeightIt* , use the code below:
+To install and load *WeightIt*, use the code below:
 
 ```{r, eval = FALSE}
 #CRAN version
@@ -67,7 +67,7 @@ For the second goal, qualities of the distributions of weights can be assessed u
 summary(W)
 ```
 
-Desirable qualities include large effective sample sizes, which imply low variability in the weights (and therefore increased precision in estimating the treatment effect).
+Large effective sample sizes imply low variability in the weights, and therefore increased precision in estimating the treatment effect.
 
 Finally, we can estimate the effect of the treatment using a weighted outcome model, accounting for estimation of the weights in the standard error of the effect estimate:
 
@@ -78,7 +78,7 @@ fit <- lm_weightit(re78 ~ treat, data = lalonde,
 summary(fit, ci = TRUE)
 ```
 
-The tables below contains the available methods in *WeightIt* for estimating weights for binary, multi-category, and continuous treatments. Many of these methods do not require any other package to use; see `vignette("installing-packages")` for information on how to install packages that are used.
+The tables below contain the available methods in *WeightIt* for estimating weights for binary, multi-category, and continuous treatments. Some of these methods require installing other packages to use; see `vignette("installing-packages")` for information on how to install them.
  
 #### Binary Treatments
 
@@ -124,7 +124,7 @@ The tables below contains the available methods in *WeightIt* for estimating wei
  Bayesian additive regression trees GPS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html)
  Distance covariance optimal weighting | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html)
  
-In addition, *WeightIt* implements the subgroup balancing propensity score using the function `sbps()`. Several other tools and utilities are available, including `trim()` to trim or truncate weights, `calibrate()` to calibrate propensity scores, `get_w_from_ps()` to compute weights from propensity scores.
+In addition, *WeightIt* implements the subgroup balancing propensity score using the function `sbps()`. Several other tools and utilities are available, including `trim()` to trim or truncate weights, `calibrate()` to calibrate propensity scores, and `get_w_from_ps()` to compute weights from propensity scores.
 
 *WeightIt* provides functions to fit weighted models that account for the uncertainty in estimating the weights. These include `glm_weightit()` for fitting generalized linear models, `ordinal_weightit()` for ordinal regression models, `multinom_weightit()` for multinomial regression models, and `coxph_weightit()` for Cox proportional hazards models. Several methods are available for computing the parameter variances, including asymptotically correct M-estimation-based variances, robust variances that treat the weights as fixed, and traditional and fractional weighted bootstrap variances. Clustered variances are supported. See `vignette("estimating-effects")` for information on how to use these after weighting to estimate treatment effects.
 
