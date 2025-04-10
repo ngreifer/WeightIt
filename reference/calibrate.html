@@ -13,7 +13,7 @@ predictor. Weights are computed using this new propensity score."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -143,27 +143,27 @@ arXiv. <a href="http://arxiv.org/abs/2411.06342" class="external-link">http://ar
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000   ||                           1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0028 |---------------------------| 17.3885</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000    ||                          1.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0038 |---------------------------| 10.6104</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4     3      2       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1     1      1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             585    557   592    374     608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 3.1627 3.5102 6.074 6.3303 17.3885</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             585    569    592    374     608</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 4.3522 5.0089 5.8584 5.8584 10.6104</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000   0.000       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       3.165 1.101   1.202       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var  MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.00   0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       2.422 1.06   1.016       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     39.02     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   429.      185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted      62.6     185</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Calibrating the GBM propensity scores</span></span></span>
 <span class="r-in"><span><span class="va">Wc</span> <span class="op">&lt;-</span> <span class="fu">calibrate</span><span class="op">(</span><span class="va">W</span><span class="op">)</span></span></span>
