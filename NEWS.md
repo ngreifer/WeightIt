@@ -5,6 +5,8 @@ WeightIt News and Updates
 
 * Fixed a bug in which the output of `bread()` was off by a factor of -1. This doesn't affect its use in `sandwich::sandwich()`.
 
+* Fixed a bug in which `bag.fraction` for `method = "gbm"` with binary and multi-category treatments had a default of .5 instead of the stated 1.
+
 * Typo fixes in vignettes and documentation.
 
 # `WeightIt` 1.4.0

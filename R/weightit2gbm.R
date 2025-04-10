@@ -350,12 +350,14 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   chk::chk_count(n.trees)
   chk::chk_gt(n.trees, 1L)
 
-  A <- ...mget(setdiff(names(formals(gbm::gbm.fit)),
+  arg_names <- setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
                          "response.name", "group",
-                         "n.trees", tunable)))
+                         "n.trees", tunable))
 
-  for (f in names(A)) {
+  A <- ...mget(arg_names)
+
+  for (f in arg_names) {
     if (is_null(A[[f]])) {
       A[f] <- list(switch(f,
                           bag.fraction = 1,
@@ -409,11 +411,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   B[["shrinkage"]] <- ...get("shrinkage", .01)
 
   ## Distribution
-  distribution <- ...get("distribution")
-  B[["distribution"]] <- {
-    if (is_null(distribution)) available.distributions[1L]
-    else match_arg(distribution, available.distributions, several.ok = TRUE)
-  }
+  distribution <- ...get("distribution", available.distributions[1L])
+  B[["distribution"]] <- match_arg(distribution, available.distributions, several.ok = TRUE)
 
   ## Offset
   use.offset <- ...get("use.offset", FALSE)
@@ -675,15 +674,20 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   chk::chk_count(n.trees)
   chk::chk_gt(n.trees, 1L)
 
-  A <- ...mget(setdiff(names(formals(gbm::gbm.fit)),
+  arg_names <- setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
                          "response.name", "group",
-                         "n.trees", tunable)))
+                         "n.trees", tunable))
 
-  for (f in names(formals(gbm::gbm.fit))) {
-    A[f] <- list(switch(f,
-                        bag.fraction = 1,
-                        formals(gbm::gbm.fit)[[f]]))
+  A <- ...mget(arg_names)
+
+  for (f in arg_names) {
+    if (is_null(A[[f]])) {
+      A[f] <- list(switch(f,
+                          bag.fraction = 1,
+                          keep.data = FALSE,
+                          formals(gbm::gbm.fit)[[f]]))
+    }
   }
 
   available.distributions <- c("gaussian", "laplace", "tdist")
