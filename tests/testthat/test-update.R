@@ -626,13 +626,13 @@ test_that("update.coxph_weightit() works with weightit", {
 
   expect_no_condition({
     fit0 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, weightit = W0)
+                           data = test_data, weightit = W0)
   })
 
   #Updating weightit
   expect_no_condition({
     fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data)
+                           data = test_data)
   })
 
   expect_equal(update(fit0, weightit = NULL),
@@ -651,7 +651,7 @@ test_that("update.coxph_weightit() works with weightit", {
 
   expect_no_condition({
     fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data_s, weightit = W1)
+                           data = test_data_s, weightit = W1)
   })
 
   expect_equal(update(fit0, data = test_data_s)$coefficients,
@@ -664,8 +664,8 @@ test_that("update.coxph_weightit() works with weightit", {
 
   expect_no_condition({
     fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, weightit = W0,
-                         cluster = ~clus)
+                           data = test_data, weightit = W0,
+                           cluster = ~clus)
   })
 
   expect_equal(update(fit0, cluster = ~clus),
@@ -679,29 +679,31 @@ test_that("update.coxph_weightit() works with weightit", {
   i <- FALSE
   expect_no_condition({
     fit2 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, weightit = W0,
-                         control = if (i) list(stop("bad error")) else list())
+                           data = test_data, weightit = W0,
+                           control = if (i) list(stop("bad error")) else list())
   })
 
-  i <- TRUE
-  expect_error({
-    update(fit2, ties = "breslow")
-  }, "bad error")
+  if (exists("fit2", inherits = FALSE)) {
+    i <- TRUE
+    expect_error({
+      update(fit2, ties = "breslow")
+    }, "bad error")
 
-  expect_error({
-    update(fit2)
-  }, "bad error")
+    expect_error({
+      update(fit2)
+    }, "bad error")
 
-  expect_no_condition({
-    fit2c <- update(fit2, cluster = ~clus)
-  })
+    expect_no_condition({
+      fit2c <- update(fit2, cluster = ~clus)
+    })
 
-  expect_equal(vcov(fit2c),
-               vcov(update(fit0, cluster = ~clus)),
-               tolerance = eps)
+    expect_equal(vcov(fit2c),
+                 vcov(update(fit0, cluster = ~clus)),
+                 tolerance = eps)
 
-  expect_not_equal(vcov(fit2c),
-                   vcov(fit0))
+    expect_not_equal(vcov(fit2c),
+                     vcov(fit0))
+  }
 
   #Updating s.weights updates weightit
   expect_no_condition({
@@ -711,13 +713,13 @@ test_that("update.coxph_weightit() works with weightit", {
 
   expect_no_condition({
     fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, weightit = W1)
+                           data = test_data, weightit = W1)
   })
 
   expect_no_condition({
     fit1s <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                          data = test_data,
-                          weightit = update(object = W0, s.weights = "SW"))
+                            data = test_data,
+                            weightit = update(object = W0, s.weights = "SW"))
   })
 
   expect_no_condition({
@@ -748,7 +750,7 @@ test_that("update.coxph_weightit() works with weightit", {
 
   expect_no_condition({
     fit1 <- coxph_weightit(survival::Surv(Y_S) ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = boot_dat, weightit = W1)
+                           data = boot_dat, weightit = W1)
   })
 
   expect_equal(update(fit0, data = boot_dat, vcov = "none")$coefficients,

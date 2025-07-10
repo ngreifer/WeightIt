@@ -40,7 +40,7 @@ expect_not_equal <- function(object, expected, ...,
   }
 }
 
-expect_waldo_not_equal <- function (type, act, exp, info, ...) {
+expect_waldo_not_equal <- function(type, act, exp, info, ...) {
   comp <- waldo::compare(act$val, exp$val, ..., x_arg = "actual",
                         y_arg = "expected")
 

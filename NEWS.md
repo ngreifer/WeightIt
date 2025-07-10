@@ -3,9 +3,15 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
+* For `predict.ordinal_weightit()`, `type` can now be `"stdlv"` to request predictions on the scale of the standardized latent variable underlying the ordinal responses.
+
 * Fixed a bug in which the output of `bread()` was off by a factor of -1. This doesn't affect its use in `sandwich::sandwich()`.
 
 * Fixed a bug in which `bag.fraction` for `method = "gbm"` with binary and multi-category treatments had a default of .5 instead of the stated 1.
+
+* Fixed bugs related to `coxph_weightit()` with aliased coefficients and multi-state models. Thanks to Mads Jeppe Tarp-Johansen.
+
+* Fixed a bug in which messages about assuming which treatment level was "treated" were printed many times, including when bootstrapping.
 
 * Typo fixes in vignettes and documentation.
 
