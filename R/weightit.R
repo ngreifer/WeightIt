@@ -246,7 +246,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   #Get treat type
-  treat <- assign_treat_type(treat)
+  treat <- as.treat(treat, process = TRUE)
   treat.type <- get_treat_type(treat)
 
   chk::chk_flag(verbose)
@@ -386,7 +386,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   if (is_not_null(stabilize)) {
     stab.t.c <- get_covs_and_treat_from_formula(stabilize, data)
 
-    A["treat"] <- list(stab.t.c[["treat"]])
     A["covs"] <- list(stab.t.c[["model.covs"]])
     A["method"] <- list("glm")
     A["moments"] <- list(integer())
@@ -420,9 +419,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               missing = if (nzchar(missing)) missing else NULL,
               env = parent.frame(),
               info = obj$info,
-              obj = obj$fit.obj)
-
-  out <- clear_null(out)
+              obj = obj$fit.obj) |>
+    clear_null()
 
   if (keep.mparts && is_not_null(attr(obj, "Mparts"))) {
     if (is_null(stabilize)) {

@@ -82,7 +82,7 @@ as.weightit.weightit.fit <- function(x, covs = NULL, ...) {
 as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
                                 s.weights = NULL, ps = NULL, ...) {
 
-  if (!is.numeric(x) || is_not_null(dim(x))) {
+  if (!is.numeric(x) || length(dim(x)) > 1L) {
     .err("`x` must be a numeric vector of weights")
   }
 
@@ -93,7 +93,7 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
     .err("`treat` and `x` must be the same length")
   }
 
-  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat <- as.treat(treat, process = TRUE)
 
   if (is_not_null(covs)) {
     if (is.matrix(covs)) {
@@ -122,7 +122,7 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
   }
 
   w.list <- list(weights = x,
-                 treat = assign_treat_type(treat),
+                 treat = treat,
                  covs = covs,
                  estimand = estimand,
                  s.weights = s.weights,
@@ -155,7 +155,7 @@ as.weightitMSM <- function(x, ...) {
 as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = NULL,
                                    s.weights = NULL, ps.list = NULL, ...) {
 
-  if (!is.numeric(x) || is_not_null(dim(x))) {
+  if (!is.numeric(x) || length(dim(x)) > 1L) {
     .err("`x` must be a numeric vector of weights")
   }
 
@@ -163,7 +163,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
   chk::chk_list(treat.list)
 
   if (!all_apply(treat.list, is.atomic) ||
-      any_apply(treat.list, function(z) is_not_null(dim(z)))) {
+      any_apply(treat.list, function(z) length(dim(z)) > 1L)) {
     .err("`treat.list` must be a list of atomic vectors (i.e., numeric, logical, or character) or factors")
   }
 
@@ -176,9 +176,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
   }
 
   for (i in seq_along(treat.list)) {
-    if (!has_treat_type(treat.list[[i]])) {
-      treat.list[[i]] <- assign_treat_type(treat.list[[i]])
-    }
+    treat.list[[i]] <- as.treat(treat.list[[i]], process = TRUE)
   }
 
   chk::chk_null_or(covs.list, vld = chk::vld_list)
@@ -211,7 +209,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
     }
 
     if (!all_apply(ps.list, is.numeric) ||
-        any_apply(ps.list, function(z) is_not_null(dim(z)))) {
+        any_apply(ps.list, function(z) length(dim(z)) > 1L)) {
       .err("`ps.list` must be a list of numeric vectors")
     }
 

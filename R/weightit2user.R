@@ -185,7 +185,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
     .err("no weights were estimated")
   }
 
-  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]]))) {
+  if (!is.numeric(obj[["w"]]) || length(dim(obj[["w"]])) > 1L) {
     .err('the "w" or "weights" entry of the output of the user-provided function must be a numeric vector of weights')
   }
 
@@ -262,7 +262,7 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
     .err("no weights were estimated")
   }
 
-  if (!is.numeric(obj[["w"]]) || is_not_null(dim(obj[["w"]]))) {
+  if (!is.numeric(obj[["w"]]) || length(dim(obj[["w"]])) > 1L) {
     .err('the "w" or "weights" entry of the output of the user-provided function must be a numeric vector of weights')
   }
 

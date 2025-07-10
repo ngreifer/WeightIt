@@ -232,7 +232,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
     d <- data.frame(w, t = factor(t))
 
     if (is_not_null(focal)) {
-      d <- d[t != focal, ]
+      d <- d[t != focal, , drop = FALSE]
     }
 
     levels(d$t) <- sprintf("Treat = %s", levels(d$t))

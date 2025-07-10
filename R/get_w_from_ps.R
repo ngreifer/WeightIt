@@ -223,7 +223,7 @@
 get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = NULL,
                           subclass = NULL, stabilize = FALSE) {
 
-  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat <- as.treat(treat)
   treat.type <- get_treat_type(treat)
 
   if (treat.type == "continuous") {
@@ -252,7 +252,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   w <- rep.int(1, n)
 
   if (is.factor(treat)) {
-    treat <- as.integer(factor(treat, levels = colnames(ps_mat)))
+    treat <- unclass(factor(treat, levels = colnames(ps_mat)))
   }
   else {
     treat <- match(as.character(treat), colnames(ps_mat))
@@ -305,12 +305,17 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     w[!between(ps_mat[, 2L], c(alpha.opt, 1 - alpha.opt))] <- 0
   }
 
-  if (stabilize) w <- stabilize_w(w, treat)
+  if (stabilize) {
+    w <- stabilize_w(w, treat)
+  }
 
   names(w) <- if_null_then(rownames(ps_mat), names(treat), NULL)
 
   attr(w, "subclass") <- attr(ps_mat, "sub_mat")
-  if (estimand == "ATOS") attr(w, "alpha") <- alpha.opt
+
+  if (estimand == "ATOS") {
+    attr(w, "alpha") <- alpha.opt
+  }
 
   w
 }
@@ -337,7 +342,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       ps.names <- rownames(ps)
       ps <- as.matrix(ps)
     }
-    else if (is.numeric(ps) && is_null(dim(ps))) {
+    else if (is.numeric(ps) && length(dim(ps)) <= 1L) {
       ps.names <- names(ps)
       ps <- matrix(ps, ncol = 1L)
     }

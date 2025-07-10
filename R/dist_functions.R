@@ -6,9 +6,8 @@
 #using retained units, but full covariate matrix is returned.
 transform_covariates <- function(formula = NULL, data = NULL, method = "mahalanobis", s.weights = NULL, var = NULL,
                                  discarded = NULL) {
-  X <- get.covs.matrix.for.dist(formula, data)
-
-  X <- check_X(X)
+  X <- get.covs.matrix.for.dist(formula, data) |>
+    check_X()
 
   #If all variables have no variance, use Euclidean to avoid errors
   #If some have no variance, removes those to avoid messing up distances
@@ -104,8 +103,8 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 eucdist_internal <- function(X, treat = NULL) {
 
   if (is.null(treat)) {
-    if (is.null(dim(X))) {
-      d <- abs(outer(X, X, "-"))
+    if (length(dim(X)) <= 1L) {
+      d <- abs(outer(drop(X), drop(X), "-"))
       dimnames(d) <- list(names(X), names(X))
     }
     else {
@@ -120,7 +119,7 @@ eucdist_internal <- function(X, treat = NULL) {
   }
   else {
     treat_l <- as.logical(treat)
-    if (is.null(dim(X))) {
+    if (length(dim(X)) <= 1L) {
       d <- abs(outer(X[treat_l], X[!treat_l], "-"))
       dimnames(d) <- list(names(X)[treat_l], names(X)[!treat_l])
     }
@@ -185,7 +184,7 @@ check_X <- function(X) {
   if (is.data.frame(X)) {
     X <- as.matrix(X)
   }
-  else if (is.numeric(X) && is.null(dim(X))) {
+  else if (is.numeric(X) && length(dim(X)) <= 1L) {
     X <- matrix(X, nrow = length(X),
                 dimnames = list(names(X), NULL))
   }

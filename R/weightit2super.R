@@ -246,7 +246,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
                            stabilize, subclass, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat[subset])
+  treat <- treat[subset]
   s.weights <- s.weights[subset]
 
   missing <- .process_missing2(missing, covs)

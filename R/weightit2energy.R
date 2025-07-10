@@ -472,11 +472,15 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   lambda <- ...get("lambda", 1e-4)
   chk::chk_number(lambda)
 
+  treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
+                    dimnames = list(NULL, levels_treat))
+
   for (t in levels_treat) {
-    s.weights[treat == t] <- s.weights[treat == t] / mean_fast(s.weights[treat == t])
+    in_t <- which(treat == t)
+    s.weights[in_t] <- s.weights[in_t] / mean_fast(s.weights[in_t])
+    treat_t[in_t, t] <- 1
   }
 
-  treat_t <- vapply(levels_treat, function(t) treat == t, logical(n))
   n_t <- colSums(treat_t)
 
   s.weights_n_t <- vapply(levels_treat, function(t) treat_t[, t] * s.weights / n_t[t],

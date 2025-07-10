@@ -301,7 +301,8 @@
        y = y,
        weights = weights,
        gradient = grad,
-       hessian = hessian)
+       hessian = hessian,
+       varx = cov(x))
 }
 
 .ordinal_weightit <- function(formula, data, link = "logit", weights, subset, start = NULL, na.action,

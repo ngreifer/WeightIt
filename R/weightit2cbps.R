@@ -371,8 +371,11 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
           silent = TRUE)
     })
 
-    if (!null_or_error(out) && out$estim.precis < 1e-5) {
-      par_alpha <- out$root
+    if (!null_or_error(out) && utils::hasName(out, "root") &&
+        utils::hasName(out, "estim.precis") &&
+        chk::vld_number(out[["estim.precis"]]) &&
+        out[["estim.precis"]] < 1e-5) {
+      par_alpha <- out[["root"]]
     }
   }
 
@@ -511,7 +514,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                                 stabilize, subclass, missing, moments, int, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- factor(treat[subset])
+  treat <- droplevels(treat[subset])
   s.weights <- s.weights[subset]
 
   missing <- .process_missing2(missing, covs)
@@ -567,8 +570,6 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   chk::chk_count(maxit)
 
   N <- sum(s.weights)
-
-  treat_num <- as.integer(treat)
 
   #Function to compute predicted probabilities
   get_pp <- function(B, Xm) {
@@ -637,8 +638,11 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
           silent = TRUE)
     })
 
-    if (!null_or_error(out) && out$estim.precis < 1e-5) {
-      par_alpha <- out$root
+    if (!null_or_error(out) && utils::hasName(out, "root") &&
+        utils::hasName(out, "estim.precis") &&
+        chk::vld_number(out[["estim.precis"]]) &&
+        out[["estim.precis"]] < 1e-5) {
+      par_alpha <- out[["root"]]
     }
   }
 
@@ -764,7 +768,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
     invS <- {
       if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs,
-                                             treat_num, s.weights))
+                                             treat, s.weights))
       else NULL
     }
 
@@ -975,8 +979,11 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
           silent = TRUE)
     })
 
-    if (!null_or_error(out) && out$estim.precis < 1e-5) {
-      par_alpha <- out$root
+    if (!null_or_error(out) && utils::hasName(out, "root") &&
+        utils::hasName(out, "estim.precis") &&
+        chk::vld_number(out[["estim.precis"]]) &&
+        out[["estim.precis"]] < 1e-5) {
+      par_alpha <- out[["root"]]
     }
   }
 

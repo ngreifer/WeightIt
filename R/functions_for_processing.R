@@ -398,8 +398,8 @@
     ct <- .get_control_and_treated_levels(treat, estimand, focal, treated)
 
     focal <- switch(estimand,
-                    "ATT" = ct["treated"],
-                    "ATC" = ct["control"],
+                    ATT = ct["treated"],
+                    ATC = ct["control"],
                     NULL)
 
     treated <- ct["treated"]
@@ -436,7 +436,7 @@
   list(focal = unname(focal),
        estimand = estimand,
        reported.estimand = reported.estimand,
-       treated = switch(treat.type, "binary" = unname(treated), NULL))
+       treated = switch(treat.type, binary = unname(treated), NULL))
 }
 
 .get_control_and_treated_levels <- function(treat, estimand, focal = NULL, treated = NULL) {
@@ -1317,7 +1317,7 @@ stabilize_w <- function(weights, treat) {
                                           subclass = NULL, stabilize = FALSE) {
   #Batch turn PS into weights; primarily for output of predict.gbm
   # Assumes a (0,1) treatment if binary
-  if (is_null(dim(ps))) {
+  if (length(dim(ps)) <= 1L) {
     ps <- matrix(ps, ncol = 1L)
   }
 
@@ -1621,7 +1621,6 @@ generalized_inverse <- function(sigma, .try = TRUE) {
   else if (.method == "richardson") {
     .gradientRich(.f = .f, .x = .x, .eps = .eps, .parm = .parm, .direction = .direction, ...)
   }
-
 }
 
 #Finite difference gradient
@@ -1669,7 +1668,7 @@ generalized_inverse <- function(sigma, .try = TRUE) {
       f_new_l <- .f(.x, ...)
     }
     else if (.direction == "left") {
-      x[j] <- .x0[j] - .eps[j]
+      .x[j] <- .x0[j] - .eps[j]
 
       f_new_l <- .f(.x, ...)
     }

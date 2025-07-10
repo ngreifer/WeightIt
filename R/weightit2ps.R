@@ -5,7 +5,6 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
 
   n <- length(treat)
   p.score <- NULL
-  treat <- factor(treat)
   treat_sub <- factor(treat[subset])
 
   t.lev <- get_treated_level(treat, estimand, focal)

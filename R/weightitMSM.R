@@ -210,9 +210,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     reported.covs.list[[i]] <- t.c[["reported.covs"]]
     covs.list[[i]] <- t.c[["model.covs"]]
     treat.list[[i]] <- t.c[["treat"]]
-    treat.name <- t.c[["treat.name"]]
-    names(treat.list)[i] <- treat.name
-    names(reported.covs.list)[i] <- treat.name
 
     if (is_null(covs.list[[i]])) {
       .err(sprintf("no covariates were specified in the %s formula", ordinal(i)))
@@ -228,11 +225,16 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
       .err("treatment and covariates must have the same number of units")
     }
 
+    treat.list[[i]] <- as.treat(treat.list[[i]], process = TRUE)
+
+    treat.name <- attr(treat.list[[i]], "treat.name")
+
     if (anyNA(treat.list[[i]])) {
       .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s", treat.name))
     }
 
-    treat.list[[i]] <- assign_treat_type(treat.list[[i]])
+    names(treat.list)[i] <- treat.name
+    names(reported.covs.list)[i] <- treat.name
 
     if (!is.MSM.method) {
       .check_method_treat.type(method, get_treat_type(treat.list[[i]]))

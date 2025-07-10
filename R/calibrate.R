@@ -113,7 +113,7 @@ calibrate.weightit <- function(x, ...) {
     .err("`calibrate()` can only be used on `weightit` objects when propensity scores have been estimated")
   }
 
-  if (get_treat_type(x[["treat"]]) != "binary") {
+  if (!identical(get_treat_type(x[["treat"]]), "binary")) {
     .err("`calibrate()` can only be used with binary treatments")
   }
 

@@ -198,14 +198,12 @@
 #'
 #' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
 #' R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
-#' Multiple Treatments Using Generalized Boosted Models. *Statistics in
-#' Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+#' Multiple Treatments Using Generalized Boosted Models. *Statistics in Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 #'
 #' ## Continuous treatments
 #'
 #' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for
-#' Estimating Generalized Propensity Scores with Continuous Treatments. *Journal
-#' of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
+#' Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
 #'
 #' @examplesIf requireNamespace("gbm", quietly = TRUE)
 #' library("cobalt")
@@ -599,11 +597,15 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         info <- list(best.tree = best.tree,
                      tree.val = tree.val)
 
-        if (treat.type == "multi-category") best.ps <- NULL
+        if (treat.type == "multi-category") {
+          best.ps <- NULL
+        }
       }
     }
 
-    if (treat.type == "multi-category") ps <- NULL
+    if (treat.type == "multi-category") {
+      ps <- NULL
+    }
   }
 
   if (nrow(tune) > 1L) {
@@ -795,6 +797,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
                           A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))],
                           tune_args))
+
     verbosely({
       fit <- eval(gbm.call)
     }, verbose = verbose)

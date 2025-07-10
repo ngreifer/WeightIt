@@ -171,9 +171,9 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     formula <- obj[["formula"]]
   }
 
-  formula <- delete.response(terms(formula))
-
-  t.c <- get_covs_and_treat_from_formula(formula, combined.data)
+  t.c <- terms(formula) |>
+    delete.response() |>
+    get_covs_and_treat_from_formula(combined.data)
 
   if (is_null(t.c[["reported.covs"]])) {
     .err("no covariates were found")
@@ -189,7 +189,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   covs <- covs[, !same.as.moderator, drop = FALSE]
 
   bin.vars <- is_binary_col(covs)
-  s.d.denom <- get.s.d.denom.weightit(estimand = obj[["estimand"]], weights = obj[["weights"]],
+  s.d.denom <- get.s.d.denom.weightit(estimand = obj[["estimand"]],
+                                      weights = obj[["weights"]],
                                       treat = treat)
 
   R <- levels(moderator.factor)
@@ -455,10 +456,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     }
 
     weights <- get_w(s_min, moderator.factor, w_o, w_s)
-    if (is_not_null(obj[["ps"]]) && is_not_null(obj2[["ps"]])) {
-      ps <- get_w(s_min, moderator.factor, obj[["ps"]], obj2[["ps"]])
+
+    ps <- {
+      if (is_null(obj[["ps"]]) || is_null(obj2[["ps"]])) NULL
+      else get_w(s_min, moderator.factor, obj[["ps"]], obj2[["ps"]])
     }
-    else ps <- NULL
   }
 
   out <- obj

@@ -125,8 +125,11 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   A <- list(...)
 
   #Checks
-  if (!check_if_call_from_fun(weightit) && !check_if_call_from_fun(weightitMSM)) {
-
+  if (check_if_call_from_fun(weightit) || check_if_call_from_fun(weightitMSM)) {
+    treat <- as.treat(treat)
+    treat.type <- get_treat_type(treat)
+  }
+  else {
     chk::chk_not_missing(covs, "`covs`")
     chk::chk_matrix(covs)
     chk::chk_numeric(covs)
@@ -144,7 +147,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       .err("`treat` and `covs` must contain the same number of units")
     }
 
-    if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+    treat <- as.treat(treat, process = TRUE)
     treat.type <- get_treat_type(treat)
 
     .check_acceptable_method(method, msm = FALSE, force = FALSE)
@@ -230,10 +233,6 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     moments <- m.i.q[["moments"]]
     int <- m.i.q[["int"]]
     A["quantile"] <- m.i.q["quantile"]
-  }
-  else {
-    if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
-    treat.type <- get_treat_type(treat)
   }
 
   missing <- .process_missing2(missing, covs)

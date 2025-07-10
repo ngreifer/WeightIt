@@ -92,10 +92,10 @@ num_to_superscript <- function(x) {
                      "\u2078",
                      "\u2079"),
                    as.character(0:9))
-  x <- as.character(x)
-  splitx <- strsplit(x, "", fixed = TRUE)
 
-  vapply(splitx, function(y) paste(nums[y], collapse = ""), character(1L))
+  as.character(x) |>
+    strsplit("", fixed = TRUE) |>
+    vapply(function(y) paste(nums[y], collapse = ""), character(1L))
 }
 ordinal <- function(x) {
   if (is_null(x) || !is.numeric(x)) {
@@ -596,17 +596,15 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
   env <- environment(f)
 
   #Check if data exists
-  if (is_not_null(data)) {
-    if (is.data.frame(data)) {
-      data.specified <- TRUE
-    }
-    else {
-      .wrn("the argument supplied to `data` is not a data.frame object. This may causes errors or unexpected results")
-      data <- env
-      data.specified <- FALSE
-    }
+  if (is_null(data)) {
+    data <- env
+    data.specified <- FALSE
+  }
+  else if (is.data.frame(data)) {
+    data.specified <- TRUE
   }
   else {
+    .wrn("the argument supplied to `data` is not a data.frame object. This may causes errors or unexpected results")
     data <- env
     data.specified <- FALSE
   }
@@ -621,7 +619,7 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
       if (conditionMessage(e) == "'.' in formula and no 'data' argument")
         "`.` is not allowed in formulas"
       else
-        .err(conditionMessage(e), tidy = FALSE)
+        conditionMessage(e)
     }
     .err(msg)
   })
@@ -749,12 +747,10 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
                                         drop.unused.levels = TRUE,
                                         na.action = "na.pass"))
 
-    tryCatch({
-      covs <- eval(mf.covs)
-    },
-    error = function(e) {
-      .err(conditionMessage(e), tidy = FALSE)
-    })
+    covs <- tryCatch(eval(mf.covs),
+                     error = function(e) {
+                       .err(conditionMessage(e), tidy = FALSE)
+                     })
 
     if (is_not_null(treat.name) && utils::hasName(covs, treat.name)) {
       .err("the variable on the left side of the formula appears on the right side too")
@@ -802,12 +798,18 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
     covs.matrix <- NULL
   }
 
-  if (!terms) attr(covs, "terms") <- NULL
+  if (!terms) {
+    attr(covs, "terms") <- NULL
+  }
+
+  if (is_not_null(treat)) {
+    class(treat) <- unique(c("treat", class(treat)))
+    attr(treat, "treat.name") <- treat.name
+  }
 
   list(reported.covs = covs,
        model.covs = covs.matrix,
-       treat = treat,
-       treat.name = treat.name)
+       treat = treat)
 }
 assign_treat_type <- function(treat, use.multi = FALSE) {
   #Returns treat with treat.type attribute
@@ -1024,11 +1026,14 @@ match_arg <- function(arg, choices, several.ok = FALSE) {
   }
 
   i <- pmatch(arg, choices, nomatch = 0L, duplicates.ok = TRUE)
-  if (all(i == 0L))
+
+  if (all(i == 0L)) {
     .err(sprintf("the argument to `%s` should be %s%s",
                  arg.name,
                  ngettext(length(choices), "", if (several.ok) "at least one of " else "one of "),
                  word_list(choices, and.or = "or", quotes = 2L)))
+  }
+
   i <- i[i > 0L]
 
   choices[i]

@@ -61,8 +61,9 @@
       weights * ((y == i) - pp[, i]) * X
     }))
 
-    if (is_not_null(names(B)))
+    if (is_not_null(names(B))) {
       colnames(out) <- names(B)
+    }
 
     out
   }
@@ -178,11 +179,13 @@
   }
 
   weights <- as.vector(model.weights(mf))
-  if (!is.null(weights) && !is.numeric(weights))
+  if (!is.null(weights) && !is.numeric(weights)) {
     .err("`weights` must be a numeric vector")
+  }
 
-  if (!is.null(weights) && any(weights < 0))
+  if (!is.null(weights) && any(weights < 0)) {
     .err("negative weights not allowed")
+  }
 
   offset <- as.vector(model.offset(mf))
   if (is_not_null(offset) && length(offset) != NROW(Y)) {
