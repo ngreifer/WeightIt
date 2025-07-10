@@ -272,7 +272,7 @@
                                        ...) {
   d <- dim(x)
 
-  if (is_null(d) || length(d) != 2L) {
+  if (length(d) != 2L) {
     .err("'x' must be coefficient matrix/data frame")
   }
 
@@ -723,8 +723,10 @@
       if (is_not_null(weightit)) {
         wcall$s.weights <- SW * w
 
-        weightit_boot <- .eval_fit(wcall, envir = wenv,
-                                   warnings = c("some extreme weights were generated" = NA))
+        suppressMessages({
+          weightit_boot <- .eval_fit(wcall, envir = wenv,
+                                     warnings = c("some extreme weights were generated" = NA))
+        })
 
         internal_model_call$weights <- weightit_boot[["weights"]] * SW * w
       }
@@ -735,7 +737,7 @@
       fit_boot <- .eval_fit(internal_model_call, envir = genv,
                             warnings = c("non-integer" = NA))
 
-      fit_boot[["coefficients"]]
+      fit_boot[["coefficients"]][!aliased]
     }
 
     #Sham data.frame to get weight length
@@ -791,8 +793,10 @@
         wcall$data <- data[ind, ]
         wcall$s.weights <- SW[ind]
 
-        weightit_boot <- .eval_fit(wcall, envir = wenv,
-                                   warnings = c("some extreme weights were generated" = NA))
+        suppressMessages({
+          weightit_boot <- .eval_fit(wcall, envir = wenv,
+                                     warnings = c("some extreme weights were generated" = NA))
+        })
 
         internal_model_call$weights <- weightit_boot$weights * SW[ind]
       }
@@ -805,7 +809,7 @@
       fit_boot <- .eval_fit(internal_model_call, envir = genv,
                             warnings = c("non-integer" = NA))
 
-      fit_boot$coefficients
+      fit_boot$coefficients[!aliased]
     }
 
     if (is_null(cluster)) {
@@ -832,7 +836,7 @@
   }
   else if (inherits(fit, "coxph")) {
     if (is_null(cluster)) {
-      V <- fit$var
+      V <- fit$var[!aliased, !aliased, drop = FALSE]
     }
     else {
       V <- 0
@@ -843,7 +847,7 @@
                           collapse = cluster[[i]],
                           weighted = TRUE)
 
-        V <- V + sgn[i] * adj * crossprod(temp)
+        V <- V + sgn[i] * adj * crossprod(temp[, !aliased, drop = FALSE])
       }
     }
   }

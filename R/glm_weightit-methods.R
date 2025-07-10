@@ -347,10 +347,6 @@ summary.coxph_weightit <- function(object,
     chk::chk_flag(ci)
   }
 
-  df.r <- object$df.residual
-
-  dispersion <- NaN
-
   if (is.null(transform)) transform <- base::identity
   else transform <- match.fun(transform)
 
@@ -373,7 +369,7 @@ summary.coxph_weightit <- function(object,
       pvalue <- tvalue <- s.err
     }
     else {
-      s.err <- sqrt(diag(covmat)[!aliased])
+      s.err <- sqrt(diag(covmat))
       tvalue <- coef.p / s.err
       pvalue <- 2 * pnorm(-abs(tvalue))
     }
@@ -407,10 +403,9 @@ summary.coxph_weightit <- function(object,
 
   keep <- match(c("call", "terms", "family", "deviance", "aic", "contrasts", "df.residual",
                   "null.deviance", "df.null", "iter", "na.action", "vcov_type"), names(object), 0L)
-  ans <- c(object[keep], list(deviance.resid = residuals(object, type = "deviance"),
-                              coefficients = coef.table, aliased = aliased,
-                              dispersion = dispersion, df = c(object$rank, df.r, df.f),
-                              cov.unscaled = covmat.unscaled, cov.scaled = covmat,
+  ans <- c(object[keep], list(coefficients = coef.table,
+                              aliased = aliased,
+                              cov.scaled = covmat,
                               cluster = attr(object, "cluster"),
                               transformed = !identity_transform))
 
@@ -1022,9 +1017,8 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
           else object[["data"]]
         }
 
-        s.weights <- eval.parent(extras[["s.weights"]])
-
-        s.weights <- .process.s.weights(s.weights, data)
+        s.weights <- eval.parent(extras[["s.weights"]]) |>
+          .process.s.weights(data)
 
         if (is_not_null(s.weights)) {
           extras[["weightit"]] <- list(s.weights = s.weights,
