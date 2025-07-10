@@ -255,7 +255,10 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
             silent = TRUE)
       })
 
-      if (!null_or_error(out) && out$estim.precis < 1e-5) {
+      if (!null_or_error(out) && utils::hasName(out, "root") &&
+          utils::hasName(out, "estim.precis") &&
+          chk::vld_number(out[["estim.precis"]]) &&
+          out[["estim.precis"]] < 1e-5) {
         coef_start <- out$root
       }
     }
@@ -536,8 +539,10 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
             silent = TRUE)
       })
 
-      if (!null_or_error(out) && is.finite(out$estim.precis) &&
-          out$estim.precis < 1e-5) {
+      if (!null_or_error(out) && utils::hasName(out, "root") &&
+          utils::hasName(out, "estim.precis") &&
+          chk::vld_number(out[["estim.precis"]]) &&
+          out[["estim.precis"]] < 1e-5) {
         coef_start <- out$root
       }
     }
