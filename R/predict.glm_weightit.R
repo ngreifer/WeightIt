@@ -15,8 +15,8 @@
 #'   `"response"`, predictions on the scale of the original response variable
 #'   (also `"probs"`); `"link"`, predictions on the scale of the linear
 #'   predictor (also `"lp"`); `"class"`, the modal predicted category for
-#'   ordinal and multinomial models; and `"mean"`, the expected value of the
-#'   outcome for ordinal and multinomial models. See Details for more
+#'   ordinal and multinomial models; `"mean"`, the expected value of the
+#'   outcome for ordinal and multinomial models; and `"stdlv"`, the standardized latent variable values for ordinal models. See Details for more
 #'   information. The default is `"response"` for all models, which differs from
 #'   [stats::predict.glm()].
 #' @param na.action function determining what should be done with missing values
@@ -54,7 +54,7 @@
 #' For ordinal models, setting `type = "link"` (also `"lp"`) computes the linear
 #' predictor without including the thresholds. This can be interpreted as the
 #' prediction of the latent variable underlying the ordinal response. This
-#' cannot be used with multinomial models.
+#' cannot be used with multinomial models. Setting `type = "stdlv"` standardizes these predictions by the implied standard deviation of the ordinal responses, which is a function of the link function, the original covariates, and the coefficient estimates.
 #'
 #' @seealso [stats::predict.glm()] for predictions from generalized linear
 #' models. [glm_weightit()] for the fitting function.
