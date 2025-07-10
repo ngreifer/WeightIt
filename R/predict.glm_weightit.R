@@ -152,8 +152,13 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
                                      na.action = na.pass, values = NULL, ...) {
 
   chk::chk_string(type)
-  type <- switch(type, "probs" = "response", "lp" = "link", type)
-  type <- match_arg(type, c("response", "link", "class", "mean"))
+  type <- switch(type, "probs" = "response", "lp" = "link", "lv" = "link", type)
+  type <- match_arg(type, c("response", "link", "class", "mean", "stdlv"))
+
+  if (type == "stdlv" && !object$family$link %in% c("probit", "logit", "cloglog", "loglog")) {
+    .err(sprintf('`type = "stdlv"` cannot be used with `link = %s`',
+                 add_quotes(object$family$link)))
+  }
 
   na.act <- object$na.action
   object$na.action <- NULL
@@ -164,6 +169,25 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
     }
     else if (type == "link") {
       out <- object$linear.predictors
+    }
+    else if (type == "stdlv") {
+      sigma2 <- switch(object$family$link,
+                       "probit" = 1,
+                       "logit" = pi^2 / 3,
+                       "cloglog" = pi^2 / 6,
+                       "loglog" = pi^2 / 6)
+
+      mu <- switch(object$family$link,
+                   "probit" = 0,
+                   "logit" = 0,
+                   "cloglog" = -digamma(1),
+                   "loglog" = digamma(1))
+
+      varY <- drop(object$coefficients[seq_col(object$varx)] %*%
+                     object$varx %*%
+                     object$coefficients[seq_col(object$varx)]) + sigma2
+
+      out <- (mu + object$linear.predictors) / sqrt(varY)
     }
     else if (type == "class") {
       out <- factor(max.col(object$fitted.values, ties.method = "first"),
@@ -190,8 +214,9 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
       out <- drop(object$fitted.values %*% values[colnames(object$fitted.values)])
     }
 
-    if (is_not_null(na.act))
+    if (is_not_null(na.act)) {
       out <- napredict(na.act, out)
+    }
 
     return(out)
   }
@@ -199,6 +224,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   tt <- terms(object)
 
   Terms <- delete.response(tt)
+
   m <- model.frame(Terms, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
@@ -206,6 +232,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   if (is_not_null(cl)) {
     .checkMFClasses(cl, m)
   }
+
   x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
 
   offset <- model.offset(m)
@@ -218,12 +245,35 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
       else offset + addO
     }
   }
-  if (is_null(offset)) offset <- rep.int(0, nrow(x))
+
+  if (is_null(offset)) {
+    offset <- rep.int(0, nrow(x))
+  }
 
   x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
 
   if (type == "link") {
     return(offset + drop(x %*% object$coefficients[seq_col(x)]))
+  }
+
+  if (type == "stdlv") {
+    sigma2 <- switch(object$family$link,
+                     "probit" = 1,
+                     "logit" = pi^2 / 3,
+                     "cloglog" = pi^2 / 6,
+                     "loglog" = pi^2 / 6)
+
+    mu <- switch(object$family$link,
+                 "probit" = 0,
+                 "logit" = 0,
+                 "cloglog" = -digamma(1),
+                 "loglog" = digamma(1))
+
+    varY <- drop(object$coefficients[seq_col(object$varx)] %*%
+                   object$varx %*%
+                   object$coefficients[seq_col(object$varx)]) + sigma2
+
+    return((mu + offset + drop(x %*% object$coefficients[seq_col(x)])) / sqrt(varY))
   }
 
   p <- object$get_p(object$coefficients, x, offset)
@@ -302,8 +352,9 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
       out <- drop(object$fitted.values %*% values[colnames(object$fitted.values)])
     }
 
-    if (is_not_null(na.act))
+    if (is_not_null(na.act)) {
       out <- napredict(na.act, out)
+    }
 
     return(out)
   }
@@ -311,6 +362,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
   tt <- terms(object)
 
   Terms <- delete.response(tt)
+
   m <- model.frame(Terms, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
@@ -318,6 +370,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
   if (is_not_null(cl)) {
     .checkMFClasses(cl, m)
   }
+
   x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
 
   offset <- model.offset(m)
@@ -330,7 +383,9 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
     }
   }
 
-  if (is_null(offset)) offset <- rep.int(0, nrow(x))
+  if (is_null(offset)) {
+    offset <- rep.int(0, nrow(x))
+  }
 
   p <- object$get_p(object$coefficients, x, offset)
 
