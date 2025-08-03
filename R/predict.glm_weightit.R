@@ -12,13 +12,11 @@
 #'   which to predict. If omitted, the fitted values applied to the original
 #'   dataset are used.
 #' @param type the type of prediction desired. Allowable options include
-#'   `"response"`, predictions on the scale of the original response variable
-#'   (also `"probs"`); `"link"`, predictions on the scale of the linear
-#'   predictor (also `"lp"`); `"class"`, the modal predicted category for
-#'   ordinal and multinomial models; `"mean"`, the expected value of the
-#'   outcome for ordinal and multinomial models; and `"stdlv"`, the standardized latent variable values for ordinal models. See Details for more
-#'   information. The default is `"response"` for all models, which differs from
-#'   [stats::predict.glm()].
+#'   `"response"`, for predictions on the scale of the original response variable
+#'   (also `"probs"`); `"link"`, for predictions on the scale of the linear
+#'   predictor (also `"lp"`); `"class"`, for the modal predicted category for
+#'   ordinal and multinomial models; `"mean"`, for the expected value of the
+#'   outcome for ordinal and multinomial models; and `"stdlv"`, for the standardized latent variable values for ordinal models. See Details for more information. The default is `"response"` for all models, which differs from [stats::predict.glm()].
 #' @param na.action function determining what should be done with missing values
 #'   in `newdata`. The default is to predict `NA`.
 #' @param values when `type = "mean"`, the numeric values each level corresponds
@@ -32,7 +30,7 @@
 #' * when `type = "response"`, a numeric matrix with a row for each unit and
 #'   a column for each level of the outcome with the predicted probability of
 #'   the corresponding outcome in the cells
-#' * when `type = "class"`, a factor with the model predicted class for each
+#' * when `type = "class"`, a factor with the modal predicted class for each
 #'   unit; for ordinal models, this will be an ordered factor.
 #'
 #' @details For generalized linear models other than ordinal and multinomial
@@ -45,9 +43,9 @@
 #' the values supplied in `values` weighted by the predicted probability of
 #' those values. If `values` is omitted, `predict()` will attempt to convert the
 #' outcome levels to numeric values, and if this cannot be done, an error will
-#' be thrown. `values` should be specified as a named vector, e.g., `values =
-#' c(one = 1, two = 2, three = 3)`, where `"one"`, `"two"`, and `"three"` are
-#' the original outcome levels and 1, 2, and 3 are the numeric values they
+#' be thrown. `values` should be specified as a named vector, e.g.,
+#' `values = c(one = 1, two = 2, three = 3)`, where `"one"`, `"two"`, and `"three"` are
+#' the original outcome levels, and 1, 2, and 3 are the numeric values they
 #' correspond to. This method only makes sense to use if the outcome levels
 #' meaningfully correspond to numeric values.
 #'

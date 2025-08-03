@@ -57,7 +57,7 @@ differ from the some uses of the word "trim" (see the \code{drop} argument below
 (winsorizes) them to the specified quantile. All weights above that quantile
 are set to the weight at that quantile unless \code{drop = TRUE}, in which case
 they are set to 0. If \code{lower = TRUE}, all weights below 1 minus the quantile
-are trimmed. In general, trimming weights can decrease balance but also
+are trimmed. In general, trimming weights can increase imbalance but also
 decreases the variability of the weights, improving precision at the
 potential expense of unbiasedness (Cole & Hernán, 2008). See Lee, Lessler,
 and Stuart (2011) and Thoemmes and Ong (2015) for discussions and simulation

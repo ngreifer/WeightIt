@@ -37,7 +37,7 @@
 #' (winsorizes) them to the specified quantile. All weights above that quantile
 #' are set to the weight at that quantile unless `drop = TRUE`, in which case
 #' they are set to 0. If `lower = TRUE`, all weights below 1 minus the quantile
-#' are trimmed. In general, trimming weights can decrease balance but also
+#' are trimmed. In general, trimming weights can increase imbalance but also
 #' decreases the variability of the weights, improving precision at the
 #' potential expense of unbiasedness (Cole & Hernán, 2008). See Lee, Lessler,
 #' and Stuart (2011) and Thoemmes and Ong (2015) for discussions and simulation
@@ -225,14 +225,14 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
 
       if (drop) {
         weights[weights < trim.w[1L] | weights > trim.w[2L]] <- 0
-        .msg(sprintf("Setting weights beyond %s to 0",
+        .msg(sprintf("setting weights beyond %s to 0",
                      word_list(paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%"))))
       }
       else {
         weights[weights < trim.w[1L]] <- trim.w[1L]
         weights[weights > trim.w[2L]] <- trim.w[2L]
 
-        .msg(sprintf("Trimming weights to %s",
+        .msg(sprintf("trimming weights to %s",
                      word_list(paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%"))))
       }
 
@@ -251,8 +251,8 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
       at <- as.integer(min(at, sum(to.be.trimmed) - at))
 
       trim.top <- {
-        if (lower) c(at + 1, sum(to.be.trimmed) - at)
-        else c(1, sum(to.be.trimmed) - at)
+        if (lower) c(at + 1L, sum(to.be.trimmed) - at)
+        else c(1L, sum(to.be.trimmed) - at)
       }
 
       weights.text <- {
@@ -291,8 +291,8 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
       at <- as.integer(min(at, length(weights) - at))
 
       trim.top <- {
-        if (lower) c(at + 1, length(weights) - at)
-        else c(1, length(weights) - at)
+        if (lower) c(at + 1L, length(weights) - at)
+        else c(1L, length(weights) - at)
       }
 
       weights.text <- {

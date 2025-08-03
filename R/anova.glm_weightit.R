@@ -15,7 +15,6 @@
 #'   `"Wald"` is allowed.
 #' @param tolerance for the Wald test, the tolerance used to determine if models
 #'   are symbolically nested.
-#'
 #' @param \dots other arguments passed to the function used for computing the
 #'   parameter variance matrix, if supplied as a string or function, e.g.,
 #'   `cluster`, `R`, or `fwb.args`.

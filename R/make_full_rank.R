@@ -32,11 +32,12 @@
 #'
 #' @examples
 #'
-#' set.seed(1000)
-#' c1 <- rbinom(10, 1, .4)
-#' c2 <- 1-c1
-#' c3 <- rnorm(10)
-#' c4 <- 10*c3
+#' set.seed(1234)
+#' n <- 20
+#' c1 <- rbinom(n, 1, .4)
+#' c2 <- 1 - c1
+#' c3 <- rnorm(n)
+#' c4 <- 10 * c3
 #' mat <- data.frame(c1, c2, c3, c4)
 #'
 #' make_full_rank(mat) #leaves c2 and c4
@@ -72,11 +73,11 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
   #If intercept is to be included in check, add column of 1s
   if (with.intercept) {
     mat_qr <- qr(cbind(1, mat))
-    keep[mat_qr$pivot[-seq(mat_qr$rank)] - 1L] <- FALSE
+    keep[mat_qr$pivot[-seq_len(mat_qr$rank)] - 1L] <- FALSE
   }
   else {
     mat_qr <- qr(mat)
-    keep[mat_qr$pivot[-seq(mat_qr$rank)]] <- FALSE
+    keep[mat_qr$pivot[-seq_len(mat_qr$rank)]] <- FALSE
   }
 
   if (is.mat) {

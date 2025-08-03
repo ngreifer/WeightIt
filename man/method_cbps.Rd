@@ -83,11 +83,11 @@ binary treatments), multinomial logistic regression model (for multi-category
 treatments), or linear regression model (for continuous treatments) that is
 used to compute (generalized) propensity scores, from which the weights are
 computed. It involves replacing (or augmenting, in the case of the
-over-identified version) the standard regression score equations with the
+over-identified version) the standard maximum likelihood score equations with the
 balance constraints in a generalized method of moments estimation. The idea
 is to nudge the estimation of the coefficients toward those that produce
-balance in the weighted sample. The just-identified version (with \code{exact = FALSE}) does away with the score equations for the coefficients so that only
-the balance constraints are used. The just-identified version will therefore
+balance in the weighted sample. The just-identified version (with \code{over = FALSE}) does away with the maximum likelihood score equations for the coefficients so that only
+the balance constraints are used, which will therefore
 produce superior balance on the means (i.e., corresponding to the balance
 constraints) for binary and multi-category treatments and linear terms for
 continuous treatments than will the over-identified version.
@@ -133,8 +133,9 @@ an initial call to \pkgfun{rootSolve}{multiroot}. However, the package is not
 required.
 }
 \section{Additional Arguments}{
- \code{moments} and \code{int} are accepted. See
-\code{\link[=weightit]{weightit()}} for details.
+
+
+\code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.
 
 The following additional arguments can be specified:
 \describe{
@@ -212,15 +213,13 @@ cobalt::bal.tab(W4)
 \subsection{Binary treatments}{
 
 Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score.
-\emph{Journal of the Royal Statistical Society: Series B (Statistical
-Methodology)}, 76(1), 243–263.
+\emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, 76(1), 243–263.
 }
 
 \subsection{Multi-Category treatments}{
 
 Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score.
-\emph{Journal of the Royal Statistical Society: Series B (Statistical
-Methodology)}, 76(1), 243–263.
+\emph{Journal of the Royal Statistical Society: Series B (Statistical Methodology)}, 76(1), 243–263.
 }
 
 \subsection{Continuous treatments}{
@@ -234,8 +233,7 @@ advertisements. \emph{The Annals of Applied Statistics}, 12(1), 156–177.
 \subsection{Longitudinal treatments}{
 
 Huffman, C., & van Gameren, E. (2018). Covariate Balancing Inverse
-Probability Weights for Time-Varying Continuous Interventions. \emph{Journal of
-Causal Inference}, 6(2). \doi{10.1515/jci-2017-0002}
+Probability Weights for Time-Varying Continuous Interventions. \emph{Journal of Causal Inference}, 6(2). \doi{10.1515/jci-2017-0002}
 
 Note: one should not cite Imai & Ratkovic (2015) when using CBPS for
 longitudinal treatments.

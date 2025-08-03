@@ -86,15 +86,16 @@ control aspects of fitting that are not covered by the above arguments.}
 }
 \value{
 A \code{weightit.fit} object with the following elements:
-\item{weights}{The estimated weights, one for each unit.} \item{treat}{The
-values of the treatment variable.} \item{estimand}{The estimand requested.}
+\item{weights}{The estimated weights, one for each unit.}
+\item{treat}{The values of the treatment variable.}
+\item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
 \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
 returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined.}
-\item{s.weights}{The provided sampling weights.} \item{focal}{The focal
-treatment level if the ATT or ATC was requested.} \item{fit.obj}{When
-\code{include.obj = TRUE}, the fit object.} \item{info}{Additional information
-about the fitting. See the individual methods pages for what is included.}
+\item{s.weights}{The provided sampling weights.}
+\item{focal}{The focal treatment level if the ATT or ATC was requested.}
+\item{fit.obj}{When \code{include.obj = TRUE}, the fit object.}
+\item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 
 The \code{weightit.fit} object does not have specialized \code{print()}, \code{summary()},
 or \code{plot()} methods. It is simply a list containing the above components. Use

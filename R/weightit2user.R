@@ -1,6 +1,5 @@
 #' User-Defined Functions for Estimating Weights
 #' @name method_user
-#' @aliases method_user
 #' @usage NULL
 #'
 #' @description
@@ -37,8 +36,6 @@
 #' [weightit()], [weightitMSM()]
 #'
 #' @examples
-#'
-#' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'
 #' #A user-defined version of method = "ps"
@@ -58,7 +55,7 @@
 #'                   nodegree + re74, data = lalonde,
 #'                 method = my.ps, estimand = "ATT"))
 #' summary(W1)
-#' bal.tab(W1)
+#' cobalt::bal.tab(W1)
 #'
 #' data("msmdata")
 #' (W2 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
@@ -71,7 +68,7 @@
 #'                    method = my.ps))
 #'
 #' summary(W2)
-#' bal.tab(W2)
+#' cobalt::bal.tab(W2)
 #'
 #' # Kernel balancing using the `kbal` package, available
 #' # using `pak::pak_install("chadhazlett/KBAL")`.
@@ -81,8 +78,9 @@
 #'   kbal.fun <- function(treat, covs, estimand, focal, verbose, ...) {
 #'     args <- list(...)
 #'
-#'     if (!estimand %in% c("ATT", "ATC"))
+#'     if (!estimand %in% c("ATT", "ATC")) {
 #'       stop('`estimand` must be "ATT" or "ATC".', call. = FALSE)
+#'     }
 #'
 #'     treat <- as.numeric(treat == focal)
 #'
@@ -91,7 +89,7 @@
 #'     args$treatment <- treat
 #'     args$printprogress <- verbose
 #'
-#'     cat_cols <- apply(covs, 2, function(x) length(unique(x)) <= 2)
+#'     cat_cols <- apply(covs, 2L, function(x) length(unique(x)) <= 2)
 #'
 #'     if (all(cat_cols)) {
 #'       args$cat_data <- TRUE
@@ -123,7 +121,7 @@
 #'                   method = kbal.fun, estimand = "ATT",
 #'                   include.obj = TRUE))
 #'   summary(Wk)
-#'   bal.tab(Wk, stats = c("m", "ks"))
+#'   cobalt::bal.tab(Wk, stats = c("m", "ks"))
 #' }
 #'
 NULL
@@ -167,7 +165,9 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
     #else just use Fun default
   }
 
-  if (has_dots) fun_args <- c(fun_args, A)
+  if (has_dots) {
+    fun_args <- c(fun_args, A)
+  }
 
   obj <- do.call(Fun, fun_args)
 
@@ -244,7 +244,9 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
     #else just use Fun default
   }
 
-  if (has_dots) fun_args <- c(fun_args, A)
+  if (has_dots) {
+    fun_args <- c(fun_args, A)
+  }
 
   obj <- do.call(Fun, fun_args)
 

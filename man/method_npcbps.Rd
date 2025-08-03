@@ -35,8 +35,7 @@ fit object.
 \subsection{Longitudinal Treatments}{
 
 For longitudinal treatments, the weights are the product of the weights
-estimated at each time point. This is not how \pkgfun{CBPS}{CBMSM} estimates
-weights for longitudinal treatments.
+estimated at each time point. \strong{NOTE: the use of npCBPS with longitudinal treatments has not been validated!}
 }
 
 \subsection{Sampling Weights}{
@@ -63,16 +62,16 @@ M-estimation is not supported.
 Nonparametric CBPS involves the specification of a constrained
 optimization problem over the weights. The constraints correspond to
 covariate balance, and the loss function is the empirical likelihood of the
-data given the weights. npCBPS is similar to \link[=method_ebal]{entropy
-balancing} and will generally produce similar results. Because the
+data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the
 optimization problem of npCBPS is not convex it can be slow to converge or
 not converge at all, so approximate balance is allowed instead using the
 \code{cor.prior} argument, which controls the average deviation from zero
 correlation between the treatment and covariates allowed.
 }
 \section{Additional Arguments}{
- \code{moments} and \code{int} are accepted. See
-\code{\link[=weightit]{weightit()}} for details.
+
+
+\code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.
 
 \describe{
 \item{\code{quantile}}{
@@ -97,7 +96,6 @@ All arguments take on the defaults of those in \code{npCBPS()}.
 \examples{
 \dontshow{if (requireNamespace("CBPS", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
 # Examples take a long time to run
-library("cobalt")
 data("lalonde", package = "cobalt")
 \donttest{
   #Balancing covariates between treatment groups (binary)
@@ -105,14 +103,14 @@ data("lalonde", package = "cobalt")
                     nodegree + re74, data = lalonde,
                   method = "npcbps", estimand = "ATE"))
   summary(W1)
-  bal.tab(W1)
+  cobalt::bal.tab(W1)
 
   #Balancing covariates with respect to race (multi-category)
   (W2 <- weightit(race ~ age + educ + married +
                     nodegree + re74, data = lalonde,
                   method = "npcbps", estimand = "ATE"))
   summary(W2)
-  bal.tab(W2)
+  cobalt::bal.tab(W2)
 }
 \dontshow{\}) # examplesIf}
 }

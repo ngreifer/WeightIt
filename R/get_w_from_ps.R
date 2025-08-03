@@ -109,7 +109,8 @@
 #'
 #' @seealso [`method_glm`]
 #'
-#' @references ## Binary treatments
+#' @references
+#' ## Binary treatments
 #'
 #' - `estimand = "ATO"`
 #'
@@ -169,7 +170,7 @@
 #' Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine,
 #' 32(19), 3388–3414. \doi{10.1002/sim.5753}
 #'
-#' - Marginal mean weighting through stratification
+#' - Marginal mean weighting through stratification (MMWS)
 #'
 #' Hong, G. (2012). Marginal mean weighting through stratification: A
 #' generalized method for evaluating multivalued and multiple treatments with

@@ -1,6 +1,7 @@
 #' Generate Balancing Weights for Longitudinal Treatments
 #'
-#' @description `weightitMSM()` allows for the easy generation of balancing
+#' @description
+#' `weightitMSM()` allows for the easy generation of balancing
 #' weights for marginal structural models for time-varying treatments using a
 #' variety of available methods for binary, continuous, and multi-category
 #' treatments. Many of these methods exist in other packages, which [weightit()]
@@ -57,25 +58,34 @@
 #'   aspects of fitting that are not covered by the above arguments. See Details
 #'   at [weightit()].
 #'
-#' @returns A `weightitMSM` object with the following elements:
-#' \item{weights}{The estimated weights, one for each unit.} \item{treat.list}{A
-#' list of the values of the time-varying treatment variables.}
+#' @returns
+#' A `weightitMSM` object with the following elements:
+#' \item{weights}{The estimated weights, one for each unit.}
+#' \item{treat.list}{A list of the values of the time-varying treatment variables.}
 #' \item{covs.list}{A list of the covariates used in the fitting at each time
 #' point. Only includes the raw covariates, which may have been altered in the
-#' fitting process.} \item{data}{The data.frame originally entered to
-#' `weightitMSM()`.} \item{estimand}{"ATE", currently the only estimand for MSMs
-#' with binary or multi-category treatments.} \item{method}{The weight
-#' estimation method specified.} \item{ps.list}{A list of the estimated
-#' propensity scores (if any) at each time point.} \item{s.weights}{The provided
-#' sampling weights.} \item{by}{A data.frame containing the `by` variable when
-#' specified.} \item{stabilization}{The stabilization factors, if any.}
+#' fitting process.}
+#' \item{data}{The data.frame originally entered to
+#' `weightitMSM()`.}
+#' \item{estimand}{"ATE", currently the only estimand for MSMs
+#' with binary or multi-category treatments.}
+#' \item{method}{The weight
+#' estimation method specified.}
+#' \item{ps.list}{A list of the estimated
+#' propensity scores (if any) at each time point.}
+#' \item{s.weights}{The provided
+#' sampling weights.}
+#' \item{by}{A data.frame containing the `by` variable when
+#' specified.}
+#' \item{stabilization}{The stabilization factors, if any.}
 #'
 #' When `keep.mparts` is `TRUE` (the default) and the chosen method is
 #' compatible with M-estimation, the components related to M-estimation for use
 #' in [glm_weightit()] are stored in the `"Mparts.list"` attribute. When `by` is
 #' specified, `keep.mparts` is set to `FALSE`.
 #'
-#' @details Currently only "wide" data sets, where each row corresponds to a
+#' @details
+#' Currently only "wide" data sets, where each row corresponds to a
 #' unit's entire variable history, are supported. You can use [reshape()] or
 #' other functions to transform your data into this format; see example below.
 #'
@@ -102,14 +112,11 @@
 #'
 #' [summary.weightitMSM()] for summarizing the weights
 #'
-#' @references Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse
-#' Probability Weights for Marginal Structural Models. American Journal of
-#' Epidemiology, 168(6), 656–664. \doi{10.1093/aje/kwn164}
+#' @references
+#' Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse
+#' Probability Weights for Marginal Structural Models. *American Journal of Epidemiology*, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 #'
 #' @examples
-#'
-#' library("cobalt")
-#'
 #' data("msmdata")
 #' (W1 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
 #'                         A_2 ~ X1_1 + X2_1 +
@@ -120,9 +127,9 @@
 #'                    data = msmdata,
 #'                    method = "glm"))
 #' summary(W1)
-#' bal.tab(W1)
+#' cobalt::bal.tab(W1)
 #'
-#' #Using stabilization factors
+#' # Using stabilization factors
 #' W2 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
 #'                         A_2 ~ X1_1 + X2_1 +
 #'                           A_1 + X1_0 + X2_0,
@@ -136,8 +143,8 @@
 #'                                       ~ A_1,
 #'                                       ~ A_1 + A_2))
 #'
-#' #Same as above but with fully saturated stabilization factors
-#' #(i.e., making the last entry in 'num.formula' A_1*A_2)
+#' # Same as above but with fully saturated stabilization factors
+#' # (i.e., making the last entry in 'num.formula' A_1*A_2)
 #' W3 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
 #'                         A_2 ~ X1_1 + X2_1 +
 #'                           A_1 + X1_0 + X2_0,
@@ -458,13 +465,17 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
       unique.stabout <- unique(stabout)
 
-      if (length(unique.stabout) <= 1L) stabout <- unique.stabout
+      if (length(unique.stabout) <= 1L) {
+        stabout <- unique.stabout
+      }
     }
     else {
       stabout <- NULL
     }
 
-    if (include.obj) names(obj.list) <- names(treat.list)
+    if (include.obj) {
+      names(obj.list) <- names(treat.list)
+    }
   }
 
   if (is_not_null(method) && all_the_same(w)) {
@@ -557,7 +568,8 @@ print.weightitMSM <- function(x, ...) {
   }
 
   if (is_not_null(x[["by"]])) {
-    cat(sprintf(" - by: %s\n", word_list(names(x[["by"]]), and.or = FALSE)))
+    cat(sprintf(" - by: %s\n",
+                word_list(names(x[["by"]]), and.or = FALSE)))
   }
 
   if (is_not_null(x$stabilization)) {
@@ -588,8 +600,12 @@ print.weightitMSM <- function(x, ...) {
   trim <- attr(x[["weights"]], "trim")
   if (is_not_null(trim)) {
     if (trim < 1) {
-      if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(sprintf(" - weights trimmed at %s\n", word_list(paste0(round(100 * trim, 2L), "%"))))
+      if (attr(x[["weights"]], "trim.lower")) {
+        trim <- c(1 - trim, trim)
+      }
+
+      cat(sprintf(" - weights trimmed at %s\n",
+                  word_list(paste0(round(100 * trim, 2L), "%"))))
     }
     else {
       cat(sprintf(" - weights trimmed at the %s %s\n",

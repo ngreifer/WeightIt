@@ -54,7 +54,8 @@ models may be time-consuming or impossible to fit.}
 
 \item{by}{a string containing the name of the variable in \code{data} for which
 weighting is to be done within categories or a one-sided formula with the
-stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or
+stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender},
+a separate propensity score model or
 optimization will occur within each level of the variable \code{"gender"}. Only
 one \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
@@ -128,17 +129,24 @@ at \code{\link[=weightit]{weightit()}}.}
 }
 \value{
 A \code{weightitMSM} object with the following elements:
-\item{weights}{The estimated weights, one for each unit.} \item{treat.list}{A
-list of the values of the time-varying treatment variables.}
+\item{weights}{The estimated weights, one for each unit.}
+\item{treat.list}{A list of the values of the time-varying treatment variables.}
 \item{covs.list}{A list of the covariates used in the fitting at each time
 point. Only includes the raw covariates, which may have been altered in the
-fitting process.} \item{data}{The data.frame originally entered to
-\code{weightitMSM()}.} \item{estimand}{"ATE", currently the only estimand for MSMs
-with binary or multi-category treatments.} \item{method}{The weight
-estimation method specified.} \item{ps.list}{A list of the estimated
-propensity scores (if any) at each time point.} \item{s.weights}{The provided
-sampling weights.} \item{by}{A data.frame containing the \code{by} variable when
-specified.} \item{stabilization}{The stabilization factors, if any.}
+fitting process.}
+\item{data}{The data.frame originally entered to
+\code{weightitMSM()}.}
+\item{estimand}{"ATE", currently the only estimand for MSMs
+with binary or multi-category treatments.}
+\item{method}{The weight
+estimation method specified.}
+\item{ps.list}{A list of the estimated
+propensity scores (if any) at each time point.}
+\item{s.weights}{The provided
+sampling weights.}
+\item{by}{A data.frame containing the \code{by} variable when
+specified.}
+\item{stabilization}{The stabilization factors, if any.}
 
 When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is
 compatible with M-estimation, the components related to M-estimation for use
@@ -177,9 +185,6 @@ approach to generating weights than simply estimating several time-specific
 models.
 }
 \examples{
-
-library("cobalt")
-
 data("msmdata")
 (W1 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                         A_2 ~ X1_1 + X2_1 +
@@ -190,9 +195,9 @@ data("msmdata")
                    data = msmdata,
                    method = "glm"))
 summary(W1)
-bal.tab(W1)
+cobalt::bal.tab(W1)
 
-#Using stabilization factors
+# Using stabilization factors
 W2 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                         A_2 ~ X1_1 + X2_1 +
                           A_1 + X1_0 + X2_0,
@@ -206,8 +211,8 @@ W2 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                                       ~ A_1,
                                       ~ A_1 + A_2))
 
-#Same as above but with fully saturated stabilization factors
-#(i.e., making the last entry in 'num.formula' A_1*A_2)
+# Same as above but with fully saturated stabilization factors
+# (i.e., making the last entry in 'num.formula' A_1*A_2)
 W3 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                         A_2 ~ X1_1 + X2_1 +
                           A_1 + X1_0 + X2_0,
@@ -220,8 +225,7 @@ W3 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
 }
 \references{
 Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse
-Probability Weights for Marginal Structural Models. American Journal of
-Epidemiology, 168(6), 656–664. \doi{10.1093/aje/kwn164}
+Probability Weights for Marginal Structural Models. \emph{American Journal of Epidemiology}, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 }
 \seealso{
 \code{\link[=weightit]{weightit()}} for information on the allowable methods

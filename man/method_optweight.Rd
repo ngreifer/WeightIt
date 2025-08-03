@@ -2,11 +2,11 @@
 % Please edit documentation in R/weightit2optweight.R
 \name{method_optweight}
 \alias{method_optweight}
-\title{Optimization-Based Weighting}
+\alias{method_sbw}
+\title{Stable Balancing Weights}
 \description{
-This page explains the details of estimating optimization-based
-weights (also known as stable balancing weights) by setting \code{method = "optweight"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can
-be used with binary, multi-category, and continuous treatments.
+This page explains the details of estimating stable balancing
+weights (also known as optimization-based weights) by setting \code{method = "optweight"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
 
 In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
@@ -41,11 +41,10 @@ For binary treatments, this method estimates the weights using
 
 For longitudinal treatments, \code{optweight()} estimates weights that
 simultaneously satisfy balance constraints at all time points, so only one
-model is fit to obtain the weights. Using \code{method = "optweight"} in
+model is fit to obtain the weights. Using \code{method = "sbw"} in
 \code{weightitMSM()} causes \code{is.MSM.method} to be set to \code{TRUE} by default. Setting
 it to \code{FALSE} will run one model for each time point and multiply the weights
-together, a method that is not recommended. NOTE: neither use of
-optimization-based weights with longitudinal treatments has been validated!
+together, a method that is not recommended. \strong{NOTE: neither use of stable balancing weights with longitudinal treatments has been validated!}
 }
 
 \subsection{Sampling Weights}{
@@ -79,7 +78,7 @@ balancing is the ability to allow approximate, rather than exact, balance
 through the \code{tols} argument, which can increase precision even for slight
 relaxations of the constraints.
 
-\code{plot()} can be used on the output of \code{weightit()} with \code{method = "optweight"}
+\code{plot()} can be used on the output of \code{weightit()} with \code{method = "sbw"}
 to display the dual variables; see Examples and \code{\link[=plot.weightit]{plot.weightit()}} for more
 details.
 }
@@ -96,17 +95,16 @@ Seriously, just use \pkgfun{optweight}{optweight}. The syntax is almost
 identical and it's compatible with \pkg{cobalt}, too.
 }
 \section{Additional Arguments}{
- \code{moments} and \code{int} are accepted. See
-\code{\link[=weightit]{weightit()}} for details.
+
+
+\code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.
 
 \describe{
-\item{\code{quantile}}{
-A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
+\item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
 }
 }
 
-All arguments to \code{optweight()} can be passed through \code{weightit()} or
-\code{weightitMSM()}, with the following exception:
+All arguments to \code{optweight()} can be passed through \code{weightit()} or \code{weightitMSM()}, with the following exception:
 \itemize{
 \item \code{targets} cannot be used and is ignored.
 }
@@ -150,6 +148,12 @@ cobalt::bal.tab(W2)
 plot(W2)
 
 #Balancing covariates with respect to re75 (continuous)
+(W3 <- weightit(re75 ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "optweight", tols = .05))
+summary(W3)
+cobalt::bal.tab(W3)
+plot(W3)
 \dontshow{\}) # examplesIf}
 }
 \references{
@@ -160,23 +164,20 @@ balancing weights: Asymptotic properties and practical considerations.
 \emph{Biometrika}, 107(1), 93–105. \doi{10.1093/biomet/asz050}
 
 Zubizarreta, J. R. (2015). Stable Weights that Balance Covariates for
-Estimation With Incomplete Outcome Data. \emph{Journal of the American Statistical
-Association}, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
+Estimation With Incomplete Outcome Data. \emph{Journal of the American Statistical Association}, 110(511), 910–922. \doi{10.1080/01621459.2015.1023805}
 }
 
 \subsection{Multi-Category Treatments}{
 
 de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight
 adjustment in non-experimental studies with multivalued treatments: Analysis
-of the effect of an earthquake on post-traumatic stress. \emph{Journal of the Royal
-Statistical Society: Series A (Statistics in Society)}, n/a(n/a).
+of the effect of an earthquake on post-traumatic stress. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, n/a(n/a).
 \doi{10.1111/rssa.12561}
 }
 
 \subsection{Continuous treatments}{
 
-Greifer, N. (2020). \emph{Estimating Balancing Weights for Continuous Treatments
-Using Constrained Optimization}. \doi{10.17615/DYSS-B342}
+Greifer, N. (2020). \emph{Estimating Balancing Weights for Continuous Treatments Using Constrained Optimization}. \doi{10.17615/DYSS-B342}
 }
 }
 \seealso{

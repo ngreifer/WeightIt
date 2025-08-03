@@ -1,11 +1,10 @@
 #' Nonparametric Covariate Balancing Propensity Score Weighting
 #' @name method_npcbps
-#' @aliases method_npcbps
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating weights from
-#' nonparametric covariate balancing propensity scores by setting `method =
-#' "npcbps"` in the call to [weightit()] or [weightitMSM()]. This method can be
+#' @description
+#' This page explains the details of estimating weights from
+#' nonparametric covariate balancing propensity scores by setting `method = "npcbps"` in the call to [weightit()] or [weightitMSM()]. This method can be
 #' used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating weights by maximizing the
@@ -33,8 +32,7 @@
 #' ## Longitudinal Treatments
 #'
 #' For longitudinal treatments, the weights are the product of the weights
-#' estimated at each time point. This is not how \pkgfun{CBPS}{CBMSM} estimates
-#' weights for longitudinal treatments.
+#' estimated at each time point. **NOTE: the use of npCBPS with longitudinal treatments has not been validated!**
 #'
 #' ## Sampling Weights
 #'
@@ -53,8 +51,9 @@
 #'
 #' M-estimation is not supported.
 #'
-#' @section Additional Arguments: `moments` and `int` are accepted. See
-#'   [weightit()] for details.
+#' @section Additional Arguments:
+#'
+#' `moments` and `int` are accepted. See [weightit()] for details.
 #'
 #' \describe{
 #'   \item{`quantile`}{
@@ -73,11 +72,11 @@
 #'   }
 #' }
 #'
-#' @details Nonparametric CBPS involves the specification of a constrained
+#' @details
+#' Nonparametric CBPS involves the specification of a constrained
 #' optimization problem over the weights. The constraints correspond to
 #' covariate balance, and the loss function is the empirical likelihood of the
-#' data given the weights. npCBPS is similar to \link[=method_ebal]{entropy
-#' balancing} and will generally produce similar results. Because the
+#' data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the
 #' optimization problem of npCBPS is not convex it can be slow to converge or
 #' not converge at all, so approximate balance is allowed instead using the
 #' `cor.prior` argument, which controls the average deviation from zero
@@ -87,14 +86,14 @@
 #'
 #' \pkgfun{CBPS}{npCBPS} for the fitting function
 #'
-#' @references Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing
+#' @references
+#' Fong, C., Hazlett, C., & Imai, K. (2018). Covariate balancing
 #' propensity score for a continuous treatment: Application to the efficacy of
 #' political advertisements. *The Annals of Applied Statistics*, 12(1), 156–177.
 #' \doi{10.1214/17-AOAS1101}
 #'
 #' @examplesIf requireNamespace("CBPS", quietly = TRUE)
 #' # Examples take a long time to run
-#' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #' \donttest{
 #'   #Balancing covariates between treatment groups (binary)
@@ -102,14 +101,14 @@
 #'                     nodegree + re74, data = lalonde,
 #'                   method = "npcbps", estimand = "ATE"))
 #'   summary(W1)
-#'   bal.tab(W1)
+#'   cobalt::bal.tab(W1)
 #'
 #'   #Balancing covariates with respect to race (multi-category)
 #'   (W2 <- weightit(race ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
 #'                   method = "npcbps", estimand = "ATE"))
 #'   summary(W2)
-#'   bal.tab(W2)
+#'   cobalt::bal.tab(W2)
 #' }
 NULL
 

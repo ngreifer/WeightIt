@@ -60,12 +60,12 @@ still works).}
 consider the "treated" or "control" group. This group will not be weighted,
 and the other groups will be weighted to resemble the focal group. If
 specified, \code{estimand} will automatically be set to \code{"ATT"} (with a warning
-if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and
-\code{focal}} in Details below.}
+if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and \code{focal}} in Details below.}
 
 \item{by}{a string containing the name of the variable in \code{data} for which
 weighting is to be done within categories or a one-sided formula with the
-stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender}, a separate propensity score model or
+stratifying variable on the right-hand side. For example, if \code{by = "gender"} or \code{by = ~gender},
+a separate propensity score model or
 optimization will occur within each level of the variable \code{"gender"}. Only
 one \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
@@ -141,13 +141,14 @@ estimated weights, one for each unit.} \item{treat}{The values of the
 treatment variable.}
 \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
 the fitting process.}
-\item{estimand}{The estimand requested.} \item{method}{The weight estimation
-method specified.}
+\item{estimand}{The estimand requested.}
+\item{method}{The weight estimation method specified.}
 \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
 returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
-\item{s.weights}{The provided sampling weights.} \item{focal}{The focal
-treatment level if the ATT or ATC was requested.} \item{by}{A data.frame
-containing the \code{by} variable when specified.} \item{obj}{When \code{include.obj = TRUE}, the fit object.}
+\item{s.weights}{The provided sampling weights.}
+\item{focal}{The focal treatment level if the ATT or ATC was requested.}
+\item{by}{A data.frame containing the \code{by} variable when specified.}
+\item{obj}{When \code{include.obj = TRUE}, the fit object.}
 \item{info}{Additional information about the fitting. See the individual
 methods pages for what is included.}
 
@@ -176,7 +177,7 @@ are allowed, and whether sampling weights are allowed.\tabular{ll}{
    \code{\link[=method_npcbps]{"npcbps"}} \tab Non-parametric Covariate Balancing Propensity Score weighting \cr
    \code{\link[=method_ebal]{"ebal"}} \tab Entropy balancing \cr
    \code{\link[=method_ipt]{"ipt"}} \tab Inverse probability tilting \cr
-   \code{\link[=method_optweight]{"optweight"}} \tab Optimization-based weighting \cr
+   \code{\link[=method_optweight]{"optweight"}} \tab Stable balancing weights \cr
    \code{\link[=method_super]{"super"}} \tab Propensity score weighting using SuperLearner \cr
    \code{\link[=method_bart]{"bart"}} \tab Propensity score weighting using Bayesian additive regression trees (BART) \cr
    \code{\link[=method_energy]{"energy"}} \tab Energy balancing \cr
@@ -185,8 +186,9 @@ are allowed, and whether sampling weights are allowed.\tabular{ll}{
 
 \code{method} can also be supplied as a user-defined function; see \code{\link{method_user}}
 for instructions and examples. Setting \code{method = NULL} computes unit weights.
-\subsection{\code{estimand} and \code{focal} For binary and multi-category treatments, the}{
+\subsection{\code{estimand} and \code{focal}}{
 
+For binary and multi-category treatments, the
 argument to \code{estimand} determines what distribution the weighted sample
 should resemble. When set to \code{"ATE"}, this requests that each group resemble
 the full sample. When set to \code{"ATO"}, \code{"ATM"}, or \code{"ATOS"} (for the methods
@@ -208,15 +210,17 @@ guesses are made using the following criteria, evaluated in order:
 \item If exactly one of the treatment values is \code{"c"}, \code{"co"}, \code{"ctrl"}, \code{"control"}, or \code{"unexposed"}, it is considered the control (and the other treated).
 \item If the treatment variable is a factor, the first level is considered control and the second treated.
 \item The lowest value after sorting with \code{\link[=sort]{sort()}} is considered control and the other treated.
+}
+
 To be safe, it is best to code your binary treatment variable as \code{0} for
 control and \code{1} for treated. Otherwise, \code{focal} should be supplied when
 requesting the ATT or ATC. For multi-category treatments, \code{focal} is required
 when requesting the ATT or ATC; none of the heuristics above are used.
 }
-}
 
-\subsection{Citing \pkg{WeightIt} When using \code{weightit()}, please cite both the}{
+\subsection{Citing \pkg{WeightIt}}{
 
+When using \code{weightit()}, please cite both the
 \pkg{WeightIt} package (using \code{citation("WeightIt")}) and the paper(s) in the
 references section of the method used.
 }

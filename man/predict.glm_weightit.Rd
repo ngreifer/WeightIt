@@ -34,13 +34,11 @@ which to predict. If omitted, the fitted values applied to the original
 dataset are used.}
 
 \item{type}{the type of prediction desired. Allowable options include
-\code{"response"}, predictions on the scale of the original response variable
-(also \code{"probs"}); \code{"link"}, predictions on the scale of the linear
-predictor (also \code{"lp"}); \code{"class"}, the modal predicted category for
-ordinal and multinomial models; and \code{"mean"}, the expected value of the
-outcome for ordinal and multinomial models. See Details for more
-information. The default is \code{"response"} for all models, which differs from
-\code{\link[stats:predict.glm]{stats::predict.glm()}}.}
+\code{"response"}, for predictions on the scale of the original response variable
+(also \code{"probs"}); \code{"link"}, for predictions on the scale of the linear
+predictor (also \code{"lp"}); \code{"class"}, for the modal predicted category for
+ordinal and multinomial models; \code{"mean"}, for the expected value of the
+outcome for ordinal and multinomial models; and \code{"stdlv"}, for the standardized latent variable values for ordinal models. See Details for more information. The default is \code{"response"} for all models, which differs from \code{\link[stats:predict.glm]{stats::predict.glm()}}.}
 
 \item{na.action}{function determining what should be done with missing values
 in \code{newdata}. The default is to predict \code{NA}.}
@@ -59,7 +57,7 @@ following circumstances when an ordinal or multinomial model was fit:
 \item when \code{type = "response"}, a numeric matrix with a row for each unit and
 a column for each level of the outcome with the predicted probability of
 the corresponding outcome in the cells
-\item when \code{type = "class"}, a factor with the model predicted class for each
+\item when \code{type = "class"}, a factor with the modal predicted class for each
 unit; for ordinal models, this will be an ordered factor.
 }
 }
@@ -82,15 +80,16 @@ expected value of the outcome for each unit; this corresponds to the sum of
 the values supplied in \code{values} weighted by the predicted probability of
 those values. If \code{values} is omitted, \code{predict()} will attempt to convert the
 outcome levels to numeric values, and if this cannot be done, an error will
-be thrown. \code{values} should be specified as a named vector, e.g., \code{values = c(one = 1, two = 2, three = 3)}, where \code{"one"}, \code{"two"}, and \code{"three"} are
-the original outcome levels and 1, 2, and 3 are the numeric values they
+be thrown. \code{values} should be specified as a named vector, e.g.,
+\code{values = c(one = 1, two = 2, three = 3)}, where \code{"one"}, \code{"two"}, and \code{"three"} are
+the original outcome levels, and 1, 2, and 3 are the numeric values they
 correspond to. This method only makes sense to use if the outcome levels
 meaningfully correspond to numeric values.
 
 For ordinal models, setting \code{type = "link"} (also \code{"lp"}) computes the linear
 predictor without including the thresholds. This can be interpreted as the
 prediction of the latent variable underlying the ordinal response. This
-cannot be used with multinomial models.
+cannot be used with multinomial models. Setting \code{type = "stdlv"} standardizes these predictions by the implied standard deviation of the ordinal responses, which is a function of the link function, the original covariates, and the coefficient estimates.
 }
 \examples{
 data("lalonde", package = "cobalt")

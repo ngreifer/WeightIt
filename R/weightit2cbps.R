@@ -1,10 +1,8 @@
 #' Covariate Balancing Propensity Score Weighting
 #' @name method_cbps
-#' @aliases method_cbps
 #' @usage NULL
 #'
 #' @description
-#'
 #' This page explains the details of estimating weights from covariate balancing
 #' propensity scores by setting `method = "cbps"` in the call to [weightit()] or
 #' [weightitMSM()]. This method can be used with binary, multi-category, and
@@ -72,11 +70,12 @@
 #' M-estimation is not supported. See [glm_weightit()] and
 #' `vignette("estimating-effects")` for details.
 #'
-#' @section Additional Arguments: `moments` and `int` are accepted. See
-#'   [weightit()] for details.
+#' @section Additional Arguments:
 #'
-#'   The following additional arguments can be specified:
-#'   \describe{
+#' `moments` and `int` are accepted. See [weightit()] for details.
+#'
+#' The following additional arguments can be specified:
+#' \describe{
 #'     \item{`over`}{`logical`; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is `FALSE` to use the just-identified CBPS.
 #'     }
 #'     \item{`twostep`}{`logical`; when `over = TRUE`, whether to use the two-step approximation to the generalized method of moments variance. Default is `TRUE`. Setting to `FALSE` increases computation time but may improve estimation. Ignored with a warning when `over = FALSE`.
@@ -100,17 +99,17 @@
 #'   }
 #' }
 #'
-#' @details CBPS estimates the coefficients of a generalized linear model (for
+#' @details
+#' CBPS estimates the coefficients of a generalized linear model (for
 #' binary treatments), multinomial logistic regression model (for multi-category
 #' treatments), or linear regression model (for continuous treatments) that is
 #' used to compute (generalized) propensity scores, from which the weights are
 #' computed. It involves replacing (or augmenting, in the case of the
-#' over-identified version) the standard regression score equations with the
+#' over-identified version) the standard maximum likelihood score equations with the
 #' balance constraints in a generalized method of moments estimation. The idea
 #' is to nudge the estimation of the coefficients toward those that produce
-#' balance in the weighted sample. The just-identified version (with `exact =
-#' FALSE`) does away with the score equations for the coefficients so that only
-#' the balance constraints are used. The just-identified version will therefore
+#' balance in the weighted sample. The just-identified version (with `over = FALSE`) does away with the maximum likelihood score equations for the coefficients so that only
+#' the balance constraints are used, which will therefore
 #' produce superior balance on the means (i.e., corresponding to the balance
 #' constraints) for binary and multi-category treatments and linear terms for
 #' continuous treatments than will the over-identified version.
@@ -126,7 +125,8 @@
 #' `CBPS::CBMSM()` uses different methods and produces different results from
 #' `weightitMSM()` called with `method = "cbps"`.
 #'
-#' @note This method used to rely on functionality in the \pkg{CBPS} package,
+#' @note
+#' This method used to rely on functionality in the \pkg{CBPS} package,
 #' but no longer does. Slight differences may be found between the two packages
 #' in some cases due to numerical imprecision (or, for continuous and
 #' longitudinal treatments, due to a difference in the estimator).
@@ -159,17 +159,16 @@
 #' [method_ebal] and [method_ipt] for entropy balancing and inverse probability
 #' tilting, which work similarly.
 #'
-#' @references ## Binary treatments
+#' @references
+#' ## Binary treatments
 #'
 #' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score.
-#' *Journal of the Royal Statistical Society: Series B (Statistical
-#' Methodology)*, 76(1), 243–263.
+#' *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*, 76(1), 243–263.
 #'
 #' ## Multi-Category treatments
 #'
 #' Imai, K., & Ratkovic, M. (2014). Covariate balancing propensity score.
-#' *Journal of the Royal Statistical Society: Series B (Statistical
-#' Methodology)*, 76(1), 243–263.
+#' *Journal of the Royal Statistical Society: Series B (Statistical Methodology)*, 76(1), 243–263.
 #'
 #' ## Continuous treatments
 #'
@@ -181,8 +180,7 @@
 #' ## Longitudinal treatments
 #'
 #' Huffman, C., & van Gameren, E. (2018). Covariate Balancing Inverse
-#' Probability Weights for Time-Varying Continuous Interventions. *Journal of
-#' Causal Inference*, 6(2). \doi{10.1515/jci-2017-0002}
+#' Probability Weights for Time-Varying Continuous Interventions. *Journal of Causal Inference*, 6(2). \doi{10.1515/jci-2017-0002}
 #'
 #' Note: one should not cite Imai & Ratkovic (2015) when using CBPS for
 #' longitudinal treatments.

@@ -12,7 +12,7 @@ continuous treatments.
 In general, this method relies on estimating weights by minimizing an energy
 statistic related to covariate balance. For binary and multi-category
 treatments, this is the energy distance, which is a multivariate distance
-between distributions, between treatment groups. For continuous treatments,
+between distributions, between the treatment groups. For continuous treatments,
 this is the sum of the distance covariance between the treatment variable and
 the covariates and the energy distances between the treatment and covariates
 in the weighted sample and their distributions in the original sample. This
@@ -43,8 +43,7 @@ using formulas described by Huling, Greifer, and Chen (2023).
 
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield optimal
-balance at each time point. NOTE: the use of energy balancing with
-longitudinal treatments has not been validated!
+balance at each time point. \strong{NOTE: the use of energy balancing with longitudinal treatments has not been validated!}
 }
 
 \subsection{Sampling Weights}{
@@ -127,26 +126,22 @@ allows you to monitor the process and examine if the optimization is
 approaching convergence.
 }
 \section{Additional Arguments}{
- The following following additional arguments
-can be specified:
+
+
+The following following additional arguments can be specified:
+
 \describe{
-\item{\code{dist.mat}}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include \code{"scaled_euclidean"} for the Euclidean (L2) distance on the scaled covariates (the default), \code{"mahalanobis"} for the Mahalanobis distance, and \code{"euclidean"} for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to \code{\link[=dist]{dist()}}.
+\item{\code{dist.mat}}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include \code{"scaled_euclidean"} for the Euclidean (L2) distance on the scaled covariates (the default), \code{"mahalanobis"} for the Mahalanobis distance, and \code{"euclidean"} for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to \code{\link[=dist]{dist()}}.}
+\item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.}
 }
-\item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.
-}
-}
-For binary and multi-category treatments, the following additional
-arguments can be specified:
+For binary and multi-category treatments, the following additional arguments can be specified:
 \describe{
-\item{\code{improved}}{\code{logical}; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when \code{estimand = "ATE"}. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is \code{TRUE}; set to \code{FALSE} to use the standard energy balancing weights instead (not recommended).
-}
-\item{\code{quantile}}{
-A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate.
-}
+\item{\code{improved}}{\code{logical}; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when \code{estimand = "ATE"}. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is \code{TRUE}; set to \code{FALSE} to use the standard energy balancing weights instead (not recommended).}
+\item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate.}
 }
 
-For continuous treatments, the following additional arguments can be
-specified:
+For continuous treatments, the following additional arguments can be specified:
+
 \describe{
 \item{\code{d.moments}}{
 The number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified).
@@ -175,6 +170,7 @@ below.
 
 \section{Additional Outputs}{
 
+
 \describe{
 \item{\code{obj}}{When \code{include.obj = TRUE}, the output of the call to \pkgfun{osqp}{solve_osqp}, which contains the dual variables and convergence information.
 }
@@ -183,7 +179,6 @@ below.
 
 \examples{
 \dontshow{if (requireNamespace("osqp", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-library("cobalt")
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
@@ -191,7 +186,7 @@ data("lalonde", package = "cobalt")
                   nodegree + re74, data = lalonde,
                 method = "energy", estimand = "ATE"))
 summary(W1)
-bal.tab(W1)
+cobalt::bal.tab(W1)
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
@@ -199,15 +194,13 @@ bal.tab(W1)
                 method = "energy", estimand = "ATT",
                 focal = "black"))
 summary(W2)
-bal.tab(W2)
-\donttest{
-  #Balancing covariates with respect to re75 (continuous)
-  (W3 <- weightit(re75 ~ age + educ + married +
+cobalt::bal.tab(W2)
+\donttest{#Balancing covariates with respect to re75 (continuous)
+(W3 <- weightit(re75 ~ age + educ + married +
                     nodegree + re74, data = lalonde,
                   method = "energy", moments = 1))
-  summary(W3)
-  bal.tab(W3, poly = 2)
-}
+summary(W3)
+cobalt::bal.tab(W3, poly = 2)}
 \dontshow{\}) # examplesIf}
 }
 \references{
@@ -220,8 +213,7 @@ Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions.
 \subsection{Continuous treatments}{
 
 Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for
-causal inference with continuous treatments. \emph{Journal of the American
-Statistical Association}, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
+causal inference with continuous treatments. \emph{Journal of the American Statistical Association}, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 }
 }
 \seealso{

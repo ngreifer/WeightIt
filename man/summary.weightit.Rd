@@ -43,14 +43,18 @@ of weights. Default is to plot the distribution for the first time points.}
 \value{
 For point treatments (i.e., \code{weightit} objects), \code{summary()} returns
 a \code{summary.weightit} object with the following elements:
+
 \item{weight.range}{The range (minimum and maximum) weight for each treatment
-group.} \item{weight.top}{The units with the greatest weights in each
+group.}
+\item{weight.top}{The units with the greatest weights in each
 treatment group; how many are included is determined by \code{top}.}
 \item{coef.of.var (Coef of Var)}{The coefficient of variation (standard
 deviation divided by mean) of the weights in each treatment group and
-overall.} \item{scaled.mad (MAD)}{The mean absolute deviation of the weights
+overall.}
+\item{scaled.mad (MAD)}{The mean absolute deviation of the weights
 in each treatment group and overall divided by the mean of the weights in the
-corresponding group.} \item{negative entropy (Entropy)}{The negative entropy
+corresponding group.}
+\item{negative entropy (Entropy)}{The negative entropy
 (\eqn{\sum w log(w)}) of the weights in each treatment group and overall
 divided by the mean of the weights in the corresponding group.}
 \item{num.zeros}{The number of weights equal to zero.}

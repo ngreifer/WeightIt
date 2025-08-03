@@ -1,6 +1,5 @@
 #' Propensity Score Weighting Using Generalized Boosted Models
 #' @name method_gbm
-#' @aliases method_gbm
 #' @usage NULL
 #'
 #' @description This page explains the details of estimating weights from
@@ -58,8 +57,7 @@
 #'
 #' ## Missing Data
 #'
-#' In the presence of missing data, the following value(s) for `missing` are
-#' allowed:
+#' In the presence of missing data, the following value(s) for `missing` are allowed:
 #'     \describe{
 #'       \item{`"ind"` (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.}
 #'       \item{`"surr"`}{Surrogate splitting is used to process `NA`s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.}
@@ -69,8 +67,9 @@
 #'
 #' M-estimation is not supported.
 #'
-#' @section Additional Arguments: The following additional arguments can be
-#'   specified:
+#' @section Additional Arguments:
+#'
+#' The following additional arguments can be specified:
 #'   \describe{
 #'     \item{`criterion`}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, `criterion` can be set as `"cv{#}`", where `{#}` is replaced by a number representing the number of cross-validation folds used (e.g., `"cv5"` for 5-fold cross-validation). For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 #'     }
@@ -100,7 +99,7 @@
 #'   The `w` argument in `gbm.fit()` is ignored because sampling weights are
 #'   passed using `s.weights`.
 #'
-#'   For continuous treatments only, the following arguments may be supplied:
+#' For continuous treatments only, the following arguments may be supplied:
 #' \describe{
 #'       \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 #'
@@ -122,6 +121,7 @@
 #'   no random components in the model.
 #'
 #' @section Additional Outputs:
+#'
 #' \describe{
 #' \item{`info`}{
 #'   A list with the following entries:
@@ -129,7 +129,7 @@
 #'       \item{`best.tree`}{
 #'         The number of trees at the optimum. If this is close to `n.trees`, `weightit()` should be rerun with a larger value for `n.trees`, and `start.tree` can be set to just below `best.tree`. When other parameters are tuned, this is the best tree value in the best combination of tuned parameters. See example.}
 #'       \item{`tree.val`}{
-#'         A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. Running [plot()] on this object will plot the criterion by the number of trees and is a good way to see patterns in the relationship between them and to determine if more trees are needed. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.}
+#'         A data frame with two columns: the first is the number of trees and the second is the value of the criterion corresponding to that tree. When other parameters are tuned, these are the number of trees and the criterion values in the best combination of tuned parameters. See example.}
 #'     }
 #'   If any arguments are to be tuned (i.e., they have been supplied more than one value), the following two additional components are included in `info`:
 #'     \describe{
@@ -144,7 +144,8 @@
 #' }
 #' }
 #'
-#' @details Generalized boosted modeling (GBM, also known as gradient boosting
+#' @details
+#' Generalized boosted modeling (GBM, also known as gradient boosting
 #' machines) is a machine learning method that generates predicted values from a
 #' flexible regression of the treatment on the covariates, which are treated as
 #' propensity scores and used to compute weights. It does this by building a
@@ -174,7 +175,8 @@
 #' display the results of the tuning process; see Examples and [plot.weightit()]
 #' for more details.
 #'
-#' @note The `criterion` argument used to be called `stop.method`, which is its
+#' @note
+#' The `criterion` argument used to be called `stop.method`, which is its
 #' name in \pkg{twang}. `stop.method` still works for backward compatibility.
 #' Additionally, the criteria formerly named as `"es.mean"`, `"es.max"`, and
 #' `"es.rms"` have been renamed to `"smd.mean"`, `"smd.max"`, and `"smd.rms"`.
@@ -187,7 +189,8 @@
 #'
 #' \pkgfun{gbm}{gbm.fit} for the fitting function.
 #'
-#' @references ## Binary treatments
+#' @references
+#' ## Binary treatments
 #'
 #' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score
 #' Estimation With Boosted Regression for Evaluating Causal Effects in
@@ -206,7 +209,6 @@
 #' Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
 #'
 #' @examplesIf requireNamespace("gbm", quietly = TRUE)
-#' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)
@@ -216,7 +218,7 @@
 #'                 criterion = "smd.max",
 #'                 use.offset = TRUE))
 #' summary(W1)
-#' bal.tab(W1)
+#' cobalt::bal.tab(W1)
 #'
 #' # View information about the fitting process
 #' W1$info$best.tree #best tree
@@ -229,7 +231,7 @@
 #'                   method = "gbm", estimand = "ATT",
 #'                   focal = "hispan", criterion = "ks.mean"))
 #'   summary(W2)
-#'   bal.tab(W2, stats = c("m", "ks"))
+#'   cobalt::bal.tab(W2, stats = c("m", "ks"))
 #'
 #'   #Balancing covariates with respect to re75 (continuous)
 #'   (W3 <- weightit(re75 ~ age + educ + married +
@@ -237,7 +239,7 @@
 #'                   method = "gbm", density = "kernel",
 #'                   criterion = "p.rms", trim.at = .97))
 #'   summary(W3)
-#'   bal.tab(W3)
+#'   cobalt::bal.tab(W3)
 #'
 #'   #Using a t(3) density and illustrating the search for
 #'   #more trees.
@@ -260,7 +262,7 @@
 #'   W4b$info$best.tree #13417; optimum has been found
 #'   plot(W4b) #increasing at right edge
 #'
-#'   bal.tab(W4b)
+#'   cobalt::bal.tab(W4b)
 #'
 #'   #Tuning hyperparameters
 #'   (W5 <- weightit(treat ~ age + educ + married +
@@ -275,7 +277,7 @@
 #'   W5$info$best.tune #Best values of tuned parameters
 #'   plot(W5) #plot criterion values against number of trees
 #'
-#'   bal.tab(W5, stats = c("m", "ks"))
+#'   cobalt::bal.tab(W5, stats = c("m", "ks"))
 #' }
 NULL
 

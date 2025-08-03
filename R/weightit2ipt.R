@@ -1,9 +1,9 @@
 #' Inverse Probability Tilting
 #' @name method_ipt
-#' @aliases method_ipt
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating weights using
+#' @description
+#' This page explains the details of estimating weights using
 #' inverse probability tilting by setting `method = "ipt"` in the call to
 #' [weightit()] or [weightitMSM()]. This method can be used with binary and
 #' multi-category treatments.
@@ -38,8 +38,7 @@
 #'
 #' For longitudinal treatments, the weights are the product of the weights
 #' estimated at each time point. This method is not guaranteed to yield exact
-#' balance at each time point. NOTE: the use of inverse probability tilting with
-#' longitudinal treatments has not been validated!
+#' balance at each time point. **NOTE: the use of inverse probability tilting with longitudinal treatments has not been validated!**
 #'
 #' ## Sampling Weights
 #'
@@ -47,8 +46,7 @@
 #'
 #' ## Missing Data
 #'
-#' In the presence of missing data, the following value(s) for `missing` are
-#' allowed:
+#' In the presence of missing data, the following value(s) for `missing` are allowed:
 #'     \describe{
 #'       \item{`"ind"` (default)}{
 #'         First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.
@@ -60,12 +58,12 @@
 #' M-estimation is supported for all scenarios. See [glm_weightit()] and
 #' `vignette("estimating-effects")` for details.
 #'
-#' @section Additional Arguments: `moments` and `int` are accepted. See
-#'   [weightit()] for details.
+#' @section Additional Arguments:
+#'
+#' `moments` and `int` are accepted. See [weightit()] for details.
 #'
 #' \describe{
-#'   \item{`quantile`}{
-#'     A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate.
+#'   \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate.
 #'   }
 #'   \item{`link`}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is `"logit"`, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, and `"clog"` are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()].
 #'   }
@@ -79,7 +77,8 @@
 #'   }
 #' }
 #'
-#' @details Inverse probability tilting (IPT) involves specifying estimating
+#' @details
+#' Inverse probability tilting (IPT) involves specifying estimating
 #' equations that fit the parameters of two or more generalized linear models
 #' with a modification that ensures exact balance on the covariate means. These
 #' estimating equations are solved, and the estimated parameters are used in the
@@ -102,11 +101,12 @@
 #' [method_ebal] and [method_cbps] for entropy balancing and CBPS, which work
 #' similarly.
 #'
-#' @references ## `estimand = "ATE"`
+#' @references
+#'
+#' ## `estimand = "ATE"`
 #'
 #' Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability
-#' Tilting for Moment Condition Models with Missing Data. *The Review of
-#' Economic Studies*, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
+#' Tilting for Moment Condition Models with Missing Data. *The Review of Economic Studies*, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
 #'
 #' ## `estimand = "ATT"`
 #'
@@ -190,8 +190,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
                              "ATC" = 1,
                              0:1)
 
-  fit.list <- make_list(groups_to_weight)
-  par.list <- make_list(groups_to_weight)
+  fit.list <- par.list <- make_list(groups_to_weight)
 
   n <- length(treat)
   k <- ncol(C)
@@ -410,8 +409,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   w <- rep.int(1, length(treat))
 
-  fit.list <- make_list(groups_to_weight)
-  par.list <- make_list(groups_to_weight)
+  fit.list <- par.list <- make_list(groups_to_weight)
 
   k <- ncol(C)
 

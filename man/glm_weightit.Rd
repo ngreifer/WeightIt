@@ -165,7 +165,7 @@ See \code{\link[=model.matrix]{model.matrix()}}.}
 \item{\dots}{arguments to be used to form the default control argument if it
 is not supplied directly.}
 
-\item{link}{for \code{plor_weightit()} and \code{multinom_weightit()}, a string
+\item{link}{for \code{ordinal_weightit()} and \code{multinom_weightit()}, a string
 corresponding to the desired link function. For \code{ordinal_weightit()}, any
 allowed by \code{\link[=binomial]{binomial()}} are accepted; for \code{multinom_weightit()}, only
 \code{"logit"} is allowed. Default is \code{"logit"} for ordinal or multinomial
@@ -174,7 +174,7 @@ logistic regression, respectively.}
 \value{
 For \code{lm_weightit()} and \code{glm_weightit()}, a \code{glm_weightit} object,
 which inherits from \code{glm}. For \code{ordinal_weightit()} and
-\code{multinom_weightit()}, an \code{ordinal_weightit} or \code{multinom_weightit},
+\code{multinom_weightit()}, an \code{ordinal_weightit} or \code{multinom_weightit} object,
 respectively. For \code{coxph_weightit()}, a \code{coxph_weightit} object, which
 inherits from \code{coxph}. See \code{\link[survival:coxph]{survival::coxph()}} for details.
 
@@ -229,7 +229,8 @@ estimation of the weights and can be used with any weighting method. It is
 important to set a seed using \code{set.seed()} to ensure replicability of the
 results. The fractional weighted bootstrap is more reliable but requires the
 weighting method to accept sampling weights (which most do, and you'll get an
-error if it doesn't). Setting \code{vcov = "FWB"} and supplying \code{fwb.args = list(wtype = "multinom")} also performs the resampling-based bootstrap but
+error if it doesn't). Setting \code{vcov = "FWB"} and supplying \code{fwb.args = list(wtype = "multinom")}
+also performs the resampling-based bootstrap but
 with the additional features \pkg{fwb} provides (e.g., a progress bar and
 parallelization) at the expense of needing to have \pkg{fwb} installed.
 
@@ -259,7 +260,8 @@ ignore estimation of the weights, if any. When no adjustment is done for
 estimation of the weights (i.e., because no \code{weightit} argument was supplied
 or there was no \code{"Mparts"} component in the supplied object), the default
 variance matrix produced by \code{glm_weightit()} should align with that from
-\verb{sandwich::vcovHC(. type = "HC0")} or \code{sandwich::vcovCL(., type = "HC0", cluster = cluster)} when \code{cluster} is supplied. Not all types are available
+\verb{sandwich::vcovHC(. type = "HC0")} or \code{sandwich::vcovCL(., type = "HC0", cluster = cluster)}
+when \code{cluster} is supplied. Not all types are available
 for all models.
 }
 \examples{

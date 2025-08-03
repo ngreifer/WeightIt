@@ -42,11 +42,12 @@ more than only column has only one value, only the first one will remain.
 }
 \examples{
 
-set.seed(1000)
-c1 <- rbinom(10, 1, .4)
-c2 <- 1-c1
-c3 <- rnorm(10)
-c4 <- 10*c3
+set.seed(1234)
+n <- 20
+c1 <- rbinom(n, 1, .4)
+c2 <- 1 - c1
+c3 <- rnorm(n)
+c4 <- 10 * c3
 mat <- data.frame(c1, c2, c3, c4)
 
 make_full_rank(mat) #leaves c2 and c4

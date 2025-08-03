@@ -1,9 +1,9 @@
 #' Propensity Score Weighting Using SuperLearner
 #' @name method_super
-#' @aliases method_super
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating weights from
+#' @description
+#' This page explains the details of estimating weights from
 #' SuperLearner-based propensity scores by setting `method = "super"` in the
 #' call to [weightit()] or [weightitMSM()]. This method can be used with binary,
 #' multi-category, and continuous treatments.
@@ -42,8 +42,7 @@
 #' For continuous treatments, the generalized propensity score is estimated
 #' using \pkgfun{SuperLearner}{SuperLearner}. In addition, kernel density
 #' estimation can be used instead of assuming a normal density for the numerator
-#' and denominator of the generalized propensity score by setting `density =
-#' "kernel"`. Other arguments to [density()] can be specified to refine the
+#' and denominator of the generalized propensity score by setting `density = "kernel"`. Other arguments to [density()] can be specified to refine the
 #' density estimation parameters. `plot = TRUE` can be specified to plot the
 #' density for the numerator and denominator, which can be helpful in diagnosing
 #' extreme weights.
@@ -71,15 +70,16 @@
 #' M-estimation is not supported.
 #'
 #' @section Additional Arguments:
+#'
 #' \describe{
 #'   \item{`discrete`}{if `TRUE`, uses discrete SuperLearner, which simply selects the best performing method. Default `FALSE`, which finds the optimal combination of predictions for the libraries using `SL.method`.}
 #' }
 #'
-#'   An argument to `SL.library` **must** be supplied. To see a list of
-#'   available entries, use \pkgfun{SuperLearner}{listWrappers}.
+#' An argument to `SL.library` **must** be supplied. To see a list of
+#' available entries, use \pkgfun{SuperLearner}{listWrappers}.
 #'
-#'   All arguments to \pkgfun{SuperLearner}{SuperLearner} can be passed through
-#'   `weightit()` or `weightitMSM()`, with the following exceptions:
+#' All arguments to \pkgfun{SuperLearner}{SuperLearner} can be passed through
+#' `weightit()` or `weightitMSM()`, with the following exceptions:
 #'
 #'   * `obsWeights` is ignored because sampling weights are passed using `s.weights`.
 #'   * `method` in `SuperLearner()` is replaced with the argument `SL.method` in `weightit()`.
@@ -104,7 +104,7 @@
 #'   combination of the predictions optimize a balance criterion, which must be
 #'   set with the `criterion` argument, described below.
 #'   \describe{
-#'     \item{`criterion`}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+#'     \item{`criterion`}{a string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 #'     }
 #'   }
 #'   Note that this implementation differs from that of Pirracchio and Carone
@@ -133,22 +133,23 @@
 #'   }
 #' }
 #'
-#' @details SuperLearner works by fitting several machine learning models to the
+#' @details
+#' SuperLearner works by fitting several machine learning models to the
 #' treatment and covariates and then taking a weighted combination of the
 #' generated predicted values to use as the propensity scores, which are then
 #' used to construct weights. The machine learning models used are supplied
 #' using the `SL.library` argument; the more models are supplied, the higher the
 #' chance of correctly modeling the propensity score. It is a good idea to
-#' include parameteric models, flexible and tree-based models, and regularized
+#' include parametric models, flexible and tree-based models, and regularized
 #' models among the models selected. The predicted values are combined using the
 #' method supplied in the `SL.method` argument (which is nonnegative least
 #' squares by default). A benefit of SuperLearner is that, asymptotically, it is
 #' guaranteed to perform as well as or better than the best-performing method
-#' included in the library. Using Balance SuperLearner by setting `SL.method =
-#' "method.balance"` works by selecting the combination of predicted values that
+#' included in the library. Using Balance SuperLearner by setting `SL.method = "method.balance"` works by selecting the combination of predicted values that
 #' minimizes an imbalance measure.
 #'
-#' @note Some methods formerly available in \pkg{SuperLearner} are now in
+#' @note
+#' Some methods formerly available in \pkg{SuperLearner} are now in
 #' \pkg{SuperLearnerExtra}, which can be found on GitHub at
 #' \url{https://github.com/ecpolley/SuperLearnerExtra}.
 #'
@@ -166,7 +167,8 @@
 #'
 #' @seealso [weightit()], [weightitMSM()], [get_w_from_ps()]
 #'
-#' @references ## Binary treatments
+#' @references
+#' ## Binary treatments
 #'
 #' Pirracchio, R., Petersen, M. L., & van der Laan, M. (2015). Improving
 #' Propensity Score Estimators’ Robustness to Model Misspecification Using Super
@@ -191,44 +193,43 @@
 #' See [`method_glm`] for additional references.
 #'
 #' @examplesIf all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))
-#' \donttest{library("cobalt")
-#' data("lalonde", package = "cobalt")
+#' \donttest{data("lalonde", package = "cobalt")
 #'
 #' #Note: for time, all exmaples use a small set of
 #' #      learners. Many more should be added if
 #' #      possible, including a variety of model
 #' #      types (e.g., parametric, flexible, tree-
-#' #.     based, regularized, etc.)
+#' #      based, regularized, etc.)
 #'
-#' #Balancing covariates between treatment groups (binary)
+#' # Balancing covariates between treatment groups (binary)
 #' (W1 <- weightit(treat ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "super", estimand = "ATT",
 #'                 SL.library = c("SL.glm", "SL.stepAIC",
 #'                                "SL.glm.interaction")))
 #' summary(W1)
-#' bal.tab(W1)
+#' cobalt::bal.tab(W1)
 #'
-#' #Balancing covariates with respect to race (multi-category)
+#' # Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "super", estimand = "ATE",
 #'                 SL.library = c("SL.glm", "SL.stepAIC",
 #'                                "SL.glm.interaction")))
 #' summary(W2)
-#' bal.tab(W2)
+#' cobalt::bal.tab(W2)
 #'
-#' #Balancing covariates with respect to re75 (continuous)
-#' #assuming t(8) conditional density for treatment
+#' # Balancing covariates with respect to re75 (continuous)
+#' # assuming t(8) conditional density for treatment
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "super", density = "dt_8",
 #'                 SL.library = c("SL.glm", "SL.ridge",
 #'                                "SL.glm.interaction")))
 #' summary(W3)
-#' bal.tab(W3)
+#' cobalt::bal.tab(W3)
 #'
-#' #Balancing covariates between treatment groups (binary)
+#' # Balancing covariates between treatment groups (binary)
 #' # using balance SuperLearner to minimize the maximum
 #' # KS statistic
 #' (W4 <- weightit(treat ~ age + educ + married +
@@ -239,7 +240,7 @@
 #'                 SL.method = "method.balance",
 #'                 criterion = "ks.max"))
 #' summary(W4)
-#' bal.tab(W4, stats = c("m", "ks"))}
+#' cobalt::bal.tab(W4, stats = c("m", "ks"))}
 NULL
 
 weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
@@ -638,12 +639,12 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
       densfun <- attr(control$trimLogit, "vals")$densfun
       init <- attr(control$trimLogit, "vals")$init
 
-      w_mat <- apply(Z, 2, function(gp.score) {
+      w_mat <- apply(Z, 2L, function(gp.score) {
         r <- Y - gp.score
         exp(log.dens.num - densfun(r / sqrt(col.w.v(r, obsWeights)), log = TRUE))
       })
 
-      cvRisk <- apply(w_mat, 2, cobalt::bal.compute, x = init)
+      cvRisk <- apply(w_mat, 2L, cobalt::bal.compute, x = init)
       names(cvRisk) <- libraryNames
 
       p <- ncol(Z)

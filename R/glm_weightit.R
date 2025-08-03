@@ -22,7 +22,7 @@
 #'   used in the model. This can be a character string naming a family function,
 #'   a family function or the result of a call to a family function. See
 #'   [family] for details of family functions.
-#' @param link for `plor_weightit()` and `multinom_weightit()`, a string
+#' @param link for `ordinal_weightit()` and `multinom_weightit()`, a string
 #'   corresponding to the desired link function. For `ordinal_weightit()`, any
 #'   allowed by [binomial()] are accepted; for `multinom_weightit()`, only
 #'   `"logit"` is allowed. Default is `"logit"` for ordinal or multinomial
@@ -74,7 +74,7 @@
 #'
 #' @returns For `lm_weightit()` and `glm_weightit()`, a `glm_weightit` object,
 #' which inherits from `glm`. For `ordinal_weightit()` and
-#' `multinom_weightit()`, an `ordinal_weightit` or `multinom_weightit`,
+#' `multinom_weightit()`, an `ordinal_weightit` or `multinom_weightit` object,
 #' respectively. For `coxph_weightit()`, a `coxph_weightit` object, which
 #' inherits from `coxph`. See [survival::coxph()] for details.
 #'
@@ -116,8 +116,8 @@
 #' important to set a seed using `set.seed()` to ensure replicability of the
 #' results. The fractional weighted bootstrap is more reliable but requires the
 #' weighting method to accept sampling weights (which most do, and you'll get an
-#' error if it doesn't). Setting `vcov = "FWB"` and supplying `fwb.args =
-#' list(wtype = "multinom")` also performs the resampling-based bootstrap but
+#' error if it doesn't). Setting `vcov = "FWB"` and supplying `fwb.args = list(wtype = "multinom")`
+#' also performs the resampling-based bootstrap but
 #' with the additional features \pkg{fwb} provides (e.g., a progress bar and
 #' parallelization) at the expense of needing to have \pkg{fwb} installed.
 #'
@@ -147,8 +147,8 @@
 #' estimation of the weights (i.e., because no `weightit` argument was supplied
 #' or there was no `"Mparts"` component in the supplied object), the default
 #' variance matrix produced by `glm_weightit()` should align with that from
-#' `sandwich::vcovHC(. type = "HC0")` or `sandwich::vcovCL(., type = "HC0",
-#' cluster = cluster)` when `cluster` is supplied. Not all types are available
+#' `sandwich::vcovHC(. type = "HC0")` or `sandwich::vcovCL(., type = "HC0", cluster = cluster)`
+#' when `cluster` is supplied. Not all types are available
 #' for all models.
 #'
 #' @seealso [lm()] and [glm()] for fitting generalized linear models without

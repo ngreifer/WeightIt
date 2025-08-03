@@ -36,12 +36,11 @@
 #'   consider the "treated" or "control" group. This group will not be weighted,
 #'   and the other groups will be weighted to resemble the focal group. If
 #'   specified, `estimand` will automatically be set to `"ATT"` (with a warning
-#'   if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and
-#'   `focal`* in Details below.
+#'   if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and `focal`* in Details below.
 #' @param by a string containing the name of the variable in `data` for which
 #'   weighting is to be done within categories or a one-sided formula with the
-#'   stratifying variable on the right-hand side. For example, if `by =
-#'   "gender"` or `by = ~gender`, a separate propensity score model or
+#'   stratifying variable on the right-hand side. For example, if `by = "gender"` or `by = ~gender`,
+#'   a separate propensity score model or
 #'   optimization will occur within each level of the variable `"gender"`. Only
 #'   one `by` variable is allowed; to stratify by multiply variables
 #'   simultaneously, create a new variable that is a full cross of those
@@ -106,14 +105,14 @@
 #' treatment variable.}
 #' \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
 #' the fitting process.}
-#' \item{estimand}{The estimand requested.} \item{method}{The weight estimation
-#' method specified.}
+#' \item{estimand}{The estimand requested.}
+#' \item{method}{The weight estimation method specified.}
 #' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
 #' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
-#' \item{s.weights}{The provided sampling weights.} \item{focal}{The focal
-#' treatment level if the ATT or ATC was requested.} \item{by}{A data.frame
-#' containing the `by` variable when specified.} \item{obj}{When `include.obj =
-#' TRUE`, the fit object.}
+#' \item{s.weights}{The provided sampling weights.}
+#' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
+#' \item{by}{A data.frame containing the `by` variable when specified.}
+#' \item{obj}{When `include.obj = TRUE`, the fit object.}
 #' \item{info}{Additional information about the fitting. See the individual
 #' methods pages for what is included.}
 #'
@@ -136,7 +135,7 @@
 #' | [`"npcbps"`][method_npcbps]| Non-parametric Covariate Balancing Propensity Score weighting |
 #' | [`"ebal"`][method_ebal] | Entropy balancing |
 #' | [`"ipt"`][method_ipt] | Inverse probability tilting |
-#' | [`"optweight"`][method_optweight] | Optimization-based weighting |
+#' | [`"optweight"`][method_optweight] | Stable balancing weights |
 #' | [`"super"`][method_super] | Propensity score weighting using SuperLearner |
 #' | [`"bart"`][method_bart] | Propensity score weighting using Bayesian additive regression trees (BART) |
 #' | [`"energy"`][method_energy] | Energy balancing |
@@ -144,7 +143,9 @@
 #' `method` can also be supplied as a user-defined function; see [`method_user`]
 #' for instructions and examples. Setting `method = NULL` computes unit weights.
 #'
-#' ## `estimand` and `focal` For binary and multi-category treatments, the
+#' ## `estimand` and `focal`
+#'
+#' For binary and multi-category treatments, the
 #' argument to `estimand` determines what distribution the weighted sample
 #' should resemble. When set to `"ATE"`, this requests that each group resemble
 #' the full sample. When set to `"ATO"`, `"ATM"`, or `"ATOS"` (for the methods
@@ -159,18 +160,22 @@
 #' name of the focal group, which is the treated group when `estimand = "ATT"`
 #' and the control group when `estimand = "ATC"`. If `focal` is not supplied,
 #' guesses are made using the following criteria, evaluated in order:
+#'
 #' * If the treatment variable is `logical`, `TRUE` is considered treated and `FALSE` control.
 #' * If the treatment is numeric (or a string or factor with values that can be coerced to numeric values), if 0 is one of the values, it is considered the control, and otherwise, the lower value is considered the control (with the other considered treated).
 #' * If exactly one of the treatment values is `"t"`, `"tr"`, `"treat"`, `"treated"`, or `"exposed"`, it is considered the treated (and the other control).
 #' * If exactly one of the treatment values is `"c"`, `"co"`, `"ctrl"`, `"control"`, or `"unexposed"`, it is considered the control (and the other treated).
 #' * If the treatment variable is a factor, the first level is considered control and the second treated.
 #' * The lowest value after sorting with [sort()] is considered control and the other treated.
+#'
 #' To be safe, it is best to code your binary treatment variable as `0` for
 #' control and `1` for treated. Otherwise, `focal` should be supplied when
 #' requesting the ATT or ATC. For multi-category treatments, `focal` is required
 #' when requesting the ATT or ATC; none of the heuristics above are used.
 #'
-#' ## Citing \pkg{WeightIt} When using `weightit()`, please cite both the
+#' ## Citing \pkg{WeightIt}
+#'
+#' When using `weightit()`, please cite both the
 #' \pkg{WeightIt} package (using `citation("WeightIt")`) and the paper(s) in the
 #' references section of the method used.
 #'

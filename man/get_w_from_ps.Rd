@@ -247,7 +247,7 @@ R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
 Multiple Treatments Using Generalized Boosted Models. Statistics in Medicine,
 32(19), 3388–3414. \doi{10.1002/sim.5753}
 \itemize{
-\item Marginal mean weighting through stratification
+\item Marginal mean weighting through stratification (MMWS)
 }
 
 Hong, G. (2012). Marginal mean weighting through stratification: A
