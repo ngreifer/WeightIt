@@ -357,16 +357,17 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (solver == "multiroot") {
     out <- suppressWarnings({
-      try(rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
-                               start = par_alpha,
-                               Xm = mod_covs,
-                               Xb = bal_covs,
-                               A = treat,
-                               SW = s.weights,
-                               rtol = reltol,
-                               atol = reltol,
-                               ctol = reltol),
-          silent = TRUE)
+      try(verbosely({
+        rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
+                             start = par_alpha,
+                             Xm = mod_covs,
+                             Xb = bal_covs,
+                             A = treat,
+                             SW = s.weights,
+                             rtol = reltol,
+                             atol = reltol,
+                             ctol = reltol)
+      }, verbose = FALSE), silent = TRUE)
     })
 
     if (!null_or_error(out) && utils::hasName(out, "root") &&
@@ -624,16 +625,17 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (solver == "multiroot") {
     out <- suppressWarnings({
-      try(rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
-                               start = par_alpha,
-                               Xm = mod_covs,
-                               Xb = bal_covs,
-                               A = treat,
-                               SW = s.weights,
-                               rtol = reltol,
-                               atol = reltol,
-                               ctol = reltol),
-          silent = TRUE)
+      try(verbosely({
+        rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
+                             start = par_alpha,
+                             Xm = mod_covs,
+                             Xb = bal_covs,
+                             A = treat,
+                             SW = s.weights,
+                             rtol = reltol,
+                             atol = reltol,
+                             ctol = reltol)
+      }, verbose = FALSE), silent = TRUE)
     })
 
     if (!null_or_error(out) && utils::hasName(out, "root") &&
@@ -858,7 +860,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
-  treat <- treat[subset]
+  treat <- as.numeric(treat[subset])
   s.weights <- s.weights[subset]
 
   missing <- .process_missing2(missing, covs)
@@ -920,32 +922,25 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   s.weights <- s.weights / mean_fast(s.weights)
 
-  # dens.num <- dnorm(treat, log = TRUE)
-
-  # un_s2 <- mean((treat - mean(treat)) ^ 2)
-  # un_p <- mean(treat)
-
-  squish_tol <- 25
+  squish_tol <- 50
 
   # Balance condition
   psi_bal <- function(B, Xm, Xb = Xm, A, SW) {
     un_s2 <- exp(B[1L])
     un_p <- B[2L]
     log.dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
-                           lo = -squish_tol, hi = squish_tol)
+                           lo = -Inf, hi = squish_tol)
 
     s2 <- exp(B[3L])
     p <- drop(Xm %*% B[-(1:3)])
     log.dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
-                             lo = -squish_tol, hi = squish_tol)
+                             lo = -squish_tol, hi = Inf)
 
     w <- exp(log.dens.num - log.dens.denom)
 
     cbind(SW * (A - un_p)^2 - un_s2,
           SW * (A - un_p),
           SW * (A - p)^2 - s2,
-          # SW * (A - p),
-          # SW * w * Xb,
           SW * w * A * Xb)
   }
 
@@ -965,16 +960,17 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   if (solver == "multiroot") {
     out <- suppressWarnings({
-      try(rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
-                               start = par_alpha,
-                               Xm = mod_covs,
-                               Xb = bal_covs,
-                               A = treat,
-                               SW = s.weights,
-                               rtol = reltol,
-                               atol = reltol,
-                               ctol = reltol),
-          silent = TRUE)
+      try(verbosely({
+        rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
+                             start = par_alpha,
+                             Xm = mod_covs,
+                             Xb = bal_covs,
+                             A = treat,
+                             SW = s.weights,
+                             rtol = reltol,
+                             atol = reltol,
+                             ctol = reltol)
+      }, verbose = FALSE), silent = TRUE)
     })
 
     if (!null_or_error(out) && utils::hasName(out, "root") &&
@@ -1009,10 +1005,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
       p <- drop(Xm %*% B[-(1:3)])
 
-      cbind(#SW * (A - un_p)^2 - un_s2,
-        #SW * (A - un_p),
-        #SW * (A - p)^2 - s2,
-        SW * (A - p) * Xm)
+      cbind(SW * (A - p) * Xm)
     }
 
     # Combine LR and balance
@@ -1070,11 +1063,13 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   un_s2 <- exp(par_out[1L])
   un_p <- par_out[2L]
-  log.dens.num <- dnorm(treat, un_p, sqrt(un_s2), log = TRUE)
+  log.dens.num <- squish(dnorm(treat, un_p, sqrt(un_s2), log = TRUE),
+                         lo = -Inf, hi = squish_tol)
 
   s2 <- exp(par_out[3L])
   p <- drop(mod_covs %*% par_out[-(1:3)])
-  log.dens.denom <- dnorm(treat, p, sqrt(s2), log = TRUE)
+  log.dens.denom <- squish(dnorm(treat, p, sqrt(s2), log = TRUE),
+                           lo = -squish_tol, hi = Inf)
 
   w <- exp(log.dens.num - log.dens.denom)
 
@@ -1197,7 +1192,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
            })
   })
 
-  squish_tol <- 25
+  squish_tol <- 50
 
   get_w <- lapply(seq_along(treat.list), function(i) {
     switch(treat.types[i],
@@ -1296,15 +1291,16 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
   if (solver == "multiroot") {
     out <- suppressWarnings({
-      try(rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
-                               start = par_alpha,
-                               X.list = covs.list,
-                               A.list = treat.list,
-                               SW = s.weights,
-                               rtol = reltol,
-                               atol = reltol,
-                               ctol = reltol),
-          silent = TRUE)
+      try(verbosely({
+        rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
+                             start = par_alpha,
+                             X.list = covs.list,
+                             A.list = treat.list,
+                             SW = s.weights,
+                             rtol = reltol,
+                             atol = reltol,
+                             ctol = reltol)
+      }, verbose = FALSE), silent = TRUE)
     })
 
     if (!null_or_error(out) && out$estim.precis < 1e-5) {

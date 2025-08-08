@@ -1,5 +1,8 @@
 template:
   bootstrap: 5
+  math-rendering: mathjax
+  bslib:
+    primary: "#00612E"
 url: https://ngreifer.github.io/WeightIt/
 reference:
 - title: Estimate weights

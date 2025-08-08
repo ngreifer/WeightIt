@@ -13,6 +13,8 @@ WeightIt News and Updates
 
 * Fixed a bug in which messages about assuming which treatment level was "treated" were printed many times, including when bootstrapping.
 
+* Fixed a bug in which CBPS for continuous treatments would not yield correct balance in the presence of some extreme density estimates.
+
 * Typo fixes in vignettes and documentation.
 
 # `WeightIt` 1.4.0

@@ -241,13 +241,14 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
     if (solver == "multiroot") {
       out <- suppressWarnings({
-        try(rootSolve::multiroot(f = gradient.EB,
-                                 start = coef_start,
-                                 S = s.weights_t, C = C, Q = Q,
-                                 rtol = reltol,
-                                 atol = reltol,
-                                 ctol = reltol),
-            silent = TRUE)
+        try(verbosely({
+          rootSolve::multiroot(f = gradient.EB,
+                               start = coef_start,
+                               S = s.weights_t, C = C, Q = Q,
+                               rtol = reltol,
+                               atol = reltol,
+                               ctol = reltol)
+        }, verbose = FALSE), silent = TRUE)
       })
 
       if (!null_or_error(out) && utils::hasName(out, "root") &&
@@ -527,11 +528,12 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
     if (solver == "multiroot") {
       out <- suppressWarnings({
-        try(rootSolve::multiroot(f = gradient.EB,
-                                 start = coef_start,
-                                 S = s.weights, C = C, Q = Q,
-                                 maxiter = 20),
-            silent = TRUE)
+        try(verbosely({
+          rootSolve::multiroot(f = gradient.EB,
+                               start = coef_start,
+                               S = s.weights, C = C, Q = Q,
+                               maxiter = 20)
+        }, verbose = FALSE), silent = TRUE)
       })
 
       if (!null_or_error(out) && utils::hasName(out, "root") &&
@@ -743,11 +745,12 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 #
 #     if (solver == "multiroot") {
 #       out <- suppressWarnings({
-#         try(rootSolve::multiroot(f = gradient.EB,
+#         try(verbosely({
+#         rootSolve::multiroot(f = gradient.EB,
 #                                  start = coef_start,
 #                                  S = s.weights, C = C, Q = Q,
-#                                  maxiter = 20),
-#             silent = TRUE)
+#                                  maxiter = 20)
+#             }, verbose = FALSE), silent = TRUE)
 #       })
 #
 #       if (!null_or_error(out) && utils::hasName(out, "root") &&
