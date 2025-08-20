@@ -78,7 +78,17 @@
 #' * `combine.chains` is always set to `TRUE`
 #' * `sampleronly` is always set to `FALSE`
 #'
-#' For continuous treatments only, the following arguments may be supplied:
+#' For binary and multi-category treatments, the following arguments may be supplied:
+#' \describe{
+#'   \item{`subclass`}{`integer`; the number of subclasses to use for computing
+#'   weights using marginal mean weighting through stratification (MMWS). If `NULL`,
+#'   standard inverse probability weights (and their extensions) will be
+#'   computed; if a number greater than 1, subclasses will be formed and weights
+#'   will be computed based on subclass membership. See [get_w_from_ps()] for
+#'   details and references.}
+#' }
+#'
+#' For continuous treatments, the following arguments may be supplied:
 #'   \describe{
 #'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 #'
@@ -174,7 +184,7 @@
 NULL
 
 weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
-                          subclass, missing, verbose, ...) {
+                          missing, verbose, ...) {
 
   rlang::check_installed("dbarts", version = "0.9-23")
 
@@ -223,13 +233,13 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   p.score <- fitted(fit)
 
   w <- .get_w_from_ps_internal_bin(ps = p.score, treat = treat, estimand,
-                                   stabilize = stabilize, subclass = subclass)
+                                   stabilize = stabilize, subclass = ...get("subclass"))
 
   list(w = w, ps = p.score, fit.obj = fit)
 }
 
 weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize,
-                                 subclass, missing, verbose, ...) {
+                                 missing, verbose, ...) {
   rlang::check_installed("dbarts", version = "0.9-23")
 
   covs <- covs[subset, , drop = FALSE]
@@ -282,7 +292,7 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- .get_w_from_ps_internal_multi(ps = ps, treat = treat, estimand, focal,
-                                     stabilize = stabilize, subclass = subclass)
+                                     stabilize = stabilize, subclass = ...get("subclass"))
 
   list(w = w, fit.obj = fit.list)
 }

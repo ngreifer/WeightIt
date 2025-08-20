@@ -68,11 +68,15 @@
 #' \describe{
 #'   \item{`dist.mat`}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include `"scaled_euclidean"` for the Euclidean (L2) distance on the scaled covariates (the default), `"mahalanobis"` for the Mahalanobis distance, and `"euclidean"` for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to [dist()].}
 #'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.}
+#'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
+#'     \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.}
 #' }
+#'
 #' For binary and multi-category treatments, the following additional arguments can be specified:
 #'   \describe{
 #'     \item{`improved`}{`logical`; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when `estimand = "ATE"`. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is `TRUE`; set to `FALSE` to use the standard energy balancing weights instead (not recommended).}
-#'   \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate.}
+#'     \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same quantile(s) for all continuous covariates.
+#'     }
 #'   }
 #'
 #' For continuous treatments, the following additional arguments can be specified:
@@ -165,6 +169,8 @@
 #' allows you to monitor the process and examine if the optimization is
 #' approaching convergence.
 #'
+#' As of version 1.5.0, `polish` is now set to `TRUE` by default. This should yield slightly improved solutions but may be a little slower.
+#'
 #' @author Noah Greifer, using code from Jared Huling's
 #' \CRANpkg{independenceWeights} package for continuous treatments.
 #'
@@ -207,7 +213,7 @@
 NULL
 
 weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
-                            missing, moments, int, verbose, ...) {
+                            missing, verbose, ...) {
 
   missing <- .process_missing2(missing, covs)
 
@@ -256,6 +262,11 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   lambda <- ...get("lambda", 1e-4)
   chk::chk_number(lambda)
 
+  moments <- ...get("moments", 0)
+  int <- isTRUE(...get("int", FALSE))
+  quantile <- ...get("quantile")
+  add_constraints <- any(moments > 0) || int || is_not_null(quantile)
+
   t0 <- which(treat == 0)
   t1 <- which(treat == 1)
 
@@ -288,10 +299,13 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(rep.int(min.w, n), 1, 1)
     uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), 1, 1)
 
-    if (moments > 0 || int || is_not_null(...get("quantile"))) {
+    if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
-      covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights))
+      covs <- .apply_moments_int_quantile(covs,
+                                          moments = moments,
+                                          int = int,
+                                          quantile = quantile,
+                                          s.weights = s.weights)
 
       targets <- col.w.m(covs, s.weights)
 
@@ -311,11 +325,14 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(rep.int(min.w, n0), 1)
     uvec <- c(ifelse(check_if_zero(s.weights[t0]), min.w, Inf), 1)
 
-    if (moments > 0 || int || is_not_null(...get("quantile"))) {
+    if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
-      covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
-                                focal = 1, treat = treat))
+      covs <- .apply_moments_int_quantile(covs,
+                                          moments = moments,
+                                          int = int,
+                                          quantile = quantile,
+                                          s.weights = s.weights, focal = 1,
+                                          treat = treat)
 
       targets <- col.w.m(covs[t1, , drop = FALSE], s.weights[t1])
 
@@ -336,11 +353,14 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(rep.int(min.w, n1), 1)
     uvec <- c(ifelse(check_if_zero(s.weights[t1]), min.w, Inf), 1)
 
-    if (moments > 0 || int || is_not_null(...get("quantile"))) {
+    if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
-      covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
-                                focal = 0, treat = treat))
+      covs <- .apply_moments_int_quantile(covs,
+                                          moments = moments,
+                                          int = int,
+                                          quantile = quantile,
+                                          s.weights = s.weights, focal = 0,
+                                          treat = treat)
 
       targets <- col.w.m(covs[t0, , drop = FALSE], s.weights[t0])
 
@@ -382,6 +402,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   chk::chk_number(A[["time_limit"]], "`time_limit`")
   if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
   chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
+  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
+  chk::chk_flag(A[["polish"]], "`polish`")
   A[["verbose"]] <- TRUE
 
   options.list <- do.call(osqp::osqpSettings, A)
@@ -415,7 +437,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     w <- opt.out$x
   }
 
-  w[w <= min.w] <- min.w
+  if (abs(min.w) < .Machine$double.eps) {
+    w[abs(w) < .Machine$double.eps] <- 0
+  }
 
   opt.out$lambda <- lambda
 
@@ -423,7 +447,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                                  missing, moments, int, verbose, ...) {
+                                  missing, verbose, ...) {
 
   missing <- .process_missing2(missing, covs)
 
@@ -470,6 +494,11 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   lambda <- ...get("lambda", 1e-4)
   chk::chk_number(lambda)
 
+  moments <- ...get("moments", 0)
+  int <- isTRUE(...get("int", FALSE))
+  quantile <- ...get("quantile")
+  add_constraints <- any(moments > 0) || int || is_not_null(quantile)
+
   treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
                     dimnames = list(NULL, levels_treat))
 
@@ -506,10 +535,13 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     lvec <- c(rep.int(min.w, n), rep.int(1, length(levels_treat)))
     uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), rep.int(1, length(levels_treat)))
 
-    if (moments > 0 || int || is_not_null(...get("quantile"))) {
+    if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
-      covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights))
+      covs <- .apply_moments_int_quantile(covs,
+                                          moments = moments,
+                                          int = int,
+                                          quantile = quantile,
+                                          s.weights = s.weights)
 
       targets <- col.w.m(covs, s.weights)
 
@@ -533,11 +565,14 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     lvec <- c(rep.int(min.w, sum(!in_focal)), rep.int(1, length(non_focal)))
     uvec <- c(ifelse(check_if_zero(s.weights[!in_focal]), min.w, Inf), rep.int(1, length(non_focal)))
 
-    if (moments > 0 || int || is_not_null(...get("quantile"))) {
+    if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
-      covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                    .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
-                                focal = focal, treat = treat))
+      covs <- .apply_moments_int_quantile(covs,
+                                          moments = moments,
+                                          int = int,
+                                          quantile = quantile,
+                                          s.weights = s.weights, focal = focal,
+                                          treat = treat)
 
       targets <- col.w.m(covs[in_focal, , drop = FALSE], s.weights[in_focal])
 
@@ -580,6 +615,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   chk::chk_number(A[["time_limit"]], "`time_limit`")
   if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
   chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
+  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
+  chk::chk_flag(A[["polish"]], "`polish`")
   A[["verbose"]] <- TRUE
 
   options.list <- do.call(osqp::osqpSettings, A)
@@ -609,14 +646,16 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     w[treat != focal] <- opt.out$x
   }
 
-  w[w <= min.w] <- min.w
+  if (abs(min.w) < .Machine$double.eps) {
+    w[abs(w) < .Machine$double.eps] <- 0
+  }
 
   opt.out$lambda <- lambda
 
   list(w = w, fit.obj = opt.out)
 }
 
-weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
+weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
 
   missing <- .process_missing2(missing, covs)
 
@@ -681,6 +720,10 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   lambda <- ...get("lambda", 1e-4)
   chk::chk_number(lambda)
 
+  moments <- ...get("moments", 0)
+  int <- isTRUE(...get("int", FALSE))
+  add_constraints <- any(moments > 0) || int
+
   d.moments <- max(...get("d.moments", 0), moments)
   chk::chk_count(d.moments)
 
@@ -726,19 +769,21 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   uvec <- c(ifelse(sw0, min.w, Inf), n)
 
   if (d.moments > 0) {
-    d.covs <- .int_poly_f(covs, poly = d.moments)
+    d.covs <- .apply_moments_int_quantile(covs, moments = d.moments)
     d.treat <- cbind(poly(treat, degree = d.moments))
 
-    d.covs <- center(d.covs, col.w.m(d.covs, s.weights))
-    d.treat <- center(d.treat, col.w.m(d.treat, s.weights))
+    d.covs <- center_w(d.covs, s.weights)
+    d.treat <- center_w(d.treat, s.weights)
 
     Amat <- cbind(Amat, d.covs * s.weights, d.treat * s.weights)
     lvec <- c(lvec, rep.int(0, ncol(d.covs)), rep.int(0, ncol(d.treat)))
     uvec <- c(uvec, rep.int(0, ncol(d.covs)), rep.int(0, ncol(d.treat)))
   }
 
-  if (moments > 0 || int) {
-    covs <- .int_poly_f(covs, poly = moments, int = int)
+  if (add_constraints) {
+    covs <- .apply_moments_int_quantile(covs,
+                                        moments = moments,
+                                        int = int)
 
     X.means <- col.w.m(covs, s.weights)
     A.mean <- w.m(treat, s.weights)
@@ -784,6 +829,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   chk::chk_number(A[["time_limit"]], "`time_limit`")
   if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
   chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
+  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
+  chk::chk_flag(A[["polish"]], "`polish`")
   A[["verbose"]] <- TRUE
 
   options.list <- do.call(osqp::osqpSettings, A)
@@ -806,7 +853,10 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, moment
   }
 
   w <- opt.out$x
-  w[w <= min.w] <- min.w
+
+  if (abs(min.w) < .Machine$double.eps) {
+    w[abs(w) < .Machine$double.eps] <- 0
+  }
 
   opt.out$lambda <- lambda
 

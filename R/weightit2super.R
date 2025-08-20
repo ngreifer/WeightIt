@@ -84,7 +84,17 @@
 #'   * `obsWeights` is ignored because sampling weights are passed using `s.weights`.
 #'   * `method` in `SuperLearner()` is replaced with the argument `SL.method` in `weightit()`.
 #'
-#'   For continuous treatments only, the following arguments may be supplied:
+#' For binary and multi-category treatments, the following arguments may be supplied:
+#' \describe{
+#'   \item{`subclass`}{`integer`; the number of subclasses to use for computing
+#'   weights using marginal mean weighting through stratification (MMWS). If `NULL`,
+#'   standard inverse probability weights (and their extensions) will be
+#'   computed; if a number greater than 1, subclasses will be formed and weights
+#'   will be computed based on subclass membership. See [get_w_from_ps()] for
+#'   details and references.}
+#' }
+#'
+#' For continuous treatments, the following arguments may be supplied:
 #'   \describe{
 #'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 #'
@@ -145,8 +155,7 @@
 #' method supplied in the `SL.method` argument (which is nonnegative least
 #' squares by default). A benefit of SuperLearner is that, asymptotically, it is
 #' guaranteed to perform as well as or better than the best-performing method
-#' included in the library. Using Balance SuperLearner by setting `SL.method = "method.balance"` works by selecting the combination of predicted values that
-#' minimizes an imbalance measure.
+#' included in the library. Using Balance SuperLearner by setting `SL.method = "method.balance"` works by selecting the combination of predicted values that minimizes an imbalance measure.
 #'
 #' @note
 #' Some methods formerly available in \pkg{SuperLearner} are now in
@@ -244,7 +253,7 @@
 NULL
 
 weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
-                           stabilize, subclass, missing, verbose, ...) {
+                           stabilize, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -356,13 +365,14 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- .get_w_from_ps_internal_bin(ps = ps, treat = treat, estimand,
-                                   stabilize = stabilize, subclass = subclass)
+                                   stabilize = stabilize,
+                                   subclass = ...get("subclass"))
 
   list(w = w, ps = ps, info = info, fit.obj = fit)
 }
 
 weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                                 stabilize, subclass, missing, verbose, ...) {
+                                 stabilize, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -438,7 +448,8 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   #ps should be matrix of probs for each treat
   #Computing weights
   w <- get_w_from_ps(ps = ps, treat = treat, estimand, focal,
-                     stabilize = stabilize, subclass = subclass)
+                     stabilize = stabilize,
+                     subclass = ...get("subclass"))
 
   p.score <- NULL
 

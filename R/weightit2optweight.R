@@ -62,11 +62,13 @@
 #'
 #' @section Additional Arguments:
 #'
-#' `moments` and `int` are accepted. See [weightit()] for details.
-#'
 #' \describe{
-#'   \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
-#'   }
+#'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.
+#'     }
+#'     \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.
+#'     }
+#'     \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.
+#'     }
 #' }
 #'
 #' All arguments to `optweight()` can be passed through `weightit()` or `weightitMSM()`, with the following exception:
@@ -86,7 +88,8 @@
 #'  \item{`obj`}{When `include.obj = TRUE`, the output of the call to \pkgfun{optweight}{optweight}.}
 #'  }
 #'
-#' @details Stable balancing weights are weights that solve a constrained
+#' @details
+#' Stable balancing weights are weights that solve a constrained
 #' optimization problem, where the constraints correspond to covariate balance
 #' and the loss function is the variance (or other norm) of the weights. These
 #' weights maximize the effective sample size of the weighted sample subject to
@@ -114,7 +117,8 @@
 #'
 #' \pkgfun{optweight}{optweight} for the fitting function
 #'
-#' @references ## Binary treatments
+#' @references
+#' ## Binary treatments
 #'
 #' Wang, Y., & Zubizarreta, J. R. (2020). Minimal dispersion approximately
 #' balancing weights: Asymptotic properties and practical considerations.
@@ -155,17 +159,18 @@
 #' cobalt::bal.tab(W2)
 #' plot(W2)
 #'
+#' \dontrun{
 #' #Balancing covariates with respect to re75 (continuous)
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "optweight", tols = .05))
 #' summary(W3)
 #' cobalt::bal.tab(W3)
-#' plot(W3)
+#' plot(W3)}
 NULL
 
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing,
-                               moments, int, verbose, ...) {
+                               verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -173,9 +178,12 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
   missing <- .process_missing2(missing, covs)
 
-  covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
-                            focal = focal, treat = treat))
+  covs <- .apply_moments_int_quantile(covs,
+                                      moments = ...get("moments"),
+                                      int = ...get("int"),
+                                      quantile = ...get("quantile"),
+                                      s.weights = s.weights, focal = focal,
+                                      treat = treat)
 
   for (i in seq_col(covs)) {
     covs[, i] <- .make_closer_to_1(covs[, i])
@@ -186,11 +194,11 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   }
 
   .args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
-                           names(formals(optweight::optweight)),
-                           names(formals(osqp::osqpSettings)))),
-                  c("treat.list", "covs.list", "data",
-                    "estimand", "focal",
-                    "formula", "s.weights", "verbose"))
+                            names(formals(optweight::optweight)),
+                            names(formals(osqp::osqpSettings)))),
+                   c("treat.list", "covs.list", "data",
+                     "estimand", "focal",
+                     "formula", "s.weights", "verbose"))
 
   A <- ...mget(.args)
 
@@ -220,7 +228,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
 weightit2optweight.multi <- weightit2optweight
 
-weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
+weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -228,7 +236,9 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
 
   missing <- .process_missing2(missing, covs)
 
-  covs <- .int_poly_f(covs, poly = moments, int = int)
+  covs <- .apply_moments_int_quantile(covs,
+                                      moments = ...get("moments"),
+                                      int = ...get("int"))
 
   for (i in seq_col(covs)) {
     covs[, i] <- .make_closer_to_1(covs[, i])
@@ -239,10 +249,10 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   }
 
   .args <- setdiff(unique(c(names(formals(optweight::optweight.fit)),
-                           names(formals(optweight::optweight)),
-                           names(formals(osqp::osqpSettings)))),
-                  c("treat.list", "covs.list", "data",
-                    "formula", "s.weights", "verbose"))
+                            names(formals(optweight::optweight)),
+                            names(formals(osqp::osqpSettings)))),
+                   c("treat.list", "covs.list", "data",
+                     "formula", "s.weights", "verbose"))
 
   A <- ...mget(.args)
 
@@ -268,7 +278,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, mom
   list(w = out[["weights"]], info = list(duals = out[["duals"]]), fit.obj = out)
 }
 
-weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, missing, moments, int, verbose, ...) {
+weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, missing, verbose, ...) {
 
   s.weights <- s.weights[subset]
   treat.types <- character(length(treat.list))
@@ -291,17 +301,18 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
       covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
     }
 
-    covs.list[[i]] <- cbind(covs.list[[i]],
-                            .int_poly_f(covs.list[[i]], poly = moments, int = int))
-
-    if (treat.types[i] %in% c("binary", "multi-category")) {
-      covs.list[[i]] <- cbind(.int_poly_f(covs.list[[i]], poly = moments, int = int, center = TRUE),
-                              .quantile_f(covs.list[[i]], qu = ...get("quantile"), s.weights = s.weights,
-                                          treat = treat.list[[i]]))
+    if (treat.types[i] %in% c("binary", "multinomial")) {
+      covs.list[[i]] <- .apply_moments_int_quantile(covs.list[[i]],
+                                                    moments = ...get("moments"),
+                                                    int = ...get("int"),
+                                                    quantile = ...get("quantile"),
+                                                    s.weights = s.weights,
+                                                    treat = treat.list[[i]])
     }
     else {
-      covs.list[[i]] <- cbind(covs.list[[i]], .int_poly_f(covs.list[[i]], poly = moments,
-                                                          int = int, center = TRUE))
+      covs.list[[i]] <- .apply_moments_int_quantile(covs.list[[i]],
+                                                    moments = ...get("moments"),
+                                                    int = ...get("int"))
     }
 
     for (j in seq_col(covs.list[[i]])) {
@@ -310,10 +321,10 @@ weightitMSM2optweight <- function(covs.list, treat.list, s.weights, subset, miss
   }
 
   .args <- setdiff(c(names(formals(optweight::optweight.fit)),
-                    names(formals(osqp::osqpSettings))),
-                  c("treat.list", "covs.list",
-                    "estimand", "focal",
-                    "s.weights", "force", "verbose"))
+                     names(formals(osqp::osqpSettings))),
+                   c("treat.list", "covs.list",
+                     "estimand", "focal",
+                     "s.weights", "force", "verbose"))
 
   A <- ...mget(.args)
 

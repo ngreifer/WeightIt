@@ -19,9 +19,8 @@
 #' \item{`estimand`: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to estimand, `weightit()` sets `focal` to the control level (usually 0 or the lowest level of `treat`) and sets `estimand` to "ATT".}
 #' \item{`focal`: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). `weightit()` ensures the value of focal is a level of `treat`.}
 #' \item{`stabilize`: a logical vector of length 1. It is not processed by `weightit()` before it reaches the fitting function.}
-#' \item{`moments`: a numeric vector of length 1. It is not processed by `weightit()` before it reaches the fitting function except that `as.integer()` is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.}
-#' \item{`int`: a logical vector of length 1. It is not processed by `weightit()` before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.}
 #' }
+#'
 #' None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
 #'
 #' In addition, any additional arguments supplied to `weightit()` will be passed on to the fitting function. `weightit()` ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include `\dots` as a parameter.
@@ -39,7 +38,7 @@
 #' data("lalonde", package = "cobalt")
 #'
 #' #A user-defined version of method = "ps"
-#' my.ps <- function(treat, covs, estimand, focal = NULL) {
+#' my.ps <- function(treat, covs, estimand, focal = NULL, ...) {
 #'   covs <- make_full_rank(covs)
 #'   d <- data.frame(treat, covs)
 #'   f <- formula(d)
@@ -127,7 +126,7 @@
 NULL
 
 weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
-                          stabilize, subclass, missing, ps, moments, int, verbose, ...) {
+                          stabilize, missing, ps, verbose, ...) {
   A <- list(...)
 
   if (is_not_null(covs)) {
@@ -202,7 +201,7 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stabilize,
-                             missing, moments, int, verbose, ...) {
+                             missing, verbose, ...) {
   A <- list(...)
 
   if (is_not_null(covs.list)) {

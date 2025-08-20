@@ -60,11 +60,13 @@
 #'
 #' @section Additional Arguments:
 #'
-#' `moments` and `int` are accepted. See [weightit()] for details.
-#'
 #' \describe{
-#'   \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate.
-#'   }
+#'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.
+#'     }
+#'     \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.
+#'     }
+#'     \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same quantile(s) for all continuous covariates.
+#'     }
 #'   \item{`link`}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is `"logit"`, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, and `"clog"` are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()].
 #'   }
 #' }
@@ -134,7 +136,7 @@
 NULL
 
 weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
-                         stabilize, missing, moments, int, verbose, ...) {
+                         stabilize, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -146,9 +148,12 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
-                            focal = focal, treat = treat))
+  covs <- .apply_moments_int_quantile(covs,
+                                      moments = ...get("moments"),
+                                      int = ...get("int"),
+                                      quantile = ...get("quantile"),
+                                      s.weights = s.weights, focal = focal,
+                                      treat = treat)
 
   for (i in seq_col(covs)) {
     covs[, i] <- .make_closer_to_1(covs[, i])
@@ -355,7 +360,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
-                               stabilize, missing, moments, int, verbose, ...) {
+                               stabilize, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -367,9 +372,12 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
-                            focal = focal, treat = treat))
+  covs <- .apply_moments_int_quantile(covs,
+                                      moments = ...get("moments"),
+                                      int = ...get("int"),
+                                      quantile = ...get("quantile"),
+                                      s.weights = s.weights, focal = focal,
+                                      treat = treat)
 
   for (i in seq_col(covs)) {
     covs[, i] <- .make_closer_to_1(covs[, i])
@@ -407,7 +415,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                              "ATE" = levels(treat),
                              setdiff(levels(treat), focal))
 
-  w <- rep.int(1, length(treat))
+  w <- rep_with(1, treat)
 
   fit.list <- par.list <- make_list(groups_to_weight)
 
@@ -517,7 +525,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         Bmat <- matrix(Btreat, nrow = ncol(Xtreat),
                        dimnames = list(colnames(Xtreat), groups_to_weight))
 
-        w <- rep.int(1, length(A))
+        w <- rep_with(1, A)
 
         for (i in groups_to_weight) {
           ps_i <- .fam$linkinv(drop(Xtreat[A == i, , drop = FALSE] %*% Bmat[, i]))
@@ -530,7 +538,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         Bmat <- matrix(Btreat, nrow = ncol(Xtreat),
                        dimnames = list(colnames(Xtreat), groups_to_weight))
 
-        w <- rep.int(1, length(A))
+        w <- rep_with(1, A)
 
         for (i in groups_to_weight) {
           ps_i <- .fam$linkinv(drop(Xtreat[A == i, , drop = FALSE] %*% Bmat[, i]))
@@ -565,7 +573,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         ps <- .fam$linkinv(XB)
 
         do.call("cbind", lapply(setdiff(levels(A), focal), function(i) {
-          dw2 <- rep(0, length(A))
+          dw2 <- rep_with(0, A)
           in_fi <- A %in% c(i, focal)
           dw2[in_fi] <- .dw_dp_bin(ps[in_fi, i], as.numeric(A[in_fi] == focal), "ATT")
 

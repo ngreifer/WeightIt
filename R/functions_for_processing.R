@@ -15,7 +15,7 @@
 
   .allowable.methods <- unlist(lapply(names(.weightit_methods), function(m) {
     aliases <- .weightit_methods[[m]]$alias
-    setNames(rep(m, length(aliases)), aliases)
+    setNames(rep_with(m, aliases), aliases)
   }))
 
   unname(.allowable.methods[method])
@@ -151,7 +151,7 @@
     else .weightit_methods[[method]]$estimand
   }
 
-  if (treat.type == "multi-category") {
+  if (treat.type == "multinomial") {
     allowable_estimands <- setdiff(allowable_estimands, "ATOS")
   }
 
@@ -164,8 +164,8 @@
   toupper(estimand)
 }
 
-.check_subclass <- function(method, treat.type) {
-  if (is_not_null(method) && !is.function(method)) {
+.check_subclass <- function(subclass = NULL, method, treat.type) {
+  if (is_not_null(subclass) && is_not_null(method) && !is.function(method)) {
 
     subclass_ok <- .weightit_methods[[method]]$subclass_ok
 
@@ -176,14 +176,16 @@
   }
 }
 
-.process_moments_int_quantile <- function(moments, int, quantile = NULL, method = NULL) {
+.process_moments_int_quantile <- function(moments = NULL, int = FALSE, quantile = NULL, method = NULL, ...) {
   if (is.function(method)) {
     return(list(moments = moments, int = int, quantile = quantile))
   }
 
   if (is_null(method) || !.weightit_methods[[method]]$moments_int_ok) {
     if (is_not_null(method)) {
-      mi0 <- c(is_not_null(moments), is_not_null(int) && !isFALSE(int), is_not_null(quantile))
+      mi0 <- c(is_not_null(moments),
+               is_not_null(int) && !isFALSE(int),
+               is_not_null(quantile))
 
       if (any(mi0)) {
         .wrn(sprintf("%s not compatible with %s. Ignoring %s",
@@ -196,6 +198,9 @@
     return(list(moments = integer(), int = FALSE, quantile = list()))
   }
 
+  if (is_null(int)) {
+    int <- FALSE
+  }
   chk::chk_flag(int)
 
   if (is_not_null(quantile)) {
@@ -204,9 +209,12 @@
     }
 
     bad.q <- FALSE
-    if (is.numeric(quantile) && .vld_qu(quantile)) {
+    if (.vld_qu(quantile)) {
       if (length(quantile) == 1L || (is_not_null(names(quantile)) && all(nzchar(names(quantile))))) {
         quantile <- as.list(quantile)
+      }
+      else if (is_null(names(quantile)) && anyDuplicated(quantile) == 0L) {
+        quantile <- list(quantile)
       }
       else {
         bad.q <- TRUE
@@ -228,19 +236,21 @@
   }
 
   if (is_not_null(moments)) {
-    chk::chk_whole_number(moments)
+    chk::chk_whole_numeric(moments)
+
+    if (length(moments) > 1L && (is_null(names(moments)) || !all(nzchar(names(moments))))) {
+      .err("`moments` must be an integer or a named vector of integers")
+    }
 
     chk::chk_gte(moments,
                  if (is_null(quantile)) .weightit_methods[[method]]$moments_default
                  else 0)
 
-    if (int && moments < 1) {
-      .wrn("when `int = TRUE`, `moments` must be greater than or equal to 1. Setting `moments = 1`")
-      moments <- 1L
+    if (int && any(moments < 1)) {
+      .err("when `int = TRUE`, `moments` must be greater than or equal to 1")
     }
-    else {
-      moments <- as.integer(moments)
-    }
+
+    moments[] <- as.integer(moments)
   }
   else {
     moments <- {
@@ -248,6 +258,8 @@
       else .weightit_methods[[method]]$moments_default
     }
   }
+
+  attr(moments, "moments_default") <- .weightit_methods[[method]]$moments_default
 
   list(moments = moments, int = int, quantile = quantile)
 }
@@ -584,7 +596,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     by <- drop(by[, 1L])
   }
   else if (rlang::is_formula(by, lhs = FALSE)) {
-    t.c <- get_covs_and_treat_from_formula(by, data)
+    t.c <- get_covs_and_treat_from_formula2(by, data)
     by <- t.c[["reported.covs"]]
     if (NCOL(by) != 1L) {
       .err(sprintf("only one variable can be on the right-hand side of the formula for `%s`",
@@ -614,7 +626,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 
   by.factor <- {
-    if (is_null(by)) factor(rep.int(1L, n), levels = 1L)
+    if (is_null(by)) gl(1, n)
     else factor(by.components[[1L]], levels = sort(unique(by.components[[1L]])),
                 labels = paste(names(by.components), "=", sort(unique(by.components[[1L]]))))
   }
@@ -630,6 +642,51 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   attr(by.components, "by.factor") <- by.factor
 
   by.components
+}
+
+.check_num.formula <- function(num.formula, data, env, formula.list) {
+  if (rlang::is_formula(num.formula)) {
+    if (!rlang::is_formula(num.formula, lhs = FALSE)) {
+      .err("the argument to `num.formula` must have right hand side variables but not a response variable (e.g., ~ V1 + V2)")
+    }
+
+    rhs.vars.mentioned.lang <- attr(terms(num.formula), "variables")[-1L]
+    rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse1, character(1L))
+    rhs.vars.failed <- vapply(rhs.vars.mentioned.lang, function(v) {
+      null_or_error(try(eval(v, c(data, env)), silent = TRUE))
+    }, logical(1L))
+
+    if (any(rhs.vars.failed)) {
+      .err(sprintf("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: %s",
+                    word_list(rhs.vars.mentioned[rhs.vars.failed], and.or = FALSE)),
+           tidy = FALSE)
+    }
+  }
+  else if (is.list(num.formula)) {
+    if (length(num.formula) != length(formula.list)) {
+      .err("when supplied as a list, `num.formula` must have as many entries as `formula.list`")
+    }
+
+    if (!all_apply(num.formula, rlang::is_formula, lhs = FALSE)) {
+      .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
+    }
+
+    rhs.vars.mentioned.lang.list <- lapply(num.formula, function(nf) attr(terms(nf), "variables")[-1L])
+    rhs.vars.mentioned <- unique(unlist(lapply(rhs.vars.mentioned.lang.list,
+                                               function(r) vapply(r, deparse1, character(1L)))))
+    rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
+      null_or_error(try(eval(parse(text = v), c(data, env)), silent = TRUE))
+    }, logical(1L))
+
+    if (any(rhs.vars.failed)) {
+      .err(sprintf("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: %s",
+                    word_list(rhs.vars.mentioned[rhs.vars.failed], and.or = FALSE)),
+           tidy = FALSE)
+    }
+  }
+  else {
+    .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
+  }
 }
 
 .make_closer_to_1 <- function(x) {
@@ -751,10 +808,8 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     .err("all names of `quantile` must refer to continuous covariates")
   }
 
-  for (i in qu) {
-    if (!vld_qu(i)) {
-      .err("`quantile` must be a number between 0 and 1 or a named list thereof")
-    }
+  if (!all_apply(qu, vld_qu)) {
+    .err("`quantile` must be a number between 0 and 1 or a named list thereof")
   }
 
   if (is_not_null(focal) && is_not_null(s.weights)) {
@@ -770,6 +825,136 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     colnames(out) <- paste0(i, "_", qu[[i]])
     out
   }))
+}
+
+.apply_moments_int_quantile <- function(d, moments = integer(), int = FALSE, quantile = list(),
+                                        center = TRUE, orthogonal_poly = TRUE, s.weights = NULL,
+                                        focal = NULL, treat = NULL, const = 2000) {
+
+  if (is_null(d)) {
+    return(d)
+  }
+
+  if (!is.numeric(d)) {
+    .err("an error occurred, probably a bug")
+  }
+
+  binary.vars <- is_binary_col(d)
+
+  if (center && (int || !orthogonal_poly)) {
+    d[, !binary.vars] <- center_w(d[, !binary.vars, drop = FALSE],
+                                  s.weights)
+  }
+
+  nd <- NCOL(d)
+
+  # moments
+  default_moments <- if_null_then(attr(moments, "moments_default"), 1L)
+  poly <- setNames(rep.int(default_moments, nd),
+                   colnames(d))
+
+  if (length(moments) == 1L && (is_null(names(moments)) || !nzchar(names(moments)))) {
+    poly[] <- moments
+  }
+  else {
+    in_poly_and_moments <- intersect(names(poly), names(moments))
+    poly[in_poly_and_moments] <- moments[in_poly_and_moments]
+  }
+
+  poly[binary.vars] <- pmin(poly[binary.vars], 1L)
+
+  poly_terms <- poly_co.names <- make_list(colnames(d)[poly > 0L])
+
+  for (i in names(poly_terms)) {
+    if (poly[i] == 1L) {
+      poly_terms[[i]] <- d[,i]
+      poly_co.names[[i]] <- i
+    }
+    else {
+      poly_terms[[i]] <- stats::poly(d[, i], degree = poly[i],
+                                     raw = !orthogonal_poly, simple = TRUE)
+      poly_co.names[[i]] <- sprintf("%s%s%s",
+                                    if (orthogonal_poly) "orth_" else "",
+                                    i,
+                                    num_to_superscript(seq_len(poly[i])))
+    }
+  }
+
+  # int
+  if (int && nd > 1L) {
+    ints_to_make <- utils::combn(colnames(d), 2L, simplify = FALSE)
+
+    int_terms <- int_co.names <- make_list(length(ints_to_make))
+
+    for (i in seq_along(ints_to_make)) {
+      int_i <- d[, ints_to_make[[i]][1L]] * d[, ints_to_make[[i]][2L]]
+
+      if (!all_the_same(int_i)) {
+        int_terms[[i]] <- int_i
+        int_co.names[[i]] <- sprintf("%s * %s",
+                                     ints_to_make[[i]][1L],
+                                     ints_to_make[[i]][2L])
+      }
+    }
+  }
+  else {
+    int_terms <- int_co.names <- list()
+  }
+
+  # quantile
+  qu <- make_list(colnames(d)[!binary.vars])
+
+  if (length(quantile) == 1L && (is_null(names(quantile)) || !nzchar(names(quantile)))) {
+    qu[] <- quantile[rep.int(1L, sum(!binary.vars))]
+  }
+  else {
+    if (any(names(quantile) %in% colnames(d)[binary.vars])) {
+      .wrn("ignoring `quantile` constraints on binary and categorical variables")
+    }
+
+    in_qu_and_quantile <- intersect(names(qu), names(quantile))
+    qu[in_qu_and_quantile] <- quantile[in_qu_and_quantile]
+  }
+
+  qu <- clear_null(qu)
+
+  if (is_not_null(focal) && is_not_null(s.weights)) {
+    s.weights <- s.weights[treat == focal]
+  }
+
+  if (is_not_null(qu)) {
+    quantile_terms <- quantile_co.names <- make_list(names(qu))
+
+    for (i in names(qu)) {
+      target <- if (is_null(focal)) d[, i] else d[treat == focal, i]
+
+      quantile_terms[[i]] <- do.call("cbind", lapply(qu[[i]], function(q) {
+        plogis(const * (d[, i] - w.quantile(target, q, s.weights)))
+      }))
+
+      quantile_co.names[[i]] <- paste0(i, "_", qu[[i]])
+    }
+  }
+  else {
+    quantile_terms <- quantile_co.names <- list()
+  }
+
+  if (is_null(poly_terms) && is_null(int_terms) && is_null(quantile_terms)) {
+    return(matrix(ncol = 0L, nrow = nrow(d), dimnames = list(rownames(d), NULL)))
+  }
+
+  out <- do.call("cbind", c(poly_terms, int_terms, quantile_terms))
+  out_co.names <- c(unlist(poly_co.names), unlist(int_co.names), unlist(quantile_co.names))
+
+  # Remove single values
+  if (is_not_null(out)) {
+    colnames(out) <- out_co.names
+
+    single_value <- apply(out, 2L, all_the_same)
+    out <- out[, !single_value, drop = FALSE]
+  }
+
+  out
 }
 
 get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = NULL, treat = NULL, focal = NULL) {
@@ -1004,7 +1189,7 @@ get.s.d.denom.cont.weightit <- function(s.d.denom = NULL) {
   }
 
   for (t in unique.treat) {
-    if (length(x[treat == t]) == nsub) {
+    if (sum(treat == t) == nsub) {
       sub[treat == t] <- seq_len(nsub)
     }
   }
@@ -1124,7 +1309,7 @@ stabilize_w <- function(weights, treat) {
       else
         exp(-abs(x - mu) / b) / (2 * b)
     }
-    else if (is.character(density) && length(density) == 1L) {
+    else if (chk::vld_string(density)) {
       splitdens <- strsplit(density, "_", fixed = TRUE)[[1L]]
 
       splitdens1 <- get0(splitdens[1L], mode = "function", envir = parent.frame())
@@ -1175,7 +1360,7 @@ stabilize_w <- function(weights, treat) {
       }
 
       if ((log && !all(is.finite(dens))) ||
-          (!log && !all(dens > 0))) {
+          (!log && any(dens <= 0))) {
         .err("the input to density may not accept the full range of standardized treatment values or residuals")
       }
 
@@ -1195,7 +1380,7 @@ stabilize_w <- function(weights, treat) {
                                         subclass = NULL, stabilize = FALSE) {
 
   estimand <- toupper(estimand)
-  w <- rep.int(1, length(treat))
+  w <- rep_with(1, treat)
 
   #Assume treat is binary
   if (is_not_null(subclass)) {
@@ -1256,7 +1441,7 @@ stabilize_w <- function(weights, treat) {
                                           subclass = NULL, stabilize = FALSE) {
 
   estimand <- toupper(estimand)
-  w <- rep.int(0.0, length(treat))
+  w <- rep_with(0, treat)
 
   ps_mat <- ps
 
@@ -1440,7 +1625,7 @@ stabilize_w <- function(weights, treat) {
 .dw_dp_bin <- function(p, treat, estimand = "ATE") {
   estimand <- toupper(estimand)
 
-  dw <- rep.int(0, length(treat))
+  dw <- rep_with(0, treat)
 
   i0 <- which(treat == 0)
 
@@ -1706,7 +1891,7 @@ generalized_inverse <- function(sigma, .try = TRUE) {
   h <- abs(d * .x) + .eps * (abs(.x) < 1e-5)
 
   for (k in seq_len(r)) {
-    eps_i <- rep(0, length(.parm))
+    eps_i <- rep_with(0, .parm)
 
     for (ii in seq_along(.parm)) {
       i <- .parm[ii]
@@ -1880,11 +2065,11 @@ generalized_inverse <- function(sigma, .try = TRUE) {
 .get_glm_starting_values <- function(X, Y, w, family, offset = NULL) {
 
   if (is_null(w)) {
-    w <- rep.int(1, length(Y))
+    w <- rep_with(1, Y)
   }
 
   if (is_null(offset)) {
-    offset <- rep.int(0, length(Y))
+    offset <- rep_with(0, Y)
   }
 
   mustart <- .25 + .5 * Y

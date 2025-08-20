@@ -60,15 +60,18 @@
 #'
 #' @section Additional Arguments:
 #'
-#' `moments` and `int` are accepted. See [weightit()] for details.
-#'
 #' \describe{
 #'   \item{`base.weights`}{a vector of base weights, one for each unit. These correspond to the base weights $q$ in Hainmueller (2012). The estimated weights minimize the Kullback entropy divergence from the base weights, defined as \eqn{\sum w \log(w/q)}, subject to exact balance constraints. These can be used to supply previously estimated weights so that the newly estimated weights retain the some of the properties of the original weights while ensuring the balance constraints are met. Sampling weights should not be passed to `base.weights` but can be included in a `weightit()` call that includes `s.weights`.}
 #'   \item{`reltol`}{the relative tolerance for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is `1e-10`.}
 #'   \item{`maxit`}{the maximum number of iterations for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is 1000 for binary and multi-category treatments and 10000 for continuous and longitudinal treatments.}
 #'   \item{`solver`}{the solver to use to estimate the parameters. Allowable options include `"multiroot"` to use \pkgfun{rootSolve}{multiroot} and `"optim"` to use [stats::optim()]. `"multiroot"` is the default when \pkg{rootSolve} is installed, as it tends to be much faster and more accurate; otherwise, `"optim"` is the default and requires no dependencies. Regardless of `solver`, the output of `optim()` is returned when `include.obj = TRUE` (see below).}
-#'   \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or an unnamed list of length 1 (e.g., `list(c(.25, .5, .75))`) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., `c(x1 = .5, x2 = .75)` to request one quantile for each covariate. Only allowed with binary and multi-category treatments.}
-#'   \item{`d.moments`}{with continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting `d.moments = 3` ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. `d.moments` should be greater than or equal to `moments` and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2021) recommend setting `d.moments = 3`, even if `moments` is less than 3. This argument corresponds to the tuning parameters \eqn{r} and \eqn{s} in Vegetabile et al. (2021) (which here are set to be equal). Ignored for binary and multi-category treatments.}
+#'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.
+#'     }
+#'     \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.
+#'     }
+#'     \item{`quantile`}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting `quantile = list(x1 = c(.25, .5. , .75))` ensures the 25th, 50th, and 75th percentiles of `x1` in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.
+#'     }
+#'   \item{`d.moments`}{`integer`; with continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting `d.moments = 3` ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. `d.moments` should be greater than or equal to `moments` and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2021) recommend setting `d.moments = 3`, even if `moments` is less than 3. This argument corresponds to the tuning parameters \eqn{r} and \eqn{s} in Vegetabile et al. (2021) (which here are set to be equal). Ignored for binary and multi-category treatments.}
 #' }
 #'
 #' The `stabilize` argument is ignored; in the past it would reduce the
@@ -166,7 +169,7 @@
 NULL
 
 weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
-                          stabilize, missing, moments, int, verbose, ...) {
+                          stabilize, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
@@ -178,9 +181,12 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- cbind(.int_poly_f(covs, poly = moments, int = int, center = TRUE),
-                .quantile_f(covs, qu = ...get("quantile"), s.weights = s.weights,
-                            focal = focal, treat = treat))
+  covs <- .apply_moments_int_quantile(covs,
+                                      moments = ...get("moments"),
+                                      int = ...get("int"),
+                                      quantile = ...get("quantile"),
+                                      s.weights = s.weights, focal = focal,
+                                      treat = treat)
 
   for (i in seq_col(covs)) {
     covs[, i] <- .make_closer_to_1(covs[, i])
@@ -191,7 +197,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
   bw <- if_null_then(...get("base.weights"),
                      ...get("base.weight"),
-                     rep.int(1, length(treat)))
+                     rep_with(1, treat))
 
   if (!is.numeric(bw) || length(bw) != length(treat)) {
     .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
@@ -203,13 +209,13 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   maxit <- ...get("maxit", 1e4L)
   chk::chk_count(maxit)
 
-  solver <- ...get("solver", NULL)
+  solver <- ...get("solver")
   if (is_null(solver)) {
-    if (requireNamespace("rootSolve", quietly = TRUE)) {
-      solver <- "multiroot"
-    }
-    else {
-      solver <- "optim"
+    solver <- {
+      if (requireNamespace("rootSolve", quietly = TRUE))
+        "multiroot"
+      else
+        "optim"
     }
   }
   else {
@@ -288,7 +294,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
          opt.out = opt.out)
   }
 
-  w <- rep.int(1, length(treat))
+  w <- rep_with(1, treat)
   sw0 <- check_if_zero(s.weights)
 
   if (estimand == "ATE") {
@@ -342,7 +348,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
       }), groups_to_weight)
 
       sw0 <- check_if_zero(s.weights)
-      w <- rep.int(1, length(A))
+      w <- rep_with(1, A)
 
       for (i in groups_to_weight) {
         in_i <- which(A == i & !sw0)
@@ -411,7 +417,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
 weightit2ebal.multi <- weightit2ebal
 
-weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments, int, verbose, ...) {
+weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   s.weights <- s.weights[subset]
@@ -424,7 +430,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
 
   bw <- if_null_then(...get("base.weights"),
                      ...get("base.weight"),
-                     rep.int(1, length(treat)))
+                     rep_with(1, treat))
 
   if (!is.numeric(bw) || length(bw) != length(treat)) {
     .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
@@ -460,25 +466,29 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
     rlang::check_installed("rootSolve")
   }
 
-  d.moments <- max(...get("d.moments", 1L), moments)
+  moments <- ...get("moments", 1L)
+
+  d.moments <- ...get("d.moments", 1L)
   chk::chk_count(d.moments)
 
   treat <- .make_closer_to_1(treat)
 
   t.mat <- matrix(treat, ncol = 1L, dimnames = list(NULL, "treat"))
-  t.mat <- .int_poly_f(t.mat, poly = d.moments)
+  t.mat <- .apply_moments_int_quantile(t.mat, moments = d.moments)
 
-  t.mat <- center(t.mat, cobalt::col_w_mean(t.mat, s.weights))
+  t.mat <- center_w(t.mat, s.weights)
 
-  bal.covs <- .int_poly_f(covs, poly = moments, int = int, center = TRUE)
+  bal.covs <- .apply_moments_int_quantile(covs,
+                                          moments = moments,
+                                          int = ...get("int"))
 
   for (i in seq_col(bal.covs)) {
     bal.covs[, i] <- .make_closer_to_1(bal.covs[, i])
   }
 
-  bal.covs <- center(bal.covs, cobalt::col_w_mean(bal.covs, s.weights))
+  bal.covs <- center_w(bal.covs, s.weights)
 
-  if (d.moments == moments) {
+  if (all(d.moments <= moments)) {
     C <- cbind(t.mat,
                bal.covs,
                t.mat[, 1L] * bal.covs)
@@ -488,13 +498,15 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
                      colnames(bal.covs))
   }
   else {
-    d.covs <- .int_poly_f(covs, poly = d.moments, int = int, center = TRUE)
+    d.covs <- .apply_moments_int_quantile(covs,
+                                          moments = pmax(d.moments, moments),
+                                          int = ...get("int"))
 
     for (i in seq_col(d.covs)) {
       d.covs[, i] <- .make_closer_to_1(d.covs[, i])
     }
 
-    d.covs <- center(d.covs, cobalt::col_w_mean(d.covs, s.weights))
+    d.covs <- center_w(d.covs, s.weights)
 
     C <- cbind(t.mat,
                d.covs,
@@ -573,7 +585,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
          opt.out = opt.out)
   }
 
-  w <- rep.int(1, length(treat))
+  w <- rep_with(1, treat)
   sw0 <- check_if_zero(s.weights)
 
   verbosely({
@@ -593,7 +605,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, moments,
     },
     wfun = function(Btreat, Xtreat, A) {
       sw0 <- check_if_zero(s.weights)
-      w <- rep.int(1, length(A))
+      w <- rep_with(1, A)
 
       C <- Xtreat[!sw0, , drop = FALSE]
       n <- nrow(C)

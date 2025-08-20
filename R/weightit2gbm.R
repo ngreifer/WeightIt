@@ -73,22 +73,24 @@
 #'   \describe{
 #'     \item{`criterion`}{A string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. In addition, to optimize the cross-validation error instead of balance, `criterion` can be set as `"cv{#}`", where `{#}` is replaced by a number representing the number of cross-validation folds used (e.g., `"cv5"` for 5-fold cross-validation). For binary and multi-category treatments, the default is `"smd.mean"`, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is `"p.mean"`, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 #'     }
-#'       \item{`trim.at`}{A number supplied to `at` in [trim()] which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
-#'       }
-#'       \item{`distribution`}{A string with the distribution used in the loss function of the boosted model. This is supplied to the `distribution` argument in \pkgfun{gbm}{gbm.fit}. For binary treatments, `"bernoulli"` and `"adaboost"` are available, with `"bernoulli"` the default. For multi-category treatments, only `"multinomial"` is allowed. For continuous treatments `"gaussian"`, `"laplace"`, and `"tdist"` are available, with `"gaussian"` the default. This argument is tunable.
-#'       }
-#'       \item{`n.trees`}{The maximum number of trees used. This is passed onto the `n.trees` argument in `gbm.fit()`. The default is 10000 for binary and multi-category treatments and 20000 for continuous treatments.
-#'       }
-#'       \item{`start.tree`}{The tree at which to start balance checking. If you know the best balance isn't in the first 100 trees, for example, you can set `start.tree = 101` so that balance statistics are not computed on the first 100 trees. This can save some time since balance checking takes up the bulk of the run time for some balance-based stopping methods, and is especially useful when running the same model adding more and more trees. The default is 1, i.e., to start from the very first tree in assessing balance.
-#'       }
-#'       \item{`interaction.depth`}{The depth of the trees. This is passed onto the `interaction.depth` argument in `gbm.fit()`. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multi-category treatments and 4 for continuous treatments. This argument is tunable.
-#'       }
-#'       \item{`shrinkage`}{The shrinkage parameter applied to the trees. This is passed onto the `shrinkage` argument in `gbm.fit()`. The default is .01 for binary and multi-category treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
-#'       }
-#'       \item{`bag.fraction`}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the `bag.fraction` argument in `gbm.fit()`. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using [set.seed()] to ensure replicability of results.
-#'        }
-#'        \item{`use.offset`}{`logical`; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If `TRUE`, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the `offset` argument of `gbm.fit()`. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over `method = "glm"` with respect to `criterion`. Default is `FALSE` to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.
-#'        }
+#'     \item{`trim.at`}{A number supplied to `at` in [trim()] which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
+#'     }
+#'     \item{`subclass`}{`integer`; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If `NULL`, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Only allowed for binary and multi-category treatments. See [get_w_from_ps()] for details and references.
+#'     }
+#'     \item{`distribution`}{A string with the distribution used in the loss function of the boosted model. This is supplied to the `distribution` argument in \pkgfun{gbm}{gbm.fit}. For binary treatments, `"bernoulli"` and `"adaboost"` are available, with `"bernoulli"` the default. For multi-category treatments, only `"multinomial"` is allowed. For continuous treatments `"gaussian"`, `"laplace"`, and `"tdist"` are available, with `"gaussian"` the default. This argument is tunable.
+#'     }
+#'     \item{`n.trees`}{The maximum number of trees used. This is passed onto the `n.trees` argument in `gbm.fit()`. The default is 10000 for binary and multi-category treatments and 20000 for continuous treatments.
+#'     }
+#'     \item{`start.tree`}{The tree at which to start balance checking. If you know the best balance isn't in the first 100 trees, for example, you can set `start.tree = 101` so that balance statistics are not computed on the first 100 trees. This can save some time since balance checking takes up the bulk of the run time for some balance-based stopping methods, and is especially useful when running the same model adding more and more trees. The default is 1, i.e., to start from the very first tree in assessing balance.
+#'     }
+#'     \item{`interaction.depth`}{The depth of the trees. This is passed onto the `interaction.depth` argument in `gbm.fit()`. Higher values indicate better ability to capture nonlinear and nonadditive relationships. The default is 3 for binary and multi-category treatments and 4 for continuous treatments. This argument is tunable.
+#'     }
+#'     \item{`shrinkage`}{The shrinkage parameter applied to the trees. This is passed onto the `shrinkage` argument in `gbm.fit()`. The default is .01 for binary and multi-category treatments and .0005 for continuous treatments. The lower this value is, the more trees one may have to include to reach the optimum. This argument is tunable.
+#'     }
+#'     \item{`bag.fraction`}{The fraction of the units randomly selected to propose the next tree in the expansion. This is passed onto the `bag.fraction` argument in `gbm.fit()`. The default is 1, but smaller values should be tried. For values less then 1, subsequent runs with the same parameters will yield different results due to random sampling; be sure to seed the seed using [set.seed()] to ensure replicability of results.
+#'     }
+#'     \item{`use.offset`}{`logical`; whether to use the linear predictor resulting from a generalized linear model as an offset to the GBM model. If `TRUE`, this fits a logistic regression model (for binary treatments) or a linear regression model (for continuous treatments) and supplies the linear predict to the `offset` argument of `gbm.fit()`. This often improves performance generally but especially when the true propensity score model is well approximated by a GLM, and this yields uniformly superior performance over `method = "glm"` with respect to `criterion`. Default is `FALSE` to omit the offset. Only allowed for binary and continuous treatments. This argument is tunable.
+#'     }
 #' }
 #'
 #'   All other arguments take on the defaults of those in \pkgfun{gbm}{gbm.fit},
@@ -282,7 +284,7 @@
 NULL
 
 weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
-                         stabilize, subclass, missing, verbose, ...) {
+                         stabilize, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -312,7 +314,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     chk::chk_string(criterion)
   }
 
-  available.criteria <- cobalt::available.stats(switch(treat.type, "multi-category" = "multi", treat.type))
+  available.criteria <- cobalt::available.stats(switch(treat.type, "multinomial" = "multi", treat.type))
 
   if (startsWith(criterion, "es.")) {
     subbed.crit <- sub("es.", "smd.", criterion, fixed = TRUE)
@@ -420,7 +422,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   chk::chk_not_any_na(use.offset)
 
   if (any(use.offset)) {
-    if (treat.type == "multi-category") {
+    if (treat.type == "multinomial") {
       .err("`use.offset` cannot be used with multi-category treatments")
     }
 
@@ -485,7 +487,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       }
 
       w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
-                                         focal = focal, stabilize = stabilize, subclass = subclass)
+                                         focal = focal, stabilize = stabilize,
+                                         subclass = ...get("subclass"))
       if (trim.at != 0) {
         w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
       }
@@ -518,7 +521,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         }
 
         w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
-                                           focal = focal, stabilize = stabilize, subclass = subclass)
+                                           focal = focal, stabilize = stabilize,
+                                           subclass = ...get("subclass"))
         if (trim.at != 0) {
           w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
         }
@@ -588,7 +592,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
         best.w <- drop(.get_w_from_ps_internal_array(best.ps, treat = treat, estimand = estimand,
                                                      focal = focal, stabilize = stabilize,
-                                                     subclass = subclass))
+                                                     subclass = ...get("subclass")))
 
         current.best.loss <- best.loss
         best.tune.index <- i
@@ -599,13 +603,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         info <- list(best.tree = best.tree,
                      tree.val = tree.val)
 
-        if (treat.type == "multi-category") {
+        if (treat.type == "multinomial") {
           best.ps <- NULL
         }
       }
     }
 
-    if (treat.type == "multi-category") {
+    if (treat.type == "multinomial") {
       ps <- NULL
     }
   }
@@ -621,7 +625,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 weightit2gbm.multi <- weightit2gbm
 
 weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
-                              stabilize, subclass, missing, verbose, ...) {
+                              stabilize, missing, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
