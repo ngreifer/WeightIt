@@ -159,7 +159,7 @@ summary.glm_weightit <- function(object,
 
     if (is_null(covmat)) {
       ci <- FALSE
-      s.err <- rep.int(NA_real_, length(coef.p))
+      s.err <- rep_with(NA_real_, coef.p)
       pvalue <- tvalue <- s.err
     }
     else {
@@ -250,7 +250,7 @@ summary.multinom_weightit <- function(object,
 
     if (is_null(covmat)) {
       ci <- FALSE
-      s.err <- rep.int(NA_real_, length(coef.p))
+      s.err <- rep_with(NA_real_, coef.p)
       pvalue <- tvalue <- s.err
     }
     else {
@@ -365,7 +365,7 @@ summary.coxph_weightit <- function(object,
 
     if (is_null(covmat)) {
       ci <- FALSE
-      s.err <- rep.int(NA_real_, length(coef.p))
+      s.err <- rep_with(NA_real_, coef.p)
       pvalue <- tvalue <- s.err
     }
     else {
@@ -378,10 +378,10 @@ summary.coxph_weightit <- function(object,
     dimnames(coef.table) <- list(names(coef.p), dn)
   }
   else {
-    coef.table <- matrix(NA_real_, 0L, 4L)
-    dimnames(coef.table) <- list(NULL, c("Estimate", "Std. Error",
-                                         "z value", "Pr(>|z|)"))
-    covmat <- matrix(NA_real_, 0L, 0L)
+    coef.table <- matrix(NA_real_, nrow = 0L, ncol = 4L)
+    colnames(coef.table) <- c("Estimate", "Std. Error", "z value", "Pr(>|z|)")
+
+    covmat <- matrix(NA_real_, nrow = 0L, ncol = 0L)
   }
 
   transformed_coefs <- transform(coef.table[, "Estimate"])
@@ -636,14 +636,14 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   }
 
   if (is_null(W)) {
-    W <- rep.int(1, length(Y))
+    W <- rep_with(1, Y)
   }
 
   if (is_null(SW)) {
-    SW <- rep.int(1, length(Y))
+    SW <- rep_with(1, Y)
   }
 
-  offset <- if_null_then(x[["offset"]], rep.int(0, length(Y)))
+  offset <- if_null_then(x[["offset"]], rep_with(0, Y))
 
   if (any(aliased)) {
     if (is_not_null(attr(x[["qr"]][["qr"]], "aliased"))) {
@@ -753,7 +753,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
     if (all(lengths(dw_dBtreat.list) > 0L)) {
       w.list <- c(lapply(seq_along(btreat.list), function(i) {
         wfun.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
-      }), list(rep(1, length(A.list[[1L]]))))
+      }), list(rep_with(1, A.list[[1L]])))
 
       dw_dBtreat <- do.call("cbind", lapply(seq_along(btreat.list), function(i) {
         dw_dBtreat.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW) *
@@ -822,14 +822,14 @@ bread.glm_weightit <- function(x, ...) {
     }
 
     if (is_null(W)) {
-      W <- rep.int(1, length(Y))
+      W <- rep_with(1, Y)
     }
 
     if (is_null(SW)) {
-      SW <- rep.int(1, length(Y))
+      SW <- rep_with(1, Y)
     }
 
-    offset <- if_null_then(x[["offset"]], rep.int(0, length(Y)))
+    offset <- if_null_then(x[["offset"]], rep_with(0, Y))
 
     if (any(aliased)) {
       if (is_not_null(attr(x[["qr"]][["qr"]], "aliased"))) {
@@ -850,7 +850,7 @@ bread.glm_weightit <- function(x, ...) {
     }, .x = bout)
   }
 
-  A1 <- -.solve_hessian(H) * nobs(x)
+  A1 <- -nobs(x) * .solve_hessian(H)
 
   colnames(A1) <- rownames(A1) <- names(aliased)[!aliased]
 

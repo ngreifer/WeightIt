@@ -175,7 +175,9 @@
 
   # Psi function and gradient using natural parameterization
   psi <- function(B, X, y, weights, offset = NULL) {
-    if (is_null(offset)) offset <- rep.int(0, length(y))
+    if (is_null(offset)) {
+      offset <- rep_with(0, y)
+    }
 
     if (no_x) {
       a <- B
@@ -248,7 +250,7 @@
   # Get predicted probabilities for all units for all categories,
   # natural parameterization of `a`
   get_pp <- function(B, X, offset = NULL) {
-    if (length(offset) == 0L) {
+    if (is_null(offset)) {
       offset <- rep.int(0, n)
     }
 
@@ -437,7 +439,9 @@
 
   # Psi function and gradient using natural parameterization
   psi <- function(B, X, y, weights, offset = NULL) {
-    if (is_null(offset)) offset <- rep.int(0, length(y))
+    if (is_null(offset)) {
+      offset <- rep_with(0, y)
+    }
 
     if (no_x) {
       a <- B

@@ -73,7 +73,7 @@ calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = 
   method <- match_arg(method, c("platt", "isoreg"))
 
   s.weights <- .process.s.weights(s.weights, data)
-  if (is_null(s.weights)) s.weights <- rep.int(1, length(x))
+  if (is_null(s.weights)) s.weights <- rep_with(1, x)
 
   if (method == "platt") {
     p <- glm.fit(cbind(1, x), treat, weights = s.weights,

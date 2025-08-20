@@ -23,7 +23,7 @@ as.treat <- function(x, process = NULL) {
     x <- assign_treat_type(x)
     treat.type <- get_treat_type(x)
 
-    if (treat.type == "multi-category") {
+    if (treat.type == "multinomial") {
       x <- assign_treat_type(factor(x))
     }
   }

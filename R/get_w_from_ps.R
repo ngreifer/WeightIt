@@ -22,7 +22,7 @@
 #'   matters when `treat` has values other than 0 and 1 and when `ps` is given
 #'   as a vector or an unnamed single-column matrix or data frame.
 #' @param subclass `numeric`; the number of subclasses to use when computing
-#'   weights using marginal mean weighting through stratification (also known as
+#'   weights using marginal mean weighting through stratification (MMWS; also known as
 #'   fine stratification). If `NULL`, standard inverse probability weights (and
 #'   their extensions) will be computed; if a number greater than 1, subclasses
 #'   will be formed and weights will be computed based on subclass membership.
@@ -281,7 +281,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     min_ind <- max.col(-ps_mat, ties.method = "first")
     no_match <- which(ps_mat[cbind(seq_len(n), treat)] != ps_mat[cbind(seq_len(n), min_ind)])
 
-    if (length(no_match) > 0L) {
+    if (is_not_null(no_match)) {
       w[no_match] <- ps_mat[cbind(no_match, min_ind[no_match])] /
         ps_mat[cbind(no_match, treat[no_match])]
     }
@@ -386,7 +386,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     }
 
   }
-  else if (treat.type == "multi-category") {
+  else if (treat.type == "multinomial") {
     if (is.matrix(ps)) {
       if (!is.numeric(ps)) {
         .err("`ps` must be numeric when supplied as a matrix")

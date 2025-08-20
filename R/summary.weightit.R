@@ -97,8 +97,7 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     nn <- make_df("Total", c("Unweighted", "Weighted"))
-    nn["Unweighted", ] <- ESS(sw)
-    nn["Weighted", ] <- ESS(w)
+    nn[["Total"]] <- c(ESS(sw), ESS(w))
   }
   else if (treat.type == "binary" && !chk::vld_character_or_factor(t)) {
     treated <- get_treated_level(t, object$estimand, object$focal)
@@ -123,10 +122,8 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
     out$weight.mean <- if (stabilized) mean_fast(w) else NULL
 
     nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
-    nn["Unweighted", ] <- c(ESS(sw[t0]),
-                            ESS(sw[t1]))
-    nn["Weighted", ] <- c(ESS(w[t0]),
-                          ESS(w[t1]))
+    nn[["Control"]] <- c(ESS(sw[t0]), ESS(w[t0]))
+    nn[["Treated"]] <- c(ESS(sw[t1]), ESS(w[t1]))
   }
   else {
     t <- as.factor(t)
@@ -145,8 +142,7 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
 
     nn <- make_df(levels(t), c("Unweighted", "Weighted"))
     for (i in levels(t)) {
-      nn["Unweighted", i] <- ESS(sw[t == i])
-      nn["Weighted", i] <- ESS(w[t == i])
+      nn[[i]] <- c(ESS(sw[t == i]), ESS(w[t == i]))
     }
   }
 
@@ -172,9 +168,9 @@ print.summary.weightit <- function(x, ...) {
   })
   df <- setNames(data.frame(unlist(lapply(names(x$weight.top), function(x) c(" ", x))),
                             matrix(unlist(lapply(x$weight.top, function(x) {
-                              c(names(x), rep.int("", top - length(x)), round(x, 4L), rep.int("", top - length(x)))
+                              c(names(x), character(top - length(x)), round(x, 4L), character(top - length(x)))
                             })), byrow = TRUE, nrow = 2L * length(x$weight.top))),
-                 rep.int("", 1L + top))
+                 character(1L + top))
   cat0("\n- ", italic(sprintf("Units with the %s most extreme weights%s",
                               top,
                               ngettext(length(x$weight.top), "", " by group"))),
@@ -233,11 +229,13 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
       theme_bw()
   }
   else {
-    d <- data.frame(w, t = factor(t))
+    d <- data.frame(w, t)
 
     if (is_not_null(focal)) {
       d <- d[t != focal, , drop = FALSE]
     }
+
+    d$t <- factor(d$t)
 
     levels(d$t) <- sprintf("Treat = %s", levels(d$t))
     w_means <- aggregate(w ~ t, data = d, FUN = mean)
@@ -270,7 +268,7 @@ summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, ...)
   out.list <- make_list(names(object$treat.list))
 
   sw <- {
-    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1.0, nobs(object))
+    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, nobs(object))
     else object$s.weights
   }
 
@@ -310,7 +308,7 @@ print.summary.weightitMSM <- function(x, ...) {
 #' @exportS3Method plot summary.weightitMSM
 #' @rdname summary.weightit
 plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1, ...) {
-  if (!is.numeric(time) || length(time) != 1L || time %nin% seq_along(x)) {
+  if (!chk::vld_count(time) || time %nin% seq_along(x)) {
     .err("`time` must be a number corresponding to the time point for which to display the distribution of weights")
   }
 

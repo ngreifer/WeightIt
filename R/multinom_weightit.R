@@ -41,7 +41,9 @@
   x_ <- x[, !aliased_X, drop = FALSE]
 
   get_pp <- function(B, X, offset = NULL) {
-    if (length(offset) == 0L) offset <- 0
+    if (is_null(offset)) {
+      offset <- 0
+    }
 
     qq <- exp(offset + X %*% matrix(B, nrow = ncol(X)))
 
@@ -81,9 +83,9 @@
   }
 
   m_control <- list(fnscale = -1, #maximize likelihood; optim() minimizes by default
-                  trace = 0,
-                  maxit = 1e3L,
-                  reltol = 1e-12)
+                    trace = 0,
+                    maxit = 1e3L,
+                    reltol = 1e-12)
 
   control <- utils::modifyList(m_control, control)
 
@@ -189,8 +191,8 @@
 
   offset <- as.vector(model.offset(mf))
   if (is_not_null(offset) && length(offset) != NROW(Y)) {
-      .err(gettextf("number of offsets is %d; should equal %d (number of observations)",
-                    length(offset), NROW(Y)), domain = NA)
+    .err(gettextf("number of offsets is %d; should equal %d (number of observations)",
+                  length(offset), NROW(Y)), domain = NA)
   }
 
   fit <- eval(call(".multinom_weightit.fit",
@@ -222,7 +224,7 @@
   }
 
   if (is_null(weights)) {
-    weights <- rep.int(1, length(y))
+    weights <- rep_with(1, y)
   }
 
   K <- nlevels(y) - 1L

@@ -173,7 +173,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   t.c <- terms(formula) |>
     delete.response() |>
-    get_covs_and_treat_from_formula(combined.data)
+    get_covs_and_treat_from_formula2(combined.data)
 
   if (is_null(t.c[["reported.covs"]])) {
     .err("no covariates were found")
@@ -223,7 +223,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
                                                                abs = TRUE, s.weights = s.weights[moderator.factor == g],
                                                                bin.vars = bin.vars)))
       }
-      else if (treat.type == "multi-category") {
+      else if (treat.type == "multinomial") {
         if (is_not_null(focal)) {
           bin.treat <- as.numeric(treat == focal)
           s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
@@ -329,7 +329,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
                                                                abs = TRUE, s.weights = s.weights[moderator.factor == g],
                                                                bin.vars = bin.vars)))
       }
-      else if (treat.type == "multi-category") {
+      else if (treat.type == "multinomial") {
         if (is_not_null(focal)) {
           bin.treat <- as.numeric(treat == focal)
           s.d.denom <- switch(estimand, ATT = "treated", ATC = "control", "all")
@@ -464,7 +464,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   }
 
   out <- obj
-  out[["covs"]] <- t.c[["reported.covs"]]
+  out[["covs"]] <- t.c[["simple.covs"]]
   out[["weights"]] <- weights
   out[["ps"]] <- ps
   out[["moderator"]] <- processed.moderator
@@ -485,7 +485,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 summary.weightit.sbps <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
 
   sw_ <- {
-    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, length(object$weights))
+    if (ignore.s.weights || is_null(object$s.weights)) rep_with(1, object$weights)
     else object$s.weights
   }
   w_ <- object$weights * sw_
@@ -548,7 +548,7 @@ summary.weightit.sbps <- function(object, top = 5L, ignore.s.weights = FALSE, ..
       nn["Weighted", ] <- c(ESS(w[t == 0]),
                             ESS(w[t == 1]))
     }
-    else if (treat.type == "multi-category") {
+    else if (treat.type == "multinomial") {
       out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
                                                                    max(w[w > 0 & t == x]))),
                                    levels(t))
@@ -605,11 +605,11 @@ print.summary.weightit.sbps <- function(x, ...) {
     print.data.frame(round_df_char(text_box_plot(x[[g]]$weight.range, 28L), 4L), ...)
     df <- setNames(data.frame(unlist(lapply(names(x[[g]]$weight.top), function(j) c(" ", j))),
                               matrix(unlist(lapply(x[[g]]$weight.top, function(j) {
-                                c(names(j), rep.int("", top - length(j)),
-                                  round(j, 4L), rep.int("", top - length(j)))
+                                c(names(j), character(top - length(j)),
+                                  round(j, 4L), character(top - length(j)))
                               })),
                               byrow = TRUE, nrow = 2L * length(x[[g]]$weight.top))),
-                   rep.int("", 1L + top))
+                   character(1L + top))
     cat(sprintf("\n- Units with %s greatest weights by group:\n", top))
     print.data.frame(df, row.names = FALSE)
     cat("\n")

@@ -29,7 +29,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 
   if (method == "mahalanobis") {
 
-    if (is.null(var)) {
+    if (is_null(var)) {
       X <- scale(X)
       #NOTE: optmatch and Rubin (1980) use pooled within-group covariance matrix
       var <- {

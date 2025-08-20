@@ -641,14 +641,14 @@
   }
 
   if (is_null(W)) {
-    W <- rep.int(1, length(Y))
+    W <- rep_with(1, Y)
   }
 
   if (is_null(SW)) {
-    SW <- rep.int(1, length(Y))
+    SW <- rep_with(1, Y)
   }
 
-  offset <- if_null_then(fit[["offset"]], rep.int(0, length(Y)))
+  offset <- if_null_then(fit[["offset"]], rep_with(0, Y))
 
   if (any(aliased)) {
     if (is_not_null(attr(fit[["qr"]][["qr"]], "aliased"))) {
@@ -964,7 +964,7 @@
       if (all(lengths(dw_dBtreat.list) > 0L)) {
         w.list <- c(lapply(seq_along(btreat.list), function(i) {
           wfun.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
-        }), list(rep(1, length(A.list[[1L]]))))
+        }), list(rep_with(1, A.list[[1L]])))
 
         dw_dBtreat <- do.call("cbind", lapply(seq_along(btreat.list), function(i) {
           dw_dBtreat.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]], SW) *
