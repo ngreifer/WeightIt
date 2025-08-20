@@ -32,8 +32,9 @@ pre code {
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 options(width = 200, digits= 4)
 
-me_ok <- requireNamespace("marginaleffects", quietly = TRUE) && !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
-me_ok_new <- me_ok && utils::packageVersion("marginaleffects") > "0.25.0.1"
+me_ok <- requireNamespace("marginaleffects", quietly = TRUE) &&
+  !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false"))) &&
+  utils::packageVersion("marginaleffects") > "0.25.0.1"
 su_ok <- requireNamespace("survival", quietly = TRUE)
 ```
 
@@ -398,7 +399,7 @@ W
 
 Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model and perform weighted g-computation. We use `avg_predictions()` first to compute the expected potential outcome under each treatment for the focal group, and the use `hypotheses()` to test all pairwise comparisons.
 
-```{r, eval=me_ok_new}
+```{r, eval=me_ok}
 #Fit the outcome model
 fit <- lm_weightit(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 + 
                                  X6 + X7 + X8 + X9),
@@ -533,7 +534,7 @@ p
 
 We can compare individual predictions using `marginaleffects::hypotheses()`. For example, to compare all treatment histories to just the first treatment history (i.e., in which all units are untreated for all time periods), we can run the following:
 
-```{r, eval = me_ok_new}
+```{r, eval = me_ok}
 hypotheses(p, ~reference)
 ```
 
@@ -577,7 +578,7 @@ a
 
 We can see that the subgroup mean differences differ from each other, and we can formally test for moderation using `hypotheses()`:
 
-```{r, eval = me_ok_new}
+```{r, eval = me_ok}
 hypotheses(a, ~pairwise)
 ```
 

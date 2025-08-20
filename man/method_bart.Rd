@@ -120,7 +120,17 @@ or \code{weightitMSM()}, with the following exceptions:
 \item \code{sampleronly} is always set to \code{FALSE}
 }
 
-For continuous treatments only, the following arguments may be supplied:
+For binary and multi-category treatments, the following arguments may be supplied:
+\describe{
+\item{\code{subclass}}{\code{integer}; the number of subclasses to use for computing
+weights using marginal mean weighting through stratification (MMWS). If \code{NULL},
+standard inverse probability weights (and their extensions) will be
+computed; if a number greater than 1, subclasses will be formed and weights
+will be computed based on subclass membership. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for
+details and references.}
+}
+
+For continuous treatments, the following arguments may be supplied:
 \describe{
 \item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 

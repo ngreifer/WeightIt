@@ -14,9 +14,6 @@ weightit.fit(
   focal = NULL,
   stabilize = FALSE,
   ps = NULL,
-  moments = NULL,
-  int = FALSE,
-  subclass = NULL,
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
@@ -51,8 +48,7 @@ method and what literature to read to interpret these estimands.}
 consider the "treated" or "control" group. This group will not be weighted,
 and the other groups will be weighted to resemble the focal group. If
 specified, \code{estimand} will automatically be set to \code{"ATT"} (with a warning
-if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and
-\code{focal}} in Details at \code{\link[=weightit]{weightit()}}.}
+if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}}.}
 
 \item{stabilize}{\code{logical}; whether or not to stabilize the weights. For the
 methods that involve estimating propensity scores, this involves
@@ -62,9 +58,6 @@ treatment group. Default is \code{FALSE}. Note this differs from its use with
 
 \item{ps}{a vector of propensity scores. If specified, \code{method} will be
 ignored and set to \code{"glm"}.}
-
-\item{moments, int, subclass}{arguments to customize the weight estimation. See
-\code{\link[=weightit]{weightit()}} for details.}
 
 \item{missing}{\code{character}; how missing data should be handled. The options
 depend on the \code{method} used. If \code{NULL}, \code{covs} will be checked for \code{NA}
@@ -86,12 +79,12 @@ control aspects of fitting that are not covered by the above arguments.}
 }
 \value{
 A \code{weightit.fit} object with the following elements:
+
 \item{weights}{The estimated weights, one for each unit.}
 \item{treat}{The values of the treatment variable.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
-\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
-returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined.}
+\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined.}
 \item{s.weights}{The provided sampling weights.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{fit.obj}{When \code{include.obj = TRUE}, the fit object.}
@@ -139,7 +132,6 @@ object is much smaller than a \code{weightit} object because the covariates are
 not returned alongside the weights.
 }
 \examples{
-
 library("cobalt")
 data("lalonde", package = "cobalt")
 

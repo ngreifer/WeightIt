@@ -124,6 +124,8 @@ find the optimal solutions. This can occur when \code{moments} or \code{int} are
 specified. \code{max_iter} should be increased, and setting \code{verbose = TRUE}
 allows you to monitor the process and examine if the optimization is
 approaching convergence.
+
+As of version 1.5.0, \code{polish} is now set to \code{TRUE} by default. This should yield slightly improved solutions but may be a little slower.
 }
 \section{Additional Arguments}{
 
@@ -133,11 +135,15 @@ The following following additional arguments can be specified:
 \describe{
 \item{\code{dist.mat}}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include \code{"scaled_euclidean"} for the Euclidean (L2) distance on the scaled covariates (the default), \code{"mahalanobis"} for the Mahalanobis distance, and \code{"euclidean"} for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to \code{\link[=dist]{dist()}}.}
 \item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.}
+\item{\code{moments}}{\code{integer}; the highest power of each covariate to be balanced. For example, if \code{moments = 3}, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., \code{moments = c(x1 = 2, x2 = 4)}). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
+\item{\code{int}}{\code{logical}; whether first-order interactions of the covariates are to be balanced. Default is \code{FALSE}.}
 }
+
 For binary and multi-category treatments, the following additional arguments can be specified:
 \describe{
 \item{\code{improved}}{\code{logical}; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when \code{estimand = "ATE"}. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is \code{TRUE}; set to \code{FALSE} to use the standard energy balancing weights instead (not recommended).}
-\item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate.}
+\item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or a vector (e.g., \code{c(.25, .5, .75)}) to request the same quantile(s) for all continuous covariates.
+}
 }
 
 For continuous treatments, the following additional arguments can be specified:

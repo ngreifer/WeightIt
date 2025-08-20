@@ -38,7 +38,7 @@ as.weightitMSM(x, ...)
 \item{x}{required; a \code{numeric} vector of weights, one for each unit, or a
 \code{weightit.fit} object from \code{\link[=weightit.fit]{weightit.fit()}}.}
 
-\item{...}{additional arguments. These must be named. They will be included
+\item{\dots}{additional arguments. These must be named. They will be included
 in the output object.}
 
 \item{covs}{an optional \code{data.frame} of covariates. For using \pkg{WeightIt}
@@ -70,8 +70,7 @@ not necessary, but for use with \pkg{cobalt} it is.}
 each time point.}
 }
 \value{
-An object of class \code{weightit} (for \code{as.weightit()}) or \code{weightitMSM}
-(for \code{as.weightitMSM()}).
+An object of class \code{weightit} (for \code{as.weightit()}) or \code{weightitMSM} (for \code{as.weightitMSM()}).
 }
 \description{
 This function allows users to get the benefits of a \code{weightit}
@@ -80,7 +79,6 @@ These benefits include diagnostics, plots, and direct compatibility with
 \pkg{cobalt} for assessing balance.
 }
 \examples{
-
 treat <- rbinom(500, 1, .3)
 weights <- rchisq(500, df = 2)
 

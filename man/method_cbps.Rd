@@ -135,8 +135,6 @@ required.
 \section{Additional Arguments}{
 
 
-\code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.
-
 The following additional arguments can be specified:
 \describe{
 \item{\code{over}}{\code{logical}; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is \code{FALSE} to use the just-identified CBPS.
@@ -151,9 +149,13 @@ The following additional arguments can be specified:
 }
 \item{\code{solver}}{the solver to use to estimate the parameters of the just-identified CBPS. Allowable options include \code{"multiroot"} to use \pkgfun{rootSolve}{multiroot} and \code{"optim"} to use \code{\link[stats:optim]{stats::optim()}}. \code{"multiroot"} is the default when \pkg{rootSolve} is installed, as it tends to be much faster and more accurate; otherwise, \code{"optim"} is the default and requires no dependencies. Regardless of \code{solver}, the output of \code{optim()} is returned when \code{include.obj = TRUE} (see below). When \code{over = TRUE}, the parameter estimates of the just-identified CBPS are used as starting values for the over-identified CBPS.
 }
-\item{\code{quantile}}{
-A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate. Only allowed with binary and multi-category treatments.
+\item{\code{moments}}{\code{integer}; the highest power of each covariate to be balanced. For example, if \code{moments = 3}, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., \code{moments = c(x1 = 2, x2 = 4)}). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.
 }
+\item{\code{int}}{\code{logical}; whether first-order interactions of the covariates are to be balanced. Default is \code{FALSE}.
+}
+\item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or a vector (e.g., \code{c(.25, .5, .75)}) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.
+}
+
 }
 }
 

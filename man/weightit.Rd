@@ -14,9 +14,6 @@ weightit(
   by = NULL,
   s.weights = NULL,
   ps = NULL,
-  moments = NULL,
-  int = FALSE,
-  subclass = NULL,
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
@@ -84,30 +81,6 @@ but the listed covariates will play no role in the weight estimation. Using
 \code{ps} is similar to calling \code{\link[=get_w_from_ps]{get_w_from_ps()}} directly, but produces a full
 \code{weightit} object rather than just producing weights.}
 
-\item{moments}{\code{numeric}; for some methods, the greatest power of each
-covariate to be balanced. For example, if \code{moments = 3}, for each
-non-categorical covariate, the covariate, its square, and its cube will be
-balanced. This argument is ignored for other methods; to balance powers of
-the covariates, appropriate functions must be entered in \code{formula}. See the
-individual pages for each method for information on whether they accept
-\code{moments}.}
-
-\item{int}{\code{logical}; for some methods, whether first-order interactions of
-the covariates are to be balanced. This argument is ignored for other
-methods; to balance interactions between the variables, appropriate
-functions must be entered in \code{formula}. See the individual pages for each
-method for information on whether they accept \code{int}.}
-
-\item{subclass}{\code{numeric}; the number of subclasses to use for computing
-weights using marginal mean weighting with subclasses (MMWS). If \code{NULL},
-standard inverse probability weights (and their extensions) will be
-computed; if a number greater than 1, subclasses will be formed and weights
-will be computed based on subclass membership. Attempting to set a
-non-\code{NULL} value for methods that don't compute a propensity score will
-result in an error; see each method's help page for information on whether
-MMWS weights are compatible with the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for
-details and references.}
-
 \item{missing}{\code{character}; how missing data should be handled. The options
 and defaults depend on the \code{method} used. Ignored if no missing data is
 present. It should be noted that multiple imputation outperforms all
@@ -136,21 +109,19 @@ aspects of fitting that are not covered by the above arguments. See
 Details.}
 }
 \value{
-A \code{weightit} object with the following elements: \item{weights}{The
-estimated weights, one for each unit.} \item{treat}{The values of the
-treatment variable.}
-\item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
-the fitting process.}
+A \code{weightit} object with the following elements:
+
+\item{weights}{The estimated weights, one for each unit.}
+\item{treat}{The values of the treatment variable.}
+\item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
-\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
-returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
+\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
 \item{s.weights}{The provided sampling weights.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{by}{A data.frame containing the \code{by} variable when specified.}
 \item{obj}{When \code{include.obj = TRUE}, the fit object.}
-\item{info}{Additional information about the fitting. See the individual
-methods pages for what is included.}
+\item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 
 When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is
 compatible with M-estimation, the components related to M-estimation for use

@@ -1,5 +1,4 @@
 #' Create a `weightit` object manually
-#' @name as.weightit
 #'
 #' @description This function allows users to get the benefits of a `weightit`
 #' object when using weights not estimated with [weightit()] or [weightitMSM()].
@@ -28,14 +27,13 @@
 #'   not necessary, but for use with \pkg{cobalt} it is.
 #' @param ps.list an optional list of `numeric` vectors of propensity scores at
 #'   each time point.
-#' @param ...  additional arguments. These must be named. They will be included
+#' @param \dots additional arguments. These must be named. They will be included
 #'   in the output object.
 #'
-#' @returns An object of class `weightit` (for `as.weightit()`) or `weightitMSM`
-#' (for `as.weightitMSM()`).
+#' @returns
+#' An object of class `weightit` (for `as.weightit()`) or `weightitMSM` (for `as.weightitMSM()`).
 #'
 #' @examples
-#'
 #' treat <- rbinom(500, 1, .3)
 #' weights <- rchisq(500, df = 2)
 #'

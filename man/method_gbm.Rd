@@ -125,6 +125,8 @@ The following additional arguments can be specified:
 }
 \item{\code{trim.at}}{A number supplied to \code{at} in \code{\link[=trim]{trim()}} which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).
 }
+\item{\code{subclass}}{\code{integer}; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If \code{NULL}, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Only allowed for binary and multi-category treatments. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details and references.
+}
 \item{\code{distribution}}{A string with the distribution used in the loss function of the boosted model. This is supplied to the \code{distribution} argument in \pkgfun{gbm}{gbm.fit}. For binary treatments, \code{"bernoulli"} and \code{"adaboost"} are available, with \code{"bernoulli"} the default. For multi-category treatments, only \code{"multinomial"} is allowed. For continuous treatments \code{"gaussian"}, \code{"laplace"}, and \code{"tdist"} are available, with \code{"gaussian"} the default. This argument is tunable.
 }
 \item{\code{n.trees}}{The maximum number of trees used. This is passed onto the \code{n.trees} argument in \code{gbm.fit()}. The default is 10000 for binary and multi-category treatments and 20000 for continuous treatments.

@@ -87,10 +87,12 @@ potentially with some cost in precision.
 \section{Additional Arguments}{
 
 
-\code{moments} and \code{int} are accepted. See \code{\link[=weightit]{weightit()}} for details.
-
 \describe{
-\item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or an unnamed list of length 1 (e.g., \code{list(c(.25, .5, .75))}) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., \code{c(x1 = .5, x2 = .75)} to request one quantile for each covariate.
+\item{\code{moments}}{\code{integer}; the highest power of each covariate to be balanced. For example, if \code{moments = 3}, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., \code{moments = c(x1 = 2, x2 = 4)}). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.
+}
+\item{\code{int}}{\code{logical}; whether first-order interactions of the covariates are to be balanced. Default is \code{FALSE}.
+}
+\item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or a vector (e.g., \code{c(.25, .5, .75)}) to request the same quantile(s) for all continuous covariates.
 }
 \item{\code{link}}{the link used to determine the inverse link for computing the (generalized) propensity scores. Default is \code{"logit"}, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but \code{"probit"}, \code{"cauchit"}, \code{"cloglog"}, \code{"loglog"}, \code{"log"}, and \code{"clog"} are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class \code{"link-glm"} can also be supplied. The argument is passed to \code{\link[=quasibinomial]{quasibinomial()}}.
 }

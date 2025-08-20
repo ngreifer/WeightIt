@@ -12,8 +12,6 @@ weightitMSM(
   by = NULL,
   s.weights = NULL,
   num.formula = NULL,
-  moments = NULL,
-  int = FALSE,
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
@@ -76,20 +74,6 @@ also be a list of one-sided formulas, one for each time point. Unless you
 know what you are doing, we recommend setting \code{stabilize = TRUE} and
 ignoring \code{num.formula}.}
 
-\item{moments}{\code{numeric}; for some methods, the greatest power of each
-covariate to be balanced. For example, if \code{moments = 3}, for each
-non-categorical covariate, the covariate, its square, and its cube will be
-balanced. This argument is ignored for other methods; to balance powers of
-the covariates, appropriate functions must be entered in \code{formula}. See the
-individual pages for each method for information on whether they accept
-\code{moments}.}
-
-\item{int}{\code{logical}; for some methods, whether first-order interactions of
-the covariates are to be balanced. This argument is ignored for other
-methods; to balance interactions between the variables, appropriate
-functions must be entered in \code{formula}. See the individual pages for each
-method for information on whether they accept \code{int}.}
-
 \item{missing}{\code{character}; how missing data should be handled. The options
 and defaults depend on the \code{method} used. Ignored if no missing data is
 present. It should be noted that multiple imputation outperforms all
@@ -131,21 +115,13 @@ at \code{\link[=weightit]{weightit()}}.}
 A \code{weightitMSM} object with the following elements:
 \item{weights}{The estimated weights, one for each unit.}
 \item{treat.list}{A list of the values of the time-varying treatment variables.}
-\item{covs.list}{A list of the covariates used in the fitting at each time
-point. Only includes the raw covariates, which may have been altered in the
-fitting process.}
-\item{data}{The data.frame originally entered to
-\code{weightitMSM()}.}
-\item{estimand}{"ATE", currently the only estimand for MSMs
-with binary or multi-category treatments.}
-\item{method}{The weight
-estimation method specified.}
-\item{ps.list}{A list of the estimated
-propensity scores (if any) at each time point.}
-\item{s.weights}{The provided
-sampling weights.}
-\item{by}{A data.frame containing the \code{by} variable when
-specified.}
+\item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
+\item{data}{The data.frame originally entered to \code{weightitMSM()}.}
+\item{estimand}{"ATE", currently the only estimand for MSMs with binary or multi-category treatments.}
+\item{method}{The weight estimation method specified.}
+\item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
+\item{s.weights}{The provided sampling weights.}
+\item{by}{A data.frame containing the \code{by} variable when specified.}
 \item{stabilization}{The stabilization factors, if any.}
 
 When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is

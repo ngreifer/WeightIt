@@ -19,9 +19,8 @@ The following arguments are automatically passed to the user-defined function, w
 \item{\code{estimand}: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to estimand, \code{weightit()} sets \code{focal} to the control level (usually 0 or the lowest level of \code{treat}) and sets \code{estimand} to "ATT".}
 \item{\code{focal}: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). \code{weightit()} ensures the value of focal is a level of \code{treat}.}
 \item{\code{stabilize}: a logical vector of length 1. It is not processed by \code{weightit()} before it reaches the fitting function.}
-\item{\code{moments}: a numeric vector of length 1. It is not processed by \code{weightit()} before it reaches the fitting function except that \code{as.integer()} is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.}
-\item{\code{int}: a logical vector of length 1. It is not processed by \code{weightit()} before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.}
 }
+
 None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
 
 In addition, any additional arguments supplied to \code{weightit()} will be passed on to the fitting function. \code{weightit()} ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \verb{\\dots} as a parameter.
@@ -38,7 +37,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 data("lalonde", package = "cobalt")
 
 #A user-defined version of method = "ps"
-my.ps <- function(treat, covs, estimand, focal = NULL) {
+my.ps <- function(treat, covs, estimand, focal = NULL, ...) {
   covs <- make_full_rank(covs)
   d <- data.frame(treat, covs)
   f <- formula(d)

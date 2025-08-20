@@ -22,9 +22,7 @@ authors that want to support different weighting methods.
 \details{
 Each component is itself a list containing the following components:
 \describe{
-\item{\code{treat_type}}{at least one of \code{"binary"}, \code{"multi-category"}, or
-\code{"continuous"} indicating which treatment types are
-available for this method.}
+\item{\code{treat_type}}{at least one of \code{"binary"}, \code{"multinomial"}, or \code{"continuous"} indicating which treatment types are available for this method.}
 \item{\code{estimand}}{which estimands are available for this method. All methods that support binary and multi-category treatments accept \code{"ATE"}, \code{"ATT"}, and \code{"ATC"}, as well as some other estimands depending on the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for more details about what each estimand means.}
 \item{\code{alias}}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is \code{"ebal"}, but \code{"ebalance"} and \code{"entropy"} also work. The first value is the canonical name.}
 \item{\code{description}}{a string containing the description of the name in English.}

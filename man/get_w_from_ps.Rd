@@ -39,7 +39,7 @@ matters when \code{treat} has values other than 0 and 1 and when \code{ps} is gi
 as a vector or an unnamed single-column matrix or data frame.}
 
 \item{subclass}{\code{numeric}; the number of subclasses to use when computing
-weights using marginal mean weighting through stratification (also known as
+weights using marginal mean weighting through stratification (MMWS; also known as
 fine stratification). If \code{NULL}, standard inverse probability weights (and
 their extensions) will be computed; if a number greater than 1, subclasses
 will be formed and weights will be computed based on subclass membership.

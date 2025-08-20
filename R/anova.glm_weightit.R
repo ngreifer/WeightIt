@@ -19,9 +19,11 @@
 #'   parameter variance matrix, if supplied as a string or function, e.g.,
 #'   `cluster`, `R`, or `fwb.args`.
 #'
-#' @returns An object of class `"anova"` inheriting from class `"data.frame"`.
+#' @returns
+#' An object of class `"anova"` inheriting from class `"data.frame"`.
 #'
-#' @details `anova()` performs a Wald test to compare two fitted models. The
+#' @details
+#' `anova()` performs a Wald test to compare two fitted models. The
 #' models must be nested, but they don't have to be nested symbolically (i.e.,
 #' the names of the coefficients of the smaller model do not have to be a subset
 #' of the names of the coefficients of the larger model). The larger model must
@@ -30,7 +32,8 @@
 #' variance-covariance matrix of the coefficients of the smaller model is not
 #' used.
 #'
-#' @seealso [glm_weightit()] for the page documenting `glm_weightit()`,
+#' @seealso
+#' [glm_weightit()] for the page documenting `glm_weightit()`,
 #' `lm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, and
 #' `coxph_weightit()`. [anova.glm()] for model comparison of `glm` objects.
 #'
