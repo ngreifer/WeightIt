@@ -56,27 +56,6 @@
 #'   but the listed covariates will play no role in the weight estimation. Using
 #'   `ps` is similar to calling [get_w_from_ps()] directly, but produces a full
 #'   `weightit` object rather than just producing weights.
-#' @param moments `numeric`; for some methods, the greatest power of each
-#'   covariate to be balanced. For example, if `moments = 3`, for each
-#'   non-categorical covariate, the covariate, its square, and its cube will be
-#'   balanced. This argument is ignored for other methods; to balance powers of
-#'   the covariates, appropriate functions must be entered in `formula`. See the
-#'   individual pages for each method for information on whether they accept
-#'   `moments`.
-#' @param int `logical`; for some methods, whether first-order interactions of
-#'   the covariates are to be balanced. This argument is ignored for other
-#'   methods; to balance interactions between the variables, appropriate
-#'   functions must be entered in `formula`. See the individual pages for each
-#'   method for information on whether they accept `int`.
-#' @param subclass `numeric`; the number of subclasses to use for computing
-#'   weights using marginal mean weighting with subclasses (MMWS). If `NULL`,
-#'   standard inverse probability weights (and their extensions) will be
-#'   computed; if a number greater than 1, subclasses will be formed and weights
-#'   will be computed based on subclass membership. Attempting to set a
-#'   non-`NULL` value for methods that don't compute a propensity score will
-#'   result in an error; see each method's help page for information on whether
-#'   MMWS weights are compatible with the method. See [get_w_from_ps()] for
-#'   details and references.
 #' @param missing `character`; how missing data should be handled. The options
 #'   and defaults depend on the `method` used. Ignored if no missing data is
 #'   present. It should be noted that multiple imputation outperforms all
@@ -100,28 +79,28 @@
 #'   aspects of fitting that are not covered by the above arguments. See
 #'   Details.
 #'
-#' @returns A `weightit` object with the following elements: \item{weights}{The
-#' estimated weights, one for each unit.} \item{treat}{The values of the
-#' treatment variable.}
-#' \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
-#' the fitting process.}
+#' @returns
+#' A `weightit` object with the following elements:
+#'
+#' \item{weights}{The estimated weights, one for each unit.}
+#' \item{treat}{The values of the treatment variable.}
+#' \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
 #' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
-#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are
-#' returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 #' \item{by}{A data.frame containing the `by` variable when specified.}
 #' \item{obj}{When `include.obj = TRUE`, the fit object.}
-#' \item{info}{Additional information about the fitting. See the individual
-#' methods pages for what is included.}
+#' \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 #'
 #' When `keep.mparts` is `TRUE` (the default) and the chosen method is
 #' compatible with M-estimation, the components related to M-estimation for use
 #' in [glm_weightit()] are stored in the `"Mparts"` attribute. When `by` is
 #' specified, `keep.mparts` is set to `FALSE`.
 #'
-#' @details The primary purpose of `weightit()` is as a dispatcher to functions
+#' @details
+#' The primary purpose of `weightit()` is as a dispatcher to functions
 #' that perform the estimation of balancing weights using the requested
 #' `method`. Below are the methods allowed and links to pages containing more
 #' information about them, including additional arguments and outputs (e.g.,
@@ -179,7 +158,8 @@
 #' \pkg{WeightIt} package (using `citation("WeightIt")`) and the paper(s) in the
 #' references section of the method used.
 #'
-#' @seealso [weightitMSM()] for estimating weights with sequential (i.e.,
+#' @seealso
+#' [weightitMSM()] for estimating weights with sequential (i.e.,
 #' longitudinal) treatments for use in estimating marginal structural models
 #' (MSMs).
 #'
@@ -218,8 +198,8 @@
 
 #' @export
 weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", stabilize = FALSE, focal = NULL,
-                     by = NULL, s.weights = NULL, ps = NULL, moments = NULL, int = FALSE, subclass = NULL,
-                     missing = NULL, verbose = FALSE, include.obj = FALSE, keep.mparts = TRUE, ...) {
+                     by = NULL, s.weights = NULL, ps = NULL, missing = NULL, verbose = FALSE,
+                     include.obj = FALSE, keep.mparts = TRUE, ...) {
 
   ## Checks and processing ----
 
@@ -231,8 +211,12 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   #Process treat and covs from formula and data
-  t.c <- get_covs_and_treat_from_formula(formula, data)
+  # t.c <- get_covs_and_treat_from_formula(formula, data)
+  # reported.covs <- t.c[["reported.covs"]]
+  t.c <- get_covs_and_treat_from_formula2(formula, data)
   reported.covs <- t.c[["reported.covs"]]
+  simple.covs <- t.c[["simple.covs"]]
+
   covs <- t.c[["model.covs"]]
   treat <- t.c[["treat"]]
 
@@ -302,9 +286,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   #Check subclass
-  if (is_not_null(subclass)) {
-    .check_subclass(method, treat.type)
-  }
+  .check_subclass(...get("subclass"), method, treat.type)
 
   #Process s.weights
   s.weights <- .process.s.weights(s.weights, data)
@@ -358,10 +340,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   processed.by <- .process_by(by, data = data, treat = treat, by.arg = by.arg)
 
   #Process moments and int
-  m.i.q <- .process_moments_int_quantile(moments = moments,
-                                         int = int,
-                                         quantile = A[["quantile"]],
-                                         method = method)
+  m.i.q <- .process_moments_int_quantile(method = method, ...)
 
   call <- match.call()
 
@@ -376,7 +355,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A["stabilize"] <- list(FALSE)
   A["method"] <- list(method)
   A[c("moments", "int", "quantile")] <- m.i.q[c("moments", "int", "quantile")]
-  A["subclass"] <- list(subclass)
   A["ps"] <- list(ps)
   A["missing"] <- list(missing)
   A["verbose"] <- list(verbose)
@@ -389,7 +367,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   obj <- do.call("weightit.fit", A)
 
   if (is_not_null(stabilize)) {
-    stab.t.c <- get_covs_and_treat_from_formula(stabilize, data)
+    stab.t.c <- get_covs_and_treat_from_formula2(stabilize, data)
 
     A["covs"] <- list(stab.t.c[["model.covs"]])
     A["method"] <- list("glm")
@@ -411,7 +389,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   ## Assemble output object----
   out <- list(weights = obj$weights,
               treat = treat,
-              covs = reported.covs,
+              covs = simple.covs,
               estimand = if (treat.type == "continuous") NULL else reported.estimand,
               method = method,
               ps = if (is_null(obj$ps) || all(is.na(obj$ps))) NULL else obj$ps,
@@ -480,7 +458,7 @@ print.weightit <- function(x, ...) {
   cat(sprintf(" - treatment: %s\n",
               switch(treat.type,
                      "continuous" = "continuous",
-                     "multi-category" = sprintf("%s-category (%s)",
+                     "multinomial" = sprintf("%s-category (%s)",
                                        nunique(x[["treat"]]),
                                        word_list(levels(x[["treat"]]), and.or = FALSE)),
                      "binary" = "2-category")))

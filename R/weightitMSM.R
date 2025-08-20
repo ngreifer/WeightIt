@@ -62,21 +62,13 @@
 #' A `weightitMSM` object with the following elements:
 #' \item{weights}{The estimated weights, one for each unit.}
 #' \item{treat.list}{A list of the values of the time-varying treatment variables.}
-#' \item{covs.list}{A list of the covariates used in the fitting at each time
-#' point. Only includes the raw covariates, which may have been altered in the
-#' fitting process.}
-#' \item{data}{The data.frame originally entered to
-#' `weightitMSM()`.}
-#' \item{estimand}{"ATE", currently the only estimand for MSMs
-#' with binary or multi-category treatments.}
-#' \item{method}{The weight
-#' estimation method specified.}
-#' \item{ps.list}{A list of the estimated
-#' propensity scores (if any) at each time point.}
-#' \item{s.weights}{The provided
-#' sampling weights.}
-#' \item{by}{A data.frame containing the `by` variable when
-#' specified.}
+#' \item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
+#' \item{data}{The data.frame originally entered to `weightitMSM()`.}
+#' \item{estimand}{"ATE", currently the only estimand for MSMs with binary or multi-category treatments.}
+#' \item{method}{The weight estimation method specified.}
+#' \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
+#' \item{s.weights}{The provided sampling weights.}
+#' \item{by}{A data.frame containing the `by` variable when specified.}
 #' \item{stabilization}{The stabilization factors, if any.}
 #'
 #' When `keep.mparts` is `TRUE` (the default) and the chosen method is
@@ -108,7 +100,8 @@
 #' approach to generating weights than simply estimating several time-specific
 #' models.
 #'
-#' @seealso [weightit()] for information on the allowable methods
+#' @seealso
+#' [weightit()] for information on the allowable methods
 #'
 #' [summary.weightitMSM()] for summarizing the weights
 #'
@@ -158,8 +151,7 @@
 #' @export
 weightitMSM <- function(formula.list, data = NULL, method = "glm",
                         stabilize = FALSE, by = NULL,
-                        s.weights = NULL, num.formula = NULL, moments = NULL,
-                        int = FALSE, missing = NULL, verbose = FALSE,
+                        s.weights = NULL, num.formula = NULL, missing = NULL, verbose = FALSE,
                         include.obj = FALSE, keep.mparts = TRUE,
                         is.MSM.method, weightit.force = FALSE, ...) {
 
@@ -202,7 +194,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     by.arg <- "by"
   }
 
-  reported.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
+  reported.covs.list <- simple.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
     stabout <- sw.list <- Mparts.list <- stab.Mparts.list <- make_list(length(formula.list))
 
   if (is_null(formula.list) || !is.list(formula.list) ||
@@ -213,8 +205,13 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   for (i in seq_along(formula.list)) {
 
     #Process treat and covs from formula and data
-    t.c <- get_covs_and_treat_from_formula(formula.list[[i]], data)
+    # t.c <- get_covs_and_treat_from_formula(formula.list[[i]], data)
+    # reported.covs.list[[i]] <- t.c[["reported.covs"]]
+
+    t.c <- get_covs_and_treat_from_formula2(formula.list[[i]], data)
+    simple.covs.list[[i]] <- t.c[["simple.covs"]]
     reported.covs.list[[i]] <- t.c[["reported.covs"]]
+
     covs.list[[i]] <- t.c[["model.covs"]]
     treat.list[[i]] <- t.c[["treat"]]
 
@@ -237,7 +234,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     treat.name <- attr(treat.list[[i]], "treat.name")
 
     if (anyNA(treat.list[[i]])) {
-      .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s", treat.name))
+      .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s",
+                   treat.name))
     }
 
     names(treat.list)[i] <- treat.name
@@ -284,56 +282,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
       stabilize <- FALSE
       num.formula <- NULL
     }
-
-    if (is_not_null(num.formula)) {
-      if (rlang::is_formula(num.formula)) {
-        if (!rlang::is_formula(num.formula, lhs = FALSE)) {
-          .err("the argument to `num.formula` must have right hand side variables but not a response variable (e.g., ~ V1 + V2)")
-        }
-
-        rhs.vars.mentioned.lang <- attr(terms(num.formula), "variables")[-1L]
-        rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse1, character(1L))
-        rhs.vars.failed <- vapply(rhs.vars.mentioned.lang, function(v) {
-          null_or_error(try(eval(v, c(data, .GlobalEnv)), silent = TRUE))
-        }, logical(1L))
-
-        if (any(rhs.vars.failed)) {
-          .err(paste0(c("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: ",
-                        word_list(rhs.vars.mentioned[rhs.vars.failed], and.or = FALSE))), tidy = FALSE)
-        }
-      }
-      else if (is.list(num.formula)) {
-        if (length(num.formula) != length(formula.list)) {
-          .err("when supplied as a list, `num.formula` must have as many entries as `formula.list`")
-        }
-
-        if (!all_apply(num.formula, rlang::is_formula, lhs = FALSE)) {
-          .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
-        }
-
-        rhs.vars.mentioned.lang.list <- lapply(num.formula, function(nf) attr(terms(nf), "variables")[-1L])
-        rhs.vars.mentioned <- unique(unlist(lapply(rhs.vars.mentioned.lang.list,
-                                                   function(r) vapply(r, deparse1, character(1L)))))
-        rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
-          null_or_error(try(eval(parse(text = v), c(data, .GlobalEnv)), silent = TRUE))
-        }, logical(1L))
-
-        if (any(rhs.vars.failed)) {
-          .err(paste0(c("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: ",
-                        word_list(rhs.vars.mentioned[rhs.vars.failed], and.or = FALSE))), tidy = FALSE)
-        }
-      }
-      else {
-        .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
-      }
+    else if (is_not_null(num.formula)) {
+      .check_num.formula(num.formula, data, env = parent.frame(),
+                         formula.list = formula.list)
     }
   }
 
   #Process moments and int
-  m.i.q <- .process_moments_int_quantile(moments = moments,
-                                         int = int,
-                                         quantile = A[["quantile"]],
-                                         method = method)
+  m.i.q <- .process_moments_int_quantile(method = method, ...)
 
   A["s.weights"] <- list(s.weights)
   A["by.factor"] <- list(attr(processed.by, "by.factor"))
@@ -346,7 +302,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
   if (is.MSM.method) {
     #Returns weights (w)
-
     A["covs.list"] <- list(covs.list)
     A["treat.list"] <- list(treat.list)
     A["stabilize"] <- list(stabilize)
@@ -359,7 +314,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     Mparts.list <- attr(obj, "Mparts")
   }
   else {
-
     if (is_not_null(A[["link"]])) {
       if (length(A[["link"]]) == 1L) {
         A[["link"]] <- rep.int(A[["link"]], length(formula.list))
@@ -403,8 +357,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         #Process stabilization formulas and get stab weights
         if (rlang::is_formula(num.formula)) {
           if (i == 1L) {
-            stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
-                                     as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
+            stab.f <- update(formula.list[[i]], num.formula)
+            # stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
+            #                          as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
           }
           else {
             stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~",
@@ -414,23 +369,24 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
           }
         }
         else if (is.list(num.formula)) {
-          stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
-                                   as.formula(paste(paste(num.formula[[i]], collapse = ""), "+ .")))
+          stab.f <- update(formula.list[[i]], num.formula[[i]])
+          # stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
+          #                          as.formula(paste(paste(num.formula[[i]], collapse = ""), "+ .")))
         }
         else {
           if (i == 1L) {
-            stab.f <- as.formula(paste(names(treat.list)[i], "~ 1"))
+            stab.f <- update(formula.list[[i]], ". ~ 1")
           }
           else {
-            stab.f <- as.formula(paste(names(treat.list)[i], "~",
-                                       paste(names(treat.list)[seq_along(names(treat.list)) < i],
-                                             collapse = " * ")))
+            stab.f <- update(formula.list[[i]],
+                             sprintf(". ~ %s", paste(names(treat.list)[seq_along(treat.list) < i],
+                                                     collapse = " * ")))
           }
         }
 
-        stab.t.c_i <- get_covs_and_treat_from_formula(stab.f, data)
+        stab.t.c_i <- get_covs_and_treat_from_formula2(stab.f, data)
 
-        A_i["covs"] <- list(stab.t.c_i[["model.covs"]])
+        A_i["covs"] <- stab.t.c_i["model.covs"]
         A_i["method"] <- list("glm")
         A_i["moments"] <- list(integer())
         A_i["int"] <- list(FALSE)
@@ -485,7 +441,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   ## Assemble output object----
   out <- list(weights = w,
               treat.list = treat.list,
-              covs.list = reported.covs.list,
+              covs.list = simple.covs.list,
               estimand = "ATE",
               method = method,
               s.weights = s.weights,
@@ -540,7 +496,7 @@ print.weightitMSM <- function(x, ...) {
                 i,
                 switch(treat.types[i],
                        "continuous" = "continuous",
-                       "multi-category" = sprintf("%s-category (%s)",
+                       "multinomial" = sprintf("%s-category (%s)",
                                                   nunique(x[["treat.list"]][[i]]),
                                                   word_list(levels(x[["treat.list"]][[i]]), and.or = FALSE)),
                        "binary" = "2-category")))
