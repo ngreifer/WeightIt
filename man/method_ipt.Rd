@@ -110,7 +110,7 @@ The \code{stabilize} argument is ignored.
 }
 
 \examples{
-\dontshow{if (requireNamespace("rootSolve", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("rootSolve")) withAutoprint(\{ # examplesIf}
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)

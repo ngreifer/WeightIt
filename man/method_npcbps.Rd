@@ -5,8 +5,7 @@
 \title{Nonparametric Covariate Balancing Propensity Score Weighting}
 \description{
 This page explains the details of estimating weights from
-nonparametric covariate balancing propensity scores by setting \code{method = "npcbps"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be
-used with binary, multi-category, and continuous treatments.
+nonparametric covariate balancing propensity scores by setting \code{method = "npcbps"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
 
 In general, this method relies on estimating weights by maximizing the
 empirical likelihood of the data subject to balance constraints. This method
@@ -62,8 +61,7 @@ M-estimation is not supported.
 Nonparametric CBPS involves the specification of a constrained
 optimization problem over the weights. The constraints correspond to
 covariate balance, and the loss function is the empirical likelihood of the
-data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the
-optimization problem of npCBPS is not convex it can be slow to converge or
+data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or
 not converge at all, so approximate balance is allowed instead using the
 \code{cor.prior} argument, which controls the average deviation from zero
 correlation between the treatment and covariates allowed.
@@ -94,7 +92,7 @@ All arguments take on the defaults of those in \code{npCBPS()}.
 }
 
 \examples{
-\dontshow{if (requireNamespace("CBPS", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("CBPS")) withAutoprint(\{ # examplesIf}
 # Examples take a long time to run
 data("lalonde", package = "cobalt")
 \donttest{
@@ -122,6 +120,8 @@ political advertisements. \emph{The Annals of Applied Statistics}, 12(1), 156–
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, \code{\link{method_cbps}}
+
+\code{\link{method_optweight}}, which can also be used to perform npCBPS by setting \code{norm = "log"}. In generally, this \code{"optweight"} implementation is more stable and flexible.
 
 \pkgfun{CBPS}{npCBPS} for the fitting function
 }

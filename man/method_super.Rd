@@ -187,7 +187,7 @@ When \code{include.obj = TRUE}, the SuperLearner fit(s) used to generate the pre
 }
 
 \examples{
-\dontshow{if (all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed(c("SuperLearner", "MASS"))) withAutoprint(\{ # examplesIf}
 \donttest{data("lalonde", package = "cobalt")
 
 #Note: for time, all exmaples use a small set of

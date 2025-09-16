@@ -125,6 +125,8 @@ specified. \code{max_iter} should be increased, and setting \code{verbose = TRUE
 allows you to monitor the process and examine if the optimization is
 approaching convergence.
 
+If \code{min.w} is positive and you still get a warning about the presence of negative weights, try setting \code{eps} to a smaller number (e.g., to \code{1e-12}).
+
 As of version 1.5.0, \code{polish} is now set to \code{TRUE} by default. This should yield slightly improved solutions but may be a little slower.
 }
 \section{Additional Arguments}{
@@ -137,6 +139,7 @@ The following following additional arguments can be specified:
 \item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.}
 \item{\code{moments}}{\code{integer}; the highest power of each covariate to be balanced. For example, if \code{moments = 3}, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., \code{moments = c(x1 = 2, x2 = 4)}). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
 \item{\code{int}}{\code{logical}; whether first-order interactions of the covariates are to be balanced. Default is \code{FALSE}.}
+\item{\code{tols}}{when \code{moments} is positive, a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0. Ignored when \code{moments = 0}.}
 }
 
 For binary and multi-category treatments, the following additional arguments can be specified:
@@ -167,7 +170,7 @@ are also included, guaranteeing exact moment balance on these covariates
 while minimizing the energy distance of the weighted sample. For binary and
 multi-category treatments, this involves exact balance on the means of the
 entered covariates; for continuous treatments, this involves exact balance
-on the treatment-covariate correlations of the entered covariates.
+on the treatment-covariate correlations of the entered covariates. The constraint on exact balance can be relaxed using the \code{tols} argument.
 
 Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some
 defaults differ from those in \code{osqpSettings()}; see \emph{Reproducibility}
@@ -184,7 +187,7 @@ below.
 }
 
 \examples{
-\dontshow{if (requireNamespace("osqp", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("osqp")) withAutoprint(\{ # examplesIf}
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
@@ -226,6 +229,5 @@ causal inference with continuous treatments. \emph{Journal of the American Stati
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
 }
 \author{
-Noah Greifer, using code from Jared Huling's
-\CRANpkg{independenceWeights} package for continuous treatments.
+Noah Greifer, using code from Jared Huling's \CRANpkg{independenceWeights} package for continuous treatments.
 }

@@ -7,25 +7,27 @@
 \alias{plot.summary.weightitMSM}
 \title{Print and Summarize Output}
 \usage{
-\method{summary}{weightit}(object, top = 5L, ignore.s.weights = FALSE, ...)
+\method{summary}{weightit}(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...)
 
 \method{plot}{summary.weightit}(x, binwidth = NULL, bins = NULL, ...)
 
-\method{summary}{weightitMSM}(object, top = 5L, ignore.s.weights = FALSE, ...)
+\method{summary}{weightitMSM}(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...)
 
-\method{plot}{summary.weightitMSM}(x, binwidth = NULL, bins = NULL, time = 1, ...)
+\method{plot}{summary.weightitMSM}(x, binwidth = NULL, bins = NULL, time = 1L, ...)
 }
 \arguments{
 \item{object}{a \code{weightit} or \code{weightitMSM} object; the output of a call to
 \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}.}
 
 \item{top}{how many of the largest and smallest weights to display. Default
-is 5.}
+is 5. Ignored when \code{weight.range = FALSE}.}
 
-\item{ignore.s.weights}{whether or not to ignore sampling weights when
+\item{ignore.s.weights}{\code{logical}; whether or not to ignore sampling weights when
 computing the weight summary. If \code{FALSE}, the default, the estimated
 weights will be multiplied by the sampling weights (if any) before values
 are computed.}
+
+\item{weight.range}{\code{logical}; whether to display statistics about the range of weights and the highest and lowest weights for each group. Default is \code{TRUE}.}
 
 \item{...}{For \code{plot()}, additional arguments passed to \code{\link[graphics:hist]{graphics::hist()}} to
 determine the number of bins, though \code{\link[ggplot2:geom_histogram]{ggplot2::geom_histogram()}} is
@@ -44,22 +46,13 @@ of weights. Default is to plot the distribution for the first time points.}
 For point treatments (i.e., \code{weightit} objects), \code{summary()} returns
 a \code{summary.weightit} object with the following elements:
 
-\item{weight.range}{The range (minimum and maximum) weight for each treatment
-group.}
-\item{weight.top}{The units with the greatest weights in each
-treatment group; how many are included is determined by \code{top}.}
-\item{coef.of.var (Coef of Var)}{The coefficient of variation (standard
-deviation divided by mean) of the weights in each treatment group and
-overall.}
-\item{scaled.mad (MAD)}{The mean absolute deviation of the weights
-in each treatment group and overall divided by the mean of the weights in the
-corresponding group.}
-\item{negative entropy (Entropy)}{The negative entropy
-(\eqn{\sum w log(w)}) of the weights in each treatment group and overall
-divided by the mean of the weights in the corresponding group.}
+\item{weight.range}{The range (minimum and maximum) weight for each treatment group.}
+\item{weight.top}{The units with the greatest weights in each treatment group; how many are included is determined by \code{top}.}
+\item{coef.of.var (Coef of Var)}{The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.}
+\item{scaled.mad (MAD)}{The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
+\item{negative entropy (Entropy)}{The negative entropy (\eqn{\sum w log(w)}) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.}
 \item{num.zeros}{The number of weights equal to zero.}
-\item{effective.sample.size}{The effective sample size for each treatment
-group before and after weighting. See \code{\link[=ESS]{ESS()}}.}
+\item{effective.sample.size}{The effective sample size for each treatment group before and after weighting. See \code{\link[=ESS]{ESS()}}.}
 
 For longitudinal treatments (i.e., \code{weightitMSM} objects), \code{summary()}
 returns a list of the above elements for each treatment period.

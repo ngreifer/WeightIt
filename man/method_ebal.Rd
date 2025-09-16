@@ -40,8 +40,8 @@ using formulas described by Tübbicke (2022) and Vegetabile et al. (2021).
 
 For longitudinal treatments, the weights are the product of the weights
 estimated at each time point. This method is not guaranteed to yield exact
-balance at each time point. NOTE: the use of entropy balancing with
-longitudinal treatments has not been validated!
+balance at each time point. \strong{NOTE: the use of entropy balancing with
+longitudinal treatments has not been validated and should not be done!}
 }
 
 \subsection{Sampling Weights}{

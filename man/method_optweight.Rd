@@ -6,51 +6,49 @@
 \title{Stable Balancing Weights}
 \description{
 This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting \code{method = "optweight"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and continuous treatments.
+weights (also known as optimization-based weights) by setting \code{method = "optweight"} in the call to \code{\link[=weightit]{weightit()}}. This method can be used with binary, multi-category, and continuous treatments.
 
 In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
-method relies on \pkgfun{optweight}{optweight} from the \CRANpkg{optweight}
+method relies on \pkgfun{optweight}{optweight.fit} from the \CRANpkg{optweight}
 package.
 
-Because \code{optweight()} offers finer control and uses the same syntax as
-\code{weightit()}, it is recommended that \pkgfun{optweight}{optweight} be used
+Because \pkgfun{optweight}{optweight} offers finer control and uses the same syntax as
+\code{weightit()}, it is recommended that \code{optweight()} be used
 instead of \code{weightit()} with \code{method = "optweight"}.
 \subsection{Binary Treatments}{
 
 For binary treatments, this method estimates the weights using
-\pkgfun{optweight}{optweight}. The following estimands are allowed: ATE, ATT,
-and ATC. The weights are taken from the output of the \code{optweight} fit object.
+\pkgfun{optweight}{optweight.fit}. The following estimands are allowed: ATE, ATT,
+and ATC. The weights are taken from the output of the \code{optweight.fit} fit object.
 }
 
 \subsection{Multi-Category Treatments}{
 
 For multi-category treatments, this method estimates the weights using
-\pkgfun{optweight}{optweight}. The following estimands are allowed: ATE and
-ATT. The weights are taken from the output of the \code{optweight} fit object.
+\pkgfun{optweight}{optweight.fit}. The following estimands are allowed: ATE and
+ATT. The weights are taken from the output of the \code{optweight.fit} fit object.
 }
 
 \subsection{Continuous Treatments}{
 
-For binary treatments, this method estimates the weights using
-\pkgfun{optweight}{optweight}. The weights are taken from the output of the
-\code{optweight} fit object.
+For continuous treatments, this method estimates the weights using
+\pkgfun{optweight}{optweight.fit}. The weights are taken from the output of the
+\code{optweight.fit} fit object.
 }
 
 \subsection{Longitudinal Treatments}{
 
-For longitudinal treatments, \code{optweight()} estimates weights that
-simultaneously satisfy balance constraints at all time points, so only one
-model is fit to obtain the weights. Using \code{method = "sbw"} in
-\code{weightitMSM()} causes \code{is.MSM.method} to be set to \code{TRUE} by default. Setting
-it to \code{FALSE} will run one model for each time point and multiply the weights
-together, a method that is not recommended. \strong{NOTE: neither use of stable balancing weights with longitudinal treatments has been validated!}
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point. This method is not guaranteed to yield exact
+balance at each time point. \strong{NOTE: the use of stable balancing weights with
+longitudinal treatments has not been validated and should not be done!}
 }
 
 \subsection{Sampling Weights}{
 
 Sampling weights are supported through \code{s.weights} in all scenarios, but only
-for versions of \pkg{optweight} after 0.2.5.
+for versions of \pkg{optweight} greater than or equal to 1.0.0.
 }
 
 \subsection{Missing Data}{
@@ -78,7 +76,9 @@ balancing is the ability to allow approximate, rather than exact, balance
 through the \code{tols} argument, which can increase precision even for slight
 relaxations of the constraints.
 
-\code{plot()} can be used on the output of \code{weightit()} with \code{method = "sbw"}
+The function of the weights that is optimized can be changed using the \code{norm} argument. The default \code{norm = "l2"}, minimizes the variance of the weights (i.e., maximizes the ESS). \code{norm = "entropy"} minimizes the negative entropy of the weights and is equivalent to entropy balancing, though in this implementation, inexact balance is allowed. \code{norm = "log"} minimizes the sum of the negative logs of the weights and is equivalent to nonparametric covariate balancing propensity score weighting (npCBPS). See \pkgfun{optweight}{optweight.fit} for the other allowed options to \code{norm} and other arguments.
+
+\code{plot()} can be used on the output of \code{weightit()} with \code{method = "optweight"}
 to display the dual variables; see Examples and \code{\link[=plot.weightit]{plot.weightit()}} for more
 details.
 }
@@ -106,12 +106,12 @@ identical and it's compatible with \pkg{cobalt}, too.
 }
 }
 
-All arguments to \code{optweight()} can be passed through \code{weightit()} or \code{weightitMSM()}, with the following exception:
+All arguments to \code{optweight.fit()} can be passed through \code{weightit()} or \code{weightitMSM()}, with the following exception:
 \itemize{
 \item \code{targets} cannot be used and is ignored.
 }
 
-All arguments take on the defaults of those in \code{optweight()}.
+All arguments take on the defaults of those in \code{optweight.fit()}.
 }
 
 \section{Additional Outputs}{
@@ -123,12 +123,12 @@ A list with one entry:
 \item{\code{duals}}{A data frame of dual variables for each balance constraint.}
 }
 }
-\item{\code{obj}}{When \code{include.obj = TRUE}, the output of the call to \pkgfun{optweight}{optweight}.}
+\item{\code{obj}}{When \code{include.obj = TRUE}, the output of the call to \pkgfun{optweight}{optweight.fit}.}
 }
 }
 
 \examples{
-\dontshow{if (all(sapply(c("optweight", "osqp"), requireNamespace, quietly = TRUE))) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("optweight (>= 1.0.0)")) withAutoprint(\{ # examplesIf}
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
@@ -172,10 +172,7 @@ Estimation With Incomplete Outcome Data. \emph{Journal of the American Statistic
 
 \subsection{Multi-Category Treatments}{
 
-de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and stable weight
-adjustment in non-experimental studies with multivalued treatments: Analysis
-of the effect of an earthquake on post-traumatic stress. \emph{Journal of the Royal Statistical Society: Series A (Statistics in Society)}, n/a(n/a).
-\doi{10.1111/rssa.12561}
+de los Angeles Resa, M., & Zubizarreta, J. R. (2020). Direct and Stable Weight Adjustment in Non-Experimental Studies With Multivalued Treatments: Analysis of the Effect of an Earthquake on Post-Traumatic Stress. \emph{Journal of the Royal Statistical Society Series A: Statistics in Society}, 183(4), 1387–1410. \doi{10.1111/rssa.12561}
 }
 
 \subsection{Continuous treatments}{
@@ -186,5 +183,9 @@ Greifer, N. (2020). \emph{Estimating Balancing Weights for Continuous Treatments
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
 
-\pkgfun{optweight}{optweight} for the fitting function
+\pkgfun{optweight}{optweight.fit} for the fitting function
+
+\code{\link{method_entropy}} for entropy balancing, which is a special case of stable balancing weights.
+
+\code{\link{method_npcbps}} for npCBPS weighting, which is also a special case of stable balancing weights.
 }

@@ -31,6 +31,7 @@ Each component is itself a list containing the following components:
 \item{\code{msm_method_available}}{a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the \code{is.MSM.method} argument of \code{weightitMSM()}.}
 \item{\code{subclass_ok}}{a logical for whether \code{subclass} can be supplied to compute subclassification weights from the propensity scores.}
 \item{\code{packages_needed}}{a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.}
+\item{\code{package_versions_needed}}{a named character vector of the minimal package versions required to use the method. Only present when \code{packages_needed} is not empty.}
 \item{\code{s.weights_ok}}{a logical for whether sampling weights can be used with the method.}
 \item{\code{missing}}{a character vector of the allowed options that can be supplied to \code{missing} when missing data is present. All methods accept \code{"ind"} for the missingness indicator approach; some other methods accept additional values.}
 \item{\code{moments_int_ok}}{a logical for whether \code{moments}, \code{int}, and \code{quantile} can be used with the method.}

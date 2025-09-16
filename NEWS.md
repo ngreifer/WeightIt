@@ -5,9 +5,21 @@ WeightIt News and Updates
 
 * For `predict.ordinal_weightit()`, `type` can now be `"stdlv"` to request predictions on the scale of the standardized latent variable underlying the ordinal responses.
 
+* `moments` can now be supplied as a named vector with a different integer value for each covariate, e.g., `moments = c(x1 = 2, x2 = 3)` to balance just the first two moments of `x1` and the first three of `x2`.
+
+* With `method = "energy"`, a new `tols` argument can be set to request inexact balance on covariate moments.
+
+* Some arguments and documentation for them has changed, in particular `moments`, `int`, and `subclass`, which used to be named arguments of `weightit()` and are now to be supplied through `...`. They are documented only on the help pages of the specific methods that allow them.
+
+* The `covs` component of the `weightit()` output object now only includes the raw covariates, not any transformations. This will affect `cobalt::bal.tab()` output.
+
+* In `summary.weightit()`, a new argument, `weight.range` can be supplied to specify whether the range of weights in each group should be displayed.
+
 * Fixed a bug in which the output of `bread()` was off by a factor of -1. This doesn't affect its use in `sandwich::sandwich()`.
 
 * Fixed a bug in which `bag.fraction` for `method = "gbm"` with binary and multi-category treatments had a default of .5 instead of the stated 1.
+
+* Fixed bugs relating to `method = "optweight"`; sampling weights and the fractional weighted bootstrap can now be used with it.
 
 * Fixed bugs related to `coxph_weightit()` with aliased coefficients and multi-state models. Thanks to Mads Jeppe Tarp-Johansen.
 

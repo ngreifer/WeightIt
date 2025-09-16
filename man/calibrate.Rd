@@ -48,7 +48,7 @@ regression with the previously estimated propensity score as the sole
 predictor. Weights are computed using this new propensity score.
 }
 \examples{
-\dontshow{if (requireNamespace("gbm", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("gbm")) withAutoprint(\{ # examplesIf}
 library("cobalt")
 data("lalonde", package = "cobalt")
 

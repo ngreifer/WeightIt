@@ -200,7 +200,7 @@ When \code{include.obj = TRUE}, the \code{gbm} fit used to generate the predicte
 }
 
 \examples{
-\dontshow{if (requireNamespace("gbm", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("gbm")) withAutoprint(\{ # examplesIf}
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)

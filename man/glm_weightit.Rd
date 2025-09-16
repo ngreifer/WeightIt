@@ -265,7 +265,6 @@ when \code{cluster} is supplied. Not all types are available
 for all models.
 }
 \examples{
-
 data("lalonde", package = "cobalt")
 
 # Logistic regression ATT weights
@@ -283,12 +282,14 @@ summary(fit1)
 # Linear regression outcome model that treats weights
 # as fixed
 fit2 <- lm_weightit(re78 ~ treat, data = lalonde,
-                    weightit = w.out, vcov = "HC0")
+                    weightit = w.out,
+                    vcov = "HC0")
 
 summary(fit2)
-\dontshow{if (requireNamespace("fwb", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
-# example code
 
+# Can also just call summary() with `vcov` option
+summary(fit1, vcov = "HC0")
+\dontshow{if (rlang::is_installed("fwb")) withAutoprint(\{ # examplesIf}
 # Linear regression outcome model that bootstraps
 # estimation of weights and outcome model fitting
 # using fractional weighted bootstrap with "Mammen"

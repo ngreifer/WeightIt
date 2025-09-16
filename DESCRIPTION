@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 1.4.0.9003
+Version: 1.4.0.9004
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -18,7 +18,7 @@ Description: Generates balancing weights for causal effect estimation in observa
 Depends:
     R (>= 4.1.0)
 Imports:
-    cobalt (>= 4.5.1),
+    cobalt (>= 4.6.1),
     ggplot2 (>= 3.3.0),
     chk (>= 0.9.2),
     rlang (>= 1.1.0),
@@ -30,7 +30,7 @@ Imports:
 Suggests:
     rootSolve (>= 1.8.2.4),
     CBPS (>= 0.18),
-    optweight (>= 0.2.4),
+    optweight (>= 1.0.0),
     SuperLearner (>= 2.0-25),
     mclogit,
     MNP (>= 3.1-4),
@@ -59,6 +59,6 @@ URL: https://ngreifer.github.io/WeightIt/, https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
 VignetteBuilder: knitr
 LazyData: true
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3

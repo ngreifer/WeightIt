@@ -150,7 +150,7 @@ When \code{include.obj = TRUE}, the \code{bart2} fit(s) used to generate the pre
 }
 
 \examples{
-\dontshow{if (requireNamespace("dbarts", quietly = TRUE)) (if (getRversion() >= "3.4") withAutoprint else force)(\{ # examplesIf}
+\dontshow{if (rlang::is_installed("dbarts")) withAutoprint(\{ # examplesIf}
 \donttest{data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
