@@ -275,7 +275,10 @@ repo</a> using the following code:</p>
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"ngreifer/optweight"</span><span class="op">)</span></span></code></pre></div>
 <p><em>optweight</em> depends on the <em>osqp</em> package, which
 requires compilation, which means you may need additional software
-installed on your computer to install it from source.</p>
+installed on your computer to install it from source. It’s also a good
+idea to install the <em>highs</em> and <em>scs</em> packages if you want
+to take advantage of all of <em>optweight</em>’s features and optimize
+its performance.</p>
 </div>
 <div class="section level2">
 <h2 id="propensity-score-weighting-using-superlearner-method-super">Propensity score weighting using SuperLearner
