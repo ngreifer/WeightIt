@@ -1,6 +1,6 @@
 #' Weighting methods
 #'
-#' @description `.weightit_methods` is a list containing the allowable weighting
+#' `.weightit_methods` is a list containing the allowable weighting
 #'   methods that can be supplied by name to the `method` argument of
 #'   [weightit()], [weightitMSM()], and [weightit.fit()]. Each entry corresponds
 #'   to an allowed method and contains information about what options are and
@@ -8,7 +8,8 @@
 #'   use by checking functions in \pkg{WeightIt}, it might be of use for package
 #'   authors that want to support different weighting methods.
 #'
-#' @details Each component is itself a list containing the following components:
+#' @details
+#' Each component is itself a list containing the following components:
 #' \describe{
 #' \item{`treat_type`}{at least one of `"binary"`, `"multinomial"`, or `"continuous"` indicating which treatment types are available for this method.}
 #' \item{`estimand`}{which estimands are available for this method. All methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
@@ -19,6 +20,7 @@
 #' \item{`msm_method_available`}{a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the `is.MSM.method` argument of `weightitMSM()`.}
 #' \item{`subclass_ok`}{a logical for whether `subclass` can be supplied to compute subclassification weights from the propensity scores.}
 #' \item{`packages_needed`}{a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.}
+#' \item{`package_versions_needed`}{a named character vector of the minimal package versions required to use the method. Only present when `packages_needed` is not empty.}
 #' \item{`s.weights_ok`}{a logical for whether sampling weights can be used with the method.}
 #' \item{`missing`}{a character vector of the allowed options that can be supplied to `missing` when missing data is present. All methods accept `"ind"` for the missingness indicator approach; some other methods accept additional values.}
 #' \item{`moments_int_ok`}{a logical for whether `moments`, `int`, and `quantile` can be used with the method.}
@@ -83,6 +85,7 @@
     msm_method_available = FALSE,
     subclass_ok = TRUE,
     packages_needed = "dbarts",
+    package_versions_needed = c(dbarts = "0.9-29"),
     s.weights_ok = FALSE,
     missing = "ind",
     moments_int_ok = FALSE,
@@ -206,10 +209,11 @@
     description = "stable balancing weights",
     ps = FALSE,
     msm_valid = FALSE,
-    msm_method_available = TRUE,
+    msm_method_available = FALSE,
     subclass_ok = FALSE,
-    packages_needed = c("optweight", "osqp"),
-    s.weights_ok = tryCatch(packageVersion("optweight") > "0.2.5", error = function(e) FALSE), #Note; need to update optweight to ensure s.weights are treated same as entropy balancing.
+    packages_needed = "optweight",
+    package_versions_needed = c("optweight" = "1.0.0"),
+    s.weights_ok = TRUE,
     missing = "ind",
     moments_int_ok = TRUE,
     moments_default = 1,
