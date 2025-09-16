@@ -102,16 +102,17 @@ summary(W)
     #> 
     #> - Weight ranges:
     #> 
-    #>            Min                                  Max
-    #> treated 1.0000         ||                    1.0000
-    #> control 0.0092 |---------------------------| 3.7432
+    #>           Min                                 Max
+    #> treated 1.            ||                    1.   
+    #> control 0.009 |---------------------------| 3.743
     #> 
     #> - Units with the 5 most extreme weights by group:
-    #>                                            
-    #>               5      4      3      2      1
-    #>  treated      1      1      1      1      1
-    #>             597    573    381    411    303
-    #>  control 3.0301 3.0592 3.2397 3.5231 3.7432
+    #>                                     
+    #>             1     2    3     4     5
+    #>  treated    1     1    1     1     1
+    #>           412   388  226   196   118
+    #>  control 3.03 3.059 3.24 3.523 3.743
+    #> 
     #> 
     #> - Weight statistics:
     #> 
