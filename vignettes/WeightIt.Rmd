@@ -19,7 +19,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
 options(width = 200, digits= 4)
 
-me_ok <- requireNamespace("marginaleffects", quietly = TRUE) && !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))
+me_ok <- rlang::is_installed("marginaleffects")
 set.seed(1000)
 ```
 
@@ -42,8 +42,11 @@ head(lalonde)
 We have our outcome (`re78`), our treatment (`treat`), and the covariates for which balance is desired (`age`, `educ`, `race`, `married`, `nodegree`, `re74`, and `re75`). Using *cobalt*, we can examine the initial imbalance on the covariates:
 
 ```{r}
-bal.tab(treat ~ age + educ + race + married + nodegree + re74 + re75,
-        data = lalonde, estimand = "ATT", thresholds = c(m = .05))
+bal.tab(treat ~ age + educ + race + married + nodegree +
+          re74 + re75,
+        data = lalonde,
+        estimand = "ATT",
+        thresholds = c(m = .05))
 ```
 
 Based on this output, we can see that all variables are imbalanced in the sense that the standardized mean differences (for continuous variables) and differences in proportion (for binary variables) are greater than .05 for all variables. In particular, `re74` and `re75` are quite imbalanced, which is troubling given that they are likely strong predictors of the outcome. We will estimate weights using `weightit()` to try to attain balance on these covariates.
@@ -52,8 +55,11 @@ First, we'll start simple, and use inverse probability weights from propensity s
 
 ```{r}
 library("WeightIt")
-W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
-                  data = lalonde, estimand = "ATT", method = "glm")
+W.out <- weightit(treat ~ age + educ + race + married + nodegree +
+                    re74 + re75,
+                  data = lalonde,
+                  estimand = "ATT",
+                  method = "glm")
 W.out #print the output
 ```
 
@@ -66,21 +72,26 @@ summary(W.out)
 These weights have quite high variability, and yield an ESS of close to 100 in the control group. Let's see if these weights managed to yield balance on our covariates.
 
 ```{r}
-bal.tab(W.out, stats = c("m", "v"), thresholds = c(m = .05))
+bal.tab(W.out, stats = c("m", "v"),
+        thresholds = c(m = .05))
 ```
 
 For nearly all the covariates, these weights yielded very good balance. Only `age` remained imbalanced, with a standardized mean difference greater than .05 and a variance ratio greater than 2. Let's see if we can do better. We'll choose a different method: entropy balancing [@hainmuellerEntropyBalancingCausal2012], which guarantees perfect balance on specified moments of the covariates while minimizing the negative entropy (a measure of dispersion) of the weights.
 
 ```{r}
-W.out <- weightit(treat ~ age + educ + race + married + nodegree + re74 + re75,
-                  data = lalonde, estimand = "ATT", method = "ebal")
+W.out <- weightit(treat ~ age + educ + race + married + nodegree +
+                    re74 + re75,
+                  data = lalonde,
+                  estimand = "ATT",
+                  method = "ebal")
 summary(W.out)
 ```
 
 The variability of the weights has not changed much, but let's see if there are any gains in terms of balance:
 
 ```{r}
-bal.tab(W.out, stats = c("m", "v"), thresholds = c(m = .05))
+bal.tab(W.out, stats = c("m", "v"),
+        thresholds = c(m = .05))
 ```
 
 Indeed, we have achieved perfect balance on the means of the covariates. However, the variance ratio of `age` is still quite high. We could continue to try to adjust for this imbalance, but if there is reason to believe it is unlikely to affect the outcome, it may be best to leave it as is. (You can try adding `I(age^2)` to the formula and see what changes this causes.)
@@ -96,6 +107,7 @@ fit <- lm_weightit(re78 ~ treat * (age + educ + race + married +
 ```{r, message=FALSE, eval = me_ok}
 # G-computation for the treatment effect
 library("marginaleffects")
+
 avg_comparisons(fit, variables = "treat",
                 newdata = subset(treat == 1))
 ```
@@ -108,6 +120,7 @@ Our confidence interval for `treat` contains 0, so there isn't evidence that `tr
 
 ```{r}
 data("msmdata")
+
 head(msmdata)
 ```
 
@@ -117,6 +130,7 @@ Using *cobalt*, we can examine the initial imbalance at each time point and over
 
 ```{r}
 library("cobalt") #if not already attached
+
 bal.tab(list(A_1 ~ X1_0 + X2_0,
              A_2 ~ X1_1 + X2_1 +
                A_1 + X1_0 + X2_0,
@@ -138,6 +152,7 @@ Wmsm.out <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                                A_1 + X1_0 + X2_0),
                         data = msmdata, method = "glm",
                         stabilize = TRUE)
+
 Wmsm.out
 ```
 
@@ -170,8 +185,10 @@ Then, we compute the average expected potential outcomes under each treatment re
 
 ```{r, eval = me_ok}
 library("marginaleffects")
-(p <- avg_predictions(fit,
-                      variables = c("A_1", "A_2", "A_3")))
+
+p <- avg_predictions(fit, variables = c("A_1", "A_2", "A_3"))
+
+p
 ```
 
 We can compare the expected potential outcomes under each regime using `marginaleffects::hypotheses()`. To get all pairwise comparisons, supply the `avg_predictions()` output to `hypotheses(., ~ pairwise)`. To compare individual regimes, we can use `hypotheses()`, identifying the rows of the `avg_predictions()` output. For example, to compare the regimes with no treatment for all three time points vs. the regime with treatment for all three time points, we would run

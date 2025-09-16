@@ -11,7 +11,7 @@ knitr::opts_chunk$set(
   message = FALSE,
   tidy = FALSE,
   fig.align='center',
-  comment = "#>",
+  comment = "##",
   fig.path = "man/figures/README-"
 )
 ```
@@ -22,7 +22,7 @@ knitr::opts_chunk$set(
 
 ### Overview
 
-*WeightIt* is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety of estimands including the ATE, ATT, ATC, ATO, and others, and support for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. *WeightIt* also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. *WeightIt* uses a familiar formula interface and is meant to complement `MatchIt` as a package that provides a unified interface to basic and advanced weighting methods.
+*WeightIt* is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety of estimands including the ATE, ATT, ATC, ATO, and others, and for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. *WeightIt* also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. *WeightIt* uses a familiar formula interface and is meant to complement `MatchIt` as a package that provides a unified interface to basic and advanced weighting methods.
 
 For a complete vignette, see the [website](https://ngreifer.github.io/WeightIt/articles/WeightIt.html) for *WeightIt* or `vignette("WeightIt")`.
 

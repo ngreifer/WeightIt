@@ -264,10 +264,8 @@ safe_str2expression <- function(text) {
 }
 
 #Numbers
-check_if_zero <- function(x) {
-  # this is the default tolerance used in all.equal
-  tolerance <- .Machine$double.eps^0.5
-  abs(x) < tolerance
+check_if_zero <- function(x, tol = 1e-8) {
+  abs(x) < tol
 }
 between <- function(x, range, inclusive = TRUE, na.action = FALSE) {
   if (!all(is.numeric(x))) {

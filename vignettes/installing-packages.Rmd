@@ -149,9 +149,9 @@ pak::pkg_install("rootSolve")
 
 <!-- `ATE` requires compilation, which means you may need additional software installed on your computer to install it from source. -->
 
-## Optimization-based weighting (`method = "optweight"`)
+## Stable balancing weighting (`method = "optweight"`)
 
-*WeightIt* uses the R package *optweight* to perform optimization-based weighting. To install *optweight* from CRAN, run
+*WeightIt* uses the R package *optweight* to estimate stable balancing weights. To install *optweight* from CRAN, run
 
 ```{r}
 pak::pkg_install("optweight")

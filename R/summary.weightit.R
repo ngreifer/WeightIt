@@ -114,7 +114,7 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
   out$coef.of.var <- vapply(tx, function(ti) sd(ww[ti]) / mean_fast(ww[ti]), numeric(1L))
   out$scaled.mad <- vapply(tx, function(ti) mean_abs_dev(ww[ti] / mean_fast(ww[ti])), numeric(1L))
   out$negative.entropy <- vapply(tx, function(ti) neg_ent(ww[ti]), numeric(1L))
-  out$num.zeros <- vapply(tx, function(ti) sum(check_if_zero(ww[ti])), numeric(1L))
+  out$num.zeros <- vapply(tx, function(ti) sum(check_if_zero(ww[ti], tol = 1e-10)), numeric(1L))
 
   if (stabilized) {
     out$weight.mean <- vapply(tx, function(ti) mean_fast(ww[ti]), numeric(1L))
@@ -181,7 +181,7 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
     cat("\n")
   }
 
-  cat0("\n- ", .it("Weight statistics"), ":\n\n")
+  cat0("- ", .it("Weight statistics"), ":\n\n")
   cbind(x$coef.of.var,
         x$scaled.mad,
         x$negative.entropy,

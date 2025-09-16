@@ -32,10 +32,8 @@ pre code {
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
 options(width = 200, digits= 4)
 
-me_ok <- requireNamespace("marginaleffects", quietly = TRUE) &&
-  !isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false"))) &&
-  utils::packageVersion("marginaleffects") > "0.25.0.1"
-su_ok <- requireNamespace("survival", quietly = TRUE)
+me_ok <- rlang::is_installed("marginaleffects (>= 0.29.0)")
+su_ok <- rlang::is_installed("survival")
 ```
 
 ```{r, include = FALSE}
