@@ -149,7 +149,7 @@
   }
 
   if (treat.type == "continuous") {
-    if (is_not_null(estimand) && !identical(toupper(estimand), "ATE")) {
+    if (is_not_null(estimand) && (!chk::vld_string(estimand) || !identical(toupper(estimand), "ATE"))) {
       .wrn("`estimand` is ignored for continuous treatments")
     }
 
@@ -163,7 +163,7 @@
     else .weightit_methods[[method]]$estimand
   }
 
-  if (treat.type == "multinomial") {
+  if (treat.type %in% c("multinomial", "multi-category")) {
     allowable_estimands <- setdiff(allowable_estimands, "ATOS")
   }
 
@@ -473,9 +473,9 @@
 
 .get_control_and_treated_levels <- function(treat, estimand, focal = NULL, treated = NULL) {
 
-  if (is_not_null(attr(treat, "control")) &&
-      is_not_null(attr(treat, "treated"))) {
-    return(setNames(c(attr(treat, "control"), attr(treat, "treated")),
+  if (is_not_null(.attr(treat, "control")) &&
+      is_not_null(.attr(treat, "treated"))) {
+    return(setNames(c(.attr(treat, "control"), .attr(treat, "treated")),
                     c("control", "treated")))
   }
 
@@ -502,11 +502,11 @@
       treated <- focal
     }
   }
-  else if (is_not_null(attr(treat, "treated", TRUE))) {
-    treated <- attr(treat, "treated", TRUE)
+  else if (is_not_null(.attr(treat, "treated"))) {
+    treated <- .attr(treat, "treated")
   }
-  else if (is_not_null(attr(treat, "control", TRUE))) {
-    control <- attr(treat, "control", TRUE)
+  else if (is_not_null(.attr(treat, "control"))) {
+    control <- .attr(treat, "control")
   }
   else if (is_not_null(treated)) {
     if (length(treated) > 1L || treated %nin% unique.vals) {
@@ -670,7 +670,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
       .err("the argument to `num.formula` must have right hand side variables but not a response variable (e.g., ~ V1 + V2)")
     }
 
-    rhs.vars.mentioned.lang <- attr(terms(num.formula), "variables")[-1L]
+    rhs.vars.mentioned.lang <- .attr(terms(num.formula), "variables")[-1L]
     rhs.vars.mentioned <- vapply(rhs.vars.mentioned.lang, deparse1, character(1L))
     rhs.vars.failed <- vapply(rhs.vars.mentioned.lang, function(v) {
       null_or_error(try(eval(v, c(data, env)), silent = TRUE))
@@ -691,7 +691,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
       .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
     }
 
-    rhs.vars.mentioned.lang.list <- lapply(num.formula, function(nf) attr(terms(nf), "variables")[-1L])
+    rhs.vars.mentioned.lang.list <- lapply(num.formula, function(nf) .attr(terms(nf), "variables")[-1L])
     rhs.vars.mentioned <- unique(unlist(lapply(rhs.vars.mentioned.lang.list,
                                                function(r) vapply(r, deparse1, character(1L)))))
     rhs.vars.failed <- vapply(rhs.vars.mentioned, function(v) {
@@ -743,7 +743,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   nd <- NCOL(d)
 
   # moments
-  default_moments <- if_null_then(attr(moments, "moments_default"), 1L)
+  default_moments <- if_null_then(.attr(moments, "moments_default"), 1L)
   poly <- setNames(rep.int(default_moments, nd),
                    colnames(d))
 
@@ -1019,9 +1019,9 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 
   sub <- findInterval(ps,
                       quantile(switch(estimand,
-                                      "ATE" = ps,
-                                      "ATT" = ps[treat == 1],
-                                      "ATC" = ps[treat == 0]),
+                                      ATE = ps,
+                                      ATT = ps[treat == 1],
+                                      ATC = ps[treat == 0]),
                                seq(0, 1, length.out = subclass + 1L)),
                       all.inside = TRUE) |>
     as.integer()
@@ -1778,9 +1778,9 @@ generalized_inverse <- function(sigma, .try = TRUE) {
       eps_i[i] <- h[i]
 
       a_k_ii <- switch(.direction,
-                       "center" = (.f(.x + eps_i, ...) - .f(.x - eps_i, ...)) / (2 * h[i]),
-                       "right" = (.f(.x + 2 * eps_i, ...) - .f0) / (2 * h[i]),
-                       "left" = (.f0 - .f(.x - 2 * eps_i, ...)) / (2 * h[i]))
+                       center = (.f(.x + eps_i, ...) - .f(.x - eps_i, ...)) / (2 * h[i]),
+                       right = (.f(.x + 2 * eps_i, ...) - .f0) / (2 * h[i]),
+                       left = (.f0 - .f(.x - 2 * eps_i, ...)) / (2 * h[i]))
 
       if (is_null(a)) {
         a <- array(NA_real_, dim = c(length(a_k_ii), r, n))

@@ -87,7 +87,7 @@ argument was supplied to \code{weightit} in the fitting function.}
 \item{formula.}{changes to the model formula, passed to the \code{new} argument of
 \code{\link[=update.formula]{update.formula()}}.}
 
-\item{evaluate}{whether to evaluate the call (\code{TRUE}, the default) or just
+\item{evaluate}{\code{logical}; whether to evaluate the call (\code{TRUE}, the default) or just
 return it.}
 }
 \value{
@@ -141,7 +141,7 @@ will be created.
 \code{estfun()} extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with \code{bread()}, is used by \code{\link[sandwich:sandwich]{sandwich::sandwich()}} to compute the robust covariance matrix of the estimated coefficients. See \code{\link[=glm_weightit]{glm_weightit()}} and \code{vcov()} above for more details.
 }
 \examples{
-## See more examples at ?glm_weightit
+## See examples at ?glm_weightit
 }
 \seealso{
 \code{\link[=glm_weightit]{glm_weightit()}} for the page documenting \code{glm_weightit()},

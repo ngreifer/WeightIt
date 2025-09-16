@@ -13,9 +13,9 @@ trim(x, ...)
 \method{trim}{default}(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, ...)
 }
 \arguments{
-\item{x}{A \code{weightit} object or a vector of weights.}
+\item{x}{a \code{weightit} object or a vector of weights.}
 
-\item{\dots}{Not used.}
+\item{\dots}{not used.}
 
 \item{at}{\code{numeric}; either the quantile of the weights above which weights
 are to be trimmed. A single number between .5 and 1, or the number of
@@ -30,7 +30,7 @@ and bottom 3 weights). Default is \code{FALSE} to only trim the higher weights.}
 or not. Default is \code{FALSE} to retain all trimmed units. Setting to \code{TRUE}
 may change the original targeted estimand when not the ATT or ATC.}
 
-\item{treat}{A vector of treatment status for each unit. This should always
+\item{treat}{a vector of treatment status for each unit. This should always
 be included when \code{x} is numeric, but you can get away with leaving it out
 if the treatment is continuous or the estimand is the ATE for binary or
 multi-category treatments.}
@@ -74,13 +74,13 @@ weights are considered for trimming. In general, weights for any group for
 which all the weights are the same will not be considered in the trimming.
 }
 \examples{
-
 library("cobalt")
 data("lalonde", package = "cobalt")
 
 (W <- weightit(treat ~ age + educ + married +
                  nodegree + re74, data = lalonde,
                method = "glm", estimand = "ATT"))
+
 summary(W)
 
 #Trimming the top and bottom 5 weights
@@ -107,20 +107,17 @@ treat <- rbinom(500, 1, .3)
 weights <- rchisq(500, df = 2)
 W <- as.weightit(weights, treat = treat,
                  estimand = "ATE")
+
 summary(W)
+
 summary(trim(W, at = .95))
 }
 \references{
-Cole, S. R., & Hernán, M. Á. (2008). Constructing Inverse
-Probability Weights for Marginal Structural Models. American Journal of
-Epidemiology, 168(6), 656–664.
+Cole, S. R., & Hernán, M. Á. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. \emph{American Journal of Epidemiology}, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 
-Lee, B. K., Lessler, J., & Stuart, E. A. (2011). Weight Trimming and
-Propensity Score Weighting. PLoS ONE, 6(3), e18174.
+Lee, B. K., Lessler, J., & Stuart, E. A. (2011). Weight Trimming and Propensity Score Weighting. \emph{PLoS ONE}, 6(3), e18174. \doi{10.1371/journal.pone.0018174}
 
-Thoemmes, F., & Ong, A. D. (2016). A Primer on Inverse Probability of
-Treatment Weighting and Marginal Structural Models. Emerging Adulthood, 4(1),
-40–59.
+Thoemmes, F., & Ong, A. D. (2016). A Primer on Inverse Probability of Treatment Weighting and Marginal Structural Models. \emph{Emerging Adulthood}, 4(1), 40–59. \doi{10.1177/2167696815621645}
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}

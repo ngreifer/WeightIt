@@ -141,9 +141,7 @@ Tilting for Moment Condition Models with Missing Data. \emph{The Review of Econo
 
 \subsection{\code{estimand = "ATT"}}{
 
-Sant'Anna, P. H. C., & Zhao, J. (2020). Doubly robust
-difference-in-differences estimators. \emph{Journal of Econometrics}, 219(1),
-101–122. \doi{10.1016/j.jeconom.2020.06.003}
+Sant'Anna, P. H. C., & Zhao, J. (2020). Doubly robust difference-in-differences estimators. \emph{Journal of Econometrics}, 219(1), 101–122. \doi{10.1016/j.jeconom.2020.06.003}
 }
 }
 \seealso{

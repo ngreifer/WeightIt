@@ -104,7 +104,6 @@
 #' similarly.
 #'
 #' @references
-#'
 #' ## `estimand = "ATE"`
 #'
 #' Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability
@@ -112,9 +111,7 @@
 #'
 #' ## `estimand = "ATT"`
 #'
-#' Sant'Anna, P. H. C., & Zhao, J. (2020). Doubly robust
-#' difference-in-differences estimators. *Journal of Econometrics*, 219(1),
-#' 101–122. \doi{10.1016/j.jeconom.2020.06.003}
+#' Sant'Anna, P. H. C., & Zhao, J. (2020). Doubly robust difference-in-differences estimators. *Journal of Econometrics*, 219(1), 101–122. \doi{10.1016/j.jeconom.2020.06.003}
 #'
 #' @examplesIf rlang::is_installed("rootSolve")
 #' data("lalonde", package = "cobalt")
@@ -194,8 +191,8 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   .fam <- quasibinomial(link)
 
   groups_to_weight <- switch(estimand,
-                             "ATT" = 0,
-                             "ATC" = 1,
+                             ATT = 0,
+                             ATC = 1,
                              0:1)
 
   fit.list <- par.list <- make_list(groups_to_weight)
@@ -246,24 +243,24 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   }
   else {
     psi <- switch(estimand,
-                  "ATT" = function(B, X, A, SW) {
+                  ATT = function(B, X, A, SW) {
                     p <- .fam$linkinv(drop(X %*% B))
                     SW * (A - (1 - A) * p / (1 - p)) * X
                   },
-                  "ATC" = function(B, X, A, SW) {
+                  ATC = function(B, X, A, SW) {
                     p <- .fam$linkinv(drop(X %*% B))
                     SW * (A * (1 - p) / p - (1 - A)) * X
                   })
 
     verbosely({
       fit.list[[1L]] <- rootSolve::multiroot(f,
-                                            start = start,
-                                            A = treat,
-                                            X = C,
-                                            SW = s.weights,
-                                            .psi = psi,
-                                            rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
-                                            verbose = TRUE)
+                                             start = start,
+                                             A = treat,
+                                             X = C,
+                                             SW = s.weights,
+                                             .psi = psi,
+                                             rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
+                                             verbose = TRUE)
     }, verbose = verbose)
 
     par.list[[1L]] <- fit.list[[1L]]$root
@@ -280,7 +277,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   Mparts <- list(
     psi_treat = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A, SW) {
+      ATE = function(Btreat, Xtreat, A, SW) {
         p0 <- seq_len(length(Btreat) / 2)
         cbind(psi.list[["0"]](Btreat[p0], Xtreat, A, SW),
               psi.list[["1"]](Btreat[-p0], Xtreat, A, SW))
@@ -290,7 +287,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
       }),
     wfun = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A) {
+      ATE = function(Btreat, Xtreat, A) {
         p0 <- seq_len(length(Btreat) / 2)
         A0 <- A == 0
 
@@ -306,7 +303,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
       }),
     dw_dBtreat = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A, SW) {
+      ATE = function(Btreat, Xtreat, A, SW) {
         p0 <- seq_len(length(Btreat) / 2)
         A0 <- A == 0
 
@@ -327,7 +324,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
       }),
     hess_treat = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A, SW) {
+      ATE = function(Btreat, Xtreat, A, SW) {
         p0 <- seq_len(length(Btreat) / 2)
         A0 <- A == 0
 
@@ -341,7 +338,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
         dw <- .dw_dp_bin(ps, A, estimand = estimand) * .fam$mu.eta(XB) * SW
 
         .block_diag(list(crossprod(Xtreat[A0, , drop = FALSE],
-                              dw[A0] * Xtreat[A0, , drop = FALSE]),
+                                   dw[A0] * Xtreat[A0, , drop = FALSE]),
                          crossprod(Xtreat[!A0, , drop = FALSE],
                                    dw[!A0] * Xtreat[!A0, , drop = FALSE])))
       },
@@ -415,7 +412,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   .fam <- quasibinomial(link)
 
   groups_to_weight <- switch(estimand,
-                             "ATE" = levels(treat),
+                             ATE = levels(treat),
                              setdiff(levels(treat), focal))
 
   w <- rep_with(1, treat)
@@ -500,7 +497,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   Mparts <- list(
     psi_treat = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A, SW) {
+      ATE = function(Btreat, Xtreat, A, SW) {
         Bmat <- matrix(Btreat, nrow = ncol(Xtreat),
                        dimnames = list(colnames(Xtreat), groups_to_weight))
 
@@ -516,15 +513,15 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
           m <- matrix(0, nrow = length(A), ncol = length(Bmat[, i]))
 
           m[A %in% c(i, focal), ] <- psi(Bmat[, i],
-                                        Xtreat[A %in% c(i, focal), , drop = FALSE],
-                                        as.numeric(A[A %in% c(i, focal)] == focal),
-                                        SW[A %in% c(i, focal)])
+                                         Xtreat[A %in% c(i, focal), , drop = FALSE],
+                                         as.numeric(A[A %in% c(i, focal)] == focal),
+                                         SW[A %in% c(i, focal)])
           m
         }))
       }),
     wfun = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A) {
+      ATE = function(Btreat, Xtreat, A) {
         Bmat <- matrix(Btreat, nrow = ncol(Xtreat),
                        dimnames = list(colnames(Xtreat), groups_to_weight))
 
@@ -552,7 +549,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       }),
     dw_dBtreat = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A, SW) {
+      ATE = function(Btreat, Xtreat, A, SW) {
         Bmat <- matrix(Btreat, nrow = ncol(Xtreat),
                        dimnames = list(colnames(Xtreat),
                                        levels(A)))
@@ -585,7 +582,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       }),
     hess_treat = switch(
       estimand,
-      "ATE" = function(Btreat, Xtreat, A, SW) {
+      ATE = function(Btreat, Xtreat, A, SW) {
         Bmat <- matrix(Btreat, nrow = ncol(Xtreat),
                        dimnames = list(colnames(Xtreat),
                                        levels(A)))

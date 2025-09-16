@@ -102,7 +102,7 @@ should probably not be used except in special cases. Unlike \code{weightit()},
 \code{weightit.fit()} does not accept a formula and data frame interface and
 instead requires the covariates and treatment to be supplied as a numeric
 matrix and atomic vector, respectively. In this way, \code{weightit.fit()} is to
-\code{weightit()} what \code{\link[=lm.fit]{lm.fit()}} is to \code{\link[=lm]{lm()}} - a thinner, slightly faster
+\code{weightit()} what \code{\link[=lm.fit]{lm.fit()}} is to \code{\link[=lm]{lm()}}: a thinner, slightly faster
 interface that performs minimal argument checking.
 }
 \details{
@@ -152,7 +152,6 @@ W1 <- as.weightit(WF1, covs = covs)
 W1
 summary(W1)
 bal.tab(W1)
-
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, which you should use for estimating weights unless you

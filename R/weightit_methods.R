@@ -1,12 +1,7 @@
 #' Weighting methods
 #'
-#' `.weightit_methods` is a list containing the allowable weighting
-#'   methods that can be supplied by name to the `method` argument of
-#'   [weightit()], [weightitMSM()], and [weightit.fit()]. Each entry corresponds
-#'   to an allowed method and contains information about what options are and
-#'   are not allowed for each method. While this list is primarily for internal
-#'   use by checking functions in \pkg{WeightIt}, it might be of use for package
-#'   authors that want to support different weighting methods.
+#' @description
+#' `.weightit_methods` is a list containing the allowable weighting methods that can be supplied by name to the `method` argument of [weightit()], [weightitMSM()], and [weightit.fit()]. Each entry corresponds to an allowed method and contains information about what options are and are not allowed for each method. While this list is primarily for internal use by checking functions in \pkg{WeightIt}, it might be of use for package authors that want to support different weighting methods.
 #'
 #' @details
 #' Each component is itself a list containing the following components:
@@ -212,7 +207,7 @@
     msm_method_available = FALSE,
     subclass_ok = FALSE,
     packages_needed = "optweight",
-    package_versions_needed = c("optweight" = "1.0.0"),
+    package_versions_needed = c(optweight = "1.0.0"),
     s.weights_ok = TRUE,
     missing = "ind",
     moments_int_ok = TRUE,

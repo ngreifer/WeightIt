@@ -85,9 +85,10 @@ anova(fit1, fit2, vcov = "BS", R = 100)
 # model; note they are nested but not symbolically
 # nested
 fit_s <- glm_weightit(re78 ~ splines::ns(age, df =4),
-                      data = lalonde )
+                      data = lalonde)
 
-fit_l <- glm_weightit( re78 ~ age, data = lalonde )
+fit_l <- glm_weightit(re78 ~ age,
+                      data = lalonde)
 
 anova(fit_s, fit_l)
 \dontshow{\}) # examplesIf}

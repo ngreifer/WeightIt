@@ -1,15 +1,17 @@
 #' Plot information about the weight estimation process
 #' @name plot.weightit
 #'
-#' @description `plot.weightit()` plots information about the weights depending
+#' @description
+#' `plot.weightit()` plots information about the weights depending
 #' on how they were estimated. Currently, only weighting using `method = "gbm"`
 #' or `"optweight"` are supported. To plot the distribution of weights, see
 #' [plot.summary.weightit()].
 #'
 #' @param x a `weightit` object; the output of a call to [weightit()].
-#' @param ... Unused.
+#' @param ... unused.
 #'
-#' @returns A `ggplot` object.
+#' @returns
+#' A `ggplot` object.
 #'
 #' @details
 #'
@@ -42,9 +44,7 @@
 #' @seealso [weightit()], [plot.summary.weightit()]
 #'
 #' @examples
-#'
 #' # See example at the corresponding methods page
-#'
 
 #' @exportS3Method plot weightit
 plot.weightit <- function(x, ...) {
@@ -59,6 +59,5 @@ plot.weightit <- function(x, ...) {
 
   switch(x$method,
          gbm = .plot_tune_gbm(x$info, x$by),
-         optweight = .plot_duals_optweight(x$info, x$by)
-  )
+         optweight = .plot_duals_optweight(x$info, x$by))
 }

@@ -191,7 +191,7 @@ Greifer, N. (2020). \emph{Estimating Balancing Weights for Continuous Treatments
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
 
-\pkgfun{optweight}{optweight.fit} for the fitting function
+\pkgfun{optweight}{optweight.fit} for the fitting function.
 
 \code{\link{method_entropy}} for entropy balancing, which is a special case of stable balancing weights.
 

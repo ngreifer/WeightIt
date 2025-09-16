@@ -399,8 +399,8 @@ center <- function(x, at = NULL, na.rm = TRUE) {
   out <- x - matrix(at, byrow = TRUE, ncol = ncol(x), nrow = nrow(x))
 
   switch(type,
-         "df" = as.data.frame.matrix(out),
-         "vec" = drop(out),
+         df = as.data.frame.matrix(out),
+         vec = drop(out),
          out)
 }
 w.m <- function(x, w = NULL, na.rm = TRUE) {
@@ -676,7 +676,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   #Check if response exists
   if (rlang::is_formula(tt, lhs = TRUE)) {
-    resp.var.mentioned <- attr(tt, "variables")[[2L]]
+    resp.var.mentioned <- .attr(tt, "variables")[[2L]]
     resp.var.mentioned.char <- deparse1(resp.var.mentioned)
 
     test <- tryCatch(eval(resp.var.mentioned, data, env),
@@ -711,7 +711,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   #Check if RHS variables exist
   tt.covs <- delete.response(tt)
 
-  rhs.term.labels <- attr(tt.covs, "term.labels")
+  rhs.term.labels <- .attr(tt.covs, "term.labels")
 
   if (is_null(rhs.term.labels)) {
     new.form <- as.formula("~ 0")
@@ -735,8 +735,8 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
                 treat = treat))
   }
 
-  rhs.term.orders <- attr(tt.covs, "order")
-  rhs.vars.mentioned <- attr(tt.covs, "variables")[-1L]
+  rhs.term.orders <- .attr(tt.covs, "order")
+  rhs.vars.mentioned <- .attr(tt.covs, "variables")[-1L]
   rhs.vars.mentioned.char <- vapply(rhs.vars.mentioned, deparse1, character(1L))
 
   simple.covs <- rhs.vars.mentioned |>
@@ -809,7 +809,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
       if (inherits(test, "rms")) {
         class(test) <- "matrix"
         test <- setNames(as.data.frame(as.matrix(test)),
-                         attr(test, "colnames"))
+                         .attr(test, "colnames"))
       }
       else if (is_not_null(colnames(test))) {
         colnames(test) <- paste(rhs.vars.mentioned.char[i], colnames(test), sep = sep)
@@ -936,7 +936,7 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
   treat
 }
 get_treat_type <- function(treat) {
-  attr(treat, "treat.type")
+  .attr(treat, "treat.type")
 }
 has_treat_type <- function(treat) {
   is_not_null(get_treat_type(treat))
@@ -1206,6 +1206,9 @@ check_if_call_from_fun <- function(fun) {
 
   FALSE
 }
+.attr <- function(x, which) {
+  attr(x, which, exact = TRUE)
+}
 
 #Extract variables from ..., similar to ...elt(), by name without evaluating list(...)
 ...get <- function(x, ifnotfound = NULL) {
@@ -1306,7 +1309,7 @@ Invert <- function(f) {
 #Cholseky decomp with automatic pivoting
 .chol2 <- function(Sinv) {
   ch <- suppressWarnings(chol(Sinv, pivot = TRUE))
-  p <- order(attr(ch, "pivot"))
+  p <- order(.attr(ch, "pivot"))
   ch[, p, drop = FALSE]
 }
 

@@ -41,20 +41,20 @@
 #'   also be a list of one-sided formulas, one for each time point. Unless you
 #'   know what you are doing, we recommend setting `stabilize = TRUE` and
 #'   ignoring `num.formula`.
-#' @param include.obj whether to include in the output a list of the fit objects
+#' @param include.obj `logical`; whether to include in the output a list of the fit objects
 #'   created in the process of estimating the weights at each time point. For
 #'   example, with `method = "glm"`, a list of the `glm` objects containing the
 #'   propensity score models at each time point will be included. See the help
 #'   pages for each method for information on what object will be included if
 #'   `TRUE`.
-#' @param is.MSM.method whether the method estimates weights for multiple time
+#' @param is.MSM.method `logical`; whether the method estimates weights for multiple time
 #'   points all at once (`TRUE`) or by estimating weights at each time point and
 #'   then multiplying them together (`FALSE`). This is only relevant for
 #'   user-specified functions.
-#' @param weightit.force several methods are not valid for estimating weights
+#' @param weightit.force `logical`; several methods are not valid for estimating weights
 #'   with longitudinal treatments, and will produce an error message if
 #'   attempted. Set to `TRUE` to bypass this error message.
-#' @param ...  other arguments for functions called by `weightit()` that control
+#' @param ... other arguments for functions called by `weightit()` that control
 #'   aspects of fitting that are not covered by the above arguments. See Details
 #'   at [weightit()].
 #'
@@ -106,8 +106,7 @@
 #' [summary.weightitMSM()] for summarizing the weights
 #'
 #' @references
-#' Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse
-#' Probability Weights for Marginal Structural Models. *American Journal of Epidemiology*, 168(6), 656–664. \doi{10.1093/aje/kwn164}
+#' Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. *American Journal of Epidemiology*, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 #'
 #' @examples
 #' data("msmdata")
@@ -228,7 +227,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
     treat.list[[i]] <- as.treat(treat.list[[i]], process = TRUE)
 
-    treat.name <- attr(treat.list[[i]], "treat.name")
+    treat.name <- .attr(treat.list[[i]], "treat.name")
 
     if (anyNA(treat.list[[i]]) || !all(is.finite(treat.list[[i]]))) {
       .err(sprintf("no missing or non-finite values are allowed in the treatment variable. Missing or non-finite values found in %s",
@@ -289,7 +288,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   m.i.q <- .process_moments_int_quantile(method = method, ...)
 
   A["s.weights"] <- list(s.weights)
-  A["by.factor"] <- list(attr(processed.by, "by.factor"))
+  A["by.factor"] <- list(.attr(processed.by, "by.factor"))
   A["method"] <- list(method)
   A[c("moments", "int", "quantile")] <- m.i.q[c("moments", "int", "quantile")]
   A["subclass"] <- list(numeric())
@@ -308,7 +307,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     w <- obj[["weights"]]
     stabout <- NULL
     obj.list <- obj[["fit.obj"]]
-    Mparts.list <- attr(obj, "Mparts")
+    Mparts.list <- .attr(obj, "Mparts")
   }
   else {
     if (is_not_null(A[["link"]])) {
@@ -342,13 +341,13 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
       ## Running models ----
 
-      #Returns weights (w) and propensty score (ps)
+      #Returns weights (w) and propensity score (ps)
       obj <- do.call("weightit.fit", A_i)
 
       w.list[i] <- list(obj[["weights"]])
       ps.list[i] <- list(obj[["ps"]])
       obj.list[i] <- list(obj[["fit.obj"]])
-      Mparts.list[i] <- list(attr(obj, "Mparts"))
+      Mparts.list[i] <- list(.attr(obj, "Mparts"))
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
@@ -394,7 +393,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         sw.list[[i]] <- 1 / sw_obj[["weights"]]
         stabout[[i]] <- stab.f[-2L]
 
-        stab.Mparts.list[i] <- list(attr(sw_obj, "Mparts"))
+        stab.Mparts.list[i] <- list(.attr(sw_obj, "Mparts"))
 
         if (is_not_null(stab.Mparts.list[[i]])) {
           #Invert wfun and compute derivative of inverted wfun
@@ -470,14 +469,14 @@ print.weightitMSM <- function(x, ...) {
 
   if (is_not_null(x[["method"]])) {
     method_name <- {
-      if (is_not_null(attr(x[["method"]], "name"))) add_quotes(attr(x[["method"]], "name"))
+      if (is_not_null(.attr(x[["method"]], "name"))) add_quotes(.attr(x[["method"]], "name"))
       else if (is.character(x[["method"]])) add_quotes(x[["method"]])
       else "user-defined"
     }
 
     method_note <- {
-      if (is_not_null(attr(x[["method"]], "package")))
-        sprintf(" (converted from %s)", .it(attr(x[["method"]], "package")))
+      if (is_not_null(.attr(x[["method"]], "package")))
+        sprintf(" (converted from %s)", .it(.attr(x[["method"]], "package")))
       else if (is_not_null(x[["method"]]))
         sprintf(" (%s)", .method_to_phrase(x[["method"]]))
       else
@@ -507,11 +506,12 @@ print.weightitMSM <- function(x, ...) {
     cat(sprintf("    + time %s: %s\n",
                 i,
                 switch(treat.types[i],
-                       "continuous" = "continuous",
-                       "multinomial" = sprintf("%s-category (%s)",
+                       continuous = "continuous",
+                       `multi-category` =,
+                       multinomial = sprintf("%s-category (%s)",
                                                   nunique(x[["treat.list"]][[i]]),
                                                   word_list(levels(x[["treat.list"]][[i]]), and.or = FALSE)),
-                       "binary" = "2-category")))
+                       binary = "2-category")))
   }
 
   if (is_not_null(x[["covs.list"]])) {
@@ -545,30 +545,30 @@ print.weightitMSM <- function(x, ...) {
     if (any_apply(x$stabilization, function(s) is_not_null(all.vars(s)))) {
       cat(paste0("; stabilization factors:\n",
                  if (length(x$stabilization) == 1L) {
-                   sprintf("      %s", word_list(attr(terms(x[["stabilization"]][[1L]]), "term.labels"),
+                   sprintf("      %s", word_list(.attr(terms(x[["stabilization"]][[1L]]), "term.labels"),
                                                  and.or = FALSE))
                  }
                  else {
                    paste(vapply(seq_along(x$stabilization), function(i) {
                      if (i == 1L) {
                        sprintf("    + baseline: %s",
-                               if (is_null(attr(terms(x[["stabilization"]][[i]]), "term.labels"))) "(none)"
-                               else word_list(attr(terms(x[["stabilization"]][[i]]), "term.labels"), and.or = FALSE))
+                               if (is_null(.attr(terms(x[["stabilization"]][[i]]), "term.labels"))) "(none)"
+                               else word_list(.attr(terms(x[["stabilization"]][[i]]), "term.labels"), and.or = FALSE))
                      }
                      else {
                        sprintf("    + after time %s: %s",
                                i - 1L,
-                               word_list(attr(terms(x[["stabilization"]][[i]]), "term.labels"), and.or = FALSE))
+                               word_list(.attr(terms(x[["stabilization"]][[i]]), "term.labels"), and.or = FALSE))
                      }
                    }, character(1L)), collapse = "\n")
                  }))
     }
   }
 
-  trim <- attr(x[["weights"]], "trim")
+  trim <- .attr(x[["weights"]], "trim")
   if (is_not_null(trim)) {
     if (trim < 1) {
-      if (attr(x[["weights"]], "trim.lower")) {
+      if (.attr(x[["weights"]], "trim.lower")) {
         trim <- c(1 - trim, trim)
       }
 
@@ -577,7 +577,7 @@ print.weightitMSM <- function(x, ...) {
     }
     else {
       cat(sprintf(" - weights trimmed at the %s %s\n",
-                  if (attr(x[["weights"]], "trim.lower")) "top and bottom"
+                  if (.attr(x[["weights"]], "trim.lower")) "top and bottom"
                   else "top",
                   trim))
     }

@@ -1,6 +1,7 @@
 #' Predictions for `glm_weightit` objects
 #'
-#' @description `predict()` generates predictions for models fit using
+#' @description
+#' `predict()` generates predictions for models fit using
 #' `glm_weightit()`, `ordinal_weightit()`, `multinom_weightit()`, or
 #' `coxph_weightit()`. This page only details the `predict()` methods after
 #' using `glm_weightit()`, `ordinal_weightit()`, or `multinom_weightit()`. See
@@ -25,7 +26,8 @@
 #'   used. See Details.
 #' @param \dots further arguments passed to or from other methods.
 #'
-#' @returns A numeric vector containing the desired predictions, except for the
+#' @returns
+#' A numeric vector containing the desired predictions, except for the
 #' following circumstances when an ordinal or multinomial model was fit:
 #' * when `type = "response"`, a numeric matrix with a row for each unit and
 #'   a column for each level of the outcome with the predicted probability of
@@ -33,7 +35,8 @@
 #' * when `type = "class"`, a factor with the modal predicted class for each
 #'   unit; for ordinal models, this will be an ordered factor.
 #'
-#' @details For generalized linear models other than ordinal and multinomial
+#' @details
+#' For generalized linear models other than ordinal and multinomial
 #' models, see [stats::predict.glm()] for more information on how predictions
 #' are computed and which arguments can be specified. Note that standard errors
 #' cannot be computed for the predictions using `predict.glm_weightit()`.
@@ -54,7 +57,8 @@
 #' prediction of the latent variable underlying the ordinal response. This
 #' cannot be used with multinomial models. Setting `type = "stdlv"` standardizes these predictions by the implied standard deviation of the ordinal responses, which is a function of the link function, the original covariates, and the coefficient estimates.
 #'
-#' @seealso [stats::predict.glm()] for predictions from generalized linear
+#' @seealso
+#' [stats::predict.glm()] for predictions from generalized linear
 #' models. [glm_weightit()] for the fitting function.
 #' [survival::predict.coxph()] for predictions from Cox proportional hazards
 #' models.
@@ -136,7 +140,7 @@
 predict.glm_weightit <- function(object, newdata = NULL, type = "response",
                                  na.action = na.pass, ...) {
   chk::chk_string(type)
-  type <- switch(type, "probs" = "response", "lp" = "link", type)
+  type <- switch(type, probs = "response", lp = "link", type)
   type <- match_arg(type, c("response", "link"))
 
   stats::predict.glm(object, newdata = newdata, type = type,
@@ -150,7 +154,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
                                      na.action = na.pass, values = NULL, ...) {
 
   chk::chk_string(type)
-  type <- switch(type, "probs" = "response", "lp" = "link", "lv" = "link", type)
+  type <- switch(type, probs = "response", lp = "link", lv = "link", type)
   type <- match_arg(type, c("response", "link", "class", "mean", "stdlv"))
 
   if (type == "stdlv" && !object$family$link %in% c("probit", "logit", "cloglog", "loglog")) {
@@ -170,16 +174,16 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
     }
     else if (type == "stdlv") {
       sigma2 <- switch(object$family$link,
-                       "probit" = 1,
-                       "logit" = pi^2 / 3,
-                       "cloglog" = pi^2 / 6,
-                       "loglog" = pi^2 / 6)
+                       probit = 1,
+                       logit = pi^2 / 3,
+                       cloglog = pi^2 / 6,
+                       loglog = pi^2 / 6)
 
       mu <- switch(object$family$link,
-                   "probit" = 0,
-                   "logit" = 0,
-                   "cloglog" = -digamma(1),
-                   "loglog" = digamma(1))
+                   probit = 0,
+                   logit = 0,
+                   cloglog = -digamma(1),
+                   loglog = digamma(1))
 
       varY <- drop(object$coefficients[seq_col(object$varx)] %*%
                      object$varx %*%
@@ -226,7 +230,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   m <- model.frame(Terms, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
-  cl <- attr(Terms, "dataClasses")
+  cl <- .attr(Terms, "dataClasses")
   if (is_not_null(cl)) {
     .checkMFClasses(cl, m)
   }
@@ -256,16 +260,16 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 
   if (type == "stdlv") {
     sigma2 <- switch(object$family$link,
-                     "probit" = 1,
-                     "logit" = pi^2 / 3,
-                     "cloglog" = pi^2 / 6,
-                     "loglog" = pi^2 / 6)
+                     probit = 1,
+                     logit = pi^2 / 3,
+                     cloglog = pi^2 / 6,
+                     loglog = pi^2 / 6)
 
     mu <- switch(object$family$link,
-                 "probit" = 0,
-                 "logit" = 0,
-                 "cloglog" = -digamma(1),
-                 "loglog" = digamma(1))
+                 probit = 0,
+                 logit = 0,
+                 cloglog = -digamma(1),
+                 loglog = digamma(1))
 
     varY <- drop(object$coefficients[seq_col(object$varx)] %*%
                    object$varx %*%
@@ -313,7 +317,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
                                       na.action = na.pass, values = NULL, ...) {
 
   chk::chk_string(type)
-  type <- switch(type, "probs" = "response", type)
+  type <- switch(type, probs = "response", type)
   type <- match_arg(type, c("response", "class", "mean"))
 
   na.act <- object$na.action
@@ -364,7 +368,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
   m <- model.frame(Terms, newdata, na.action = na.action,
                    xlev = object$xlevels)
 
-  cl <- attr(Terms, "dataClasses")
+  cl <- .attr(Terms, "dataClasses")
   if (is_not_null(cl)) {
     .checkMFClasses(cl, m)
   }
@@ -373,6 +377,7 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
 
   offset <- model.offset(m)
   addO <- object$call$offset
+
   if (is_not_null(addO)) {
     addO <- eval(addO, newdata, environment(tt))
     offset <- {

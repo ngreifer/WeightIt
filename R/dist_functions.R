@@ -164,7 +164,7 @@ get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
                                            function(x) contrasts(x, contrasts = FALSE) / sqrt(2)))
 
   if (ncol(X) > 1L) {
-    .assign <- attr(X, "assign")[-1L]
+    .assign <- .attr(X, "assign")[-1L]
     X <- X[, -1L, drop = FALSE]
   }
   attr(X, "assign") <- .assign
@@ -175,11 +175,11 @@ get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
 }
 
 check_X <- function(X) {
-  if (isTRUE(attr(X, "checked"))) {
+  if (isTRUE(.attr(X, "checked"))) {
     return(X)
   }
 
-  treat <- attr(X, "treat")
+  treat <- .attr(X, "treat")
 
   if (is.data.frame(X)) {
     X <- as.matrix(X)

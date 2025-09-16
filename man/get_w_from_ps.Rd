@@ -135,7 +135,6 @@ known as fine stratification weights and described by Desai et al. (2017).
 }
 }
 \examples{
-
 library("cobalt")
 data("lalonde", package = "cobalt")
 

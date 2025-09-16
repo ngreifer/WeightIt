@@ -1,7 +1,7 @@
 #' Print and Summarize Output
-#' @name summary.weightit
 #'
-#' @description `summary()` generates a summary of the `weightit` or
+#' @description
+#' `summary()` generates a summary of the `weightit` or
 #' `weightitMSM` object to evaluate the properties of the estimated weights.
 #' `plot()` plots the distribution of the weights. `nobs()` extracts the number
 #' of observations.
@@ -52,9 +52,7 @@
 #' @seealso [weightit()], [weightitMSM()], [summary()]
 #'
 #' @examples
-#'
 #' # See example at ?weightit or ?weightitMSM
-#'
 
 #' @exportS3Method summary weightit
 summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...) {
@@ -208,9 +206,9 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
 #' @exportS3Method plot summary.weightit
 #' @rdname summary.weightit
 plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
-  w <- attr(x, "weights")
-  t <- attr(x, "treat")
-  focal <- attr(w, "focal")
+  w <- .attr(x, "weights")
+  t <- .attr(x, "treat")
+  focal <- .attr(w, "focal")
 
   treat.type <- get_treat_type(t)
 

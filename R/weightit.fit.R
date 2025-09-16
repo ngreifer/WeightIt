@@ -1,12 +1,13 @@
 #' Generate Balancing Weights with Minimal Input Processing
 #'
-#' @description `weightit.fit()` dispatches one of the weight estimation methods
+#' @description
+#' `weightit.fit()` dispatches one of the weight estimation methods
 #' determined by `method`. It is an internal function called by [weightit()] and
 #' should probably not be used except in special cases. Unlike `weightit()`,
 #' `weightit.fit()` does not accept a formula and data frame interface and
 #' instead requires the covariates and treatment to be supplied as a numeric
 #' matrix and atomic vector, respectively. In this way, `weightit.fit()` is to
-#' `weightit()` what [lm.fit()] is to [lm()] - a thinner, slightly faster
+#' `weightit()` what [lm.fit()] is to [lm()]: a thinner, slightly faster
 #' interface that performs minimal argument checking.
 #'
 #' @inheritParams weightit
@@ -113,7 +114,6 @@
 #' W1
 #' summary(W1)
 #' bal.tab(W1)
-#'
 
 #' @export
 weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.factor = NULL,
@@ -253,8 +253,9 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
 
     fun <- switch(treat.type,
-                  "multinomial" = paste.(fun, "multi"),
-                  "continuous" = paste.(fun, "cont"),
+                  `multi-category` =,
+                  multinomial = paste.(fun, "multi"),
+                  continuous = paste.(fun, "cont"),
                   fun)
   }
 

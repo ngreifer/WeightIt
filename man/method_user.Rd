@@ -23,7 +23,7 @@ The following arguments are automatically passed to the user-defined function, w
 
 None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
 
-In addition, any additional arguments supplied to \code{weightit()} will be passed on to the fitting function. \code{weightit()} ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \verb{\\dots} as a parameter.
+In addition, any additional arguments supplied to \code{weightit()} will be passed on to the fitting function. \code{weightit()} ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \code{...} as a parameter.
 
 The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither "w" or "weights". If a list, the list can contain other named entries, but only entries named "w", "weights", "ps", and "fit.obj" will be processed. "ps" is a vector of propensity scores and "fit.obj" should be an object used in the fitting process that a user may want to examine and that is included in the \code{weightit} output object as "obj" when \code{include.obj = TRUE}. The "ps" and "fit.obj" components are optional, but "weights" or "w" is required.
 }

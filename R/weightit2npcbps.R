@@ -80,7 +80,8 @@
 #' `cor.prior` argument, which controls the average deviation from zero
 #' correlation between the treatment and covariates allowed.
 #'
-#' @seealso [weightit()], [weightitMSM()], [`method_cbps`]
+#' @seealso
+#' [weightit()], [weightitMSM()], [`method_cbps`]
 #'
 #' [`method_optweight`], which can also be used to perform npCBPS by setting `norm = "log"`. In generally, this `"optweight"` implementation is more stable and flexible.
 #'

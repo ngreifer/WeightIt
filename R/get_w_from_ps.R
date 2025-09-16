@@ -1,6 +1,7 @@
 #' Compute weights from propensity scores
 #'
-#' @description Given a vector or matrix of propensity scores, outputs a vector
+#' @description
+#' Given a vector or matrix of propensity scores, outputs a vector
 #' of weights that target the provided estimand.
 #'
 #' @param ps a vector, matrix, or data frame of propensity scores. See Details.
@@ -34,12 +35,14 @@
 #'   checking, this won't make a difference; otherwise, this can improve
 #'   performance.
 #'
-#' @returns A vector of weights. When `subclass` is not `NULL`, the subclasses
+#' @returns
+#' A vector of weights. When `subclass` is not `NULL`, the subclasses
 #' are returned as the `"subclass"` attribute. When `estimand = "ATOS"`, the
 #' chosen value of `alpha` (the smallest propensity score allowed to remain in
 #' the sample) is returned in the `"alpha"` attribute.
 #'
-#' @details `get_w_from_ps()` applies the formula for computing weights from
+#' @details
+#' `get_w_from_ps()` applies the formula for computing weights from
 #' propensity scores for the desired estimand. The formula for each estimand is
 #' below, with \eqn{A_i} the treatment value for unit \eqn{i} taking on values
 #' \eqn{\mathcal{A} = (1, \ldots, g)}, \eqn{p_{a, i}} the probability of
@@ -178,7 +181,6 @@
 #' \doi{10.1037/a0024918}
 #'
 #' @examples
-#'
 #' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'
@@ -310,9 +312,9 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     w <- stabilize_w(w, treat)
   }
 
-  names(w) <- if_null_then(rownames(ps_mat), names(treat), NULL)
+  names(w) <- if_null_then(rownames(ps_mat), names(treat))
 
-  attr(w, "subclass") <- attr(ps_mat, "sub_mat")
+  attr(w, "subclass") <- .attr(ps_mat, "sub_mat")
 
   if (estimand == "ATOS") {
     attr(w, "alpha") <- alpha.opt
@@ -386,7 +388,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     }
 
   }
-  else if (treat.type == "multinomial") {
+  else if (treat.type %in% c("multinomial", "multi-category")) {
     if (is.matrix(ps)) {
       if (!is.numeric(ps)) {
         .err("`ps` must be numeric when supplied as a matrix")

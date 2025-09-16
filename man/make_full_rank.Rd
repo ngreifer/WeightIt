@@ -10,7 +10,7 @@ make_full_rank(mat, with.intercept = TRUE)
 \item{mat}{a numeric matrix or data frame to be transformed. Typically this
 contains covariates. \code{NA}s are not allowed.}
 
-\item{with.intercept}{whether an intercept (i.e., a vector of 1s) should be
+\item{with.intercept}{\code{logical}; whether an intercept (i.e., a vector of 1s) should be
 added to \code{mat} before making it full rank. If \code{TRUE}, the intercept will be
 used in determining whether a column is linearly dependent on others.
 Regardless, no intercept will be included in the output.}
@@ -41,7 +41,6 @@ be removed, and it will function as though there was an intercept present; if
 more than only column has only one value, only the first one will remain.
 }
 \examples{
-
 set.seed(1234)
 n <- 20
 c1 <- rbinom(n, 1, .4)

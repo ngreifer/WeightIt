@@ -129,8 +129,8 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   w <- exp(log.dens.num - log.dens.denom)
 
   if (isTRUE(...get("plot"))) {
-    d.n <- attr(log.dens.num, "density")
-    d.d <- attr(log.dens.denom, "density")
+    d.n <- .attr(log.dens.num, "density")
+    d.d <- .attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)
   }
 

@@ -36,8 +36,8 @@
     chk::chk_is(weightit, "weightit")
 
     if (!m_est_supported ||
-        (is_null(attr(weightit, "Mparts", exact = TRUE)) &&
-         is_null(attr(weightit, "Mparts.list", exact = TRUE)))) {
+        (is_null(.attr(weightit, "Mparts")) &&
+         is_null(.attr(weightit, "Mparts.list")))) {
 
       if (is_null(vcov)) {
         return("HC0")
@@ -98,7 +98,7 @@
   if (is_null(vcov.)) {
     V <- stats::vcov(object)
     vcov_type <- object$vcov_type
-    cluster <- attr(object, "cluster")
+    cluster <- .attr(object, "cluster")
   }
   else if (is.function(vcov.)) {
     V <- vcov.(object, ...)
@@ -119,8 +119,8 @@
   else if (chk::vld_string(vcov.)) {
     V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
 
-    vcov_type <- attr(V, "vcov_type")
-    cluster <- attr(V, "cluster")
+    vcov_type <- .attr(V, "vcov_type")
+    cluster <- .attr(V, "cluster")
   }
   else {
     .err("`vcov` must be `NULL`, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
@@ -144,7 +144,7 @@
 
     V <- stats::vcov(object)
     vcov_type <- object$vcov_type
-    cluster <- attr(object, "cluster")
+    cluster <- .attr(object, "cluster")
   }
   else if (is.function(vcov.)) {
     V <- vcov.(object, ...)
@@ -165,8 +165,8 @@
   else if (chk::vld_string(vcov.)) {
     V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
 
-    vcov_type <- attr(V, "vcov_type")
-    cluster <- attr(V, "cluster")
+    vcov_type <- .attr(V, "vcov_type")
+    cluster <- .attr(V, "cluster")
   }
   else {
     .err("`vcov` must be `NULL`, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
@@ -194,10 +194,10 @@
 
   object$vcov_type <- {
     if (is_null(vcov)) "none"
-    else if_null_then(vcov_type, attr(vcov, "vcov_type"))
+    else if_null_then(vcov_type, .attr(vcov, "vcov_type"))
   }
 
-  attr(object, "cluster") <- attr(vcov, "cluster")
+  attr(object, "cluster") <- .attr(vcov, "cluster")
 
   object$vcov <- .modify_vcov_info(object[["vcov"]])
 
@@ -215,7 +215,7 @@
     if (is_not_null(object[["vcov"]])) {
       return(.modify_vcov_info(object[["vcov"]],
                                vcov_type = object[["vcov_type"]],
-                               cluster = attr(object, "cluster")))
+                               cluster = .attr(object, "cluster")))
     }
 
     if (!identical(object[["vcov_type"]], "none")) {
@@ -238,7 +238,7 @@
 
   cluster <- {
     if ("cluster" %in% ...names()) ...get("cluster")
-    else attr(object, "cluster")
+    else .attr(object, "cluster")
   }
 
   internal_model_call <- .build_internal_model_call(object, vcov = vcov.)
@@ -445,7 +445,7 @@
 
     if (signif.legend) {
       w <- getOption("width")
-      sleg <- attr(Signif, "legend")
+      sleg <- .attr(Signif, "legend")
 
       if (w < nchar(sleg)) {
         sleg <- strwrap(sleg, width = w - 2L, prefix = space(2L))
@@ -652,8 +652,8 @@
   offset <- if_null_then(fit[["offset"]], rep_with(0, Y))
 
   if (any(aliased)) {
-    if (is_not_null(attr(fit[["qr"]][["qr"]], "aliased"))) {
-      Xout <- Xout[, !attr(fit[["qr"]][["qr"]], "aliased"), drop = FALSE]
+    if (is_not_null(.attr(fit[["qr"]][["qr"]], "aliased"))) {
+      Xout <- Xout[, !.attr(fit[["qr"]][["qr"]], "aliased"), drop = FALSE]
     }
     else {
       Xout <- make_full_rank(Xout, with.intercept = FALSE)
@@ -703,8 +703,8 @@
   }
 
   if (vcov == "FWB") {
-    R <- attr(vcov, "R")
-    fwb.args <- attr(vcov, "fwb.args")
+    R <- .attr(vcov, "R")
+    fwb.args <- .attr(vcov, "fwb.args")
 
     internal_model_call$x <- FALSE
     internal_model_call$y <- FALSE
@@ -714,8 +714,7 @@
       wcall <- weightit[["call"]]
       wenv <- weightit[["env"]]
 
-      if (!deparse1(wcall[[1L]]) %in% c("weightit", "weightitMSM") ||
-          !is.environment(wenv)) {
+      if (deparse1(wcall[[1L]]) %nin% c("weightit", "weightitMSM")) {
         .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
       }
     }
@@ -769,7 +768,7 @@
     }
   }
   else if (vcov == "BS") {
-    R <- attr(vcov, "R")
+    R <- .attr(vcov, "R")
 
     internal_model_call$x <- FALSE
     internal_model_call$y <- FALSE
@@ -781,8 +780,7 @@
       wcall <- weightit[["call"]]
       wenv <- weightit[["env"]]
 
-      if (!deparse1(wcall[[1L]]) %in% c("weightit", "weightitMSM") ||
-          !is.environment(wenv)) {
+      if (deparse1(wcall[[1L]]) %nin% c("weightit", "weightitMSM")) {
         .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
       }
 
@@ -827,7 +825,7 @@
 
     if (is_null(cluster)) {
       boot_out <- do.call("rbind", lapply(seq_len(R), function(i) {
-        ind <- sample(seq_row(data), nrow(data), replace = TRUE)
+        ind <- sample.int(nrow(data), replace = TRUE)
         bootfun(data, ind)
       }))
 
@@ -839,7 +837,7 @@
         cli <- split(seq_along(cluster[[i]]), cluster[[i]])
 
         boot_out <- do.call("rbind", lapply(seq_len(R), function(i) {
-          ind <- unlist(cli[sample(seq_along(cli), length(cli), replace = TRUE)])
+          ind <- unlist(cli[sample.int(length(cli), replace = TRUE)])
           bootfun(data, ind)
         }))
 
@@ -866,8 +864,8 @@
   }
   else {
     if (vcov == "asympt") {
-      Mparts <- attr(weightit, "Mparts", exact = TRUE)
-      Mparts.list <- attr(weightit, "Mparts.list", exact = TRUE)
+      Mparts <- .attr(weightit, "Mparts")
+      Mparts.list <- .attr(weightit, "Mparts.list")
     }
     else {
       Mparts <- Mparts.list <- NULL
@@ -1032,7 +1030,7 @@
     fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
   }
 
-  fit$vcov_type <- attr(fit[["vcov"]], "vcov_type")
+  fit$vcov_type <- .attr(fit[["vcov"]], "vcov_type")
 
   fit$call <- model_call
 
@@ -1043,7 +1041,7 @@
   if (isFALSE(x)) fit$x <- NULL
   if (isFALSE(y)) fit$y <- NULL
 
-  attr(fit, "cluster") <- attr(fit[["vcov"]], "cluster")
+  attr(fit, "cluster") <- .attr(fit[["vcov"]], "cluster")
 
   fit[["vcov"]] <- .modify_vcov_info(fit[["vcov"]])
 

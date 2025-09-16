@@ -340,19 +340,19 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   # Balance condition for ATT
   psi_bal <- switch(estimand,
-                    "ATE" = function(B, Xm, Xb = Xm, A, SW) {
+                    ATE = function(B, Xm, Xb = Xm, A, SW) {
                       p <- .fam$linkinv(drop(Xm %*% B))
                       SW * (A / p - (1 - A) / (1 - p)) * Xb
                     },
-                    "ATT" = function(B, Xm, Xb = Xm, A, SW) {
+                    ATT = function(B, Xm, Xb = Xm, A, SW) {
                       p <- .fam$linkinv(drop(Xm %*% B))
                       SW * ((A - p) / (1 - p)) * Xb
                     },
-                    "ATC" = function(B, Xm, Xb = Xm, A, SW) {
+                    ATC = function(B, Xm, Xb = Xm, A, SW) {
                       p <- .fam$linkinv(drop(Xm %*% B))
                       SW * ((A - p) / p) * Xb
                     },
-                    "ATO" = function(B, Xm, Xb = Xm, A, SW) {
+                    ATO = function(B, Xm, Xb = Xm, A, SW) {
                       p <- .fam$linkinv(drop(Xm %*% B))
                       SW * (A * (1 - p) - (1 - A) * p) * Xb
                     })
@@ -427,16 +427,16 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
       S11 <- crossprod(SW * g * (p * (1 - p)) * Xm, SW * g * Xm)
       S12 <- switch(estimand,
-                    "ATE" = crossprod(SW * g * Xm, SW * Xb),
-                    "ATT" = crossprod(SW * g * Xm, SW * p * Xb),
-                    "ATC" = crossprod(SW * g * Xm, SW * (1 - p) * Xb),
-                    "ATO" = crossprod(SW * g * Xm, SW * p * (1 - p) * Xb))
+                    ATE = crossprod(SW * g * Xm, SW * Xb),
+                    ATT = crossprod(SW * g * Xm, SW * p * Xb),
+                    ATC = crossprod(SW * g * Xm, SW * (1 - p) * Xb),
+                    ATO = crossprod(SW * g * Xm, SW * p * (1 - p) * Xb))
       S21 <- t(S12)
       S22 <- switch(estimand,
-                    "ATE" = crossprod(SW / (p * (1 - p)) * Xb, SW * Xb),
-                    "ATT" = crossprod(SW * (p / (1 - p)) * Xb, SW * Xb),
-                    "ATC" = crossprod(SW * ((1 - p) / p) * Xb, SW * Xb),
-                    "ATO" = crossprod(SW * (p * (1 - p)) * Xb, SW * Xb))
+                    ATE = crossprod(SW / (p * (1 - p)) * Xb, SW * Xb),
+                    ATT = crossprod(SW * (p / (1 - p)) * Xb, SW * Xb),
+                    ATC = crossprod(SW * ((1 - p) / p) * Xb, SW * Xb),
+                    ATO = crossprod(SW * (p * (1 - p)) * Xb, SW * Xb))
 
       rbind(cbind(S11, S12),
             cbind(S21, S22)) / N
@@ -604,14 +604,14 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   psi_bal <- switch(estimand,
-                    "ATE" = function(B, Xm, Xb = Xm, A, SW) {
+                    ATE = function(B, Xm, Xb = Xm, A, SW) {
                       pp <- get_pp(B, Xm)
 
                       do.call("cbind", lapply(combs, function(co) {
                         SW * ((A == co[1L]) / pp[, co[1L]] - (A == co[2L]) / pp[, co[2L]]) * Xb
                       }))
                     },
-                    "ATO" = function(B, Xm, Xb = Xm, A, SW) {
+                    ATO = function(B, Xm, Xb = Xm, A, SW) {
                       pp <- get_pp(B, Xm)
 
                       do.call("cbind", lapply(combs, function(co) {
@@ -701,8 +701,8 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
       }
 
       swXmXb <- switch(estimand,
-                       "ATE" = crossprod(SW * Xm, SW * Xb),
-                       "ATO" = crossprod(SW * Xm, SW * Xb / wden),
+                       ATE = crossprod(SW * Xm, SW * Xb),
+                       ATO = crossprod(SW * Xm, SW * Xb / wden),
                        crossprod(SW * Xm, SW * pp[, focal] * Xb))
 
       S <- list()
@@ -732,7 +732,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
       for (ii in combs) {
         for (jj in combs) {
           m <- switch(estimand,
-                      "ATE" = {
+                      ATE = {
                         if (identical(ii, jj))    crossprod(SW * (1 / pp[, ii[1L]] + 1 / pp[, ii[2L]]) * Xb, SW * Xb)
                         else if (ii[1L] == jj[1L])  crossprod(SW * (1 / pp[, ii[1L]]) * Xb, SW * Xb)
                         else if (ii[1L] == jj[2L]) -crossprod(SW * (1 / pp[, ii[1L]]) * Xb, SW * Xb)
@@ -740,7 +740,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                         else if (ii[2L] == jj[2L])  crossprod(SW * (1 / pp[, ii[2L]]) * Xb, SW * Xb)
                         else sq_matrix(0, n = ncol(Xb))
                       },
-                      "ATO" = {
+                      ATO = {
                         if (identical(ii, jj))    crossprod(SW * (1 / pp[, ii[1L]] + 1 / pp[, ii[2L]]) * Xb,
                                                             SW * Xb / wden)
                         else if (ii[1L] == jj[1L])  crossprod(SW * (1 / pp[, ii[1L]]) * Xb, SW * Xb / wden)
@@ -1116,7 +1116,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
     }
 
-    if (treat.types[i] %in% c("binary", "multinomial")) {
+    if (treat.types[i] %in% c("binary", "multinomial", "multi-category")) {
       covs.list[[i]] <- .apply_moments_int_quantile(covs.list[[i]],
                                                     moments = ...get("moments"),
                                                     int = ...get("int"),
@@ -1135,9 +1135,10 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
     treat.list[[i]] <- switch(
       treat.types[i],
-      "binary" = binarize(treat.list[[i]], one = get_treated_level(treat.list[[i]], "ATE")),
-      "multinomial" = factor(treat.list[[i]]),
-      "continuous" = scale_w(treat.list[[i]], s.weights)
+      binary = binarize(treat.list[[i]], one = get_treated_level(treat.list[[i]], "ATE")),
+      `multi-category` =,
+      multinomial = factor(treat.list[[i]]),
+      continuous = scale_w(treat.list[[i]], s.weights)
     )
 
     for (j in seq_col(covs.list[[i]])) {
@@ -1187,9 +1188,10 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   for (i in seq_along(treat.list)) {
     coef_ind[[i]] <- length(unlist(coef_ind)) + switch(
       treat.types[i],
-      "binary" = seq_col(covs.list[[i]]),
-      "multinomial" = seq_len((nlevels(treat.list[[i]]) - 1L) * ncol(covs.list[[i]])),
-      "continuous" = seq_len(3L + ncol(covs.list[[i]]))
+      binary = seq_col(covs.list[[i]]),
+      `multi-category` =,
+      multinomial = seq_len((nlevels(treat.list[[i]]) - 1L) * ncol(covs.list[[i]])),
+      continuous = seq_len(3L + ncol(covs.list[[i]]))
     )
   }
 
@@ -1222,7 +1224,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
                 weights = SW)$coefficients
       }
     }
-    else if (treat.types[i] == "multinomial") {
+    else if (treat.types[i] %in% c("multinomial", "multi-category")) {
       get_p[[i]] <- function(B, X, A) {
         qq <- exp(X %*% matrix(B, nrow = ncol(X)))
 
@@ -1362,7 +1364,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
           SW * (A - p) * X
         }
       }
-      else if (treat.types[i] == "multinomial") {
+      else if (treat.types[i] %in% c("multinomial", "multi-category")) {
         get_psi_glm[[i]] <- function(p, X, A, SW) {
           do.call("cbind", lapply(levels(A), function(i) {
             SW * ((A == i) - p[, i]) * X

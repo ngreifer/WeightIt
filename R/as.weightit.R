@@ -1,6 +1,7 @@
 #' Create a `weightit` object manually
 #'
-#' @description This function allows users to get the benefits of a `weightit`
+#' @description
+#' This function allows users to get the benefits of a `weightit`
 #' object when using weights not estimated with [weightit()] or [weightitMSM()].
 #' These benefits include diagnostics, plots, and direct compatibility with
 #' \pkg{cobalt} for assessing balance.

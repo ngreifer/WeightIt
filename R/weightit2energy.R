@@ -2,7 +2,8 @@
 #' @name method_energy
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating weights using
+#' @description
+#' This page explains the details of estimating weights using
 #' energy balancing by setting `method = "energy"` in the call to [weightit()]
 #' or [weightitMSM()]. This method can be used with binary, multi-category, and
 #' continuous treatments.
@@ -103,9 +104,7 @@
 #' entered covariates; for continuous treatments, this involves exact balance
 #' on the treatment-covariate correlations of the entered covariates. The constraint on exact balance can be relaxed using the `tols` argument.
 #'
-#' Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some
-#' defaults differ from those in `osqpSettings()`; see *Reproducibility*
-#' below.
+#' Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some defaults differ from those in `osqpSettings()`; see *Reproducibility* section.
 #'
 #' @section Additional Outputs:
 #'
@@ -181,13 +180,11 @@
 #' @references
 #' ## Binary and multi-category treatments
 #'
-#' Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions.
-#' *Journal of Causal Inference*, 12(1). \doi{10.1515/jci-2022-0029}
+#' Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions. *Journal of Causal Inference*, 12(1). \doi{10.1515/jci-2022-0029}
 #'
 #' ## Continuous treatments
 #'
-#' Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for
-#' causal inference with continuous treatments. *Journal of the American Statistical Association*, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
+#' Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. *Journal of the American Statistical Association*, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 #'
 #' @examplesIf rlang::is_installed("osqp")
 #' data("lalonde", package = "cobalt")

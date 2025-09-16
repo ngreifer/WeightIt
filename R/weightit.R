@@ -1,6 +1,7 @@
 #' Estimate Balancing Weights
 #'
-#' @description `weightit()` allows for the easy generation of balancing weights
+#' @description
+#' `weightit()` allows for the easy generation of balancing weights
 #' using a variety of available methods for binary, continuous, and
 #' multi-category treatments. Many of these methods exist in other packages,
 #' which `weightit()` calls; these packages must be installed to use the desired
@@ -45,11 +46,11 @@
 #'   one `by` variable is allowed; to stratify by multiply variables
 #'   simultaneously, create a new variable that is a full cross of those
 #'   variables using [interaction()].
-#' @param s.weights A vector of sampling weights or the name of a variable in
+#' @param s.weights a vector of sampling weights or the name of a variable in
 #'   `data` that contains sampling weights. These can also be matching weights
 #'   if weighting is to be used on matched data. See the individual pages for
 #'   each method for information on whether sampling weights can be supplied.
-#' @param ps A vector of propensity scores or the name of a variable in `data`
+#' @param ps a vector of propensity scores or the name of a variable in `data`
 #'   containing propensity scores. If not `NULL`, `method` is ignored unless it
 #'   is a user-supplied function, and the propensity scores will be used to
 #'   create weights. `formula` must include the treatment variable in `data`,
@@ -347,7 +348,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A["treat"] <- list(treat)
   A["covs"] <- list(covs)
   A["s.weights"] <- list(s.weights)
-  A["by.factor"] <- list(attr(processed.by, "by.factor"))
+  A["by.factor"] <- list(.attr(processed.by, "by.factor"))
   A["estimand"] <- list(estimand)
   A["focal"] <- list(focal)
   A["stabilize"] <- list(FALSE)
@@ -403,12 +404,12 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               obj = obj$fit.obj) |>
     clear_null()
 
-  if (keep.mparts && is_not_null(attr(obj, "Mparts"))) {
+  if (keep.mparts && is_not_null(.attr(obj, "Mparts"))) {
     if (is_null(stabilize)) {
-      attr(out, "Mparts") <- attr(obj, "Mparts")
+      attr(out, "Mparts") <- .attr(obj, "Mparts")
     }
     else {
-      stab.Mparts <- attr(sw_obj, "Mparts")
+      stab.Mparts <- .attr(sw_obj, "Mparts")
       #Invert wfun and compute derivative of inverted wfun
       .wfun <- stab.Mparts$wfun
       stab.Mparts$wfun <- Invert(.wfun)
@@ -420,7 +421,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
         }
       }
 
-      attr(out, "Mparts.list") <- list(attr(obj, "Mparts"), stab.Mparts)
+      attr(out, "Mparts.list") <- list(.attr(obj, "Mparts"), stab.Mparts)
     }
   }
 
@@ -437,14 +438,14 @@ print.weightit <- function(x, ...) {
 
   if (is_not_null(x[["method"]])) {
     method_name <- {
-      if (is_not_null(attr(x[["method"]], "name"))) add_quotes(attr(x[["method"]], "name"))
+      if (is_not_null(.attr(x[["method"]], "name"))) add_quotes(.attr(x[["method"]], "name"))
       else if (is.character(x[["method"]])) add_quotes(x[["method"]])
       else "user-defined"
     }
 
     method_note <- {
-      if (is_not_null(attr(x[["method"]], "package")))
-        sprintf(" (converted from %s)", .it(attr(x[["method"]], "package")))
+      if (is_not_null(.attr(x[["method"]], "package")))
+        sprintf(" (converted from %s)", .it(.attr(x[["method"]], "package")))
       else if (is_not_null(x[["method"]]))
         sprintf(" (%s)", .method_to_phrase(x[["method"]]))
       else
@@ -470,11 +471,12 @@ print.weightit <- function(x, ...) {
 
   cat(sprintf(" - treatment: %s\n",
               switch(treat.type,
-                     "continuous" = "continuous",
-                     "multinomial" = sprintf("%s-category (%s)",
+                     continuous = "continuous",
+                     `multi-category` =,
+                     multinomial = sprintf("%s-category (%s)",
                                              nunique(x[["treat"]]),
                                              word_list(levels(x[["treat"]]), and.or = FALSE)),
-                     "binary" = "2-category")))
+                     binary = "2-category")))
 
   if (is_not_null(x[["estimand"]])) {
     cat(sprintf(" - estimand: %s\n",
@@ -498,21 +500,21 @@ print.weightit <- function(x, ...) {
   }
 
   if (is_not_null(x[["moderator"]])) {
-    nsubgroups <- nlevels(attr(x[["moderator"]], "by.factor"))
+    nsubgroups <- nlevels(.attr(x[["moderator"]], "by.factor"))
     cat(sprintf(" - moderator: %s (%s subgroups)\n",
                 word_list(names(x[["moderator"]]), and.or = FALSE),
                 nsubgroups))
   }
 
-  trim <- attr(x[["weights"]], "trim")
+  trim <- .attr(x[["weights"]], "trim")
   if (is_not_null(trim)) {
     if (trim < 1) {
-      if (attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
+      if (.attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
       cat(sprintf(" - weights trimmed at %s\n", word_list(paste0(round(100 * trim, 2L), "%"))))
     }
     else {
       cat(sprintf(" - weights trimmed at the %s %s\n",
-                  if (attr(x[["weights"]], "trim.lower")) "top and bottom"
+                  if (.attr(x[["weights"]], "trim.lower")) "top and bottom"
                   else "top",
                   trim))
     }

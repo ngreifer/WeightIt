@@ -1,9 +1,9 @@
 #' Propensity Score Weighting Using Generalized Linear Models
 #' @name method_glm
-#' @aliases method_glm
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating weights from
+#' @description
+#' This page explains the details of estimating weights from
 #' generalized linear model-based propensity scores by setting `method = "glm"`
 #' in the call to [weightit()] or [weightitMSM()]. This method can be used with
 #' binary, multi-category, and continuous treatments.
@@ -46,8 +46,7 @@
 #'
 #' For continuous treatments, weights are estimated as
 #' \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-#' stabilization factor) is
-#' the unconditional density of treatment evaluated the observed treatment value
+#' stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
 #' and \eqn{f_{A|X}(a_i)} (known as the generalized propensity score) is the
 #' conditional density of treatment given the covariates evaluated at the
 #' observed value of treatment. The shape of \eqn{f_A(.)} and \eqn{f_{A|X}(.)}
@@ -66,7 +65,7 @@
 #' ## Sampling Weights
 #'
 #' Sampling weights are supported through `s.weights` in all scenarios except
-#' for multi-category treatments with `link = "bayes.probit"` and for binary and
+#' for multi-category treatments with `multi.method = "mnp"` and for binary and
 #' continuous treatments with `missing = "saem"` (see below). Warning messages
 #' may appear otherwise about non-integer successes, and these can be ignored.
 #'
@@ -147,7 +146,6 @@
 #' @seealso [weightit()], [weightitMSM()], [get_w_from_ps()]
 #'
 #' @references
-#'
 #' ## Binary treatments
 #'
 #' - `estimand = "ATO"`
@@ -156,9 +154,7 @@
 #'
 #' - `estimand = "ATM"`
 #'
-#' Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in
-#' Propensity Score Analysis. *The International Journal of Biostatistics*,
-#' 9(2). \doi{10.1515/ijb-2012-0030}
+#' Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. *The International Journal of Biostatistics*, 9(2). \doi{10.1515/ijb-2012-0030}
 #'
 #' - `estimand = "ATOS"`
 #'
@@ -178,25 +174,17 @@
 #'
 #' - Firth corrected logistic regression
 #'
-#' Puhr, R., Heinze, G., Nold, M., Lusa, L., & Geroldinger, A. (2017). Firth’s
-#' logistic regression with rare events: Accurate effect estimates and
-#' predictions? *Statistics in Medicine*, 36(14), 2302–2317.
-#' \doi{10.1002/sim.7273}
+#' Puhr, R., Heinze, G., Nold, M., Lusa, L., & Geroldinger, A. (2017). Firth’s logistic regression with rare events: Accurate effect estimates and predictions? *Statistics in Medicine*, 36(14), 2302–2317. \doi{10.1002/sim.7273}
 #'
 #' - SAEM logistic regression for missing data
 #'
-#' Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing
-#' covariates — Parameter estimation, model selection and prediction within a
-#' joint-modeling framework. *Computational Statistics & Data Analysis*, 106907.
-#' \doi{10.1016/j.csda.2019.106907}
+#' Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. *Computational Statistics & Data Analysis*, 106907. \doi{10.1016/j.csda.2019.106907}
 #'
 #' ## Multi-Category Treatments
 #'
 #' - `estimand = "ATO"`
 #'
-#' Li, F., & Li, F. (2019). Propensity score weighting for causal inference with
-#' multiple treatments. *The Annals of Applied Statistics*, 13(4), 2389–2415.
-#' \doi{10.1214/19-AOAS1282}
+#' Li, F., & Li, F. (2019). Propensity score weighting for causal inference with  multiple treatments. *The Annals of Applied Statistics*, 13(4), 2389–2415. \doi{10.1214/19-AOAS1282}
 #'
 #' - `estimand = "ATM"`
 #'
@@ -369,8 +357,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     rlang::check_installed("logistf")
 
     fit_fun <- switch(link,
-                      "flic" = logistf::flic,
-                      "flac" = logistf::flac)
+                      flic = logistf::flic,
+                      flac = logistf::flac)
 
     ctrl_fun <- logistf::logistf.control
 
@@ -501,7 +489,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
                                     stabilize = stabilize)
       },
       dw_dBtreat = switch(estimand,
-                          "ATOS" = NULL,
+                          ATOS = NULL,
                           function(Btreat, Xtreat, A, SW) {
                             XB <- drop(Xtreat %*% Btreat)
                             ps <- family$linkinv(XB)
@@ -618,22 +606,20 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   link.ignored <- multi.method %in% c("mclogit", "mnp", "brmultinom", "bracl")
 
   #Process link
-  acceptable.links <- switch(
-    multi.method,
-    "weightit" = {
-      if (ord.treat) c("logit", "probit", "cloglog", "loglog",
-                       "identity", "log", "clog", "cauchit")
-      else "logit"
-    },
-    "glm" = c("logit", "probit", "cloglog", "loglog", "identity",
-              "log", "clog", "cauchit"),
-    "polr" = c("logit", "probit", "loglog", "cloglog", "cauchit"),
-    "brmultinom" = c("br.logit", "logit"),
-    "bracl" = c("br.logit", "logit"),
-    "mnp" = c("bayes.probit", "probit"),
-    "mclogit" = "logit",
-    "saem" = "logit"
-  )
+  acceptable.links <- switch(multi.method,
+                             weightit = {
+                               if (ord.treat) c("logit", "probit", "cloglog", "loglog",
+                                                "identity", "log", "clog", "cauchit")
+                               else "logit"
+                             },
+                             glm = c("logit", "probit", "cloglog", "loglog", "identity",
+                                     "log", "clog", "cauchit"),
+                             polr = c("logit", "probit", "loglog", "cloglog", "cauchit"),
+                             brmultinom = c("br.logit", "logit"),
+                             bracl = c("br.logit", "logit"),
+                             mnp = c("bayes.probit", "probit"),
+                             mclogit = "logit",
+                             saem = "logit")
 
   if (is_null(link)) {
     link <- acceptable.links[1L]
@@ -1092,8 +1078,8 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   w <- exp(log.dens.num - log.dens.denom)
 
   if (isTRUE(...get("plot"))) {
-    d.n <- attr(log.dens.num, "density")
-    d.d <- attr(log.dens.denom, "density")
+    d.n <- .attr(log.dens.num, "density")
+    d.d <- .attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)
   }
 

@@ -1,6 +1,7 @@
 #' Fitting Weighted Generalized Linear Models
 #'
-#' @description `glm_weightit()` is used to fit generalized linear models with a
+#' @description
+#' `glm_weightit()` is used to fit generalized linear models with a
 #' covariance matrix that accounts for estimation of weights, if supplied.
 #' `lm_weightit()` is a wrapper for `glm_weightit()` with the Gaussian family
 #' and identity link (i.e., a linear model). `ordinal_weightit()` fits
@@ -72,7 +73,8 @@
 #' @param \dots arguments to be used to form the default control argument if it
 #'   is not supplied directly.
 #'
-#' @returns For `lm_weightit()` and `glm_weightit()`, a `glm_weightit` object,
+#' @returns
+#' For `lm_weightit()` and `glm_weightit()`, a `glm_weightit` object,
 #' which inherits from `glm`. For `ordinal_weightit()` and
 #' `multinom_weightit()`, an `ordinal_weightit` or `multinom_weightit` object,
 #' respectively. For `coxph_weightit()`, a `coxph_weightit` object, which
@@ -91,7 +93,8 @@
 #' sampling weights, which will be 1 if `s.weights` is not supplied in the
 #' original `weightit()` call.
 #'
-#' @details [glm_weightit()] is essentially a wrapper for [glm()] that
+#' @details
+#' [glm_weightit()] is essentially a wrapper for [glm()] that
 #' optionally computes a coefficient variance matrix that can be adjusted to
 #' account for estimation of the weights if a `weightit` or `weightitMSM` object
 #' is supplied to the `weightit` argument. When no argument is supplied to
@@ -151,7 +154,8 @@
 #' when `cluster` is supplied. Not all types are available
 #' for all models.
 #'
-#' @seealso [lm()] and [glm()] for fitting generalized linear models without
+#' @seealso
+#' [lm()] and [glm()] for fitting generalized linear models without
 #' adjusting standard errors for estimation of the weights. [survival::coxph()]
 #' for fitting Cox proportional hazards models without adjusting standard errors
 #' for estimation of the weights.

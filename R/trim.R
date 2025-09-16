@@ -1,14 +1,14 @@
 #' Trim (Winsorize) Large Weights
-#' @name trim
 #'
-#' @description Trims (i.e., winsorizes) large weights by setting all weights
+#' @description
+#' Trims (i.e., winsorizes) large weights by setting all weights
 #' higher than that at a given quantile to the weight at the quantile or to 0.
 #' This can be useful in controlling extreme weights, which can reduce effective
 #' sample size by enlarging the variability of the weights. Note that by
 #' default, no observations are fully discarded when using `trim()`, which may
 #' differ from the some uses of the word "trim" (see the `drop` argument below).
 #'
-#' @param x A `weightit` object or a vector of weights.
+#' @param x a `weightit` object or a vector of weights.
 #' @param at `numeric`; either the quantile of the weights above which weights
 #'   are to be trimmed. A single number between .5 and 1, or the number of
 #'   weights to be trimmed (e.g., `at = 3` for the top 3 weights to be set to
@@ -16,23 +16,25 @@
 #' @param lower `logical`; whether also to trim at the lower quantile (e.g., for
 #'   `at = .9`, trimming at both .1 and .9, or for `at = 3`, trimming the top
 #'   and bottom 3 weights). Default is `FALSE` to only trim the higher weights.
-#' @param treat A vector of treatment status for each unit. This should always
+#' @param treat a vector of treatment status for each unit. This should always
 #'   be included when `x` is numeric, but you can get away with leaving it out
 #'   if the treatment is continuous or the estimand is the ATE for binary or
 #'   multi-category treatments.
 #' @param drop `logical`; whether to set the weights of the trimmed units to 0
 #'   or not. Default is `FALSE` to retain all trimmed units. Setting to `TRUE`
 #'   may change the original targeted estimand when not the ATT or ATC.
-#' @param \dots Not used.
+#' @param \dots not used.
 #'
-#' @returns If the input is a `weightit` object, the output will be a `weightit`
+#' @returns
+#' If the input is a `weightit` object, the output will be a `weightit`
 #' object with the weights replaced by the trimmed weights (or 0) and will have
 #' an additional attribute, `"trim"`, equal to the quantile of trimming.
 #'
 #' If the input is a numeric vector of weights, the output will be a numeric
 #' vector of the trimmed weights, again with the aforementioned attribute.
 #'
-#' @details `trim()` takes in a `weightit` object (the output of a call to
+#' @details
+#' `trim()` takes in a `weightit` object (the output of a call to
 #' [weightit()] or [weightitMSM()]) or a numeric vector of weights and trims
 #' (winsorizes) them to the specified quantile. All weights above that quantile
 #' are set to the weight at that quantile unless `drop = TRUE`, in which case
@@ -55,25 +57,21 @@
 #'
 #' @seealso [weightit()], [weightitMSM()]
 #'
-#' @references Cole, S. R., & Hernán, M. Á. (2008). Constructing Inverse
-#' Probability Weights for Marginal Structural Models. American Journal of
-#' Epidemiology, 168(6), 656–664.
+#' @references
+#' Cole, S. R., & Hernán, M. Á. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. *American Journal of Epidemiology*, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 #'
-#' Lee, B. K., Lessler, J., & Stuart, E. A. (2011). Weight Trimming and
-#' Propensity Score Weighting. PLoS ONE, 6(3), e18174.
+#' Lee, B. K., Lessler, J., & Stuart, E. A. (2011). Weight Trimming and Propensity Score Weighting. *PLoS ONE*, 6(3), e18174. \doi{10.1371/journal.pone.0018174}
 #'
-#' Thoemmes, F., & Ong, A. D. (2016). A Primer on Inverse Probability of
-#' Treatment Weighting and Marginal Structural Models. Emerging Adulthood, 4(1),
-#' 40–59.
+#' Thoemmes, F., & Ong, A. D. (2016). A Primer on Inverse Probability of Treatment Weighting and Marginal Structural Models. *Emerging Adulthood*, 4(1), 40–59. \doi{10.1177/2167696815621645}
 #'
 #' @examples
-#'
 #' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'
 #' (W <- weightit(treat ~ age + educ + married +
 #'                  nodegree + re74, data = lalonde,
 #'                method = "glm", estimand = "ATT"))
+#'
 #' summary(W)
 #'
 #' #Trimming the top and bottom 5 weights
@@ -100,7 +98,9 @@
 #' weights <- rchisq(500, df = 2)
 #' W <- as.weightit(weights, treat = treat,
 #'                  estimand = "ATE")
+#'
 #' summary(W)
+#'
 #' summary(trim(W, at = .95))
 
 #' @export
@@ -238,86 +238,84 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
 
     }
   }
-  else {
-    if (is_not_null(groups.not.to.trim)) {
-      to.be.trimmed <- treat %nin% groups.not.to.trim
-      if (at >= sum(to.be.trimmed)) {
-        .wrn(sprintf("`at` must be less than %s, the number of units for which treat is not %s. Weights will not be trimmed",
-                     sum(to.be.trimmed),
-                     word_list(groups.not.to.trim, and.or = "or")))
-        return(weights)
-      }
+  else if (is_not_null(groups.not.to.trim)) {
+    to.be.trimmed <- treat %nin% groups.not.to.trim
+    if (at >= sum(to.be.trimmed)) {
+      .wrn(sprintf("`at` must be less than %s, the number of units for which treat is not %s. Weights will not be trimmed",
+                   sum(to.be.trimmed),
+                   word_list(groups.not.to.trim, and.or = "or")))
+      return(weights)
+    }
 
-      at <- as.integer(min(at, sum(to.be.trimmed) - at))
+    at <- as.integer(min(at, sum(to.be.trimmed) - at))
 
-      trim.top <- {
-        if (lower) c(at + 1L, sum(to.be.trimmed) - at)
-        else c(1L, sum(to.be.trimmed) - at)
-      }
+    trim.top <- {
+      if (lower) c(at + 1L, sum(to.be.trimmed) - at)
+      else c(1L, sum(to.be.trimmed) - at)
+    }
 
-      weights.text <- {
-        if (at > 1) sprintf("%s weights", at)
-        else if (lower) "weights"
-        else "weight"
-      }
+    weights.text <- {
+      if (at > 1) sprintf("%s weights", at)
+      else if (lower) "weights"
+      else "weight"
+    }
 
-      trim.w <- sort(weights[to.be.trimmed], partial = trim.top)[trim.top]
+    trim.w <- sort(weights[to.be.trimmed], partial = trim.top)[trim.top]
 
-      if (drop) {
-        weights[to.be.trimmed & (weights < trim.w[1L] | weights > trim.w[2L])] <- 0
+    if (drop) {
+      weights[to.be.trimmed & (weights < trim.w[1L] | weights > trim.w[2L])] <- 0
 
-        .msg(sprintf("setting the %s %s where treat is not %s to 0",
-                     word_list(c("top", "bottom")[c(TRUE, lower)]),
-                     weights.text,
-                     word_list(groups.not.to.trim, and.or = "or")))
-      }
-      else {
-        weights[to.be.trimmed & weights < trim.w[1L]] <- trim.w[1L]
-        weights[to.be.trimmed & weights > trim.w[2L]] <- trim.w[2L]
-
-        .msg(sprintf("trimming the %s %s where treat is not %s",
-                     word_list(c("top", "bottom")[c(TRUE, lower)]),
-                     weights.text,
-                     word_list(groups.not.to.trim, and.or = "or")))
-      }
+      .msg(sprintf("setting the %s %s where treat is not %s to 0",
+                   word_list(c("top", "bottom")[c(TRUE, lower)]),
+                   weights.text,
+                   word_list(groups.not.to.trim, and.or = "or")))
     }
     else {
-      if (at >= length(weights)) {
-        .wrn(sprintf("`at` must be less than %s, the number of units. Weights will not be trimmed",
-                     length(weights)))
-        return(weights)
-      }
+      weights[to.be.trimmed & weights < trim.w[1L]] <- trim.w[1L]
+      weights[to.be.trimmed & weights > trim.w[2L]] <- trim.w[2L]
 
-      at <- as.integer(min(at, length(weights) - at))
+      .msg(sprintf("trimming the %s %s where treat is not %s",
+                   word_list(c("top", "bottom")[c(TRUE, lower)]),
+                   weights.text,
+                   word_list(groups.not.to.trim, and.or = "or")))
+    }
+  }
+  else {
+    if (at >= length(weights)) {
+      .wrn(sprintf("`at` must be less than %s, the number of units. Weights will not be trimmed",
+                   length(weights)))
+      return(weights)
+    }
 
-      trim.top <- {
-        if (lower) c(at + 1L, length(weights) - at)
-        else c(1L, length(weights) - at)
-      }
+    at <- as.integer(min(at, length(weights) - at))
 
-      weights.text <- {
-        if (at > 1) sprintf("%s weights", at)
-        else if (lower) "weights"
-        else "weight"
-      }
+    trim.top <- {
+      if (lower) c(at + 1L, length(weights) - at)
+      else c(1L, length(weights) - at)
+    }
 
-      trim.w <- sort(weights)[trim.top]
+    weights.text <- {
+      if (at > 1) sprintf("%s weights", at)
+      else if (lower) "weights"
+      else "weight"
+    }
 
-      if (drop) {
-        weights[weights < trim.w[1L] | weights > trim.w[2L]] <- 0
+    trim.w <- sort(weights)[trim.top]
 
-        .msg(sprintf("setting the %s %s to 0",
-                     word_list(c("top", "bottom")[c(TRUE, lower)]),
-                     weights.text))
-      }
-      else {
-        weights[weights < trim.w[1L]] <- trim.w[1L]
-        weights[weights > trim.w[2L]] <- trim.w[2L]
+    if (drop) {
+      weights[weights < trim.w[1L] | weights > trim.w[2L]] <- 0
 
-        .msg(sprintf("trimming the %s %s",
-                     word_list(c("top", "bottom")[c(TRUE, lower)]),
-                     weights.text))
-      }
+      .msg(sprintf("setting the %s %s to 0",
+                   word_list(c("top", "bottom")[c(TRUE, lower)]),
+                   weights.text))
+    }
+    else {
+      weights[weights < trim.w[1L]] <- trim.w[1L]
+      weights[weights > trim.w[2L]] <- trim.w[2L]
+
+      .msg(sprintf("trimming the %s %s",
+                   word_list(c("top", "bottom")[c(TRUE, lower)]),
+                   weights.text))
     }
   }
 

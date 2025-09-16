@@ -573,8 +573,8 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   w <- exp(log.dens.num - log.dens.denom)
 
   if (isTRUE(...get("plot"))) {
-    d.n <- attr(log.dens.num, "density")
-    d.d <- attr(log.dens.denom, "density")
+    d.n <- .attr(log.dens.num, "density")
+    d.d <- .attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)
   }
 
@@ -596,8 +596,8 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     # 1) coef: the weights (coefficients) for each algorithm
     # 2) cvRisk: the V-fold CV risk for each algorithm
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      estimand <- attr(control$trimLogit, "vals")$estimand
-      init <- attr(control$trimLogit, "vals")$init
+      estimand <- .attr(control$trimLogit, "vals")$estimand
+      init <- .attr(control$trimLogit, "vals")$init
 
       for (i in seq_col(Z)) {
         Z[, i] <- squish(Z[, i], .001)
@@ -657,9 +657,9 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     # 1) coef: the weights (coefficients) for each algorithm
     # 2) cvRisk: the V-fold CV risk for each algorithm
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      log.dens.num <- attr(control$trimLogit, "vals")$log.dens.num
-      densfun <- attr(control$trimLogit, "vals")$densfun
-      init <- attr(control$trimLogit, "vals")$init
+      log.dens.num <- .attr(control$trimLogit, "vals")$log.dens.num
+      densfun <- .attr(control$trimLogit, "vals")$densfun
+      init <- .attr(control$trimLogit, "vals")$init
 
       w_mat <- apply(Z, 2L, function(gp.score) {
         r <- Y - gp.score

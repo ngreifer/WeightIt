@@ -59,7 +59,7 @@ one \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
 variables using \code{\link[=interaction]{interaction()}}.}
 
-\item{s.weights}{A vector of sampling weights or the name of a variable in
+\item{s.weights}{a vector of sampling weights or the name of a variable in
 \code{data} that contains sampling weights. These can also be matching weights
 if weighting is to be used on matched data. See the individual pages for
 each method for information on whether sampling weights can be supplied.}
@@ -84,7 +84,7 @@ be used instead. Consider the \CRANpkg{MatchThem} package for the use of
 \item{verbose}{\code{logical}; whether to print additional information output by
 the fitting function.}
 
-\item{include.obj}{whether to include in the output a list of the fit objects
+\item{include.obj}{\code{logical}; whether to include in the output a list of the fit objects
 created in the process of estimating the weights at each time point. For
 example, with \code{method = "glm"}, a list of the \code{glm} objects containing the
 propensity score models at each time point will be included. See the help
@@ -98,12 +98,12 @@ See the individual pages for each method for whether these components are
 produced. Set to \code{FALSE} to keep the output object smaller, e.g., if
 standard errors will not be computed using \code{glm_weightit()}.}
 
-\item{is.MSM.method}{whether the method estimates weights for multiple time
+\item{is.MSM.method}{\code{logical}; whether the method estimates weights for multiple time
 points all at once (\code{TRUE}) or by estimating weights at each time point and
 then multiplying them together (\code{FALSE}). This is only relevant for
 user-specified functions.}
 
-\item{weightit.force}{several methods are not valid for estimating weights
+\item{weightit.force}{\code{logical}; several methods are not valid for estimating weights
 with longitudinal treatments, and will produce an error message if
 attempted. Set to \code{TRUE} to bypass this error message.}
 
@@ -200,8 +200,7 @@ W3 <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                    stabilize = TRUE)
 }
 \references{
-Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse
-Probability Weights for Marginal Structural Models. \emph{American Journal of Epidemiology}, 168(6), 656–664. \doi{10.1093/aje/kwn164}
+Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. \emph{American Journal of Epidemiology}, 168(6), 656–664. \doi{10.1093/aje/kwn164}
 }
 \seealso{
 \code{\link[=weightit]{weightit()}} for information on the allowable methods

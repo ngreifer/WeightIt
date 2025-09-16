@@ -3,7 +3,8 @@
 #' @aliases method_sbw
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating stable balancing
+#' @description
+#' This page explains the details of estimating stable balancing
 #' weights (also known as optimization-based weights) by setting `method = "optweight"` in the call to [weightit()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating weights by solving a quadratic
@@ -114,9 +115,10 @@
 #' Seriously, just use \pkgfun{optweight}{optweight}. The syntax is almost
 #' identical and it's compatible with \pkg{cobalt}, too.
 #'
-#' @seealso [weightit()], [weightitMSM()]
+#' @seealso
+#' [weightit()], [weightitMSM()]
 #'
-#' \pkgfun{optweight}{optweight.fit} for the fitting function
+#' \pkgfun{optweight}{optweight.fit} for the fitting function.
 #'
 #' [`method_entropy`] for entropy balancing, which is a special case of stable balancing weights.
 #'

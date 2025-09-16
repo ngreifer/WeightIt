@@ -1,26 +1,28 @@
 #' Calibrate Propensity Score Weights
 #' @name calibrate
 #'
-#' @description `calibrate()` calibrates propensity scores used in weights. This
+#' @description
+#' `calibrate()` calibrates propensity scores used in weights. This
 #' involves fitting a new propensity score model using logistic or isotonic
 #' regression with the previously estimated propensity score as the sole
 #' predictor. Weights are computed using this new propensity score.
 #'
-#' @param x A `weightit` object or a vector of propensity scores. Only binary
+#' @param x a `weightit` object or a vector of propensity scores. Only binary
 #'   treatments are supported.
-#' @param treat A vector of treatment status for each unit. Only binary
+#' @param treat a vector of treatment status for each unit. Only binary
 #'   treatments are supported.
-#' @param s.weights A vector of sampling weights or the name of a variable in
+#' @param s.weights a vector of sampling weights or the name of a variable in
 #'   `data` that contains sampling weights.
-#' @param data An optional data frame containing the variable named in
+#' @param data an optional data frame containing the variable named in
 #'   `s.weights` when supplied as a string.
 #' @param method `character`; the method of calibration used. Allowable options
 #'   include `"platt"` (default) for Platt scaling as described by Gutman et al.
 #'   (2024) and `"isoreg"` for isotonic regression as described by van der Laan
 #'   et al. (2024) and implemented in [isoreg()].
-#' @param \dots Not used.
+#' @param \dots not used.
 #'
-#' @returns If the input is a `weightit` object, the output will be a `weightit`
+#' @returns
+#' If the input is a `weightit` object, the output will be a `weightit`
 #' object with the propensity scores replaced with the calibrated propensity
 #' scores and the weights replaced by weights computed from the calibrated
 #' propensity scores.
@@ -30,7 +32,8 @@
 #'
 #' @seealso [weightit()], [weightitMSM()]
 #'
-#' @references Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse
+#' @references
+#' Gutman, R., Karavani, E., & Shimoni, Y. (2024). Improving Inverse
 #' Probability Weighting by Post-calibrating Its Propensity Scores.
 #' *Epidemiology*, 35(4). \doi{10.1097/EDE.0000000000001733}
 #'

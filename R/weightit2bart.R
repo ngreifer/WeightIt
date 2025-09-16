@@ -2,7 +2,8 @@
 #' @name method_bart
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating weights from
+#' @description
+#' This page explains the details of estimating weights from
 #' Bayesian additive regression trees (BART)-based propensity scores by setting
 #' `method = "bart"` in the call to [weightit()] or [weightitMSM()]. This method
 #' can be used with binary, multi-category, and continuous treatments.
@@ -191,9 +192,6 @@ NULL
 
 weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
                           missing, verbose, ...) {
-
-  rlang::check_installed("dbarts", version = "0.9-23")
-
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -247,8 +245,6 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
 weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize,
                                  missing, verbose, ...) {
-  rlang::check_installed("dbarts", version = "0.9-23")
-
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
@@ -362,8 +358,8 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   w <- exp(log.dens.num - log.dens.denom)
 
   if (isTRUE(...get("plot"))) {
-    d.n <- attr(log.dens.num, "density")
-    d.d <- attr(log.dens.denom, "density")
+    d.n <- .attr(log.dens.num, "density")
+    d.d <- .attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)
   }
 

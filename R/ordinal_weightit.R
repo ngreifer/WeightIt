@@ -327,7 +327,7 @@
   mf[[1L]] <- quote(stats::model.frame)
   mf <- eval(mf, parent.frame())
 
-  mt <- attr(mf, "terms")
+  mt <- .attr(mf, "terms")
 
   Y <- model.response(mf, "any")
   if (length(dim(Y)) == 1L) {
@@ -363,14 +363,15 @@
                    hess = hess, control = control))
 
   if (model) fit$model <- mf
-  fit$na.action <- attr(mf, "na.action")
+  fit$na.action <- .attr(mf, "na.action")
   if (!x) fit$x <- NULL
   if (!y) fit$y <- NULL
 
   c(fit,
     list(call = cal, formula = formula, terms = mt,
          data = data, offset = offset,
-         contrasts = attr(X, "contrasts"), xlevels = .getXlevels(mt, mf)))
+         contrasts = .attr(X, "contrasts"),
+         xlevels = .getXlevels(mt, mf)))
 }
 
 .get_hess_ordinal <- function(fit) {

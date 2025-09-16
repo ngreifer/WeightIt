@@ -73,9 +73,7 @@ mean of the weights.
 of observations.
 }
 \examples{
-
 # See example at ?weightit or ?weightitMSM
-
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, \code{\link[=summary]{summary()}}

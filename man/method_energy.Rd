@@ -172,9 +172,7 @@ multi-category treatments, this involves exact balance on the means of the
 entered covariates; for continuous treatments, this involves exact balance
 on the treatment-covariate correlations of the entered covariates. The constraint on exact balance can be relaxed using the \code{tols} argument.
 
-Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some
-defaults differ from those in \code{osqpSettings()}; see \emph{Reproducibility}
-below.
+Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some defaults differ from those in \code{osqpSettings()}; see \emph{Reproducibility} section.
 }
 
 \section{Additional Outputs}{
@@ -223,14 +221,12 @@ cobalt::bal.tab(W3, poly = 2)}
 \references{
 \subsection{Binary and multi-category treatments}{
 
-Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions.
-\emph{Journal of Causal Inference}, 12(1). \doi{10.1515/jci-2022-0029}
+Huling, J. D., & Mak, S. (2024). Energy balancing of covariate distributions. \emph{Journal of Causal Inference}, 12(1). \doi{10.1515/jci-2022-0029}
 }
 
 \subsection{Continuous treatments}{
 
-Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for
-causal inference with continuous treatments. \emph{Journal of the American Statistical Association}, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
+Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for causal inference with continuous treatments. \emph{Journal of the American Statistical Association}, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 }
 }
 \seealso{

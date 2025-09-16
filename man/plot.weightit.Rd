@@ -9,7 +9,7 @@
 \arguments{
 \item{x}{a \code{weightit} object; the output of a call to \code{\link[=weightit]{weightit()}}.}
 
-\item{...}{Unused.}
+\item{...}{unused.}
 }
 \value{
 A \code{ggplot} object.
@@ -50,9 +50,7 @@ than the imbalance tolerance). This is essentially a wrapper for
 }
 }
 \examples{
-
 # See example at the corresponding methods page
-
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=plot.summary.weightit]{plot.summary.weightit()}}

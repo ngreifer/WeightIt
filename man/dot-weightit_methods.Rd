@@ -11,13 +11,7 @@ An object of class \code{list} of length 10.
 .weightit_methods
 }
 \description{
-\code{.weightit_methods} is a list containing the allowable weighting
-methods that can be supplied by name to the \code{method} argument of
-\code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, and \code{\link[=weightit.fit]{weightit.fit()}}. Each entry corresponds
-to an allowed method and contains information about what options are and
-are not allowed for each method. While this list is primarily for internal
-use by checking functions in \pkg{WeightIt}, it might be of use for package
-authors that want to support different weighting methods.
+\code{.weightit_methods} is a list containing the allowable weighting methods that can be supplied by name to the \code{method} argument of \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}, and \code{\link[=weightit.fit]{weightit.fit()}}. Each entry corresponds to an allowed method and contains information about what options are and are not allowed for each method. While this list is primarily for internal use by checking functions in \pkg{WeightIt}, it might be of use for package authors that want to support different weighting methods.
 }
 \details{
 Each component is itself a list containing the following components:

@@ -48,8 +48,7 @@ generalized propensity score (e.g., ordinal logistic regression).
 
 For continuous treatments, weights are estimated as
 \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-stabilization factor) is
-the unconditional density of treatment evaluated the observed treatment value
+stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
 and \eqn{f_{A|X}(a_i)} (known as the generalized propensity score) is the
 conditional density of treatment given the covariates evaluated at the
 observed value of treatment. The shape of \eqn{f_A(.)} and \eqn{f_{A|X}(.)}
@@ -70,7 +69,7 @@ estimated at each time point.
 \subsection{Sampling Weights}{
 
 Sampling weights are supported through \code{s.weights} in all scenarios except
-for multi-category treatments with \code{link = "bayes.probit"} and for binary and
+for multi-category treatments with \code{multi.method = "mnp"} and for binary and
 continuous treatments with \code{missing = "saem"} (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.
 }
@@ -195,9 +194,7 @@ Li, F., Morgan, K. L., & Zaslavsky, A. M. (2018). Balancing covariates via prope
 \item \code{estimand = "ATM"}
 }
 
-Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in
-Propensity Score Analysis. \emph{The International Journal of Biostatistics},
-9(2). \doi{10.1515/ijb-2012-0030}
+Li, L., & Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. \emph{The International Journal of Biostatistics}, 9(2). \doi{10.1515/ijb-2012-0030}
 \itemize{
 \item \code{estimand = "ATOS"}
 }
@@ -222,18 +219,12 @@ See references for the \CRANpkg{brglm2} package.
 \item Firth corrected logistic regression
 }
 
-Puhr, R., Heinze, G., Nold, M., Lusa, L., & Geroldinger, A. (2017). Firth’s
-logistic regression with rare events: Accurate effect estimates and
-predictions? \emph{Statistics in Medicine}, 36(14), 2302–2317.
-\doi{10.1002/sim.7273}
+Puhr, R., Heinze, G., Nold, M., Lusa, L., & Geroldinger, A. (2017). Firth’s logistic regression with rare events: Accurate effect estimates and predictions? \emph{Statistics in Medicine}, 36(14), 2302–2317. \doi{10.1002/sim.7273}
 \itemize{
 \item SAEM logistic regression for missing data
 }
 
-Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing
-covariates — Parameter estimation, model selection and prediction within a
-joint-modeling framework. \emph{Computational Statistics & Data Analysis}, 106907.
-\doi{10.1016/j.csda.2019.106907}
+Jiang, W., Josse, J., & Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. \emph{Computational Statistics & Data Analysis}, 106907. \doi{10.1016/j.csda.2019.106907}
 }
 
 \subsection{Multi-Category Treatments}{
@@ -241,9 +232,7 @@ joint-modeling framework. \emph{Computational Statistics & Data Analysis}, 10690
 \item \code{estimand = "ATO"}
 }
 
-Li, F., & Li, F. (2019). Propensity score weighting for causal inference with
-multiple treatments. \emph{The Annals of Applied Statistics}, 13(4), 2389–2415.
-\doi{10.1214/19-AOAS1282}
+Li, F., & Li, F. (2019). Propensity score weighting for causal inference with  multiple treatments. \emph{The Annals of Applied Statistics}, 13(4), 2389–2415. \doi{10.1214/19-AOAS1282}
 \itemize{
 \item \code{estimand = "ATM"}
 }

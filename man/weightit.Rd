@@ -68,12 +68,12 @@ one \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
 variables using \code{\link[=interaction]{interaction()}}.}
 
-\item{s.weights}{A vector of sampling weights or the name of a variable in
+\item{s.weights}{a vector of sampling weights or the name of a variable in
 \code{data} that contains sampling weights. These can also be matching weights
 if weighting is to be used on matched data. See the individual pages for
 each method for information on whether sampling weights can be supplied.}
 
-\item{ps}{A vector of propensity scores or the name of a variable in \code{data}
+\item{ps}{a vector of propensity scores or the name of a variable in \code{data}
 containing propensity scores. If not \code{NULL}, \code{method} is ignored unless it
 is a user-supplied function, and the propensity scores will be used to
 create weights. \code{formula} must include the treatment variable in \code{data},

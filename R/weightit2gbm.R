@@ -2,7 +2,8 @@
 #' @name method_gbm
 #' @usage NULL
 #'
-#' @description This page explains the details of estimating weights from
+#' @description
+#' This page explains the details of estimating weights from
 #' generalized boosted model-based propensity scores by setting `method = "gbm"`
 #' in the call to [weightit()] or [weightitMSM()]. This method can be used with
 #' binary, multi-category, and continuous treatments.
@@ -194,21 +195,15 @@
 #' @references
 #' ## Binary treatments
 #'
-#' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score
-#' Estimation With Boosted Regression for Evaluating Causal Effects in
-#' Observational Studies. *Psychological Methods*, 9(4), 403–425.
-#' \doi{10.1037/1082-989X.9.4.403}
+#' McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. *Psychological Methods*, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 #'
 #' ## Multi-Category Treatments
 #'
-#' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
-#' R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
-#' Multiple Treatments Using Generalized Boosted Models. *Statistics in Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+#' McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. *Statistics in Medicine*, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 #'
 #' ## Continuous treatments
 #'
-#' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for
-#' Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
+#' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
 #'
 #' @examplesIf rlang::is_installed("gbm")
 #' data("lalonde", package = "cobalt")
@@ -323,7 +318,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     chk::chk_string(criterion)
   }
 
-  available.criteria <- cobalt::available.stats(switch(treat.type, "multinomial" = "multi", treat.type))
+  available.criteria <- cobalt::available.stats(switch(treat.type,
+                                                       `multi-category` =,
+                                                       multinomial = "multi",
+                                                       treat.type))
 
   if (startsWith(criterion, "es.")) {
     subbed.crit <- sub("es.", "smd.", criterion, fixed = TRUE)
@@ -431,7 +429,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   chk::chk_not_any_na(use.offset)
 
   if (any(use.offset)) {
-    if (treat.type == "multinomial") {
+    if (treat.type %in% c("multinomial", "multi-category")) {
       .err("`use.offset` cannot be used with multi-category treatments")
     }
 
@@ -612,13 +610,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         info <- list(best.tree = best.tree,
                      tree.val = tree.val)
 
-        if (treat.type == "multinomial") {
+        if (treat.type %in% c("multinomial", "multi-category")) {
           best.ps <- NULL
         }
       }
     }
 
-    if (treat.type == "multinomial") {
+    if (treat.type %in% c("multinomial", "multi-category")) {
       ps <- NULL
     }
   }
@@ -793,9 +791,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     if (null_density) {
       use.kernel <- FALSE
       density <- switch(A[["distribution"]]$name,
-                        "gaussian" = "dnorm",
-                        "tdist" = "dt_4",
-                        "laplace" = "dlaplace")
+                        gaussian = "dnorm",
+                        tdist = "dt_4",
+                        laplace = "dlaplace")
     }
 
     if (i == 1L || (null_density && !identical(tune[["distribution"]][i], tune[["distribution"]][i - 1L]))) {
@@ -941,10 +939,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (isTRUE(...get("plot"))) {
-    d.n <- attr(log.dens.num, "density")
+    d.n <- .attr(log.dens.num, "density")
     r <- treat - best.gps
     log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
-    d.d <- attr(log.dens.denom, "density")
+    d.d <- .attr(log.dens.denom, "density")
     plot_density(d.n, d.d, log = TRUE)
   }
 
@@ -989,7 +987,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
       #Subsample if too big
       ind <- unlist(lapply(split(seq_row(d), d[c("by", "tune")]), function(i) {
-        if (length(i) <= subsample) return(i)
+        if (length(i) <= subsample) {
+          return(i)
+        }
+
         b <- d$by[i][1L]
         t <- d$tune[i][1L]
 
@@ -1011,7 +1012,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
       #Subsample if too big
       ind <- unlist(lapply(split(seq_row(d), d["by"]), function(i) {
-        if (length(i) <= subsample) return(i)
+        if (length(i) <= subsample) {
+          return(i)
+        }
+
         b <- d$by[i][1L]
 
         trees <- round(seq(min(d$tree[i]), max(d$tree[i]), length.out = round(subsample * .8)))
@@ -1039,7 +1043,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
       #Subsample if too big
       ind <- unlist(lapply(split(seq_row(d), d["tune"]), function(i) {
-        if (length(i) <= subsample) return(i)
+        if (length(i) <= subsample) {
+          return(i)
+        }
+
         t <- d$tune[i][1L]
 
         trees <- round(seq(min(d$tree[i]), max(d$tree[i]), length.out = round(subsample * .8)))
@@ -1104,6 +1111,5 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     p <- p + facet_wrap(vars(.data$by))
   }
 
-  p +
-    theme_bw()
+  p + theme_bw()
 }

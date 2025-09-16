@@ -100,7 +100,6 @@ take some time if \code{obj} was hard to fit. It's safer to estimate \code{obj} 
 and supply these to \code{sbps()}.
 }
 \examples{
-
 library("cobalt")
 data("lalonde", package = "cobalt")
 
@@ -128,7 +127,7 @@ bal.tab(S_, cluster = "race")
 }
 \references{
 Dong, J., Zhang, J. L., Zeng, S., & Li, F. (2020). Subgroup
-balancing propensity score. Statistical Methods in Medical Research, 29(3),
+balancing propensity score. \emph{Statistical Methods in Medical Research}, 29(3),
 659–676. \doi{10.1177/0962280219870836}
 }
 \seealso{

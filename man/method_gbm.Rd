@@ -285,23 +285,17 @@ cobalt::bal.tab(W5, stats = c("m", "ks"))
 \references{
 \subsection{Binary treatments}{
 
-McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score
-Estimation With Boosted Regression for Evaluating Causal Effects in
-Observational Studies. \emph{Psychological Methods}, 9(4), 403–425.
-\doi{10.1037/1082-989X.9.4.403}
+McCaffrey, D. F., Ridgeway, G., & Morral, A. R. (2004). Propensity Score Estimation With Boosted Regression for Evaluating Causal Effects in Observational Studies. \emph{Psychological Methods}, 9(4), 403–425. \doi{10.1037/1082-989X.9.4.403}
 }
 
 \subsection{Multi-Category Treatments}{
 
-McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
-R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
-Multiple Treatments Using Generalized Boosted Models. \emph{Statistics in Medicine}, 32(19), 3388–3414. \doi{10.1002/sim.5753}
+McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., & Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. \emph{Statistics in Medicine}, 32(19), 3388–3414. \doi{10.1002/sim.5753}
 }
 
 \subsection{Continuous treatments}{
 
-Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for
-Estimating Generalized Propensity Scores with Continuous Treatments. \emph{Journal of Causal Inference}, 3(1). \doi{10.1515/jci-2014-0022}
+Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for Estimating Generalized Propensity Scores with Continuous Treatments. \emph{Journal of Causal Inference}, 3(1). \doi{10.1515/jci-2014-0022}
 }
 }
 \seealso{

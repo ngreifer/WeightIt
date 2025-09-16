@@ -1,7 +1,8 @@
 #' Methods for `glm_weightit()` objects
 #' @name anova.glm_weightit
 #'
-#' @description `anova()` is used to compare nested models fit with
+#' @description
+#' `anova()` is used to compare nested models fit with
 #' `glm_weightit()`, `mutinom_weightit()`, `ordinal_weightit()`, or
 #' `coxph_weightit()` using a Wald test that incorporates uncertainty in
 #' estimating the weights (if any).
@@ -65,9 +66,10 @@
 #' # model; note they are nested but not symbolically
 #' # nested
 #' fit_s <- glm_weightit(re78 ~ splines::ns(age, df =4),
-#'                       data = lalonde )
+#'                       data = lalonde)
 #'
-#' fit_l <- glm_weightit( re78 ~ age, data = lalonde )
+#' fit_l <- glm_weightit(re78 ~ age,
+#'                       data = lalonde)
 #'
 #' anova(fit_s, fit_l)
 
@@ -141,7 +143,7 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
 
   .varnote <- .it(sprintf("Variance: %s\n",
                           .vcov_to_phrase(object[["vcov_type"]],
-                                          is_not_null(attr(object, "cluster")))))
+                                          is_not_null(.attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
@@ -244,7 +246,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 
   .varnote <- .it(sprintf("Variance: %s\n",
                           .vcov_to_phrase(object$vcov_type,
-                                          is_not_null(attr(object, "cluster")))))
+                                          is_not_null(.attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
@@ -291,8 +293,8 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   chk::chk_string(method)
   method <- match_arg(method, "Wald")
 
-  if (!identical(attr(object, "vcov_type"), attr(object2, "vcov_type")) &&
-      !identical(attr(object2, "vcov_type"), "none")) {
+  if (!identical(.attr(object, "vcov_type"), .attr(object2, "vcov_type")) &&
+      !identical(.attr(object2, "vcov_type"), "none")) {
     .wrn("different `vcov` types detected for each model; using the `vcov` from the larger model")
   }
 
@@ -356,7 +358,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
 
   .varnote <- .it(sprintf("Variance: %s\n",
                           .vcov_to_phrase(object$vcov_type,
-                                          is_not_null(attr(object, "cluster")))))
+                                          is_not_null(.attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
