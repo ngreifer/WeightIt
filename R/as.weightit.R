@@ -142,6 +142,29 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
   w.list
 }
 
+# @exportS3Method as.weightit optweight
+# @rdname as.weightit
+.as.weightit.optweight <- function(x, ...) {
+  names(x)[names(x) == "weights"] <- "x"
+
+  x$method <- "optweight"
+  attr(x$method, "name") <- x$method
+  attr(x$method, "package") <- "optweight"
+
+  w <- do.call("as.weightit.default", x, quote = TRUE)
+
+  if (is_null(w$info)) {
+    w$info <- list(duals = w$duals)
+  }
+  else {
+    w$info$duals <- w$duals
+  }
+
+  w$duals <- NULL
+
+  w
+}
+
 #' @export
 #' @rdname as.weightit
 as.weightitMSM <- function(x, ...) {
