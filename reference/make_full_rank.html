@@ -72,7 +72,7 @@ contains covariates. <code>NA</code>s are not allowed.</p></dd>
 
 
 <dt id="arg-with-intercept">with.intercept<a class="anchor" aria-label="anchor" href="#arg-with-intercept"></a></dt>
-<dd><p>whether an intercept (i.e., a vector of 1s) should be
+<dd><p><code>logical</code>; whether an intercept (i.e., a vector of 1s) should be
 added to <code>mat</code> before making it full rank. If <code>TRUE</code>, the intercept will be
 used in determining whether a column is linearly dependent on others.
 Regardless, no intercept will be included in the output.</p></dd>
@@ -106,8 +106,7 @@ more than only column has only one value, only the first one will remain.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1234</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">20</span></span></span>
 <span class="r-in"><span><span class="va">c1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">1</span>, <span class="fl">.4</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">c2</span> <span class="op">&lt;-</span> <span class="fl">1</span> <span class="op">-</span> <span class="va">c1</span></span></span>

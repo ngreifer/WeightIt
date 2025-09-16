@@ -132,7 +132,7 @@ variables using <code><a href="https://rdrr.io/r/base/interaction.html" class="e
 
 
 <dt id="arg-s-weights">s.weights<a class="anchor" aria-label="anchor" href="#arg-s-weights"></a></dt>
-<dd><p>A vector of sampling weights or the name of a variable in
+<dd><p>a vector of sampling weights or the name of a variable in
 <code>data</code> that contains sampling weights. These can also be matching weights
 if weighting is to be used on matched data. See the individual pages for
 each method for information on whether sampling weights can be supplied.</p></dd>
@@ -165,7 +165,7 @@ the fitting function.</p></dd>
 
 
 <dt id="arg-include-obj">include.obj<a class="anchor" aria-label="anchor" href="#arg-include-obj"></a></dt>
-<dd><p>whether to include in the output a list of the fit objects
+<dd><p><code>logical</code>; whether to include in the output a list of the fit objects
 created in the process of estimating the weights at each time point. For
 example, with <code>method = "glm"</code>, a list of the <code>glm</code> objects containing the
 propensity score models at each time point will be included. See the help
@@ -183,14 +183,14 @@ standard errors will not be computed using <code><a href="glm_weightit.html">glm
 
 
 <dt id="arg-is-msm-method">is.MSM.method<a class="anchor" aria-label="anchor" href="#arg-is-msm-method"></a></dt>
-<dd><p>whether the method estimates weights for multiple time
+<dd><p><code>logical</code>; whether the method estimates weights for multiple time
 points all at once (<code>TRUE</code>) or by estimating weights at each time point and
 then multiplying them together (<code>FALSE</code>). This is only relevant for
 user-specified functions.</p></dd>
 
 
 <dt id="arg-weightit-force">weightit.force<a class="anchor" aria-label="anchor" href="#arg-weightit-force"></a></dt>
-<dd><p>several methods are not valid for estimating weights
+<dd><p><code>logical</code>; several methods are not valid for estimating weights
 with longitudinal treatments, and will produce an error message if
 attempted. Set to <code>TRUE</code> to bypass this error message.</p></dd>
 
@@ -264,8 +264,7 @@ models.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Cole, S. R., &amp; Hernán, M. A. (2008). Constructing Inverse
-Probability Weights for Marginal Structural Models. <em>American Journal of Epidemiology</em>, 168(6), 656–664. <a href="https://doi.org/10.1093/aje/kwn164" class="external-link">doi:10.1093/aje/kwn164</a></p>
+    <p>Cole, S. R., &amp; Hernán, M. A. (2008). Constructing Inverse Probability Weights for Marginal Structural Models. <em>American Journal of Epidemiology</em>, 168(6), 656–664. <a href="https://doi.org/10.1093/aje/kwn164" class="external-link">doi:10.1093/aje/kwn164</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -196,9 +196,10 @@ used.</p>
 <span class="r-in"><span><span class="co"># model; note they are nested but not symbolically</span></span></span>
 <span class="r-in"><span><span class="co"># nested</span></span></span>
 <span class="r-in"><span><span class="va">fit_s</span> <span class="op">&lt;-</span> <span class="fu"><a href="glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="fu">splines</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/splines/ns.html" class="external-link">ns</a></span><span class="op">(</span><span class="va">age</span>, df <span class="op">=</span><span class="fl">4</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                      data <span class="op">=</span> <span class="va">lalonde</span> <span class="op">)</span></span></span>
+<span class="r-in"><span>                      data <span class="op">=</span> <span class="va">lalonde</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">fit_l</span> <span class="op">&lt;-</span> <span class="fu"><a href="glm_weightit.html">glm_weightit</a></span><span class="op">(</span> <span class="va">re78</span> <span class="op">~</span> <span class="va">age</span>, data <span class="op">=</span> <span class="va">lalonde</span> <span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">fit_l</span> <span class="op">&lt;-</span> <span class="fu"><a href="glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">age</span>,</span></span>
+<span class="r-in"><span>                      data <span class="op">=</span> <span class="va">lalonde</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova</a></span><span class="op">(</span><span class="va">fit_s</span>, <span class="va">fit_l</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

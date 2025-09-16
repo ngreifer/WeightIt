@@ -7,11 +7,9 @@
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Compute effective sample size of weighted sample — ESS"><meta name="description" content="Computes the effective sample size (ESS) of a weighted sample,
 which represents the size of an unweighted sample with approximately the same
-amount of precision as the weighted sample under consideration.
-The ESS is calculated as \((\sum w)^2/\sum w^2\)."><meta property="og:description" content="Computes the effective sample size (ESS) of a weighted sample,
+amount of precision as the weighted sample under consideration."><meta property="og:description" content="Computes the effective sample size (ESS) of a weighted sample,
 which represents the size of an unweighted sample with approximately the same
-amount of precision as the weighted sample under consideration.
-The ESS is calculated as \((\sum w)^2/\sum w^2\)."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"></head><body>
+amount of precision as the weighted sample under consideration."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -54,7 +52,6 @@ The ESS is calculated as \((\sum w)^2/\sum w^2\)."><meta property="og:image" con
     <p>Computes the effective sample size (ESS) of a weighted sample,
 which represents the size of an unweighted sample with approximately the same
 amount of precision as the weighted sample under consideration.</p>
-<p>The ESS is calculated as \((\sum w)^2/\sum w^2\).</p>
     </div>
 
     <div class="section level2">
@@ -67,17 +64,21 @@ amount of precision as the weighted sample under consideration.</p>
 
 
 <dl><dt id="arg-w">w<a class="anchor" aria-label="anchor" href="#arg-w"></a></dt>
-<dd><p>a vector of weights</p></dd>
+<dd><p>a vector of weights.</p></dd>
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The ESS is calculated as \((\sum w)^2/\sum w^2\). It is invariant to multiplicative scaling of the weights (i.e., multiplying all weights by a nonzero scalar).</p>
+    </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>McCaffrey, D. F., Ridgeway, G., &amp; Morral, A. R. (2004).
 Propensity Score Estimation With Boosted Regression for Evaluating Causal
-Effects in Observational Studies. Psychological Methods, 9(4), 403–425.
+Effects in Observational Studies. <em>Psychological Methods</em>, 9(4), 403–425.
 <a href="https://doi.org/10.1037/1082-989X.9.4.403" class="external-link">doi:10.1037/1082-989X.9.4.403</a></p>
 <p>Shook‐Sa, B. E., &amp; Hudgens, M. G. (2020). Power and sample size for
-observational studies of point exposure effects. Biometrics, biom.13405.
+observational studies of point exposure effects. <em>Biometrics</em>, biom.13405.
 <a href="https://doi.org/10.1111/biom.13405" class="external-link">doi:10.1111/biom.13405</a></p>
     </div>
     <div class="section level2">
@@ -87,8 +88,7 @@ observational studies of point exposure effects. Biometrics, biom.13405.
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span>  cobalt (Version 4.6.1, Build Date: 2025-08-20)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -103,6 +103,7 @@ observational studies of point exposure effects. Biometrics, biom.13405.
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -131,6 +132,7 @@ observational studies of point exposure effects. Biometrics, biom.13405.
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.    185.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    404.35   51.73</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">ESS</span><span class="op">(</span><span class="va">W1</span><span class="op">$</span><span class="va">weights</span><span class="op">[</span><span class="va">W1</span><span class="op">$</span><span class="va">treat</span> <span class="op">==</span> <span class="fl">0</span><span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 404.3484</span>
 <span class="r-in"><span><span class="fu">ESS</span><span class="op">(</span><span class="va">W1</span><span class="op">$</span><span class="va">weights</span><span class="op">[</span><span class="va">W1</span><span class="op">$</span><span class="va">treat</span> <span class="op">==</span> <span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>

@@ -22,7 +22,7 @@ stabilize: a logical vector of length 1. It is not processed by weightit() befor
 
 
 None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
-In addition, any additional arguments supplied to weightit() will be passed on to the fitting function. weightit() ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \dots as a parameter.
+In addition, any additional arguments supplied to weightit() will be passed on to the fitting function. weightit() ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include ... as a parameter.
 The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither &quot;w&quot; or &quot;weights&quot;. If a list, the list can contain other named entries, but only entries named &quot;w&quot;, &quot;weights&quot;, &quot;ps&quot;, and &quot;fit.obj&quot; will be processed. &quot;ps&quot; is a vector of propensity scores and &quot;fit.obj&quot; should be an object used in the fitting process that a user may want to examine and that is included in the weightit output object as &quot;obj&quot; when include.obj = TRUE. The &quot;ps&quot; and &quot;fit.obj&quot; components are optional, but &quot;weights&quot; or &quot;w&quot; is required.
 
 
@@ -49,7 +49,7 @@ stabilize: a logical vector of length 1. It is not processed by weightit() befor
 
 
 None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
-In addition, any additional arguments supplied to weightit() will be passed on to the fitting function. weightit() ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \dots as a parameter.
+In addition, any additional arguments supplied to weightit() will be passed on to the fitting function. weightit() ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include ... as a parameter.
 The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither &quot;w&quot; or &quot;weights&quot;. If a list, the list can contain other named entries, but only entries named &quot;w&quot;, &quot;weights&quot;, &quot;ps&quot;, and &quot;fit.obj&quot; will be processed. &quot;ps&quot; is a vector of propensity scores and &quot;fit.obj&quot; should be an object used in the fitting process that a user may want to examine and that is included in the weightit output object as &quot;obj&quot; when include.obj = TRUE. The &quot;ps&quot; and &quot;fit.obj&quot; components are optional, but &quot;weights&quot; or &quot;w&quot; is required.
 
 
@@ -113,7 +113,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <li><p><code>focal</code>: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). <code><a href="weightit.html">weightit()</a></code> ensures the value of focal is a level of <code>treat</code>.</p></li>
 <li><p><code>stabilize</code>: a logical vector of length 1. It is not processed by <code><a href="weightit.html">weightit()</a></code> before it reaches the fitting function.</p></li>
 </ul><p>None of these parameters are required to be in the fitting function. These are simply those that are automatically available.</p>
-<p>In addition, any additional arguments supplied to <code><a href="weightit.html">weightit()</a></code> will be passed on to the fitting function. <code><a href="weightit.html">weightit()</a></code> ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include <code>\dots</code> as a parameter.</p>
+<p>In addition, any additional arguments supplied to <code><a href="weightit.html">weightit()</a></code> will be passed on to the fitting function. <code><a href="weightit.html">weightit()</a></code> ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include <code>...</code> as a parameter.</p>
 <p>The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither "w" or "weights". If a list, the list can contain other named entries, but only entries named "w", "weights", "ps", and "fit.obj" will be processed. "ps" is a vector of propensity scores and "fit.obj" should be an object used in the fitting process that a user may want to examine and that is included in the <code>weightit</code> output object as "obj" when <code>include.obj = TRUE</code>. The "ps" and "fit.obj" components are optional, but "weights" or "w" is required.</p>
 </div>
 

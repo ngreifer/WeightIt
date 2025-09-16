@@ -53,8 +53,7 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is
-the unconditional density of treatment evaluated the observed treatment value
+stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
 and \(f_{A|X}(a_i)\) (known as the generalized propensity score) is the
 conditional density of treatment given the covariates evaluated at the
 observed value of treatment. The shape of \(f_A(.)\) and \(f_{A|X}(.)\)
@@ -79,7 +78,7 @@ Sampling Weights
 
 
 Sampling weights are supported through s.weights in all scenarios except
-for multi-category treatments with link = "bayes.probit" and for binary and
+for multi-category treatments with multi.method = "mnp" and for binary and
 continuous treatments with missing = "saem" (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.
 
@@ -165,8 +164,7 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is
-the unconditional density of treatment evaluated the observed treatment value
+stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
 and \(f_{A|X}(a_i)\) (known as the generalized propensity score) is the
 conditional density of treatment given the covariates evaluated at the
 observed value of treatment. The shape of \(f_A(.)\) and \(f_{A|X}(.)\)
@@ -191,7 +189,7 @@ Sampling Weights
 
 
 Sampling weights are supported through s.weights in all scenarios except
-for multi-category treatments with link = "bayes.probit" and for binary and
+for multi-category treatments with multi.method = "mnp" and for binary and
 continuous treatments with missing = "saem" (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.
 
@@ -317,8 +315,7 @@ generalized propensity score (e.g., ordinal logistic regression).</p>
 
 <p>For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is
-the unconditional density of treatment evaluated the observed treatment value
+stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
 and \(f_{A|X}(a_i)\) (known as the generalized propensity score) is the
 conditional density of treatment given the covariates evaluated at the
 observed value of treatment. The shape of \(f_A(.)\) and \(f_{A|X}(.)\)
@@ -343,7 +340,7 @@ estimated at each time point.</p>
 
 
 <p>Sampling weights are supported through <code>s.weights</code> in all scenarios except
-for multi-category treatments with <code>link = "bayes.probit"</code> and for binary and
+for multi-category treatments with <code>multi.method = "mnp"</code> and for binary and
 continuous treatments with <code>missing = "saem"</code> (see below). Warning messages
 may appear otherwise about non-integer successes, and these can be ignored.</p>
 </div>
@@ -447,30 +444,20 @@ are passed to <code>...</code> in <code><a href="https://rdrr.io/r/stats/glm.htm
 
 <ul><li><p><code>estimand = "ATO"</code></p></li>
 </ul><p>Li, F., Morgan, K. L., &amp; Zaslavsky, A. M. (2018). Balancing covariates via propensity score weighting. <em>Journal of the American Statistical Association</em>, 113(521), 390–400. <a href="https://doi.org/10.1080/01621459.2016.1260466" class="external-link">doi:10.1080/01621459.2016.1260466</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
-</ul><p>Li, L., &amp; Greene, T. (2013). A Weighting Analogue to Pair Matching in
-Propensity Score Analysis. <em>The International Journal of Biostatistics</em>,
-9(2). <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a></p><ul><li><p><code>estimand = "ATOS"</code></p></li>
+</ul><p>Li, L., &amp; Greene, T. (2013). A Weighting Analogue to Pair Matching in Propensity Score Analysis. <em>The International Journal of Biostatistics</em>, 9(2). <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a></p><ul><li><p><code>estimand = "ATOS"</code></p></li>
 </ul><p>Crump, R. K., Hotz, V. J., Imbens, G. W., &amp; Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. <em>Biometrika</em>, 96(1), 187–199. <a href="https://doi.org/10.1093/biomet/asn055" class="external-link">doi:10.1093/biomet/asn055</a></p><ul><li><p>Other estimands</p></li>
 </ul><p>Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. <em>Multivariate Behavioral Research</em>, 46(3), 399–424. <a href="https://doi.org/10.1080/00273171.2011.568786" class="external-link">doi:10.1080/00273171.2011.568786</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
 </ul><p>Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. <em>Journal of Educational and Behavioral Statistics</em>, 35(5), 499–531. <a href="https://doi.org/10.3102/1076998609359785" class="external-link">doi:10.3102/1076998609359785</a></p><ul><li><p>Bias-reduced logistic regression</p></li>
 </ul><p>See references for the <a href="https://CRAN.R-project.org/package=brglm2" class="external-link"><span class="pkg">brglm2</span></a> package.</p><ul><li><p>Firth corrected logistic regression</p></li>
-</ul><p>Puhr, R., Heinze, G., Nold, M., Lusa, L., &amp; Geroldinger, A. (2017). Firth’s
-logistic regression with rare events: Accurate effect estimates and
-predictions? <em>Statistics in Medicine</em>, 36(14), 2302–2317.
-<a href="https://doi.org/10.1002/sim.7273" class="external-link">doi:10.1002/sim.7273</a></p><ul><li><p>SAEM logistic regression for missing data</p></li>
-</ul><p>Jiang, W., Josse, J., &amp; Lavielle, M. (2019). Logistic regression with missing
-covariates — Parameter estimation, model selection and prediction within a
-joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>, 106907.
-<a href="https://doi.org/10.1016/j.csda.2019.106907" class="external-link">doi:10.1016/j.csda.2019.106907</a></p>
+</ul><p>Puhr, R., Heinze, G., Nold, M., Lusa, L., &amp; Geroldinger, A. (2017). Firth’s logistic regression with rare events: Accurate effect estimates and predictions? <em>Statistics in Medicine</em>, 36(14), 2302–2317. <a href="https://doi.org/10.1002/sim.7273" class="external-link">doi:10.1002/sim.7273</a></p><ul><li><p>SAEM logistic regression for missing data</p></li>
+</ul><p>Jiang, W., Josse, J., &amp; Lavielle, M. (2019). Logistic regression with missing covariates — Parameter estimation, model selection and prediction within a joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>, 106907. <a href="https://doi.org/10.1016/j.csda.2019.106907" class="external-link">doi:10.1016/j.csda.2019.106907</a></p>
 </div>
 
 <div class="section">
 <h3 id="multi-category-treatments-1">Multi-Category Treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments-1"></a></h3>
 
 <ul><li><p><code>estimand = "ATO"</code></p></li>
-</ul><p>Li, F., &amp; Li, F. (2019). Propensity score weighting for causal inference with
-multiple treatments. <em>The Annals of Applied Statistics</em>, 13(4), 2389–2415.
-<a href="https://doi.org/10.1214/19-AOAS1282" class="external-link">doi:10.1214/19-AOAS1282</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
+</ul><p>Li, F., &amp; Li, F. (2019). Propensity score weighting for causal inference with  multiple treatments. <em>The Annals of Applied Statistics</em>, 13(4), 2389–2415. <a href="https://doi.org/10.1214/19-AOAS1282" class="external-link">doi:10.1214/19-AOAS1282</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
 </ul><p>Yoshida, K., Hernández-Díaz, S., Solomon, D. H., Jackson, J. W., Gagne, J.
 J., Glynn, R. J., &amp; Franklin, J. M. (2017). Matching weights to
 simultaneously compare three treatment groups: Comparison to three-way
