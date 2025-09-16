@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# `WeightIt` (development version)
+# `WeightIt` 1.5.0
 
 * For `predict.ordinal_weightit()`, `type` can now be `"stdlv"` to request predictions on the scale of the standardized latent variable underlying the ordinal responses.
 
