@@ -1,24 +1,24 @@
 # Makes a phrase from vcov_type to be printed by print() and summary()
 .vcov_to_phrase <- function(vcov_type, cluster = FALSE) {
   switch(vcov_type,
-         "const" = "maximum likelihood",
-         "asympt" = {
+         const = "maximum likelihood",
+         asympt = {
            if (cluster) "HC0 cluster-robust (adjusted for estimation of weights)"
            else"HC0 robust (adjusted for estimation of weights)"
          },
-         "HC0" = {
+         HC0 = {
            if (cluster) "HC0 cluster-robust"
            else "HC0 robust"
          },
-         "BS" = {
+         BS = {
            if (cluster) "traditional cluster bootstrap"
            else "traditional bootstrap"
          },
-         "FWB" = {
+         FWB = {
            if (cluster) "fractional weighted cluster bootstrap"
            else "fractional weighted bootstrap"
          },
-         "none" = "none",
+         none = "none",
          "user-supplied")
 }
 
@@ -591,7 +591,8 @@
   }
 
   if (vcov == "none") {
-    return(.modify_vcov_info(matrix(nrow = 0L, ncol = 0L), vcov_type = "none", cluster = cluster))
+    return(.modify_vcov_info(matrix(nrow = 0L, ncol = 0L),
+                             vcov_type = "none", cluster = cluster))
   }
 
   bout <- fit[["coefficients"]]
@@ -712,6 +713,11 @@
     if (is_not_null(weightit)) {
       wcall <- weightit[["call"]]
       wenv <- weightit[["env"]]
+
+      if (!deparse1(wcall[[1L]]) %in% c("weightit", "weightitMSM") ||
+          !is.environment(wenv)) {
+        .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
+      }
     }
     else {
       weightit_boot <- list(weights = 1)
@@ -769,10 +775,17 @@
     internal_model_call$y <- FALSE
     internal_model_call$model <- FALSE
 
-    genv <- environment(fit$formula)
+    genv <- environment(fit[["formula"]])
+
     if (is_not_null(weightit)) {
-      wcall <- weightit$call
-      wenv <- weightit$env
+      wcall <- weightit[["call"]]
+      wenv <- weightit[["env"]]
+
+      if (!deparse1(wcall[[1L]]) %in% c("weightit", "weightitMSM") ||
+          !is.environment(wenv)) {
+        .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
+      }
+
       data <- eval(wcall$data, wenv)
       if (is_null(data)) {
         .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
@@ -1058,6 +1071,7 @@
   },
   error = function(e) {
     .e <- conditionMessage(e)
+
     if (grepl("system is computationally singular", .e, fixed = TRUE) ||
         grepl("Lapack routine dgesv: system is exactly singular", .e, fixed = TRUE)) {
       if (model == "out") {

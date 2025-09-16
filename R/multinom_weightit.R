@@ -15,7 +15,7 @@
   if (is_null(weights)) weights <- rep.int(1, N)
   else chk::chk_numeric(weights)
 
-  if (is.null(offset)) offset <- rep.int(0, N)
+  if (is_null(offset)) offset <- rep.int(0, N)
   else chk::chk_numeric(offset)
 
   chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
@@ -123,7 +123,8 @@
               gradient = grad)
 
   if (hess) {
-    hessian <- matrix(NA_real_, nrow = sum(!aliased_B), ncol = sum(!aliased_B))
+    hessian <- sq_matrix(NA_real_, n = sum(!aliased_B),
+                         names = nm[!aliased_B])
 
     for (i in seq_len(K)) {
       i_ind <- (i - 1L) * ncol(x_) + seq_len(ncol(x_))
@@ -139,8 +140,6 @@
         }
       }
     }
-
-    colnames(hessian) <- rownames(hessian) <- nm[!aliased_B]
 
     fit$hessian <- hessian
   }
@@ -168,24 +167,28 @@
   mf <- eval(mf, parent.frame())
 
   mt <- attr(mf, "terms")
+
   Y <- model.response(mf, "any")
   if (length(dim(Y)) == 1L) {
     nm <- rownames(Y)
     dim(Y) <- NULL
-    if (!is.null(nm))
+
+    if (is_not_null(nm)) {
       names(Y) <- nm
+    }
   }
+
   X <- {
-    if (is.empty.model(mt)) matrix(NA_real_, NROW(Y), 0L)
+    if (is.empty.model(mt)) matrix(NA_real_, nrow = NROW(Y), ncol = 0L)
     else model.matrix(mt, mf, contrasts)
   }
 
   weights <- as.vector(model.weights(mf))
-  if (!is.null(weights) && !is.numeric(weights)) {
+  if (is_not_null(weights) && !is.numeric(weights)) {
     .err("`weights` must be a numeric vector")
   }
 
-  if (!is.null(weights) && any(weights < 0)) {
+  if (is_not_null(weights) && any(weights < 0)) {
     .err("negative weights not allowed")
   }
 
@@ -208,7 +211,8 @@
   c(fit,
     list(call = cal, formula = formula, terms = mt,
          data = data, offset = offset,
-         contrasts = attr(X, "contrasts"), xlevels = .getXlevels(mt, mf)))
+         contrasts = attr(X, "contrasts"),
+         xlevels = .getXlevels(mt, mf)))
 }
 
 .get_hess_multinom <- function(fit) {
@@ -237,7 +241,8 @@
 
   pp <- fit$fitted.values
 
-  hessian <- matrix(NA_real_, nrow = length(theta0), ncol = length(theta0))
+  hessian <- sq_matrix(NA_real_, n = length(theta0),
+                       names = names(theta0))
 
   for (i in seq_len(K)) {
     i_ind <- (i - 1L) * ncol(x_) + seq_len(ncol(x_))
@@ -253,8 +258,6 @@
       }
     }
   }
-
-  colnames(hessian) <- rownames(hessian) <- names(theta0)
 
   hessian
 }

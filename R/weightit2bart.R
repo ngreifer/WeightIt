@@ -157,7 +157,7 @@
 #' See [`method_glm`] for additional references on propensity score weighting
 #' more generally.
 #'
-#' @examplesIf requireNamespace("dbarts", quietly = TRUE)
+#' @examplesIf rlang::is_installed("dbarts")
 #' \donttest{data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)
@@ -199,7 +199,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   }
 
   if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
@@ -253,7 +253,7 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
   }
 
   if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 

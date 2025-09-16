@@ -210,7 +210,7 @@
 #' Zhu, Y., Coffman, D. L., & Ghosh, D. (2015). A Boosting Algorithm for
 #' Estimating Generalized Propensity Scores with Continuous Treatments. *Journal of Causal Inference*, 3(1). \doi{10.1515/jci-2014-0022}
 #'
-#' @examplesIf requireNamespace("gbm", quietly = TRUE)
+#' @examplesIf rlang::is_installed("gbm")
 #' data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)

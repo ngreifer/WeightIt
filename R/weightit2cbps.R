@@ -247,7 +247,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- .apply_moments_int_quantile(covs, moments = ...get("moments"),
+  covs <- .apply_moments_int_quantile(covs,
+                                      moments = ...get("moments"),
                                       int = ...get("int"),
                                       quantile = ...get("quantile"),
                                       s.weights = s.weights, focal = focal,
@@ -264,7 +265,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (requireNamespace("rootSolve", quietly = TRUE)) {
+    if (rlang::is_installed("rootSolve")) {
       solver <- "multiroot"
     }
     else {
@@ -540,7 +541,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (requireNamespace("rootSolve", quietly = TRUE)) {
+    if (rlang::is_installed("rootSolve")) {
       solver <- "multiroot"
     }
     else {
@@ -727,7 +728,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                         else if (ii[1L] == jj[2L]) -crossprod(SW * (1 / pp[, ii[1L]]) * Xb, SW * Xb)
                         else if (ii[2L] == jj[1L]) -crossprod(SW * (1 / pp[, ii[2L]]) * Xb, SW * Xb)
                         else if (ii[2L] == jj[2L])  crossprod(SW * (1 / pp[, ii[2L]]) * Xb, SW * Xb)
-                        else matrix(0, ncol(Xb), ncol(Xb))
+                        else sq_matrix(0, n = ncol(Xb))
                       },
                       "ATO" = {
                         if (identical(ii, jj))    crossprod(SW * (1 / pp[, ii[1L]] + 1 / pp[, ii[2L]]) * Xb,
@@ -736,7 +737,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                         else if (ii[1L] == jj[2L]) -crossprod(SW * (1 / pp[, ii[1L]]) * Xb, SW * Xb / wden)
                         else if (ii[2L] == jj[1L]) -crossprod(SW * (1 / pp[, ii[2L]]) * Xb, SW * Xb / wden)
                         else if (ii[2L] == jj[2L])  crossprod(SW * (1 / pp[, ii[2L]]) * Xb, SW * Xb / wden)
-                        else matrix(0, ncol(Xb), ncol(Xb))
+                        else sq_matrix(0, n = ncol(Xb))
                       },
                       {
                         if (identical(ii, jj)) crossprod(SW * (1 / pp[, ii[1L]] + 1 / pp[, ii[2L]]) * pp[, focal] * Xb,
@@ -745,7 +746,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                         else if (ii[1L] == jj[2L]) -crossprod(SW * (1 / pp[, ii[1L]]) * pp[, focal] * Xb, SW * pp[, focal] * Xb)
                         else if (ii[2L] == jj[1L]) -crossprod(SW * (1 / pp[, ii[2L]]) * pp[, focal] * Xb, SW * pp[, focal] * Xb)
                         else if (ii[2L] == jj[2L])  crossprod(SW * (1 / pp[, ii[2L]]) * pp[, focal] * Xb, SW * pp[, focal] * Xb)
-                        else matrix(0, ncol(Xb), ncol(Xb))
+                        else sq_matrix(0, n = ncol(Xb))
                       })
           S[[sprintf("b%s%s_b%s%s", ii[1L], ii[2L], jj[1L], jj[2L])]] <- m
           S[[sprintf("b%s%s_b%s%s", jj[1L], jj[2L], ii[1L], ii[2L])]] <- m
@@ -893,7 +894,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (requireNamespace("rootSolve", quietly = TRUE)) {
+    if (rlang::is_installed("rootSolve")) {
       solver <- "multiroot"
     }
     else {
@@ -1138,7 +1139,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (requireNamespace("rootSolve", quietly = TRUE)) {
+    if (rlang::is_installed("rootSolve")) {
       solver <- "multiroot"
     }
     else {

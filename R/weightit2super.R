@@ -201,7 +201,7 @@
 #'
 #' See [`method_glm`] for additional references.
 #'
-#' @examplesIf all(sapply(c("SuperLearner", "MASS"), requireNamespace, quietly = TRUE))
+#' @examplesIf rlang::is_installed(c("SuperLearner", "MASS"))
 #' \donttest{data("lalonde", package = "cobalt")
 #'
 #' #Note: for time, all exmaples use a small set of

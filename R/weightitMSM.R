@@ -233,8 +233,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
     treat.name <- attr(treat.list[[i]], "treat.name")
 
-    if (anyNA(treat.list[[i]])) {
-      .err(sprintf("no missing values are allowed in the treatment variable. Missing values found in %s",
+    if (anyNA(treat.list[[i]]) || !all(is.finite(treat.list[[i]]))) {
+      .err(sprintf("no missing or non-finite values are allowed in the treatment variable. Missing or non-finite values found in %s",
                    treat.name))
     }
 
@@ -469,12 +469,27 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 print.weightitMSM <- function(x, ...) {
   treat.types <- vapply(x[["treat.list"]], get_treat_type, character(1L))
 
-  cat(sprintf("A %s object\n", italic(class(x)[1L])))
+  cat(sprintf("A %s object\n", .it(class(x)[1L])))
 
   if (is_not_null(x[["method"]])) {
-    cat(sprintf(" - method: %s (%s)\n",
-                add_quotes(attr(x[["method"]], "name")),
-                .method_to_phrase(x[["method"]])))
+    method_name <- {
+      if (is_not_null(attr(x[["method"]], "name"))) add_quotes(attr(x[["method"]], "name"))
+      else if (is.character(x[["method"]])) add_quotes(x[["method"]])
+      else "user-defined"
+    }
+
+    method_note <- {
+      if (is_not_null(attr(x[["method"]], "package")))
+        sprintf(" (converted from %s)", .it(attr(x[["method"]], "package")))
+      else if (is_not_null(x[["method"]]))
+        sprintf(" (%s)", .method_to_phrase(x[["method"]]))
+      else
+        ""
+    }
+
+    cat(sprintf(" - method: %s%s\n",
+                method_name,
+                method_note))
   }
   else if (all_the_same(x[["weights"]])) {
     cat(" - method: no weighting\n")

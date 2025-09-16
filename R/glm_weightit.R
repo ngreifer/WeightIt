@@ -157,7 +157,6 @@
 #' for estimation of the weights.
 #'
 #' @examples
-#'
 #' data("lalonde", package = "cobalt")
 #'
 #' # Logistic regression ATT weights
@@ -175,12 +174,14 @@
 #' # Linear regression outcome model that treats weights
 #' # as fixed
 #' fit2 <- lm_weightit(re78 ~ treat, data = lalonde,
-#'                     weightit = w.out, vcov = "HC0")
+#'                     weightit = w.out,
+#'                     vcov = "HC0")
 #'
 #' summary(fit2)
-#' @examplesIf requireNamespace("fwb", quietly = TRUE)
-#' # example code
 #'
+#' # Can also just call summary() with `vcov` option
+#' summary(fit1, vcov = "HC0")
+#' @examplesIf rlang::is_installed("fwb")
 #' # Linear regression outcome model that bootstraps
 #' # estimation of weights and outcome model fitting
 #' # using fractional weighted bootstrap with "Mammen"

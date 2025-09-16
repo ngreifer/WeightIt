@@ -211,8 +211,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   #Process treat and covs from formula and data
-  # t.c <- get_covs_and_treat_from_formula(formula, data)
-  # reported.covs <- t.c[["reported.covs"]]
   t.c <- get_covs_and_treat_from_formula2(formula, data)
   reported.covs <- t.c[["reported.covs"]]
   simple.covs <- t.c[["simple.covs"]]
@@ -435,12 +433,27 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 print.weightit <- function(x, ...) {
   treat.type <- get_treat_type(x[["treat"]])
 
-  cat(sprintf("A %s object\n", italic(class(x)[1L])))
+  cat(sprintf("A %s object\n", .it(class(x)[1L])))
 
   if (is_not_null(x[["method"]])) {
-    cat(sprintf(" - method: %s (%s)\n",
-                add_quotes(attr(x[["method"]], "name")),
-                .method_to_phrase(x[["method"]])))
+    method_name <- {
+      if (is_not_null(attr(x[["method"]], "name"))) add_quotes(attr(x[["method"]], "name"))
+      else if (is.character(x[["method"]])) add_quotes(x[["method"]])
+      else "user-defined"
+    }
+
+    method_note <- {
+      if (is_not_null(attr(x[["method"]], "package")))
+        sprintf(" (converted from %s)", .it(attr(x[["method"]], "package")))
+      else if (is_not_null(x[["method"]]))
+        sprintf(" (%s)", .method_to_phrase(x[["method"]]))
+      else
+        ""
+    }
+
+    cat(sprintf(" - method: %s%s\n",
+                method_name,
+                method_note))
   }
   else if (all_the_same(x[["weights"]])) {
     cat(" - method: no weighting\n")
@@ -459,8 +472,8 @@ print.weightit <- function(x, ...) {
               switch(treat.type,
                      "continuous" = "continuous",
                      "multinomial" = sprintf("%s-category (%s)",
-                                       nunique(x[["treat"]]),
-                                       word_list(levels(x[["treat"]]), and.or = FALSE)),
+                                             nunique(x[["treat"]]),
+                                             word_list(levels(x[["treat"]]), and.or = FALSE)),
                      "binary" = "2-category")))
 
   if (is_not_null(x[["estimand"]])) {

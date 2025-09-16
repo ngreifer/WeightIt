@@ -38,7 +38,7 @@
 #' Inverse Probability Weighting via Isotonic Calibration (arXiv:2411.06342).
 #' arXiv. \url{http://arxiv.org/abs/2411.06342}
 #'
-#' @examplesIf requireNamespace("gbm", quietly = TRUE)
+#' @examplesIf rlang::is_installed("gbm")
 #' library("cobalt")
 #' data("lalonde", package = "cobalt")
 #'

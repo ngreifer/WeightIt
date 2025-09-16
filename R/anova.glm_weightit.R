@@ -60,7 +60,7 @@
 #' # Using a bootstrapped variance matrix
 #' anova(fit1, fit2, vcov = "BS", R = 100)
 #'
-#' @examplesIf requireNamespace("splines", quietly = TRUE)
+#' @examplesIf rlang::is_installed("splines")
 #' # Model comparison between spline model and linear
 #' # model; note they are nested but not symbolically
 #' # nested
@@ -134,14 +134,14 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  .title <- paste0("\n", underline("Wald test"))
+  .title <- paste0("\n", .ul("Wald test"))
   .topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
                       deparse1(formula(object)),
                       deparse1(formula(object2)))
 
-  .varnote <- paste(italic(sprintf("Variance: %s\n",
-                                   .vcov_to_phrase(object[["vcov_type"]],
-                                                   is_not_null(attr(object, "cluster"))))))
+  .varnote <- .it(sprintf("Variance: %s\n",
+                          .vcov_to_phrase(object[["vcov_type"]],
+                                          is_not_null(attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
@@ -237,14 +237,14 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  .title <- paste0("\n", underline("Wald test"))
+  .title <- paste0("\n", .ul("Wald test"))
   .topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
                       deparse1(formula(object)),
                       deparse1(formula(object2)))
 
-  .varnote <- paste(italic(sprintf("Variance: %s\n",
-                                   .vcov_to_phrase(object$vcov_type,
-                                                   is_not_null(attr(object, "cluster"))))))
+  .varnote <- .it(sprintf("Variance: %s\n",
+                          .vcov_to_phrase(object$vcov_type,
+                                          is_not_null(attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))
@@ -349,14 +349,14 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
 
   SSH <- drop(crossprod(value.hyp, solve(vcov.hyp, value.hyp)))
 
-  .title <- paste0("\n", underline("Wald test"))
+  .title <- paste0("\n", .ul("Wald test"))
   .topnote <- sprintf("Model 1: %s\nModel 2: %s\n",
                       deparse1(formula(object)),
                       deparse1(formula(object2)))
 
-  .varnote <- paste(italic(sprintf("Variance: %s\n",
-                                   .vcov_to_phrase(object$vcov_type,
-                                                   is_not_null(attr(object, "cluster"))))))
+  .varnote <- .it(sprintf("Variance: %s\n",
+                          .vcov_to_phrase(object$vcov_type,
+                                          is_not_null(attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
                     c("1", "2"))

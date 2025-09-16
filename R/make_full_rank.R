@@ -80,9 +80,11 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
     keep[mat_qr$pivot[-seq_len(mat_qr$rank)]] <- FALSE
   }
 
+  mat <- mat[, keep, drop = FALSE]
+
   if (is.mat) {
-    return(mat[, keep, drop = FALSE])
+    return(mat)
   }
 
-  as.data.frame(mat[, keep, drop = FALSE])
+  as.data.frame(mat)
 }

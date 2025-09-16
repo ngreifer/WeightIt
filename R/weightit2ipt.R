@@ -71,7 +71,7 @@
 #'   }
 #' }
 #'
-#'   The `stabilize` argument is ignored.
+#' The `stabilize` argument is ignored.
 #'
 #' @section Additional Outputs:
 #' \describe{
@@ -116,7 +116,7 @@
 #' difference-in-differences estimators. *Journal of Econometrics*, 219(1),
 #' 101–122. \doi{10.1016/j.jeconom.2020.06.003}
 #'
-#' @examplesIf requireNamespace("rootSolve", quietly = TRUE)
+#' @examplesIf rlang::is_installed("rootSolve")
 #' data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)

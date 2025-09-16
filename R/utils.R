@@ -249,7 +249,18 @@ space <- function(n) {
   strrep(" ", n)
 }
 str_rev <- function(x) {
-  vapply(lapply(strsplit(x, NULL), rev), paste, character(1L), collapse = "")
+  strsplit(x, NULL) |>
+    lapply(rev) |>
+    vapply(paste, character(1L), collapse = "")
+}
+safe_str2expression <- function(text) {
+  expr <- try(str2expression(text), silent = TRUE)
+
+  if (null_or_error(expr)) {
+    expr <- str2expression(add_quotes(text, "`"))
+  }
+
+  expr
 }
 
 #Numbers
@@ -516,6 +527,14 @@ col.w.r <- function(mat, y, w = NULL, s.weights = NULL, bin.vars = NULL, na.rm =
   cov / den
 }
 scale_w <- function(x, w = NULL) {
+  if (length(dim(x)) == 2L) {
+    for (i in seq_col(x)) {
+      x[,i] <- scale_w(x[,i], w)
+    }
+
+    return(x)
+  }
+
   (x - w.m(x, w)) / sqrt(col.w.v(x, w))
 }
 center_w <- function(x, w = NULL) {
@@ -589,51 +608,33 @@ hasbar <- function(term) {
   any(c("|", "||") %in% all.names(term))
 }
 get_varnames <- function(expr) {
-  if (is.name(expr)) {
-    return(as.character(expr))
-  }
-
-  if (!is.call(expr)) {
-    return(NULL)
-  }
-
-  fun <- expr[[1L]]
-
-  if (fun == as.name("$")) {
-    # Handle a$b
-    lhs <- get_varnames(expr[[2L]])
-    rhs <- get_varnames(expr[[3L]])
-    return(paste0(lhs, "$", rhs))
-  }
-
-  if (fun == as.name("[[")) {
-    # Handle a[["col"]]
-    lhs <- get_varnames(expr[[2L]])
-    rhs <- get_varnames(expr[[3L]])
-    # if rhs is quoted (character constant)
-    if (is.character(expr[[3L]])) {
-      rhs <- expr[[3L]]
+  # Ensure we are working with a formula RHS
+  recurse <- function(e) {
+    if (is.symbol(e)) {
+      # bare variable like age
+      return(as.character(e))
     }
 
-    return(paste0(lhs, "[[", rhs, "]]"))
-  }
-
-  if (fun == as.name("[")) {
-    # Handle a["col"] or a[idx]
-    lhs <- get_varnames(expr[[2L]])
-    rhs <- get_varnames(expr[[3L]])
-    # if rhs is quoted (character constant)
-    if (is.character(expr[[3L]])) {
-      rhs <- expr[[3L]]
+    if (!is.call(e)) {
+      return(NULL)
     }
 
-    return(paste0(lhs, "[", rhs, "]"))
+    fn <- as.character(e[[1L]])
+
+    if (fn == as.name("$") || fn == as.name("[[") || fn == as.name("[")) {
+      # if (fn %in% c("$", "[[", "[")) {
+
+      # keep as-is for $, [[, and [
+      return(deparse1(e))
+    }
+
+    # strip outer function, recurse into arguments
+    unlist(lapply(as.list(e)[-1L], recurse))
+
   }
 
-  # Recurse into all other calls
-  unlist(lapply(as.list(expr)[-1L], get_varnames))
+  recurse(expr)
 }
-
 
 #treat/covs
 get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep = "", ...) {
@@ -860,11 +861,13 @@ get_covs_and_treat_from_formula <- function(f, data = NULL, terms = FALSE, sep =
        model.covs = covs.matrix,
        treat = treat)
 }
-get_covs_and_treat_from_formula2 <- function(f, data = NULL, terms = FALSE, sep = "", ...) {
+get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   if (!rlang::is_formula(f)) {
     .err("`formula` must be a formula")
   }
+
+  chk::chk_string(sep)
 
   env <- environment(f)
 
@@ -968,13 +971,15 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, terms = FALSE, sep 
     lapply(get_varnames) |>
     unlist() |>
     unique() |>
-    lapply(str2expression) |>
     lapply(function(i) {
-      test <- tryCatch(eval(i, data, env),
+      iexp <- safe_str2expression(i)
+
+      test <- tryCatch(eval(iexp, data, env),
                        error = identity)
 
       if (inherits(test, "simpleError")) {
         m <- conditionMessage(test)
+
         if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
           .err(m, tidy = FALSE)
         }
@@ -983,11 +988,16 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, terms = FALSE, sep 
       }
 
       if (length(dim(test)) == 2L) {
-        as.list(as.data.frame(test))
+        out <- as.data.frame(test)
+
+        if (is_null(colnames(test))) {
+          names(out) <- paste(i, seq_col(out), sep = sep)
+        }
+
+        return(as.list(out))
       }
-      else {
-        setNames(list(test), i)
-      }
+
+      list(test) |> setNames(i)
     }) |>
     clear_null() |>
     unlist(recursive = FALSE) |>
@@ -1029,8 +1039,11 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, terms = FALSE, sep 
         test <- setNames(as.data.frame(as.matrix(test)),
                          attr(test, "colnames"))
       }
-      else if (can_str2num(colnames(test))) {
+      else if (is_not_null(colnames(test))) {
         colnames(test) <- paste(rhs.vars.mentioned.char[i], colnames(test), sep = sep)
+      }
+      else {
+        colnames(test) <- paste(rhs.vars.mentioned.char[i], seq_col(test), sep = sep)
       }
 
       addl.dfs[[i]] <- as.data.frame(test)
@@ -1062,7 +1075,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, terms = FALSE, sep 
   }
 
   new.form <- sprintf("~ %s", paste(vapply(names(rhs.term.labels.list), function(x) {
-    if (x %in% rhs.vars.mentioned.char[rhs.df]) paste0(add_quotes(rhs.term.labels.list[[x]], "`"), collapse = " + ")
+    if (x %in% rhs.vars.mentioned.char[rhs.df]) paste(add_quotes(rhs.term.labels.list[[x]], "`"), collapse = " + ")
     else rhs.term.labels.list[[x]]
   } , character(1L)), collapse = " + ")) |>
     as.formula()
@@ -1081,10 +1094,6 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, terms = FALSE, sep 
 
   if (is_not_null(treat.name) && utils::hasName(covs, treat.name)) {
     .err("the variable on the left side of the formula appears on the right side too")
-  }
-
-  if (!is.character(sep) || length(sep) > 1L) {
-    stop("'sep' must be a string of length 1.", call. = FALSE)
   }
 
   s <- nzchar(sep)
@@ -1119,10 +1128,6 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, terms = FALSE, sep 
     for (i in names(covs)[vapply(covs, is.factor, logical(1L))]) {
       levels(covs[[i]]) <- original.covs.levels[[i]]
     }
-  }
-
-  if (!terms) {
-    attr(covs, "terms") <- NULL
   }
 
   if (is_not_null(treat)) {
@@ -1269,9 +1274,17 @@ make_df <- function(ncol, nrow = 0L, types = "numeric") {
 
   df
 }
+sq_matrix <- function(x, n, names = NULL) {
+  if (missing(x)) {
+    x <- NA
+  }
+
+  matrix(x, nrow = n, ncol = n, dimnames = list(names, names))
+}
 rep_with <- function(x, y) {
   #Helper function to fill named vectors with x and given names of y
-  setNames(rep.int(x, length(y)), names(y))
+  rep.int(x, length(y)) |>
+    setNames(names(y))
 }
 is_null <- function(x) length(x) == 0L
 is_not_null <- function(x) !is_null(x)
@@ -1528,7 +1541,7 @@ Invert <- function(f) {
   n <- length(mat.list)
 
   if (n == 0L) {
-    return(matrix(0, nrow = 0L, ncol = 0L))
+    return(sq_matrix(n = 0L))
   }
 
   if (n == 1L) {
@@ -1580,7 +1593,6 @@ any_apply <- function(X, FUN, ...) {
 
   FALSE
 }
-
 all_apply <- function(X, FUN, ...) {
   FUN <- match.fun(FUN)
   if (!is.vector(X) || is.object(X)) {
@@ -1595,3 +1607,8 @@ all_apply <- function(X, FUN, ...) {
 
   TRUE
 }
+
+#crayon utilities
+.it <- function(...) crayon::italic(...)
+.ul <- function(...) crayon::underline(...)
+.st <- function(...) crayon::strikethrough(...)

@@ -40,7 +40,7 @@
   if (is_null(weights)) weights <- rep.int(1, n)
   else chk::chk_numeric(weights)
 
-  if (is.null(offset)) offset <- rep.int(0, n)
+  if (is_null(offset)) offset <- rep.int(0, n)
   else chk::chk_numeric(offset)
 
   chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
@@ -328,26 +328,29 @@
   mf <- eval(mf, parent.frame())
 
   mt <- attr(mf, "terms")
+
   Y <- model.response(mf, "any")
   if (length(dim(Y)) == 1L) {
     nm <- rownames(Y)
     dim(Y) <- NULL
-    if (!is.null(nm))
+    if (is_not_null(nm)) {
       names(Y) <- nm
+    }
   }
+
   X <- {
-    if (is.empty.model(mt)) matrix(NA_real_, NROW(Y), 0L)
+    if (is.empty.model(mt)) matrix(NA_real_, nrow = NROW(Y), ncol = 0L)
     else model.matrix(mt, mf, contrasts)
   }
 
   weights <- as.vector(model.weights(mf))
-  if (!is.null(weights)) {
+  if (is_not_null(weights)) {
     chk::chk_numeric(weights)
     chk::chk_gte(weights)
   }
 
   offset <- as.vector(model.offset(mf))
-  if (!is.null(offset)) {
+  if (is_not_null(offset)) {
     chk::chk_numeric(offset)
     if (length(offset) != NROW(Y))
       .err(gettextf("number of offsets is %d; should equal %d (number of observations)",
@@ -386,7 +389,7 @@
 
   if (is_null(weights)) weights <- rep.int(1, n)
 
-  if (is.null(offset)) offset <- rep.int(0, n)
+  if (is_null(offset)) offset <- rep.int(0, n)
 
   m <- nlevels(y) #num. thresholds
 

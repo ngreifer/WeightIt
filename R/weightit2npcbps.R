@@ -4,8 +4,7 @@
 #'
 #' @description
 #' This page explains the details of estimating weights from
-#' nonparametric covariate balancing propensity scores by setting `method = "npcbps"` in the call to [weightit()] or [weightitMSM()]. This method can be
-#' used with binary, multi-category, and continuous treatments.
+#' nonparametric covariate balancing propensity scores by setting `method = "npcbps"` in the call to [weightit()] or [weightitMSM()]. This method can be used with binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating weights by maximizing the
 #' empirical likelihood of the data subject to balance constraints. This method
@@ -76,13 +75,14 @@
 #' Nonparametric CBPS involves the specification of a constrained
 #' optimization problem over the weights. The constraints correspond to
 #' covariate balance, and the loss function is the empirical likelihood of the
-#' data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the
-#' optimization problem of npCBPS is not convex it can be slow to converge or
+#' data given the weights. npCBPS is similar to \link[=method_ebal]{entropy balancing} and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or
 #' not converge at all, so approximate balance is allowed instead using the
 #' `cor.prior` argument, which controls the average deviation from zero
 #' correlation between the treatment and covariates allowed.
 #'
 #' @seealso [weightit()], [weightitMSM()], [`method_cbps`]
+#'
+#' [`method_optweight`], which can also be used to perform npCBPS by setting `norm = "log"`. In generally, this `"optweight"` implementation is more stable and flexible.
 #'
 #' \pkgfun{CBPS}{npCBPS} for the fitting function
 #'
@@ -92,7 +92,7 @@
 #' political advertisements. *The Annals of Applied Statistics*, 12(1), 156–177.
 #' \doi{10.1214/17-AOAS1101}
 #'
-#' @examplesIf requireNamespace("CBPS", quietly = TRUE)
+#' @examplesIf rlang::is_installed("CBPS")
 #' # Examples take a long time to run
 #' data("lalonde", package = "cobalt")
 #' \donttest{

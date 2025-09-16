@@ -127,11 +127,11 @@ trim.weightit <- function(x, at = 0, lower = FALSE, drop = FALSE, ...) {
   chk::chk_flag(drop)
 
   x[["weights"]] <- .trim_weights(x[["weights"]],
-                                 at = at,
-                                 treat = x[["treat"]],
-                                 groups.not.to.trim = x[["focal"]],
-                                 lower = lower,
-                                 drop = drop)
+                                  at = at,
+                                  treat = x[["treat"]],
+                                  groups.not.to.trim = x[["focal"]],
+                                  lower = lower,
+                                  drop = drop)
   x
 }
 
@@ -183,10 +183,10 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
   chk::chk_flag(drop)
 
   .trim_weights(x, at = at,
-               treat = treat,
-               groups.not.to.trim = groups.not.to.trim,
-               lower = lower,
-               drop = drop)
+                treat = treat,
+                groups.not.to.trim = groups.not.to.trim,
+                lower = lower,
+                drop = drop)
 }
 
 #Internal function that does the work

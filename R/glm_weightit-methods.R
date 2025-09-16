@@ -423,7 +423,7 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
   chk::chk_flag(call)
 
   if (call) {
-    cat0("\n", underline("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
+    cat0("\n", .ul("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
          "\n")
   }
 
@@ -432,8 +432,8 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
     return(invisible(x))
   }
 
-  cat0("\n", underline(sprintf("Coefficients%s:",
-                               if (x$transformed) " (transformed)" else "")),
+  cat0("\n", .ul(sprintf("Coefficients%s:",
+                         if (x$transformed) " (transformed)" else "")),
        "\n")
 
   coefs <- x$coefficients
@@ -459,14 +459,14 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
                              signif.stars = signif.stars,
                              ...)
 
-  cat(italic(sprintf("Standard error: %s\n",
-                     .vcov_to_phrase(x$vcov_type,
-                                     is_not_null(x[["cluster"]])))))
+  cat(.it(sprintf("Standard error: %s\n",
+                  .vcov_to_phrase(x$vcov_type,
+                                  is_not_null(x[["cluster"]])))))
 
   if (is_not_null(attr(x, "thresholds"))) {
     thresholds <- x$coefficients[attr(x, "thresholds"), , drop = FALSE]
 
-    cat0("\n", underline(sprintf("Thresholds%s:", if (x$transformed) " (transformed)" else "")),
+    cat0("\n", .ul(sprintf("Thresholds%s:", if (x$transformed) " (transformed)" else "")),
          "\n")
 
     .printCoefmat_glm_weightit(thresholds, digits = digits,
@@ -483,23 +483,23 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
 #' @rdname glm_weightit-methods
 print.glm_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
 
-  cat0("\n", underline("Call:"), "\n",
+  cat0("\n", .ul("Call:"), "\n",
        paste(deparse(x$call), collapse = "\n"),
        "\n")
 
   if (is_not_null(coef(x))) {
     co <- x$contrasts
-    cat0("\n", underline(sprintf("Coefficients%s:",
-                                 if (is.character(co))
-                                   paste("  [contrasts: ", apply(cbind(names(co), co), 1L, paste, collapse = "="), "]")
-                                 else "")),
+    cat0("\n", .ul(sprintf("Coefficients%s:",
+                           if (is.character(co))
+                             paste("  [contrasts: ", apply(cbind(names(co), co), 1L, paste, collapse = "="), "]")
+                           else "")),
          "\n")
 
     print.default(format(x$coefficients, digits = digits),
                   print.gap = 2L, quote = FALSE)
-    cat(italic(sprintf("Standard error: %s\n",
-                       .vcov_to_phrase(x$vcov_type,
-                                       is_not_null(attr(x, "cluster"))))))
+    cat(.it(sprintf("Standard error: %s\n",
+                    .vcov_to_phrase(x$vcov_type,
+                                    is_not_null(attr(x, "cluster"))))))
   }
   else {
     cat("No coefficients\n\n")
@@ -964,8 +964,8 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
       vn_in_call <- which(names(obj_call) %in% vcov_args & names(obj_call) %nin% names(extras))
 
       update_call <- as.call(c(as.list(update_call[c(1L, match("object", names(update_call)))]),
-                         as.list(extras[vn_in_extras]),
-                         as.list(obj_call[vn_in_call])))
+                               as.list(extras[vn_in_extras]),
+                               as.list(obj_call[vn_in_call])))
 
       if (any(names(extras) == "vcov")) {
         names(update_call)[names(update_call) == "vcov"] <- "vcov."

@@ -36,8 +36,8 @@
 #'
 #' For longitudinal treatments, the weights are the product of the weights
 #' estimated at each time point. This method is not guaranteed to yield exact
-#' balance at each time point. NOTE: the use of entropy balancing with
-#' longitudinal treatments has not been validated!
+#' balance at each time point. **NOTE: the use of entropy balancing with
+#' longitudinal treatments has not been validated and should not be done!**
 #'
 #' ## Sampling Weights
 #'
@@ -212,7 +212,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   solver <- ...get("solver")
   if (is_null(solver)) {
     solver <- {
-      if (requireNamespace("rootSolve", quietly = TRUE))
+      if (rlang::is_installed("rootSolve"))
         "multiroot"
       else
         "optim"
@@ -393,7 +393,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
       sw0 <- check_if_zero(SW)
 
-      H <- matrix(0, nrow = length(Btreat), ncol = length(Btreat))
+      H <- sq_matrix(0, n = length(Btreat))
 
       for (i in groups_to_weight) {
         in_i <- which(A == i & !sw0)
@@ -428,12 +428,21 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     covs <- add_missing_indicators(covs)
   }
 
-  bw <- if_null_then(...get("base.weights"),
-                     ...get("base.weight"),
-                     rep_with(1, treat))
+  for (i in c("b.weights", "base.weights", "base.weight")) {
+    bw <- ...get(i)
 
-  if (!is.numeric(bw) || length(bw) != length(treat)) {
-    .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
+    if (is_not_null(bw)) {
+      if (!is.numeric(bw) || length(bw) != length(treat)) {
+        .err(sprintf("the argument to `%s` must be a numeric vector with length equal to the number of units",
+                     i))
+      }
+
+      break
+    }
+  }
+
+  if (is_null(bw)) {
+    bw <- rep_with(1, treat)
   }
 
   treat <- treat[subset]
@@ -450,7 +459,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (requireNamespace("rootSolve", quietly = TRUE)) {
+    if (rlang::is_installed("rootSolve")) {
       solver <- "multiroot"
     }
     else {
@@ -675,7 +684,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 #
 #   solver <- ...get("solver", NULL)
 #   if (is_null(solver)) {
-#     if (requireNamespace("rootSolve", quietly = TRUE)) {
+#     if (rlang::is_installed("rootSolve")) {
 #       solver <- "multiroot"
 #     }
 #     else {
