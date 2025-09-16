@@ -108,7 +108,7 @@ M-estimation
 For binary treatments, M-estimation is supported when link is neither
 "flic" nor "flac" (see below). For multi-category treatments,
 M-estimation is supported when multi.method is "weightit" (the default)
-or "glm". For continuous treatments, M-estimation is supported when
+or "glm". M-estimation is not supported when subclass is specified. For continuous treatments, M-estimation is supported when
 density is not "kernel". The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all treatment
@@ -220,7 +220,7 @@ M-estimation
 For binary treatments, M-estimation is supported when link is neither
 "flic" nor "flac" (see below). For multi-category treatments,
 M-estimation is supported when multi.method is "weightit" (the default)
-or "glm". For continuous treatments, M-estimation is supported when
+or "glm". M-estimation is not supported when subclass is specified. For continuous treatments, M-estimation is supported when
 density is not "kernel". The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all treatment
@@ -237,7 +237,7 @@ methods are.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -369,7 +369,7 @@ allowed:</p><dl><dt><code>"ind"</code> (default)</dt>
 <p>For binary treatments, M-estimation is supported when <code>link</code> is neither
 <code>"flic"</code> nor <code>"flac"</code> (see below). For multi-category treatments,
 M-estimation is supported when <code>multi.method</code> is <code>"weightit"</code> (the default)
-or <code>"glm"</code>. For continuous treatments, M-estimation is supported when
+or <code>"glm"</code>. M-estimation is not supported when <code>subclass</code> is specified. For continuous treatments, M-estimation is supported when
 <code>density</code> is not <code>"kernel"</code>. The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all treatment
@@ -384,17 +384,24 @@ methods are.</p>
 
     <div class="section level2">
     <h2 id="additional-arguments">Additional Arguments<a class="anchor" aria-label="anchor" href="#additional-arguments"></a></h2>
-    <p>For binary treatments, the following
-additional argument can be specified:</p><dl><dt><code>link</code></dt>
+
+
+
+<p>For binary treatments, the following additional argument can be specified:</p><dl><dt><code>link</code></dt>
 <dd><p>the link used in the generalized linear model for the propensity scores. <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code> as well as <code>"loglog"</code> and <code>"clog"</code>. A <code>br.</code> prefix can be added (e.g., <code>"br.logit"</code>); this changes the fitting method to the bias-corrected generalized linear models implemented in the <a href="https://CRAN.R-project.org/package=brglm2" class="external-link"><span class="pkg">brglm2</span></a> package. <code>link</code> can also be either <code>"flic"</code> or <code>"flac"</code> to fit the corresponding Firth corrected logistic regression models implemented in the <a href="https://CRAN.R-project.org/package=logistf" class="external-link"><span class="pkg">logistf</span></a> package.</p></dd>
 
+<dt><code>subclass</code></dt>
+<dd><p><code>integer</code>; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details and references.</p></dd>
 
-</dl><p>For multi-category treatments, the following additional arguments can be
-specified:</p><dl><dt><code>multi.method</code></dt>
+
+</dl><p>For multi-category treatments, the following additional arguments can be specified:</p><dl><dt><code>multi.method</code></dt>
 <dd><p>the method used to estimate the generalized propensity scores. Allowable options include <code>"weightit"</code> (the default) to use multinomial logistic regression implemented in <span class="pkg">WeightIt</span>, <code>"glm"</code> to use a series of binomial models using <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, <code>"mclogit"</code> to use multinomial logistic regression as implemented in <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html" class="external-link">mclogit::mblogit()</a></code>, <code>"mnp"</code> to use Bayesian multinomial probit regression as implemented in <code><a href="https://rdrr.io/pkg/MNP/man/mnp.html" class="external-link">MNP::MNP()</a></code>, and <code>"brmultinom"</code> to use bias-reduced multinomial logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>. <code>"weightit"</code> and <code>"mclogit"</code> should give near-identical results, the main difference being increased robustness and customizability when using <code>"mclogit"</code> at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include <code>"weightit"</code> (the default) to use ordinal regression implemented in <span class="pkg">WeightIt</span> or <code>"polr"</code> to use ordinal regression implemented in <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>, unless <code>link</code> is <code>"br.logit"</code>, in which case bias-reduce ordinal logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code> is used. Ignored when <code>missing = "saem"</code>. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.</p></dd>
 
 <dt><code>link</code></dt>
 <dd><p>The link used in the multinomial, binomial, or ordered regression model for the generalized propensity scores depending on the argument supplied to <code>multi.method</code>. When <code>multi.method = "glm"</code>, <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code>. When treatment is ordered and <code>multi.method</code> is <code>"weightit"</code> or <code>"polr"</code>, <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code> or <code>"br.logit"</code>. Otherwise, <code>link</code> should be <code>"logit"</code> or not specified.</p></dd>
+
+<dt><code>subclass</code></dt>
+<dd><p><code>integer</code>; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details and references.</p></dd>
 
 
 </dl><p>For continuous treatments, the following additional arguments may be
@@ -439,21 +446,13 @@ are passed to <code>...</code> in <code><a href="https://rdrr.io/r/stats/glm.htm
 <h3 id="binary-treatments-1">Binary treatments<a class="anchor" aria-label="anchor" href="#binary-treatments-1"></a></h3>
 
 <ul><li><p><code>estimand = "ATO"</code></p></li>
-</ul><p>Li, F., Morgan, K. L., &amp; Zaslavsky, A. M. (2018). Balancing covariates via
-propensity score weighting. <em>Journal of the American Statistical
-Association</em>, 113(521), 390–400. <a href="https://doi.org/10.1080/01621459.2016.1260466" class="external-link">doi:10.1080/01621459.2016.1260466</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
+</ul><p>Li, F., Morgan, K. L., &amp; Zaslavsky, A. M. (2018). Balancing covariates via propensity score weighting. <em>Journal of the American Statistical Association</em>, 113(521), 390–400. <a href="https://doi.org/10.1080/01621459.2016.1260466" class="external-link">doi:10.1080/01621459.2016.1260466</a></p><ul><li><p><code>estimand = "ATM"</code></p></li>
 </ul><p>Li, L., &amp; Greene, T. (2013). A Weighting Analogue to Pair Matching in
 Propensity Score Analysis. <em>The International Journal of Biostatistics</em>,
 9(2). <a href="https://doi.org/10.1515/ijb-2012-0030" class="external-link">doi:10.1515/ijb-2012-0030</a></p><ul><li><p><code>estimand = "ATOS"</code></p></li>
-</ul><p>Crump, R. K., Hotz, V. J., Imbens, G. W., &amp; Mitnik, O. A. (2009). Dealing
-with limited overlap in estimation of average treatment effects.
-<em>Biometrika</em>, 96(1), 187–199. <a href="https://doi.org/10.1093/biomet/asn055" class="external-link">doi:10.1093/biomet/asn055</a></p><ul><li><p>Other estimands</p></li>
-</ul><p>Austin, P. C. (2011). An Introduction to Propensity Score Methods for
-Reducing the Effects of Confounding in Observational Studies. <em>Multivariate
-Behavioral Research</em>, 46(3), 399–424. <a href="https://doi.org/10.1080/00273171.2011.568786" class="external-link">doi:10.1080/00273171.2011.568786</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
-</ul><p>Hong, G. (2010). Marginal mean weighting through stratification: Adjustment
-for selection bias in multilevel data. <em>Journal of Educational and Behavioral
-Statistics</em>, 35(5), 499–531. <a href="https://doi.org/10.3102/1076998609359785" class="external-link">doi:10.3102/1076998609359785</a></p><ul><li><p>Bias-reduced logistic regression</p></li>
+</ul><p>Crump, R. K., Hotz, V. J., Imbens, G. W., &amp; Mitnik, O. A. (2009). Dealing with limited overlap in estimation of average treatment effects. <em>Biometrika</em>, 96(1), 187–199. <a href="https://doi.org/10.1093/biomet/asn055" class="external-link">doi:10.1093/biomet/asn055</a></p><ul><li><p>Other estimands</p></li>
+</ul><p>Austin, P. C. (2011). An Introduction to Propensity Score Methods for Reducing the Effects of Confounding in Observational Studies. <em>Multivariate Behavioral Research</em>, 46(3), 399–424. <a href="https://doi.org/10.1080/00273171.2011.568786" class="external-link">doi:10.1080/00273171.2011.568786</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
+</ul><p>Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. <em>Journal of Educational and Behavioral Statistics</em>, 35(5), 499–531. <a href="https://doi.org/10.3102/1076998609359785" class="external-link">doi:10.3102/1076998609359785</a></p><ul><li><p>Bias-reduced logistic regression</p></li>
 </ul><p>See references for the <a href="https://CRAN.R-project.org/package=brglm2" class="external-link"><span class="pkg">brglm2</span></a> package.</p><ul><li><p>Firth corrected logistic regression</p></li>
 </ul><p>Puhr, R., Heinze, G., Nold, M., Lusa, L., &amp; Geroldinger, A. (2017). Firth’s
 logistic regression with rare events: Accurate effect estimates and
@@ -477,10 +476,7 @@ J., Glynn, R. J., &amp; Franklin, J. M. (2017). Matching weights to
 simultaneously compare three treatment groups: Comparison to three-way
 matching. <em>Epidemiology</em> (Cambridge, Mass.), 28(3), 387–395.
 <a href="https://doi.org/10.1097/EDE.0000000000000627" class="external-link">doi:10.1097/EDE.0000000000000627</a></p><ul><li><p>Other estimands</p></li>
-</ul><p>McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand,
-R., &amp; Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for
-Multiple Treatments Using Generalized Boosted Models. <em>Statistics in
-Medicine</em>, 32(19), 3388–3414. <a href="https://doi.org/10.1002/sim.5753" class="external-link">doi:10.1002/sim.5753</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
+</ul><p>McCaffrey, D. F., Griffin, B. A., Almirall, D., Slaughter, M. E., Ramchand, R., &amp; Burgette, L. F. (2013). A Tutorial on Propensity Score Estimation for Multiple Treatments Using Generalized Boosted Models. <em>Statistics in Medicine</em>, 32(19), 3388–3414. <a href="https://doi.org/10.1002/sim.5753" class="external-link">doi:10.1002/sim.5753</a></p><ul><li><p>Marginal mean weighting through stratification</p></li>
 </ul><p>Hong, G. (2012). Marginal mean weighting through stratification: A
 generalized method for evaluating multivalued and multiple treatments with
 nonexperimental data. <em>Psychological Methods</em>, 17(1), 44–60.
@@ -531,16 +527,17 @@ joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                 ||            1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0176 |---------------------------| 1.8338</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                    ||            1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.018 |---------------------------| 1.834</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5     4     3     2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1     1     1     1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             612   595   269   409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.2781 1.351 1.412 1.518 1.8338</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1     2     3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            427   410   224   111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.278 1.351 1.412 1.518 1.834</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -584,19 +581,20 @@ joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.4528 |---------------------------| 30.8070</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.7990  |---------------------|      25.9532</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.1123 |-|                            3.9770</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.453 |---------------------------| 30.807</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.799  |---------------------|      25.953</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.112 |-|                            3.977</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             226     231    485     181     182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black   7.532  7.6243 8.5246 12.3509  30.807</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             392     564    345     269     371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 15.9922 16.7517 18.784 23.4106 25.9532</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             432     589    437     404     599</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white   3.686  3.6864  3.712  3.7842   3.977</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            203    164    163    153    152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black  7.532  7.624  8.525 12.351 30.807</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             67     43     39     36     28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 15.992 16.752 18.784 23.411 25.953</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            291    285    195    190    172</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  3.686  3.686  3.712  3.784  3.977</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -640,13 +638,14 @@ joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.1076 |---------------------------| 101.6599</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.108 |---------------------------| 101.66</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         482     481     484     483      485</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 69.644 69.7094 85.9204 94.3369 101.6599</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         485    484   483    482    481</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 69.644 69.709 85.92 94.337 101.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

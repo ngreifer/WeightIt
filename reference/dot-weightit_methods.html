@@ -25,7 +25,7 @@ authors that want to support different weighting methods."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,9 +78,7 @@ authors that want to support different weighting methods.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Each component is itself a list containing the following components:</p><dl><dt><code>treat_type</code></dt>
-<dd><p>at least one of <code>"binary"</code>, <code>"multi-category"</code>, or
-<code>"continuous"</code> indicating which treatment types are
-available for this method.</p></dd>
+<dd><p>at least one of <code>"binary"</code>, <code>"multinomial"</code>, or <code>"continuous"</code> indicating which treatment types are available for this method.</p></dd>
 
 <dt><code>estimand</code></dt>
 <dd><p>which estimands are available for this method. All methods that support binary and multi-category treatments accept <code>"ATE"</code>, <code>"ATT"</code>, and <code>"ATC"</code>, as well as some other estimands depending on the method. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for more details about what each estimand means.</p></dd>
@@ -105,6 +103,9 @@ available for this method.</p></dd>
 
 <dt><code>packages_needed</code></dt>
 <dd><p>a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.</p></dd>
+
+<dt><code>package_versions_needed</code></dt>
+<dd><p>a named character vector of the minimal package versions required to use the method. Only present when <code>packages_needed</code> is not empty.</p></dd>
 
 <dt><code>s.weights_ok</code></dt>
 <dd><p>a logical for whether sampling weights can be used with the method.</p></dd>

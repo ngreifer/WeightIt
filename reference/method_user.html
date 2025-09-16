@@ -19,8 +19,8 @@ subset: a logical vector the same length as treat that is TRUE for units to be i
 estimand: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If &quot;ATC&quot; was supplied to estimand, weightit() sets focal to the control level (usually 0 or the lowest level of treat) and sets estimand to &quot;ATT&quot;.
 focal: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). weightit() ensures the value of focal is a level of treat.
 stabilize: a logical vector of length 1. It is not processed by weightit() before it reaches the fitting function.
-moments: a numeric vector of length 1. It is not processed by weightit() before it reaches the fitting function except that as.integer() is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.
-int: a logical vector of length 1. It is not processed by weightit() before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.
+
+
 None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
 In addition, any additional arguments supplied to weightit() will be passed on to the fitting function. weightit() ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \dots as a parameter.
 The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither &quot;w&quot; or &quot;weights&quot;. If a list, the list can contain other named entries, but only entries named &quot;w&quot;, &quot;weights&quot;, &quot;ps&quot;, and &quot;fit.obj&quot; will be processed. &quot;ps&quot; is a vector of propensity scores and &quot;fit.obj&quot; should be an object used in the fitting process that a user may want to examine and that is included in the weightit output object as &quot;obj&quot; when include.obj = TRUE. The &quot;ps&quot; and &quot;fit.obj&quot; components are optional, but &quot;weights&quot; or &quot;w&quot; is required.
@@ -46,8 +46,8 @@ subset: a logical vector the same length as treat that is TRUE for units to be i
 estimand: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If &quot;ATC&quot; was supplied to estimand, weightit() sets focal to the control level (usually 0 or the lowest level of treat) and sets estimand to &quot;ATT&quot;.
 focal: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). weightit() ensures the value of focal is a level of treat.
 stabilize: a logical vector of length 1. It is not processed by weightit() before it reaches the fitting function.
-moments: a numeric vector of length 1. It is not processed by weightit() before it reaches the fitting function except that as.integer() is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.
-int: a logical vector of length 1. It is not processed by weightit() before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.
+
+
 None of these parameters are required to be in the fitting function. These are simply those that are automatically available.
 In addition, any additional arguments supplied to weightit() will be passed on to the fitting function. weightit() ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include \dots as a parameter.
 The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither &quot;w&quot; or &quot;weights&quot;. If a list, the list can contain other named entries, but only entries named &quot;w&quot;, &quot;weights&quot;, &quot;ps&quot;, and &quot;fit.obj&quot; will be processed. &quot;ps&quot; is a vector of propensity scores and &quot;fit.obj&quot; should be an object used in the fitting process that a user may want to examine and that is included in the weightit output object as &quot;obj&quot; when include.obj = TRUE. The &quot;ps&quot; and &quot;fit.obj&quot; components are optional, but &quot;weights&quot; or &quot;w&quot; is required.
@@ -67,7 +67,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,8 +112,6 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <li><p><code>estimand</code>: a character vector of length 1 containing the desired estimand. The characters will have been converted to uppercase. If "ATC" was supplied to estimand, <code><a href="weightit.html">weightit()</a></code> sets <code>focal</code> to the control level (usually 0 or the lowest level of <code>treat</code>) and sets <code>estimand</code> to "ATT".</p></li>
 <li><p><code>focal</code>: a character vector of length 1 containing the focal level of the treatment when the estimand is the ATT (or the ATC as detailed above). <code><a href="weightit.html">weightit()</a></code> ensures the value of focal is a level of <code>treat</code>.</p></li>
 <li><p><code>stabilize</code>: a logical vector of length 1. It is not processed by <code><a href="weightit.html">weightit()</a></code> before it reaches the fitting function.</p></li>
-<li><p><code>moments</code>: a numeric vector of length 1. It is not processed by <code><a href="weightit.html">weightit()</a></code> before it reaches the fitting function except that <code><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer()</a></code> is applied to it. This is used in other methods to determine whether polynomials of the entered covariates are to be used in the weight estimation.</p></li>
-<li><p><code>int</code>: a logical vector of length 1. It is not processed by <code><a href="weightit.html">weightit()</a></code> before it reaches the fitting function. This is used in other methods to determine whether interactions of the entered covariates are to be used in the weight estimation.</p></li>
 </ul><p>None of these parameters are required to be in the fitting function. These are simply those that are automatically available.</p>
 <p>In addition, any additional arguments supplied to <code><a href="weightit.html">weightit()</a></code> will be passed on to the fitting function. <code><a href="weightit.html">weightit()</a></code> ensures the arguments correspond to the parameters of the fitting function and throws an error if an incorrectly named argument is supplied and the fitting function doesn't include <code>\dots</code> as a parameter.</p>
 <p>The fitting function must output either a numeric vector of weights or a list (or list-like object) with an entry named wither "w" or "weights". If a list, the list can contain other named entries, but only entries named "w", "weights", "ps", and "fit.obj" will be processed. "ps" is a vector of propensity scores and "fit.obj" should be an object used in the fitting process that a user may want to examine and that is included in the <code>weightit</code> output object as "obj" when <code>include.obj = TRUE</code>. The "ps" and "fit.obj" components are optional, but "weights" or "w" is required.</p>
@@ -139,7 +137,7 @@ Longitudinal treatments can be handled either by running the fitting function fo
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#A user-defined version of method = "ps"</span></span></span>
-<span class="r-in"><span><span class="va">my.ps</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">treat</span>, <span class="va">covs</span>, <span class="va">estimand</span>, <span class="va">focal</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">my.ps</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">treat</span>, <span class="va">covs</span>, <span class="va">estimand</span>, <span class="va">focal</span> <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="va">covs</span> <span class="op">&lt;-</span> <span class="fu"><a href="make_full_rank.html">make_full_rank</a></span><span class="op">(</span><span class="va">covs</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span><span class="va">treat</span>, <span class="va">covs</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/formula.html" class="external-link">formula</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span></span></span>
@@ -166,16 +164,17 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000               ||              1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0222 |---------------------------| 2.0438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                  ||              1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.022 |---------------------------| 2.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             411    595    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.3303 1.4365 1.5005 1.6369 2.0438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1     2   3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated    1     1   1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           410   226 224   111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.33 1.437 1.5 1.637 2.044</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -232,16 +231,17 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |-------------------|         284.7636</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.079 |---------------------------| 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.276 |-------------------|         284.764</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              5488     3440     3593     1286     5685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  166.992 170.5549 196.4136 213.1934 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              2594     2932     5226     1875     2533</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.6248  168.964 172.4195 245.8822 284.7636</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             3172    3065    2025    1938     731</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 166.992 170.555 196.414 213.193 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2301    1275    1145    1121     832</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.625 168.964  172.42 245.882 284.764</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -260,16 +260,17 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |----------------|            245.8822</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.079 |---------------------------| 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.276 |----------------|            245.882</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              2932     3440     3593     2533     5685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  168.964 170.5549 196.4136 284.7636 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              2594     5488     5226     1286     1875</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.6248  166.992 172.4195 213.1934 245.8822</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2902    1869    1779    1509    1313</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 168.964 170.555 196.414 284.764 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2684    2549    1250     911     620</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.625 166.992  172.42 213.193 245.882</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -288,16 +289,17 @@ Longitudinal treatments can be handled either by running the fitting function fo
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |---------|                   148.1547</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.079 |---------------------------| 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.276 |---------|                   148.155</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              3593     1286     1875     2533     5685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 196.4136 213.1934 245.8822 284.7636 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              6862      168     3729     6158     3774</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control  88.0721  97.8273  104.623 121.8451 148.1547</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1991    1254     893     668     468</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 196.414 213.193 245.882 284.764 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             4479    4021    2455    2427     112</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control  88.072  97.827 104.623 121.845 148.155</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

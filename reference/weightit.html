@@ -21,7 +21,7 @@ method."><meta property="og:image" content="https://ngreifer.github.io/WeightIt/
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,9 +72,6 @@ method.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  s.weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  ps <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  moments <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  int <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  subclass <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  missing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include.obj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -164,36 +161,6 @@ but the listed covariates will play no role in the weight estimation. Using
 <code>weightit</code> object rather than just producing weights.</p></dd>
 
 
-<dt id="arg-moments">moments<a class="anchor" aria-label="anchor" href="#arg-moments"></a></dt>
-<dd><p><code>numeric</code>; for some methods, the greatest power of each
-covariate to be balanced. For example, if <code>moments = 3</code>, for each
-non-categorical covariate, the covariate, its square, and its cube will be
-balanced. This argument is ignored for other methods; to balance powers of
-the covariates, appropriate functions must be entered in <code>formula</code>. See the
-individual pages for each method for information on whether they accept
-<code>moments</code>.</p></dd>
-
-
-<dt id="arg-int">int<a class="anchor" aria-label="anchor" href="#arg-int"></a></dt>
-<dd><p><code>logical</code>; for some methods, whether first-order interactions of
-the covariates are to be balanced. This argument is ignored for other
-methods; to balance interactions between the variables, appropriate
-functions must be entered in <code>formula</code>. See the individual pages for each
-method for information on whether they accept <code>int</code>.</p></dd>
-
-
-<dt id="arg-subclass">subclass<a class="anchor" aria-label="anchor" href="#arg-subclass"></a></dt>
-<dd><p><code>numeric</code>; the number of subclasses to use for computing
-weights using marginal mean weighting with subclasses (MMWS). If <code>NULL</code>,
-standard inverse probability weights (and their extensions) will be
-computed; if a number greater than 1, subclasses will be formed and weights
-will be computed based on subclass membership. Attempting to set a
-non-<code>NULL</code> value for methods that don't compute a propensity score will
-result in an error; see each method's help page for information on whether
-MMWS weights are compatible with the method. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for
-details and references.</p></dd>
-
-
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
 <dd><p><code>character</code>; how missing data should be handled. The options
 and defaults depend on the <code>method</code> used. Ignored if no missing data is
@@ -235,15 +202,13 @@ Details.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code>weightit</code> object with the following elements:</p>
 <dl><dt>weights</dt>
-<dd><p>The
-estimated weights, one for each unit.</p></dd>
- <dt>treat</dt>
-<dd><p>The values of the
-treatment variable.</p></dd>
+<dd><p>The estimated weights, one for each unit.</p></dd>
+
+<dt>treat</dt>
+<dd><p>The values of the treatment variable.</p></dd>
 
 <dt>covs</dt>
-<dd><p>The covariates used in the fitting. Only includes the raw covariates, which may have been altered in
-the fitting process.</p></dd>
+<dd><p>The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.</p></dd>
 
 <dt>estimand</dt>
 <dd><p>The estimand requested.</p></dd>
@@ -252,8 +217,7 @@ the fitting process.</p></dd>
 <dd><p>The weight estimation method specified.</p></dd>
 
 <dt>ps</dt>
-<dd><p>The estimated or provided propensity scores. Estimated propensity scores are
-returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"ipt"</code>, <code>"super"</code>, or <code>"bart"</code>. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details for how the treated group is determined.</p></dd>
+<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"ipt"</code>, <code>"super"</code>, or <code>"bart"</code>. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details for how the treated group is determined.</p></dd>
 
 <dt>s.weights</dt>
 <dd><p>The provided sampling weights.</p></dd>
@@ -268,8 +232,7 @@ returned for binary treatments and only when <code>method</code> is <code>"glm"<
 <dd><p>When <code>include.obj = TRUE</code>, the fit object.</p></dd>
 
 <dt>info</dt>
-<dd><p>Additional information about the fitting. See the individual
-methods pages for what is included.</p></dd>
+<dd><p>Additional information about the fitting. See the individual methods pages for what is included.</p></dd>
 
 
 </dl><p>When <code>keep.mparts</code> is <code>TRUE</code> (the default) and the chosen method is
@@ -358,16 +321,17 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000               ||              1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0222 |---------------------------| 2.0438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                  ||              1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.022 |---------------------------| 2.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             411    595    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.3303 1.4365 1.5005 1.6369 2.0438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1     2   3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated    1     1   1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           410   226 224   111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.33 1.437 1.5 1.637 2.044</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -411,19 +375,20 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.5530   |-------------------------| 5.3496</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.1408 |----------------|            3.3323</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.3978  |-------|                    1.9232</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.553   |-------------------------| 5.35 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.141 |----------------|            3.332</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.398  |-------|                    1.923</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            226    244    485    181    182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.5215 2.5492 2.8059 3.5551 5.3496</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            392    564    269    345    371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 2.0464 2.5298 2.6323 2.7049 3.3323</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             68    457    599    589    531</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 1.7109 1.7226 1.7433 1.7741 1.9232</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           203   166   163   153   152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.521 2.549 2.806 3.555  5.35</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            67    43    39    36    28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 2.046  2.53 2.632 2.705 3.332</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           291   285   258   205     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white 1.711 1.723 1.743 1.774 1.923</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -466,13 +431,14 @@ are known. In general, <code>weightit()</code> should be used.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0098 |---------------------------| 20.9463</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.01 |---------------------------| 20.946</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          485     481     482    484     483</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 10.2091 13.1123 13.9739 17.816 20.9463</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         485    484    483    482    481</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 10.209 13.112 13.974 17.816 20.946</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

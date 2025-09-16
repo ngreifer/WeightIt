@@ -27,7 +27,7 @@ interface that performs minimal argument checking."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,9 +81,6 @@ interface that performs minimal argument checking.</p>
 <span>  focal <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  stabilize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  ps <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  moments <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  int <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  subclass <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  missing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include.obj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -135,8 +132,7 @@ method and what literature to read to interpret these estimands.</p></dd>
 consider the "treated" or "control" group. This group will not be weighted,
 and the other groups will be weighted to resemble the focal group. If
 specified, <code>estimand</code> will automatically be set to <code>"ATT"</code> (with a warning
-if <code>estimand</code> is not <code>"ATT"</code> or <code>"ATC"</code>). See section <em><code>estimand</code> and
-<code>focal</code></em> in Details at <code><a href="weightit.html">weightit()</a></code>.</p></dd>
+if <code>estimand</code> is not <code>"ATT"</code> or <code>"ATC"</code>). See section <em><code>estimand</code> and <code>focal</code></em> in Details at <code><a href="weightit.html">weightit()</a></code>.</p></dd>
 
 
 <dt id="arg-stabilize">stabilize<a class="anchor" aria-label="anchor" href="#arg-stabilize"></a></dt>
@@ -150,11 +146,6 @@ treatment group. Default is <code>FALSE</code>. Note this differs from its use w
 <dt id="arg-ps">ps<a class="anchor" aria-label="anchor" href="#arg-ps"></a></dt>
 <dd><p>a vector of propensity scores. If specified, <code>method</code> will be
 ignored and set to <code>"glm"</code>.</p></dd>
-
-
-<dt id="arg-moments-int-subclass">moments, int, subclass<a class="anchor" aria-label="anchor" href="#arg-moments-int-subclass"></a></dt>
-<dd><p>arguments to customize the weight estimation. See
-<code><a href="weightit.html">weightit()</a></code> for details.</p></dd>
 
 
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
@@ -199,8 +190,7 @@ control aspects of fitting that are not covered by the above arguments.</p></dd>
 <dd><p>The weight estimation method specified.</p></dd>
 
 <dt>ps</dt>
-<dd><p>The estimated or provided propensity scores. Estimated propensity scores are
-returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"ipt"</code>, <code>"super"</code>, or <code>"bart"</code>. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details at <code><a href="weightit.html">weightit()</a></code> for how the treated group is determined.</p></dd>
+<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"ipt"</code>, <code>"super"</code>, or <code>"bart"</code>. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details at <code><a href="weightit.html">weightit()</a></code> for how the treated group is determined.</p></dd>
 
 <dt>s.weights</dt>
 <dd><p>The provided sampling weights.</p></dd>
@@ -255,8 +245,7 @@ object.</p></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Balancing covariates between treatment groups (binary)</span></span></span>
@@ -300,6 +289,7 @@ object.</p></div>
 <span class="r-in"><span><span class="va">W1</span> <span class="op">&lt;-</span> <span class="fu"><a href="as.weightit.html">as.weightit</a></span><span class="op">(</span><span class="va">WF1</span>, covs <span class="op">=</span> <span class="va">covs</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">W1</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit</span> object</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - number of obs.: 614</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
@@ -310,16 +300,17 @@ object.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000         ||                    1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0092 |---------------------------| 3.7432</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.            ||                    1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.009 |---------------------------| 3.743</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             597    573    381    411    303</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 3.0301 3.0592 3.2397 3.5231 3.7432</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1     2    3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated    1     1    1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           412   388  226   196   118</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 3.03 3.059 3.24 3.523 3.743</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

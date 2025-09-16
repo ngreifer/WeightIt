@@ -19,7 +19,7 @@ The ESS is calculated as \((\sum w)^2/\sum w^2\)."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,7 +89,7 @@ observational studies of point exposure effects. Biometrics, biom.13405.
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  cobalt (Version 4.6.0, Build Date: 2025-04-15)</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span>  cobalt (Version 4.6.1, Build Date: 2025-08-20)</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates between treatment groups (binary)</span></span></span>
@@ -108,16 +108,17 @@ observational studies of point exposure effects. Biometrics, biom.13405.
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.5560  |--------------------------| 73.3315</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.0222 ||                             3.0438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.556  |--------------------------| 73.332</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.022 ||                             3.044</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              124     184     172     181     182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 11.2281 11.3437 12.0848 26.1775 73.3315</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              411     595     269     409     296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control  2.3303  2.4365  2.5005  2.6369  3.0438</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             184    182    181    172    124</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 11.228 11.344 12.085 26.178 73.332</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             410    226    224    111     84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control   2.33  2.437    2.5  2.637  3.044</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

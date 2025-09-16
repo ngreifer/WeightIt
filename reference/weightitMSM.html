@@ -21,7 +21,7 @@ calls; these packages must be installed to use the desired method."><meta proper
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,8 +70,6 @@ calls; these packages must be installed to use the desired method.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  s.weights <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  num.formula <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  moments <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  int <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  missing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include.obj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -152,24 +150,6 @@ know what you are doing, we recommend setting <code>stabilize = TRUE</code> and
 ignoring <code>num.formula</code>.</p></dd>
 
 
-<dt id="arg-moments">moments<a class="anchor" aria-label="anchor" href="#arg-moments"></a></dt>
-<dd><p><code>numeric</code>; for some methods, the greatest power of each
-covariate to be balanced. For example, if <code>moments = 3</code>, for each
-non-categorical covariate, the covariate, its square, and its cube will be
-balanced. This argument is ignored for other methods; to balance powers of
-the covariates, appropriate functions must be entered in <code>formula</code>. See the
-individual pages for each method for information on whether they accept
-<code>moments</code>.</p></dd>
-
-
-<dt id="arg-int">int<a class="anchor" aria-label="anchor" href="#arg-int"></a></dt>
-<dd><p><code>logical</code>; for some methods, whether first-order interactions of
-the covariates are to be balanced. This argument is ignored for other
-methods; to balance interactions between the variables, appropriate
-functions must be entered in <code>formula</code>. See the individual pages for each
-method for information on whether they accept <code>int</code>.</p></dd>
-
-
 <dt id="arg-missing">missing<a class="anchor" aria-label="anchor" href="#arg-missing"></a></dt>
 <dd><p><code>character</code>; how missing data should be handled. The options
 and defaults depend on the <code>method</code> used. Ignored if no missing data is
@@ -231,33 +211,25 @@ at <code><a href="weightit.html">weightit()</a></code>.</p></dd>
 <dd><p>A list of the values of the time-varying treatment variables.</p></dd>
 
 <dt>covs.list</dt>
-<dd><p>A list of the covariates used in the fitting at each time
-point. Only includes the raw covariates, which may have been altered in the
-fitting process.</p></dd>
+<dd><p>A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.</p></dd>
 
 <dt>data</dt>
-<dd><p>The data.frame originally entered to
-<code>weightitMSM()</code>.</p></dd>
+<dd><p>The data.frame originally entered to <code>weightitMSM()</code>.</p></dd>
 
 <dt>estimand</dt>
-<dd><p>"ATE", currently the only estimand for MSMs
-with binary or multi-category treatments.</p></dd>
+<dd><p>"ATE", currently the only estimand for MSMs with binary or multi-category treatments.</p></dd>
 
 <dt>method</dt>
-<dd><p>The weight
-estimation method specified.</p></dd>
+<dd><p>The weight estimation method specified.</p></dd>
 
 <dt>ps.list</dt>
-<dd><p>A list of the estimated
-propensity scores (if any) at each time point.</p></dd>
+<dd><p>A list of the estimated propensity scores (if any) at each time point.</p></dd>
 
 <dt>s.weights</dt>
-<dd><p>The provided
-sampling weights.</p></dd>
+<dd><p>The provided sampling weights.</p></dd>
 
 <dt>by</dt>
-<dd><p>A data.frame containing the <code>by</code> variable when
-specified.</p></dd>
+<dd><p>A data.frame containing the <code>by</code> variable when specified.</p></dd>
 
 <dt>stabilization</dt>
 <dd><p>The stabilization factors, if any.</p></dd>
@@ -331,16 +303,17 @@ Probability Weights for Marginal Structural Models. <em>American Journal of Epid
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |-------------------|         284.7636</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.079 |---------------------------| 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.276 |-------------------|         284.764</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              5488     3440     3593     1286     5685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  166.992 170.5549 196.4136 213.1934 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              2594     2932     5226     1875     2533</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.6248  168.964 172.4195 245.8822 284.7636</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             3172    3065    2025    1938     731</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 166.992 170.555 196.414 213.193 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2301    1275    1145    1121     832</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.625 168.964  172.42 245.882 284.764</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -359,16 +332,17 @@ Probability Weights for Marginal Structural Models. <em>American Journal of Epid
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |----------------|            245.8822</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.079 |---------------------------| 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.276 |----------------|            245.882</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              2932     3440     3593     2533     5685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  168.964 170.5549 196.4136 284.7636 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              2594     5488     5226     1286     1875</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.6248  166.992 172.4195 213.1934 245.8822</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2902    1869    1779    1509    1313</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 168.964 170.555 196.414 284.764 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             2684    2549    1250     911     620</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 155.625 166.992  172.42 213.193 245.882</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -387,16 +361,17 @@ Probability Weights for Marginal Structural Models. <em>American Journal of Epid
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0791 |---------------------------| 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2761 |---------|                   148.1547</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.079 |---------------------------| 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.276 |---------|                   148.155</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              3593     1286     1875     2533     5685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 196.4136 213.1934 245.8822 284.7636 403.4833</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              6862      168     3729     6158     3774</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control  88.0721  97.8273  104.623 121.8451 148.1547</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1991    1254     893     668     468</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 196.414 213.193 245.882 284.764 403.483</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             4479    4021    2455    2427     112</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control  88.072  97.827 104.623 121.845 148.155</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

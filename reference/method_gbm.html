@@ -185,7 +185,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -355,6 +355,9 @@ backward compatibility.</p>
 <dt><code>trim.at</code></dt>
 <dd><p>A number supplied to <code>at</code> in <code><a href="trim.html">trim()</a></code> which trims the weights from all the trees before choosing the best tree. This can be valuable when some weights are extreme, which occurs especially with continuous treatments. The default is 0 (i.e., no trimming).</p></dd>
 
+<dt><code>subclass</code></dt>
+<dd><p><code>integer</code>; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If <code>NULL</code>, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. Only allowed for binary and multi-category treatments. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details and references.</p></dd>
+
 <dt><code>distribution</code></dt>
 <dd><p>A string with the distribution used in the loss function of the boosted model. This is supplied to the <code>distribution</code> argument in <code><a href="https://rdrr.io/pkg/gbm/man/gbm.fit.html" class="external-link">gbm::gbm.fit()</a></code>. For binary treatments, <code>"bernoulli"</code> and <code>"adaboost"</code> are available, with <code>"bernoulli"</code> the default. For multi-category treatments, only <code>"multinomial"</code> is allowed. For continuous treatments <code>"gaussian"</code>, <code>"laplace"</code>, and <code>"tdist"</code> are available, with <code>"gaussian"</code> the default. This argument is tunable.</p></dd>
 
@@ -491,16 +494,17 @@ Estimating Generalized Propensity Scores with Continuous Treatments. <em>Journal
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.1332 |---------------------------| 22.9390</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.0067 |------|                       6.8862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.133 |---------------------------| 22.939</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.007 |------|                       6.886</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             181     177     183     184    182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 10.484 11.0975 15.9424 18.3611 22.939</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             409     592     569     374    608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control  3.913  3.9782  4.0872  4.1513 6.8862</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             184    183    182    181    177</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 10.484 11.097 15.942 18.361 22.939</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             423    407    384    224    189</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control  3.913  3.978  4.087  4.151  6.886</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -553,19 +557,20 @@ Estimating Generalized Propensity Scores with Continuous Treatments. <em>Journal
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.0666  |------------------------|   1.0589</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.0000                          ||   1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.0366 |---------------------------| 1.1517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.067  |------------------------|   1.059</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.                             ||   1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.037 |---------------------------| 1.152</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            183   162    191    485    190</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black 0.9078 0.954 0.9542 1.0433 1.0589</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            100    87     44     28      2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan      1     1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             68   227    380    434    523</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 0.6885 0.721 0.8131 0.8343 1.1517</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           158   157   155   154   139</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black 0.908 0.954 0.954 1.043 1.059</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1     2     3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           253   192   156    45     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white 0.688 0.721 0.813 0.834 1.152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -609,13 +614,14 @@ Estimating Generalized Propensity Scores with Continuous Treatments. <em>Journal
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0699 |---------------------------| 11.8181</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.07 |---------------------------| 11.818</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          407     395     375     354     308</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 11.8181 11.8181 11.8181 11.8181 11.8181</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         308    354    375    395    407</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 11.818 11.818 11.818 11.818 11.818</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

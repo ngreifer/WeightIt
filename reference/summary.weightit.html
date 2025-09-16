@@ -19,7 +19,7 @@ of observations."><meta property="og:image" content="https://ngreifer.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,16 +60,16 @@ of observations.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'weightit'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, top <span class="op">=</span> <span class="fl">5L</span>, ignore.s.weights <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, top <span class="op">=</span> <span class="fl">5L</span>, ignore.s.weights <span class="op">=</span> <span class="cn">FALSE</span>, weight.range <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'summary.weightit'</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, binwidth <span class="op">=</span> <span class="cn">NULL</span>, bins <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'weightitMSM'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, top <span class="op">=</span> <span class="fl">5L</span>, ignore.s.weights <span class="op">=</span> <span class="cn">FALSE</span>, <span class="va">...</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">object</span>, top <span class="op">=</span> <span class="fl">5L</span>, ignore.s.weights <span class="op">=</span> <span class="cn">FALSE</span>, weight.range <span class="op">=</span> <span class="cn">TRUE</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># S3 method for class 'summary.weightitMSM'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, binwidth <span class="op">=</span> <span class="cn">NULL</span>, bins <span class="op">=</span> <span class="cn">NULL</span>, time <span class="op">=</span> <span class="fl">1</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">x</span>, binwidth <span class="op">=</span> <span class="cn">NULL</span>, bins <span class="op">=</span> <span class="cn">NULL</span>, time <span class="op">=</span> <span class="fl">1L</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -83,14 +83,18 @@ of observations.</p>
 
 <dt id="arg-top">top<a class="anchor" aria-label="anchor" href="#arg-top"></a></dt>
 <dd><p>how many of the largest and smallest weights to display. Default
-is 5.</p></dd>
+is 5. Ignored when <code>weight.range = FALSE</code>.</p></dd>
 
 
 <dt id="arg-ignore-s-weights">ignore.s.weights<a class="anchor" aria-label="anchor" href="#arg-ignore-s-weights"></a></dt>
-<dd><p>whether or not to ignore sampling weights when
+<dd><p><code>logical</code>; whether or not to ignore sampling weights when
 computing the weight summary. If <code>FALSE</code>, the default, the estimated
 weights will be multiplied by the sampling weights (if any) before values
 are computed.</p></dd>
+
+
+<dt id="arg-weight-range">weight.range<a class="anchor" aria-label="anchor" href="#arg-weight-range"></a></dt>
+<dd><p><code>logical</code>; whether to display statistics about the range of weights and the highest and lowest weights for each group. Default is <code>TRUE</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -119,34 +123,25 @@ of weights. Default is to plot the distribution for the first time points.</p></
     <p>For point treatments (i.e., <code>weightit</code> objects), <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns
 a <code>summary.weightit</code> object with the following elements:</p>
 <dl><dt>weight.range</dt>
-<dd><p>The range (minimum and maximum) weight for each treatment
-group.</p></dd>
+<dd><p>The range (minimum and maximum) weight for each treatment group.</p></dd>
 
 <dt>weight.top</dt>
-<dd><p>The units with the greatest weights in each
-treatment group; how many are included is determined by <code>top</code>.</p></dd>
+<dd><p>The units with the greatest weights in each treatment group; how many are included is determined by <code>top</code>.</p></dd>
 
 <dt>coef.of.var (Coef of Var)</dt>
-<dd><p>The coefficient of variation (standard
-deviation divided by mean) of the weights in each treatment group and
-overall.</p></dd>
+<dd><p>The coefficient of variation (standard deviation divided by mean) of the weights in each treatment group and overall.</p></dd>
 
 <dt>scaled.mad (MAD)</dt>
-<dd><p>The mean absolute deviation of the weights
-in each treatment group and overall divided by the mean of the weights in the
-corresponding group.</p></dd>
+<dd><p>The mean absolute deviation of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
 
 <dt>negative entropy (Entropy)</dt>
-<dd><p>The negative entropy
-(\(\sum w log(w)\)) of the weights in each treatment group and overall
-divided by the mean of the weights in the corresponding group.</p></dd>
+<dd><p>The negative entropy (\(\sum w log(w)\)) of the weights in each treatment group and overall divided by the mean of the weights in the corresponding group.</p></dd>
 
 <dt>num.zeros</dt>
 <dd><p>The number of weights equal to zero.</p></dd>
 
 <dt>effective.sample.size</dt>
-<dd><p>The effective sample size for each treatment
-group before and after weighting. See <code><a href="ESS.html">ESS()</a></code>.</p></dd>
+<dd><p>The effective sample size for each treatment group before and after weighting. See <code><a href="ESS.html">ESS()</a></code>.</p></dd>
 
 
 </dl><p>For longitudinal treatments (i.e., <code>weightitMSM</code> objects), <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>

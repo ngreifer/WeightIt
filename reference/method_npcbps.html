@@ -6,8 +6,7 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Nonparametric Covariate Balancing Propensity Score Weighting â€” method_npcbps"><meta name="description" content='This page explains the details of estimating weights from
-nonparametric covariate balancing propensity scores by setting method = "npcbps" in the call to weightit() or weightitMSM(). This method can be
-used with binary, multi-category, and continuous treatments.
+nonparametric covariate balancing propensity scores by setting method = "npcbps" in the call to weightit() or weightitMSM(). This method can be used with binary, multi-category, and continuous treatments.
 In general, this method relies on estimating weights by maximizing the
 empirical likelihood of the data subject to balance constraints. This method
 relies on CBPS::npCBPS() from the CBPS package.
@@ -73,8 +72,7 @@ M-estimation
 M-estimation is not supported.
 
 '><meta property="og:description" content='This page explains the details of estimating weights from
-nonparametric covariate balancing propensity scores by setting method = "npcbps" in the call to weightit() or weightitMSM(). This method can be
-used with binary, multi-category, and continuous treatments.
+nonparametric covariate balancing propensity scores by setting method = "npcbps" in the call to weightit() or weightitMSM(). This method can be used with binary, multi-category, and continuous treatments.
 In general, this method relies on estimating weights by maximizing the
 empirical likelihood of the data subject to balance constraints. This method
 relies on CBPS::npCBPS() from the CBPS package.
@@ -147,7 +145,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -180,8 +178,7 @@ M-estimation is not supported.
 
     <div class="ref-description section level2">
     <p>This page explains the details of estimating weights from
-nonparametric covariate balancing propensity scores by setting <code>method = "npcbps"</code> in the call to <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. This method can be
-used with binary, multi-category, and continuous treatments.</p>
+nonparametric covariate balancing propensity scores by setting <code>method = "npcbps"</code> in the call to <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. This method can be used with binary, multi-category, and continuous treatments.</p>
 <p>In general, this method relies on estimating weights by maximizing the
 empirical likelihood of the data subject to balance constraints. This method
 relies on <code><a href="https://rdrr.io/pkg/CBPS/man/npCBPS.html" class="external-link">CBPS::npCBPS()</a></code> from the <a href="https://CRAN.R-project.org/package=CBPS" class="external-link"><span class="pkg">CBPS</span></a> package.</p><div class="section">
@@ -252,8 +249,7 @@ allowed:</p><dl><dt><code>"ind"</code> (default)</dt>
     <p>Nonparametric CBPS involves the specification of a constrained
 optimization problem over the weights. The constraints correspond to
 covariate balance, and the loss function is the empirical likelihood of the
-data given the weights. npCBPS is similar to <a href="method_ebal.html">entropy balancing</a> and will generally produce similar results. Because the
-optimization problem of npCBPS is not convex it can be slow to converge or
+data given the weights. npCBPS is similar to <a href="method_ebal.html">entropy balancing</a> and will generally produce similar results. Because the optimization problem of npCBPS is not convex it can be slow to converge or
 not converge at all, so approximate balance is allowed instead using the
 <code>cor.prior</code> argument, which controls the average deviation from zero
 correlation between the treatment and covariates allowed.</p>
@@ -263,13 +259,17 @@ correlation between the treatment and covariates allowed.</p>
 
 
 
-<p><code>moments</code> and <code>int</code> are accepted. See <code><a href="weightit.html">weightit()</a></code> for details.</p>
-<dl><dt><code>quantile</code></dt>
-<dd><p>A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75)</code> to request one quantile for each covariate. Only allowed with binary and multi-category treatments.</p></dd>
+<dl><dt><code>moments</code></dt>
+<dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.</p></dd>
+
+<dt><code>int</code></dt>
+<dd><p><code>logical</code>; whether first-order interactions of the covariates are to be balanced. Default is <code>FALSE</code>.</p></dd>
+
+<dt><code>quantile</code></dt>
+<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.</p></dd>
 
 
-</dl><p>All arguments to <code>npCBPS()</code> can be passed through <code><a href="weightit.html">weightit()</a></code> or
-<code><a href="weightitMSM.html">weightitMSM()</a></code>.</p>
+</dl><p>All arguments to <code>npCBPS()</code> can be passed through <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>.</p>
 <p>All arguments take on the defaults of those in <code>npCBPS()</code>.</p>
     </div>
     <div class="section level2">
@@ -291,6 +291,7 @@ political advertisements. <em>The Annals of Applied Statistics</em>, 12(1), 156â
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code>, <code><a href="weightitMSM.html">weightitMSM()</a></code>, <code><a href="method_cbps.html">method_cbps</a></code></p>
+<p><code><a href="method_optweight.html">method_optweight</a></code>, which can also be used to perform npCBPS by setting <code>norm = "log"</code>. In generally, this <code>"optweight"</code> implementation is more stable and flexible.</p>
 <p><code><a href="https://rdrr.io/pkg/CBPS/man/npCBPS.html" class="external-link">CBPS::npCBPS()</a></code> for the fitting function</p></div>
     </div>
 
@@ -315,16 +316,17 @@ political advertisements. <em>The Annals of Applied Statistics</em>, 12(1), 156â
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.5587 |---------------------------| 9.8862</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.5594 |---|                         2.1293</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.559 |---------------------------| 9.886</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.559 |---|                         2.129</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             172     69     58    181    182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 3.3634  4.199 8.3691 8.4396 9.8862</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             411    595    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.6451 1.6633 1.7413 1.8249 2.1293</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            182   181   172    69    58</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 3.363 4.199 8.369  8.44 9.886</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            410   226   224   111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.645 1.663 1.741 1.825 2.129</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -367,19 +369,20 @@ political advertisements. <em>The Annals of Applied Statistics</em>, 12(1), 156â
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.6417  |--------------------------| 9.3668</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.2853 |---------------|             5.5253</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.4681 |-----|                       2.5147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.642  |--------------------------| 9.367</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.285 |---------------|             5.525</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.468 |-----|                       2.515</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            226    244    605    181    182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.5367 2.7284 3.0888 4.5045 9.3668</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            392    564    269    371    345</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 2.0057 2.2325 3.0749 4.2753 5.5253</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             68    457    599    589    531</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 1.9505 1.9707 2.0169 2.1335 2.5147</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           241   166   163   153   152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.537 2.728 3.089 4.505 9.367</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            67    43    39    36    28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 2.006 2.232 3.075 4.275 5.525</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           291   285   258   205     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  1.95 1.971 2.017 2.134 2.515</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

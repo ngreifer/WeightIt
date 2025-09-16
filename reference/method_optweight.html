@@ -6,20 +6,20 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stable Balancing Weights — method_optweight"><meta name="description" content='This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit() or weightitMSM(). This method can be used with binary, multi-category, and continuous treatments.
+weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit(). This method can be used with binary, multi-category, and continuous treatments.
 In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
-method relies on optweight::optweight() from the optweight
+method relies on optweight::optweight.fit() from the optweight
 package.
-Because optweight() offers finer control and uses the same syntax as
-weightit(), it is recommended that optweight::optweight() be used
+Because optweight::optweight() offers finer control and uses the same syntax as
+weightit(), it is recommended that optweight() be used
 instead of weightit() with method = "optweight".
 Binary Treatments
 
 
 For binary treatments, this method estimates the weights using
-optweight::optweight(). The following estimands are allowed: ATE, ATT,
-and ATC. The weights are taken from the output of the optweight fit object.
+optweight::optweight.fit(). The following estimands are allowed: ATE, ATT,
+and ATC. The weights are taken from the output of the optweight.fit fit object.
 
 
 
@@ -27,29 +27,27 @@ Multi-Category Treatments
 
 
 For multi-category treatments, this method estimates the weights using
-optweight::optweight(). The following estimands are allowed: ATE and
-ATT. The weights are taken from the output of the optweight fit object.
+optweight::optweight.fit(). The following estimands are allowed: ATE and
+ATT. The weights are taken from the output of the optweight.fit fit object.
 
 
 
 Continuous Treatments
 
 
-For binary treatments, this method estimates the weights using
-optweight::optweight(). The weights are taken from the output of the
-optweight fit object.
+For continuous treatments, this method estimates the weights using
+optweight::optweight.fit(). The weights are taken from the output of the
+optweight.fit fit object.
 
 
 
 Longitudinal Treatments
 
 
-For longitudinal treatments, optweight() estimates weights that
-simultaneously satisfy balance constraints at all time points, so only one
-model is fit to obtain the weights. Using method = "sbw" in
-weightitMSM() causes is.MSM.method to be set to TRUE by default. Setting
-it to FALSE will run one model for each time point and multiply the weights
-together, a method that is not recommended. NOTE: neither use of stable balancing weights with longitudinal treatments has been validated!
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point. This method is not guaranteed to yield exact
+balance at each time point. NOTE: the use of stable balancing weights with
+longitudinal treatments has not been validated and should not be done!
 
 
 
@@ -57,7 +55,7 @@ Sampling Weights
 
 
 Sampling weights are supported through s.weights in all scenarios, but only
-for versions of optweight after 0.2.5.
+for versions of optweight greater than or equal to 1.0.0.
 
 
 
@@ -81,20 +79,20 @@ M-estimation
 M-estimation is not supported.
 
 '><meta property="og:description" content='This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit() or weightitMSM(). This method can be used with binary, multi-category, and continuous treatments.
+weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit(). This method can be used with binary, multi-category, and continuous treatments.
 In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
-method relies on optweight::optweight() from the optweight
+method relies on optweight::optweight.fit() from the optweight
 package.
-Because optweight() offers finer control and uses the same syntax as
-weightit(), it is recommended that optweight::optweight() be used
+Because optweight::optweight() offers finer control and uses the same syntax as
+weightit(), it is recommended that optweight() be used
 instead of weightit() with method = "optweight".
 Binary Treatments
 
 
 For binary treatments, this method estimates the weights using
-optweight::optweight(). The following estimands are allowed: ATE, ATT,
-and ATC. The weights are taken from the output of the optweight fit object.
+optweight::optweight.fit(). The following estimands are allowed: ATE, ATT,
+and ATC. The weights are taken from the output of the optweight.fit fit object.
 
 
 
@@ -102,29 +100,27 @@ Multi-Category Treatments
 
 
 For multi-category treatments, this method estimates the weights using
-optweight::optweight(). The following estimands are allowed: ATE and
-ATT. The weights are taken from the output of the optweight fit object.
+optweight::optweight.fit(). The following estimands are allowed: ATE and
+ATT. The weights are taken from the output of the optweight.fit fit object.
 
 
 
 Continuous Treatments
 
 
-For binary treatments, this method estimates the weights using
-optweight::optweight(). The weights are taken from the output of the
-optweight fit object.
+For continuous treatments, this method estimates the weights using
+optweight::optweight.fit(). The weights are taken from the output of the
+optweight.fit fit object.
 
 
 
 Longitudinal Treatments
 
 
-For longitudinal treatments, optweight() estimates weights that
-simultaneously satisfy balance constraints at all time points, so only one
-model is fit to obtain the weights. Using method = "sbw" in
-weightitMSM() causes is.MSM.method to be set to TRUE by default. Setting
-it to FALSE will run one model for each time point and multiply the weights
-together, a method that is not recommended. NOTE: neither use of stable balancing weights with longitudinal treatments has been validated!
+For longitudinal treatments, the weights are the product of the weights
+estimated at each time point. This method is not guaranteed to yield exact
+balance at each time point. NOTE: the use of stable balancing weights with
+longitudinal treatments has not been validated and should not be done!
 
 
 
@@ -132,7 +128,7 @@ Sampling Weights
 
 
 Sampling weights are supported through s.weights in all scenarios, but only
-for versions of optweight after 0.2.5.
+for versions of optweight greater than or equal to 1.0.0.
 
 
 
@@ -163,7 +159,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -196,20 +192,20 @@ M-estimation is not supported.
 
     <div class="ref-description section level2">
     <p>This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting <code>method = "optweight"</code> in the call to <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. This method can be used with binary, multi-category, and continuous treatments.</p>
+weights (also known as optimization-based weights) by setting <code>method = "optweight"</code> in the call to <code><a href="weightit.html">weightit()</a></code>. This method can be used with binary, multi-category, and continuous treatments.</p>
 <p>In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
-method relies on <code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code> from the <a href="https://CRAN.R-project.org/package=optweight" class="external-link"><span class="pkg">optweight</span></a>
+method relies on <code><a href="https://ngreifer.github.io/optweight/reference/optweight.fit.html" class="external-link">optweight::optweight.fit()</a></code> from the <a href="https://CRAN.R-project.org/package=optweight" class="external-link"><span class="pkg">optweight</span></a>
 package.</p>
-<p>Because <code>optweight()</code> offers finer control and uses the same syntax as
-<code><a href="weightit.html">weightit()</a></code>, it is recommended that <code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code> be used
+<p>Because <code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight()</a></code> offers finer control and uses the same syntax as
+<code><a href="weightit.html">weightit()</a></code>, it is recommended that <code>optweight()</code> be used
 instead of <code><a href="weightit.html">weightit()</a></code> with <code>method = "optweight"</code>.</p><div class="section">
 <h3 id="binary-treatments">Binary Treatments<a class="anchor" aria-label="anchor" href="#binary-treatments"></a></h3>
 
 
 <p>For binary treatments, this method estimates the weights using
-<code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code>. The following estimands are allowed: ATE, ATT,
-and ATC. The weights are taken from the output of the <code>optweight</code> fit object.</p>
+<code><a href="https://ngreifer.github.io/optweight/reference/optweight.fit.html" class="external-link">optweight::optweight.fit()</a></code>. The following estimands are allowed: ATE, ATT,
+and ATC. The weights are taken from the output of the <code>optweight.fit</code> fit object.</p>
 </div>
 
 <div class="section">
@@ -217,29 +213,27 @@ and ATC. The weights are taken from the output of the <code>optweight</code> fit
 
 
 <p>For multi-category treatments, this method estimates the weights using
-<code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code>. The following estimands are allowed: ATE and
-ATT. The weights are taken from the output of the <code>optweight</code> fit object.</p>
+<code><a href="https://ngreifer.github.io/optweight/reference/optweight.fit.html" class="external-link">optweight::optweight.fit()</a></code>. The following estimands are allowed: ATE and
+ATT. The weights are taken from the output of the <code>optweight.fit</code> fit object.</p>
 </div>
 
 <div class="section">
 <h3 id="continuous-treatments">Continuous Treatments<a class="anchor" aria-label="anchor" href="#continuous-treatments"></a></h3>
 
 
-<p>For binary treatments, this method estimates the weights using
-<code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code>. The weights are taken from the output of the
-<code>optweight</code> fit object.</p>
+<p>For continuous treatments, this method estimates the weights using
+<code><a href="https://ngreifer.github.io/optweight/reference/optweight.fit.html" class="external-link">optweight::optweight.fit()</a></code>. The weights are taken from the output of the
+<code>optweight.fit</code> fit object.</p>
 </div>
 
 <div class="section">
 <h3 id="longitudinal-treatments">Longitudinal Treatments<a class="anchor" aria-label="anchor" href="#longitudinal-treatments"></a></h3>
 
 
-<p>For longitudinal treatments, <code>optweight()</code> estimates weights that
-simultaneously satisfy balance constraints at all time points, so only one
-model is fit to obtain the weights. Using <code>method = "sbw"</code> in
-<code><a href="weightitMSM.html">weightitMSM()</a></code> causes <code>is.MSM.method</code> to be set to <code>TRUE</code> by default. Setting
-it to <code>FALSE</code> will run one model for each time point and multiply the weights
-together, a method that is not recommended. <strong>NOTE: neither use of stable balancing weights with longitudinal treatments has been validated!</strong></p>
+<p>For longitudinal treatments, the weights are the product of the weights
+estimated at each time point. This method is not guaranteed to yield exact
+balance at each time point. <strong>NOTE: the use of stable balancing weights with
+longitudinal treatments has not been validated and should not be done!</strong></p>
 </div>
 
 <div class="section">
@@ -247,7 +241,7 @@ together, a method that is not recommended. <strong>NOTE: neither use of stable 
 
 
 <p>Sampling weights are supported through <code>s.weights</code> in all scenarios, but only
-for versions of <span class="pkg">optweight</span> after 0.2.5.</p>
+for versions of <span class="pkg">optweight</span> greater than or equal to 1.0.0.</p>
 </div>
 
 <div class="section">
@@ -281,7 +275,8 @@ user-supplied balance constraints. An advantage of this method over entropy
 balancing is the ability to allow approximate, rather than exact, balance
 through the <code>tols</code> argument, which can increase precision even for slight
 relaxations of the constraints.</p>
-<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> can be used on the output of <code><a href="weightit.html">weightit()</a></code> with <code>method = "sbw"</code>
+<p>The function of the weights that is optimized can be changed using the <code>norm</code> argument. The default <code>norm = "l2"</code>, minimizes the variance of the weights (i.e., maximizes the ESS). <code>norm = "entropy"</code> minimizes the negative entropy of the weights and is equivalent to entropy balancing, though in this implementation, inexact balance is allowed. <code>norm = "log"</code> minimizes the sum of the negative logs of the weights and is equivalent to nonparametric covariate balancing propensity score weighting (npCBPS). See <code><a href="https://ngreifer.github.io/optweight/reference/optweight.fit.html" class="external-link">optweight::optweight.fit()</a></code> for the other allowed options to <code>norm</code> and other arguments.</p>
+<p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> can be used on the output of <code><a href="weightit.html">weightit()</a></code> with <code>method = "optweight"</code>
 to display the dual variables; see Examples and <code><a href="plot.weightit.html">plot.weightit()</a></code> for more
 details.</p>
     </div>
@@ -294,7 +289,7 @@ factor are given the same tolerance, and only one value needs to be supplied
 for a factor variable. Because of the potential for confusion and ambiguity,
 it is recommended to only supply one value for <code>tols</code> in <code><a href="weightit.html">weightit()</a></code> that
 applies to all variables. For finer control, use <code>optweight()</code> directly.</p>
-<p>Seriously, just use <code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code>. The syntax is almost
+<p>Seriously, just use <code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight()</a></code>. The syntax is almost
 identical and it's compatible with <span class="pkg">cobalt</span>, too.</p>
     </div>
     <div class="section level2">
@@ -302,13 +297,18 @@ identical and it's compatible with <span class="pkg">cobalt</span>, too.</p>
 
 
 
-<p><code>moments</code> and <code>int</code> are accepted. See <code><a href="weightit.html">weightit()</a></code> for details.</p>
-<dl><dt><code>quantile</code></dt>
-<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75)</code> to request one quantile for each covariate. Only allowed with binary and multi-category treatments.</p></dd>
+<dl><dt><code>moments</code></dt>
+<dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.</p></dd>
+
+<dt><code>int</code></dt>
+<dd><p><code>logical</code>; whether first-order interactions of the covariates are to be balanced. Default is <code>FALSE</code>.</p></dd>
+
+<dt><code>quantile</code></dt>
+<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.</p></dd>
 
 
-</dl><p>All arguments to <code>optweight()</code> can be passed through <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>, with the following exception:</p><ul><li><p><code>targets</code> cannot be used and is ignored.</p></li>
-</ul><p>All arguments take on the defaults of those in <code>optweight()</code>.</p>
+</dl><p>All arguments to <code>optweight.fit()</code> can be passed through <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>, with the following exception:</p><ul><li><p><code>targets</code> cannot be used and is ignored.</p></li>
+</ul><p>All arguments take on the defaults of those in <code>optweight.fit()</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="additional-outputs">Additional Outputs<a class="anchor" aria-label="anchor" href="#additional-outputs"></a></h2>
@@ -322,7 +322,7 @@ identical and it's compatible with <span class="pkg">cobalt</span>, too.</p>
 </dl></dd>
 
 <dt><code>obj</code></dt>
-<dd><p>When <code>include.obj = TRUE</code>, the output of the call to <code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code>.</p></dd>
+<dd><p>When <code>include.obj = TRUE</code>, the output of the call to <code><a href="https://ngreifer.github.io/optweight/reference/optweight.fit.html" class="external-link">optweight::optweight.fit()</a></code>.</p></dd>
 
 
 </dl></div>
@@ -344,10 +344,7 @@ Estimation With Incomplete Outcome Data. <em>Journal of the American Statistical
 <h3 id="multi-category-treatments-1">Multi-Category Treatments<a class="anchor" aria-label="anchor" href="#multi-category-treatments-1"></a></h3>
 
 
-<p>de los Angeles Resa, M., &amp; Zubizarreta, J. R. (2020). Direct and stable weight
-adjustment in non-experimental studies with multivalued treatments: Analysis
-of the effect of an earthquake on post-traumatic stress. <em>Journal of the Royal Statistical Society: Series A (Statistics in Society)</em>, n/a(n/a).
-<a href="https://doi.org/10.1111/rssa.12561" class="external-link">doi:10.1111/rssa.12561</a></p>
+<p>de los Angeles Resa, M., &amp; Zubizarreta, J. R. (2020). Direct and Stable Weight Adjustment in Non-Experimental Studies With Multivalued Treatments: Analysis of the Effect of an Earthquake on Post-Traumatic Stress. <em>Journal of the Royal Statistical Society Series A: Statistics in Society</em>, 183(4), 1387–1410. <a href="https://doi.org/10.1111/rssa.12561" class="external-link">doi:10.1111/rssa.12561</a></p>
 </div>
 
 <div class="section">
@@ -361,7 +358,9 @@ of the effect of an earthquake on post-traumatic stress. <em>Journal of the Roya
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="weightit.html">weightit()</a></code>, <code><a href="weightitMSM.html">weightitMSM()</a></code></p>
-<p><code><a href="https://rdrr.io/pkg/optweight/man/optweight.html" class="external-link">optweight::optweight()</a></code> for the fitting function</p></div>
+<p><code><a href="https://ngreifer.github.io/optweight/reference/optweight.fit.html" class="external-link">optweight::optweight.fit()</a></code> for the fitting function</p>
+<p><code><a href="method_ebal.html">method_entropy</a></code> for entropy balancing, which is a special case of stable balancing weights.</p>
+<p><code><a href="method_npcbps.html">method_npcbps</a></code> for npCBPS weighting, which is also a special case of stable balancing weights.</p></div>
     </div>
 
     <div class="section level2">
@@ -385,16 +384,17 @@ of the effect of an earthquake on post-traumatic stress. <em>Journal of the Roya
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated   1           ||                  1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control   0 |---------------------------| 3.0426</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated   1           ||                  1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   0 |---------------------------| 3.043</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             411    589    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.5261 2.5415 2.6434 2.7396 3.0426</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1     2     3    4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1    1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            404   226   224  111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.526 2.542 2.643 2.74 3.043</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -413,7 +413,7 @@ of the effect of an earthquake on post-traumatic stress. <em>Journal of the Roya
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       -0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       -0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       -0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       -0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       -0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
@@ -440,19 +440,20 @@ of the effect of an earthquake on post-traumatic stress. <em>Journal of the Roya
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.4429     |-----------------------| 3.5741</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.0000 |-------------------|         2.5848</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.2574   |---------|                 1.6593</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  0.443     |-----------------------| 3.574</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 0.    |-------------------|         2.585</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  0.257   |---------|                 1.659</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            184    190    485    181    182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.3351 2.3723 2.5586 2.8367 3.5741</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            392    345    269    564    371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 2.0459 2.0984 2.1887 2.1982 2.5848</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             68    589    324    599    531</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 1.5706 1.5706 1.5725 1.5968 1.6593</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           203   157   155   153   152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black 2.335 2.372 2.559 2.837 3.574</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            67    43    39    36    28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 2.046 2.098 2.189 2.198 2.585</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           258   285   172   117     6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white 1.571 1.571 1.573 1.597 1.659</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -482,17 +483,14 @@ of the effect of an earthquake on post-traumatic stress. <em>Journal of the Roya
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="method_optweight-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W3</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                  <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
 <span class="r-in"><span>                method <span class="op">=</span> <span class="st">"optweight"</span>, tols <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in is_null(x) || class(x) == "try-error":</span> 'length = 2' in coercion to 'logical(1)'</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'W3' not found</span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in cobalt::bal.tab(W3):</span> object 'W3' not found</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'W3' not found</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

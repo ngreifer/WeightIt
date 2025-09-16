@@ -167,7 +167,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -332,6 +332,8 @@ find the optimal solutions. This can occur when <code>moments</code> or <code>in
 specified. <code>max_iter</code> should be increased, and setting <code>verbose = TRUE</code>
 allows you to monitor the process and examine if the optimization is
 approaching convergence.</p>
+<p>If <code>min.w</code> is positive and you still get a warning about the presence of negative weights, try setting <code>eps</code> to a smaller number (e.g., to <code>1e-12</code>).</p>
+<p>As of version 1.5.0, <code>polish</code> is now set to <code>TRUE</code> by default. This should yield slightly improved solutions but may be a little slower.</p>
     </div>
     <div class="section level2">
     <h2 id="additional-arguments">Additional Arguments<a class="anchor" aria-label="anchor" href="#additional-arguments"></a></h2>
@@ -345,12 +347,21 @@ approaching convergence.</p>
 <dt><code>lambda</code></dt>
 <dd><p>a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.</p></dd>
 
+<dt><code>moments</code></dt>
+<dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.</p></dd>
+
+<dt><code>int</code></dt>
+<dd><p><code>logical</code>; whether first-order interactions of the covariates are to be balanced. Default is <code>FALSE</code>.</p></dd>
+
+<dt><code>tols</code></dt>
+<dd><p>when <code>moments</code> is positive, a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0. Ignored when <code>moments = 0</code>.</p></dd>
+
 
 </dl><p>For binary and multi-category treatments, the following additional arguments can be specified:</p><dl><dt><code>improved</code></dt>
 <dd><p><code>logical</code>; whether to use the improved energy balancing weights as described by Huling and Mak (2024) when <code>estimand = "ATE"</code>. This involves optimizing balance not only between each treatment group and the overall sample, but also between each pair of treatment groups. Huling and Mak (2024) found that the improved energy balancing weights generally outperformed standard energy balancing. Default is <code>TRUE</code>; set to <code>FALSE</code> to use the standard energy balancing weights instead (not recommended).</p></dd>
 
 <dt><code>quantile</code></dt>
-<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75)</code> to request one quantile for each covariate.</p></dd>
+<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates.</p></dd>
 
 
 </dl><p>For continuous treatments, the following additional arguments can be specified:</p>
@@ -371,7 +382,7 @@ are also included, guaranteeing exact moment balance on these covariates
 while minimizing the energy distance of the weighted sample. For binary and
 multi-category treatments, this involves exact balance on the means of the
 entered covariates; for continuous treatments, this involves exact balance
-on the treatment-covariate correlations of the entered covariates.</p>
+on the treatment-covariate correlations of the entered covariates. The constraint on exact balance can be relaxed using the <code>tols</code> argument.</p>
 <p>Any other arguments will be passed to <code><a href="https://rdrr.io/pkg/osqp/man/osqpSettings.html" class="external-link">osqp::osqpSettings()</a></code>. Some
 defaults differ from those in <code>osqpSettings()</code>; see <em>Reproducibility</em>
 below.</p>
@@ -412,8 +423,7 @@ causal inference with continuous treatments. <em>Journal of the American Statist
     </div>
     <div class="section level2">
     <h2 id="author">Author<a class="anchor" aria-label="anchor" href="#author"></a></h2>
-    <p>Noah Greifer, using code from Jared Huling's
-<a href="https://CRAN.R-project.org/package=independenceWeights" class="external-link"><span class="pkg">independenceWeights</span></a> package for continuous treatments.</p>
+    <p>Noah Greifer, using code from Jared Huling's <a href="https://CRAN.R-project.org/package=independenceWeights" class="external-link"><span class="pkg">independenceWeights</span></a> package for continuous treatments.</p>
     </div>
 
     <div class="section level2">
@@ -436,28 +446,29 @@ causal inference with continuous treatments. <em>Journal of the American Statist
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated   0 |---------------|              7.5273</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control   0 |---------------------------| 12.9264</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated   0 |---------------|              7.527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   0 |---------------------------| 12.926</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             124    183    172    184     181</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 3.7973 3.9464 4.7248 5.7377  7.5273</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             567    374    192    303     608</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 5.0956 5.1599 5.1633 6.5388 12.9264</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            184   183   181   172    124</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 3.797 3.946 4.725 5.738  7.527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            423   382   189   118      7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 5.096  5.16 5.163 6.539 12.926</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.148 0.852   0.551       6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.162 0.764   0.466       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.148 0.852   0.551       9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.162 0.765   0.467       7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.    185.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    182.83   80.09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    182.79   80.09</span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Diff.Adj</span>
@@ -470,7 +481,7 @@ causal inference with continuous treatments. <em>Journal of the American Statist
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.    185.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    182.83   80.09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    182.79   80.09</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to race (multi-category)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
@@ -489,32 +500,33 @@ causal inference with continuous treatments. <em>Journal of the American Statist
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black    1   ||                           1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan   0 |---------|                    4.6858</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white    0 |---------------------------| 12.6742</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black    1   ||                           1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan   0 |---------|                    4.686</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white    0 |---------------------------| 12.674</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              6      5      4       3       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black      1      1      1       1       1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             28    269    373     570     424</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 3.6372 3.9319 4.1098  4.5448  4.6858</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             76    422     96      42     140</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 7.6424 7.6594 9.3907 11.1661 12.6742</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             1     2     3      4      5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black     1     1     1      1      1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            69    48    40     28      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 3.637 3.932  4.11  4.545  4.686</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           184    15    10      7      4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white 7.642 7.659 9.391 11.166 12.674</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.000 0.000   0.000       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       1.165 0.879   0.618       2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        1.733 1.073   0.966      79</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       1.165 0.879   0.618      15</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        1.733 1.073   0.967      91</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   243   72.  299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     243   30.8  74.87</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     243   30.8  74.86</span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
@@ -527,7 +539,7 @@ causal inference with continuous treatments. <em>Journal of the American Statist
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            hispan  white black</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted   72.  299.     243</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted     30.8  74.87   243</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted     30.8  74.86   243</span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W3</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">re75</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
 <span class="r-in"><span>                    <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span>, data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
@@ -543,32 +555,33 @@ causal inference with continuous treatments. <em>Journal of the American Statist
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all   0 |---------------------------| 9.7874</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all   0 |---------------------------| 9.787</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         501    486    180    166    171</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 6.7811 6.8314 7.7046 9.3441 9.7874</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        501   486   180   171   166</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 6.781 6.832 7.705 9.345 9.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.209 0.817   0.564      98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all        1.21 0.819   0.565      98</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   249.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   249.47</span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span>, poly <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.  -0.0000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary   0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.   0.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.  -0.0000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age²     Contin.  -0.0106</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ²    Contin.   0.0117</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74²    Contin.  -0.0440</span>
@@ -576,7 +589,7 @@ causal inference with continuous treatments. <em>Journal of the American Statist
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   249.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   249.47</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

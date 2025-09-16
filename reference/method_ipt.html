@@ -159,7 +159,7 @@ vignette("estimating-effects") for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -289,9 +289,14 @@ potentially with some cost in precision.</p>
 
 
 
-<p><code>moments</code> and <code>int</code> are accepted. See <code><a href="weightit.html">weightit()</a></code> for details.</p>
-<dl><dt><code>quantile</code></dt>
-<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75)</code> to request one quantile for each covariate.</p></dd>
+<dl><dt><code>moments</code></dt>
+<dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.</p></dd>
+
+<dt><code>int</code></dt>
+<dd><p><code>logical</code>; whether first-order interactions of the covariates are to be balanced. Default is <code>FALSE</code>.</p></dd>
+
+<dt><code>quantile</code></dt>
+<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates.</p></dd>
 
 <dt><code>link</code></dt>
 <dd><p>the link used to determine the inverse link for computing the (generalized) propensity scores. Default is <code>"logit"</code>, which is used in the original description of the method by Graham, Pinto, and Egel (2012), but <code>"probit"</code>, <code>"cauchit"</code>, <code>"cloglog"</code>, <code>"loglog"</code>, <code>"log"</code>, and <code>"clog"</code> are also allowed. Note that negative weights are possible with these last two and they should be used with caution. An object of class <code>"link-glm"</code> can also be supplied. The argument is passed to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">quasibinomial()</a></code>.</p></dd>
@@ -356,16 +361,17 @@ similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000              ||               1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0172 |---------------------------| 2.2625</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                 ||               1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.017 |---------------------------| 2.263</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             589    595    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.4644 1.4848 1.5763 1.7434 2.2625</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1     2     3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            410   404   224   111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.464 1.485 1.576 1.743 2.263</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -409,19 +415,20 @@ similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.5699  |------------|               15.7872</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.7112  |--------------------------| 29.0704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.1023 |--|                           4.6925</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.57   |------------|               15.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.711  |--------------------------| 29.07 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.102 |--|                           4.693</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             226     244     485     181     182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black  6.5667  6.7697  7.0956  9.9758 15.7872</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             392     564     269     345     371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 17.4359 21.6727 23.0335 24.2297 29.0704</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              68     457     599     589     531</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white  3.8408  3.9124  3.9335  4.1771  4.6925</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            203    166    163   153    152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black  6.567   6.77  7.096 9.976 15.787</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             67     43     39    36     28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 17.436 21.673 23.033 24.23  29.07</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            291    285    258   205      6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  3.841  3.912  3.934 4.177  4.693</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

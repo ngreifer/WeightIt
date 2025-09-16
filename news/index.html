@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -47,8 +47,14 @@
 <h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
 <code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
 <ul><li><p>For <code><a href="../reference/predict.glm_weightit.html">predict.ordinal_weightit()</a></code>, <code>type</code> can now be <code>"stdlv"</code> to request predictions on the scale of the standardized latent variable underlying the ordinal responses.</p></li>
+<li><p><code>moments</code> can now be supplied as a named vector with a different integer value for each covariate, e.g., <code>moments = c(x1 = 2, x2 = 3)</code> to balance just the first two moments of <code>x1</code> and the first three of <code>x2</code>.</p></li>
+<li><p>With <code>method = "energy"</code>, a new <code>tols</code> argument can be set to request inexact balance on covariate moments.</p></li>
+<li><p>Some arguments and documentation for them has changed, in particular <code>moments</code>, <code>int</code>, and <code>subclass</code>, which used to be named arguments of <code><a href="../reference/weightit.html">weightit()</a></code> and are now to be supplied through <code>...</code>. They are documented only on the help pages of the specific methods that allow them.</p></li>
+<li><p>The <code>covs</code> component of the <code><a href="../reference/weightit.html">weightit()</a></code> output object now only includes the raw covariates, not any transformations. This will affect <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code> output.</p></li>
+<li><p>In <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code>, a new argument, <code>weight.range</code> can be supplied to specify whether the range of weights in each group should be displayed.</p></li>
 <li><p>Fixed a bug in which the output of <code>bread()</code> was off by a factor of -1. This doesn’t affect its use in <code><a href="https://sandwich.R-Forge.R-project.org/reference/sandwich.html" class="external-link">sandwich::sandwich()</a></code>.</p></li>
 <li><p>Fixed a bug in which <code>bag.fraction</code> for <code>method = "gbm"</code> with binary and multi-category treatments had a default of .5 instead of the stated 1.</p></li>
+<li><p>Fixed bugs relating to <code>method = "optweight"</code>; sampling weights and the fractional weighted bootstrap can now be used with it.</p></li>
 <li><p>Fixed bugs related to <code><a href="../reference/glm_weightit.html">coxph_weightit()</a></code> with aliased coefficients and multi-state models. Thanks to Mads Jeppe Tarp-Johansen.</p></li>
 <li><p>Fixed a bug in which messages about assuming which treatment level was “treated” were printed many times, including when bootstrapping.</p></li>
 <li><p>Fixed a bug in which CBPS for continuous treatments would not yield correct balance in the presence of some extreme density estimates.</p></li>

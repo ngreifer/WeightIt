@@ -181,7 +181,7 @@ vignette("estimating-effects") for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -356,7 +356,6 @@ required.</p>
 
 
 
-<p><code>moments</code> and <code>int</code> are accepted. See <code><a href="weightit.html">weightit()</a></code> for details.</p>
 <p>The following additional arguments can be specified:</p><dl><dt><code>over</code></dt>
 <dd><p><code>logical</code>; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is <code>FALSE</code> to use the just-identified CBPS.</p></dd>
 
@@ -375,8 +374,15 @@ required.</p>
 <dt><code>solver</code></dt>
 <dd><p>the solver to use to estimate the parameters of the just-identified CBPS. Allowable options include <code>"multiroot"</code> to use <code><a href="https://rdrr.io/pkg/rootSolve/man/multiroot.html" class="external-link">rootSolve::multiroot()</a></code> and <code>"optim"</code> to use <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code>. <code>"multiroot"</code> is the default when <span class="pkg">rootSolve</span> is installed, as it tends to be much faster and more accurate; otherwise, <code>"optim"</code> is the default and requires no dependencies. Regardless of <code>solver</code>, the output of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> is returned when <code>include.obj = TRUE</code> (see below). When <code>over = TRUE</code>, the parameter estimates of the just-identified CBPS are used as starting values for the over-identified CBPS.</p></dd>
 
+<dt><code>moments</code></dt>
+<dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.</p></dd>
+
+<dt><code>int</code></dt>
+<dd><p><code>logical</code>; whether first-order interactions of the covariates are to be balanced. Default is <code>FALSE</code>.</p></dd>
+
 <dt><code>quantile</code></dt>
-<dd><p>A named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or an unnamed list of length 1 (e.g., <code>list(c(.25, .5, .75))</code>) to request the same quantile(s) for all continuous covariates, or a named vector (e.g., <code>c(x1 = .5, x2 = .75)</code> to request one quantile for each covariate. Only allowed with binary and multi-category treatments.</p></dd>
+<dd><p>a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting <code>quantile = list(x1 = c(.25, .5. , .75))</code> ensures the 25th, 50th, and 75th percentiles of <code>x1</code> in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., <code>.5</code>) or a vector (e.g., <code>c(.25, .5, .75)</code>) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.</p></dd>
+
 
 
 </dl></div>
@@ -457,16 +463,17 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000              ||               1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0172 |---------------------------| 2.2625</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                 ||               1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.017 |---------------------------| 2.263</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5      4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             589    595    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.4644 1.4848 1.5763 1.7434 2.2625</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1     2     3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            410   404   224   111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.464 1.485 1.576 1.743 2.263</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -512,16 +519,17 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000               ||              1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0125 |---------------------------| 2.0531</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                  ||              1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.012 |---------------------------| 2.053</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               5     4      3      2      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1     1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             595   589    269    409    296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.3681 1.378 1.4721 1.6067 2.0531</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              1     2     3     4     5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            410   404   224   111    84</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.368 1.378 1.472 1.607 2.053</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -565,19 +573,20 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.5007  |------------------|         17.9659</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.6315  |--------------------------| 24.5609</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.1311 |--|                           4.1340</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.501  |------------------|         17.966</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 1.631  |--------------------------| 24.561</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.131 |--|                           4.134</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            226     231     485     181     182</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black 6.7985  6.8385  7.2674  9.8974 17.9659</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            392     564     269     345     371</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 16.762 19.8529 22.0193 23.8782 24.5609</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            398     432     437     404     599</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 3.6882  3.7815  3.8476  3.8952   4.134</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            203    164    163    153    152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black  6.799  6.838  7.267  9.897 17.966</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             67     43     39     36     28</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 16.762 19.853 22.019 23.878 24.561</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            270    195    190    172    169</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  3.688  3.781  3.848  3.895  4.134</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -620,13 +629,14 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.0098 |---------------------------| 20.9463</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.01 |---------------------------| 20.946</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          485     481     482    484     483</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 10.2091 13.1123 13.9739 17.816 20.9463</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         485    484    483    482    481</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 10.209 13.112 13.974 17.816 20.946</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -676,16 +686,17 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0503 |---------------------------| 110.8804</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2386 |---------------------|        86.9515</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.05  |---------------------------| 110.88 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.239 |---------------------|        86.951</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             3880     168    2859    3774     3653</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 50.1139 50.1139 56.0786 96.4501 110.8804</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             5695    6284    3500    1875     1362</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control  52.431 55.2118 55.2118 58.5934  86.9515</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            2115   2177   2058   1611     90</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 50.114 50.114 56.079  96.45 110.88</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            2778   1532   2516    832    586</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 52.431 55.212 55.212 58.593 86.951</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -704,16 +715,17 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0503 |-----------------------|      96.4501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.2386 |---------------------------| 110.8804</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.05  |-----------------------|      96.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 1.239 |---------------------------| 110.88</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                                  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             3729     871    3880     168     3774</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 42.3872 42.8221 50.1139 50.1139  96.4501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             3500    2859    1875    1362     3653</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 55.2118 56.0786 58.5934 86.9515 110.8804</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            2004   1954    460   1933     82</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 42.387 42.822 50.114 50.114  96.45</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            1753   1689   1386    911    664</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 55.212 56.079 58.593 86.951 110.88</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
