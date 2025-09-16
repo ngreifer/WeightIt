@@ -475,6 +475,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -503,6 +504,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    225.73     185</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
@@ -531,6 +533,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 3-category (black, hispan, white)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -563,6 +566,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   175.81  61.46 258.91</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
@@ -590,6 +594,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: continuous</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -614,6 +619,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   212.62</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
@@ -645,6 +651,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -673,6 +680,7 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    255.99     185</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W4</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj KS.Adj</span>

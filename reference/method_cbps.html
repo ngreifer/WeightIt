@@ -458,6 +458,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1a</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -486,6 +487,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    252.12     185</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1a</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
@@ -514,6 +516,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 2-category</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W1b</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -542,6 +545,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    259.24     185</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1b</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
@@ -568,6 +572,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: 3-category (black, hispan, white)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATE</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -600,6 +605,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   173.37  53.95 259.76</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
@@ -624,6 +630,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - sampling weights: none</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - treatment: continuous</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, re74</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -648,6 +655,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   197.36</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
@@ -680,6 +688,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     + baseline: X1_0, X2_0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     + after time 1: X1_1, X2_1, A_1, X1_0, X2_0</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                       </span><span style="font-style: italic;"> Time 1 </span><span style="text-decoration: line-through;">                       </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
@@ -739,6 +748,7 @@ tilting, which work similarly.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 3701.      3799</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   1570.46    1926</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W4</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all time points</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      Times    Type Max.Diff.Adj</span>
