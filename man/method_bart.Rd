@@ -157,14 +157,18 @@ When \code{include.obj = TRUE}, the \code{bart2} fit(s) used to generate the pre
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "bart", estimand = "ATT"))
+
 summary(W1)
+
 cobalt::bal.tab(W1)
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                 nodegree + re74, data = lalonde,
                 method = "bart", estimand = "ATE"))
+
 summary(W2)
+
 cobalt::bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
@@ -172,7 +176,9 @@ cobalt::bal.tab(W2)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "bart", density = "dt_3"))
+
 summary(W3)
+
 cobalt::bal.tab(W3)}
 \dontshow{\}) # examplesIf}
 }

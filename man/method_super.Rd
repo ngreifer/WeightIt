@@ -202,7 +202,9 @@ When \code{include.obj = TRUE}, the SuperLearner fit(s) used to generate the pre
                 method = "super", estimand = "ATT",
                 SL.library = c("SL.glm", "SL.stepAIC",
                                "SL.glm.interaction")))
+
 summary(W1)
+
 cobalt::bal.tab(W1)
 
 # Balancing covariates with respect to race (multi-category)
@@ -211,7 +213,9 @@ cobalt::bal.tab(W1)
                 method = "super", estimand = "ATE",
                 SL.library = c("SL.glm", "SL.stepAIC",
                                "SL.glm.interaction")))
+
 summary(W2)
+
 cobalt::bal.tab(W2)
 
 # Balancing covariates with respect to re75 (continuous)
@@ -221,7 +225,9 @@ cobalt::bal.tab(W2)
                 method = "super", density = "dt_8",
                 SL.library = c("SL.glm", "SL.ridge",
                                "SL.glm.interaction")))
+
 summary(W3)
+
 cobalt::bal.tab(W3)
 
 # Balancing covariates between treatment groups (binary)
@@ -234,7 +240,9 @@ cobalt::bal.tab(W3)
                                "SL.lda"),
                 SL.method = "method.balance",
                 criterion = "ks.max"))
+
 summary(W4)
+
 cobalt::bal.tab(W4, stats = c("m", "ks"))}
 \dontshow{\}) # examplesIf}
 }

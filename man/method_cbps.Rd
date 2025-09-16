@@ -174,7 +174,9 @@ data("lalonde", package = "cobalt")
 (W1a <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "cbps", estimand = "ATT"))
+
 summary(W1a)
+
 cobalt::bal.tab(W1a)
 
 #Balancing covariates between treatment groups (binary)
@@ -183,21 +185,27 @@ cobalt::bal.tab(W1a)
                   nodegree + re74, data = lalonde,
                 method = "cbps", estimand = "ATT",
                 over = TRUE, link = "probit"))
+
 summary(W1b)
+
 cobalt::bal.tab(W1b)
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "cbps", estimand = "ATE"))
+
 summary(W2)
+
 cobalt::bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "cbps"))
+
 summary(W3)
+
 cobalt::bal.tab(W3)
 \donttest{
 #Longitudinal treatments
@@ -207,7 +215,9 @@ data("msmdata")
                           A_1 + X1_0 + X2_0),
                    data = msmdata,
                    method = "cbps"))
+
 summary(W4)
+
 cobalt::bal.tab(W4)
 }
 }

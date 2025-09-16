@@ -245,14 +245,18 @@
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "glm", estimand = "ATT",
 #'                 link = "probit"))
+#'
 #' summary(W1)
+#'
 #' bal.tab(W1)
 #'
 #' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "glm", estimand = "ATE"))
+#'
 #' summary(W2)
+#'
 #' bal.tab(W2)
 #'
 #' #Balancing covariates with respect to re75 (continuous)
@@ -260,7 +264,9 @@
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "glm", density = "kernel"))
+#'
 #' summary(W3)
+#'
 #' bal.tab(W3)
 NULL
 
@@ -286,10 +292,10 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     if (missing == "saem") {
       covs0 <- covs
       for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[, i]), i] <- covs0[!is.na(covs0[, i]), i][1L]
-      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
+      colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs0)))
     }
     else {
-      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+      colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     }
 
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -351,7 +357,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     warning = function(w) {
       w <- conditionMessage(w)
       if (w != "one argument not used by format '%i '") {
-        .wrn("(from `misaem::miss.glm()`) ", w, tidy = FALSE)
+        .wrn(sprintf("(from `misaem::miss.glm()`): %s", w),
+             tidy = FALSE)
       }
       invokeRestart("muffleWarning")
     })
@@ -390,8 +397,8 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     warning = function(w) {
       w <- conditionMessage(w)
       if (w != "non-integer #successes in a binomial glm!")
-        .wrn(sprintf("(from `logistf::%s()`) ", link),
-             w, tidy = FALSE)
+        .wrn(sprintf("(from `logistf::%s()`): %s",
+                     link, w), tidy = FALSE)
       invokeRestart("muffleWarning")
     })
 
@@ -455,8 +462,11 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     }, verbose = verbose)},
     warning = function(w) {
       w <- conditionMessage(w)
-      if (w != "non-integer #successes in a binomial glm!")
-        .wrn("(from `glm()`) ", w, tidy = FALSE)
+      if (w != "non-integer #successes in a binomial glm!") {
+        .wrn(sprintf("(from `glm()`): %s", w),
+             tidy = FALSE)
+      }
+
       invokeRestart("muffleWarning")
     })
 
@@ -540,10 +550,10 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     if (missing == "saem") {
       covs0 <- covs
       for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[, i]), i] <- covs0[!is.na(covs0[, i]), i][1L]
-      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
+      colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs0)))
     }
     else {
-      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+      colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     }
 
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -714,8 +724,10 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       warning = function(w) {
         w <- conditionMessage(w)
         if (w != "non-integer #successes in a binomial glm!") {
-          .wrn("(from `glm()`) ", w, tidy = FALSE)
+          .wrn(sprintf("(from `glm()`): %s", w),
+               tidy = FALSE)
         }
+
         invokeRestart("muffleWarning")
       })
 
@@ -742,7 +754,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                          quote = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.\n       Error message: (from `MASS::polr()`) %s",
+      .err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.\n       Error message: (from `MASS::polr()`): %s",
                    link, conditionMessage(e)), tidy = FALSE)})
 
     ps <- fit.obj$fitted.values
@@ -769,7 +781,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                          quote = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("there was a problem with the bias-reduced ordinal logit regression.\n       Try a different link.\n       Error message: (from `brglm2::bracl()`) %s", conditionMessage(e)), tidy = FALSE)
+      .err(sprintf("there was a problem with the bias-reduced ordinal logit regression.\n       Try a different link.\n       Error message: (from `brglm2::bracl()`): %s", conditionMessage(e)), tidy = FALSE)
     })
 
     ps <- fit.obj$fitted.values
@@ -805,8 +817,10 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       warning = function(w) {
         w <- conditionMessage(w)
         if (w != "one argument not used by format '%i '") {
-          .wrn("(from `misaem::miss.glm()`) ", w, tidy = FALSE)
+          .wrn(sprintf("(from `misaem::miss.glm()`): %s", w),
+               tidy = FALSE)
         }
+
         invokeRestart("muffleWarning")
       })
 
@@ -823,8 +837,9 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       fit.obj <- MNP::mnp(formula, data, verbose = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem fitting the multinomial regression with `MNP()`.\n       Try a different `multi.method`.\nError message: (from `MNP::mnp()`) %s",
-                   conditionMessage(e)), tidy = FALSE)
+      .err(sprintf("There was a problem fitting the multinomial regression with `MNP()`.\n       Try a different `multi.method`.\nError message: (from `MNP::mnp()`): %s",
+                   conditionMessage(e)),
+           tidy = FALSE)
     })
 
     ps <- predict(fit.obj, type = "prob")$p
@@ -865,7 +880,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try a different `multi.method`.\nError message: (from `mclogit::mblogit()`) %s",
+      .err(sprintf("There was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try a different `multi.method`.\nError message: (from `mclogit::mblogit()`): %s",
                    link, conditionMessage(e)),
            tidy = FALSE)
     })
@@ -891,7 +906,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                          quote = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different `multi.method`.\n       Error message: (from `brglm2::brmultinom()`) %s",
+      .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different `multi.method`.\n       Error message: (from `brglm2::brmultinom()`): %s",
                    conditionMessage(e)),
            tidy = FALSE)
     })
@@ -972,10 +987,10 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
       for (i in colnames(covs)[anyNA_col(covs)]) {
         covs0[is.na(covs0[, i]), i] <- covs0[!is.na(covs0[, i]), i][1L]
       }
-      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs0))]
+      colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs0)))
     }
     else {
-      colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+      colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     }
 
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
@@ -1023,8 +1038,10 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     warning = function(w) {
       w <- conditionMessage(w)
       if (w != "one argument not used by format '%i '") {
-        .wrn("(from `misaem::miss.lm()`) ", w, tidy = FALSE)
+        .wrn(sprintf("(from `misaem::miss.lm()`): %s", w),
+             tidy = FALSE)
       }
+
       invokeRestart("muffleWarning")
     })
 

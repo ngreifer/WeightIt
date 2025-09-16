@@ -216,7 +216,9 @@
 #'                 method = "super", estimand = "ATT",
 #'                 SL.library = c("SL.glm", "SL.stepAIC",
 #'                                "SL.glm.interaction")))
+#'
 #' summary(W1)
+#'
 #' cobalt::bal.tab(W1)
 #'
 #' # Balancing covariates with respect to race (multi-category)
@@ -225,7 +227,9 @@
 #'                 method = "super", estimand = "ATE",
 #'                 SL.library = c("SL.glm", "SL.stepAIC",
 #'                                "SL.glm.interaction")))
+#'
 #' summary(W2)
+#'
 #' cobalt::bal.tab(W2)
 #'
 #' # Balancing covariates with respect to re75 (continuous)
@@ -235,7 +239,9 @@
 #'                 method = "super", density = "dt_8",
 #'                 SL.library = c("SL.glm", "SL.ridge",
 #'                                "SL.glm.interaction")))
+#'
 #' summary(W3)
+#'
 #' cobalt::bal.tab(W3)
 #'
 #' # Balancing covariates between treatment groups (binary)
@@ -248,7 +254,9 @@
 #'                                "SL.lda"),
 #'                 SL.method = "method.balance",
 #'                 criterion = "ks.max"))
+#'
 #' summary(W4)
+#'
 #' cobalt::bal.tab(W4, stats = c("m", "ks"))}
 NULL
 
@@ -272,7 +280,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   covs <- as.data.frame(covs)
 
   if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
@@ -350,8 +358,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
                         env = env))
   }, verbose = verbose)},
   error = function(e) {
-    e. <- conditionMessage(e)
-    .err("(from `SuperLearner::SuperLearner()`) ", e., tidy = FALSE)
+    .err(sprintf("(from `SuperLearner::SuperLearner()`): %s",
+                 conditionMessage(e)),
+         tidy = FALSE)
   })
 
   ps <- {
@@ -391,7 +400,7 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   covs <- as.data.frame(covs)
 
   if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
@@ -432,8 +441,9 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
                                     env = env))
     }, verbose = verbose)},
     error = function(e) {
-      e. <- conditionMessage(e)
-      .err("(from `SuperLearner::SuperLearner()`) ", e., tidy = FALSE)
+      .err(sprintf("(from `SuperLearner::SuperLearner()`): %s",
+                   conditionMessage(e)),
+           tidy = FALSE)
     })
 
     ps[[i]] <- {
@@ -473,7 +483,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   }
 
   if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
     covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
   }
 
@@ -546,8 +556,9 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                         env = env))
   }, verbose = verbose)},
   error = function(e) {
-    e. <- conditionMessage(e)
-    .err("(from `SuperLearner::SuperLearner()`) ", e., tidy = FALSE)
+    .err(sprintf("(from `SuperLearner::SuperLearner()`): %s",
+                 conditionMessage(e)),
+         tidy = FALSE)
   })
 
   gp.score <- {

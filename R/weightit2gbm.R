@@ -219,67 +219,76 @@
 #'                 method = "gbm", estimand = "ATE",
 #'                 criterion = "smd.max",
 #'                 use.offset = TRUE))
+#'
 #' summary(W1)
+#'
 #' cobalt::bal.tab(W1)
 #'
 #' # View information about the fitting process
 #' W1$info$best.tree #best tree
+#'
 #' plot(W1) #plot of criterion value against number of trees
 #'
-#' \donttest{
-#'   #Balancing covariates with respect to race (multi-category)
-#'   (W2 <- weightit(race ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "gbm", estimand = "ATT",
-#'                   focal = "hispan", criterion = "ks.mean"))
-#'   summary(W2)
-#'   cobalt::bal.tab(W2, stats = c("m", "ks"))
+#' \donttest{#Balancing covariates with respect to race (multi-category)
+#' (W2 <- weightit(race ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "gbm", estimand = "ATT",
+#'                 focal = "hispan", criterion = "ks.mean"))
 #'
-#'   #Balancing covariates with respect to re75 (continuous)
-#'   (W3 <- weightit(re75 ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "gbm", density = "kernel",
-#'                   criterion = "p.rms", trim.at = .97))
-#'   summary(W3)
-#'   cobalt::bal.tab(W3)
+#' summary(W2)
 #'
-#'   #Using a t(3) density and illustrating the search for
-#'   #more trees.
-#'   W4a <- weightit(re75 ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "gbm", density = "dt_3",
-#'                   criterion = "p.max",
-#'                   n.trees = 10000)
+#' cobalt::bal.tab(W2, stats = c("m", "ks"))
 #'
-#'   W4a$info$best.tree #10000; optimum hasn't been found
-#'   plot(W4a) #decreasing at right edge
+#' #Balancing covariates with respect to re75 (continuous)
+#' (W3 <- weightit(re75 ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "gbm", density = "kernel",
+#'                 criterion = "p.rms", trim.at = .97))
 #'
-#'   W4b <- weightit(re75 ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "gbm", density = "dt_3",
-#'                   criterion = "p.max",
-#'                   start.tree = 10000,
-#'                   n.trees = 20000)
+#' summary(W3)
 #'
-#'   W4b$info$best.tree #13417; optimum has been found
-#'   plot(W4b) #increasing at right edge
+#' cobalt::bal.tab(W3)
 #'
-#'   cobalt::bal.tab(W4b)
+#' #Using a t(3) density and illustrating the search for
+#' #more trees.
+#' W4a <- weightit(re75 ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "gbm", density = "dt_3",
+#'                 criterion = "p.max",
+#'                 n.trees = 10000)
 #'
-#'   #Tuning hyperparameters
-#'   (W5 <- weightit(treat ~ age + educ + married +
-#'                     nodegree + re74, data = lalonde,
-#'                   method = "gbm", estimand = "ATT",
-#'                   criterion = "ks.max",
-#'                   interaction.depth = 2:4,
-#'                   distribution = c("bernoulli", "adaboost")))
+#' W4a$info$best.tree #10000; optimum hasn't been found
 #'
-#'   W5$info$tune
+#' plot(W4a) #decreasing at right edge
 #'
-#'   W5$info$best.tune #Best values of tuned parameters
-#'   plot(W5) #plot criterion values against number of trees
+#' W4b <- weightit(re75 ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "gbm", density = "dt_3",
+#'                 criterion = "p.max",
+#'                 start.tree = 10000,
+#'                 n.trees = 20000)
 #'
-#'   cobalt::bal.tab(W5, stats = c("m", "ks"))
+#' W4b$info$best.tree #13417; optimum has been found
+#'
+#' plot(W4b) #increasing at right edge
+#'
+#' cobalt::bal.tab(W4b)
+#'
+#' #Tuning hyperparameters
+#' (W5 <- weightit(treat ~ age + educ + married +
+#'                   nodegree + re74, data = lalonde,
+#'                 method = "gbm", estimand = "ATT",
+#'                 criterion = "ks.max",
+#'                 interaction.depth = 2:4,
+#'                 distribution = c("bernoulli", "adaboost")))
+#'
+#' W5$info$tune
+#'
+#' W5$info$best.tune #Best values of tuned parameters
+#'
+#' plot(W5) #plot criterion values against number of trees
+#'
+#' cobalt::bal.tab(W5, stats = c("m", "ks"))
 #' }
 NULL
 

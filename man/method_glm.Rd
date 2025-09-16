@@ -160,14 +160,18 @@ data("lalonde", package = "cobalt")
                   nodegree + re74, data = lalonde,
                 method = "glm", estimand = "ATT",
                 link = "probit"))
+
 summary(W1)
+
 bal.tab(W1)
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "glm", estimand = "ATE"))
+
 summary(W2)
+
 bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
@@ -175,7 +179,9 @@ bal.tab(W2)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "glm", density = "kernel"))
+
 summary(W3)
+
 bal.tab(W3)
 }
 \references{

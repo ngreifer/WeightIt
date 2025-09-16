@@ -132,12 +132,15 @@ A list with one entry:
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)
-(W1 <- weightit(treat ~ age + educ + married +
+(W1 <- weightit(treat ~ age + educ + race +
                   nodegree + re74, data = lalonde,
                 method = "optweight", estimand = "ATT",
                 tols = 0))
+
 summary(W1)
+
 cobalt::bal.tab(W1)
+
 plot(W1)
 
 #Balancing covariates with respect to race (multi-category)
@@ -145,16 +148,22 @@ plot(W1)
                   nodegree + re74, data = lalonde,
                 method = "optweight", estimand = "ATE",
                 tols = .01))
+
 summary(W2)
+
 cobalt::bal.tab(W2)
+
 plot(W2)
 
 #Balancing covariates with respect to re75 (continuous)
-(W3 <- weightit(re75 ~ age + educ + married +
+(W3 <- weightit(re75 ~ age + educ + race +
                   nodegree + re74, data = lalonde,
-                method = "optweight", tols = .05))
+                method = "optweight", tols = .02))
+
 summary(W3)
+
 cobalt::bal.tab(W3)
+
 plot(W3)
 \dontshow{\}) # examplesIf}
 }

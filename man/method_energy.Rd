@@ -194,7 +194,9 @@ data("lalonde", package = "cobalt")
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "energy", estimand = "ATE"))
+
 summary(W1)
+
 cobalt::bal.tab(W1)
 
 #Balancing covariates with respect to race (multi-category)
@@ -202,13 +204,19 @@ cobalt::bal.tab(W1)
                   nodegree + re74, data = lalonde,
                 method = "energy", estimand = "ATT",
                 focal = "black"))
+
 summary(W2)
+
 cobalt::bal.tab(W2)
+
 \donttest{#Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
                     nodegree + re74, data = lalonde,
-                  method = "energy", moments = 1))
+                  method = "energy", moments = 1,
+                  tols = .01))
+
 summary(W3)
+
 cobalt::bal.tab(W3, poly = 2)}
 \dontshow{\}) # examplesIf}
 }

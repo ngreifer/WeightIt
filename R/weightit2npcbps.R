@@ -100,14 +100,18 @@
 #'   (W1 <- weightit(treat ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
 #'                   method = "npcbps", estimand = "ATE"))
+#'
 #'   summary(W1)
+#'
 #'   cobalt::bal.tab(W1)
 #'
 #'   #Balancing covariates with respect to race (multi-category)
 #'   (W2 <- weightit(race ~ age + educ + married +
 #'                     nodegree + re74, data = lalonde,
 #'                   method = "npcbps", estimand = "ATE"))
+#'
 #'   summary(W2)
+#'
 #'   cobalt::bal.tab(W2)
 #' }
 NULL
@@ -134,7 +138,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, verbose, ..
     covs[, i] <- .make_closer_to_1(covs[, i])
   }
 
-  colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   new.data <- data.frame(treat = treat, covs)
@@ -148,8 +152,9 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, verbose, ..
                         print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
-    e. <- conditionMessage(e)
-    .err("(from `CBPS::npCBPS()`) ", e., tidy = FALSE)
+    .err(sprintf("(from `CBPS::npCBPS()`): %s",
+                 conditionMessage(e)),
+         tidy = FALSE)
   })
 
   w <- fit$weights
@@ -182,7 +187,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, verbos
                                       moments = ...get("moments"),
                                       int = ...get("int"))
 
-  colinear.covs.to.remove <- colnames(covs)[colnames(covs) %nin% colnames(make_full_rank(covs))]
+  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   new.data <- data.frame(treat = treat, covs)
@@ -196,8 +201,9 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, verbos
                         print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
-    e. <- conditionMessage(e)
-    .err("(from `CBPS::npCBPS()`) ", e., tidy = FALSE)
+    .err(sprintf("(from `CBPS::npCBPS()`): %s",
+                 conditionMessage(e)),
+         tidy = FALSE)
   })
 
   w <- fit$weights

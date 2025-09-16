@@ -126,14 +126,18 @@ data("lalonde", package = "cobalt")
 (W1 <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "ebal", estimand = "ATT"))
+
 summary(W1)
+
 cobalt::bal.tab(W1)
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "ebal", estimand = "ATE"))
+
 summary(W2)
+
 cobalt::bal.tab(W2)
 
 #Balancing covariates and squares with respect to
@@ -143,8 +147,11 @@ cobalt::bal.tab(W2)
                   nodegree + re74, data = lalonde,
                 method = "ebal", moments = 2,
                 d.moments = 3))
+
 summary(W3)
-cobalt::bal.tab(W3)
+
+cobalt::bal.tab(W3, poly = 2,
+                stats = c("c", "m"))
 }
 \references{
 \subsection{Binary Treatments}{

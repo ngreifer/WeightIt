@@ -205,9 +205,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   for (i in seq_along(formula.list)) {
 
     #Process treat and covs from formula and data
-    # t.c <- get_covs_and_treat_from_formula(formula.list[[i]], data)
-    # reported.covs.list[[i]] <- t.c[["reported.covs"]]
-
     t.c <- get_covs_and_treat_from_formula2(formula.list[[i]], data)
     simple.covs.list[[i]] <- t.c[["simple.covs"]]
     reported.covs.list[[i]] <- t.c[["reported.covs"]]

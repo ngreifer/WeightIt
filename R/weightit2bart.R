@@ -164,14 +164,18 @@
 #' (W1 <- weightit(treat ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "bart", estimand = "ATT"))
+#'
 #' summary(W1)
+#'
 #' cobalt::bal.tab(W1)
 #'
 #' #Balancing covariates with respect to race (multi-category)
 #' (W2 <- weightit(race ~ age + educ + married +
 #'                 nodegree + re74, data = lalonde,
 #'                 method = "bart", estimand = "ATE"))
+#'
 #' summary(W2)
+#'
 #' cobalt::bal.tab(W2)
 #'
 #' #Balancing covariates with respect to re75 (continuous)
@@ -179,7 +183,9 @@
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "bart", density = "dt_3"))
+#'
 #' summary(W3)
+#'
 #' cobalt::bal.tab(W3)}
 NULL
 
@@ -226,8 +232,9 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     fit <- eval(bart.call)
   }, verbose = verbose)},
   error = function(e) {
-    e. <- conditionMessage(e)
-    .err("(from `dbarts::bart2()`) ", e., tidy = FALSE)
+    .err(sprintf("(from `dbarts::bart2()`): %s",
+                 conditionMessage(e)),
+                 tidy = FALSE)
   })
 
   p.score <- fitted(fit)
@@ -282,8 +289,9 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
       fit.list[[i]] <- eval(bart.call)
     }, verbose = verbose)},
     error = function(e) {
-      e. <- conditionMessage(e)
-      .err("(from `dbarts::bart2()`) ", e., tidy = FALSE)
+      .err(sprintf("(from `dbarts::bart2()`): %s",
+                   conditionMessage(e)),
+           tidy = FALSE)
     })
 
     ps[[i]] <- fitted(fit.list[[i]])
@@ -340,8 +348,9 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     fit <- eval(bart.call)
   }, verbose = verbose)},
   error = function(e) {
-    e. <- conditionMessage(e)
-    .err("(from `dbarts::bart2()`) ", e., tidy = FALSE)
+    .err(sprintf("(from `dbarts::bart2()`): %s",
+                 conditionMessage(e)),
+         tidy = FALSE)
   })
 
   r <- residuals(fit)

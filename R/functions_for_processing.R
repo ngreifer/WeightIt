@@ -452,6 +452,7 @@
         if (is_null(treated) || treated %nin% unique.vals) {
           .err('when `estimand = "ATT"` for multi-category treatments, an argument must be supplied to `focal`')
         }
+
         focal <- treated
       }
     }
@@ -459,6 +460,7 @@
       if (is_null(focal)) {
         .err('when `estimand = "ATC"` for multi-category treatments, an argument must be supplied to `focal`')
       }
+
       estimand <- "ATT"
     }
   }
