@@ -75,7 +75,7 @@
 <div class="section level3">
 <h3 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h3>
-<p><em>WeightIt</em> is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety of estimands including the ATE, ATT, ATC, ATO, and others, and support for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. <em>WeightIt</em> also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. <em>WeightIt</em> uses a familiar formula interface and is meant to complement <code>MatchIt</code> as a package that provides a unified interface to basic and advanced weighting methods.</p>
+<p><em>WeightIt</em> is a one-stop package to generate balancing weights for point and longitudinal treatments in observational studies. Support is included for binary, multi-category, and continuous treatments, a variety of estimands including the ATE, ATT, ATC, ATO, and others, and for a wide variety of weighting methods, including those that rely on parametric modeling, machine learning, or optimization. <em>WeightIt</em> also provides functionality for fitting regression models in weighted samples that account for estimation of the weights in quantifying uncertainty. <em>WeightIt</em> uses a familiar formula interface and is meant to complement <code>MatchIt</code> as a package that provides a unified interface to basic and advanced weighting methods.</p>
 <p>For a complete vignette, see the <a href="https://ngreifer.github.io/WeightIt/articles/WeightIt.html">website</a> for <em>WeightIt</em> or <code><a href="articles/WeightIt.html">vignette("WeightIt")</a></code>.</p>
 <p>To install and load <em>WeightIt</em>, use the code below:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -95,64 +95,64 @@
 <span>              data <span class="op">=</span> <span class="va">lalonde</span>, method <span class="op">=</span> <span class="st">"glm"</span>, </span>
 <span>              estimand <span class="op">=</span> <span class="st">"ATT"</span><span class="op">)</span></span>
 <span><span class="va">W</span></span></code></pre></div>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="co">#&gt; A weightit object</span></span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt;  - method: "glm" (propensity score weighting with GLM)</span></span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt;  - number of obs.: 614</span></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt;  - sampling weights: none</span></span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt;  - treatment: 2-category</span></span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt;  - estimand: ATT (focal: 1)</span></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt;  - covariates: age, educ, nodegree, married, race, re74, re75</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="do">## A weightit object</span></span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="do">##  - method: "glm" (propensity score weighting with GLM)</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="do">##  - number of obs.: 614</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="do">##  - sampling weights: none</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="do">##  - treatment: 2-category</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="do">##  - estimand: ATT (focal: 1)</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="do">##  - covariates: age, educ, nodegree, married, race, re74, re75</span></span></code></pre></div>
 <p>Evaluating weights has two components: evaluating the covariate balance produced by the weights, and evaluating whether the weights will allow for sufficient precision in the eventual effect estimate. For the first goal, functions in the <em>cobalt</em> package, which are fully compatible with <em>WeightIt</em>, can be used, as demonstrated below:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W</span>, un <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co">#&gt; Balance Measures</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="co">#&gt;                 Type Diff.Un Diff.Adj</span></span>
-<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="co">#&gt; prop.score  Distance  1.7941  -0.0205</span></span>
-<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co">#&gt; age          Contin. -0.3094   0.1188</span></span>
-<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="co">#&gt; educ         Contin.  0.0550  -0.0284</span></span>
-<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="co">#&gt; nodegree      Binary  0.1114   0.0184</span></span>
-<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="co">#&gt; married       Binary -0.3236   0.0186</span></span>
-<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="co">#&gt; race_black    Binary  0.6404  -0.0022</span></span>
-<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="co">#&gt; race_hispan   Binary -0.0827   0.0002</span></span>
-<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="co">#&gt; race_white    Binary -0.5577   0.0021</span></span>
-<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="co">#&gt; re74         Contin. -0.7211  -0.0021</span></span>
-<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="co">#&gt; re75         Contin. -0.2903   0.0110</span></span>
-<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="co">#&gt; Effective sample sizes</span></span>
-<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="co">#&gt;            Control Treated</span></span>
-<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="co">#&gt; Unadjusted  429.       185</span></span>
-<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="co">#&gt; Adjusted     99.82     185</span></span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="do">## Balance Measures</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="do">##                 Type Diff.Un Diff.Adj</span></span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a><span class="do">## prop.score  Distance  1.7941  -0.0205</span></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="do">## age          Contin. -0.3094   0.1188</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="do">## educ         Contin.  0.0550  -0.0284</span></span>
+<span id="cb5-6"><a href="#cb5-6" tabindex="-1"></a><span class="do">## nodegree      Binary  0.1114   0.0184</span></span>
+<span id="cb5-7"><a href="#cb5-7" tabindex="-1"></a><span class="do">## married       Binary -0.3236   0.0186</span></span>
+<span id="cb5-8"><a href="#cb5-8" tabindex="-1"></a><span class="do">## race_black    Binary  0.6404  -0.0022</span></span>
+<span id="cb5-9"><a href="#cb5-9" tabindex="-1"></a><span class="do">## race_hispan   Binary -0.0827   0.0002</span></span>
+<span id="cb5-10"><a href="#cb5-10" tabindex="-1"></a><span class="do">## race_white    Binary -0.5577   0.0021</span></span>
+<span id="cb5-11"><a href="#cb5-11" tabindex="-1"></a><span class="do">## re74         Contin. -0.7211  -0.0021</span></span>
+<span id="cb5-12"><a href="#cb5-12" tabindex="-1"></a><span class="do">## re75         Contin. -0.2903   0.0110</span></span>
+<span id="cb5-13"><a href="#cb5-13" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb5-14"><a href="#cb5-14" tabindex="-1"></a><span class="do">## Effective sample sizes</span></span>
+<span id="cb5-15"><a href="#cb5-15" tabindex="-1"></a><span class="do">##            Control Treated</span></span>
+<span id="cb5-16"><a href="#cb5-16" tabindex="-1"></a><span class="do">## Unadjusted  429.       185</span></span>
+<span id="cb5-17"><a href="#cb5-17" tabindex="-1"></a><span class="do">## Adjusted     99.82     185</span></span></code></pre></div>
 <p>For the second goal, qualities of the distributions of weights can be assessed using <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, as demonstrated below.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="co">#&gt;                   Summary of weights</span></span>
-<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="co">#&gt; - Weight ranges:</span></span>
-<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="co">#&gt;            Min                                  Max</span></span>
-<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="co">#&gt; treated 1.0000         ||                    1.0000</span></span>
-<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="co">#&gt; control 0.0092 |---------------------------| 3.7432</span></span>
-<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="co">#&gt; - Units with the 5 most extreme weights by group:</span></span>
-<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="co">#&gt;                                            </span></span>
-<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="co">#&gt;               5      4      3      2      1</span></span>
-<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="co">#&gt;  treated      1      1      1      1      1</span></span>
-<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="co">#&gt;             597    573    381    411    303</span></span>
-<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="co">#&gt;  control 3.0301 3.0592 3.2397 3.5231 3.7432</span></span>
-<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="co">#&gt; - Weight statistics:</span></span>
-<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="co">#&gt;         Coef of Var   MAD Entropy # Zeros</span></span>
-<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="co">#&gt; treated       0.000 0.000   0.000       0</span></span>
-<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="co">#&gt; control       1.818 1.289   1.098       0</span></span>
-<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="co">#&gt; - Effective Sample Sizes:</span></span>
-<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="co">#&gt;            Control Treated</span></span>
-<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="co">#&gt; Unweighted  429.       185</span></span>
-<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="co">#&gt; Weighted     99.82     185</span></span></code></pre></div>
+<div class="sourceCode" id="cb7"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="do">##                   Summary of weights</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a><span class="do">## - Weight ranges:</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a><span class="do">##           Min                                 Max</span></span>
+<span id="cb7-6"><a href="#cb7-6" tabindex="-1"></a><span class="do">## treated 1.            ||                    1.   </span></span>
+<span id="cb7-7"><a href="#cb7-7" tabindex="-1"></a><span class="do">## control 0.009 |---------------------------| 3.743</span></span>
+<span id="cb7-8"><a href="#cb7-8" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb7-9"><a href="#cb7-9" tabindex="-1"></a><span class="do">## - Units with the 5 most extreme weights by group:</span></span>
+<span id="cb7-10"><a href="#cb7-10" tabindex="-1"></a><span class="do">##                                     </span></span>
+<span id="cb7-11"><a href="#cb7-11" tabindex="-1"></a><span class="do">##             1     2    3     4     5</span></span>
+<span id="cb7-12"><a href="#cb7-12" tabindex="-1"></a><span class="do">##  treated    1     1    1     1     1</span></span>
+<span id="cb7-13"><a href="#cb7-13" tabindex="-1"></a><span class="do">##           412   388  226   196   118</span></span>
+<span id="cb7-14"><a href="#cb7-14" tabindex="-1"></a><span class="do">##  control 3.03 3.059 3.24 3.523 3.743</span></span>
+<span id="cb7-15"><a href="#cb7-15" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb7-16"><a href="#cb7-16" tabindex="-1"></a><span class="do">## - Weight statistics:</span></span>
+<span id="cb7-17"><a href="#cb7-17" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb7-18"><a href="#cb7-18" tabindex="-1"></a><span class="do">##         Coef of Var   MAD Entropy # Zeros</span></span>
+<span id="cb7-19"><a href="#cb7-19" tabindex="-1"></a><span class="do">## treated       0.000 0.000   0.000       0</span></span>
+<span id="cb7-20"><a href="#cb7-20" tabindex="-1"></a><span class="do">## control       1.818 1.289   1.098       0</span></span>
+<span id="cb7-21"><a href="#cb7-21" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb7-22"><a href="#cb7-22" tabindex="-1"></a><span class="do">## - Effective Sample Sizes:</span></span>
+<span id="cb7-23"><a href="#cb7-23" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb7-24"><a href="#cb7-24" tabindex="-1"></a><span class="do">##            Control Treated</span></span>
+<span id="cb7-25"><a href="#cb7-25" tabindex="-1"></a><span class="do">## Unweighted  429.       185</span></span>
+<span id="cb7-26"><a href="#cb7-26" tabindex="-1"></a><span class="do">## Weighted     99.82     185</span></span></code></pre></div>
 <p>Large effective sample sizes imply low variability in the weights, and therefore increased precision in estimating the treatment effect.</p>
 <p>Finally, we can estimate the effect of the treatment using a weighted outcome model, accounting for estimation of the weights in the standard error of the effect estimate:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -160,15 +160,15 @@
 <span>                   weightit <span class="op">=</span> <span class="va">W</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span>, ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="co">#&gt; Call:</span></span>
-<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="co">#&gt; lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = W)</span></span>
-<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="co">#&gt; Coefficients:</span></span>
-<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="co">#&gt;             Estimate Std. Error z value Pr(&gt;|z|)  2.5 % 97.5 %    </span></span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co">#&gt; (Intercept)   5135.1      583.8   8.797   &lt;1e-06 3990.9 6279.2 ***</span></span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="co">#&gt; treat         1214.1      798.2   1.521    0.128 -350.3 2778.4    </span></span>
-<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="co">#&gt; Standard error: HC0 robust (adjusted for estimation of weights)</span></span></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a><span class="do">## Call:</span></span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a><span class="do">## lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = W)</span></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a><span class="do">## Coefficients:</span></span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a><span class="do">##             Estimate Std. Error z value Pr(&gt;|z|)  2.5 % 97.5 %    </span></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="do">## (Intercept)   5135.1      583.8   8.797   &lt;1e-06 3990.9 6279.2 ***</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a><span class="do">## treat         1214.1      798.2   1.521    0.128 -350.3 2778.4    </span></span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a><span class="do">## Standard error: HC0 robust (adjusted for estimation of weights)</span></span></code></pre></div>
 <p>The tables below contain the available methods in <em>WeightIt</em> for estimating weights for binary, multi-category, and continuous treatments. Some of these methods require installing other packages to use; see <code><a href="articles/installing-packages.html">vignette("installing-packages")</a></code> for information on how to install them.</p>
 <div class="section level4">
 <h4 id="binary-treatments">Binary Treatments<a class="anchor" aria-label="anchor" href="#binary-treatments"></a>

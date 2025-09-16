@@ -216,7 +216,7 @@ supplying <code>s.weights</code> or <code>weights</code> passes the argument thr
 <code><a href="weightit.html">weightit()</a></code> to be refit. When <code>s.weights</code> or <code>weights</code> are supplied and no
 <code>weightit</code> object is present, a fake one containing just the supplied weights
 will be created.</p>
-<p><code>estfun()</code> extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with <code>bread()</code>, is used by <code><a href="https://rdrr.io/pkg/sandwich/man/sandwich.html" class="external-link">sandwich::sandwich()</a></code> to compute the robust covariance matrix of the estimated coefficients. See <code><a href="glm_weightit.html">glm_weightit()</a></code> and <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> above for more details.</p>
+<p><code>estfun()</code> extracts the empirical estimating functions for the fitted model, optionally accounting for the estimation of the weights (if available). This, along with <code>bread()</code>, is used by <code><a href="https://sandwich.R-Forge.R-project.org/reference/sandwich.html" class="external-link">sandwich::sandwich()</a></code> to compute the robust covariance matrix of the estimated coefficients. See <code><a href="glm_weightit.html">glm_weightit()</a></code> and <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code> above for more details.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -225,7 +225,7 @@ will be created.</p>
 <code><a href="glm_weightit.html">coxph_weightit()</a></code>. <code><a href="https://rdrr.io/r/stats/summary.glm.html" class="external-link">summary.glm()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for the relevant
 methods pages. <code><a href="predict.glm_weightit.html">predict.glm_weightit()</a></code> for computing predictions from the
 models. <code><a href="anova.glm_weightit.html">anova.glm_weightit()</a></code> for comparing models using a Wald test.</p>
-<p><code><a href="https://rdrr.io/pkg/sandwich/man/estfun.html" class="external-link">sandwich::estfun()</a></code> and <code><a href="https://rdrr.io/pkg/sandwich/man/bread.html" class="external-link">sandwich::bread()</a></code> for the <code>estfun()</code> and <code>bread()</code> generics.</p></div>
+<p><code><a href="https://sandwich.R-Forge.R-project.org/reference/estfun.html" class="external-link">sandwich::estfun()</a></code> and <code><a href="https://sandwich.R-Forge.R-project.org/reference/bread.html" class="external-link">sandwich::bread()</a></code> for the <code>estfun()</code> and <code>bread()</code> generics.</p></div>
     </div>
 
     <div class="section level2">
