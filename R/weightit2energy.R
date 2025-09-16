@@ -69,7 +69,8 @@
 #'   \item{`dist.mat`}{the name of the method used to compute the distance matrix of the covariates or the numeric distance matrix itself. Allowable options include `"scaled_euclidean"` for the Euclidean (L2) distance on the scaled covariates (the default), `"mahalanobis"` for the Mahalanobis distance, and `"euclidean"` for the raw Euclidean distance. Abbreviations allowed. Note that some user-supplied distance matrices can cause the R session to abort due to a bug within \pkg{osqp}, so this argument should be used with caution. A distance matrix must be a square, symmetric, numeric matrix with zeros along the diagonal and a row and column for each unit. Can also be supplied as the output of a call to [dist()].}
 #'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Note this is distinct from the lambda value described in Huling and Mak (2024), which penalizes the complexity of individual treatment rules rather than the weights, but does correspond to lambda from Huling et al. (2023). Default is .0001, which is essentially 0.}
 #'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
-#'     \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.}
+#'   \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.}
+#'   \item{`tols`}{when `moments` is positive, a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0. Ignored when `moments = 0`.}
 #' }
 #'
 #' For binary and multi-category treatments, the following additional arguments can be specified:
@@ -100,7 +101,7 @@
 #' while minimizing the energy distance of the weighted sample. For binary and
 #' multi-category treatments, this involves exact balance on the means of the
 #' entered covariates; for continuous treatments, this involves exact balance
-#' on the treatment-covariate correlations of the entered covariates.
+#' on the treatment-covariate correlations of the entered covariates. The constraint on exact balance can be relaxed using the `tols` argument.
 #'
 #' Any other arguments will be passed to \pkgfun{osqp}{osqpSettings}. Some
 #' defaults differ from those in `osqpSettings()`; see *Reproducibility*
@@ -169,10 +170,11 @@
 #' allows you to monitor the process and examine if the optimization is
 #' approaching convergence.
 #'
+#' If `min.w` is positive and you still get a warning about the presence of negative weights, try setting `eps` to a smaller number (e.g., to `1e-12`).
+#'
 #' As of version 1.5.0, `polish` is now set to `TRUE` by default. This should yield slightly improved solutions but may be a little slower.
 #'
-#' @author Noah Greifer, using code from Jared Huling's
-#' \CRANpkg{independenceWeights} package for continuous treatments.
+#' @author Noah Greifer, using code from Jared Huling's \CRANpkg{independenceWeights} package for continuous treatments.
 #'
 #' @seealso [weightit()], [weightitMSM()]
 #'
@@ -187,7 +189,7 @@
 #' Huling, J. D., Greifer, N., & Chen, G. (2023). Independence weights for
 #' causal inference with continuous treatments. *Journal of the American Statistical Association*, 0(ja), 1–25. \doi{10.1080/01621459.2023.2213485}
 #'
-#' @examplesIf requireNamespace("osqp", quietly = TRUE)
+#' @examplesIf rlang::is_installed("osqp")
 #' data("lalonde", package = "cobalt")
 #'
 #' #Balancing covariates between treatment groups (binary)
@@ -224,9 +226,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   d <- ...get("dist.mat", "scaled_euclidean")
 
   if (chk::vld_string(d)) {
-    dist.covs <- transform_covariates(data = covs, method = d,
-                                      s.weights = s.weights, discarded = !subset)
-    d <- unname(eucdist_internal(dist.covs))
+    d <- transform_covariates(data = covs, method = d,
+                              s.weights = s.weights, discarded = !subset) |>
+      eucdist_internal() |>
+      unname()
   }
   else {
     if (inherits(d, "dist")) {
@@ -266,6 +269,12 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   int <- isTRUE(...get("int", FALSE))
   quantile <- ...get("quantile")
   add_constraints <- any(moments > 0) || int || is_not_null(quantile)
+
+  if (add_constraints) {
+    tols <- ...get("tols", 0)
+    chk::chk_number(tols)
+    tols <- abs(tols)
+  }
 
   t0 <- which(treat == 0)
   t1 <- which(treat == 1)
@@ -309,9 +318,20 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
       targets <- col.w.m(covs, s.weights)
 
+      sds <- rep.int(1, ncol(covs))
+
+      if (tols > 0) {
+        bin.vars <- is_binary_col(covs)
+
+        if (!all(bin.vars)) {
+          sds[!bin.vars] <- sqrt(colMeans(rbind(col.w.v(covs[t1, !bin.vars, drop = FALSE], w = s.weights[t1]),
+                                                col.w.v(covs[t0, !bin.vars, drop = FALSE], w = s.weights[t0]))))
+        }
+      }
+
       Amat <- cbind(Amat, covs * s.weights_n_0, covs * s.weights_n_1)
-      lvec <- c(lvec, targets, targets)
-      uvec <- c(uvec, targets, targets)
+      lvec <- c(lvec, targets - sds * tols / 2, targets - sds * tols / 2)
+      uvec <- c(uvec, targets + sds * tols / 2, targets + sds * tols / 2)
     }
   }
   else if (estimand == "ATT") {
@@ -336,10 +356,19 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
       targets <- col.w.m(covs[t1, , drop = FALSE], s.weights[t1])
 
-      Amat <- cbind(Amat, covs[t0, , drop = FALSE] * s.weights_n_0[t0])
+      sds <- rep.int(1, ncol(covs))
 
-      lvec <- c(lvec, targets)
-      uvec <- c(uvec, targets)
+      if (tols > 0) {
+        bin.vars <- is_binary_col(covs)
+
+        if (!all(bin.vars)) {
+          sds[!bin.vars] <- sqrt(col.w.v(covs[t1, !bin.vars, drop = FALSE], w = s.weights[t1]))
+        }
+      }
+
+      Amat <- cbind(Amat, covs[t0, , drop = FALSE] * s.weights_n_0[t0])
+      lvec <- c(lvec, targets - sds * tols)
+      uvec <- c(uvec, targets + sds * tols)
     }
   }
   else if (estimand == "ATC") {
@@ -364,24 +393,46 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
       targets <- col.w.m(covs[t0, , drop = FALSE], s.weights[t0])
 
-      Amat <- cbind(Amat, covs[t1, , drop = FALSE] * s.weights_n_1[t1])
+      if (tols > 0) {
+        bin.vars <- is_binary_col(covs)
 
-      lvec <- c(lvec, targets)
-      uvec <- c(uvec, targets)
+        if (!all(bin.vars)) {
+          sds[!bin.vars] <- sqrt(col.w.v(covs[t0, !bin.vars, drop = FALSE], w = s.weights[t0]))
+        }
+      }
+
+      Amat <- cbind(Amat, covs[t1, , drop = FALSE] * s.weights_n_1[t1])
+      lvec <- c(lvec, targets - sds * tols)
+      uvec <- c(uvec, targets + sds * tols)
     }
   }
 
   #Add weight penalty
   if (lambda < 0) {
+    # es <- eigen(P, symmetric = TRUE)
+    # esv <- es$values
+    #
+    # tol <- nrow(P) * max(abs(esv)) * .Machine$double.eps
+    #
+    # if (!all(esv > tol)) {
+    #   tau <- pmax(0, 2 * tol - esv)
+    #   P <- P + tcrossprod(es$vectors %*% diag(sqrt(tau), nrow(P)))
+    # }
+
     #Find lambda to make P PSD
     e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
+
     if (e.min < 0) {
-      lambda <- -e.min * n^2
+      diag(P) <- diag(P) - e.min + .Machine$double.eps
     }
   }
-
-  diag(P) <- diag(P) + lambda / n^2
+  else if (lambda != 0) {
+    diag(P) <- switch(estimand,
+                      ATE = diag(P) + lambda * (s.weights_n_0 + s.weights_n_1)^2 / 2,
+                      ATT = diag(P) + lambda * s.weights_n_0[t0]^2 / 2,
+                      ATC = diag(P) + lambda * s.weights_n_1[t1]^2 / 2)
+  }
 
   A <- ...mget(names(formals(osqp::osqpSettings)))
 
@@ -391,7 +442,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
   }
 
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 4e3L
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
   if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
@@ -437,6 +488,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     w <- opt.out$x
   }
 
+  # Shrink tiny weights to 0
   if (abs(min.w) < .Machine$double.eps) {
     w[abs(w) < .Machine$double.eps] <- 0
   }
@@ -458,9 +510,10 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   d <- ...get("dist.mat", "scaled_euclidean")
 
   if (chk::vld_string(d)) {
-    dist.covs <- transform_covariates(data = covs, method = d,
-                                      s.weights = s.weights, discarded = !subset)
-    d <- unname(eucdist_internal(dist.covs))
+    d <- transform_covariates(data = covs, method = d,
+                              s.weights = s.weights, discarded = !subset) |>
+      eucdist_internal() |>
+      unname()
   }
   else {
     if (inherits(d, "dist")) {
@@ -498,6 +551,12 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   int <- isTRUE(...get("int", FALSE))
   quantile <- ...get("quantile")
   add_constraints <- any(moments > 0) || int || is_not_null(quantile)
+
+  if (add_constraints) {
+    tols <- ...get("tols", 0)
+    chk::chk_number(tols)
+    tols <- abs(tols)
+  }
 
   treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
                     dimnames = list(NULL, levels_treat))
@@ -545,9 +604,22 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
       targets <- col.w.m(covs, s.weights)
 
+      sds <- rep.int(1, ncol(covs))
+
+      if (tols > 0) {
+        bin.vars <- is_binary_col(covs)
+
+        if (!all(bin.vars)) {
+          sds[!bin.vars] <- sqrt(colMeans(do.call("rbind",
+                                                  lapply(levels_treat, function(t) {
+                                                    col.w.v(covs[treat == t, !bin.vars, drop = FALSE], w = s.weights[treat == t])
+                                                  }))))
+        }
+      }
+
       Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t, 2L, function(x) covs * x, simplify = FALSE)))
-      lvec <- c(lvec, rep.int(targets, length(levels_treat)))
-      uvec <- c(uvec, rep.int(targets, length(levels_treat)))
+      lvec <- c(lvec, rep.int(targets - sds * tols / 2, length(levels_treat)))
+      uvec <- c(uvec, rep.int(targets + sds * tols / 2, length(levels_treat)))
     }
   }
   else {
@@ -576,11 +648,21 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
       targets <- col.w.m(covs[in_focal, , drop = FALSE], s.weights[in_focal])
 
+      sds <- rep.int(1, ncol(covs))
+
+      if (tols > 0) {
+        bin.vars <- is_binary_col(covs)
+
+        if (!all(bin.vars)) {
+          sds[!bin.vars] <- sqrt(col.w.v(covs[in_focal, !bin.vars, drop = FALSE], w = s.weights[in_focal]))
+        }
+      }
+
       Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t[!in_focal, non_focal, drop = FALSE], 2L,
                                                  function(x) covs[!in_focal, , drop = FALSE] * x,
                                                  simplify = FALSE)))
-      lvec <- c(lvec, rep.int(targets, length(non_focal)))
-      uvec <- c(uvec, rep.int(targets, length(non_focal)))
+      lvec <- c(lvec, rep.int(targets - sds * tols, length(non_focal)))
+      uvec <- c(uvec, rep.int(targets + sds * tols, length(non_focal)))
     }
   }
 
@@ -604,7 +686,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
   }
 
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 4e3L
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
   if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
@@ -646,6 +728,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     w[treat != focal] <- opt.out$x
   }
 
+  # Shrink tiny weights to 0
   if (abs(min.w) < .Machine$double.eps) {
     w[abs(w) < .Machine$double.eps] <- 0
   }
@@ -666,9 +749,10 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   Xdist <- ...get("dist.mat", "scaled_euclidean")
 
   if (chk::vld_string(Xdist)) {
-    dist.covs <- transform_covariates(data = covs, method = Xdist,
-                                      s.weights = s.weights, discarded = !subset)
-    Xdist <- unname(eucdist_internal(X = dist.covs))
+    Xdist <- transform_covariates(data = covs, method = Xdist,
+                                  s.weights = s.weights, discarded = !subset) |>
+      eucdist_internal() |>
+      unname()
   }
   else {
     if (inherits(Xdist, "dist")) {
@@ -724,6 +808,12 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   int <- isTRUE(...get("int", FALSE))
   add_constraints <- any(moments > 0) || int
 
+  if (add_constraints) {
+    tols <- ...get("tols", 0)
+    chk::chk_number(tols)
+    tols <- abs(tols)
+  }
+
   d.moments <- max(...get("d.moments", 0), moments)
   chk::chk_count(d.moments)
 
@@ -752,17 +842,17 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   Q_energy_X_adj <- 1 - Q_energy_A_adj
 
-  PebA <- PebA * Q_energy_A_adj
-  PebX <- PebX * Q_energy_X_adj
+  PebA[] <- PebA * Q_energy_A_adj
+  PebX[] <- PebX * Q_energy_X_adj
 
-  qebA <- qebA * Q_energy_A_adj
-  qebX <- qebX * Q_energy_X_adj
+  qebA[] <- qebA * Q_energy_A_adj
+  qebX[] <- qebX * Q_energy_X_adj
 
   P <- Pdcow + PebA + PebX
   q <- qebA + qebX
 
-  P <- P * tcrossprod(s.weights)
-  q <- q * s.weights
+  P[] <- P * tcrossprod(s.weights)
+  q[] <- q * s.weights
 
   Amat <- cbind(diag(n), s.weights)
   lvec <- c(rep.int(min.w, n), n)
@@ -772,10 +862,10 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     d.covs <- .apply_moments_int_quantile(covs, moments = d.moments)
     d.treat <- cbind(poly(treat, degree = d.moments))
 
-    d.covs <- center_w(d.covs, s.weights)
-    d.treat <- center_w(d.treat, s.weights)
+    d.covs <- scale_w(d.covs, s.weights)
+    d.treat <- scale_w(d.treat, s.weights)
 
-    Amat <- cbind(Amat, d.covs * s.weights, d.treat * s.weights)
+    Amat <- cbind(Amat, d.covs * s.weights / n, d.treat * s.weights / n)
     lvec <- c(lvec, rep.int(0, ncol(d.covs)), rep.int(0, ncol(d.treat)))
     uvec <- c(uvec, rep.int(0, ncol(d.covs)), rep.int(0, ncol(d.treat)))
   }
@@ -785,16 +875,13 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
                                         moments = moments,
                                         int = int)
 
-    X.means <- col.w.m(covs, s.weights)
-    A.mean <- w.m(treat, s.weights)
+    covs <- scale_w(covs, s.weights)
+    treat <- scale_w(treat, s.weights)
 
-    covs <- center(covs, X.means)
-    treat <- treat - A.mean
+    Amat <- cbind(Amat, covs * treat * s.weights / n)
 
-    Amat <- cbind(Amat, covs * treat * s.weights)
-
-    lvec <- c(lvec, rep.int(0, ncol(covs)))
-    uvec <- c(uvec, rep.int(0, ncol(covs)))
+    lvec <- c(lvec, rep.int(-tols, ncol(covs)))
+    uvec <- c(uvec, rep.int(tols, ncol(covs)))
   }
 
   #Add weight penalty
@@ -812,18 +899,16 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   A <- ...mget(names(formals(osqp::osqpSettings)))
 
-  if (is_not_null(...get("eps"))) {
-    chk::chk_number(...get("eps"), "`eps`")
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- ...get("eps")
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
-  }
+  eps <- ...get("eps", 1e-8)
+
+  chk::chk_number(eps)
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- eps
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- eps
 
   if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
   chk::chk_count(A[["max_iter"]], "`max_iter`")
   chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
   chk::chk_number(A[["eps_abs"]], "`eps_abs`")
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
   chk::chk_number(A[["eps_rel"]], "`eps_rel`")
   if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
   chk::chk_number(A[["time_limit"]], "`time_limit`")
@@ -854,6 +939,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   w <- opt.out$x
 
+  # Shrink tiny weights to 0
   if (abs(min.w) < .Machine$double.eps) {
     w[abs(w) < .Machine$double.eps] <- 0
   }
