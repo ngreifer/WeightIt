@@ -529,7 +529,7 @@ col.w.r <- function(mat, y, w = NULL, s.weights = NULL, bin.vars = NULL, na.rm =
 scale_w <- function(x, w = NULL) {
   if (length(dim(x)) == 2L) {
     for (i in seq_col(x)) {
-      x[,i] <- scale_w(x[,i], w)
+      x[, i] <- scale_w(x[, i], w)
     }
 
     return(x)

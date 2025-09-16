@@ -759,7 +759,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
 
   for (i in names(poly_terms)) {
     if (poly[i] == 1L) {
-      poly_terms[[i]] <- d[,i]
+      poly_terms[[i]] <- d[, i]
       poly_co.names[[i]] <- i
     }
     else {

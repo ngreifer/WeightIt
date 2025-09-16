@@ -238,7 +238,8 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
                      fill = "gray70", alpha = 1) +
       scale_y_continuous(expand = expansion(c(0, .05))) +
       geom_vline(xintercept = mean(w), linetype = "12", color = "blue", size = .75) +
-      labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
+      labs(x = "Weight", y = "Count", title = "Distribution of Weights",
+           subtitle = subtitle) +
       theme_bw()
   }
   else {
@@ -261,7 +262,8 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
                      fill = "gray70", alpha = 1) +
       scale_y_continuous(expand = expansion(c(0, .05))) +
       geom_vline(data = w_means, aes(xintercept = .data$w), linetype = "12", color = "red") +
-      labs(x = "Weight", y = "Count", title = "Distribution of Weights") +
+      labs(x = "Weight", y = "Count", title = "Distribution of Weights",
+           subtitle = subtitle) +
       theme_bw() +
       facet_wrap(vars(.data$t), ncol = 1L, scales = "free") +
       theme(panel.background = element_blank(),

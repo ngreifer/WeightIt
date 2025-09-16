@@ -161,14 +161,13 @@
 #' cobalt::bal.tab(W2)
 #' plot(W2)
 #'
-#' \dontrun{
 #' #Balancing covariates with respect to re75 (continuous)
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
 #'                 method = "optweight", tols = .05))
 #' summary(W3)
 #' cobalt::bal.tab(W3)
-#' plot(W3)}
+#' plot(W3)
 NULL
 
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing,
@@ -344,7 +343,6 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, ver
     return(NULL)
   }
 
-  original.vars <- colnames(covs)
   na.cov <- is.na(d$cov)
 
   if (is_not_null(d$treat) && any(na.cov)) {

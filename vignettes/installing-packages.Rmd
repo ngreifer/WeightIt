@@ -163,7 +163,7 @@ If *optweight* is not on CRAN, or if you want to install the development version
 pak::pkg_install("ngreifer/optweight")
 ```
 
-*optweight* depends on the *osqp* package, which requires compilation, which means you may need additional software installed on your computer to install it from source.
+*optweight* depends on the *osqp* package, which requires compilation, which means you may need additional software installed on your computer to install it from source. It's also a good idea to install the *highs* and *scs* packages if you want to take advantage of all of *optweight*'s features and optimize its performance.
 
 ## Propensity score weighting using SuperLearner (`method = "super"`)
 

@@ -149,14 +149,13 @@ summary(W2)
 cobalt::bal.tab(W2)
 plot(W2)
 
-\dontrun{
 #Balancing covariates with respect to re75 (continuous)
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "optweight", tols = .05))
 summary(W3)
 cobalt::bal.tab(W3)
-plot(W3)}
+plot(W3)
 \dontshow{\}) # examplesIf}
 }
 \references{
