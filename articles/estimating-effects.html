@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2025-09-16</h4>
+            <h4 data-toc-skip class="date">2025-09-17</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -291,8 +291,8 @@ models to adjust the standard errors for their joint estimation. For
 other methods, one must rely on an approximation that treats the weights
 as fixed and known, which can either yield conservative or
 anti-conservative standard errors depending on the method and estimand
-<span class="citation">(<a href="#ref-austin2022">Austin 2022</a>; <a href="#ref-reifeisVarianceTreatmentEffect2020">Reifeis and Hudgens
-2020</a>)</span>. Alternatively, one can use the bootstrap, which tends
+<span class="citation">(<a href="#ref-austin2022">Austin 2022</a>; <a href="#ref-reifeisVarianceTreatmentEffect2022">Reifeis and Hudgens
+2022</a>)</span>. Alternatively, one can use the bootstrap, which tends
 to have good performance regardless of the situation but can be
 computationally intensive for large datasets or slow weight estimation
 methods <span class="citation">(<a href="#ref-austin2022">Austin
@@ -317,8 +317,8 @@ introduction.</p>
 <p>Most theoretical developments on the estimation of asymptotically
 correct standard errors for propensity score-weighted treatment effect
 estimates rely on M-estimation theory <span class="citation">(<a href="#ref-luncefordStratificationWeightingPropensity2004">Lunceford and
-Davidian 2004</a>; <a href="#ref-reifeisVarianceTreatmentEffect2020">Reifeis and Hudgens
-2020</a>; <a href="#ref-gabrielInverseProbabilityTreatment2024">Gabriel
+Davidian 2004</a>; <a href="#ref-reifeisVarianceTreatmentEffect2022">Reifeis and Hudgens
+2022</a>; <a href="#ref-gabrielInverseProbabilityTreatment2024">Gabriel
 et al. 2024</a>)</span>. This method can only be used when the model
 used to estimate the weights involves estimating equations. Currently,
 only weights estimated using a generalized linear model propensity
@@ -348,8 +348,8 @@ from schools). Robust SEs have been shown to be conservative (i.e.,
 yielding overly large SEs and wide confidence intervals) for estimating
 the ATE after some forms of weighting <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins, Hernán, and
 Brumback 2000</a>)</span>, though they can be either conservative or not
-for other weighting methods and estimands, such as for the ATT <span class="citation">(<a href="#ref-reifeisVarianceTreatmentEffect2020">Reifeis and Hudgens
-2020</a>)</span> or for entropy balancing <span class="citation">(<a href="#ref-chanGloballyEfficientNonparametric2016">Chan, Yam, and Zhang
+for other weighting methods and estimands, such as for the ATT <span class="citation">(<a href="#ref-reifeisVarianceTreatmentEffect2022">Reifeis and Hudgens
+2022</a>)</span> or for entropy balancing <span class="citation">(<a href="#ref-chanGloballyEfficientNonparametric2016">Chan, Yam, and Zhang
 2016</a>)</span>. Robust SEs treat the estimated weights as if they were
 fixed and known, ignoring uncertainty in their estimation that is
 otherwise accounted for by the asymptotically correct standard errors
@@ -1301,10 +1301,11 @@ P. J. Devereaux, Paul Landais, and Yannick Le Manach. 2017.
 a Threshold for Considering Residual Imbalance.”</span> <em>BMC Medical
 Research Methodology</em> 17: 78. <a href="https://doi.org/10.1186/s12874-017-0338-0" class="external-link">https://doi.org/10.1186/s12874-017-0338-0</a>.
 </div>
-<div id="ref-reifeisVarianceTreatmentEffect2020" class="csl-entry">
-Reifeis, Sarah A., and Michael G. Hudgens. 2020. <span>“On Variance of
-the Treatment Effect in the Treated Using Inverse Probability
-Weighting.”</span> <em>arXiv:2011.11874 [Stat]</em>, November. <a href="https://arxiv.org/abs/2011.11874" class="external-link">https://arxiv.org/abs/2011.11874</a>.
+<div id="ref-reifeisVarianceTreatmentEffect2022" class="csl-entry">
+Reifeis, Sarah A, and Michael G Hudgens. 2022. <span>“On Variance of the
+Treatment Effect in the Treated When Estimated by Inverse Probability
+Weighting.”</span> <em>American Journal of Epidemiology</em> 191 (6):
+1092–97. <a href="https://doi.org/10.1093/aje/kwac014" class="external-link">https://doi.org/10.1093/aje/kwac014</a>.
 </div>
 <div id="ref-robinsMarginalStructuralModels2000" class="csl-entry">
 Robins, James M., Miguel Ángel Hernán, and Babette Brumback. 2000.
