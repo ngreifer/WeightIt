@@ -41,7 +41,7 @@ WeightIt News and Updates
 
 * For some methods, analytic formulas for the derivatives used in M-estimation are now used instead of relying on numeric differentiation. This increases speed and accuracy in computing standard errors that adjust for estimation of the weights. The formulas are benchmarked against numeric differentiation results.
 
-* Added new `method` argument to `calibrate()` to support isotonic regression calibration as described by [van der Laan el al. (2024)](http://arxiv.org/abs/2411.06342).
+* Added new `method` argument to `calibrate()` to support isotonic regression calibration as described by [van der Laan el al. (2024)](https://arxiv.org/abs/2411.06342).
 
 * Added clearer error and warning messages to several functions, most notably `glm_weightit()` and friends, when missing values are present in the model variables.
 

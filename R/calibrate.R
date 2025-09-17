@@ -38,8 +38,8 @@
 #' *Epidemiology*, 35(4). \doi{10.1097/EDE.0000000000001733}
 #'
 #' van der Laan, L., Lin, Z., Carone, M., & Luedtke, A. (2024). Stabilized
-#' Inverse Probability Weighting via Isotonic Calibration (arXiv:2411.06342).
-#' arXiv. \url{http://arxiv.org/abs/2411.06342}
+#' Inverse Probability Weighting via Isotonic Calibration.
+#' arXiv. \url{https://arxiv.org/abs/2411.06342}
 #'
 #' @examplesIf rlang::is_installed("gbm")
 #' library("cobalt")

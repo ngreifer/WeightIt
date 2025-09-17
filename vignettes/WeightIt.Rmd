@@ -112,7 +112,7 @@ avg_comparisons(fit, variables = "treat",
                 newdata = subset(treat == 1))
 ```
 
-Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`. Several types of standard errors are available in *WeightIt*, including analytical standard errors that account for estimation of the weights using M-estimation, robust standard errors that treat the weights as fixed, and bootstrapping. All type are described in detail at `vignette("estimating-effects")`.
+Our confidence interval for `treat` contains 0, so there isn't evidence that `treat` has an effect on `re78`. Several types of standard errors are available in *WeightIt*, including analytical standard errors that account for estimation of the weights using M-estimation, robust standard errors that treat the weights as fixed, and bootstrapping. These are described in detail at `vignette("estimating-effects")`.
 
 ## Balancing Weights for a Longitudinal Treatment
 
