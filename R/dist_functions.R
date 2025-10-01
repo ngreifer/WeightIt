@@ -143,7 +143,7 @@ get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
 
   if (is.null(formula)) {
     fnames <- colnames(data)
-    fnames[!startsWith(fnames, "`")] <- paste0("`", fnames[!startsWith(fnames, "`")], "`")
+    fnames[!startsWith(fnames, "`")] <- add_quotes(fnames[!startsWith(fnames, "`")], "`")
     data <- as.data.frame(data)
     formula <- terms(reformulate(fnames), data = data)
   }
