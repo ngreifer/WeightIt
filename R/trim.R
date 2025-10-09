@@ -132,6 +132,11 @@ trim.weightit <- function(x, at = 0, lower = FALSE, drop = FALSE, ...) {
                                   groups.not.to.trim = x[["focal"]],
                                   lower = lower,
                                   drop = drop)
+
+  attr(x, "trim") <- list(at = at,
+                          lower = lower,
+                          drop = drop)
+
   x
 }
 
