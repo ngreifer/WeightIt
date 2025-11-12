@@ -18,7 +18,7 @@
 #' @param method `character`; the method of calibration used. Allowable options
 #'   include `"platt"` (default) for Platt scaling as described by Gutman et al.
 #'   (2024) and `"isoreg"` for isotonic regression as described by van der Laan
-#'   et al. (2024) and implemented in [isoreg()].
+#'   et al. (2024).
 #' @param \dots not used.
 #'
 #' @returns
@@ -73,25 +73,18 @@ calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = 
   }
   chk::chk_numeric(x)
 
+  chk::chk_string(method)
   method <- match_arg(method, c("platt", "isoreg"))
 
-  s.weights <- .process.s.weights(s.weights, data)
-  if (is_null(s.weights)) s.weights <- rep_with(1, x)
+  s.weights <- .process.s.weights(s.weights, data) %or% rep_with(1, x)
 
   if (method == "platt") {
     p <- glm.fit(cbind(1, x), treat, weights = s.weights,
                  family = quasibinomial())$fitted.values
   }
   else {
-    if (!all_the_same(s.weights)) {
-      .wrn("sampling weights will not be incorporated into isotonic regression. Use with caution")
-    }
-
-    i0 <- stats::isoreg(1 - x, 1 - treat)
-    i1 <- stats::isoreg(x, treat)
-
-    p0 <- 1 - i0$yf[order(i0$ord)]
-    p1 <- i1$yf[order(i1$ord)]
+    p0 <- 1 - .isoregw(1 - x, 1 - treat, s.weights)
+    p1 <- .isoregw(x, treat, s.weights)
 
     p0 <- squish(p0, lo = min(p0[treat == 0]), hi = Inf)
     p1 <- squish(p1, lo = min(p1[treat == 1]), hi = Inf)
@@ -100,18 +93,14 @@ calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = 
     p[treat == 1] <- p1[treat == 1]
   }
 
-  nm <- {
-    if (is_not_null(names(x))) names(x)
-    else if (is_null(data)) names(treat)
-    else rownames(data)
-  }
+  nm <- names(x) %or% rownames(data) %or% names(treat)
 
   setNames(p, nm)
 }
 
 #' @exportS3Method calibrate weightit
 #' @rdname calibrate
-calibrate.weightit <- function(x, ...) {
+calibrate.weightit <- function(x, method = "platt", ...) {
   if (is_null(x[["ps"]])) {
     .err("`calibrate()` can only be used on `weightit` objects when propensity scores have been estimated")
   }
@@ -121,13 +110,67 @@ calibrate.weightit <- function(x, ...) {
   }
 
   x$ps[] <- calibrate.default(x[["ps"]], treat = x[["treat"]],
-                              s.weights = x[["s.weights"]], ...)
+                              s.weights = x[["s.weights"]],
+                              method = method, ...)
 
   x$weights[] <- get_w_from_ps(x$ps, x[["treat"]],
                                estimand = x[["estimand"]],
                                focal = x[["focal"]])
 
+  attr(x, "calibrate") <- list(method = method)
+
+  attr(x, "trim") <- NULL
   attr(x, "Mparts") <- NULL
 
   x
+}
+
+.isoregw <- function(x, y, w = rep(1, length(y))) {
+  stopifnot(length(x) == length(y), length(y) == length(w))
+
+  # Order by x
+  ord <- order(x)
+  x <- x[ord]
+  y <- y[ord]
+  w <- w[ord]
+
+  # Start with each point as its own block
+  blocks <- lapply(seq_along(y), function(i) list(
+    idx = i,
+    value = y[i],
+    weight = w[i]
+  ))
+
+  i <- 1
+  while (i < length(blocks)) {
+    if (blocks[[i]]$value > blocks[[i + 1]]$value) {
+      # merge blocks i and i+1
+      new_weight <- blocks[[i]]$weight + blocks[[i + 1L]]$weight
+      new_value <- (blocks[[i]]$value * blocks[[i]]$weight +
+                      blocks[[i + 1L]]$value * blocks[[i + 1L]]$weight) / new_weight
+      new_idx <- c(blocks[[i]]$idx, blocks[[i + 1]]$idx)
+
+      blocks[[i]] <- list(idx = new_idx, value = new_value, weight = new_weight)
+      blocks[[i + 1L]] <- NULL
+
+      if (i > 1L) {
+        i <- i - 1L
+      }
+    }
+    else {
+      i <- i + 1
+    }
+  }
+
+  # Build fitted values
+  fit <- numeric(length(y))
+  for (b in blocks) {
+    fit[b$idx] <- b$value
+  }
+
+  # Return fitted values in original x order
+  yhat <- numeric(length(y))
+  yhat[ord] <- fit
+
+  yhat
 }
