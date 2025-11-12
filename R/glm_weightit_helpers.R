@@ -194,7 +194,7 @@
 
   object$vcov_type <- {
     if (is_null(vcov)) "none"
-    else if_null_then(vcov_type, .attr(vcov, "vcov_type"))
+    else vcov_type %or% .attr(vcov, "vcov_type")
   }
 
   attr(object, "cluster") <- .attr(vcov, "cluster")
@@ -614,7 +614,7 @@
       V <- .solve_hessian(-fit[["hessian"]])
     }
     else if (inherits(fit, "coxph_weightit")) {
-      V <- if_null_then(fit[["naive.var"]], fit[["var"]])
+      V <- fit[["naive.var"]] %or% fit[["var"]]
     }
     else {
       .declass <- function(obj) {
@@ -630,8 +630,8 @@
     return(.modify_vcov_info(V, vcov_type = "const", cluster = cluster))
   }
 
-  Xout <- if_null_then(fit[["x"]], model.matrix(fit))
-  Y <- if_null_then(fit[["y"]], model.response(model.frame(fit)))
+  Xout <- fit[["x"]] %or% model.matrix(fit)
+  Y <- fit[["y"]] %or% model.response(model.frame(fit))
 
   if (is_not_null(weightit)) {
     W <- weightit[["weights"]]
@@ -649,7 +649,7 @@
     SW <- rep_with(1, Y)
   }
 
-  offset <- if_null_then(fit[["offset"]], rep_with(0, Y))
+  offset <- fit[["offset"]] %or% rep_with(0, Y)
 
   if (any(aliased)) {
     if (is_not_null(.attr(fit[["qr"]][["qr"]], "aliased"))) {
@@ -711,15 +711,33 @@
     internal_model_call$model <- FALSE
 
     if (is_not_null(weightit)) {
+      if (!came_from_weightit(weightit)) {
+        .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
+      }
+
       wcall <- weightit[["call"]]
       wenv <- weightit[["env"]]
 
-      if (deparse1(wcall[[1L]]) %nin% c("weightit", "weightitMSM")) {
-        .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
+      if (is_not_null(.attr(weightit, "calibrate"))) {
+        .calibrate <- .attr(weightit, "calibrate")
+        boot_calibrate <- function(x) {
+          calibrate(x, method = .calibrate[["method"]])
+        }
       }
-    }
-    else {
-      weightit_boot <- list(weights = 1)
+      else {
+        boot_calibrate <- base::identity
+      }
+
+      if (is_not_null(.attr(weightit, "trim"))) {
+        .trim <- .attr(weightit, "trim")
+        boot_trim <- function(x) {
+          trim(x, at = .trim[["at"]], lower = .trim[["lower"]],
+               drop = .trim[["drop"]])
+        }
+      }
+      else {
+        boot_trim <- base::identity
+      }
     }
 
     genv <- environment(fit[["formula"]])
@@ -730,7 +748,9 @@
 
         suppressMessages({
           weightit_boot <- .eval_fit(wcall, envir = wenv,
-                                     warnings = c("some extreme weights were generated" = NA))
+                                     warnings = c("some extreme weights were generated" = NA)) |>
+            boot_calibrate() |>
+            boot_trim()
         })
 
         internal_model_call$weights <- weightit_boot[["weights"]] * SW * w
@@ -777,22 +797,43 @@
     genv <- environment(fit[["formula"]])
 
     if (is_not_null(weightit)) {
-      wcall <- weightit[["call"]]
-      wenv <- weightit[["env"]]
-
-      if (deparse1(wcall[[1L]]) %nin% c("weightit", "weightitMSM")) {
+      if (!came_from_weightit(weightit)) {
         .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
       }
+
+      wcall <- weightit[["call"]]
+      wenv <- weightit[["env"]]
 
       data <- eval(wcall$data, wenv)
       if (is_null(data)) {
         .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
                      rlang::call_name(wcall)))
       }
+
+      if (is_not_null(.attr(weightit, "calibrate"))) {
+        .calibrate <- .attr(weightit, "calibrate")
+        boot_calibrate <- function(x) {
+          calibrate(x, method = .calibrate[["method"]])
+        }
+      }
+      else {
+        boot_calibrate <- base::identity
+      }
+
+      if (is_not_null(.attr(weightit, "trim"))) {
+        .trim <- .attr(weightit, "trim")
+        boot_trim <- function(x) {
+          trim(x, at = .trim[["at"]], lower = .trim[["lower"]],
+               drop = .trim[["drop"]])
+        }
+      }
+      else {
+        boot_trim <- base::identity
+      }
     }
     else {
-      weightit_boot <- list(weights = 1)
       data <- eval(internal_model_call$data, genv)
+
       if (is_null(data)) {
         .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
                      rlang::call_name(model_call)))
@@ -806,7 +847,9 @@
 
         suppressMessages({
           weightit_boot <- .eval_fit(wcall, envir = wenv,
-                                     warnings = c("some extreme weights were generated" = NA))
+                                     warnings = c("some extreme weights were generated" = NA)) |>
+            boot_calibrate() |>
+            boot_trim()
         })
 
         internal_model_call$weights <- weightit_boot$weights * SW[ind]
@@ -875,8 +918,7 @@
       fit$psi(Bout, Xout, Y, w * SW, offset = offset)
     }
 
-    psi_b <- if_null_then(fit[["gradient"]],
-                          psi_out(bout, W, Y, Xout, SW, offset))
+    psi_b <- fit[["gradient"]] %or% psi_out(bout, W, Y, Xout, SW, offset)
 
     H <- {
       if (is_not_null(fit[["hessian"]])) {
@@ -1049,7 +1091,7 @@
 }
 
 .get_hess_glm <- function(fit) {
-  X <- if_null_then(fit[["x"]], model.matrix(fit))
+  X <- fit[["x"]] %or% model.matrix(fit)
 
   d1mus <- fit$family$mu.eta(fit$linear.predictors)
   varmus <- fit$family$variance(fit$fitted.values)

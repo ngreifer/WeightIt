@@ -474,8 +474,8 @@ print.weightit <- function(x, ...) {
                      continuous = "continuous",
                      `multi-category` =,
                      multinomial = sprintf("%s-category (%s)",
-                                             nunique(x[["treat"]]),
-                                             word_list(levels(x[["treat"]]), and.or = FALSE)),
+                                           nunique(x[["treat"]]),
+                                           word_list(levels(x[["treat"]]), and.or = FALSE)),
                      binary = "2-category")))
 
   if (is_not_null(x[["estimand"]])) {
@@ -506,17 +506,36 @@ print.weightit <- function(x, ...) {
                 nsubgroups))
   }
 
-  trim <- .attr(x[["weights"]], "trim")
-  if (is_not_null(trim)) {
-    if (trim < 1) {
-      if (.attr(x[["weights"]], "trim.lower")) trim <- c(1 - trim, trim)
-      cat(sprintf(" - weights trimmed at %s\n", word_list(paste0(round(100 * trim, 2L), "%"))))
+  #trim
+  if (is_not_null(.attr(x, "trim"))) {
+    trim.at <- .attr(x, "trim")[["at"]]
+    trim.lower <- .attr(x, "trim")[["lower"]]
+    trim.drop <- .attr(x, "trim")[["drop"]]
+  }
+  else if (is_not_null(.attr(x[["weights"]], "trim"))) {
+    trim.at <- .attr(x[["weights"]], "trim")
+    trim.lower <- .attr(x[["weights"]], "trim.lower")
+    trim.drop <- FALSE
+  }
+  else {
+    trim.at <- NULL
+  }
+
+  if (is_not_null(trim.at) && chk::vld_number(trim.at)) {
+    if (trim.at < 1) {
+      if (trim.lower) {
+        trim.at <- c(1 - trim.at, trim.at)
+      }
+
+      cat(sprintf(" - weights trimmed at %s%s\n",
+                  word_list(paste0(round(100 * trim.at, 2L), "%")),
+                  if (trim.drop) " and units dropped" else ""))
     }
     else {
-      cat(sprintf(" - weights trimmed at the %s %s\n",
-                  if (.attr(x[["weights"]], "trim.lower")) "top and bottom"
-                  else "top",
-                  trim))
+      cat(sprintf(" - weights trimmed at the %s %s%s\n",
+                  if (trim.lower) "top and bottom" else "top",
+                  trim.at,
+                  if (trim.drop) " and units dropped" else ""))
     }
   }
 
