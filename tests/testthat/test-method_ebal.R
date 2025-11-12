@@ -101,6 +101,15 @@ test_that("Binary treatment", {
   expect_M_parts_okay(W, tolerance = eps)
   expect_equal(W$weights, W0$weights, tolerance = eps)
 
+  # All categorical covariates (issue #86)
+  expect_no_condition({
+    W <- weightit(A ~ cut(X1, 3) + cut(X2, 3) + cut(X3, 3),
+                  data = test_data, method = "ebal", estimand = "ATE",
+                  include.obj = TRUE, solver = "optim", reltol = 1e-12)
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+
   #Should be equivalent to CBPS and IPT with logit link for ATT
   for (sw in sw.opts) {
     expect_no_condition({

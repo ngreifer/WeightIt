@@ -10,7 +10,7 @@ calibrate(x, ...)
 
 \method{calibrate}{default}(x, treat, s.weights = NULL, data = NULL, method = "platt", ...)
 
-\method{calibrate}{weightit}(x, ...)
+\method{calibrate}{weightit}(x, method = "platt", ...)
 }
 \arguments{
 \item{x}{a \code{weightit} object or a vector of propensity scores. Only binary
@@ -30,7 +30,7 @@ treatments are supported.}
 \item{method}{\code{character}; the method of calibration used. Allowable options
 include \code{"platt"} (default) for Platt scaling as described by Gutman et al.
 (2024) and \code{"isoreg"} for isotonic regression as described by van der Laan
-et al. (2024) and implemented in \code{\link[=isoreg]{isoreg()}}.}
+et al. (2024).}
 }
 \value{
 If the input is a \code{weightit} object, the output will be a \code{weightit}

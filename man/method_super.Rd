@@ -153,7 +153,7 @@ prediction method) so that the weights generated from the weighted
 combination of the predictions optimize a balance criterion, which must be
 set with the \code{criterion} argument, described below.
 \describe{
-\item{\code{criterion}}{a string describing the balance criterion used to select the best weights. See \pkgfun{cobalt}{bal.compute} for allowable options for each treatment type. For binary and multi-category treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
+\item{\code{criterion}}{a string describing the balance criterion used to select the best weights. See \code{\link[cobalt:bal.compute]{cobalt::bal.compute()}} for allowable options for each treatment type. For binary and multi-category treatments, the default is \code{"smd.mean"}, which minimizes the average absolute standard mean difference among the covariates between treatment groups. For continuous treatments, the default is \code{"p.mean"}, which minimizes the average absolute Pearson correlation between the treatment and covariates.
 }
 }
 Note that this implementation differs from that of Pirracchio and Carone
