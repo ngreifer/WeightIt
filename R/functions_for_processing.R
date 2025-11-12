@@ -640,10 +640,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
 
   by.components <- data.frame(by)
 
-  names(by.components) <- {
-    if (is_not_null(colnames(by))) colnames(by)
-    else by.name
-  }
+  names(by.components) <- colnames(by) %or% by.name
 
   by.factor <- {
     if (is_null(by)) gl(1, n)
@@ -743,7 +740,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   nd <- NCOL(d)
 
   # moments
-  default_moments <- if_null_then(.attr(moments, "moments_default"), 1L)
+  default_moments <- .attr(moments, "moments_default") %or% 1L
   poly <- setNames(rep.int(default_moments, nd),
                    colnames(d))
 
@@ -1307,7 +1304,7 @@ stabilize_w <- function(weights, treat) {
     w[!between(ps, c(alpha.opt, 1 - alpha.opt))] <- 0
   }
 
-  names(w) <- if_null_then(names(treat), NULL)
+  names(w) <- names(treat) %or% NULL
 
   if (stabilize) {
     w <- stabilize_w(w, treat)
@@ -1372,7 +1369,7 @@ stabilize_w <- function(weights, treat) {
     w <- stabilize_w(w, treat)
   }
 
-  names(w) <- if_null_then(rownames(ps_mat), names(treat), NULL)
+  names(w) <- rownames(ps_mat) %or% names(treat) %or% NULL
 
   w
 }
@@ -1973,4 +1970,23 @@ generalized_inverse <- function(sigma, .try = TRUE) {
   }
 
   fit$coefficients
+}
+
+came_from_weightit <- function(obj) {
+  cl <- getCall(obj)
+
+  if (is_null(cl) || !is.call(cl)) {
+    return(FALSE)
+  }
+
+  env <- obj[["env"]] %or% globalenv()
+
+  fn <- try(eval(cl[[1L]], envir = env), silent = TRUE)
+
+  if (!is.function(fn)) {
+    return(FALSE)
+  }
+
+  identical(fn, weightit, ignore.environment = TRUE) ||
+    identical(fn, weightitMSM, ignore.environment = TRUE)
 }

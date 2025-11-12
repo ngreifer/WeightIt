@@ -195,9 +195,8 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
   covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
-  bw <- if_null_then(...get("base.weights"),
-                     ...get("base.weight"),
-                     rep_with(1, treat))
+  bw <- ...get("base.weights") %or% ...get("base.weight") %or%
+    rep_with(1, treat)
 
   if (!is.numeric(bw) || length(bw) != length(treat)) {
     .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
@@ -662,9 +661,9 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 #     covs <- add_missing_indicators(covs)
 #   }
 #
-#   bw <- if_null_then(...get("base.weights"),
-#                      ...get("base.weight"),
-#                      rep.int(1, length(treat)))
+#   bw <- ...get("base.weights") %or%
+#                      ...get("base.weight") %or%
+#                      rep.int(1, length(treat))
 #
 #   if (!is.numeric(bw) || length(bw) != length(treat)) {
 #     .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")

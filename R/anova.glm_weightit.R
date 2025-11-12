@@ -245,7 +245,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
                       deparse1(formula(object2)))
 
   .varnote <- .it(sprintf("Variance: %s\n",
-                          .vcov_to_phrase(object$vcov_type,
+                          .vcov_to_phrase(object[["vcov_type"]],
                                           is_not_null(.attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),
@@ -357,7 +357,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
                       deparse1(formula(object2)))
 
   .varnote <- .it(sprintf("Variance: %s\n",
-                          .vcov_to_phrase(object$vcov_type,
+                          .vcov_to_phrase(object[["vcov_type"]],
                                           is_not_null(.attr(object, "cluster")))))
 
   result <- make_df(c("Res.Df", "Df", test, sprintf("Pr(>%s)", test)),

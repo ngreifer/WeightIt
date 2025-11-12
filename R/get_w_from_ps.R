@@ -312,7 +312,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     w <- stabilize_w(w, treat)
   }
 
-  names(w) <- if_null_then(rownames(ps_mat), names(treat))
+  names(w) <- rownames(ps_mat) %or% names(treat)
 
   attr(w, "subclass") <- .attr(ps_mat, "sub_mat")
 

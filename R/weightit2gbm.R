@@ -307,8 +307,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
-  criterion <- if_null_then(...get("criterion"),
-                            ...get("stop.method"))
+  criterion <- ...get("criterion") %or% ...get("stop.method")
 
   if (is_null(criterion)) {
     .wrn('no `criterion` was provided. Using "smd.mean"')
@@ -648,8 +647,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
 
-  criterion <- if_null_then(...get("criterion"),
-                            ...get("stop.method"))
+  criterion <- ...get("criterion") %or% ...get("stop.method")
 
   if (is_null(criterion)) {
     .wrn('no `criterion` was provided. Using "p.mean"')

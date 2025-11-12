@@ -143,9 +143,7 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
 
   out$effective.sample.size <- nn
 
-  if (is_not_null(object$focal)) {
-    attr(w, "focal") <- object$focal
-  }
+  attr(w, "focal") <- object$focal %or% NULL
 
   class(out) <- "summary.weightit"
 

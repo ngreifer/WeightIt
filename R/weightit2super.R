@@ -301,8 +301,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (identical(SL.method, "method.balance")) {
 
-    criterion <- if_null_then(...get("criterion"),
-                              ...get("stop.method"))
+    criterion <- ...get("criterion") %or% ...get("stop.method")
 
     if (is_null(criterion)) {
       .wrn('no `criterion` was provided. Using "smd.mean"')
@@ -510,8 +509,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
   if (identical(SL.method, "method.balance")) {
 
-    criterion <- if_null_then(...get("criterion"),
-                              ...get("stop.method"))
+    criterion <- ...get("criterion") %or% ...get("stop.method")
 
     if (is_null(criterion)) {
       .wrn('no `criterion` was provided. Using "p.mean"')

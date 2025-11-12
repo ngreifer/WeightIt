@@ -237,19 +237,12 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 
   x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
 
-  offset <- model.offset(m)
+  offset <- model.offset(m) %or% rep.int(0, nrow(x))
   addO <- object$call$offset
 
   if (is_not_null(addO)) {
     addO <- eval(addO, newdata, environment(tt))
-    offset <- {
-      if (is_null(offset)) addO
-      else offset + addO
-    }
-  }
-
-  if (is_null(offset)) {
-    offset <- rep.int(0, nrow(x))
+    offset <- offset + addO
   }
 
   x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
@@ -375,19 +368,12 @@ predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
 
   x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
 
-  offset <- model.offset(m)
+  offset <- model.offset(m) %or% rep.int(0, nrow(x))
   addO <- object$call$offset
 
   if (is_not_null(addO)) {
     addO <- eval(addO, newdata, environment(tt))
-    offset <- {
-      if (is_null(offset)) addO
-      else offset + addO
-    }
-  }
-
-  if (is_null(offset)) {
-    offset <- rep.int(0, nrow(x))
+    offset <- offset + addO
   }
 
   p <- object$get_p(object$coefficients, x, offset)

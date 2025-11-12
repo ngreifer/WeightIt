@@ -216,8 +216,8 @@
 }
 
 .get_hess_multinom <- function(fit) {
-  x <- if_null_then(fit[["x"]], model.matrix(fit))
-  y <- if_null_then(fit[["y"]], model.response(model.frame(fit)))
+  x <- fit[["x"]] %or% model.matrix(fit)
+  y <- fit[["y"]] %or% model.response(model.frame(fit))
   weights <- weights(fit)
   coefs <- coef(fit)
 

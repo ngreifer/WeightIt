@@ -33,7 +33,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
       X <- scale(X)
       #NOTE: optmatch and Rubin (1980) use pooled within-group covariance matrix
       var <- {
-        if (is.null(s.weights)) cov(X[!discarded, , drop = FALSE])
+        if (is_null(s.weights)) cov(X[!discarded, , drop = FALSE])
         else cov.wt(X[!discarded, , drop = FALSE], s.weights[!discarded])[["cov"]]
       }
     }
@@ -55,7 +55,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
     }
 
     var_r <- {
-      if (is.null(s.weights)) cov(X_r)
+      if (is_null(s.weights)) cov(X_r)
       else cov.wt(X_r, s.weights[!discarded])$cov
     }
 
@@ -77,7 +77,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
     #Do nothing
   }
   else if (method == "scaled_euclidean") {
-    if (is.null(var)) {
+    if (is_null(var)) {
       sds <- sqrt(col.w.v(X[!discarded, , drop = FALSE],
                           w = s.weights[!discarded]))
     }
@@ -102,7 +102,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
 #Internal function for fast(ish) Euclidean distance
 eucdist_internal <- function(X, treat = NULL) {
 
-  if (is.null(treat)) {
+  if (is_null(treat)) {
     if (length(dim(X)) <= 1L) {
       d <- abs(outer(drop(X), drop(X), "-"))
       dimnames(d) <- list(names(X), names(X))
@@ -141,7 +141,7 @@ eucdist_internal <- function(X, treat = NULL) {
 #to ensure same result as when non-factor binary variable supplied (see optmatch:::contr.match_on)
 get.covs.matrix.for.dist <- function(formula = NULL, data = NULL) {
 
-  if (is.null(formula)) {
+  if (is_null(formula)) {
     fnames <- colnames(data)
     fnames[!startsWith(fnames, "`")] <- add_quotes(fnames[!startsWith(fnames, "`")], "`")
     data <- as.data.frame(data)

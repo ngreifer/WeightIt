@@ -628,8 +628,8 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   bout <- x[["coefficients"]]
   aliased <- is.na(bout)
 
-  Xout <- if_null_then(x[["x"]], model.matrix(x))
-  Y <- if_null_then(x[["y"]], model.response(model.frame(x)))
+  Xout <- x[["x"]] %or% model.matrix(x)
+  Y <- x[["y"]] %or% model.response(model.frame(x))
 
   if (is_not_null(x[["weightit"]])) {
     W <- x[["weightit"]][["weights"]]
@@ -647,7 +647,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
     SW <- rep_with(1, Y)
   }
 
-  offset <- if_null_then(x[["offset"]], rep_with(0, Y))
+  offset <- x[["offset"]] %or% rep_with(0, Y)
 
   if (any(aliased)) {
     if (is_not_null(.attr(x[["qr"]][["qr"]], "aliased"))) {
@@ -656,6 +656,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
     else {
       Xout <- make_full_rank(Xout, with.intercept = FALSE)
     }
+
     bout <- bout[!aliased]
   }
 
@@ -677,8 +678,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
     x$psi(Bout, Xout, Y, w * SW, offset = offset)
   }
 
-  psi_b <- if_null_then(x[["gradient"]],
-                        psi_out(bout, W, Y, Xout, SW, offset))
+  psi_b <- x[["gradient"]] %or% psi_out(bout, W, Y, Xout, SW, offset)
 
   if (is_not_null(Mparts)) {
     # Mparts from weightit()
@@ -814,8 +814,8 @@ bread.glm_weightit <- function(x, ...) {
     H <- .get_hess_glm(x)
   }
   else {
-    Xout <- if_null_then(x[["x"]], model.matrix(x))
-    Y <- if_null_then(x[["y"]], model.response(model.frame(x)))
+    Xout <- x[["x"]] %or% model.matrix(x)
+    Y <- x[["y"]] %or% model.response(model.frame(x))
 
     if (is_not_null(x[["weightit"]])) {
       W <- x[["weightit"]][["weights"]]
@@ -833,7 +833,7 @@ bread.glm_weightit <- function(x, ...) {
       SW <- rep_with(1, Y)
     }
 
-    offset <- if_null_then(x[["offset"]], rep_with(0, Y))
+    offset <- x[["offset"]] %or% rep_with(0, Y)
 
     if (any(aliased)) {
       if (is_not_null(.attr(x[["qr"]][["qr"]], "aliased"))) {
