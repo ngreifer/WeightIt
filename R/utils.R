@@ -656,12 +656,14 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   }
 
   tryCatch({
-    tt <- terms(f, data = data)
+    tt <- terms(f, data = data) |>
+      update(~ .) |>
+      terms(data = data)
   },
   error = function(e) {
     msg <- {
       if (identical(conditionMessage(e), "'.' in formula and no 'data' argument"))
-        "`.` is not allowed in formulas"
+        "`.` is not allowed in formulas without `data`"
       else
         conditionMessage(e)
     }
@@ -809,11 +811,10 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
         test <- setNames(as.data.frame(as.matrix(test)),
                          .attr(test, "colnames"))
       }
-      else if (is_not_null(colnames(test))) {
-        colnames(test) <- paste(rhs.vars.mentioned.char[i], colnames(test), sep = sep)
-      }
       else {
-        colnames(test) <- paste(rhs.vars.mentioned.char[i], seq_col(test), sep = sep)
+        colnames(test) <- paste(rhs.vars.mentioned.char[i],
+                                colnames(test) %or% seq_col(test),
+                                sep = sep)
       }
 
       addl.dfs[[i]] <- as.data.frame(test)
@@ -923,7 +924,10 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
   }
   else if (use.multi || chk::vld_character_or_factor(treat)) {
     treat.type <- "multinomial"
-    if (!inherits(treat, "processed.treat")) treat <- factor(treat)
+
+    if (!inherits(treat, "processed.treat")) {
+      treat <- factor(treat)
+    }
   }
   else {
     treat.type <- "continuous"
@@ -968,7 +972,10 @@ all_the_same <- function(x, na.rm = TRUE) {
   else all(x == x[1L])
 }
 is_binary <- function(x, na.rm = TRUE) {
-  if (na.rm && anyNA(x)) x <- na.rem(x)
+  if (na.rm && anyNA(x)) {
+    x <- na.rem(x)
+  }
+
   !all_the_same(x) && all_the_same(x[x != x[1L]])
 }
 is_binary_col <- function(dat, na.rm = TRUE) {
@@ -981,18 +988,24 @@ is_binary_col <- function(dat, na.rm = TRUE) {
 
 #R Processing
 make_list <- function(n) {
-  if (length(n) == 1L && is.numeric(n)) {
+  if (is_null(n)) {
+    vector("list", 0L)
+  }
+  else if (length(n) == 1L && is.numeric(n) && n >= 0) {
     vector("list", as.integer(n))
   }
-  else if (length(n) > 0L && is.atomic(n)) {
-    setNames(vector("list", length(n)), as.character(n))
+  else if (is.atomic(n)) {
+    setNames(vector("list", length(n)),
+             as.character(n))
   }
   else {
     stop("'n' must be an integer(ish) scalar or an atomic variable.")
   }
 }
 make_df <- function(ncol, nrow = 0L, types = "numeric") {
-  if (is_null(ncol)) ncol <- 0L
+  if (missing(ncol) || is_null(ncol)) {
+    ncol <- 0L
+  }
 
   if (length(ncol) == 1L && is.numeric(ncol)) {
     col_names <- NULL
@@ -1003,7 +1016,9 @@ make_df <- function(ncol, nrow = 0L, types = "numeric") {
     ncol <- length(ncol)
   }
 
-  if (is_null(nrow)) nrow <- 0L
+  if (is_null(nrow)) {
+    nrow <- 0L
+  }
 
   if (length(nrow) == 1L && is.numeric(nrow)) {
     row_names <- NULL
@@ -1058,6 +1073,10 @@ rep_with <- function(x, y) {
 }
 is_null <- function(x) {length(x) == 0L}
 is_not_null <- function(x) {!is_null(x)}
+`%or%` <- function(x, y) {
+  # like `%||%` but works for non-NULL length 0 objects
+  if (is_null(x)) y else x
+}
 if_null_then <- function(x1 = NULL, x2 = NULL, ...) {
   if (is_not_null(x1)) {
     return(x1)
