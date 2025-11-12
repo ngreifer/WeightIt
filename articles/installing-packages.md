@@ -1,0 +1,280 @@
+# Installing Supporting Packages
+
+*WeightIt* is a wrapper for several other packages that aid in
+estimating balancing weights. In many ways, this is *WeightIt*’s
+strength, because it is easy to try out several weighting methods
+without having to learn a completely new syntax for each one. One
+weakness of this is that when one of these packages is not available
+(e.g., on CRAN), the method that relies on that package cannot be used.
+
+This document explains how to install each package *WeightIt* uses. You
+do not need to install every single one; you only need the one you want
+to use. For example, the *misaem* package provides support for logistic
+regression with missing data, but if you have no missing data or you
+don’t want to use the approach implemented in *misaem*, you don’t need
+to install it. *WeightIt* strongly depends on a few packages, which are
+automatically installed along with *WeightIt*, so you don’t need to
+worry about installing them separately; these are not listed here.
+
+Below we note each method (by name and by the input to the `method`
+argument of
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md))
+and how to install the required packages either from CRAN or otherwise
+when the CRAN version is not available. In many cases, this involves
+installing the package from the author’s GitHub repository, which
+requires the *pak* package, which contains the function `pkg_install()`.
+
+## Propensity score weighting using GLMs (`method = "glm"`)
+
+Several options are available for estimating propensity score weights
+using GLMs depending on the treatment type and other features of the
+desired model. For binary treatments,
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+uses [`stats::glm()`](https://rdrr.io/r/stats/glm.html) by default, and
+for continuous treatments,
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+uses [`stats::lm()`](https://rdrr.io/r/stats/lm.html) by default, so no
+additional packages are required. For multi-category treatments with
+`multi.method = "weightit"`, the default,
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+uses internal code.
+
+### `missing = "saem"`
+
+When missing data is present and `missing = "saem"` is supplied, the
+*misaem* package is required. To install *misaem* from CRAN, run
+
+``` r
+pak::pkg_install("misaem")
+```
+
+If *misaem* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer’s [GitHub
+repo](https://github.com/julierennes/misaem) using the following code:
+
+``` r
+pak::pkg_install("julierennes/misaem")
+```
+
+### Binary and multi-category treatments with `link = "br.logit"`
+
+For binary and multi-category treatments, when `link` is supplied as
+`"br.logit"` or another link beginning with `"br."`, the *brglm2*
+package is required. To install *brglm2* from CRAN, run
+
+``` r
+pak::pkg_install("brglm2")
+```
+
+If *brglm2* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer, Ioannis
+Kosmidis’s, [GitHub repo](https://github.com/ikosmidis/brglm2) using the
+following code:
+
+``` r
+pak::pkg_install("ikosmidis/brglm2")
+```
+
+*brglm2* requires compilation, which means you may need additional
+software installed on your computer to install it from source.
+
+### Multi-category treatments with `multi.method = "mclogit"`
+
+For multi-category treatments, when `multi.method = "mclogit"`, the
+*mclogit* package is required for multinomial logistic regression. To
+install *mclogit* from CRAN, run
+
+``` r
+pak::pkg_install("mclogit")
+```
+
+If *mclogit* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer, Martin Elff’s,
+[GitHub repo](https://github.com/melff/mclogit/) using the following
+code:
+
+``` r
+pak::pkg_install("melff/mclogit")
+```
+
+### Multi-category treatments with `multi.method = "mnp"`
+
+For multi-category treatments, when `multi.method = "mnp"`, the *MNP*
+package is required for Bayesian multinomial probit regression. To
+install *MNP* from CRAN, run
+
+``` r
+pak::pkg_install("MNP")
+```
+
+If *MNP* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer, Kosuke Imai’s,
+[GitHub repo](https://github.com/kosukeimai/MNP) using the following
+code:
+
+``` r
+pak::pkg_install("kosukeimai/MNP")
+```
+
+*MNP* requires compilation, which means you may need additional software
+installed on your computer to install it from source.
+
+## Propensity Score weighting using GBM (`method = "gbm"`)
+
+*WeightIt* uses the R package *gbm* to estimate propensity score weights
+using GBM. It does *not* rely on the `twang` package at all. To install
+*gbm* from CRAN, run
+
+``` r
+pak::pkg_install("gbm")
+```
+
+If *gbm* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer’s [GitHub
+repo](https://github.com/gbm-developers/gbm) using the following code:
+
+``` r
+pak::pkg_install("gbm-developers/gbm")
+```
+
+*gbm* requires compilation, which means you may need additional software
+installed on your computer to install it from source.
+
+## Covariate Balancing Propensity Score weighting (`method = "cbps"`)
+
+For `method = "cbps"`, *WeightIt* uses code written for *WeightIt*, so
+no additional packages need to be installed to use CBPS. Installing
+*rootSolve* can improve estimation, but is not necessary.
+
+## Nonparametric Covariate Balancing Propensity Score weighting (`method = "npcbps"`)
+
+For `method = "npcbps"`, *WeightIt* uses the R package *CBPS* to perform
+nonparametric covariate balancing propensity score weighting. To install
+*CBPS* from CRAN, run
+
+``` r
+pak::pkg_install("CBPS")
+```
+
+If *CBPS* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer, Kosuke Imai’s,
+[GitHub repo](https://github.com/kosukeimai/CBPS) using the following
+code:
+
+``` r
+pak::pkg_install("kosukeimai/CBPS")
+```
+
+## Entropy balancing (`method = "ebal"`)
+
+*WeightIt* uses code written for *WeightIt*, so no additional packages
+need to be installed to use entropy balancing. Installing *rootSolve*
+can improve estimation, but is not necessary.
+
+## Inverse probability tilting (`method = "ipt"`)
+
+*WeightIt* uses the R package *rootSolve* to perform the root finding
+required for inverse probability tilting. To install *rootSolve* from
+CRAN, run
+
+``` r
+pak::pkg_install("rootSolve")
+```
+
+## Stable balancing weighting (`method = "optweight"`)
+
+*WeightIt* uses the R package *optweight* to estimate stable balancing
+weights. To install *optweight* from CRAN, run
+
+``` r
+pak::pkg_install("optweight")
+```
+
+If *optweight* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer, Noah Greifer’s
+(my), [GitHub repo](https://github.com/ngreifer/optweight) using the
+following code:
+
+``` r
+pak::pkg_install("ngreifer/optweight")
+```
+
+*optweight* depends on the *osqp* package, which requires compilation,
+which means you may need additional software installed on your computer
+to install it from source. It’s also a good idea to install the *highs*
+and *scs* packages if you want to take advantage of all of *optweight*’s
+features and optimize its performance.
+
+## Propensity score weighting using SuperLearner (`method = "super"`)
+
+*WeightIt* uses the R package *SuperLearner* to estimate propensity
+score weights using SuperLearner. To install *SuperLearner* from CRAN,
+run
+
+``` r
+pak::pkg_install("SuperLearner")
+```
+
+If *SuperLearner* is not on CRAN, or if you want to install the
+development version from source, you can do so from the developer, Eric
+Polley’s, [GitHub repo](https://github.com/ecpolley/SuperLearner) using
+the following code:
+
+``` r
+pak::pkg_install("ecpolley/SuperLearner")
+```
+
+*SuperLearner* itself is a wrapper for many other packages. The whole
+point of using SuperLearner is to include many different machine
+learning algorithms to combine them into a well-fitting stacked model.
+These algorithms exist in many different R packages, which each need to
+be installed to use them. See the Suggested packages on the
+*SuperLearner* [CRAN
+page](https://cran.r-project.org/package=SuperLearner) to see which
+packages might be used with *SuperLearner*.
+
+There are additional functions for use with *SuperLearner* in the
+`SuperLearnerExtra`
+[repository](https://github.com/ecpolley/SuperLearnerExtra). To read
+these into your R session to be used with `method = "super"`, use
+[`source()`](https://rdrr.io/r/base/source.html) on the raw text file
+URL. For example, to read in the code for `SL.dbarts`, run
+
+``` r
+source("https://raw.githubusercontent.com/ecpolley/SuperLearnerExtra/master/SL/SL.dbarts.R")
+```
+
+## Propensity score weighting using BART (`method = "bart"`)
+
+*WeightIt* uses the R package *dbarts* to estimate propensity score
+weights using BART. To install *dbarts* from CRAN, run
+
+``` r
+pak::pkg_install("dbarts")
+```
+
+If *dbarts* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer, Vincent Dorie’s,
+[GitHub repo](https://github.com/vdorie/dbarts) using the following
+code:
+
+``` r
+pak::pkg_install("vdorie/dbarts")
+```
+
+*dbarts* requires compilation, which means you may need additional
+software installed on your computer to install it from source.
+
+## Energy Balancing (`method = "energy"`)
+
+*WeightIt* uses the R package *osqp* to perform the optimization
+required for energy balancing. To install *osqp* from CRAN, run
+
+``` r
+pak::pkg_install("osqp")
+```
+
+If *osqp* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer’s site using the
+instructions given [here](https://osqp.org/docs/get_started/r.html),
+though it is a bit more involved than other installations from source.
