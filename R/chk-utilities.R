@@ -24,25 +24,32 @@ pkg_caller_call <- function() {
 }
 
 .err <- function(..., n = NULL, tidy = TRUE) {
-  m <- chk::message_chk(..., n = n, tidy = tidy)
-  rlang::abort(paste(strwrap(m), collapse = "\n"),
-               call = pkg_caller_call())
+  chk::message_chk(..., n = n, tidy = tidy) |>
+    strwrap() |>
+    paste(collapse = "\n") |>
+    rlang::abort(call = pkg_caller_call())
 }
 .wrn <- function(..., n = NULL, tidy = TRUE, immediate = TRUE) {
   m <- chk::message_chk(..., n = n, tidy = tidy)
 
   if (immediate && isTRUE(all.equal(0, getOption("warn")))) {
     rlang::with_options({
-      rlang::warn(paste(strwrap(m), collapse = "\n"))
+      m |> strwrap() |>
+        paste(collapse = "\n") |>
+        rlang::warn()
     }, warn = 1)
   }
   else {
-    rlang::warn(paste(strwrap(m), collapse = "\n"))
+    m |> strwrap() |>
+      paste(collapse = "\n") |>
+      rlang::warn()
   }
 }
 .msg <- function(..., n = NULL, tidy = TRUE) {
-  m <- chk::message_chk(..., n = n, tidy = tidy)
-  rlang::inform(paste(strwrap(m), collapse = "\n"), tidy = FALSE)
+  chk::message_chk(..., n = n, tidy = tidy) |>
+    strwrap() |>
+    paste(collapse = "\n") |>
+    rlang::inform(tidy = FALSE)
 }
 
 .chk_basic_vector <- function(x, x_name = NULL) {
