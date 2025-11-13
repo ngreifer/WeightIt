@@ -14,6 +14,7 @@
   type = "response",
   na.action = na.pass,
   values = NULL,
+  level = NULL,
   ...
 )
 
@@ -23,6 +24,7 @@
   type = "response",
   na.action = na.pass,
   values = NULL,
+  level = NULL,
   ...
 )
 }
@@ -49,12 +51,14 @@ in \code{newdata}. The default is to predict \code{NA}.}
 to. Should be supplied as a named vector with outcome levels as the names.
 If \code{NULL} and the outcome levels can be converted to numeric, those will be
 used. See Details.}
+
+\item{level}{when \code{type = "response"} for ordinal and multinomial models, an optional string or number corresponding to the outcome level for which the predictions are to be produced. If \code{NULL} (the default), a matrix of predictions for all levels will be produced.}
 }
 \value{
 A numeric vector containing the desired predictions, except for the
 following circumstances when an ordinal or multinomial model was fit:
 \itemize{
-\item when \code{type = "response"}, a numeric matrix with a row for each unit and
+\item when \code{type = "response"} and \code{levels = NULL}, a numeric matrix with a row for each unit and
 a column for each level of the outcome with the predicted probability of
 the corresponding outcome in the cells
 \item when \code{type = "class"}, a factor with the modal predicted class for each
@@ -125,6 +129,9 @@ fit2 <- multinom_weightit(
 
 # Predicted probabilities
 head(predict(fit2))
+
+# Predicted probabilities for a single level
+head(predict(fit2, level = "low"))
 
 # Class assignment accuracy
 mean(predict(fit2, type = "class") == lalonde$re78_3)

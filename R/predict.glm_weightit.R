@@ -24,12 +24,13 @@
 #'   to. Should be supplied as a named vector with outcome levels as the names.
 #'   If `NULL` and the outcome levels can be converted to numeric, those will be
 #'   used. See Details.
+#' @param level when `type = "response"` for ordinal and multinomial models, an optional string or number corresponding to the outcome level for which the predictions are to be produced. If `NULL` (the default), a matrix of predictions for all levels will be produced.
 #' @param \dots further arguments passed to or from other methods.
 #'
 #' @returns
 #' A numeric vector containing the desired predictions, except for the
 #' following circumstances when an ordinal or multinomial model was fit:
-#' * when `type = "response"`, a numeric matrix with a row for each unit and
+#' * when `type = "response"` and `levels = NULL`, a numeric matrix with a row for each unit and
 #'   a column for each level of the outcome with the predicted probability of
 #'   the corresponding outcome in the cells
 #' * when `type = "class"`, a factor with the modal predicted class for each
@@ -98,6 +99,9 @@
 #' # Predicted probabilities
 #' head(predict(fit2))
 #'
+#' # Predicted probabilities for a single level
+#' head(predict(fit2, level = "low"))
+#'
 #' # Class assignment accuracy
 #' mean(predict(fit2, type = "class") == lalonde$re78_3)
 #'
@@ -151,15 +155,65 @@ predict.glm_weightit <- function(object, newdata = NULL, type = "response",
 #' @exportS3Method predict ordinal_weightit
 #' @rdname predict.glm_weightit
 predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
-                                     na.action = na.pass, values = NULL, ...) {
+                                     na.action = na.pass, values = NULL,
+                                     level = NULL, ...) {
 
   chk::chk_string(type)
-  type <- switch(type, probs = "response", lp = "link", lv = "link", type)
-  type <- match_arg(type, c("response", "link", "class", "mean", "stdlv"))
+  old_type <- type
+  type <- switch(old_type, probs = "response", lp = "link", lv = "link", old_type)
 
-  if (type == "stdlv" && !object$family$link %in% c("probit", "logit", "cloglog", "loglog")) {
+  ord <- inherits(object, "ordinal_weightit")
+
+  acceptable_types <- c("response", "link"[ord], "class", "mean", "stdlv"[ord])
+
+  type <- match_arg(type, acceptable_types)
+
+  if (ord && type == "stdlv" && !object$family$link %in% c("probit", "logit", "cloglog", "loglog")) {
     .err(sprintf('`type = "stdlv"` cannot be used with `link = %s`',
                  add_quotes(object$family$link)))
+  }
+
+  outcome_levels <- colnames(object$fitted.values)
+
+  if (is_not_null(level)) {
+    if (type != "response") {
+      .wrn(sprintf("`level` is ignored when `type = %s`",
+                   add_quotes(old_type)))
+
+      level <- NULL
+    }
+    else if (chk::vld_string(level) && level %in% outcome_levels) {
+      level <- match(level, outcome_levels)
+    }
+    else if (chk::vld_whole_number(level) && chk::chk_range(level, c(1, length(outcome_levels)))) {
+      level <- as.integer(trunc(level))
+    }
+    else {
+      .err("`level` must be the name or index of a response level")
+    }
+  }
+
+  if (type == "mean") {
+    if (is_not_null(values)) {
+      chk::chk_numeric(values)
+      chk::chk_named(values)
+
+      if (!all(outcome_levels %in% names(values))) {
+        .err('when `type = "mean"`, all outcome levels must be named in `values`')
+      }
+    }
+    else if (can_str2num(outcome_levels)) {
+      values <- outcome_levels |>
+        str2num() |>
+        setNames(outcome_levels)
+    }
+    else {
+      .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
+    }
+  }
+  else if (is_not_null(values)) {
+    .wrn(sprintf("`values` is ignored when `type = %s`",
+                 add_quotes(old_type)))
   }
 
   na.act <- object$na.action
@@ -167,7 +221,12 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 
   if (is_null(newdata)) {
     if (type == "response") {
-      out <- object$fitted.values
+      if (is_not_null(level)) {
+        out <- object$fitted.values[, level]
+      }
+      else {
+        out <- object$fitted.values
+      }
     }
     else if (type == "link") {
       out <- object$linear.predictors
@@ -193,27 +252,12 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
     }
     else if (type == "class") {
       out <- factor(max.col(object$fitted.values, ties.method = "first"),
-                    levels = seq_col(object$fitted.values),
-                    labels = colnames(object$fitted.values),
-                    ordered = inherits(object, "ordinal_weightit"))
+                    levels = seq_along(outcome_levels),
+                    labels = outcome_levels,
+                    ordered = ord)
     }
     else if (type == "mean") {
-      if (is_null(values)) {
-        if (!can_str2num(colnames(object$fitted.values))) {
-          .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
-        }
-        values <- setNames(str2num(colnames(object$fitted.values)),
-                           colnames(object$fitted.values))
-      }
-      else {
-        chk::chk_numeric(values)
-        chk::chk_named(values)
-        if (!all(colnames(object$fitted.values) %in% names(values))) {
-          .err('when `type = "mean"`, all outcome levels must be named in `values`')
-        }
-      }
-
-      out <- drop(object$fitted.values %*% values[colnames(object$fitted.values)])
+      out <- drop(object$fitted.values %*% values[outcome_levels])
     }
 
     if (is_not_null(na.act)) {
@@ -241,39 +285,45 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   addO <- object$call$offset
 
   if (is_not_null(addO)) {
-    addO <- eval(addO, newdata, environment(tt))
+    addO <- eval(addO, newdata, environment(tt)) %or% 0
     offset <- offset + addO
   }
 
-  x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
+  if (ord) {
+    x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
 
-  if (type == "link") {
-    return(offset + drop(x %*% object$coefficients[seq_col(x)]))
-  }
+    if (type == "link") {
+      return(offset + drop(x %*% object$coefficients[seq_col(x)]))
+    }
 
-  if (type == "stdlv") {
-    sigma2 <- switch(object$family$link,
-                     probit = 1,
-                     logit = pi^2 / 3,
-                     cloglog = pi^2 / 6,
-                     loglog = pi^2 / 6)
+    if (type == "stdlv") {
+      sigma2 <- switch(object$family$link,
+                       probit = 1,
+                       logit = pi^2 / 3,
+                       cloglog = pi^2 / 6,
+                       loglog = pi^2 / 6)
 
-    mu <- switch(object$family$link,
-                 probit = 0,
-                 logit = 0,
-                 cloglog = -digamma(1),
-                 loglog = digamma(1))
+      mu <- switch(object$family$link,
+                   probit = 0,
+                   logit = 0,
+                   cloglog = -digamma(1),
+                   loglog = digamma(1))
 
-    varY <- drop(object$coefficients[seq_col(object$varx)] %*%
-                   object$varx %*%
-                   object$coefficients[seq_col(object$varx)]) + sigma2
+      varY <- drop(object$coefficients[seq_col(object$varx)] %*%
+                     object$varx %*%
+                     object$coefficients[seq_col(object$varx)]) + sigma2
 
-    return((mu + offset + drop(x %*% object$coefficients[seq_col(x)])) / sqrt(varY))
+      return((mu + offset + drop(x %*% object$coefficients[seq_col(x)])) / sqrt(varY))
+    }
   }
 
   p <- object$get_p(object$coefficients, x, offset)
 
   if (type == "response") {
+    if (is_not_null(level)) {
+      p <- p[, level]
+    }
+
     return(p)
   }
 
@@ -281,23 +331,9 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
     out <- factor(max.col(p, ties.method = "first"),
                   levels = seq_col(p),
                   labels = colnames(p),
-                  ordered = inherits(object, "ordinal_weightit"))
+                  ordered = ord)
   }
   else if (type == "mean") {
-    if (is_null(values)) {
-      if (!can_str2num(colnames(p))) {
-        .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
-      }
-      values <- setNames(str2num(colnames(p)), colnames(p))
-    }
-    else {
-      chk::chk_numeric(values)
-      chk::chk_named(values)
-      if (!all(colnames(p) %in% names(values))) {
-        .err('when `type = "mean"`, all outcome levels must be named in `values`')
-      }
-    }
-
     out <- drop(p %*% values[colnames(p)])
   }
 
@@ -306,104 +342,4 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 
 #' @exportS3Method predict multinom_weightit
 #' @rdname predict.glm_weightit
-predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
-                                      na.action = na.pass, values = NULL, ...) {
-
-  chk::chk_string(type)
-  type <- switch(type, probs = "response", type)
-  type <- match_arg(type, c("response", "class", "mean"))
-
-  na.act <- object$na.action
-  object$na.action <- NULL
-
-  if (is_null(newdata)) {
-    if (type == "response") {
-      out <- object$fitted.values
-    }
-    else if (type == "link") {
-      out <- object$linear.predictors
-    }
-    else if (type == "class") {
-      out <- factor(max.col(object$fitted.values, ties.method = "first"),
-                    levels = seq_col(object$fitted.values),
-                    labels = colnames(object$fitted.values))
-    }
-    else if (type == "mean") {
-      if (is_null(values)) {
-        if (!can_str2num(colnames(object$fitted.values))) {
-          .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
-        }
-        values <- setNames(str2num(colnames(object$fitted.values)),
-                           colnames(object$fitted.values))
-      }
-      else {
-        chk::chk_numeric(values)
-        chk::chk_named(values)
-        if (!all(colnames(object$fitted.values) %in% names(values))) {
-          .err('when `type = "mean"`, all outcome levels must be named in `values`')
-        }
-      }
-
-      out <- drop(object$fitted.values %*% values[colnames(object$fitted.values)])
-    }
-
-    if (is_not_null(na.act)) {
-      out <- napredict(na.act, out)
-    }
-
-    return(out)
-  }
-
-  tt <- terms(object)
-
-  Terms <- delete.response(tt)
-
-  m <- model.frame(Terms, newdata, na.action = na.action,
-                   xlev = object$xlevels)
-
-  cl <- .attr(Terms, "dataClasses")
-  if (is_not_null(cl)) {
-    .checkMFClasses(cl, m)
-  }
-
-  x <- model.matrix(Terms, m, contrasts.arg = object$contrasts)
-
-  offset <- model.offset(m) %or% rep.int(0, nrow(x))
-  addO <- object$call$offset
-
-  if (is_not_null(addO)) {
-    addO <- eval(addO, newdata, environment(tt))
-    offset <- offset + addO
-  }
-
-  p <- object$get_p(object$coefficients, x, offset)
-
-  if (type == "response") {
-    return(p)
-  }
-
-  if (type == "class") {
-    out <- factor(max.col(p, ties.method = "first"),
-                  levels = seq_col(p),
-                  labels = colnames(p))
-  }
-  else if (type == "mean") {
-    if (is_null(values)) {
-      if (!can_str2num(colnames(p))) {
-        .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
-      }
-      values <- setNames(str2num(colnames(p)), colnames(p))
-    }
-    else {
-      chk::chk_numeric(values)
-      chk::chk_named(values)
-      if (!all(colnames(p) %in% names(values))) {
-        .err('when `type = "mean"`, all outcome levels must be named in `values`')
-      }
-    }
-
-    out <- drop(p %*% values[colnames(p)])
-  }
-
-  out
-}
+predict.multinom_weightit <- predict.ordinal_weightit
