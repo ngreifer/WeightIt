@@ -5,6 +5,13 @@
 - [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
   with `method = "isoreg"` can now be used with sampling weights.
 
+- With
+  [`predict.ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
+  and
+  [`predict.multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
+  with `type = "response"`, an optional `level` argument can be supplied
+  to request predictions solely for the given outcome level.
+
 - When `vcov` is `"BS"` or `"FWB"` in
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
   etc., any call to

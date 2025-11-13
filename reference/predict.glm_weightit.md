@@ -31,6 +31,7 @@ predict(
   type = "response",
   na.action = na.pass,
   values = NULL,
+  level = NULL,
   ...
 )
 
@@ -41,6 +42,7 @@ predict(
   type = "response",
   na.action = na.pass,
   values = NULL,
+  level = NULL,
   ...
 )
 ```
@@ -86,14 +88,21 @@ predict(
   If `NULL` and the outcome levels can be converted to numeric, those
   will be used. See Details.
 
+- level:
+
+  when `type = "response"` for ordinal and multinomial models, an
+  optional string or number corresponding to the outcome level for which
+  the predictions are to be produced. If `NULL` (the default), a matrix
+  of predictions for all levels will be produced.
+
 ## Value
 
 A numeric vector containing the desired predictions, except for the
 following circumstances when an ordinal or multinomial model was fit:
 
-- when `type = "response"`, a numeric matrix with a row for each unit
-  and a column for each level of the outcome with the predicted
-  probability of the corresponding outcome in the cells
+- when `type = "response"` and `levels = NULL`, a numeric matrix with a
+  row for each unit and a column for each level of the outcome with the
+  predicted probability of the corresponding outcome in the cells
 
 - when `type = "class"`, a factor with the modal predicted class for
   each unit; for ordinal models, this will be an ordered factor.
@@ -181,6 +190,11 @@ head(predict(fit2))
 #> 4 0.5809239 0.2219530 0.1971231
 #> 5 0.5964825 0.2995950 0.1039225
 #> 6 0.6217877 0.2666334 0.1115788
+
+# Predicted probabilities for a single level
+head(predict(fit2, level = "low"))
+#>         1         2         3         4         5         6 
+#> 0.4897563 0.5027746 0.5453691 0.5809239 0.5964825 0.6217877 
 
 # Class assignment accuracy
 mean(predict(fit2, type = "class") == lalonde$re78_3)
