@@ -211,10 +211,8 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
   solver <- ...get("solver")
   if (is_null(solver)) {
     solver <- {
-      if (rlang::is_installed("rootSolve"))
-        "multiroot"
-      else
-        "optim"
+      if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
     }
   }
   else {
