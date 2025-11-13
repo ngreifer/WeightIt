@@ -5,6 +5,8 @@ WeightIt News and Updates
 
 * `calibrate()` with `method = "isoreg"` can now be used with sampling weights.
 
+* With `predict.ordinal_weightit()` and `predict.multinom_weightit()` with `type = "response"`, an optional `level` argument can be supplied to request predictions solely for the given outcome level.
+
 * When `vcov` is `"BS"` or `"FWB"` in `glm_weightit()`, etc., any call to `trim()` or `calibrate()` will be applied within each bootstrap replication.
 
 * Fixed a bug when using bootstrapping on `glm_weightit()`, etc., when the original call to `weightit()` was called as `WeightIt::weightit()`. (#85)
