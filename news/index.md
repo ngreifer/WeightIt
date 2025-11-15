@@ -1,6 +1,6 @@
 # Changelog
 
-## `WeightIt` (development version)
+## `WeightIt` 1.5.1
 
 - [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
   with `method = "isoreg"` can now be used with sampling weights.

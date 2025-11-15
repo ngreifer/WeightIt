@@ -259,7 +259,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_white   Binary        0 Balanced, <0.05           .
     ## married      Binary        0 Balanced, <0.05           .
     ## nodegree     Binary       -0 Balanced, <0.05           .
-    ## re74        Contin.        0 Balanced, <0.05       1.326
+    ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
     ## Balance tally for mean differences
@@ -269,7 +269,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## 
     ## Variable with the greatest mean difference
     ##  Variable Diff.Adj     M.Threshold
-    ##      re75       -0 Balanced, <0.05
+    ##      re74       -0 Balanced, <0.05
     ## 
     ## Effective sample sizes
     ##            Control Treated
