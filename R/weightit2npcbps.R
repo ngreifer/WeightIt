@@ -128,19 +128,14 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, verbose, ..
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"),
-                                      quantile = ...get("quantile"),
-                                      s.weights = s.weights,
-                                      treat = treat)
-
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
-  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights,
+                                treat = treat) |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
 
   new.data <- data.frame(treat = treat, covs)
 
@@ -180,16 +175,11 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, verbos
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"))
-
-  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int")) |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
 
   new.data <- data.frame(treat = treat, covs)
 

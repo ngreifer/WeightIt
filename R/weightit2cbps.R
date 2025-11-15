@@ -257,18 +257,16 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"),
-                                      quantile = ...get("quantile"),
-                                      s.weights = s.weights, focal = focal,
-                                      treat = treat)
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights, focal = focal,
+                                treat = treat) |>
+    .make_covs_full_rank()
 
   t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
-
-  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
 
   mod_covs <- cbind(`(Intercept)` = 1, scale(svd(covs)$u))
   bal_covs <- mod_covs
@@ -314,7 +312,8 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   link <- ...get("link", "logit")
 
   if (chk::vld_string(link)) {
-    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog", "identity"))
+    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit",
+                            "log", "clog", "identity"))
 
     link <- .make_link(link)
 
@@ -536,15 +535,13 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"),
-                                      quantile = ...get("quantile"),
-                                      s.weights = s.weights, focal = focal,
-                                      treat = treat)
-
-  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights, focal = focal,
+                                treat = treat) |>
+    .make_covs_full_rank()
 
   mod_covs <- cbind(`(Intercept)` = 1, scale(svd(covs)$u))
   bal_covs <- mod_covs
@@ -733,7 +730,8 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
         for (jj in combs) {
           m <- switch(estimand,
                       ATE = {
-                        if (identical(ii, jj))    crossprod(SW * (1 / pp[, ii[1L]] + 1 / pp[, ii[2L]]) * Xb, SW * Xb)
+                        if (identical(ii, jj))    crossprod(SW * (1 / pp[, ii[1L]] + 1 / pp[, ii[2L]]) * Xb,
+                                                            SW * Xb)
                         else if (ii[1L] == jj[1L])  crossprod(SW * (1 / pp[, ii[1L]]) * Xb, SW * Xb)
                         else if (ii[1L] == jj[2L]) -crossprod(SW * (1 / pp[, ii[1L]]) * Xb, SW * Xb)
                         else if (ii[2L] == jj[1L]) -crossprod(SW * (1 / pp[, ii[2L]]) * Xb, SW * Xb)
@@ -885,12 +883,10 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"))
-
-  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int")) |>
+    .make_covs_full_rank()
 
   treat <- scale_w(treat, s.weights)
 
@@ -1117,21 +1113,19 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     }
 
     if (treat.types[i] %in% c("binary", "multinomial", "multi-category")) {
-      covs.list[[i]] <- .apply_moments_int_quantile(covs.list[[i]],
-                                                    moments = ...get("moments"),
-                                                    int = ...get("int"),
-                                                    quantile = ...get("quantile"),
-                                                    s.weights = s.weights)
+      covs.list[[i]] <- covs.list[[i]] |>
+        .apply_moments_int_quantile(moments = ...get("moments"),
+                                    int = ...get("int"),
+                                    quantile = ...get("quantile"),
+                                    s.weights = s.weights) |>
+        .make_covs_full_rank()
     }
     else {
-      covs.list[[i]] <- .apply_moments_int_quantile(covs.list[[i]],
-                                                    moments = ...get("moments"),
-                                                    int = ...get("int"))
+      covs.list[[i]] <- covs.list[[i]] |>
+        .apply_moments_int_quantile(moments = ...get("moments"),
+                                    int = ...get("int")) |>
+        .make_covs_full_rank()
     }
-
-    colinear.covs.to.remove <- setdiff(colnames(covs.list[[i]]),
-                                       colnames(make_full_rank(covs.list[[i]])))
-    covs.list[[i]] <- covs.list[[i]][, colnames(covs.list[[i]]) %nin% colinear.covs.to.remove, drop = FALSE]
 
     treat.list[[i]] <- switch(
       treat.types[i],

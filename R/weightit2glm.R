@@ -272,14 +272,15 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
+  covs <- .make_covs_closer_to_1(covs)
 
   if (ncol(covs) > 1L) {
     if (missing == "saem") {
       covs0 <- covs
-      for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[, i]), i] <- covs0[!is.na(covs0[, i]), i][1L]
+      for (i in colnames(covs)[anyNA_col(covs)]) {
+        covs0[is.na(covs0[, i]), i] <- covs0[!is.na(covs0[, i]), i][1L]
+      }
+
       colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs0)))
     }
     else {
@@ -530,14 +531,15 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
+  covs <- .make_covs_closer_to_1(covs)
 
   if (ncol(covs) > 1L) {
     if (missing == "saem") {
       covs0 <- covs
-      for (i in colnames(covs)[anyNA_col(covs)]) covs0[is.na(covs0[, i]), i] <- covs0[!is.na(covs0[, i]), i][1L]
+      for (i in colnames(covs)[anyNA_col(covs)]) {
+        covs0[is.na(covs0[, i]), i] <- covs0[!is.na(covs0[, i]), i][1L]
+      }
+
       colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs0)))
     }
     else {
@@ -963,9 +965,7 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
+  covs <- .make_covs_closer_to_1(covs)
 
   if (ncol(covs) > 1L) {
     if (missing == "saem") {

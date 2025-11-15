@@ -157,10 +157,13 @@
   chk::chk_flag(x)
   chk::chk_flag(y)
 
-  if (missing(data))
+  if (missing(data)) {
     data <- environment(formula)
+  }
+
   mf <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), names(mf), 0L)
+  m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"),
+             names(mf), 0L)
   mf <- mf[c(1L, m)]
   mf$drop.unused.levels <- TRUE
   mf[[1L]] <- quote(stats::model.frame)

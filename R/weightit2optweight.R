@@ -279,13 +279,11 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, ver
 
   bw <- bw[subset]
 
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"))
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int")) |>
+    .make_covs_closer_to_1()
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
 
   A <- list(...)
 

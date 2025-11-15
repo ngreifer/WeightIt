@@ -273,16 +273,10 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
-  covs <- as.data.frame(covs)
-
-  if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-  }
+  covs <- covs |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank() |>
+    as.data.frame()
 
   SL.method <- ...get("SL.method", eval(formals(SuperLearner::SuperLearner)[["method"]]))
   env <- ...get("env", environment(SuperLearner::SuperLearner))
@@ -345,7 +339,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
     #Note: do.call() is needed because arguments are quoted
     fit <- do.call(SuperLearner::SuperLearner,
                    list(Y = treat,
-                        X = as.data.frame(covs),
+                        X = covs,
                         family = binomial(),
                         SL.library = SL.library,
                         verbose = FALSE,
@@ -392,16 +386,10 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
-  covs <- as.data.frame(covs)
-
-  if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-  }
+  covs <- covs |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank() |>
+    as.data.frame()
 
   SL.method <- ...get("SL.method", eval(formals(SuperLearner::SuperLearner)[["method"]]))
   env <- ...get("env", environment(SuperLearner::SuperLearner))
@@ -428,7 +416,7 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
       #Note: do.call() is needed because arguments are quoted
       fit.list[[i]] <- do.call(SuperLearner::SuperLearner,
                                list(Y = treat_i,
-                                    X = as.data.frame(covs),
+                                    X = covs,
                                     family = binomial(),
                                     SL.library = SL.library,
                                     verbose = FALSE,
@@ -477,14 +465,10 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
-  if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-  }
+  covs <- covs |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank() |>
+    as.data.frame()
 
   #Process density params
   densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")), bw = ...get("bw"),
@@ -542,7 +526,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     #Note: do.call() is needed because arguments are quoted
     fit <- do.call(SuperLearner::SuperLearner,
                    list(Y = treat,
-                        X = as.data.frame(covs),
+                        X = covs,
                         family = gaussian(),
                         SL.library = SL.library,
                         verbose = FALSE,

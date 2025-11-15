@@ -190,8 +190,6 @@
 # Sets the vcov, vcov_type, and cluster components when given a user-supplied vcov;
 # for use in summary.glm_weightit()
 .set_vcov <- function(object, vcov, vcov_type = NULL) {
-  object$vcov <- vcov
-
   object$vcov_type <- {
     if (is_null(vcov)) "none"
     else vcov_type %or% .attr(vcov, "vcov_type")
@@ -199,7 +197,7 @@
 
   attr(object, "cluster") <- .attr(vcov, "cluster")
 
-  object$vcov <- .modify_vcov_info(object[["vcov"]])
+  object$vcov <- .modify_vcov_info(vcov)
 
   object
 }
@@ -243,7 +241,8 @@
 
   internal_model_call <- .build_internal_model_call(object, vcov = vcov.)
 
-  .compute_vcov(object, object[["weightit"]], vcov., cluster, object[["call"]], internal_model_call)
+  .compute_vcov(object, object[["weightit"]], vcov., cluster,
+                object[["call"]], internal_model_call)
 }
 
 .modify_vcov_info <- function(vcov, vcov_type = NULL, cluster = NULL) {
@@ -587,12 +586,14 @@
   }
 
   if (is_not_null(cluster) && vcov %in% c("none", "const")) {
-    .wrn("`cluster` is not used when `vcov = %s`", add_quotes(vcov))
+    .wrn(sprintf("`cluster` is not used when `vcov = %s`",
+                 add_quotes(vcov)))
   }
 
   if (vcov == "none") {
-    return(.modify_vcov_info(matrix(nrow = 0L, ncol = 0L),
-                             vcov_type = "none", cluster = cluster))
+    return(.modify_vcov_info(sq_matrix(n = 0L),
+                             vcov_type = "none",
+                             cluster = cluster))
   }
 
   bout <- fit[["coefficients"]]
@@ -658,6 +659,7 @@
     else {
       Xout <- make_full_rank(Xout, with.intercept = FALSE)
     }
+
     bout <- bout[!aliased]
   }
 
@@ -680,7 +682,7 @@
     if (p > 1L) {
       clu <- lapply(seq_len(p), function(i) utils::combn(seq_len(p), i, simplify = FALSE))
       clu <- unlist(clu, recursive = FALSE)
-      sgn <- vapply(clu, function(i) (-1)^(length(i) + 1L), numeric(1L))
+      sgn <- (-1L)^(lengths(clu) + 1L)
       paste_ <- function(...) paste(..., sep = "_")
       for (i in (p + 1L):length(clu)) {
         cluster <- cbind(cluster, Reduce(paste_, unclass(cluster[, clu[[i]]])))
@@ -920,11 +922,8 @@
 
     psi_b <- fit[["gradient"]] %or% psi_out(bout, W, Y, Xout, SW, offset)
 
-    H <- {
-      if (is_not_null(fit[["hessian"]])) {
-        fit$hessian
-      }
-      else if (inherits(fit, "ordinal_weightit")) {
+    H <- fit[["hessian"]] %or% {
+      if (inherits(fit, "ordinal_weightit")) {
         .get_hess_ordinal(fit)
       }
       else if (inherits(fit, "multinom_weightit")) {

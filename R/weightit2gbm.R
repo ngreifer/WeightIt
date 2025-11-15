@@ -299,13 +299,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
   if (missing == "ind") {
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
+
+  covs <- .make_covs_closer_to_1(covs)
 
   criterion <- ...get("criterion") %or% ...get("stop.method")
 
@@ -639,13 +637,11 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   missing <- .process_missing2(missing, covs)
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
   if (missing == "ind") {
     covs <- add_missing_indicators(covs, replace_with = NA)
   }
+
+  covs <- .make_covs_closer_to_1(covs)
 
   criterion <- ...get("criterion") %or% ...get("stop.method")
 

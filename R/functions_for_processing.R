@@ -706,6 +706,16 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 }
 
+.make_covs_full_rank <- function(covs) {
+  if (ncol(covs) <= 1L) {
+    return(covs)
+  }
+
+  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
+
+  covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+}
+
 .make_closer_to_1 <- function(x) {
   if (chk::vld_character_or_factor(x) || all_the_same(x)) {
     return(x)
@@ -716,6 +726,14 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 
   (x - mean_fast(x, TRUE)) / sd(x, na.rm = TRUE)
+}
+
+.make_covs_closer_to_1 <- function(covs) {
+  for (i in seq_col(covs)) {
+    covs[, i] <- .make_closer_to_1(covs[, i])
+  }
+
+  covs
 }
 
 .apply_moments_int_quantile <- function(d, moments = integer(), int = FALSE, quantile = list(),

@@ -202,14 +202,9 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     covs <- add_missing_indicators(covs)
   }
 
-  if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-  }
-
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
+  covs <- covs |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
 
   t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
@@ -255,14 +250,9 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
     covs <- add_missing_indicators(covs)
   }
 
-  if (ncol(covs) > 1L) {
-    colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-    covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
-  }
-
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
+  covs <- covs |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
 
   ps <- make_df(levels(treat), nrow = length(treat))
 
@@ -313,9 +303,8 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     covs <- add_missing_indicators(covs)
   }
 
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
+  covs <- covs |>
+    .make_covs_closer_to_1()
 
   #Process density params
   densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")),

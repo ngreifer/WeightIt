@@ -25,9 +25,8 @@
 #' \item{`plot.weightit_ok`}{a logical for whether `plot()` can be used on the `weightit` output with the method.}
 #' }
 #'
-#' @seealso [weightit()] and [weightitMSM()] for how the methods are used. Also
-#'   see the individual methods pages for information on whether and how each
-#'   option can be used.
+#' @seealso
+#' [weightit()] and [weightitMSM()] for how the methods are used. Also see the individual methods pages for information on whether and how each option can be used.
 #'
 #' @examples
 #' # Get all acceptable names

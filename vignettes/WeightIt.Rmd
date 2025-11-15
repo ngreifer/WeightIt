@@ -16,7 +16,7 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, eval=TRUE)
+knitr::opts_chunk$set(echo = TRUE, eval=TRUE,message=FALSE)
 options(width = 200, digits= 4)
 
 me_ok <- rlang::is_installed("marginaleffects")

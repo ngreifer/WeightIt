@@ -148,19 +148,14 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"),
-                                      quantile = ...get("quantile"),
-                                      s.weights = s.weights, focal = focal,
-                                      treat = treat)
-
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
-  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights, focal = focal,
+                                treat = treat) |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
 
   C <- cbind(`(Intercept)` = 1, covs)
 
@@ -170,7 +165,8 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   link <- ...get("link", "logit")
 
   if (chk::vld_string(link)) {
-    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
+    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog",
+                            "cauchit", "log", "clog"))
 
     link <- .make_link(link)
   }
@@ -372,19 +368,14 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- add_missing_indicators(covs)
   }
 
-  covs <- .apply_moments_int_quantile(covs,
-                                      moments = ...get("moments"),
-                                      int = ...get("int"),
-                                      quantile = ...get("quantile"),
-                                      s.weights = s.weights, focal = focal,
-                                      treat = treat)
-
-  for (i in seq_col(covs)) {
-    covs[, i] <- .make_closer_to_1(covs[, i])
-  }
-
-  colinear.covs.to.remove <- setdiff(colnames(covs), colnames(make_full_rank(covs)))
-  covs <- covs[, colnames(covs) %nin% colinear.covs.to.remove, drop = FALSE]
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights, focal = focal,
+                                treat = treat) |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
 
   C <- cbind(`(Intercept)` = 1, covs)
 
