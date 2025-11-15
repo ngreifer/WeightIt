@@ -33,11 +33,6 @@ interested in the average treatment effect on the treated (ATT).
 
 ``` r
 library("cobalt")
-```
-
-    ##  cobalt (Version 4.6.1, Build Date: 2025-08-20)
-
-``` r
 data("lalonde", package = "cobalt")
 head(lalonde)
 ```
@@ -264,7 +259,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_white   Binary        0 Balanced, <0.05           .
     ## married      Binary        0 Balanced, <0.05           .
     ## nodegree     Binary       -0 Balanced, <0.05           .
-    ## re74        Contin.       -0 Balanced, <0.05       1.326
+    ## re74        Contin.        0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
     ## Balance tally for mean differences
@@ -274,7 +269,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## 
     ## Variable with the greatest mean difference
     ##  Variable Diff.Adj     M.Threshold
-    ##      re74       -0 Balanced, <0.05
+    ##      re75       -0 Balanced, <0.05
     ## 
     ## Effective sample sizes
     ##            Control Treated

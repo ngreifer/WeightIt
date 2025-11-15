@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2025-11-13</h4>
+            <h4 data-toc-skip class="date">2025-11-15</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -111,10 +111,8 @@ the <em>cobalt</em> package, which we will use later on as well. Here,
 we are interested in the average treatment effect on the treated
 (ATT).</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">##  cobalt (Version 4.6.1, Build Date: 2025-08-20)</span></span></code></pre>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"lalonde"</span>, package <span class="op">=</span> <span class="st">"cobalt"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">lalonde</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##   treat age educ   race married nodegree re74 re75    re78</span></span>
 <span><span class="co">## 1     1  37   11  black       1        1    0    0  9930.0</span></span>
@@ -129,7 +127,7 @@ we are interested in the average treatment effect on the treated
 <code>married</code>, <code>nodegree</code>, <code>re74</code>, and
 <code>re75</code>). Using <em>cobalt</em>, we can examine the initial
 imbalance on the covariates:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span></span>
 <span>          <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
 <span>        data <span class="op">=</span> <span class="va">lalonde</span>,</span>
@@ -173,7 +171,7 @@ supply <code><a href="../reference/weightit.html">weightit()</a></code> with the
 set, the estimand (ATT), and the method of estimation
 (<code>"glm"</code> for generalized linear model propensity score
 weights).</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/WeightIt/">"WeightIt"</a></span><span class="op">)</span></span>
 <span><span class="va">W.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span></span>
 <span>                    <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
@@ -197,7 +195,7 @@ sample size (ESS) computed from the weights, which we hope is as close
 to the original sample size as possible. What constitutes a “large
 enough” ESS is mostly relative, though, and must be considered with
 respect other constraints, including covariate balance.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">W.out</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">##                   <span style="text-decoration: underline;">Summary of weights</span></span></span>
 <span><span class="co">## </span></span>
@@ -228,7 +226,7 @@ respect other constraints, including covariate balance.</p>
 <p>These weights have quite high variability, and yield an ESS of close
 to 100 in the control group. Let’s see if these weights managed to yield
 balance on our covariates.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"v"</span><span class="op">)</span>,</span>
 <span>        thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span></span>
@@ -265,7 +263,7 @@ balancing <span class="citation">(<a href="#ref-hainmuellerEntropyBalancingCausa
 2012</a>)</span>, which guarantees perfect balance on specified moments
 of the covariates while minimizing the negative entropy (a measure of
 dispersion) of the weights.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">W.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightit.html">weightit</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span> <span class="va">nodegree</span> <span class="op">+</span></span>
 <span>                    <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span>,</span>
 <span>                  data <span class="op">=</span> <span class="va">lalonde</span>,</span>
@@ -300,7 +298,7 @@ dispersion) of the weights.</p>
 <span><span class="co">## Weighted     98.46     185</span></span></code></pre>
 <p>The variability of the weights has not changed much, but let’s see if
 there are any gains in terms of balance:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"v"</span><span class="op">)</span>,</span>
 <span>        thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span></span>
@@ -312,7 +310,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## race_white   Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## married      Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
+<span><span class="co">## re74        Contin.        0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Balance tally for mean differences</span></span></span>
@@ -322,7 +320,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Variable with the greatest mean difference</span></span></span>
 <span><span class="co">##  Variable Diff.Adj     M.Threshold</span></span>
-<span><span class="co">##      re74       -0 Balanced, &lt;0.05</span></span>
+<span><span class="co">##      re75       -0 Balanced, &lt;0.05</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="text-decoration: underline;">Effective sample sizes</span></span></span>
 <span><span class="co">##            Control Treated</span></span>
@@ -341,12 +339,12 @@ make it easy to fit (generalized) linear models that account for
 estimation of of the weights in their standard errors. We can then use
 functions in <em>marginaleffects</em> to perform g-computation to
 extract a treatment effect estimation from the outcome model.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fit outcome model</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">lm_weightit</a></span><span class="op">(</span><span class="va">re78</span> <span class="op">~</span> <span class="va">treat</span> <span class="op">*</span> <span class="op">(</span><span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">race</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span>
 <span>                                     <span class="va">nodegree</span> <span class="op">+</span> <span class="va">re74</span> <span class="op">+</span> <span class="va">re75</span><span class="op">)</span>,</span>
 <span>                   data <span class="op">=</span> <span class="va">lalonde</span>, weightit <span class="op">=</span> <span class="va">W.out</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># G-computation for the treatment effect</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://marginaleffects.com/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span>
 <span></span>
@@ -374,7 +372,7 @@ in detail at <code><a href="../articles/estimating-effects.html">vignette("estim
 with longitudinal treatment as well. This time, we’ll use the sample
 data set <code>msmdata</code> to estimate our weights. Data must be in
 “wide” format, with one row per unit.</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"msmdata"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">msmdata</span><span class="op">)</span></span></code></pre></div>
@@ -398,7 +396,7 @@ on all variables measured prior to that treatment, including previous
 treatments.</p>
 <p>Using <em>cobalt</em>, we can examine the initial imbalance at each
 time point and overall:</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://ngreifer.github.io/cobalt/" class="external-link">"cobalt"</a></span><span class="op">)</span> <span class="co">#if not already attached</span></span>
 <span></span>
 <span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
@@ -459,7 +457,7 @@ treatments and to that of <code><a href="https://ngreifer.github.io/cobalt/refer
 treatments. We’ll use <code>method = "glm"</code> and
 <code>stabilize = TRUE</code> for stabilized propensity score weights
 estimated using logistic regression.</p>
-<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">Wmsm.out</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
 <span>                             <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span></span>
 <span>                               <span class="va">A_1</span> <span class="op">+</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
@@ -493,7 +491,7 @@ arrive at the final estimated weights. Printing the output of
 <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> provides some details about the function call
 and the output. We can take a look at the quality of the weights with
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, just as we could for point treatments.</p>
-<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">Wmsm.out</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: line-through;">                       </span><span style="font-style: italic;"> Time 1 </span><span style="text-decoration: line-through;">                       </span></span></span>
 <span><span class="co">##                   <span style="text-decoration: underline;">Summary of weights</span></span></span>
@@ -587,7 +585,7 @@ and the output. We can take a look at the quality of the weights with
 <p>Displayed are summaries of how the weights perform at each time point
 with respect to variability. Next, we’ll examine how well they perform
 with respect to covariate balance.</p>
-<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">Wmsm.out</span>, stats <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"m"</span>, <span class="st">"ks"</span><span class="op">)</span>,</span>
 <span>        which.time <span class="op">=</span> <span class="va">.none</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Balance summary across all time points</span></span></span>
@@ -623,7 +621,7 @@ effects.</p>
 <p>First, we fit a marginal structural model for the outcome using
 <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with the <code>weightit</code> object
 supplied:</p>
-<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Fit outcome model</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">Y_B</span> <span class="op">~</span> <span class="va">A_1</span> <span class="op">*</span> <span class="va">A_2</span> <span class="op">*</span> <span class="va">A_3</span> <span class="op">*</span> <span class="op">(</span><span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span><span class="op">)</span>,</span>
 <span>                    data <span class="op">=</span> <span class="va">msmdata</span>,</span>
@@ -632,7 +630,7 @@ supplied:</p>
 <p>Then, we compute the average expected potential outcomes under each
 treatment regime using
 <code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>:</p>
-<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://marginaleffects.com/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span><span class="op">)</span></span>
@@ -658,7 +656,7 @@ we can use <code><a href="https://marginaleffects.com/man/r/hypotheses.html" cla
 <code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions()</a></code> output. For example, to compare the
 regimes with no treatment for all three time points vs. the regime with
 treatment for all three time points, we would run</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"b8 - b1 = 0"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>

@@ -221,44 +221,44 @@ data("lalonde", package = "cobalt")
 #> - Weight ranges:
 #> 
 #>          Min                                 Max
-#> black  0.642  |--------------------------| 9.367
-#> hispan 0.285 |---------------|             5.525
-#> white  0.468 |-----|                       2.515
+#> black  0.643  |--------------------------| 9.266
+#> hispan 0.286 |---------------|             5.499
+#> white  0.469  |----|                       2.51 
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                      
 #>           241   166   163   153   152
-#>   black 2.537 2.728 3.089 4.505 9.367
+#>   black 2.531 2.722 3.066 4.479 9.266
 #>            67    43    39    36    28
-#>  hispan 2.006 2.232 3.075 4.275 5.525
+#>  hispan 1.998 2.245 3.077 4.286 5.499
 #>           291   285   258   205     6
-#>   white  1.95 1.971 2.017 2.134 2.515
+#>   white 1.949 1.968 2.015  2.13  2.51
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.753 0.413   0.160       0
-#> hispan       0.820 0.462   0.220       0
-#> white        0.414 0.331   0.079       0
+#> black        0.747 0.412   0.159       0
+#> hispan       0.818 0.461   0.219       0
+#> white        0.413 0.331   0.079       0
 #> 
 #> - Effective Sample Sizes:
 #> 
-#>            black hispan  white
-#> Unweighted 243.   72.   299.  
-#> Weighted   155.3  43.31 255.36
+#>             black hispan  white
+#> Unweighted 243.    72.   299.  
+#> Weighted   156.22  43.38 255.47
 
   cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.0310
-#> educ     Contin.       0.0431
-#> married   Binary       0.0225
-#> nodegree  Binary       0.0158
-#> re74     Contin.       0.0432
+#> age      Contin.       0.0314
+#> educ     Contin.       0.0415
+#> married   Binary       0.0215
+#> nodegree  Binary       0.0153
+#> re74     Contin.       0.0397
 #> 
 #> Effective sample sizes
-#>            black hispan  white
-#> Unadjusted 243.   72.   299.  
-#> Adjusted   155.3  43.31 255.36
+#>             black hispan  white
+#> Unadjusted 243.    72.   299.  
+#> Adjusted   156.22  43.38 255.47
 # }
 ```
