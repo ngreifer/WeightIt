@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# `WeightIt` (development version)
+# `WeightIt` 1.5.1
 
 * `calibrate()` with `method = "isoreg"` can now be used with sampling weights.
 
