@@ -119,6 +119,7 @@
 #' | [`"super"`][method_super] | Propensity score weighting using SuperLearner |
 #' | [`"bart"`][method_bart] | Propensity score weighting using Bayesian additive regression trees (BART) |
 #' | [`"energy"`][method_energy] | Energy balancing |
+#' | [`"cfd"`][method_cfd] | Characteristic function distance balancing |
 #'
 #' `method` can also be supplied as a user-defined function; see [`method_user`]
 #' for instructions and examples. Setting `method = NULL` computes unit weights.

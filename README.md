@@ -169,6 +169,7 @@ install them.
 | SuperLearner PS | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html) |
 | Bayesian additive regression trees PS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html) |
 | Energy balancing | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html) |
+| Characteristic function distance balancing | [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.html) |
 
 #### Multi-Category Treatments
 
@@ -184,6 +185,7 @@ install them.
 | SuperLearner PS | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html) |
 | Bayesian additive regression trees PS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html) |
 | Energy balancing | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html) |
+| Characteristic function distance balancing | [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.html) |
 
 #### Continuous Treatments
 

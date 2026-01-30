@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# `WeightIt` (development version)
+
+* Added `method = "cfd"` for characteristic function distance balancing as described by [Santra, Chen, and Park (2026)](http://arxiv.org/abs/2601.15449). Energy balancing is a special case of this method.
+
 # `WeightIt` 1.5.1
 
 * `calibrate()` with `method = "isoreg"` can now be used with sampling weights.

@@ -232,5 +232,23 @@
     density_ok = TRUE,
     stabilize_ok = TRUE,
     plot.weightit_ok = FALSE
+  ),
+  "cfd" = list(
+    treat_type = c("binary", "multinomial"),
+    estimand = c("ATE", "ATT", "ATC"),
+    alias = c("cfd", "kernel"),
+    description = "characteristic function distance balancing",
+    ps = FALSE,
+    msm_valid = FALSE,
+    msm_method_available = FALSE,
+    subclass_ok = FALSE,
+    packages_needed = "osqp",
+    s.weights_ok = TRUE,
+    missing = "ind",
+    moments_int_ok = TRUE,
+    moments_default = 0,
+    density_ok = FALSE,
+    stabilize_ok = FALSE,
+    plot.weightit_ok = FALSE
   )
 )}
