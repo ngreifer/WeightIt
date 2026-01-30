@@ -786,7 +786,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     }
 
     rlang::check_installed("GPBayes")
-    return(GPBayes::matern(D, 1, nu))
+    return(GPBayes::matern(D, bw, nu))
   }
 
   if (kernel == "laplace") {
