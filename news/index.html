@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,8 +44,13 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
+<code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<ul><li>Added <code>method = "cfd"</code> for characteristic function distance balancing as described by <a href="http://arxiv.org/abs/2601.15449" class="external-link">Santra, Chen, and Park (2026)</a>. Energy balancing is a special case of this method.</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.5.1" id="weightit-151">
-<code>WeightIt</code> 1.5.1<a class="anchor" aria-label="anchor" href="#weightit-151"></a></h2>
+<code>WeightIt</code> 1.5.1<a class="anchor" aria-label="anchor" href="#weightit-151"></a></h2><p class="text-muted">CRAN release: 2025-11-15</p>
 <ul><li><p><code><a href="../reference/calibrate.html">calibrate()</a></code> with <code>method = "isoreg"</code> can now be used with sampling weights.</p></li>
 <li><p>With <code><a href="../reference/predict.glm_weightit.html">predict.ordinal_weightit()</a></code> and <code><a href="../reference/predict.glm_weightit.html">predict.multinom_weightit()</a></code> with <code>type = "response"</code>, an optional <code>level</code> argument can be supplied to request predictions solely for the given outcome level.</p></li>
 <li><p>When <code>vcov</code> is <code>"BS"</code> or <code>"FWB"</code> in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, etc., any call to <code><a href="../reference/trim.html">trim()</a></code> or <code><a href="../reference/calibrate.html">calibrate()</a></code> will be applied within each bootstrap replication.</p></li>
@@ -250,7 +255,7 @@
 <h2 class="pkg-version" data-toc-text="0.12.0" id="weightit-0120">
 <code>WeightIt</code> 0.12.0<a class="anchor" aria-label="anchor" href="#weightit-0120"></a></h2><p class="text-muted">CRAN release: 2021-04-03</p>
 <ul><li><p>The use of <code>method = "twang"</code> has been retired and will now give an error message. Use <code>method = "gbm"</code> for nearly identical functionality with more options, as detailed at <code><a href="../reference/method_gbm.html">?method_gbm</a></code>.</p></li>
-<li><p>With multinomial treatments with <code>link = "logit"</code> (the default), if the <code>mclogit</code> package is installed, it can be requested for estimating the propensity score by setting the option <code>use.mclogit = TRUE</code>, which uses <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html" class="external-link">mclogit::mblogit()</a></code>. It should give the same results as the default, which uses <code>mlogit</code>, but can be faster and so is recommended.</p></li>
+<li><p>With multinomial treatments with <code>link = "logit"</code> (the default), if the <code>mclogit</code> package is installed, it can be requested for estimating the propensity score by setting the option <code>use.mclogit = TRUE</code>, which uses <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>. It should give the same results as the default, which uses <code>mlogit</code>, but can be faster and so is recommended.</p></li>
 <li><p>Added a <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> method for <code>summary.weightitMSM</code> objects that functions just like <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code> for each time point.</p></li>
 <li><p>Fixed a bug in <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code> where the labels of the top weights were incorrect. Thanks to Adam Lilly.</p></li>
 <li><p>Fixed a bug in <code><a href="../reference/sbps.html">sbps()</a></code> when using a stochastic search (i.e., <code>full.search = FALSE</code> or more than 8 moderator levels). (<a href="https://github.com/ngreifer/WeightIt/issues/17" class="external-link">#17</a>)</p></li>

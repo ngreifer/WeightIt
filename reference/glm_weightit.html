@@ -31,7 +31,7 @@ model when available."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -203,7 +203,8 @@ supplied); <code>"HC0"</code>, which computes the robust sandwich variance treat
 weights (if supplied) as fixed; <code>"BS"</code>, which uses the traditional
 bootstrap (including re-estimation of the weights, if supplied); <code>"FWB"</code>,
 which uses the fractional weighted bootstrap as implemented in
-<code><a href="https://ngreifer.github.io/fwb/reference/fwb.html" class="external-link">fwb::fwb()</a></code> (including re-estimation of the weights, if supplied);
+<code><a href="https://ngreifer.github.io/fwb/reference/fwb.html" class="external-link">fwb::fwb()</a></code>
+ (including re-estimation of the weights, if supplied);
 and <code>"none"</code> to omit calculation of a variance matrix. If <code>NULL</code> (the
 default), will use <code>"asympt"</code> if <code>weightit</code> is supplied and M-estimation is
 available and <code>"HC0"</code> otherwise. See the <code>vcov_type</code> component of the
@@ -256,13 +257,16 @@ See <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-li
 
 <dt id="arg-fwb-args">fwb.args<a class="anchor" aria-label="anchor" href="#arg-fwb-args"></a></dt>
 <dd><p>an optional list of further arguments to supply to
-<code><a href="https://ngreifer.github.io/fwb/reference/fwb.html" class="external-link">fwb::fwb()</a></code> when <code>vcov = "FWB"</code>.</p></dd>
+<code><a href="https://ngreifer.github.io/fwb/reference/fwb.html" class="external-link">fwb::fwb()</a></code>
+ when <code>vcov = "FWB"</code>.</p></dd>
 
 
 <dt id="arg-br">br<a class="anchor" aria-label="anchor" href="#arg-br"></a></dt>
 <dd><p><code>logical</code>; whether to use bias-reduced regression as implemented by
-<code><a href="https://rdrr.io/pkg/brglm2/man/brglmFit.html" class="external-link">brglm2::brglmFit()</a></code>. If <code>TRUE</code>, arguments passed to <code>control</code> or
-... will be passed to <code><a href="https://rdrr.io/pkg/brglm2/man/brglmControl.html" class="external-link">brglm2::brglmControl()</a></code>.</p></dd>
+<code><a href="https://rdrr.io/pkg/brglm2/man/brglmFit.html" class="external-link">brglm2::brglmFit()</a></code>
+. If <code>TRUE</code>, arguments passed to <code>control</code> or
+... will be passed to <code><a href="https://rdrr.io/pkg/brglm2/man/brglmControl.html" class="external-link">brglm2::brglmControl()</a></code>
+.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -331,7 +335,7 @@ parallelization) at the expense of needing to have <span class="pkg">fwb</span> 
 custom function in <span class="pkg">WeightIt</span>. This implementation is less robust to
 failures than other multinomial logistic regression solvers and should be
 used with caution. Estimation of coefficients should align with that from
-<code><a href="https://rdrr.io/pkg/mlogit/man/mlogit.html" class="external-link">mlogit::mlogit()</a></code> and <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html" class="external-link">mclogit::mblogit()</a></code>.</p>
+<code><a href="https://rdrr.io/pkg/mlogit/man/mlogit.html" class="external-link">mlogit::mlogit()</a></code> and <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>.</p>
 <p><code>ordinal_weightit()</code> implements proportional odds ordinal regression using a
 custom function in <span class="pkg">WeightIt</span>. Estimation of coefficients should align
 with that from <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>.</p>

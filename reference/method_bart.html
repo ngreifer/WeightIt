@@ -12,12 +12,14 @@ can be used with binary, multi-category, and continuous treatments.
 In general, this method relies on estimating propensity scores using BART and
 then converting those propensity scores into weights using a formula that
 depends on the desired estimand. This method relies on dbarts::bart2()
+
 from the dbarts package.
 Binary Treatments
 
 
 For binary treatments, this method estimates the propensity scores using
-dbarts::bart2(). The following estimands are allowed: ATE, ATT, ATC,
+dbarts::bart2()
+. The following estimands are allowed: ATE, ATT, ATC,
 ATO, ATM, and ATOS. Weights can also be computed using marginal mean
 weighting through stratification for the ATE, ATT, and ATC. See
 get_w_from_ps() for details.
@@ -28,7 +30,8 @@ Multi-Category Treatments
 
 
 For multi-category treatments, the propensity scores are estimated using
-several calls to dbarts::bart2(), one for each treatment group; the
+several calls to dbarts::bart2()
+, one for each treatment group; the
 treatment probabilities are not normalized to sum to 1. The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
 estimand are computed using the standard formulas or those mentioned above.
@@ -49,7 +52,8 @@ covariates evaluated at the observed value of treatment. The shape of
 \(f_A(.)\) and \(f_{A|X}(.)\) is controlled by the density argument
 described below (normal distributions by default), and the predicted values
 used for the mean of the conditional density are estimated using BART as
-implemented in dbarts::bart2(). Kernel density estimation can be used
+implemented in dbarts::bart2()
+. Kernel density estimation can be used
 instead of assuming a specific density for the numerator and denominator by
 setting density = "kernel". Other arguments to density() can be specified
 to refine the density estimation parameters.
@@ -97,12 +101,14 @@ can be used with binary, multi-category, and continuous treatments.
 In general, this method relies on estimating propensity scores using BART and
 then converting those propensity scores into weights using a formula that
 depends on the desired estimand. This method relies on dbarts::bart2()
+
 from the dbarts package.
 Binary Treatments
 
 
 For binary treatments, this method estimates the propensity scores using
-dbarts::bart2(). The following estimands are allowed: ATE, ATT, ATC,
+dbarts::bart2()
+. The following estimands are allowed: ATE, ATT, ATC,
 ATO, ATM, and ATOS. Weights can also be computed using marginal mean
 weighting through stratification for the ATE, ATT, and ATC. See
 get_w_from_ps() for details.
@@ -113,7 +119,8 @@ Multi-Category Treatments
 
 
 For multi-category treatments, the propensity scores are estimated using
-several calls to dbarts::bart2(), one for each treatment group; the
+several calls to dbarts::bart2()
+, one for each treatment group; the
 treatment probabilities are not normalized to sum to 1. The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
 estimand are computed using the standard formulas or those mentioned above.
@@ -134,7 +141,8 @@ covariates evaluated at the observed value of treatment. The shape of
 \(f_A(.)\) and \(f_{A|X}(.)\) is controlled by the density argument
 described below (normal distributions by default), and the predicted values
 used for the mean of the conditional density are estimated using BART as
-implemented in dbarts::bart2(). Kernel density estimation can be used
+implemented in dbarts::bart2()
+. Kernel density estimation can be used
 instead of assuming a specific density for the numerator and denominator by
 setting density = "kernel". Other arguments to density() can be specified
 to refine the density estimation parameters.
@@ -183,7 +191,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -222,12 +230,14 @@ can be used with binary, multi-category, and continuous treatments.</p>
 <p>In general, this method relies on estimating propensity scores using BART and
 then converting those propensity scores into weights using a formula that
 depends on the desired estimand. This method relies on <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>
+
 from the <a href="https://CRAN.R-project.org/package=dbarts" class="external-link"><span class="pkg">dbarts</span></a> package.</p><div class="section">
 <h3 id="binary-treatments">Binary Treatments<a class="anchor" aria-label="anchor" href="#binary-treatments"></a></h3>
 
 
 <p>For binary treatments, this method estimates the propensity scores using
-<code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>. The following estimands are allowed: ATE, ATT, ATC,
+<code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>
+. The following estimands are allowed: ATE, ATT, ATC,
 ATO, ATM, and ATOS. Weights can also be computed using marginal mean
 weighting through stratification for the ATE, ATT, and ATC. See
 <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
@@ -238,7 +248,8 @@ weighting through stratification for the ATE, ATT, and ATC. See
 
 
 <p>For multi-category treatments, the propensity scores are estimated using
-several calls to <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>, one for each treatment group; the
+several calls to <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>
+, one for each treatment group; the
 treatment probabilities are not normalized to sum to 1. The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
 estimand are computed using the standard formulas or those mentioned above.
@@ -259,7 +270,8 @@ covariates evaluated at the observed value of treatment. The shape of
 \(f_A(.)\) and \(f_{A|X}(.)\) is controlled by the <code>density</code> argument
 described below (normal distributions by default), and the predicted values
 used for the mean of the conditional density are estimated using BART as
-implemented in <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>. Kernel density estimation can be used
+implemented in <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>
+. Kernel density estimation can be used
 instead of assuming a specific density for the numerator and denominator by
 setting <code>density = "kernel"</code>. Other arguments to <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> can be specified
 to refine the density estimation parameters.</p>
@@ -312,7 +324,8 @@ score. Although the hyperparameters governing the priors can be modified by
 supplying arguments to <code><a href="weightit.html">weightit()</a></code> that are passed to the BART fitting
 function, the default values tend to work well and require little
 modification (though the defaults differ for continuous and categorical
-treatments; see the <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code> documentation for details). Unlike
+treatments; see the <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>
+ documentation for details). Unlike
 many other machine learning methods, no loss function is optimized and the
 hyperparameters do not need to be tuned (e.g., using cross-validation),
 though performance can benefit from tuning. BART tends to balance sparseness
@@ -324,7 +337,8 @@ functional form and without overfitting.</p><div class="section">
 
 <p>BART has a random component, so some work must be done to ensure
 reproducibility across runs. See the <em>Reproducibility</em> section at
-<code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code> for more details. To ensure reproducibility, one can
+<code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>
+ for more details. To ensure reproducibility, one can
 do one of two things:</p><ol><li><p>supply an argument to <code>seed</code>, which is passed to <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code> and sets the seed for single- and multi-threaded uses, or</p></li>
 <li><p>call <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> and set <code>n.threads = 1</code> to use single-threading.
 Note that to ensure reproducibility on any machine, regardless of the number of
@@ -338,7 +352,8 @@ call <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">se
 
 
 
-<p>All arguments to <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code> can be passed through <code><a href="weightit.html">weightit()</a></code>
+<p>All arguments to <code><a href="https://rdrr.io/pkg/dbarts/man/bart.html" class="external-link">dbarts::bart2()</a></code>
+ can be passed through <code><a href="weightit.html">weightit()</a></code>
 or <code><a href="weightitMSM.html">weightitMSM()</a></code>, with the following exceptions:</p><ul><li><p><code>test</code>, <code>weights</code>,<code>subset</code>, <code>offset.test</code> are ignored</p></li>
 <li><p><code>combine.chains</code> is always set to <code>TRUE</code></p></li>
 <li><p><code>sampleronly</code> is always set to <code>FALSE</code></p></li>
@@ -418,41 +433,41 @@ methods, including BART.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.       ||                         1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.003 |---------------------------| 9.527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.003 |---------------------------| 9.382</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              1     2    3     4     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1    1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            423   407  384   224   189</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.326 2.628 2.67 3.213 9.527</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.124 2.812 2.87 3.363 9.382</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated        0.00 0.000   0.000       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control        1.79 0.926   0.721       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000   0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.793 0.933   0.728       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    102.22     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted     429     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted       102     185</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.4794</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0653</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0274</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0308</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0297</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0532</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.4934</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.   0.0683</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.  -0.0235</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0315</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0331</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0572</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    102.22     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted     429     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted       102     185</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to race (multi-category)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
@@ -472,45 +487,45 @@ methods, including BART.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.238 |-----------------|            9.063</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 2.445    |------------------------| 12.818</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.067 |---------------|              7.998</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black  1.239 |-----------------|            8.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan 2.681     |-----------------------| 12.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white  1.067 |---------------|              8.146</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            192   166    164    163    152</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   black  7.079 7.262   7.95  8.305  9.063</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             69    67     59     50     37</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 11.452 12.15 12.425 12.645 12.818</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             15     7      6      5      3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white  4.337 5.006  5.424   7.78  7.998</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            192    171    166    164    152</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   black  7.203  7.209  7.792   8.24  8.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             69     67     50     43     37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  hispan 11.881 11.993 12.115 12.402 12.914</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            177     15      7      5      3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white  4.311   5.03  5.284  7.684  8.146</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.578 0.374   0.126       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.382 0.319   0.074       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.453 0.317   0.081       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.574 0.371   0.124       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> hispan       0.372 0.308   0.069       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        0.451 0.315   0.081       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 243.    72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   182.33  62.95 248.32</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   182.95  63.34 248.67</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Max.Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.1941</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1603</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0536</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0326</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.1134</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.       0.1868</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.       0.1661</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       0.0535</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary       0.0312</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.1183</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             black hispan  white</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 243.    72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   182.33  62.95 248.32</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   182.95  63.34 248.67</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to re75 (continuous)</span></span></span>
 <span class="r-in"><span><span class="co">#assuming t(3) conditional density for treatment</span></span></span>
@@ -530,37 +545,37 @@ methods, including BART.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.078 |---------------------------| 19.859</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.078 |---------------------------| 20.461</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        487   486   484    469    310</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 7.619 8.151 9.056 18.924 19.859</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        487   486   484    469    308</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 7.517 7.664 9.542 19.599 20.461</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.141 0.479    0.28       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all       1.157 0.477   0.282       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   267.09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   262.72</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0272</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0576</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary   0.0799</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0859</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.   0.1105</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.   0.0312</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0502</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary   0.0784</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0765</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.   0.1111</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   267.09</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted   262.72</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

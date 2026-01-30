@@ -59,8 +59,8 @@ treatments, the dual variables are split into those for the target
 its unweighted mean) and those for balance (i.e., ensuring the
 treatment-covariate correlations are no larger than the imbalance
 tolerance). This is essentially a wrapper for
-[`optweight::plot.optweight()`](https://ngreifer.github.io/optweight/reference/plot.optweight.html).
-See
+[`optweight::plot.optweight()`](https://ngreifer.github.io/optweight/reference/plot.optweight.html)
+. See
 [`method_optweight`](https://ngreifer.github.io/WeightIt/reference/method_optweight.md)
 for details.
 

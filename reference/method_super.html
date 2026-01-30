@@ -17,13 +17,15 @@ classification algorithms are used to estimate the propensity scores as the
 predicted probability of being in each treatment given the covariates. For
 continuous treatments, regression algorithms are used to estimate generalized
 propensity scores as the conditional density of treatment given the
-covariates. This method relies on SuperLearner::SuperLearner() from
+covariates. This method relies on SuperLearner::SuperLearner()
+ from
 the SuperLearner package.
 Binary Treatments
 
 
 For binary treatments, this method estimates the propensity scores using
-SuperLearner::SuperLearner(). The following estimands are allowed:
+SuperLearner::SuperLearner()
+. The following estimands are allowed:
 ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using
 marginal mean weighting through stratification for the ATE, ATT, and ATC. See
 get_w_from_ps() for details.
@@ -34,7 +36,8 @@ Multi-Category Treatments
 
 
 For multi-category treatments, the propensity scores are estimated using
-several calls to SuperLearner::SuperLearner(), one for each treatment
+several calls to SuperLearner::SuperLearner()
+, one for each treatment
 group; the treatment probabilities are not normalized to sum to 1. The
 following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for
 each estimand are computed using the standard formulas or those mentioned
@@ -47,7 +50,8 @@ Continuous Treatments
 
 
 For continuous treatments, the generalized propensity score is estimated
-using SuperLearner::SuperLearner(). In addition, kernel density
+using SuperLearner::SuperLearner()
+. In addition, kernel density
 estimation can be used instead of assuming a normal density for the numerator
 and denominator of the generalized propensity score by setting density = "kernel". Other arguments to density() can be specified to refine the
 density estimation parameters. plot = TRUE can be specified to plot the
@@ -102,13 +106,15 @@ classification algorithms are used to estimate the propensity scores as the
 predicted probability of being in each treatment given the covariates. For
 continuous treatments, regression algorithms are used to estimate generalized
 propensity scores as the conditional density of treatment given the
-covariates. This method relies on SuperLearner::SuperLearner() from
+covariates. This method relies on SuperLearner::SuperLearner()
+ from
 the SuperLearner package.
 Binary Treatments
 
 
 For binary treatments, this method estimates the propensity scores using
-SuperLearner::SuperLearner(). The following estimands are allowed:
+SuperLearner::SuperLearner()
+. The following estimands are allowed:
 ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using
 marginal mean weighting through stratification for the ATE, ATT, and ATC. See
 get_w_from_ps() for details.
@@ -119,7 +125,8 @@ Multi-Category Treatments
 
 
 For multi-category treatments, the propensity scores are estimated using
-several calls to SuperLearner::SuperLearner(), one for each treatment
+several calls to SuperLearner::SuperLearner()
+, one for each treatment
 group; the treatment probabilities are not normalized to sum to 1. The
 following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for
 each estimand are computed using the standard formulas or those mentioned
@@ -132,7 +139,8 @@ Continuous Treatments
 
 
 For continuous treatments, the generalized propensity score is estimated
-using SuperLearner::SuperLearner(). In addition, kernel density
+using SuperLearner::SuperLearner()
+. In addition, kernel density
 estimation can be used instead of assuming a normal density for the numerator
 and denominator of the generalized propensity score by setting density = "kernel". Other arguments to density() can be specified to refine the
 density estimation parameters. plot = TRUE can be specified to plot the
@@ -183,7 +191,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -227,13 +235,15 @@ classification algorithms are used to estimate the propensity scores as the
 predicted probability of being in each treatment given the covariates. For
 continuous treatments, regression algorithms are used to estimate generalized
 propensity scores as the conditional density of treatment given the
-covariates. This method relies on <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code> from
+covariates. This method relies on <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>
+ from
 the <a href="https://CRAN.R-project.org/package=SuperLearner" class="external-link"><span class="pkg">SuperLearner</span></a> package.</p><div class="section">
 <h3 id="binary-treatments">Binary Treatments<a class="anchor" aria-label="anchor" href="#binary-treatments"></a></h3>
 
 
 <p>For binary treatments, this method estimates the propensity scores using
-<code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>. The following estimands are allowed:
+<code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>
+. The following estimands are allowed:
 ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed using
 marginal mean weighting through stratification for the ATE, ATT, and ATC. See
 <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
@@ -244,7 +254,8 @@ marginal mean weighting through stratification for the ATE, ATT, and ATC. See
 
 
 <p>For multi-category treatments, the propensity scores are estimated using
-several calls to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>, one for each treatment
+several calls to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>
+, one for each treatment
 group; the treatment probabilities are not normalized to sum to 1. The
 following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for
 each estimand are computed using the standard formulas or those mentioned
@@ -257,7 +268,8 @@ stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html"
 
 
 <p>For continuous treatments, the generalized propensity score is estimated
-using <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>. In addition, kernel density
+using <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>
+. In addition, kernel density
 estimation can be used instead of assuming a normal density for the numerator
 and denominator of the generalized propensity score by setting <code>density = "kernel"</code>. Other arguments to <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> can be specified to refine the
 density estimation parameters. <code>plot = TRUE</code> can be specified to plot the
@@ -342,8 +354,10 @@ recover previous behavior, set <code>cvControl = list(stratifyCV = FALSE)</code>
 
 
 </dl><p>An argument to <code>SL.library</code> <strong>must</strong> be supplied. To see a list of
-available entries, use <code><a href="https://rdrr.io/pkg/SuperLearner/man/listWrappers.html" class="external-link">SuperLearner::listWrappers()</a></code>.</p>
-<p>All arguments to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code> can be passed through
+available entries, use <code><a href="https://rdrr.io/pkg/SuperLearner/man/listWrappers.html" class="external-link">SuperLearner::listWrappers()</a></code>
+.</p>
+<p>All arguments to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>
+ can be passed through
 <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>, with the following exceptions:</p><ul><li><p><code>obsWeights</code> is ignored because sampling weights are passed using <code>s.weights</code>.</p></li>
 <li><p><code>method</code> in <code>SuperLearner()</code> is replaced with the argument <code>SL.method</code> in <code><a href="weightit.html">weightit()</a></code>.</p></li>
 </ul><p>For binary and multi-category treatments, the following arguments may be supplied:</p><dl><dt><code>subclass</code></dt>
@@ -406,7 +420,8 @@ treatments are supported, but currently multi-category treatments are not.</p>
 </dl></dd>
 
 <dt><code>obj</code></dt>
-<dd><p>When <code>include.obj = TRUE</code>, the SuperLearner fit(s) used to generate the predicted values. For binary and continuous treatments, the output of the call to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>. For multi-category treatments, a list of outputs to calls to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>.</p></dd>
+<dd><p>When <code>include.obj = TRUE</code>, the SuperLearner fit(s) used to generate the predicted values. For binary and continuous treatments, the output of the call to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>
+. For multi-category treatments, a list of outputs to calls to <code><a href="https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html" class="external-link">SuperLearner::SuperLearner()</a></code>.</p></dd>
 
 
 </dl></div>
@@ -482,42 +497,42 @@ treatment effect in the treated based on propensity score matching.
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.           ||                    1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.01 |---------------------------| 3.838</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.          ||                     1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.01 |---------------------------| 3.967</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              1     2     3     4     5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            404   226   224   111    84</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.018 2.101 2.235 2.634 3.838</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.052 2.135 2.277 2.691 3.967</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated        0.00 0.000   0.000       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control        0.95 0.716   0.381       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.000 0.000   0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.962 0.718   0.386       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    225.73     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    223.01     185</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                Type Diff.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.1406</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.  -0.0500</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.   0.0248</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0049</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0228</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0297</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> prop.score Distance   0.1346</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age         Contin.  -0.0574</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ        Contin.   0.0241</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married      Binary  -0.0050</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree     Binary   0.0219</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74        Contin.  -0.0295</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    225.73     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    223.01     185</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Balancing covariates with respect to race (multi-category)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>

@@ -192,7 +192,7 @@ The following additional arguments can be specified:
 
   A string with the distribution used in the loss function of the
   boosted model. This is supplied to the `distribution` argument in
-  [`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html). For
+  [`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) . For
   binary treatments, `"bernoulli"` and `"adaboost"` are available, with
   `"bernoulli"` the default. For multi-category treatments, only
   `"multinomial"` is allowed. For continuous treatments `"gaussian"`,
@@ -256,7 +256,7 @@ The following additional arguments can be specified:
   binary and continuous treatments. This argument is tunable.
 
 All other arguments take on the defaults of those in
-[`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html), and some
+[`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) , and some
 are not used at all. For binary and multi-category treatments with a
 with cross-validation used as the criterion, `class.stratify.cv` is set
 to `TRUE` by default.

@@ -18,21 +18,21 @@ method relies on
 ### Binary Treatments
 
 For binary treatments, this method estimates the weights using
-[`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html). The ATE is
-the only estimand allowed. The weights are taken from the output of the
-`npCBPS` fit object.
+[`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html) . The ATE
+is the only estimand allowed. The weights are taken from the output of
+the `npCBPS` fit object.
 
 ### Multi-Category Treatments
 
 For multi-category treatments, this method estimates the weights using
-[`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html). The ATE is
-the only estimand allowed. The weights are taken from the output of the
-`npCBPS` fit object.
+[`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html) . The ATE
+is the only estimand allowed. The weights are taken from the output of
+the `npCBPS` fit object.
 
 ### Continuous Treatments
 
 For continuous treatments, this method estimates the weights using
-[`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html). The
+[`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html) . The
 weights are taken from the output of the `npCBPS` fit object.
 
 ### Longitudinal Treatments
@@ -120,7 +120,7 @@ All arguments take on the defaults of those in `npCBPS()`.
 
   When `include.obj = TRUE`, the nonparametric CB(G)PS model fit. The
   output of the call to
-  [`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html).
+  [`CBPS::npCBPS()`](https://rdrr.io/pkg/CBPS/man/npCBPS.html) .
 
 ## References
 

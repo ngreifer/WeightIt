@@ -159,7 +159,7 @@ vignette("estimating-effects") for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -303,7 +303,8 @@ included terms.</p>
 <dd><p>the maximum number of iterations for convergence of the optimization. Passed to the <code>control</code> argument of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>. Default is 1000 for binary and multi-category treatments and 10000 for continuous and longitudinal treatments.</p></dd>
 
 <dt><code>solver</code></dt>
-<dd><p>the solver to use to estimate the parameters. Allowable options include <code>"multiroot"</code> to use <code><a href="https://rdrr.io/pkg/rootSolve/man/multiroot.html" class="external-link">rootSolve::multiroot()</a></code> and <code>"optim"</code> to use <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code>. <code>"multiroot"</code> is the default when <span class="pkg">rootSolve</span> is installed, as it tends to be much faster and more accurate; otherwise, <code>"optim"</code> is the default and requires no dependencies. Regardless of <code>solver</code>, the output of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> is returned when <code>include.obj = TRUE</code> (see below).</p></dd>
+<dd><p>the solver to use to estimate the parameters. Allowable options include <code>"multiroot"</code> to use <code><a href="https://rdrr.io/pkg/rootSolve/man/multiroot.html" class="external-link">rootSolve::multiroot()</a></code>
+ and <code>"optim"</code> to use <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">stats::optim()</a></code>. <code>"multiroot"</code> is the default when <span class="pkg">rootSolve</span> is installed, as it tends to be much faster and more accurate; otherwise, <code>"optim"</code> is the default and requires no dependencies. Regardless of <code>solver</code>, the output of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> is returned when <code>include.obj = TRUE</code> (see below).</p></dd>
 
 <dt><code>moments</code></dt>
 <dd><p><code>integer</code>; the highest power of each covariate to be balanced. For example, if <code>moments = 3</code>, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., <code>moments = c(x1 = 2, x2 = 4)</code>). Values greater than 1 for categorical covariates are ignored. Default is 1 to balance covariate means.</p></dd>

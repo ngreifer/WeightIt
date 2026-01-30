@@ -12,7 +12,8 @@ modification of the usual generalized linear model score equations to
 enforce balance and then converting those propensity scores into weights
 using a formula that depends on the desired estimand. This method relies
 on code written for WeightIt using
-[`rootSolve::multiroot()`](https://rdrr.io/pkg/rootSolve/man/multiroot.html).
+[`rootSolve::multiroot()`](https://rdrr.io/pkg/rootSolve/man/multiroot.html)
+.
 
 ### Binary Treatments
 

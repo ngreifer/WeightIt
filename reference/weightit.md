@@ -236,6 +236,7 @@ estimands are allowed, and whether sampling weights are allowed.
 | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.md)         | Propensity score weighting using SuperLearner                              |
 | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.md)           | Propensity score weighting using Bayesian additive regression trees (BART) |
 | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.md)       | Energy balancing                                                           |
+| [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.md)             | Characteristic function distance balancing                                 |
 
 `method` can also be supplied as a user-defined function; see
 [`method_user`](https://ngreifer.github.io/WeightIt/reference/method_user.md)

@@ -20,7 +20,7 @@ weighting methods.
 
 ## Format
 
-An object of class `list` of length 10.
+An object of class `list` of length 11.
 
 ## Details
 
@@ -137,7 +137,7 @@ information on whether and how each option can be used.
 # Get all acceptable names
 names(.weightit_methods)
 #>  [1] "glm"       "bart"      "cbps"      "ebal"      "energy"    "gbm"      
-#>  [7] "ipt"       "npcbps"    "optweight" "super"    
+#>  [7] "ipt"       "npcbps"    "optweight" "super"     "cfd"      
 
 # Get all acceptable names and aliases
 lapply(.weightit_methods, `[[`, "alias")
@@ -170,6 +170,9 @@ lapply(.weightit_methods, `[[`, "alias")
 #> 
 #> $super
 #> [1] "super"        "superlearner"
+#> 
+#> $cfd
+#> [1] "cfd"    "kernel"
 #> 
 
 # Which estimands are allowed with `method = "bart"`

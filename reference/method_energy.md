@@ -76,10 +76,10 @@ M-estimation is not supported.
 ## Details
 
 Energy balancing is a method of estimating weights using optimization
-without a propensity score. The weights are the solution to a constrain
-quadratic optimization problem where the objective function concerns
-covariate balance as measured by the energy distance and (for continuous
-treatments) the distance covariance.
+without a propensity score. The weights are the solution to a
+constrained quadratic optimization problem where the objective function
+concerns covariate balance as measured by the energy distance and (for
+continuous treatments) the distance covariance.
 
 Energy balancing for binary and multi-category treatments involves
 minimizing the energy distance between the treatment groups and between
@@ -192,6 +192,11 @@ The following following additional arguments can be specified:
   treatments) or treatment-covariate correlation (for continuous
   treatments) allowed. Default is 0. Ignored when `moments = 0`.
 
+- `min.w`:
+
+  the minimum allowable weight. Negative values (including `-Inf`) are
+  allowed. Default is `1e-8`.
+
 For binary and multi-category treatments, the following additional
 arguments can be specified:
 
@@ -254,8 +259,8 @@ correlations of the entered covariates. The constraint on exact balance
 can be relaxed using the `tols` argument.
 
 Any other arguments will be passed to
-[`osqp::osqpSettings()`](https://rdrr.io/pkg/osqp/man/osqpSettings.html).
-Some defaults differ from those in `osqpSettings()`; see
+[`osqp::osqpSettings()`](https://rdrr.io/pkg/osqp/man/osqpSettings.html)
+. Some defaults differ from those in `osqpSettings()`; see
 *Reproducibility* section.
 
 ## Additional Outputs
@@ -263,7 +268,7 @@ Some defaults differ from those in `osqpSettings()`; see
 - `obj`:
 
   When `include.obj = TRUE`, the output of the call to
-  [`osqp::solve_osqp()`](https://rdrr.io/pkg/osqp/man/solve_osqp.html),
+  [`osqp::solve_osqp()`](https://rdrr.io/pkg/osqp/man/solve_osqp.html) ,
   which contains the dual variables and convergence information.
 
 ## References

@@ -18,7 +18,7 @@ formula that depends on the desired estimand. This method relies on
 ### Binary Treatments
 
 For binary treatments, this method estimates the propensity scores using
-[`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html). The
+[`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html) . The
 following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS.
 Weights can also be computed using marginal mean weighting through
 stratification for the ATE, ATT, and ATC. See
@@ -29,7 +29,7 @@ for details.
 
 For multi-category treatments, the propensity scores are estimated using
 several calls to
-[`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html), one for
+[`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html) , one for
 each treatment group; the treatment probabilities are not normalized to
 sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and
 ATM. The weights for each estimand are computed using the standard
@@ -51,7 +51,7 @@ covariates evaluated at the observed value of treatment. The shape of
 described below (normal distributions by default), and the predicted
 values used for the mean of the conditional density are estimated using
 BART as implemented in
-[`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html). Kernel
+[`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html) . Kernel
 density estimation can be used instead of assuming a specific density
 for the numerator and denominator by setting `density = "kernel"`. Other
 arguments to [`density()`](https://rdrr.io/r/stats/density.html) can be
@@ -254,41 +254,41 @@ summary(W1)
 #> 
 #>           Min                                 Max
 #> treated 1.       ||                         1.   
-#> control 0.003 |---------------------------| 9.527
+#> control 0.003 |---------------------------| 9.382
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                      
 #>              1     2    3     4     5
 #>  treated     1     1    1     1     1
 #>            423   407  384   224   189
-#>  control 2.326 2.628 2.67 3.213 9.527
+#>  control 2.124 2.812 2.87 3.363 9.382
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated        0.00 0.000   0.000       0
-#> control        1.79 0.926   0.721       0
+#> treated       0.000 0.000   0.000       0
+#> control       1.793 0.933   0.728       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
-#> Unweighted  429.       185
-#> Weighted    102.22     185
+#> Unweighted     429     185
+#> Weighted       102     185
 
 cobalt::bal.tab(W1)
 #> Balance Measures
 #>                Type Diff.Adj
-#> prop.score Distance   0.4794
-#> age         Contin.   0.0653
-#> educ        Contin.  -0.0274
-#> married      Binary  -0.0308
-#> nodegree     Binary   0.0297
-#> re74        Contin.  -0.0532
+#> prop.score Distance   0.4934
+#> age         Contin.   0.0683
+#> educ        Contin.  -0.0235
+#> married      Binary  -0.0315
+#> nodegree     Binary   0.0331
+#> re74        Contin.  -0.0572
 #> 
 #> Effective sample sizes
 #>            Control Treated
-#> Unadjusted  429.       185
-#> Adjusted    102.22     185
+#> Unadjusted     429     185
+#> Adjusted       102     185
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
@@ -308,45 +308,45 @@ summary(W2)
 #> - Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.238 |-----------------|            9.063
-#> hispan 2.445    |------------------------| 12.818
-#> white  1.067 |---------------|              7.998
+#> black  1.239 |-----------------|            8.914
+#> hispan 2.681     |-----------------------| 12.914
+#> white  1.067 |---------------|              8.146
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                          
-#>            192   166    164    163    152
-#>   black  7.079 7.262   7.95  8.305  9.063
-#>             69    67     59     50     37
-#>  hispan 11.452 12.15 12.425 12.645 12.818
-#>             15     7      6      5      3
-#>   white  4.337 5.006  5.424   7.78  7.998
+#>                                           
+#>            192    171    166    164    152
+#>   black  7.203  7.209  7.792   8.24  8.914
+#>             69     67     50     43     37
+#>  hispan 11.881 11.993 12.115 12.402 12.914
+#>            177     15      7      5      3
+#>   white  4.311   5.03  5.284  7.684  8.146
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.578 0.374   0.126       0
-#> hispan       0.382 0.319   0.074       0
-#> white        0.453 0.317   0.081       0
+#> black        0.574 0.371   0.124       0
+#> hispan       0.372 0.308   0.069       0
+#> white        0.451 0.315   0.081       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
-#> Weighted   182.33  62.95 248.32
+#> Weighted   182.95  63.34 248.67
 
 cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.1941
-#> educ     Contin.       0.1603
-#> married   Binary       0.0536
-#> nodegree  Binary       0.0326
-#> re74     Contin.       0.1134
+#> age      Contin.       0.1868
+#> educ     Contin.       0.1661
+#> married   Binary       0.0535
+#> nodegree  Binary       0.0312
+#> re74     Contin.       0.1183
 #> 
 #> Effective sample sizes
 #>             black hispan  white
 #> Unadjusted 243.    72.   299.  
-#> Adjusted   182.33  62.95 248.32
+#> Adjusted   182.95  63.34 248.67
 
 #Balancing covariates with respect to re75 (continuous)
 #assuming t(3) conditional density for treatment
@@ -366,35 +366,35 @@ summary(W3)
 #> - Weight ranges:
 #> 
 #>       Min                                  Max
-#> all 0.078 |---------------------------| 19.859
+#> all 0.078 |---------------------------| 20.461
 #> 
 #> - Units with the 5 most extreme weights:
 #>                                     
-#>        487   486   484    469    310
-#>  all 7.619 8.151 9.056 18.924 19.859
+#>        487   486   484    469    308
+#>  all 7.517 7.664 9.542 19.599 20.461
 #> 
 #> - Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.141 0.479    0.28       0
+#> all       1.157 0.477   0.282       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted   267.09
+#> Weighted   262.72
 
 cobalt::bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.   0.0272
-#> educ     Contin.   0.0576
-#> married   Binary   0.0799
-#> nodegree  Binary  -0.0859
-#> re74     Contin.   0.1105
+#> age      Contin.   0.0312
+#> educ     Contin.   0.0502
+#> married   Binary   0.0784
+#> nodegree  Binary  -0.0765
+#> re74     Contin.   0.1111
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   267.09
+#> Adjusted   262.72
 ```

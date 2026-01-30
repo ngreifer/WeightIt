@@ -10,7 +10,7 @@ treatments.
 In general, this method relies on estimating weights by solving a
 quadratic programming problem subject to approximate or exact balance
 constraints. This method relies on
-[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.fit.html)
+[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
 from the [optweight](https://CRAN.R-project.org/package=optweight)
 package.
 
@@ -25,22 +25,23 @@ with `method = "optweight"`.
 ### Binary Treatments
 
 For binary treatments, this method estimates the weights using
-[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.fit.html).
-The following estimands are allowed: ATE, ATT, and ATC. The weights are
-taken from the output of the `optweight.fit` fit object.
+[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
+. The following estimands are allowed: ATE, ATT, and ATC. The weights
+are taken from the output of the `optweight.fit` fit object.
 
 ### Multi-Category Treatments
 
 For multi-category treatments, this method estimates the weights using
-[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.fit.html).
-The following estimands are allowed: ATE and ATT. The weights are taken
-from the output of the `optweight.fit` fit object.
+[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
+. The following estimands are allowed: ATE and ATT. The weights are
+taken from the output of the `optweight.fit` fit object.
 
 ### Continuous Treatments
 
 For continuous treatments, this method estimates the weights using
-[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.fit.html).
-The weights are taken from the output of the `optweight.fit` fit object.
+[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
+. The weights are taken from the output of the `optweight.fit` fit
+object.
 
 ### Longitudinal Treatments
 
@@ -96,7 +97,7 @@ though in this implementation, inexact balance is allowed.
 `norm = "log"` minimizes the sum of the negative logs of the weights and
 is equivalent to nonparametric covariate balancing propensity score
 weighting (npCBPS). See
-[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.fit.html)
+[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
 for the other allowed options to `norm` and other arguments.
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) can be used on
@@ -123,8 +124,8 @@ that applies to all variables. For finer control, use `optweight()`
 directly.
 
 Seriously, just use
-[`optweight::optweight()`](https://ngreifer.github.io/optweight/reference/optweight.html).
-The syntax is almost identical and it's compatible with cobalt, too.
+[`optweight::optweight()`](https://ngreifer.github.io/optweight/reference/optweight.html)
+. The syntax is almost identical and it's compatible with cobalt, too.
 
 ## Additional Arguments
 
@@ -177,7 +178,8 @@ All arguments take on the defaults of those in `optweight.fit()`.
 - `obj`:
 
   When `include.obj = TRUE`, the output of the call to
-  [`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.fit.html).
+  [`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
+  .
 
 ## References
 
@@ -213,7 +215,7 @@ Treatments Using Constrained Optimization*.
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 
-[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.fit.html)
+[`optweight::optweight.fit()`](https://ngreifer.github.io/optweight/reference/optweight.html)
 for the fitting function.
 
 [`method_entropy`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
@@ -308,45 +310,45 @@ summary(W2)
 #> - Weight ranges:
 #> 
 #>          Min                                 Max
-#> black  0.443     |-----------------------| 3.574
-#> hispan 0.    |-------------------|         2.585
-#> white  0.257   |---------|                 1.659
+#> black  0.374    |------------------------| 3.624
+#> hispan 0.    |-------------------|         2.659
+#> white  0.243   |---------|                 1.684
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                      
 #>           203   157   155   153   152
-#>   black 2.335 2.372 2.559 2.837 3.574
+#>   black 2.363 2.407 2.611 2.887 3.624
 #>            67    43    39    36    28
-#>  hispan 2.046 2.098 2.189 2.198 2.585
-#>           258   285   172   117     6
-#>   white 1.571 1.571 1.573 1.597 1.659
+#>  hispan 2.007 2.146 2.243 2.267 2.659
+#>           291   285   258   117     6
+#>   white 1.588 1.593 1.602  1.61 1.684
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.550 0.443   0.130       0
-#> hispan       0.566 0.449   0.176       0
-#> white        0.353 0.295   0.065       0
+#> black        0.567 0.454   0.139       0
+#> hispan       0.581 0.458   0.187       0
+#> white        0.365 0.305   0.070       0
 #> 
 #> - Effective Sample Sizes:
 #> 
-#>             black hispan  white
-#> Unweighted 243.     72.  299.  
-#> Weighted   186.76   54.7 266.01
+#>            black hispan  white
+#> Unweighted 243.   72.   299.  
+#> Weighted   184.1  54.04 263.87
 
 cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.         0.01
-#> educ     Contin.         0.01
-#> married   Binary         0.01
-#> nodegree  Binary         0.01
-#> re74     Contin.         0.01
+#> age      Contin.            0
+#> educ     Contin.            0
+#> married   Binary            0
+#> nodegree  Binary            0
+#> re74     Contin.            0
 #> 
 #> Effective sample sizes
-#>             black hispan  white
-#> Unadjusted 243.     72.  299.  
-#> Adjusted   186.76   54.7 266.01
+#>            black hispan  white
+#> Unadjusted 243.   72.   299.  
+#> Adjusted   184.1  54.04 263.87
 
 plot(W2)
 

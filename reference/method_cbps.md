@@ -145,8 +145,8 @@ and over-identified versions are available in both packages.
 When the rootSolve package is installed, the optimization process will
 be slightly faster and more accurate because starting values are
 provided by an initial call to
-[`rootSolve::multiroot()`](https://rdrr.io/pkg/rootSolve/man/multiroot.html).
-However, the package is not required.
+[`rootSolve::multiroot()`](https://rdrr.io/pkg/rootSolve/man/multiroot.html)
+. However, the package is not required.
 
 ## Additional Arguments
 

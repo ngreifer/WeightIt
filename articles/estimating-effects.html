@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2025-11-15</h4>
+            <h4 data-toc-skip class="date">2026-01-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -936,7 +936,7 @@ requesting the predictions in the prior step it is quicker to use
 <span>              alpha <span class="op">=</span> <span class="fl">.3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Ac"</span>, y <span class="op">=</span> <span class="st">"E[Y|Ac]"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="estimating-effects_files/figure-html/unnamed-chunk-20-1.png" class="r-plt" width="672"></p>
+<p><img src="estimating-effects_files/figure-html/unnamed-chunk-20-1.png" class="r-plt" alt="" width="672"></p>
 <p>We can see that the ADRF has an elbow-shape, with a zone of no
 evidence of treatment effect followed by a zone of increasing values of
 the outcome as the treatment increases.</p>
@@ -964,7 +964,7 @@ ADRF across levels of <code>Ac</code> and then plot it<a class="footnote-ref" ta
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_hline</a></span><span class="op">(</span>yintercept <span class="op">=</span> <span class="fl">0</span>, linetype <span class="op">=</span> <span class="st">"dashed"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">labs</a></span><span class="op">(</span>x <span class="op">=</span> <span class="st">"Ac"</span>, y <span class="op">=</span> <span class="st">"dE[Y|Ac]/dAc"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="estimating-effects_files/figure-html/unnamed-chunk-21-1.png" class="r-plt" width="672"></p>
+<p><img src="estimating-effects_files/figure-html/unnamed-chunk-21-1.png" class="r-plt" alt="" width="672"></p>
 <p>We can see that between values of -1.8 and .5, there is evidence of a
 positive effect of <code>Ac</code> on <code>Y_C</code> (i.e., because
 the confidence intervals for the slope of the ADRF at those values of

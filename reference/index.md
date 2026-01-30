@@ -18,6 +18,8 @@
   : Propensity Score Weighting Using BART
 - [`method_cbps`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md)
   : Covariate Balancing Propensity Score Weighting
+- [`method_cfd`](https://ngreifer.github.io/WeightIt/reference/method_cfd.md)
+  : Characteristic Function Distance Balancing
 - [`method_ebal`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
   [`method_entropy`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)
   : Entropy Balancing

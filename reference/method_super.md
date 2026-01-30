@@ -25,9 +25,9 @@ package.
 ### Binary Treatments
 
 For binary treatments, this method estimates the propensity scores using
-[`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html).
-The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS.
-Weights can also be computed using marginal mean weighting through
+[`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html)
+. The following estimands are allowed: ATE, ATT, ATC, ATO, ATM, and
+ATOS. Weights can also be computed using marginal mean weighting through
 stratification for the ATE, ATT, and ATC. See
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
 for details.
@@ -36,8 +36,8 @@ for details.
 
 For multi-category treatments, the propensity scores are estimated using
 several calls to
-[`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html),
-one for each treatment group; the treatment probabilities are not
+[`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html)
+, one for each treatment group; the treatment probabilities are not
 normalized to sum to 1. The following estimands are allowed: ATE, ATT,
 ATC, ATO, and ATM. The weights for each estimand are computed using the
 standard formulas or those mentioned above. Weights can also be computed
@@ -50,9 +50,9 @@ for details.
 
 For continuous treatments, the generalized propensity score is estimated
 using
-[`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html).
-In addition, kernel density estimation can be used instead of assuming a
-normal density for the numerator and denominator of the generalized
+[`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html)
+. In addition, kernel density estimation can be used instead of assuming
+a normal density for the numerator and denominator of the generalized
 propensity score by setting `density = "kernel"`. Other arguments to
 [`density()`](https://rdrr.io/r/stats/density.html) can be specified to
 refine the density estimation parameters. `plot = TRUE` can be specified
@@ -137,7 +137,8 @@ cross-validation. To recover previous behavior, set
 
 An argument to `SL.library` **must** be supplied. To see a list of
 available entries, use
-[`SuperLearner::listWrappers()`](https://rdrr.io/pkg/SuperLearner/man/listWrappers.html).
+[`SuperLearner::listWrappers()`](https://rdrr.io/pkg/SuperLearner/man/listWrappers.html)
+.
 
 All arguments to
 [`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html)
@@ -265,8 +266,8 @@ treatments are not.
   When `include.obj = TRUE`, the SuperLearner fit(s) used to generate
   the predicted values. For binary and continuous treatments, the output
   of the call to
-  [`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html).
-  For multi-category treatments, a list of outputs to calls to
+  [`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html)
+  . For multi-category treatments, a list of outputs to calls to
   [`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html).
 
 ## References
@@ -336,42 +337,42 @@ summary(W1)
 #> - Weight ranges:
 #> 
 #>          Min                                 Max
-#> treated 1.           ||                    1.   
-#> control 0.01 |---------------------------| 3.838
+#> treated 1.          ||                     1.   
+#> control 0.01 |---------------------------| 3.967
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                       
 #>              1     2     3     4     5
 #>  treated     1     1     1     1     1
 #>            404   226   224   111    84
-#>  control 2.018 2.101 2.235 2.634 3.838
+#>  control 2.052 2.135 2.277 2.691 3.967
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated        0.00 0.000   0.000       0
-#> control        0.95 0.716   0.381       0
+#> treated       0.000 0.000   0.000       0
+#> control       0.962 0.718   0.386       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
-#> Weighted    225.73     185
+#> Weighted    223.01     185
 
 cobalt::bal.tab(W1)
 #> Balance Measures
 #>                Type Diff.Adj
-#> prop.score Distance   0.1406
-#> age         Contin.  -0.0500
-#> educ        Contin.   0.0248
-#> married      Binary  -0.0049
-#> nodegree     Binary   0.0228
-#> re74        Contin.  -0.0297
+#> prop.score Distance   0.1346
+#> age         Contin.  -0.0574
+#> educ        Contin.   0.0241
+#> married      Binary  -0.0050
+#> nodegree     Binary   0.0219
+#> re74        Contin.  -0.0295
 #> 
 #> Effective sample sizes
 #>            Control Treated
 #> Unadjusted  429.       185
-#> Adjusted    225.73     185
+#> Adjusted    223.01     185
 
 # Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +

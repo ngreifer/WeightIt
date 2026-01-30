@@ -235,7 +235,7 @@ methods are.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -392,7 +392,12 @@ methods are.</p>
 
 
 </dl><p>For multi-category treatments, the following additional arguments can be specified:</p><dl><dt><code>multi.method</code></dt>
-<dd><p>the method used to estimate the generalized propensity scores. Allowable options include <code>"weightit"</code> (the default) to use multinomial logistic regression implemented in <span class="pkg">WeightIt</span>, <code>"glm"</code> to use a series of binomial models using <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, <code>"mclogit"</code> to use multinomial logistic regression as implemented in <code><a href="https://rdrr.io/pkg/mclogit/man/mblogit.html" class="external-link">mclogit::mblogit()</a></code>, <code>"mnp"</code> to use Bayesian multinomial probit regression as implemented in <code><a href="https://rdrr.io/pkg/MNP/man/mnp.html" class="external-link">MNP::MNP()</a></code>, and <code>"brmultinom"</code> to use bias-reduced multinomial logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>. <code>"weightit"</code> and <code>"mclogit"</code> should give near-identical results, the main difference being increased robustness and customizability when using <code>"mclogit"</code> at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include <code>"weightit"</code> (the default) to use ordinal regression implemented in <span class="pkg">WeightIt</span> or <code>"polr"</code> to use ordinal regression implemented in <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>, unless <code>link</code> is <code>"br.logit"</code>, in which case bias-reduce ordinal logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code> is used. Ignored when <code>missing = "saem"</code>. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.</p></dd>
+<dd><p>the method used to estimate the generalized propensity scores. Allowable options include <code>"weightit"</code> (the default) to use multinomial logistic regression implemented in <span class="pkg">WeightIt</span>, <code>"glm"</code> to use a series of binomial models using <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>, <code>"mclogit"</code> to use multinomial logistic regression as implemented in <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>
+, <code>"mnp"</code> to use Bayesian multinomial probit regression as implemented in <code><a href="https://rdrr.io/pkg/MNP/man/mnp.html" class="external-link">MNP::MNP()</a></code>
+, and <code>"brmultinom"</code> to use bias-reduced multinomial logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>
+. <code>"weightit"</code> and <code>"mclogit"</code> should give near-identical results, the main difference being increased robustness and customizability when using <code>"mclogit"</code> at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include <code>"weightit"</code> (the default) to use ordinal regression implemented in <span class="pkg">WeightIt</span> or <code>"polr"</code> to use ordinal regression implemented in <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>
+, unless <code>link</code> is <code>"br.logit"</code>, in which case bias-reduce ordinal logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code>
+ is used. Ignored when <code>missing = "saem"</code>. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.</p></dd>
 
 <dt><code>link</code></dt>
 <dd><p>The link used in the multinomial, binomial, or ordered regression model for the generalized propensity scores depending on the argument supplied to <code>multi.method</code>. When <code>multi.method = "glm"</code>, <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">binomial()</a></code>. When treatment is ordered and <code>multi.method</code> is <code>"weightit"</code> or <code>"polr"</code>, <code>link</code> can be any of those allowed by <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code> or <code>"br.logit"</code>. Otherwise, <code>link</code> should be <code>"logit"</code> or not specified.</p></dd>
@@ -421,11 +426,16 @@ for fitting. The <code>method</code> argument in <code><a href="https://rdrr.io/
 This can be used to supply alternative fitting functions, such as those
 implemented in the <a href="https://CRAN.R-project.org/package=glm2" class="external-link"><span class="pkg">glm2</span></a> package. Other arguments to <code><a href="weightit.html">weightit()</a></code>
 are passed to <code>...</code> in <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. In the presence of missing data with <code>link = "logit"</code> and <code>missing = "saem"</code>, additional arguments are passed to
-<code><a href="https://rdrr.io/pkg/misaem/man/miss.glm.html" class="external-link">misaem::miss.glm()</a></code> and <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.glm.html" class="external-link">misaem::predict.miss.glm()</a></code>, except the
-<code>method</code> argument in <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.glm.html" class="external-link">misaem::predict.miss.glm()</a></code> is replaced with
+<code><a href="https://rdrr.io/pkg/misaem/man/miss.glm.html" class="external-link">misaem::miss.glm()</a></code>
+ and <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.glm.html" class="external-link">misaem::predict.miss.glm()</a></code>
+, except the
+<code>method</code> argument in <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.glm.html" class="external-link">misaem::predict.miss.glm()</a></code>
+ is replaced with
 <code>saem.method</code>.</p>
-<p>For continuous treatments in the presence of missing data with <code>missing = "saem"</code>, additional arguments are passed to <code><a href="https://rdrr.io/pkg/misaem/man/miss.lm.html" class="external-link">misaem::miss.lm()</a></code> and
-<code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.lm.html" class="external-link">misaem::predict.miss.lm()</a></code>.</p>
+<p>For continuous treatments in the presence of missing data with <code>missing = "saem"</code>, additional arguments are passed to <code><a href="https://rdrr.io/pkg/misaem/man/miss.lm.html" class="external-link">misaem::miss.lm()</a></code>
+ and
+<code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.lm.html" class="external-link">misaem::predict.miss.lm()</a></code>
+.</p>
     </div>
     <div class="section level2">
     <h2 id="additional-outputs">Additional Outputs<a class="anchor" aria-label="anchor" href="#additional-outputs"></a></h2>

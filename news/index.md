@@ -1,6 +1,15 @@
 # Changelog
 
+## `WeightIt` (development version)
+
+- Added `method = "cfd"` for characteristic function distance balancing
+  as described by [Santra, Chen, and Park
+  (2026)](http://arxiv.org/abs/2601.15449). Energy balancing is a
+  special case of this method.
+
 ## `WeightIt` 1.5.1
+
+CRAN release: 2025-11-15
 
 - [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
   with `method = "isoreg"` can now be used with sampling weights.
@@ -778,7 +787,7 @@ CRAN release: 2021-04-03
   the `mclogit` package is installed, it can be requested for estimating
   the propensity score by setting the option `use.mclogit = TRUE`, which
   uses
-  [`mclogit::mblogit()`](https://rdrr.io/pkg/mclogit/man/mblogit.html).
+  [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html).
   It should give the same results as the default, which uses `mlogit`,
   but can be faster and so is recommended.
 

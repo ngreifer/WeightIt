@@ -167,33 +167,35 @@ for information on how to install them.
 
 #### Binary Treatments
 
-| Method                                | `method`                                                                             |
-|---------------------------------------|--------------------------------------------------------------------------------------|
-| Binary regression PS                  | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html)             |
-| Generalized boosted modeling PS       | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html)             |
-| Covariate balancing PS                | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html)           |
-| Non-Parametric covariate balancing PS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html)       |
-| Entropy balancing                     | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html)           |
-| Inverse probability tilting           | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html)             |
-| Stable balancing weights              | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
-| SuperLearner PS                       | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html)         |
-| Bayesian additive regression trees PS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html)           |
-| Energy balancing                      | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html)       |
+| Method                                     | `method`                                                                             |
+|--------------------------------------------|--------------------------------------------------------------------------------------|
+| Binary regression PS                       | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html)             |
+| Generalized boosted modeling PS            | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html)             |
+| Covariate balancing PS                     | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html)           |
+| Non-Parametric covariate balancing PS      | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html)       |
+| Entropy balancing                          | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html)           |
+| Inverse probability tilting                | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html)             |
+| Stable balancing weights                   | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
+| SuperLearner PS                            | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html)         |
+| Bayesian additive regression trees PS      | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html)           |
+| Energy balancing                           | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html)       |
+| Characteristic function distance balancing | [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.html)             |
 
 #### Multi-Category Treatments
 
-| Method                                | `method`                                                                             |
-|---------------------------------------|--------------------------------------------------------------------------------------|
-| Multinomial regression PS             | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html)             |
-| Generalized boosted modeling PS       | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html)             |
-| Covariate balancing PS                | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html)           |
-| Non-parametric covariate balancing PS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html)       |
-| Entropy balancing                     | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html)           |
-| Inverse probability tilting           | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html)             |
-| Stable balancing weights              | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
-| SuperLearner PS                       | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html)         |
-| Bayesian additive regression trees PS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html)           |
-| Energy balancing                      | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html)       |
+| Method                                     | `method`                                                                             |
+|--------------------------------------------|--------------------------------------------------------------------------------------|
+| Multinomial regression PS                  | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html)             |
+| Generalized boosted modeling PS            | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html)             |
+| Covariate balancing PS                     | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html)           |
+| Non-parametric covariate balancing PS      | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html)       |
+| Entropy balancing                          | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html)           |
+| Inverse probability tilting                | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html)             |
+| Stable balancing weights                   | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
+| SuperLearner PS                            | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html)         |
+| Bayesian additive regression trees PS      | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html)           |
+| Energy balancing                           | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html)       |
+| Characteristic function distance balancing | [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.html)             |
 
 #### Continuous Treatments
 

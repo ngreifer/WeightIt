@@ -207,9 +207,10 @@ coxph_weightit(
 - br:
 
   `logical`; whether to use bias-reduced regression as implemented by
-  [`brglm2::brglmFit()`](https://rdrr.io/pkg/brglm2/man/brglmFit.html).
+  [`brglm2::brglmFit()`](https://rdrr.io/pkg/brglm2/man/brglmFit.html) .
   If `TRUE`, arguments passed to `control` or ... will be passed to
-  [`brglm2::brglmControl()`](https://rdrr.io/pkg/brglm2/man/brglmControl.html).
+  [`brglm2::brglmControl()`](https://rdrr.io/pkg/brglm2/man/brglmControl.html)
+  .
 
 - ...:
 
@@ -293,7 +294,7 @@ failures than other multinomial logistic regression solvers and should
 be used with caution. Estimation of coefficients should align with that
 from [`mlogit::mlogit()`](https://rdrr.io/pkg/mlogit/man/mlogit.html)
 and
-[`mclogit::mblogit()`](https://rdrr.io/pkg/mclogit/man/mblogit.html).
+[`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html).
 
 `ordinal_weightit()` implements proportional odds ordinal regression
 using a custom function in WeightIt. Estimation of coefficients should

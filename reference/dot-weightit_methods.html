@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,7 @@
 
     <div class="section level2">
     <h2 id="format">Format<a class="anchor" aria-label="anchor" href="#format"></a></h2>
-    <p>An object of class <code>list</code> of length 10.</p>
+    <p>An object of class <code>list</code> of length 11.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -122,7 +122,7 @@
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># Get all acceptable names</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">.weightit_methods</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [1] "glm"       "bart"      "cbps"      "ebal"      "energy"    "gbm"      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "ipt"       "npcbps"    "optweight" "super"    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  [7] "ipt"       "npcbps"    "optweight" "super"     "cfd"      </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Get all acceptable names and aliases</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">.weightit_methods</span>, <span class="va">`[[`</span>, <span class="st">"alias"</span><span class="op">)</span></span></span>
@@ -155,6 +155,9 @@
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $super</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "super"        "superlearner"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $cfd</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cfd"    "kernel"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Which estimands are allowed with `method = "bart"`</span></span></span>

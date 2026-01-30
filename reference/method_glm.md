@@ -161,20 +161,20 @@ specified:
   use a series of binomial models using
   [`glm()`](https://rdrr.io/r/stats/glm.html), `"mclogit"` to use
   multinomial logistic regression as implemented in
-  [`mclogit::mblogit()`](https://rdrr.io/pkg/mclogit/man/mblogit.html),
-  `"mnp"` to use Bayesian multinomial probit regression as implemented
-  in [`MNP::MNP()`](https://rdrr.io/pkg/MNP/man/mnp.html), and
+  [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
+  , `"mnp"` to use Bayesian multinomial probit regression as implemented
+  in [`MNP::MNP()`](https://rdrr.io/pkg/MNP/man/mnp.html) , and
   `"brmultinom"` to use bias-reduced multinomial logistic regression as
   implemented in
-  [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html).
-  `"weightit"` and `"mclogit"` should give near-identical results, the
+  [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
+  . `"weightit"` and `"mclogit"` should give near-identical results, the
   main difference being increased robustness and customizability when
   using `"mclogit"` at the expense of not being able to use M-estimation
   to compute standard errors after weighting. For ordered treatments,
   allowable options include `"weightit"` (the default) to use ordinal
   regression implemented in WeightIt or `"polr"` to use ordinal
   regression implemented in
-  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html), unless
+  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) , unless
   `link` is `"br.logit"`, in which case bias-reduce ordinal logistic
   regression as implemented in
   [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html) is
@@ -258,15 +258,16 @@ are passed to `...` in [`glm()`](https://rdrr.io/r/stats/glm.html). In
 the presence of missing data with `link = "logit"` and
 `missing = "saem"`, additional arguments are passed to
 [`misaem::miss.glm()`](https://rdrr.io/pkg/misaem/man/miss.glm.html) and
-[`misaem::predict.miss.glm()`](https://rdrr.io/pkg/misaem/man/predict.miss.glm.html),
-except the `method` argument in
+[`misaem::predict.miss.glm()`](https://rdrr.io/pkg/misaem/man/predict.miss.glm.html)
+, except the `method` argument in
 [`misaem::predict.miss.glm()`](https://rdrr.io/pkg/misaem/man/predict.miss.glm.html)
 is replaced with `saem.method`.
 
 For continuous treatments in the presence of missing data with
 `missing = "saem"`, additional arguments are passed to
 [`misaem::miss.lm()`](https://rdrr.io/pkg/misaem/man/miss.lm.html) and
-[`misaem::predict.miss.lm()`](https://rdrr.io/pkg/misaem/man/predict.miss.lm.html).
+[`misaem::predict.miss.lm()`](https://rdrr.io/pkg/misaem/man/predict.miss.lm.html)
+.
 
 ## Additional Outputs
 
