@@ -72,7 +72,7 @@ M-estimation is not supported.
 \details{
 Energy balancing is a method of estimating weights using
 optimization without a propensity score. The weights are the solution to a
-constrain quadratic optimization problem where the objective function
+constrained quadratic optimization problem where the objective function
 concerns covariate balance as measured by the energy distance and (for
 continuous treatments) the distance covariance.
 
@@ -140,6 +140,7 @@ The following following additional arguments can be specified:
 \item{\code{moments}}{\code{integer}; the highest power of each covariate to be balanced. For example, if \code{moments = 3}, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., \code{moments = c(x1 = 2, x2 = 4)}). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
 \item{\code{int}}{\code{logical}; whether first-order interactions of the covariates are to be balanced. Default is \code{FALSE}.}
 \item{\code{tols}}{when \code{moments} is positive, a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0. Ignored when \code{moments = 0}.}
+\item{\code{min.w}}{the minimum allowable weight. Negative values (including \code{-Inf}) are allowed. Default is \code{1e-8}.}
 }
 
 For binary and multi-category treatments, the following additional arguments can be specified:

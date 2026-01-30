@@ -519,7 +519,7 @@
       ctrl <- stats::glm.control
     }
 
-    model_call[setdiff(names(model_call), c(names(formals(stats::glm)), names(formals(ctrl))))] <- NULL
+    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(stats::glm), rlang::fn_fmls_names(ctrl)))] <- NULL
   }
   else if (model == "lm") {
     model_call[[1L]] <- quote(stats::glm)
@@ -533,11 +533,11 @@
     model_call$na.action <- "na.fail"
     model_call$family <- "gaussian"
 
-    model_call[setdiff(names(model_call), c(names(formals(stats::glm)), names(formals(stats::glm.control))))] <- NULL
+    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(stats::glm), rlang::fn_fmls_names(stats::glm.control)))] <- NULL
   }
   else if (model == "ordinal") {
     model_call[[1L]] <- .ordinal_weightit
-    model_call[setdiff(names(model_call), names(formals(.ordinal_weightit)))] <- NULL
+    model_call[setdiff(names(model_call), rlang::fn_fmls_names(.ordinal_weightit))] <- NULL
 
     if (is_not_null(weightit)) {
       model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
@@ -549,7 +549,7 @@
   }
   else if (model == "multinom") {
     model_call[[1L]] <- .multinom_weightit
-    model_call[setdiff(names(model_call), names(formals(.multinom_weightit)))] <- NULL
+    model_call[setdiff(names(model_call), rlang::fn_fmls_names(.multinom_weightit))] <- NULL
 
     if (is_not_null(weightit)) {
       model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
@@ -571,7 +571,7 @@
     model_call$robust <- vcov == "HC0"
 
     model_call$cluster <- NULL
-    model_call[setdiff(names(model_call), c(names(formals(survival::coxph)), names(formals(survival::coxph.control))))] <- NULL
+    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(survival::coxph), rlang::fn_fmls_names(survival::coxph.control)))] <- NULL
   }
 
   model_call
@@ -774,7 +774,7 @@
     if (is_null(fwb.args$verbose)) {
       fwb.args$verbose <- FALSE
     }
-    fwb.args <- fwb.args[names(fwb.args) %in% names(formals(fwb::fwb))]
+    fwb.args <- fwb.args[names(fwb.args) %in% rlang::fn_fmls_names(fwb::fwb)]
 
     if (is_null(cluster)) {
       fwb_out <- eval(as.call(c(list(quote(fwb::fwb)), fwb.args)))

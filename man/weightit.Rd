@@ -152,6 +152,7 @@ are allowed, and whether sampling weights are allowed.\tabular{ll}{
    \code{\link[=method_super]{"super"}} \tab Propensity score weighting using SuperLearner \cr
    \code{\link[=method_bart]{"bart"}} \tab Propensity score weighting using Bayesian additive regression trees (BART) \cr
    \code{\link[=method_energy]{"energy"}} \tab Energy balancing \cr
+   \code{\link[=method_cfd]{"cfd"}} \tab Characteristic function distance balancing \cr
 }
 
 

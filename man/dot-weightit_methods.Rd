@@ -5,7 +5,7 @@
 \alias{.weightit_methods}
 \title{Weighting methods}
 \format{
-An object of class \code{list} of length 10.
+An object of class \code{list} of length 11.
 }
 \usage{
 .weightit_methods

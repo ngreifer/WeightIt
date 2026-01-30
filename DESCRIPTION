@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 1.5.1
+Version: 1.5.1.9000
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -46,6 +46,7 @@ Suggests:
     gbm (>= 2.1.9),
     dbarts (>= 0.9-29),
     misaem (>= 1.0.1),
+    GPBayes,
     mlogit,
     dfidx,
     broom,

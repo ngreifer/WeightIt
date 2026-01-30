@@ -365,9 +365,9 @@
 
 .check_user_method <- function(method) {
   #Check to make sure it accepts treat and covs
-  if (all(c("covs", "treat") %in% names(formals(method)))) {
+  if (all(c("covs", "treat") %in% rlang::fn_fmls_names(method))) {
   }
-  # else if (all(c("covs.list", "treat.list") %in% names(formals(method)))) {
+  # else if (all(c("covs.list", "treat.list") %in% rlang::fn_fmls_names(method))) {
   # }
   else {
     .err("the user-provided function to `method` must contain `covs` and `treat` as named parameters")

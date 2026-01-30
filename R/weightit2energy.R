@@ -72,6 +72,7 @@
 #'   \item{`moments`}{`integer`; the highest power of each covariate to be balanced. For example, if `moments = 3`, each covariate, its square, and its cube will be balanced. Can also be a named vector with a value for each covariate (e.g., `moments = c(x1 = 2, x2 = 4)`). Values greater than 1 for categorical covariates are ignored. Default is 0 to impose no constraint on balance.}
 #'   \item{`int`}{`logical`; whether first-order interactions of the covariates are to be balanced. Default is `FALSE`.}
 #'   \item{`tols`}{when `moments` is positive, a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0. Ignored when `moments = 0`.}
+#'   \item{`min.w`}{the minimum allowable weight. Negative values (including `-Inf`) are allowed. Default is `1e-8`.}
 #' }
 #'
 #' For binary and multi-category treatments, the following additional arguments can be specified:
@@ -116,7 +117,7 @@
 #' @details
 #' Energy balancing is a method of estimating weights using
 #' optimization without a propensity score. The weights are the solution to a
-#' constrain quadratic optimization problem where the objective function
+#' constrained quadratic optimization problem where the objective function
 #' concerns covariate balance as measured by the energy distance and (for
 #' continuous treatments) the distance covariance.
 #'
@@ -260,6 +261,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- binarize(treat, one = t.lev)
 
   n <- length(treat)
+
+  sw0 <- check_if_zero(s.weights)
+
   diagn <- diag(n)
 
   covs <- scale(covs)
@@ -310,8 +314,16 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
     #Constraints for positivity and sum of weights
     Amat <- cbind(diagn, s.weights_n_0, s.weights_n_1)
-    lvec <- c(rep.int(min.w, n), 1, 1)
-    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), 1, 1)
+    lvec <- c(ifelse(sw0, 1, min.w), 1, 1)
+    uvec <- c(ifelse(sw0, 1, Inf), 1, 1)
+
+    unbounded <- lvec == -Inf & uvec == Inf
+
+    if (any(unbounded)) {
+      Amat <- Amat[, !unbounded, drop = FALSE]
+      lvec <- lvec[!unbounded]
+      uvec <- uvec[!unbounded]
+    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -347,8 +359,16 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     q <- 2 * (s.weights_n_1[t1] %*% d[t1, t0, drop = FALSE]) * s.weights_n_0[t0]
 
     Amat <- cbind(diag(n0), s.weights_n_0[t0])
-    lvec <- c(rep.int(min.w, n0), 1)
-    uvec <- c(ifelse(check_if_zero(s.weights[t0]), min.w, Inf), 1)
+    lvec <- c(ifelse(sw0[t0], 1, min.w), 1)
+    uvec <- c(ifelse(sw0[t0], 1, Inf), 1)
+
+    unbounded <- lvec == -Inf & uvec == Inf
+
+    if (any(unbounded)) {
+      Amat <- Amat[, !unbounded, drop = FALSE]
+      lvec <- lvec[!unbounded]
+      uvec <- uvec[!unbounded]
+    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -384,8 +404,16 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     q <- 2 * (s.weights_n_0[t0] %*% d[t0, t1, drop = FALSE]) * s.weights_n_1[t1]
 
     Amat <- cbind(diag(n1), s.weights_n_1[t1])
-    lvec <- c(rep.int(min.w, n1), 1)
-    uvec <- c(ifelse(check_if_zero(s.weights[t1]), min.w, Inf), 1)
+    lvec <- c(ifelse(sw0[t1], 1, min.w), 1)
+    uvec <- c(ifelse(sw0[t1], 1, Inf), 1)
+
+    unbounded <- lvec == -Inf & uvec == Inf
+
+    if (any(unbounded)) {
+      Amat <- Amat[, !unbounded, drop = FALSE]
+      lvec <- lvec[!unbounded]
+      uvec <- uvec[!unbounded]
+    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -494,8 +522,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   # Shrink tiny weights to 0
-  if (abs(min.w) < .Machine$double.eps) {
-    w[abs(w) < .Machine$double.eps] <- 0
+  if (abs(min.w) < 1e-10) {
+    w[abs(w) < 1e-10] <- 0
   }
 
   opt.out$lambda <- lambda
@@ -541,10 +569,12 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   s.weights <- s.weights[subset]
 
   n <- length(treat)
-  levels_treat <- levels(treat)
+
+  sw0 <- check_if_zero(s.weights)
+
   diagn <- diag(n)
 
-  covs <- scale(covs)
+  levels_treat <- levels(treat)
 
   min.w <- ...get("min.w", 1e-8)
   chk::chk_number(min.w)
@@ -561,6 +591,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     tols <- ...get("tols", 0)
     chk::chk_number(tols)
     tols <- abs(tols)
+    covs <- scale(covs)
   }
 
   treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
@@ -596,8 +627,16 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
     #Constraints for positivity and sum of weights
     Amat <- cbind(diagn, s.weights_n_t)
-    lvec <- c(rep.int(min.w, n), rep.int(1, length(levels_treat)))
-    uvec <- c(ifelse(check_if_zero(s.weights), min.w, Inf), rep.int(1, length(levels_treat)))
+    lvec <- c(ifelse(sw0, 1, min.w), rep.int(1, length(levels_treat)))
+    uvec <- c(ifelse(sw0, 1, Inf), rep.int(1, length(levels_treat)))
+
+    unbounded <- lvec == -Inf & uvec == Inf
+
+    if (any(unbounded)) {
+      Amat <- Amat[, !unbounded, drop = FALSE]
+      lvec <- lvec[!unbounded]
+      uvec <- uvec[!unbounded]
+    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -639,8 +678,16 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
       rowSums(s.weights_n_t[!in_focal, non_focal, drop = FALSE])
 
     Amat <- cbind(diag(sum(!in_focal)), s.weights_n_t[!in_focal, non_focal])
-    lvec <- c(rep.int(min.w, sum(!in_focal)), rep.int(1, length(non_focal)))
-    uvec <- c(ifelse(check_if_zero(s.weights[!in_focal]), min.w, Inf), rep.int(1, length(non_focal)))
+    lvec <- c(ifelse(sw0[!in_focal], 1, min.w), rep.int(1, length(non_focal)))
+    uvec <- c(ifelse(sw0[!in_focal], 1, Inf), rep.int(1, length(non_focal)))
+
+    unbounded <- lvec == -Inf & uvec == Inf
+
+    if (any(unbounded)) {
+      Amat <- Amat[, !unbounded, drop = FALSE]
+      lvec <- lvec[!unbounded]
+      uvec <- uvec[!unbounded]
+    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -734,8 +781,8 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   }
 
   # Shrink tiny weights to 0
-  if (abs(min.w) < .Machine$double.eps) {
-    w[abs(w) < .Machine$double.eps] <- 0
+  if (abs(min.w) < 1e-10) {
+    w[abs(w) < 1e-10] <- 0
   }
 
   opt.out$lambda <- lambda
@@ -860,8 +907,16 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   q[] <- q * s.weights
 
   Amat <- cbind(diag(n), s.weights)
-  lvec <- c(rep.int(min.w, n), n)
-  uvec <- c(ifelse(sw0, min.w, Inf), n)
+  lvec <- c(ifelse(sw0, 1, min.w), n)
+  uvec <- c(ifelse(sw0, 1, Inf), n)
+
+  unbounded <- lvec == -Inf & uvec == Inf
+
+  if (any(unbounded)) {
+    Amat <- Amat[, !unbounded, drop = FALSE]
+    lvec <- lvec[!unbounded]
+    uvec <- uvec[!unbounded]
+  }
 
   if (d.moments > 0) {
     d.covs <- .apply_moments_int_quantile(covs, moments = d.moments)
@@ -945,8 +1000,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   w <- opt.out$x
 
   # Shrink tiny weights to 0
-  if (abs(min.w) < .Machine$double.eps) {
-    w[abs(w) < .Machine$double.eps] <- 0
+  if (abs(min.w) < 1e-10) {
+    w[abs(w) < 1e-10] <- 0
   }
 
   opt.out$lambda <- lambda

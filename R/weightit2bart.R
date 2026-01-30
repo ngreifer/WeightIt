@@ -209,8 +209,8 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
 
-  A <- ...mget(setdiff(c(names(formals(dbarts::bart2)),
-                         names(formals(dbarts::dbartsControl))),
+  A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
+                         rlang::fn_fmls_names(dbarts::dbartsControl)),
                        c("offset.test", "weights", "subset", "test")))
 
   A[["data"]] <- treat
@@ -227,7 +227,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   error = function(e) {
     .err(sprintf("(from `dbarts::bart2()`): %s",
                  conditionMessage(e)),
-                 tidy = FALSE)
+         tidy = FALSE)
   })
 
   p.score <- fitted(fit)
@@ -256,8 +256,8 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
 
   ps <- make_df(levels(treat), nrow = length(treat))
 
-  A <- ...mget(setdiff(c(names(formals(dbarts::bart2)),
-                         names(formals(dbarts::dbartsControl))),
+  A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
+                         rlang::fn_fmls_names(dbarts::dbartsControl)),
                        c("offset.test", "weights", "subset", "test")))
 
   A[["formula"]] <- covs
@@ -316,8 +316,8 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
                            density = ...get("density"),
                            weights = s.weights)
 
-  A <- ...mget(setdiff(c(names(formals(dbarts::bart2)),
-                         names(formals(dbarts::dbartsControl))),
+  A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
+                         rlang::fn_fmls_names(dbarts::dbartsControl)),
                        c("offset.test", "weights", "subset", "test")))
 
   A[["formula"]] <- covs
