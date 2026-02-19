@@ -232,33 +232,7 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
     tols <- abs(tols)
   }
 
-  A <- ...mget(names(formals(osqp::osqpSettings)))
-
-  eps <- ...get("eps", squish(min.w, lo = 1e-12, hi = 1e-8))
-  if (is_not_null(eps)) {
-    chk::chk_number(eps)
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- eps
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- eps
-  }
-
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
-  chk::chk_count(A[["max_iter"]], "`max_iter`")
-  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
-  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
-  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
-  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
-  chk::chk_number(A[["time_limit"]], "`time_limit`")
-  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
-  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
-  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
-  chk::chk_flag(A[["polish"]], "`polish`")
-  if (is_null(A[["polish_refine_iter"]])) A[["polish_refine_iter"]] <- 20L
-  chk::chk_count(A[["polish_refine_iter"]], "`polish_refine_iter`")
-  A[["verbose"]] <- verbose
-
-  options.list <- do.call(osqp::osqpSettings, A)
+  options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   t0 <- which(treat == 0)
   t1 <- which(treat == 1)
@@ -531,33 +505,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     tols <- abs(tols)
   }
 
-  A <- ...mget(names(formals(osqp::osqpSettings)))
-
-  eps <- ...get("eps", squish(min.w, lo = 1e-12, hi = 1e-8))
-  if (is_not_null(eps)) {
-    chk::chk_number(eps)
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- eps
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- eps
-  }
-
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
-  chk::chk_count(A[["max_iter"]], "`max_iter`")
-  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
-  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
-  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
-  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
-  chk::chk_number(A[["time_limit"]], "`time_limit`")
-  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
-  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
-  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
-  chk::chk_flag(A[["polish"]], "`polish`")
-  if (is_null(A[["polish_refine_iter"]])) A[["polish_refine_iter"]] <- 20L
-  chk::chk_count(A[["polish_refine_iter"]], "`polish_refine_iter`")
-  A[["verbose"]] <- verbose
-
-  options.list <- do.call(osqp::osqpSettings, A)
+  options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
                     dimnames = list(NULL, levels_treat))

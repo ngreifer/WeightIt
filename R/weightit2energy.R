@@ -467,30 +467,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
                       ATC = diag(P) + lambda * s.weights_n_1[t1]^2 / 2)
   }
 
-  A <- ...mget(names(formals(osqp::osqpSettings)))
-
-  if (is_not_null(...get("eps"))) {
-    chk::chk_number(...get("eps"), "`eps`")
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- ...get("eps")
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
-  }
-
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
-  chk::chk_count(A[["max_iter"]], "`max_iter`")
-  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
-  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
-  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
-  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
-  chk::chk_number(A[["time_limit"]], "`time_limit`")
-  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
-  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
-  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
-  chk::chk_flag(A[["polish"]], "`polish`")
-  A[["verbose"]] <- TRUE
-
-  options.list <- do.call(osqp::osqpSettings, A)
+  options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   verbosely({
     opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
@@ -730,30 +707,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   diag(P) <- diag(P) + lambda / n^2
 
-  A <- ...mget(names(formals(osqp::osqpSettings)))
-
-  if (is_not_null(...get("eps"))) {
-    chk::chk_number(...get("eps"), "`eps`")
-    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- ...get("eps")
-    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- ...get("eps")
-  }
-
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
-  chk::chk_count(A[["max_iter"]], "`max_iter`")
-  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
-  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
-  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
-  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
-  chk::chk_number(A[["time_limit"]], "`time_limit`")
-  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
-  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
-  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
-  chk::chk_flag(A[["polish"]], "`polish`")
-  A[["verbose"]] <- TRUE
-
-  options.list <- do.call(osqp::osqpSettings, A)
+  options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   verbosely({
     opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
@@ -866,6 +820,8 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     tols <- abs(tols)
   }
 
+  options.list <- .process_osqp_settings(min.w, verbose, ...)
+
   d.moments <- max(...get("d.moments", 0), moments)
   chk::chk_count(d.moments)
 
@@ -956,29 +912,6 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   }
 
   diag(P) <- diag(P) + lambda / n^2
-
-  A <- ...mget(names(formals(osqp::osqpSettings)))
-
-  eps <- ...get("eps", 1e-8)
-
-  chk::chk_number(eps)
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- eps
-  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- eps
-
-  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
-  chk::chk_count(A[["max_iter"]], "`max_iter`")
-  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
-  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
-  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
-  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
-  chk::chk_number(A[["time_limit"]], "`time_limit`")
-  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 10L
-  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
-  if (is_null(A[["polish"]])) A[["polish"]] <- TRUE
-  chk::chk_flag(A[["polish"]], "`polish`")
-  A[["verbose"]] <- TRUE
-
-  options.list <- do.call(osqp::osqpSettings, A)
 
   verbosely({
     opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,

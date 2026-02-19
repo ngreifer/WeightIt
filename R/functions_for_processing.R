@@ -363,6 +363,49 @@
   missing
 }
 
+.process_osqp_settings <- function(min.w, verbose, ...) {
+  A <- ...mget(rlang::fn_fmls_names(osqp::osqpSettings))
+
+  eps <- ...get("eps", squish(min.w, lo = 1e-12, hi = 1e-8))
+  if (is_not_null(eps)) {
+    chk::chk_number(eps)
+    if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- eps
+    if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- eps
+  }
+
+  if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
+  chk::chk_count(A[["max_iter"]], "`max_iter`")
+  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
+
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
+  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
+
+  if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
+  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
+
+  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
+  chk::chk_number(A[["time_limit"]], "`time_limit`")
+
+  if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 50L
+  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
+
+  if (packageVersion("osqp") >= "1.0.0") {
+    A[["polishing"]] <- ...get("polishing") %or% ...get("polish") %or% TRUE
+    chk::chk_flag(A[["polishing"]], "`polishing`")
+  }
+  else {
+    A[["polish"]] <- ...get("polish") %or% ...get("polishing") %or% TRUE
+    chk::chk_flag(A[["polish"]], "`polish`")
+  }
+
+  if (is_null(A[["polish_refine_iter"]])) A[["polish_refine_iter"]] <- 20L
+  chk::chk_count(A[["polish_refine_iter"]], "`polish_refine_iter`")
+
+  A[["verbose"]] <- verbose
+
+  do.call(osqp::osqpSettings, A)
+}
+
 .check_user_method <- function(method) {
   #Check to make sure it accepts treat and covs
   if (all(c("covs", "treat") %in% rlang::fn_fmls_names(method))) {

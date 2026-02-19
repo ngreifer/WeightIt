@@ -5,6 +5,8 @@ WeightIt News and Updates
 
 * Added `method = "cfd"` for characteristic function distance balancing as described by [Santra, Chen, and Park (2026)](http://arxiv.org/abs/2601.15449). Energy balancing is a special case of this method.
 
+* Added support for the new version of *osqp*, which changes some optional argument names and defaults for `method = "energy"`. These should not impact results.
+
 # `WeightIt` 1.5.1
 
 * `calibrate()` with `method = "isoreg"` can now be used with sampling weights.
