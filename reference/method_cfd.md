@@ -331,26 +331,26 @@ summary(W1b)
 #> 
 #>         Min                                  Max
 #> treated  -0 |---------------------------| 11.213
-#> control  -0 |----------------------|       9.289
+#> control  -0 |----------------------|       9.265
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                        
 #>            185   184   181    82     44
-#>  treated 6.945 7.517 7.836 8.775 11.213
+#>  treated 6.945 7.517 7.836 8.774 11.213
 #>            423   326   136   118     37
-#>  control 6.947 8.894 9.067 9.211  9.289
+#>  control 6.947 8.895  9.04 9.212  9.265
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       2.068 1.445   1.333       0
-#> control       1.450 0.989   0.791       0
+#> treated       2.068 1.445   1.339       0
+#> control       1.449 0.988   0.778       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  
-#> Weighted    138.44   35.21
+#> Weighted    138.59   35.21
 
 cobalt::bal.tab(W1b)
 #> Balance Measures
@@ -364,7 +364,7 @@ cobalt::bal.tab(W1b)
 #> Effective sample sizes
 #>            Control Treated
 #> Unadjusted  429.    185.  
-#> Adjusted    138.44   35.21
+#> Adjusted    138.59   35.21
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
@@ -389,7 +389,7 @@ summary(W2)
 #>        Min                                  Max
 #> black    1   ||                           1.   
 #> hispan   0 |-----------------|           10.955
-#> white   -0 |---------------------------| 17.082
+#> white   -0 |---------------------------| 17.069
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                           
@@ -398,20 +398,20 @@ summary(W2)
 #>             69     59     48     28      2
 #>  hispan  5.033  5.133  5.336   6.45 10.955
 #>             17     15      7      4      3
-#>   white 11.265 12.204 13.026 16.878 17.082
+#>   white 11.269 12.203 13.019 16.934 17.069
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.000 0.000   0.000       0
 #> hispan       1.963 1.356   1.337       0
-#> white        2.483 1.445   1.621       0
+#> white        2.485 1.446   1.268       1
 #> 
 #> - Effective Sample Sizes:
 #> 
-#>            black hispan  white
-#> Unweighted   243  72.   299.  
-#> Weighted     243  15.01  41.85
+#>            black hispan white
+#> Unweighted   243  72.   299. 
+#> Weighted     243  15.01  41.8
 
 cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
@@ -423,7 +423,7 @@ cobalt::bal.tab(W2)
 #> re74     Contin.       0.0081
 #> 
 #> Effective sample sizes
-#>            hispan  white black
-#> Unadjusted  72.   299.     243
-#> Adjusted    15.01  41.85   243
+#>            hispan white black
+#> Unadjusted  72.   299.    243
+#> Adjusted    15.01  41.8   243
 ```

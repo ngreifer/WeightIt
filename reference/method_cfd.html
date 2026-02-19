@@ -155,7 +155,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -458,26 +458,26 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                  Max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treated  -0 |---------------------------| 11.213</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control  -0 |----------------------|       9.289</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control  -0 |----------------------|       9.265</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            185   184   181    82     44</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 6.945 7.517 7.836 8.775 11.213</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 6.945 7.517 7.836 8.774 11.213</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            423   326   136   118     37</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 6.947 8.894 9.067 9.211  9.289</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 6.947 8.895  9.04 9.212  9.265</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       2.068 1.445   1.333       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.450 0.989   0.791       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       2.068 1.445   1.339       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.449 0.988   0.778       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.    185.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    138.44   35.21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    138.59   35.21</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1b</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
@@ -491,7 +491,7 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  429.    185.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    138.44   35.21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    138.59   35.21</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Balancing covariates with respect to race (multi-category)</span></span></span>
 <span class="r-in"><span><span class="op">(</span><span class="va">W2</span> <span class="op">&lt;-</span> <span class="fu"><a href="weightit.html">weightit</a></span><span class="op">(</span><span class="va">race</span> <span class="op">~</span> <span class="va">age</span> <span class="op">+</span> <span class="va">educ</span> <span class="op">+</span> <span class="va">married</span> <span class="op">+</span></span></span>
@@ -516,7 +516,7 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Min                                  Max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black    1   ||                           1.   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan   0 |-----------------|           10.955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white   -0 |---------------------------| 17.082</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white   -0 |---------------------------| 17.069</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
@@ -525,20 +525,20 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span>             69     59     48     28      2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  hispan  5.033  5.133  5.336   6.45 10.955</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             17     15      7      4      3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   white 11.265 12.204 13.026 16.878 17.082</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   white 11.269 12.203 13.019 16.934 17.069</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> black        0.000 0.000   0.000       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan       1.963 1.356   1.337       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> white        2.483 1.445   1.621       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> white        2.485 1.446   1.268       1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan  white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   243  72.   299.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     243  15.01  41.85</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            black hispan white</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   243  72.   299. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     243  15.01  41.8</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance summary across all treatment pairs</span></span>
@@ -550,9 +550,9 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.       0.0081</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            hispan  white black</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  72.   299.     243</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    15.01  41.85   243</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            hispan white black</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted  72.   299.    243</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    15.01  41.8   243</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
