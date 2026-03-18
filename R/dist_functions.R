@@ -38,7 +38,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
       }
     }
     else if (!is.cov_like(var)) {
-      .err("if `var` is not `NULL`, it must be a covariance matrix with as many entries as supplied variables")
+      .err("if {.arg var} is not {.val {list(NULL)}}, it must be a covariance matrix with as many entries as supplied variables")
     }
 
     inv_var <- generalized_inverse(var)
@@ -88,7 +88,7 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
       sds <- sqrt(var)
     }
     else {
-      .err("if `var` is not `NULL`, it must be a covariance matrix or a vector of variances with as many entries as supplied variables")
+      .err("if {.arg var} is not {.val {list(NULL)}}, it must be a covariance matrix or a vector of variances with as many entries as supplied variables")
     }
 
     for (i in seq_col(X)) {

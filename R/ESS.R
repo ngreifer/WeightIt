@@ -38,5 +38,8 @@
 
 #' @export
 ESS <- function(w) {
+  arg_supplied(w)
+  arg_numeric(w)
+
   sum(w)^2 / sum(w^2)
 }

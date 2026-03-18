@@ -77,10 +77,10 @@
 anova.glm_weightit <- function(object, object2, test = "Chisq",
                                method = "Wald", tolerance = 1e-7, vcov = NULL, ...) {
 
-  chk::chk_not_missing(object, "`object`")
+  arg_supplied(object)
 
-  chk::chk_not_missing(object2, "`object2`")
-  chk::chk_is(object2, class(object)[1L])
+  arg_supplied(object2)
+  arg_is(object2, class(object)[1L])
 
   if (!identical(nobs(object), nobs(object2)) ||
       !identical(weights(object), weights(object2))) {
@@ -88,17 +88,17 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with `y = TRUE` to be compared")
+    .err("models must be fit with {.code y = TRUE} to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
     .err("models must be fit with the same outcomes to be compared")
   }
 
-  chk::chk_string(test)
+  arg_string(test)
   test <- match_arg(test, "Chisq")
 
-  chk::chk_string(method)
+  arg_string(method)
   method <- match_arg(method, "Wald")
 
   b1 <- coef(object, complete = FALSE)
@@ -108,7 +108,7 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
   df2 <- nobs(object2) - length(b2)
 
   if (df1 >= df2) {
-    .err("`object2` does not appear to be nested within `object`")
+    .err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   Z1 <- .lm.fit(x = model.matrix(object2)[, names(b2), drop = FALSE],
@@ -119,7 +119,7 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
   .q <- sum(keep)
 
   if (.q > df2 - df1) {
-    .err("`object2` does not appear to be nested within `object`")
+    .err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   L <- t(Z1_svd[["v"]][, keep, drop = FALSE])
@@ -166,10 +166,9 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
 anova.ordinal_weightit <- function(object, object2, test = "Chisq",
                                    method = "Wald", tolerance = 1e-7, vcov = NULL, ...) {
 
-  chk::chk_not_missing(object, "`object`")
-
-  chk::chk_not_missing(object2, "`object2`")
-  chk::chk_is(object2, class(object)[1L])
+  arg_supplied(object)
+  arg_supplied(object2)
+  arg_is(object2, class(object)[1L])
 
   if (!identical(nobs(object), nobs(object2)) ||
       !identical(weights(object), weights(object2))) {
@@ -177,7 +176,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with `y = TRUE` to be compared")
+    .err("models must be fit with {.code y = TRUE} to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
@@ -186,10 +185,10 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 
   nthreshold <- ncol(object$fitted.values) - 1L
 
-  chk::chk_string(test)
+  arg_string(test)
   test <- match_arg(test, "Chisq")
 
-  chk::chk_string(method)
+  arg_string(method)
   method <- match_arg(method, "Wald")
 
   b1 <- coef(object)
@@ -199,7 +198,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   df2 <- nobs(object2) - sum(!is.na(b2))
 
   if (df1 >= df2) {
-    .err("`object2` does not appear to be nested within `object`")
+    .err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   b1 <- b1[seq_len(length(b1) - nthreshold)]
@@ -220,7 +219,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   .q <- sum(keep)
 
   if (.q > df2 - df1) {
-    .err("`object2` does not appear to be nested within `object`")
+    .err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   L <- t(Z1_svd$v[, keep, drop = FALSE])
@@ -269,10 +268,9 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 anova.multinom_weightit <- function(object, object2, test = "Chisq",
                                     method = "Wald", tolerance = 1e-7, vcov = NULL, ...) {
 
-  chk::chk_not_missing(object, "`object`")
-
-  chk::chk_not_missing(object2, "`object2`")
-  chk::chk_is(object2, class(object)[1L])
+  arg_supplied(object)
+  arg_supplied(object2)
+  arg_is(object2, class(object)[1L])
 
   if (!identical(nobs(object), nobs(object2)) ||
       !identical(weights(object), weights(object2))) {
@@ -280,22 +278,22 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with `y = TRUE` to be compared")
+    .err("models must be fit with {.code y = TRUE} to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
     .err("models must be fit with the same outcomes to be compared")
   }
 
-  chk::chk_string(test)
+  arg_string(test)
   test <- match_arg(test, "Chisq")
 
-  chk::chk_string(method)
+  arg_string(method)
   method <- match_arg(method, "Wald")
 
   if (!identical(.attr(object, "vcov_type"), .attr(object2, "vcov_type")) &&
       !identical(.attr(object2, "vcov_type"), "none")) {
-    .wrn("different `vcov` types detected for each model; using the `vcov` from the larger model")
+    .wrn("different {.arg vcov`}types detected for each model; using the {.arg vcov} from the larger model")
   }
 
   b1 <- coef(object)
@@ -305,7 +303,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   df2 <- nobs(object2) - sum(!is.na(b2))
 
   if (df1 >= df2) {
-    .err("`object2` does not appear to be nested within `object`")
+    .err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   X1 <- model.matrix(object)
@@ -332,7 +330,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   .q <- length(keep)
 
   if (.q > df2 - df1) {
-    .err("`object2` does not appear to be nested within `object`")
+    .err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   L <- t(Z1_svd$v[, keep, drop = FALSE])

@@ -49,12 +49,11 @@
 #' @exportS3Method plot weightit
 plot.weightit <- function(x, ...) {
   if (inherits(x, "weightitMSM")) {
-    .err("`plot(.)` can currently only be used with `weightit()` output objects. To view the distribution of weights, use `plot(summary(.))`")
+    .err("{.help [{.code plot(.)}](WeightIt::plot.weightit)} can currently only be used with {.fun weightit} output objects. To view the distribution of weights, use {.help [{.code plot(summary(.))}](WeightIt::plot.summary.weightit)}")
   }
 
-  if (!chk::vld_string(x$method) || !.weightit_methods[[x$method]]$plot.weightit_ok) {
-    .err(sprintf("`plot(.)` cannot be used with %s. To view the distribution of weights, use `plot(summary(.))`",
-                 .method_to_phrase(x$method)))
+  if (!rlang::is_string(x$method) || !.weightit_methods[[x$method]]$plot.weightit_ok) {
+    .err("{.help [{.code plot(.)}](WeightIt::plot.weightit)} cannot be used with {(.method_to_phrase(x$method))}. To view the distribution of weights, use {.help [{.code plot(summary(.))}](WeightIt::plot.summary.weightit)}")
   }
 
   switch(x$method,

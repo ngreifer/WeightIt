@@ -116,11 +116,11 @@ summary.glm_weightit <- function(object,
 
   if ("conf.int" %in% ...names()) {
     conf.int <- ...elt(match("conf.int", ...names()))
-    chk::chk_flag(conf.int)
+    arg_flag(conf.int)
     ci <- conf.int
   }
   else {
-    chk::chk_flag(ci)
+    arg_flag(ci)
   }
 
   df.r <- object$df.residual
@@ -141,8 +141,10 @@ summary.glm_weightit <- function(object,
     }
   }
 
-  if (is_null(transform)) transform <- base::identity
-  else transform <- match.fun(transform)
+  transform <- {
+    if (is_null(transform)) base::identity
+    else match.fun(transform)
+  }
 
   coef.p <- coef(object)
   aliased <- is.na(coef.p)
@@ -185,7 +187,7 @@ summary.glm_weightit <- function(object,
 
   transformed_coefs <- transform(coef.table[, "Estimate"])
   if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
-    .err("`transform` must return a numeric vector")
+    .err("{.arg transform} must return a numeric vector")
   }
 
   identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
@@ -230,19 +232,21 @@ summary.multinom_weightit <- function(object,
                                       ...) {
   if ("conf.int" %in% ...names()) {
     conf.int <- ...elt(match("conf.int", ...names()))
-    chk::chk_flag(conf.int)
+    arg_flag(conf.int)
     ci <- conf.int
   }
   else {
-    chk::chk_flag(ci)
+    arg_flag(ci)
   }
 
   df.r <- object$df.residual
 
   dispersion <-  1
 
-  if (is_null(transform)) transform <- base::identity
-  else transform <- match.fun(transform)
+  transform <- {
+    if (is_null(transform)) base::identity
+    else match.fun(transform)
+  }
 
   coef.p <- coef(object)
   aliased <- is.na(coef.p)
@@ -327,7 +331,7 @@ summary.ordinal_weightit <- function(object,
                                      vcov = NULL,
                                      ...) {
 
-  chk::chk_flag(thresholds)
+  arg_flag(thresholds)
 
   out <- summary.multinom_weightit(object, ci = ci, level = level,
                                    transform = transform, vcov = vcov, ...)
@@ -356,11 +360,11 @@ summary.coxph_weightit <- function(object,
                                    ...) {
   if ("conf.int" %in% ...names()) {
     conf.int <- ...elt(match("conf.int", ...names()))
-    chk::chk_flag(conf.int)
+    arg_flag(conf.int)
     ci <- conf.int
   }
   else {
-    chk::chk_flag(ci)
+    arg_flag(ci)
   }
 
   if (is.null(transform)) transform <- base::identity
@@ -403,7 +407,7 @@ summary.coxph_weightit <- function(object,
 
   transformed_coefs <- transform(coef.table[, "Estimate"])
   if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
-    .err("`transform` must return a numeric vector")
+    .err("{.arg transform} must return a numeric vector")
   }
 
   identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
@@ -439,8 +443,8 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
                                        signif.stars = getOption("show.signif.stars"),
                                        call = TRUE,
                                        ...) {
-  chk::chk_count(digits)
-  chk::chk_flag(call)
+  arg_count(digits)
+  arg_flag(call)
 
   if (call) {
     cat0("\n", .ul("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
@@ -548,7 +552,7 @@ print.coxph_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), 
 #' @exportS3Method stats::vcov glm_weightit
 #' @rdname glm_weightit-methods
 vcov.glm_weightit <- function(object, complete = TRUE, vcov = NULL, ...) {
-  chk::chk_flag(complete)
+  arg_flag(complete)
 
   .vcov_glm_weightit.internal(object, vcov. = vcov, ...) |>
     .modify_vcov_info() |>
@@ -574,9 +578,9 @@ vcov.coxph_weightit <- function(object, complete = TRUE, vcov = NULL, ...) {
 # confint() methods
 #' @exportS3Method stats::confint glm_weightit
 confint.glm_weightit <- function(object, parm, level = 0.95, vcov = NULL, ...) {
-  chk::chk_number(level)
-  chk::chk_gt(level, .5)
-  chk::chk_lt(level, 1)
+  arg_number(level)
+  arg_gt(level, .5)
+  arg_lt(level, 1)
 
   object$df.residual <- Inf
 
@@ -679,7 +683,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   Mparts.list <- .attr(x[["weightit"]], "Mparts.list")
 
   if (is_not_null(Mparts) || is_not_null(Mparts.list)) {
-    chk::chk_flag(asympt)
+    arg_flag(asympt)
   }
   else {
     asympt <- FALSE
@@ -948,10 +952,10 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
   obj_call <- getCall(object)
 
   if (is_null(obj_call)) {
-    .err("need an object with `call` component")
+    .err("need an object with a {.field call} component")
   }
 
-  chk::chk_flag(evaluate)
+  arg_flag(evaluate)
 
   refit <- TRUE
 
@@ -963,7 +967,7 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
   }
 
   if (all(c("weights", "s.weights") %in% names(extras))) {
-    .err("`weights` and `s.weights` can not both be supplied to `update()`")
+    .err("{.arg weights} and {.arg s.weights} cannot both be supplied to {.fun update}")
   }
 
   if (utils::hasName(extras, "weights")) {
@@ -1002,15 +1006,11 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
     }
     else if (any(names(extras) %in% weightit_args)) {
       if (utils::hasName(extras, "weightit")) {
-        .err(sprintf("when `weightit` is supplied, %s cannot be supplied",
-                     word_list(intersect(weightit_args, names(extras)), and.or = "and",
-                               is.are = TRUE, quotes = "`")))
+        .err("when {.arg weightit} is supplied, {.arg {intersect(weightit_args, names(extras))}} cannot be supplied")
       }
 
       if (!evaluate) {
-        .err(sprintf("`evaluate` must be `TRUE` when %s supplied",
-                     word_list(intersect(weightit_args, names(extras)), and.or = "or",
-                               is.are = TRUE, quotes = "`")))
+        .err("{.arg evaluate} must be {.val {TRUE}} when {.or {.arg {intersect(weightit_args, names(extras))}}} {?is/are} supplied")
       }
 
       weightit_args <- intersect(weightit_args, names(extras))

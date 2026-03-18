@@ -57,9 +57,9 @@
 #' @exportS3Method summary weightit
 summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...) {
 
-  chk::chk_count(top)
-  chk::chk_flag(ignore.s.weights)
-  chk::chk_flag(weight.range)
+  arg_count(top)
+  arg_flag(ignore.s.weights)
+  arg_flag(weight.range)
 
   outnames <- c("weight.range", "weight.top", "weight.mean",
                 "coef.of.var", "scaled.mad", "negative.entropy",
@@ -152,10 +152,10 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
 
 #' @exportS3Method print summary.weightit
 print.summary.weightit <- function(x, digits = 3L, ...) {
-  cat0(space(18L), .ul("Summary of weights"), "\n\n")
+  cli::cat_line(space(18L), .ul("Summary of weights"), "\n")
 
   if (is_not_null(x$weight.range)) {
-    cat0("- ", .it("Weight ranges"), ":\n\n")
+    cli::cat_line("- ", .it("Weight ranges"), ":\n")
 
     x$weight.range |>
       text_box_plot(width = 28L) |>
@@ -164,10 +164,10 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
 
     top <- max(lengths(x$weight.top))
 
-    cat0("\n- ", .it(sprintf("Units with the %s most extreme weights%s",
-                             top,
-                             ngettext(length(x$weight.top), "", " by group"))),
-         ":\n")
+    cli::cat_line("\n- ", .it(sprintf("Units with the %s most extreme weights%s",
+                                      top,
+                                      ngettext(length(x$weight.top), "", " by group"))),
+                  ":")
 
     data.frame(unlist(lapply(names(x$weight.top), function(y) c(" ", y))),
                matrix(unlist(lapply(x$weight.top, function(y) c(names(y), character(top - length(y)),
@@ -179,7 +179,7 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
     cat("\n")
   }
 
-  cat0("- ", .it("Weight statistics"), ":\n\n")
+  cli::cat_line("- ", .it("Weight statistics"), ":\n")
   cbind(x$coef.of.var,
         x$scaled.mad,
         x$negative.entropy,
@@ -190,10 +190,10 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
     print.data.frame()
 
   if (is_not_null(x$weight.mean)) {
-    cat0("\n- ", .it("Mean of Weights"), " = ", round(x$weight.mean, 2L), "\n")
+    cli::cat_line("\n- ", .it("Mean of Weights"), " = ", round(x$weight.mean, 2L))
   }
 
-  cat0("\n- ", .it("Effective Sample Sizes"), ":\n\n")
+  cli::cat_line("\n- ", .it("Effective Sample Sizes"), ":\n")
   x$effective.sample.size |>
     round_df_char(digits = 2L, pad = " ") |>
     print.data.frame()
@@ -273,9 +273,9 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
 #' @rdname summary.weightit
 summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...) {
 
-  chk::chk_count(top)
-  chk::chk_flag(ignore.s.weights)
-  chk::chk_flag(weight.range)
+  arg_count(top)
+  arg_flag(ignore.s.weights)
+  arg_flag(weight.range)
 
   out.list <- make_list(names(object$treat.list))
 
@@ -297,7 +297,7 @@ summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, weig
 
 #' @exportS3Method print summary.weightitMSM
 print.summary.weightitMSM <- function(x, digits = 3L, ...) {
-  chk::chk_whole_number(digits)
+  arg_whole_number(digits)
 
   only.one <- length(x) == 1L || all_apply(x, function(y) isTRUE(all.equal(x[[1L]], y)))
 
@@ -322,8 +322,8 @@ print.summary.weightitMSM <- function(x, digits = 3L, ...) {
 #' @exportS3Method plot summary.weightitMSM
 #' @rdname summary.weightit
 plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1L, ...) {
-  if (!chk::vld_count(time) || time %nin% seq_along(x)) {
-    .err("`time` must be a number corresponding to the time point for which to display the distribution of weights")
+  if (!is.numeric(time) || length(time) != 1L || time %nin% seq_along(x)) {
+    .err("{.arg time} must be a number corresponding to the time point for which to display the distribution of weights")
   }
 
   plot.summary.weightit(x[[time]], binwidth = binwidth, bins = bins, ...) +

@@ -1,12 +1,12 @@
 # Ordinal regression
 .ordinal_weightit.fit <- function(x, y, weights = NULL, start = NULL, offset = NULL,
                                   link = "logit", hess = TRUE, control = list(), ...) {
-  chk::chk_atomic(y)
-  chk::chk_numeric(x)
-  chk::chk_matrix(x)
+  arg_atomic(y)
+  arg_numeric(x)
+  arg_matrix(x)
 
-  if (chk::vld_string(link)) {
-    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
+  if (rlang::is_string(link)) {
+    arg_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
 
     link <- .make_link(link)
   }
@@ -21,7 +21,7 @@
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err('`link` must be a string or an object of class "link-glm"')
+    .err("{.arg link} must be a string or an object of class {.cls link-glm}")
   }
 
   fam <- binomial(link)
@@ -38,12 +38,14 @@
   n <- length(y)
 
   if (is_null(weights)) weights <- rep.int(1, n)
-  else chk::chk_numeric(weights)
+  else arg_numeric(weights)
 
   if (is_null(offset)) offset <- rep.int(0, n)
-  else chk::chk_numeric(offset)
+  else arg_numeric(offset)
 
-  chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
+  if (!all_the_same(c(length(y), nrow(x), length(weights), length(offset)))) {
+    .err('{.arg {c("y", "x", "weights", "offset")}} must all have the same number of units')
+  }
 
   x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
 
@@ -78,8 +80,8 @@
     }
   }
   else {
-    chk::chk_numeric(start)
-    chk::chk_length(start, k0)
+    arg_numeric(start)
+    arg_length(start, k0)
 
     start <- start[!aliased_B]
 
@@ -312,11 +314,11 @@
                               x = FALSE, y = TRUE, contrasts = NULL, ...) {
   cal <- match.call()
 
-  chk::chk_flag(hess)
-  chk::chk_flag(model)
-  chk::chk_flag(x)
-  chk::chk_flag(y)
-  chk::chk_string(link)
+  arg_flag(hess)
+  arg_flag(model)
+  arg_flag(x)
+  arg_flag(y)
+  arg_string(link)
 
   if (missing(data))
     data <- environment(formula)
@@ -345,16 +347,15 @@
 
   weights <- as.vector(model.weights(mf))
   if (is_not_null(weights)) {
-    chk::chk_numeric(weights)
-    chk::chk_gte(weights)
+    arg_numeric(weights)
+    arg_gte(weights)
   }
 
   offset <- as.vector(model.offset(mf))
   if (is_not_null(offset)) {
-    chk::chk_numeric(offset)
+    arg_numeric(offset)
     if (length(offset) != NROW(Y))
-      .err(gettextf("number of offsets is %d; should equal %d (number of observations)",
-                    length(offset), NROW(Y)), domain = NA)
+      .err("number of offsets is {length(offset)}; should equal {NROW(Y)} (number of observations)")
   }
 
   fit <- eval(call(".ordinal_weightit.fit",

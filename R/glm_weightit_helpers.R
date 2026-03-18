@@ -33,7 +33,7 @@
     allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
   }
   else {
-    chk::chk_is(weightit, "weightit")
+    arg_is(weightit, "weightit")
 
     if (!m_est_supported ||
         (is_null(.attr(weightit, "Mparts")) &&
@@ -54,18 +54,18 @@
     }
   }
 
-  chk::chk_string(vcov)
+  arg_string(vcov)
   vcov <- match_arg(vcov, allowable_vcov)
 
   if (is_not_null(weightit) && vcov == "const") {
-    .wrn('`vcov = "const"` should not be used when `weightit` is supplied; the resulting standard errors are invalid and should not be interpreted')
+    .wrn('{.code vcov = "const"} should not be used when {.arg weightit} is supplied; the resulting standard errors are invalid and should not be interpreted')
   }
 
   bootstrap <- vcov %in% c("BS", "FWB")
 
   if (bootstrap) {
-    chk::chk_count(R)
-    chk::chk_gt(R, 0L)
+    arg_count(R)
+    arg_gt(R, 0L)
     attr(vcov, "R") <- R
 
     if (vcov == "FWB") {
@@ -73,18 +73,17 @@
       if (is_not_null(weightit)) {
         if (is.character(weightit$method) &&
             !.weightit_methods[[weightit$method]]$s.weights_ok) {
-          .err(sprintf('`vcov = "FWB"` cannot be used with `method = %s`',
-                       add_quotes(weightit$method)))
+          .err('{.code vcov = "FWB"} cannot be used with {.code method = "{weightit$method}"}')
         }
 
         if (identical(weightit$missing, "saem")) {
-          .err('`vcov = "FWB"` cannot be used with `missing = "saem"`')
+          .err('{.code vcov = "FWB"} cannot be used with {.code missing = "saem"}')
         }
       }
 
       rlang::check_installed("fwb")
 
-      chk::chk_list(fwb.args)
+      arg_list(fwb.args)
     }
 
     attr(vcov, "fwb.args") <- fwb.args
@@ -104,7 +103,7 @@
     V <- vcov.(object, ...)
 
     if (!is.cov_like(V)) {
-      .err("the function supplied to `vcov` must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
+      .err("the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
     }
 
     vcov_type <- "custom"
@@ -116,14 +115,14 @@
     vcov_type <- "custom"
     cluster <- NULL
   }
-  else if (chk::vld_string(vcov.)) {
+  else if (rlang::is_string(vcov.)) {
     V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
 
     vcov_type <- .attr(V, "vcov_type")
     cluster <- .attr(V, "cluster")
   }
   else {
-    .err("`vcov` must be `NULL`, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
+    .err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
   }
 
   .modify_vcov_info(V, vcov_type = vcov_type, cluster = cluster)
@@ -134,12 +133,12 @@
 
   if (is_null(vcov.)) {
     if (identical(object[["vcov_type"]], "none") || is_null(stats::vcov(object))) {
-      .err("no variance matrix found in `object`; please supply an argument to `vcov`")
+      .err("no variance matrix found in {.arg object}; please supply an argument to {.arg vcov}")
     }
 
     if (!identical(object[["vcov_type"]], object2[["vcov_type"]]) &&
         !identical(object2[["vcov_type"]], "none")) {
-      .wrn("different `vcov` types detected for each model; using the variance matrix from the larger model")
+      .wrn("different {.arg vcov} types detected for each model; using the variance matrix from the larger model")
     }
 
     V <- stats::vcov(object)
@@ -150,7 +149,7 @@
     V <- vcov.(object, ...)
 
     if (!is.cov_like(V)) {
-      .err("the function supplied to `vcov` must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
+      .err("the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
     }
 
     vcov_type <- "custom"
@@ -162,23 +161,23 @@
     vcov_type <- "custom"
     cluster <- NULL
   }
-  else if (chk::vld_string(vcov.)) {
+  else if (rlang::is_string(vcov.)) {
     V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
 
     vcov_type <- .attr(V, "vcov_type")
     cluster <- .attr(V, "cluster")
   }
   else {
-    .err("`vcov` must be `NULL`, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
+    .err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
   }
 
   if (is_null(V)) {
-    .err('no variance matrix was found. See the `vcov` argument at `help("anova.glm_weightit")` for details')
+    .err("no variance matrix was found. See the {.arg vcov} argument of {.fun anova.glm_weightit} for details")
   }
 
   if (is_not_null(b1)) {
     if (!all(names(b1) %in% rownames(V)) || !all(names(b1) %in% colnames(V))) {
-      .err("all coefficients in `object` must have entries in the supplied variance matrix")
+      .err("all coefficients in {.arg object} must have entries in the supplied variance matrix")
     }
 
     V <- V[names(b1), names(b1), drop = FALSE]
@@ -220,7 +219,7 @@
       .err("no variance-covariance matrix was found in the supplied object; this is likely a bug")
     }
 
-    .wrn('`vcov` was specified as `"none"` in the original fitting call, so no variance-covariance matrix will be returned')
+    .wrn('{.arg vcov} was specified as {.val none} in the original fitting call, so no variance-covariance matrix will be returned')
 
     return(NULL)
   }
@@ -272,56 +271,56 @@
   d <- dim(x)
 
   if (length(d) != 2L) {
-    .err("'x' must be coefficient matrix/data frame")
+    .err("{.arg x} must be coefficient matrix/data frame")
   }
 
   nm <- colnames(x)
 
-  chk::chk_flag(has.Pvalue)
+  arg_flag(has.Pvalue)
 
   if (has.Pvalue) {
     if (is_null(p.ind)) {
       if (is_null(nm)) {
-        .err("`has.Pvalue` set to `TRUE` but `p.ind` is `NULL` and no colnames present")
+        .err("{.arg has.Pvalue} set to {.val {TRUE}} but {.arg p.ind} is {.val {list(NULL)}} and no colnames present")
       }
 
       p.ind <- which(substr(nm, 1L, 3L) %in% c("Pr(", "p-v"))
 
       if (is_null(p.ind)) {
-        .err("`has.Pvalue` set to `TRUE` but `p.ind` is `NULL` and no colnames match p-value strings")
+        .err("{.arg has.Pvalue} set to {.val {TRUE}} but {.arg p.ind} is {.val {list(NULL)}} and no colnames match p-value strings")
       }
     }
     else {
-      chk::chk_whole_number(p.ind)
-      chk::chk_subset(p.ind, seq_col(x))
+      arg_whole_number(p.ind)
+      arg_subset(p.ind, seq_col(x))
     }
   }
   else if (is_not_null(p.ind)) {
-    .err("`has.Pvalue` set to `FALSE` but `p.ind` is not `NULL`")
+    .err("{.arg has.Pvalue} set to {.val {FALSE}} but {.arg p.ind} is not {.val {list(NULL)}}")
   }
 
   if (is_null(P.values)) {
     scp <- getOption("show.coef.Pvalues")
     if (!is.logical(scp) || is.na(scp)) {
-      .wrn('option "show.coef.Pvalues" is invalid: assuming `TRUE`')
+      .wrn('option {.val show.coef.Pvalues} is invalid: assuming {.val {TRUE}}')
       scp <- TRUE
     }
     P.values <- has.Pvalue && scp
   }
   else {
-    chk::chk_flag(P.values)
+    arg_flag(P.values)
   }
 
   if (P.values && !has.Pvalue) {
-    .err("`P.values` is `TRUE`, but `has.Pvalue` is not")
+    .err("{.arg P.values} is {.val {TRUE}}, but {.arg has.Pvalue} is not")
   }
 
   if (is_null(cs.ind)) {
     cs.ind <- which(nm %in% c("Estimate", "Std. Error") | endsWith(nm, " %"))
   }
   else {
-    chk::chk_whole_numeric(cs.ind)
-    chk::chk_subset(cs.ind, seq_col(x))
+    arg_whole_numeric(cs.ind)
+    arg_subset(cs.ind, seq_col(x))
   }
 
   cs.ind <- setdiff(cs.ind, p.ind)
@@ -330,14 +329,14 @@
     tst.ind <- which(endsWith(nm, "value"))
   }
   else {
-    chk::chk_whole_numeric(tst.ind)
-    chk::chk_subset(tst.ind, seq_col(x))
+    arg_whole_numeric(tst.ind)
+    arg_subset(tst.ind, seq_col(x))
   }
 
   tst.ind <- setdiff(tst.ind, p.ind)
 
   if (any(tst.ind %in% cs.ind)) {
-    .err("`tst.ind` must not overlap with `cs.ind`")
+    .err("{.arg tst.ind} must not overlap with {.arg cs.ind}")
   }
 
   xm <- data.matrix(x)
@@ -410,7 +409,7 @@
   }
 
   if (P.values) {
-    chk::chk_flag(signif.stars)
+    arg_flag(signif.stars)
 
     okP <- ok[, p.ind]
 
@@ -440,7 +439,7 @@
   print.default(Cf, quote = quote, right = right, na.print = na.print, ...)
 
   if (signif.stars) {
-    chk::chk_flag(signif.legend)
+    arg_flag(signif.legend)
 
     if (signif.legend) {
       w <- getOption("width")
@@ -488,7 +487,7 @@
 
   if (is_not_null(weightit)) {
     if (!inherits(weightit, c("weightit", "weightitMSM"))) {
-      .err("`weightit` must be a `weightit` or `weightitMSM` object")
+      .err("{.arg weightit} must be a {.cls weightit} or {.cls weightitMSM} object")
     }
 
     if (is_null(weightit[["s.weights"]])) {
@@ -497,7 +496,7 @@
   }
 
   if (model == "glm") {
-    chk::chk_flag(br)
+    arg_flag(br)
 
     model_call[[1L]] <- quote(stats::glm)
 
@@ -586,8 +585,7 @@
   }
 
   if (is_not_null(cluster) && vcov %in% c("none", "const")) {
-    .wrn(sprintf("`cluster` is not used when `vcov = %s`",
-                 add_quotes(vcov)))
+    .wrn('{.arg cluster} is not used when {.code vcov = "{vcov}"}')
   }
 
   if (vcov == "none") {
@@ -673,10 +671,10 @@
     }
 
     if (nrow(cluster) != length(Y)) {
-      .err("the number of observations in `cluster` must equal that in `data`")
+      .err("the number of observations in {.arg cluster} must equal that in {.arg data}")
     }
 
-    chk::chk_not_any_na(cluster)
+    arg_no_NA(cluster)
 
     p <- ncol(cluster)
     if (p > 1L) {
@@ -714,7 +712,7 @@
 
     if (is_not_null(weightit)) {
       if (!came_from_weightit(weightit)) {
-        .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
+        .err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
       }
 
       wcall <- weightit[["call"]]
@@ -800,7 +798,7 @@
 
     if (is_not_null(weightit)) {
       if (!came_from_weightit(weightit)) {
-        .err("the supplied `weightit` object does not appear to be the result of a call to `weightit()` or `weightitMSM()`, so bootstrapping cannot be used")
+        .err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
       }
 
       wcall <- weightit[["call"]]
@@ -808,8 +806,7 @@
 
       data <- eval(wcall$data, wenv)
       if (is_null(data)) {
-        .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
-                     rlang::call_name(wcall)))
+        .err('a dataset must have been supplied to {.arg data} in the original call to {.fun {rlang::call_name(wcall)}} to use {.code vcov = "BS"}')
       }
 
       if (is_not_null(.attr(weightit, "calibrate"))) {
@@ -837,8 +834,7 @@
       data <- eval(internal_model_call$data, genv)
 
       if (is_null(data)) {
-        .err(sprintf('a dataset must have been supplied to `data` in the original call to `%s()` to use `vcov = "BS"`',
-                     rlang::call_name(model_call)))
+        .err('a dataset must have been supplied to {.arg data} in the original call to {.fun {rlang::call_name(model_call)}} to use {.code vcov = "BS"}')
       }
     }
 
@@ -1105,7 +1101,7 @@
     solve(h, ...)
   },
   warning = function(w) {
-    .wrn(conditionMessage(w), tidy = FALSE)
+    .wrn("{conditionMessage(w)}")
     invokeRestart("muffleWarning")
   },
   error = function(e) {
@@ -1114,14 +1110,14 @@
     if (grepl("system is computationally singular", .e, fixed = TRUE) ||
         grepl("Lapack routine dgesv: system is exactly singular", .e, fixed = TRUE)) {
       if (model == "out") {
-        .err('the Hessian for the outcome model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or a model that is too complex. Estimates from this model should not be trusted. Investigate the problem by refitting with `vcov = "none"`. Simplifying the model can sometimes help')
+        .err('the Hessian for the outcome model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or a model that is too complex. Estimates from this model should not be trusted. Investigate the problem by refitting with {.code vcov = "none"}. Simplifying the model can sometimes help')
       }
 
       if (model == "weights") {
-        .err('the Hessian for the weighting model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or failure to converge. Consider treating the weights as fixed by setting `vcov = "HC0"`')
+        .err('the Hessian for the weighting model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or failure to converge. Consider treating the weights as fixed by setting {.code vcov = "HC0"}')
       }
     }
 
-    .err(.e, tidy = FALSE)
+    .err("{(.e)}")
   })
 }

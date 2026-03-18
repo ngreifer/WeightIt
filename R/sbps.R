@@ -115,7 +115,7 @@
 sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL, smooth = FALSE, full.search) {
 
   if (is_null(obj2) && is_null(moderator)) {
-    .err("either `obj2` or `moderator` must be specified")
+    .err("either {.arg obj2} or {.arg moderator} must be specified")
   }
 
   treat <- obj[["treat"]]
@@ -133,7 +133,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   if (is_not_null(obj2)) {
     if (!inherits(obj2, "weightit")) {
-      .err("`obj2` must be a `weightit` object, ideally with a 'by' component")
+      .err("{.arg obj2} must be a {.cls weightit} object, ideally with a {.field by} component")
     }
 
     if (is_not_null(obj2[["by"]])) {
@@ -143,7 +143,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
         moderator.factor <- .attr(processed.moderator, "by.factor")
       }
       else if (is_null(processed.moderator)) {
-        .err("cannot figure out moderator. Please supply a value to `moderator`")
+        .err("cannot figure out moderator. Please supply a value to {.arg moderator}")
       }
     }
     else if (is_null(processed.moderator)) {
@@ -200,7 +200,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   if (smooth) {
     if (!missing(full.search)) {
-      .wrn("`full.search` is ignored when `smooth = TRUE`")
+      .wrn("{.arg full.search} is ignored when {.code smooth = TRUE}")
     }
 
     ps_o <- obj[["ps"]]
@@ -305,7 +305,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       full.search <- (length(R) <= 8)
     }
     else {
-      chk::chk_flag(full.search)
+      arg_flag(full.search)
     }
 
     get_w <- function(s, moderator.factor, w_o, w_s) {
@@ -366,10 +366,8 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
             treat_i <- c(rep.int(1, nrow(covs)), rep.int(0, sum(treat == t)))
             w_i <- c(rep.int(1, nrow(covs)), w_[treat == t])
             moderator.factor_i <- c(moderator.factor, moderator.factor[treat == t])
-            s.weights_i <- {
-              if (is_not_null(s.weights)) c(s.weights, s.weights[treat == t])
-              else NULL
-            }
+            s.weights_i <- if (is_not_null(s.weights)) c(s.weights, s.weights[treat == t])
+
             unlist(lapply(R, function(g) cobalt::col_w_smd(covs_i[moderator.factor_i == g, , drop = FALSE],
                                                            treat_i[moderator.factor_i == g], w_i[moderator.factor_i == g],
                                                            std = TRUE, s.d.denom = "treated",

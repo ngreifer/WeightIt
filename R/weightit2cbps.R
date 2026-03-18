@@ -281,7 +281,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     }
   }
   else {
-    chk::chk_string(solver)
+    arg_string(solver)
     solver <- match_arg(solver, c("optim", "multiroot"))
   }
 
@@ -290,30 +290,30 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   over <- ...get("over", FALSE)
-  chk::chk_flag(over)
+  arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    chk::chk_flag(twostep)
+    arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("`twostep` is ignored when `over = FALSE`")
+    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  chk::chk_number(reltol)
+  arg_number(reltol)
 
   maxit <- ...get("maxit", 5e3L)
-  chk::chk_count(maxit)
+  arg_count(maxit)
 
   N <- sum(s.weights)
 
   link <- ...get("link", "logit")
 
-  if (chk::vld_string(link)) {
-    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit",
-                            "log", "clog", "identity"))
+  if (rlang::is_string(link)) {
+    arg_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit",
+                       "log", "clog", "identity"))
 
     link <- .make_link(link)
 
@@ -332,7 +332,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err('`link` must be a string or an object of class "link-glm"')
+    .err('{.arg link} must be a string or an object of class {.cls link-glm}')
   }
 
   .fam <- quasibinomial(link)
@@ -386,7 +386,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
     if (!null_or_error(out) && utils::hasName(out, "root") &&
         utils::hasName(out, "estim.precis") &&
-        chk::vld_number(out[["estim.precis"]]) &&
+        is_number(out[["estim.precis"]]) &&
         out[["estim.precis"]] < 1e-5) {
       par_alpha <- out[["root"]]
     }
@@ -483,7 +483,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   p.score <- .fam$linkinv(drop(mod_covs %*% par_out))
 
   if (out$converge != 0) {
-    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   w <- .get_w_from_ps_internal_bin(p.score, treat, estimand = estimand,
@@ -556,7 +556,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
     }
   }
   else {
-    chk::chk_string(solver)
+    arg_string(solver)
     solver <- match_arg(solver, c("optim", "multiroot"))
   }
 
@@ -565,22 +565,22 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   over <- ...get("over", FALSE)
-  chk::chk_flag(over)
+  arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    chk::chk_flag(twostep)
+    arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("`twostep` is ignored when `over = FALSE`")
+    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  chk::chk_number(reltol)
+  arg_number(reltol)
 
   maxit <- ...get("maxit", 1e3L)
-  chk::chk_count(maxit)
+  arg_count(maxit)
 
   N <- sum(s.weights)
 
@@ -654,7 +654,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
     if (!null_or_error(out) && utils::hasName(out, "root") &&
         utils::hasName(out, "estim.precis") &&
-        chk::vld_number(out[["estim.precis"]]) &&
+        is_number(out[["estim.precis"]]) &&
         out[["estim.precis"]] < 1e-5) {
       par_alpha <- out[["root"]]
     }
@@ -812,7 +812,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (out$converge != 0) {
-    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   pp <- get_pp(par_out, mod_covs)
@@ -908,7 +908,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     }
   }
   else {
-    chk::chk_string(solver)
+    arg_string(solver)
     solver <- match_arg(solver, c("optim", "multiroot"))
   }
 
@@ -917,22 +917,22 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   }
 
   over <- ...get("over", FALSE)
-  chk::chk_flag(over)
+  arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    chk::chk_flag(twostep)
+    arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("`twostep` is ignored when `over = FALSE`")
+    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  chk::chk_number(reltol)
+  arg_number(reltol)
 
   maxit <- ...get("maxit", 1e4L)
-  chk::chk_count(maxit)
+  arg_count(maxit)
 
   s.weights <- s.weights / mean_fast(s.weights)
 
@@ -989,7 +989,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
     if (!null_or_error(out) && utils::hasName(out, "root") &&
         utils::hasName(out, "estim.precis") &&
-        chk::vld_number(out[["estim.precis"]]) &&
+        is_number(out[["estim.precis"]]) &&
         out[["estim.precis"]] < 1e-5) {
       par_alpha <- out[["root"]]
     }
@@ -1072,7 +1072,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   }
 
   if (out$converge != 0) {
-    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   un_s2 <- exp(par_out[1L])
@@ -1144,15 +1144,13 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (rlang::is_installed("rootSolve")) {
-      solver <- "multiroot"
-    }
-    else {
-      solver <- "optim"
+    solver <- {
+      if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
     }
   }
   else {
-    chk::chk_string(solver)
+    arg_string(solver)
     solver <- match_arg(solver, c("optim", "multiroot"))
   }
 
@@ -1161,22 +1159,22 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   }
 
   over <- ...get("over", FALSE)
-  chk::chk_flag(over)
+  arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    chk::chk_flag(twostep)
+    arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("`twostep` is ignored when `over = FALSE`")
+    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  chk::chk_number(reltol)
+  arg_number(reltol)
 
   maxit <- ...get("maxit", 1e4L)
-  chk::chk_count(maxit)
+  arg_count(maxit)
 
   coef_ind <- make_list(length(treat.list))
   for (i in seq_along(treat.list)) {
@@ -1435,7 +1433,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   }
 
   if (out$converge != 0) {
-    .wrn("the optimization failed to converge; try again with a higher value of `maxit`")
+    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   w <- Reduce("*", lapply(seq_along(treat.list), function(i) {

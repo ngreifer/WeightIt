@@ -143,7 +143,7 @@
 #' @name predict.glm_weightit
 predict.glm_weightit <- function(object, newdata = NULL, type = "response",
                                  na.action = na.pass, ...) {
-  chk::chk_string(type)
+  arg_string(type)
   type <- switch(type, probs = "response", lp = "link", type)
   type <- match_arg(type, c("response", "link"))
 
@@ -158,7 +158,7 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
                                      na.action = na.pass, values = NULL,
                                      level = NULL, ...) {
 
-  chk::chk_string(type)
+  arg_string(type)
   old_type <- type
   type <- switch(old_type, probs = "response", lp = "link", lv = "link", old_type)
 
@@ -169,37 +169,35 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
   type <- match_arg(type, acceptable_types)
 
   if (ord && type == "stdlv" && !object$family$link %in% c("probit", "logit", "cloglog", "loglog")) {
-    .err(sprintf('`type = "stdlv"` cannot be used with `link = %s`',
-                 add_quotes(object$family$link)))
+    .err('{.code type = "stdlv"} cannot be used with {.code link = "{object$family$link}"}')
   }
 
   outcome_levels <- colnames(object$fitted.values)
 
   if (is_not_null(level)) {
     if (type != "response") {
-      .wrn(sprintf("`level` is ignored when `type = %s`",
-                   add_quotes(old_type)))
+      .wrn('{.arg level} is ignored when {.code type = "{old_type}"}')
 
       level <- NULL
     }
-    else if (chk::vld_string(level) && level %in% outcome_levels) {
+    else if (rlang::is_string(level) && level %in% outcome_levels) {
       level <- match(level, outcome_levels)
     }
-    else if (chk::vld_whole_number(level) && chk::chk_range(level, c(1, length(outcome_levels)))) {
+    else if (rlang::is_scalar_integerish(level) && level %in% seq_along(outcome_levels)) {
       level <- as.integer(trunc(level))
     }
     else {
-      .err("`level` must be the name or index of a response level")
+      .err("{.arg level} must be the name or index of a response level")
     }
   }
 
   if (type == "mean") {
     if (is_not_null(values)) {
-      chk::chk_numeric(values)
-      chk::chk_named(values)
+      arg_numeric(values)
+      arg_named(values)
 
       if (!all(outcome_levels %in% names(values))) {
-        .err('when `type = "mean"`, all outcome levels must be named in `values`')
+        .err('when {.code type = "mean"}, all outcome levels must be named in {.arg values}')
       }
     }
     else if (can_str2num(outcome_levels)) {
@@ -208,12 +206,11 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
         setNames(outcome_levels)
     }
     else {
-      .err('when `type = "mean"` and `values` is not set, the outcome levels must be able to be read as numbers')
+      .err('when {.code type = "mean"} and {.arg values} is not set, the outcome levels must be able to be read as numbers')
     }
   }
   else if (is_not_null(values)) {
-    .wrn(sprintf("`values` is ignored when `type = %s`",
-                 add_quotes(old_type)))
+    .wrn('{.arg values} is ignored when {.code type = "{old_type}"}')
   }
 
   na.act <- object$na.action

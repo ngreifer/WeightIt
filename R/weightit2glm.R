@@ -308,10 +308,13 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   else {
     link <- acceptable.links[pmatch(link, acceptable.links, nomatch = 0L)][1L]
 
-    if (is.na(link)) {
-      .err(sprintf("only %s allowed as the link for binary treatments%s",
-                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
-                   if (missing == "saem") ' with `missing = "saem"`' else ""))
+    if (anyNA(link)) {
+      if (missing == "saem") {
+        .err('only {.val {acceptable.links}} {?is/are} allowed as the link for binary treatments with {.code missing = "saem"}')
+      }
+      else {
+        .err('only {.val {acceptable.links}} {?is/are} allowed as the link for binary treatments')
+      }
     }
   }
 
@@ -325,7 +328,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
   if (missing == "saem") {
 
     if (!all_the_same(s.weights)) {
-      .err('sampling weights cannot be used with `missing = "saem"`')
+      .err('sampling weights cannot be used with {.code missing = "saem"}')
     }
 
     rlang::check_installed("misaem")
@@ -346,10 +349,13 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     warning = function(w) {
       w <- conditionMessage(w)
       if (w != "one argument not used by format '%i '") {
-        .wrn(sprintf("(from `misaem::miss.glm()`): %s", w),
-             tidy = FALSE)
+        .wrn("(from {.fun misaem::miss.glm}): {w}")
       }
       invokeRestart("muffleWarning")
+    },
+    error = function(e) {
+      e <- conditionMessage(e)
+      .err("(from {.fun misaem::miss.glm}): {e}")
     })
 
     p.score <- drop(predict(fit, newdata = covs, method = saem.method))
@@ -385,10 +391,13 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     }, verbose = verbose)},
     warning = function(w) {
       w <- conditionMessage(w)
-      if (w != "non-integer #successes in a binomial glm!")
-        .wrn(sprintf("(from `logistf::%s()`): %s",
-                     link, w), tidy = FALSE)
+      if (w != "non-integer #successes in a binomial glm!") {
+        .wrn("(from {.fun logistf::{link}}): {w}")
+      }
       invokeRestart("muffleWarning")
+    },
+    error = function(e) {
+      .err("(from {.fun logistf::{link}}): {conditionMessage(e)}")
     })
 
     p.score <- fit$predict
@@ -452,17 +461,19 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
     warning = function(w) {
       w <- conditionMessage(w)
       if (w != "non-integer #successes in a binomial glm!") {
-        .wrn(sprintf("(from `glm()`): %s", w),
-             tidy = FALSE)
+        .wrn("(from {.fun glm}): {w}")
       }
 
       invokeRestart("muffleWarning")
+    },
+    error = function(e) {
+      .err("(from {.fun glm}): {conditionMessage(e)}")
     })
 
     p.score <- fit$fitted.values
 
     if (any(p.score <= 1e-14) || any(p.score >= 1 - 1e-14)) {
-      .wrn('propensity scores numerically equal to 0 or 1 were estimated, indicating perfect separation and infinite parameter estimates. These may yield problems with inference. Consider trying a different `link`. See `help("method_glm", package = "WeightIt")` for details')
+      .wrn('propensity scores numerically equal to 0 or 1 were estimated, indicating perfect separation and infinite parameter estimates. These may yield problems with inference. Consider trying a different {.arg link}. See {.help [{.code ?method_glm}](WeightIt::method_glm)} for details')
     }
 
     .psi <- .get_glm_psi(fit)
@@ -551,7 +562,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   for (i in c("use.mlogit", "use.mclogit")) {
     if (is_not_null(...get(i))) {
-      .wrn(sprintf('`%s` is no longer accepted and will be ignored; use `multi.method` instead. See `help("method_glm")` for details', i))
+      .wrn('{.arg {i}} is no longer accepted and will be ignored; use {.arg multi.method} instead. See {.help [{.code ?method_glm}](WeightIt::method_glm)} for details')
     }
   }
 
@@ -582,13 +593,13 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     if (missing == "saem") {
       if (!identical(multi.method, "saem") &&
           !identical(multi.method, "glm")) {
-        .wrn('`multi.method` is ignored when `missing = "saem"`')
+        .wrn('{.arg multi.method} is ignored when {.code missing = "saem"}')
       }
 
       multi.method <- "saem"
     }
     else {
-      chk::chk_string(multi.method)
+      arg_string(multi.method)
       multi.method <- tolower(multi.method)
       if (multi.method == "mblogit") multi.method <- "mclogit"
 
@@ -628,20 +639,15 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
   else if (link.ignored) {
     if (!any_apply(acceptable.links, identical, link)) {
-      .wrn(sprintf("`link` is ignored when `%s = %s`",
-                   if (missing == "saem") "missing" else "multi.method",
-                   add_quotes(multi.method)))
+      .wrn('{.arg link} is ignored when {.code {if (missing == "saem") "missing" else "multi.method"} = "{multi.method}"}')
     }
 
     link <- acceptable.links[1L]
   }
   else {
     link <- acceptable.links[pmatch(link, acceptable.links, nomatch = 0L)][1L]
-    if (is.na(link)) {
-      .err(sprintf("only %s allowed as the link for %smulti-category treatments with `multi.method = %s`",
-                   if (ord.treat) "ordinal " else "",
-                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE),
-                   add_quotes(multi.method)))
+    if (anyNA(link)) {
+      .err('only {.val {acceptable.links}} {?is/are} allowed as the link for {if (ord.treat) "ordinal"} multi-category treatments with {.code multi.method = "{multi.method}"}')
     }
   }
 
@@ -712,11 +718,13 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       warning = function(w) {
         w <- conditionMessage(w)
         if (w != "non-integer #successes in a binomial glm!") {
-          .wrn(sprintf("(from `glm()`): %s", w),
-               tidy = FALSE)
+          .wrn("(from {.fun glm}: {w}")
         }
 
         invokeRestart("muffleWarning")
+      },
+      error = function(w) {
+        .err("(from {.fun glm}: {conditionMessage(e)}")
       })
 
       ps[[i]] <- fit.obj[[i]]$fitted.values
@@ -742,8 +750,8 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                          quote = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem fitting the ordinal %s regressions with `polr()`.\n       Try again with an un-ordered treatment.\n       Error message: (from `MASS::polr()`): %s",
-                   link, conditionMessage(e)), tidy = FALSE)})
+      .err("there was a problem fitting the ordinal {link} regressions with {.fun polr}. Try again with an un-ordered treatment.Error message: (from {.fun MASS::polr}):\f{conditionMessage(e)}")
+    })
 
     ps <- fit.obj$fitted.values
   }
@@ -769,7 +777,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                          quote = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("there was a problem with the bias-reduced ordinal logit regression.\n       Try a different link.\n       Error message: (from `brglm2::bracl()`): %s", conditionMessage(e)), tidy = FALSE)
+      .err("there was a problem with the bias-reduced ordinal logit regression. Try a different link. Error message: (from {.fun brglm2::bracl}):\f{conditionMessage(e)}")
     })
 
     ps <- fit.obj$fitted.values
@@ -777,7 +785,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   else if (multi.method == "saem") {
 
     if (!all_the_same(s.weights)) {
-      .err('sampling weights cannot be used with `missing = "saem"`')
+      .err('sampling weights cannot be used with {.code missing = "saem"}')
     }
 
     rlang::check_installed("misaem")
@@ -805,11 +813,13 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       warning = function(w) {
         w <- conditionMessage(w)
         if (w != "one argument not used by format '%i '") {
-          .wrn(sprintf("(from `misaem::miss.glm()`): %s", w),
-               tidy = FALSE)
+          .wrn("(from {.fun misaem::miss.glm}): {w}")
         }
 
         invokeRestart("muffleWarning")
+      },
+      error = function(e) {
+        .err("(from {.fun misaem::miss.glm}): {conditionMessage(e)}")
       })
 
       ps[[i]] <- drop(predict(fit.obj[[i]], newdata = covs, method = saem.method))
@@ -825,9 +835,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       fit.obj <- MNP::mnp(formula, data, verbose = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem fitting the multinomial regression with `MNP()`.\n       Try a different `multi.method`.\nError message: (from `MNP::mnp()`): %s",
-                   conditionMessage(e)),
-           tidy = FALSE)
+      .err("there was a problem fitting the multinomial regression with {.fun MNP}. Try a different {.arg multi.method}. Error message: (from {.fun MNP::mnp}):\f{conditionMessage(e)}")
     })
 
     ps <- predict(fit.obj, type = "prob")$p
@@ -868,9 +876,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem fitting the multinomial %s regression with `mblogit()`.\n       Try a different `multi.method`.\nError message: (from `mclogit::mblogit()`): %s",
-                   link, conditionMessage(e)),
-           tidy = FALSE)
+      .err("there was a problem fitting the multinomial {link} regression with {.fun mblogit}. Try a different {.arg multi.method}. Error message: (from {.fun mclogit::mblogit}):\f{conditionMessage(e)}")
     })
 
     ps <- fitted(fit.obj)
@@ -894,9 +900,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                          quote = TRUE)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("There was a problem with the bias-reduced multinomial logit regression. Try a different `multi.method`.\n       Error message: (from `brglm2::brmultinom()`): %s",
-                   conditionMessage(e)),
-           tidy = FALSE)
+      .err("there was a problem fitting the bias-reduced multinomial logit regression. Try a different {.arg multi.method}. Error message: (from {.fun brglm2::brmultinom}):\f{conditionMessage(e)}")
     })
 
     ps <- fit.obj$fitted.values
@@ -1011,8 +1015,7 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     which.link <- acceptable.links[pmatch(link, acceptable.links, nomatch = 0L)][1L]
 
     if (is.na(which.link)) {
-      .err(sprintf('only %s allowed as the link for continuous treatments with `missing = "saem"`',
-                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE)))
+      .err('only {.val {acceptable.links}} {?is/are} allowed as the link for continuous treatments with {.code missing = "saem"}')
     }
 
     data <- data.frame(treat, covs)
@@ -1024,11 +1027,13 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     warning = function(w) {
       w <- conditionMessage(w)
       if (w != "one argument not used by format '%i '") {
-        .wrn(sprintf("(from `misaem::miss.lm()`): %s", w),
-             tidy = FALSE)
+        .wrn("(from {.fun misaem::miss.lm}): {w}")
       }
 
       invokeRestart("muffleWarning")
+    },
+    error = function(e) {
+      .err("(from {.fun misaem::miss.lm}): {conditionMessage(e)}")
     })
 
     saem.method <- ...get("saem.method", "map")
@@ -1039,9 +1044,8 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     acceptable.links <- c("identity", "log", "inverse")
 
     link <- acceptable.links[pmatch(link, acceptable.links, nomatch = 0L)][1L]
-    if (is.na(link)) {
-      .err(sprintf("only %s allowed as the link for continuous treatments",
-                   word_list(acceptable.links, quotes = TRUE, is.are = TRUE)))
+    if (anyNA(link)) {
+      .err("only {.val {acceptable.links}} {?is/are} allowed as the link for continuous treatments")
     }
 
     family <- gaussian(link = link)

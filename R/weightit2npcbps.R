@@ -148,9 +148,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, verbose, ..
                         print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
-    .err(sprintf("(from `CBPS::npCBPS()`): %s",
-                 conditionMessage(e)),
-         tidy = FALSE)
+    .err("(from {.fun CBPS::npCBPS}): {conditionMessage(e)}")
   })
 
   w <- fit$weights
@@ -192,9 +190,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, verbos
                         print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
-    .err(sprintf("(from `CBPS::npCBPS()`): %s",
-                 conditionMessage(e)),
-         tidy = FALSE)
+    .err("(from {.fun CBPS::npCBPS}): {conditionMessage(e)}")
   })
 
   w <- fit$weights

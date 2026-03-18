@@ -284,25 +284,25 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
-  chk::chk_character(SL.library)
+  arg_character(SL.library)
 
   if (is_null(cvControl[["stratifyCV"]])) {
     cvControl[["stratifyCV"]] <- TRUE
   }
 
   discrete <- ...get("discrete", FALSE)
-  chk::chk_flag(discrete)
+  arg_flag(discrete)
 
   if (identical(SL.method, "method.balance")) {
 
     criterion <- ...get("criterion") %or% ...get("stop.method")
 
     if (is_null(criterion)) {
-      .wrn('no `criterion` was provided. Using "smd.mean"')
       criterion <- "smd.mean"
+      .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
     }
     else {
-      chk::chk_string(criterion)
+      arg_string(criterion)
     }
 
     available.criteria <- cobalt::available.stats("binary")
@@ -351,9 +351,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
                         env = env))
   }, verbose = verbose)},
   error = function(e) {
-    .err(sprintf("(from `SuperLearner::SuperLearner()`): %s",
-                 conditionMessage(e)),
-         tidy = FALSE)
+    .err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
   })
 
   ps <- {
@@ -397,13 +395,13 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
-  chk::chk_character(SL.library)
+  arg_character(SL.library)
 
   discrete <- ...get("discrete", FALSE)
-  chk::chk_flag(discrete)
+  arg_flag(discrete)
 
   if (identical(SL.method, "method.balance")) {
-    .err('"method.balance" cannot be used with multi-category treatments')
+    .err('{.val method.balance} cannot be used with multi-category treatments')
   }
 
   fit.list <- info <- make_list(levels(treat))
@@ -428,9 +426,7 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
                                     env = env))
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("(from `SuperLearner::SuperLearner()`): %s",
-                   conditionMessage(e)),
-           tidy = FALSE)
+      .err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
     })
 
     ps[[i]] <- {
@@ -486,21 +482,21 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
-  chk::chk_character(SL.library)
+  arg_character(SL.library)
 
   discrete <- ...get("discrete", FALSE)
-  chk::chk_flag(discrete)
+  arg_flag(discrete)
 
   if (identical(SL.method, "method.balance")) {
 
     criterion <- ...get("criterion") %or% ...get("stop.method")
 
     if (is_null(criterion)) {
-      .wrn('no `criterion` was provided. Using "p.mean"')
       criterion <- "p.mean"
+      .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
     }
     else {
-      chk::chk_string(criterion)
+      arg_string(criterion)
     }
 
     available.criteria <- cobalt::available.stats("continuous")
@@ -538,9 +534,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                         env = env))
   }, verbose = verbose)},
   error = function(e) {
-    .err(sprintf("(from `SuperLearner::SuperLearner()`): %s",
-                 conditionMessage(e)),
-         tidy = FALSE)
+    .err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
   })
 
   gp.score <- {

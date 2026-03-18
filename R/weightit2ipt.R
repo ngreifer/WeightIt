@@ -164,8 +164,8 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
 
   link <- ...get("link", "logit")
 
-  if (chk::vld_string(link)) {
-    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog",
+  if (is.character(link) && length(link) == 1L) {
+    arg_subset(link, c("logit", "probit", "cloglog", "loglog",
                             "cauchit", "log", "clog"))
 
     link <- .make_link(link)
@@ -181,7 +181,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err('`link` must be a string or an object of class "link-glm"')
+    .err('{.arg link} must be a string or an object of class {.cls link-glm}')
   }
 
   .fam <- quasibinomial(link)
@@ -381,8 +381,8 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   link <- ...get("link", "logit")
 
-  if (chk::vld_string(link)) {
-    chk::chk_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
+  if (is.character(link) && length(link) == 1L) {
+    arg_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
 
     link <- .make_link(link)
   }
@@ -397,7 +397,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err('`link` must be a string or an object of class "link-glm"')
+    .err('{.arg link} must be a string or an object of class {.cls link-glm}')
   }
 
   .fam <- quasibinomial(link)
@@ -617,5 +617,5 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2ipt.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
-  .err('`method = "ipt"` cannot be used with continuous treatments')
+  .err('{.code method = "ipt"} cannot be used with continuous treatments')
 }

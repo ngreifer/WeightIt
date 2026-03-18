@@ -58,11 +58,11 @@ as.weightit.weightit.fit <- function(x, covs = NULL, ...) {
       covs <- as.data.frame.matrix(covs)
     }
     else if (!is.data.frame(covs)) {
-      .err("`covs` must be a data.frame of covariates")
+      .err("{.arg covs} must be a data.frame of covariates")
     }
 
     if (nrow(covs) != length(x$weights)) {
-      .err("`covs` must have as many rows as there are units in the original call to `weightit.fit()`")
+      .err("{.arg covs} must have as many rows as there are units in the original call to {.fun weightit.fit}")
     }
 
     x$covs <- covs
@@ -82,14 +82,14 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
                                 s.weights = NULL, ps = NULL, ...) {
 
   if (!is.numeric(x) || length(dim(x)) > 1L) {
-    .err("`x` must be a numeric vector of weights")
+    .err("{.arg x} must be a numeric vector of weights")
   }
 
-  chk::chk_not_missing(treat, "`treat`")
-  .chk_basic_vector(treat)
+  arg_supplied(treat)
+  arg_atomic(treat)
 
   if (length(x) != length(treat)) {
-    .err("`treat` and `x` must be the same length")
+    .err("{.arg treat} and {.arg x} must be the same length")
   }
 
   treat <- as.treat(treat, process = TRUE)
@@ -99,25 +99,32 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
       covs <- as.data.frame.matrix(covs)
     }
     else if (!is.data.frame(covs)) {
-      .err("`covs` must be a data.frame of covariates")
+      .err("{.arg covs} must be a data frame of covariates")
     }
 
     if (nrow(covs) != length(treat)) {
-      .err("`covs` and `treat` must be the same length")
+      .err("{.arg covs} and {.arg treat} must be the same length")
     }
   }
 
-  chk::chk_null_or(estimand, vld = chk::vld_string)
-  chk::chk_null_or(s.weights, vld = chk::vld_numeric)
-
-  if (is_not_null(s.weights) && length(s.weights) != length(treat)) {
-    .err("`s.weights` and `treat` must be the same length")
+  if (is_not_null(estimand)) {
+    arg_string(estimand)
   }
 
-  chk::chk_null_or(ps, vld = chk::vld_numeric)
+  if (is_not_null(s.weights)) {
+    arg_numeric(s.weights)
 
-  if (is_not_null(ps) && length(ps) != length(treat)) {
-    .err("`ps` and `treat` must be the same length")
+    if (length(s.weights) != length(treat)) {
+      .err("{.arg s.weights} and {.arg treat} must be the same length")
+    }
+  }
+
+  if (is_not_null(ps)) {
+    arg_numeric(ps)
+
+    if (length(ps) != length(treat)) {
+      .err("{.arg ps} and {.arg treat} must be the same length")
+    }
   }
 
   w.list <- list(weights = x,
@@ -130,7 +137,7 @@ as.weightit.default <- function(x, treat, covs = NULL, estimand = NULL,
   if (...length() > 0L) {
     nm <- ...names()
     if (is_null(nm) || !all(nzchar(nm))) {
-      .err("all arguments in `...` must be named")
+      .err("all arguments in {.arg ...} must be named")
     }
 
     for (i in seq_along(nm)) {
@@ -178,73 +185,80 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
                                    s.weights = NULL, ps.list = NULL, ...) {
 
   if (!is.numeric(x) || length(dim(x)) > 1L) {
-    .err("`x` must be a numeric vector of weights")
+    .err("{.arg x} must be a numeric vector of weights")
   }
 
-  chk::chk_not_missing(treat.list, "`treat.list`")
-  chk::chk_list(treat.list)
+  arg_supplied(treat.list)
+  arg_list(treat.list)
 
   if (!all_apply(treat.list, is.atomic) ||
       any_apply(treat.list, function(z) length(dim(z)) > 1L)) {
-    .err("`treat.list` must be a list of atomic vectors (i.e., numeric, logical, or character) or factors")
+    .err("{.arg treat.list} must be a list of atomic vectors (i.e., numeric, logical, or character) or factors")
   }
 
   if (!all_the_same(lengths(treat.list))) {
-    .err("each component of `treat.list` must have the same length")
+    .err("each component of {.arg treat.list} must have the same length")
   }
 
   if (length(x) != length(treat.list[[1L]])) {
-    .err("`x` and each component of `treat.list` must be the same length")
+    .err("{.arg x} and each component of {.arg treat.list} must be the same length")
   }
 
   for (i in seq_along(treat.list)) {
     treat.list[[i]] <- as.treat(treat.list[[i]], process = TRUE)
   }
 
-  chk::chk_null_or(covs.list, vld = chk::vld_list)
   if (is_not_null(covs.list)) {
+    arg_list(covs.list)
+
     if (!all_apply(covs.list, is.data.frame)) {
-      .err("`covs.list` must be a list of data.frames for each time point")
+      .err("{.arg covs.list} must be a list of data frames for each time point")
     }
     if (length(covs.list) != length(treat.list)) {
-      .err("`covs.list` must have the same number of time points as `treat.list`")
+      .err("{.arg covs.list} must have the same number of time points as {.arg treat.list}")
     }
     if (!all_the_same(vapply(covs.list, nrow, numeric(1L)))) {
-      .err("each component of `covs.list` must have the same number of rows")
+      .err("each component of {.arg covs.list} must have the same number of rows")
     }
-    if (length(weights) != nrow(covs.list[[1L]])) {
-      .err("`x` and each component of `covs.list` must be the same length")
+    if (length(x) != nrow(covs.list[[1L]])) {
+      .err("{.arg x} and each component of {.arg covs.list} must be the same length")
     }
   }
 
-  chk::chk_null_or(estimand, vld = chk::vld_string)
-  chk::chk_null_or(s.weights, vld = chk::vld_numeric)
-
-  if (is_not_null(s.weights) && length(s.weights) != length(weights)) {
-    .err("`s.weights` and `x` must be the same length")
+  if (is_not_null(estimand)) {
+    arg_string(estimand)
   }
 
-  chk::chk_null_or(ps.list, vld = chk::vld_list)
+  if (is_not_null(s.weights)) {
+    arg_numeric(s.weights)
+
+    if (length(s.weights) != length(x)) {
+    .err("{.arg s.weights} and {.arg x} must be the same length")
+    }
+  }
+
   if (is_not_null(ps.list)) {
+    arg_list(ps.list)
+
     if (length(ps.list) != length(treat.list)) {
-      .err("`ps.list` must have the same number of time points as `treat.list`")
+      .err("{.arg ps.list} must have the same number of time points as {.arg treat.list}")
     }
 
     if (!all_apply(ps.list, is.numeric) ||
         any_apply(ps.list, function(z) length(dim(z)) > 1L)) {
-      .err("`ps.list` must be a list of numeric vectors")
+      .err("{.arg ps.list} must be a list of numeric vectors")
     }
 
     if (!all_the_same(lengths(ps.list))) {
-      .err("each component of `ps.list` must have the same length")
+      .err("each component of {.arg ps.list} must have the same length")
     }
 
-    if (length(weights) != length(ps.list[[1L]])) {
-      .err("`x` and each component of `ps.list` must be the same length")
+    if (length(x) != length(ps.list[[1L]])) {
+      .err("{.arg x} and each component of {.arg ps.list} must be the same length")
     }
   }
 
-  w.list <- list(weights = weights,
+  w.list <- list(weights = x,
                  treat.list = treat.list,
                  covs.list = covs.list,
                  estimand = estimand,
@@ -255,7 +269,7 @@ as.weightitMSM.default <- function(x, treat.list, covs.list = NULL, estimand = N
   if (...length() > 0L) {
     nm <- ...names()
     if (is_null(nm) || !all(nzchar(nm))) {
-      .err("all arguments in `...` must be named")
+      .err("all arguments in {.arg ...} must be named")
     }
 
     for (i in seq_along(nm)) {

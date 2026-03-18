@@ -225,9 +225,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
     fit <- eval(bart.call)
   }, verbose = verbose)},
   error = function(e) {
-    .err(sprintf("(from `dbarts::bart2()`): %s",
-                 conditionMessage(e)),
-         tidy = FALSE)
+    .err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
   })
 
   p.score <- fitted(fit)
@@ -275,9 +273,7 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
       fit.list[[i]] <- eval(bart.call)
     }, verbose = verbose)},
     error = function(e) {
-      .err(sprintf("(from `dbarts::bart2()`): %s",
-                   conditionMessage(e)),
-           tidy = FALSE)
+      .err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
     })
 
     ps[[i]] <- fitted(fit.list[[i]])
@@ -333,9 +329,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
     fit <- eval(bart.call)
   }, verbose = verbose)},
   error = function(e) {
-    .err(sprintf("(from `dbarts::bart2()`): %s",
-                 conditionMessage(e)),
-         tidy = FALSE)
+    .err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
   })
 
   r <- residuals(fit)

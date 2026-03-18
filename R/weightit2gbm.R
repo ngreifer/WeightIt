@@ -308,11 +308,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   criterion <- ...get("criterion") %or% ...get("stop.method")
 
   if (is_null(criterion)) {
-    .wrn('no `criterion` was provided. Using "smd.mean"')
     criterion <- "smd.mean"
+    .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
   }
   else {
-    chk::chk_string(criterion)
+    arg_string(criterion)
   }
 
   available.criteria <- cobalt::available.stats(switch(treat.type,
@@ -334,14 +334,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
     if (!startsWith(criterion, "cv") ||
         !can_str2num(substr(criterion, 3L, nchar(criterion)))) {
-      .err(sprintf("`criterion` must be one of %s",
-                   word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
+      .err('{.arg criterion} must be one of {.or {.val {c(available.criteria, "cv{#}")}}}')
     }
 
     cv <- round(str2num(substr(criterion, 3L, nchar(criterion))))
 
     if (cv < 2) {
-      .err("at least 2 CV-folds must be specified in `criterion`")
+      .err("at least 2 CV-folds must be specified in {.arg criterion}")
     }
   }
   else {
@@ -353,8 +352,8 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   trim.at <- ...get("trim.at", 0)
 
   n.trees <- ...get("n.trees", 1e4L)
-  chk::chk_count(n.trees)
-  chk::chk_gt(n.trees, 1L)
+  arg_count(n.trees)
+  arg_gt(n.trees, 1L)
 
   arg_names <- setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
@@ -384,13 +383,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (cv == 0) {
     start.tree <- ...get("start.tree", 1L)
-    chk::chk_count(start.tree)
-    chk::chk_range(start.tree, c(1L, n.trees))
+    arg_count(start.tree)
+    arg_range(start.tree, c(1L, n.trees))
 
     n.grid <- ...get("n.grid",
                      round(1 + sqrt(2 * (n.trees - start.tree + 1))))
-    chk::chk_count(n.grid)
-    chk::chk_range(n.grid, c(2L, n.trees))
+    arg_count(n.grid)
+    arg_range(n.grid, c(2L, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -422,16 +421,16 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   ## Offset
   use.offset <- ...get("use.offset", FALSE)
-  chk::chk_logical(use.offset)
-  chk::chk_not_any_na(use.offset)
+  arg_logical(use.offset)
+  arg_no_NA(use.offset)
 
   if (any(use.offset)) {
     if (treat.type %in% c("multinomial", "multi-category")) {
-      .err("`use.offset` cannot be used with multi-category treatments")
+      .err("{.arg use.offset} cannot be used with multi-category treatments")
     }
 
     if (!identical(B[["distribution"]], "bernoulli")) {
-      .err('`use.offset` can only be used with `distribution = "bernoulli"`')
+      .err('{.arg use.offset} can only be used with {.code distribution = "bernoulli"}')
     }
 
     fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
@@ -646,11 +645,11 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   criterion <- ...get("criterion") %or% ...get("stop.method")
 
   if (is_null(criterion)) {
-    .wrn('no `criterion` was provided. Using "p.mean"')
     criterion <- "p.mean"
+    .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
   }
   else {
-    chk::chk_string(criterion)
+    arg_string(criterion)
   }
 
   available.criteria <- cobalt::available.stats("continuous")
@@ -661,14 +660,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
     if (!startsWith(criterion, "cv") ||
         !can_str2num(substr(criterion, 3L, nchar(criterion)))) {
-      .err(sprintf("`criterion` must be one of %s",
-                   word_list(c(available.criteria, "cv{#}"), "or", quotes = TRUE)))
+      .err('{.arg criterion} must be one of {.or {.val {c(available.criteria, "cv{#}")}}}')
     }
 
     cv <- round(str2num(substr(criterion, 3L, nchar(criterion))))
 
     if (cv < 2) {
-      .err("at least 2 CV-folds must be specified in `criterion`")
+      .err("at least 2 CV-folds must be specified in {.arg criterion}")
     }
   }
   else {
@@ -680,8 +678,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   trim.at <- ...get("trim.at", 0)
 
   n.trees <- ...get("n.trees", 2e4L)
-  chk::chk_count(n.trees)
-  chk::chk_gt(n.trees, 1L)
+  arg_count(n.trees)
+  arg_gt(n.trees, 1L)
 
   arg_names <- setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
@@ -703,13 +701,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (cv == 0) {
     start.tree <- ...get("start.tree", 1L)
-    chk::chk_count(start.tree)
-    chk::chk_range(start.tree, c(1L, n.trees))
+    arg_count(start.tree)
+    arg_range(start.tree, c(1L, n.trees))
 
     n.grid <- ...get("n.grid",
                      round(1 + sqrt(2 * (n.trees - start.tree + 1))))
-    chk::chk_count(n.grid)
-    chk::chk_range(n.grid, c(2L, n.trees))
+    arg_count(n.grid)
+    arg_range(n.grid, c(2L, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -743,8 +741,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   ## Offset
   use.offset <- ...get("use.offset", FALSE)
-  chk::chk_logical(use.offset)
-  chk::chk_not_any_na(use.offset)
+  arg_logical(use.offset)
+  arg_no_NA(use.offset)
 
   if (any(use.offset)) {
     fit <- lm.wfit(x = as.matrix(cbind(1, covs)), y = treat,

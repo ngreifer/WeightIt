@@ -1,10 +1,10 @@
 # Multinomial logistic regression
 .multinom_weightit.fit <- function(x, y, weights = NULL, offset = NULL, start = NULL,
                                    hess = TRUE, control = list(), ...) {
-  chk::chk_atomic(y)
+  arg_atomic(y)
   y <- as.factor(y)
-  chk::chk_numeric(x)
-  chk::chk_matrix(x)
+  arg_numeric(x)
+  arg_matrix(x)
 
   if (is_null(colnames(x))) {
     colnames(x) <- paste0("x", seq_col(x))
@@ -13,12 +13,14 @@
   N <- length(y)
 
   if (is_null(weights)) weights <- rep.int(1, N)
-  else chk::chk_numeric(weights)
+  else arg_numeric(weights)
 
   if (is_null(offset)) offset <- rep.int(0, N)
-  else chk::chk_numeric(offset)
+  else arg_numeric(offset)
 
-  chk::chk_all_equal(c(length(y), nrow(x), length(weights), length(offset)))
+  if (!all_the_same(c(length(y), nrow(x), length(weights), length(offset)))) {
+    .err('{.arg {c("y", "x", "weights", "offset")}} must all have the same number of units')
+  }
 
   K <- nlevels(y) - 1L
 
@@ -31,8 +33,8 @@
     start <- rep.int(0, k0)
   }
   else {
-    chk::chk_numeric(start)
-    chk::chk_length(start, k0)
+    arg_numeric(start)
+    arg_length(start, k0)
   }
 
   nm <- unlist(lapply(levels(y)[-1L], function(i) paste(i, colnames(x), sep = "~")))
@@ -152,10 +154,10 @@
                                x = FALSE, y = TRUE, contrasts = NULL, ...) {
   cal <- match.call()
 
-  chk::chk_flag(hess)
-  chk::chk_flag(model)
-  chk::chk_flag(x)
-  chk::chk_flag(y)
+  arg_flag(hess)
+  arg_flag(model)
+  arg_flag(x)
+  arg_flag(y)
 
   if (missing(data)) {
     data <- environment(formula)
@@ -188,17 +190,16 @@
 
   weights <- as.vector(model.weights(mf))
   if (is_not_null(weights) && !is.numeric(weights)) {
-    .err("`weights` must be a numeric vector")
+    .err("{.arg weights} must be a numeric vector")
   }
 
   if (is_not_null(weights) && any(weights < 0)) {
-    .err("negative weights not allowed")
+    .err("negative weights are not allowed")
   }
 
   offset <- as.vector(model.offset(mf))
   if (is_not_null(offset) && length(offset) != NROW(Y)) {
-    .err(gettextf("number of offsets is %d; should equal %d (number of observations)",
-                  length(offset), NROW(Y)), domain = NA)
+    .err("number of offsets is {length(offset)}; should equal {NROW(Y)} (number of observations)")
   }
 
   fit <- eval(call(".multinom_weightit.fit",

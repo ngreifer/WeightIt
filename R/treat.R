@@ -17,7 +17,7 @@ as.treat <- function(x, process = NULL) {
     process <- !inherits(x, "treat")
   }
 
-  chk::chk_flag(process)
+  arg_flag(process)
 
   if (process || !has_treat_type(x)) {
     x <- assign_treat_type(x)

@@ -198,8 +198,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 
     if (is_not_null(bw)) {
       if (!is.numeric(bw) || length(bw) != length(treat)) {
-        .err(sprintf("the argument to `%s` must be a numeric vector with length equal to the number of units",
-                     i))
+        .err("the argument to {.arg {i}} must be a numeric vector with length equal to the number of units")
       }
 
       break
@@ -232,7 +231,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   A[["verbose"]] <- TRUE
 
   if (is_not_null(A[["targets"]])) {
-    .wrn("`targets` cannot be used through `WeightIt` and will be ignored")
+    .wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
     A[["targets"]] <- NULL
   }
 
@@ -263,8 +262,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, ver
 
     if (is_not_null(bw)) {
       if (!is.numeric(bw) || length(bw) != length(treat)) {
-        .err(sprintf("the argument to `%s` must be a numeric vector with length equal to the number of units",
-                     i))
+        .err("the argument to {.arg {i}} must be a numeric vector with length equal to the number of units")
       }
 
       break
@@ -284,7 +282,6 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, ver
                                 int = ...get("int")) |>
     .make_covs_closer_to_1()
 
-
   A <- list(...)
 
   A[["covs"]] <- covs
@@ -295,7 +292,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, ver
   A[["verbose"]] <- TRUE
 
   if (is_not_null(A[["targets"]])) {
-    .wrn("`targets` cannot be used through `WeightIt` and will be ignored")
+    .wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
     A[["targets"]] <- NULL
   }
 

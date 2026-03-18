@@ -190,18 +190,27 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     .make_covs_closer_to_1() |>
     .make_covs_full_rank()
 
-  bw <- ...get("base.weights") %or% ...get("base.weight") %or%
-    rep_with(1, treat)
+  for (i in c("b.weights", "base.weights", "base.weight")) {
+    bw <- ...get(i)
 
-  if (!is.numeric(bw) || length(bw) != length(treat)) {
-    .err("the argument to `base.weight` must be a numeric vector with length equal to the number of units")
+    if (is_not_null(bw)) {
+      if (!is.numeric(bw) || length(bw) != length(treat)) {
+        .err("the argument to {.arg {i}} must be a numeric vector with length equal to the number of units")
+      }
+
+      break
+    }
+  }
+
+  if (is_null(bw)) {
+    bw <- rep_with(1, treat)
   }
 
   reltol <- ...get("reltol", 1e-10)
-  chk::chk_number(reltol)
+  arg_number(reltol)
 
   maxit <- ...get("maxit", 1e4L)
-  chk::chk_count(maxit)
+  arg_count(maxit)
 
   solver <- ...get("solver")
   if (is_null(solver)) {
@@ -211,7 +220,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     }
   }
   else {
-    chk::chk_string(solver)
+    arg_string(solver)
     solver <- match_arg(solver, c("optim", "multiroot"))
   }
 
@@ -251,7 +260,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
       if (!null_or_error(out) && utils::hasName(out, "root") &&
           utils::hasName(out, "estim.precis") &&
-          chk::vld_number(out[["estim.precis"]]) &&
+          is_number(out[["estim.precis"]]) &&
           out[["estim.precis"]] < 1e-5) {
         coef_start <- out$root
       }
@@ -271,7 +280,7 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
     opt.out$gradient <- gradient.EB(opt.out$par, s.weights_t, Q, C)
 
     if (opt.out$convergence != 0) {
-      .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing `maxit`")
+      .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing {.arg maxit}")
     }
     else if (any(abs(opt.out$gradient) > 1e-3)) {
       .wrn("the estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization")
@@ -425,8 +434,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
     if (is_not_null(bw)) {
       if (!is.numeric(bw) || length(bw) != length(treat)) {
-        .err(sprintf("the argument to `%s` must be a numeric vector with length equal to the number of units",
-                     i))
+        .err("the argument to {.arg {i}} must be a numeric vector with length equal to the number of units")
       }
 
       break
@@ -444,22 +452,20 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   s.weights <- s.weights / mean_fast(s.weights)
 
   reltol <- ...get("reltol", 1e-10)
-  chk::chk_number(reltol)
+  arg_number(reltol)
 
   maxit <- ...get("maxit", 1e4)
-  chk::chk_count(maxit)
+  arg_count(maxit)
 
-  solver <- ...get("solver", NULL)
+  solver <- ...get("solver")
   if (is_null(solver)) {
-    if (rlang::is_installed("rootSolve")) {
-      solver <- "multiroot"
-    }
-    else {
-      solver <- "optim"
+    solver <- {
+      if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
     }
   }
   else {
-    chk::chk_string(solver)
+    arg_string(solver)
     solver <- match_arg(solver, c("optim", "multiroot"))
   }
 
@@ -470,7 +476,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   moments <- ...get("moments", 1L)
 
   d.moments <- ...get("d.moments", 1L)
-  chk::chk_count(d.moments)
+  arg_count(d.moments)
 
   treat <- .make_closer_to_1(treat)
 
@@ -541,7 +547,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
       if (!null_or_error(out) && utils::hasName(out, "root") &&
           utils::hasName(out, "estim.precis") &&
-          chk::vld_number(out[["estim.precis"]]) &&
+          is_number(out[["estim.precis"]]) &&
           out[["estim.precis"]] < 1e-5) {
         coef_start <- out$root
       }
@@ -561,7 +567,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     opt.out$gradient <- gradient.EB(opt.out$par, s.weights, Q, C)
 
     if (opt.out$convergence != 0) {
-      .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing `maxit`")
+      .wrn("the optimization failed to converge in the alotted number of iterations. Try increasing {.arg maxit}")
     }
     else if (any(abs(opt.out$gradient) > 1e-3)) {
       .wrn("the estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization")
@@ -659,10 +665,10 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 #   s.weights <- s.weights / mean_fast(s.weights)
 #
 #   reltol <- ...get("reltol", 1e-10)
-#   chk::chk_number(reltol)
+#   arg_number(reltol)
 #
 #   maxit <- ...get("maxit", 1e4)
-#   chk::chk_count(maxit)
+#   arg_count(maxit)
 #
 #   solver <- ...get("solver", NULL)
 #   if (is_null(solver)) {
@@ -674,7 +680,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 #     }
 #   }
 #   else {
-#     chk::chk_string(solver)
+#     arg_string(solver)
 #     solver <- match_arg(solver, c("optim", "multiroot"))
 #   }
 #
@@ -683,7 +689,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 #   }
 #
 #   d.moments <- max(...get("d.moments", 1L), moments)
-#   chk::chk_count(d.moments)
+#   arg_count(d.moments)
 #
 #   treat <- .make_closer_to_1(treat)
 #
@@ -757,7 +763,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 #
 #       if (!null_or_error(out) && utils::hasName(out, "root") &&
 #           utils::hasName(out, "estim.precis") &&
-#           chk::vld_number(out[["estim.precis"]]) &&
+#           is_number(out[["estim.precis"]]) &&
 #           out[["estim.precis"]] < 1e-5) {
 #         coef_start <- out$root
 #       }

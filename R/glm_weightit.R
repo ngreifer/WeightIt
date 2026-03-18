@@ -238,7 +238,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
   model_call <- match.call()
 
   if (identical(family, "multinomial")) {
-    .wrn('using `glm_weightit()`  with `family = "multinomial"` is deprecated. Please use `multinom_weightit()` instead')
+    .wrn('using {.fun glm_weightit}  with {.code family = "multinomial"} is deprecated. Please use {.fun multinom_weightit} instead')
     model_call[[1L]] <- quote(WeightIt::multinom_weightit)
     model_call[["family"]] <- NULL
 
@@ -246,7 +246,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
   }
 
   ###
-  chk::chk_flag(br)
+  arg_flag(br)
 
   internal_model_call <- .build_internal_model_call(model = "glm",
                                                     model_call = model_call,
@@ -259,7 +259,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
                    errors = c("missing values in object" = "missing values are not allowed in the model variables"))
 
   if (br && vcov %in% c("asympt", "HC0") && identical(fit$type, "correction")) {
-    .err('`type = "correction"` cannot be used with the specified `vcov`')
+    .err('{.code type = "correction"} cannot be used with the specified {.arg vcov}')
   }
 
   fit$psi <- .get_glm_psi(fit)
@@ -295,8 +295,7 @@ lm_weightit <- function(formula, data, weightit = NULL,
 
   ###
   if (is_not_null(...get("family"))) {
-    .err("`family` cannot be used with `lm_weightit()`. Did you mean to use `glm_weightit()` instead?",
-         tidy = FALSE)
+    .err("{.arg family} cannot be used with {.fun lm_weightit}. Did you mean to use {.fun glm_weightit} instead?")
   }
 
   internal_model_call <- .build_internal_model_call(model = "lm",
@@ -341,8 +340,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
   ###
   if (is_not_null(...get("family"))) {
-    .err("`family` cannot be used with `ordinal_weightit()`. Did you mean to use `link` instead?",
-         tidy = FALSE)
+    .err("{.arg family} cannot be used with {.fun ordinal_weightit}. Did you mean to use {.arg link} instead?")
   }
 
   internal_model_call <- .build_internal_model_call(model = "ordinal",
@@ -385,8 +383,7 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
   ###
   if (is_not_null(...get("family"))) {
-    .err("`family` cannot be used with `multinom_weightit()`.",
-         tidy = FALSE)
+    .err("{.arg family} cannot be used with {.fun multinom_weightit}")
   }
 
   internal_model_call <- .build_internal_model_call(model = "multinom",

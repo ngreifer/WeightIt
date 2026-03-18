@@ -58,20 +58,20 @@ add_quotes <- function(x, quotes = 2L) {
     quotes <- '"'
   }
 
-  if (chk::vld_string(quotes)) {
+  if (rlang::is_string(quotes)) {
     return(paste0(quotes, x, str_rev(quotes)))
   }
 
-  if (!chk::vld_count(quotes) || quotes > 2L) {
+  if (!rlang::is_scalar_integerish(quotes) || quotes > 2 || quotes < 0) {
     stop("`quotes` must be boolean, 1, 2, or a string.")
   }
 
-  if (quotes == 0L) {
+  if (quotes == 0) {
     return(x)
   }
 
   x <- {
-    if (quotes == 1L) sprintf("'%s'", x)
+    if (quotes == 1) sprintf("'%s'", x)
     else sprintf('"%s"', x)
   }
 
@@ -321,12 +321,12 @@ binarize <- function(variable, zero = NULL, one = NULL) {
   }
 
   if (length(unique.vals) != 2L) {
-    .err(sprintf("cannot binarize %s: more than two levels", var.name))
+    .err("cannot binarize {.var {var.name}}: more than two levels")
   }
 
   if (is_not_null(zero)) {
     if (zero %nin% unique.vals) {
-      .err(sprintf("the argument to `zero` is not the name of a level of %s", var.name))
+      .err("the argument to {.arg zero} is not the name of a level of {.var {var.name}}")
     }
 
     return(setNames(as.integer(variable != zero), names(variable)))
@@ -334,7 +334,7 @@ binarize <- function(variable, zero = NULL, one = NULL) {
 
   if (is_not_null(one)) {
     if (one %nin% unique.vals) {
-      .err(sprintf("the argument to `one` is not the name of a level of %s", var.name))
+      .err("the argument to {.arg one} is not the name of a level of {.var {var.name}}")
     }
 
     return(setNames(as.integer(variable == one), names(variable)))
@@ -416,7 +416,7 @@ col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
 col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
   if (!is.matrix(mat)) {
     if (is.data.frame(mat)) {
-      if (any_apply(mat, chk::vld_character_or_factor)) {
+      if (any_apply(mat, function(z) is.character(z) || is.factor(z))) {
         stop("'mat' must be a numeric matrix.")
       }
 
@@ -634,10 +634,10 @@ get_varnames <- function(expr) {
 get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   if (!rlang::is_formula(f)) {
-    .err("`formula` must be a formula")
+    .err("{.arg formula} must be a formula")
   }
 
-  chk::chk_string(sep)
+  arg_string(sep)
 
   env <- environment(f)
 
@@ -650,7 +650,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     data.specified <- TRUE
   }
   else {
-    .wrn("the argument supplied to `data` is not a data.frame object. This may causes errors or unexpected results")
+    .wrn("the argument supplied to {.arg data} is not a data frame object. This may causes errors or unexpected results")
     data <- env
     data.specified <- FALSE
   }
@@ -661,13 +661,10 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
       terms(data = data)
   },
   error = function(e) {
-    msg <- {
-      if (identical(conditionMessage(e), "'.' in formula and no 'data' argument"))
-        "`.` is not allowed in formulas without `data`"
-      else
-        conditionMessage(e)
-    }
-    .err(msg)
+    if (identical(conditionMessage(e), "'.' in formula and no 'data' argument"))
+      .err("`.` is not allowed in formulas without {.arg data}")
+    else
+      .err("{conditionMessage(e)}")
   })
 
   treat <- ...get("treat")
@@ -685,7 +682,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     if (inherits(test, "simpleError")) {
       m <- conditionMessage(test)
       if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
-        .err(m, tidy = FALSE)
+        .err("{m}")
       }
 
       resp.var.failed <- TRUE
@@ -702,9 +699,9 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
       tt <- delete.response(tt)
     }
     else {
-      .err(sprintf("the given response variable, %s, is not a variable in %s",
-                   add_quotes(utils::strcapture("object '(.*)' not found", m, character(1L))[[1L]]),
-                   word_list(c("data", "the global environment")[c(data.specified, TRUE)], "or")))
+      resp <- utils::strcapture("object '(.*)' not found", m, character(1L))[[1L]]
+
+      .err('the given response variable, {.var {resp}}, is not a variable in {.or {c("data", "the global environment")[c(data.specified, TRUE)]}}')
     }
   }
 
@@ -753,7 +750,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
         m <- conditionMessage(test)
 
         if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
-          .err(m, tidy = FALSE)
+          .err("{m}")
         }
 
         return(NULL)
@@ -786,7 +783,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     if (inherits(test, "simpleError")) {
       m <- conditionMessage(test)
       if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
-        .err(m, tidy = FALSE)
+        .err("{m}")
       }
 
       rhs.vars.failed[i] <- TRUE
@@ -803,7 +800,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
       rhs.df[i] <- TRUE
 
       if (rhs.vars.mentioned.char[i] %in% terms.with.interactions) {
-        .err("interactions with data.frames are not allowed in the input formula")
+        .err("interactions with data frames are not allowed in the input formula")
       }
 
       if (inherits(test, "rms")) {
@@ -822,10 +819,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   }
 
   if (any(rhs.vars.failed)) {
-    .err(sprintf("All variables in `formula` must be variables in `data` or objects in the global environment.\nMissing variables: %s",
-                 word_list(rhs.vars.mentioned.char[rhs.vars.failed], and.or = FALSE)),
-         tidy = FALSE)
-
+    .err("all variables in {.arg formula} must be variables in {.arg data} or objects in the global environment.\nMissing variables: {rhs.vars.mentioned.char[rhs.vars.failed]}")
   }
 
   rhs.term.labels.list <- setNames(as.list(rhs.term.labels), rhs.term.labels)
@@ -860,7 +854,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   covs <- tryCatch(eval(mf.covs),
                    error = function(e) {
-                     .err(conditionMessage(e), tidy = FALSE)
+                     .err("{conditionMessage(e)}")
                    })
 
   if (is_not_null(treat.name) && utils::hasName(covs, treat.name)) {
@@ -922,7 +916,7 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
   if (!use.multi && nunique.treat == 2L) {
     treat.type <- "binary"
   }
-  else if (use.multi || chk::vld_character_or_factor(treat)) {
+  else if (use.multi || is.character(treat) || is.factor(treat)) {
     treat.type <- "multinomial"
 
     if (!inherits(treat, "processed.treat")) {
@@ -1115,49 +1109,54 @@ clear_attr <- function(x, all = FALSE) {
 }
 probably_a_bug <- function() {
   fun <- paste(deparse1(sys.call(-1L)), collapse = "\n")
-  .err(sprintf("an error was produced and is likely a bug. Please let the maintainer know a bug was produced by the function\n%s", fun))
+  .err("an error was produced and is likely a bug. Please let the maintainer know a bug was produced by the function {.fun {fun}}")
 }
 `%nin%` <- function(x, table) is.na(match(x, table, nomatch = NA_integer_))
 null_or_error <- function(x) {is_null(x) || inherits(x, "try-error")}
+is_number <- function(x) {
+  is.numeric(x) && length(x) == 1L && !anyNA(x)
+}
 
-#More informative and cleaner version of base::match.arg(). Uses chk.
-match_arg <- function(arg, choices, several.ok = FALSE) {
-  #Replaces match.arg() but gives cleaner error message and processing
-  #of arg.
-  if (missing(arg)) {
-    stop("No argument was supplied to match_arg.")
-  }
+#More informative and cleaner version of base::match.arg(). Uses arg.
+match_arg <- function(x, choices, several.ok = FALSE, context = NULL,
+                      arg = rlang::caller_arg(x)) {
+  arg_supplied(x, arg = arg)
+  arg_supplied(choices)
+  arg_character(choices)
 
-  arg.name <- deparse1(substitute(arg), width.cutoff = 500L)
-
-  if (missing(choices)) {
-    sysP <- sys.parent()
-    formal.args <- formals(sys.function(sysP))
-    choices <- eval(formal.args[[as.character(substitute(arg))]],
-                    envir = sys.frame(sysP))
-  }
-
-  if (is_null(arg)) {
+  if (is_null(x)) {
     return(choices[1L])
   }
 
+  arg_flag(several.ok)
+
   if (several.ok) {
-    chk::chk_character(arg, x_name = add_quotes(arg.name, "`"))
+    arg_character(x, arg = arg)
   }
   else {
-    chk::chk_string(arg, x_name = add_quotes(arg.name, "`"))
-    if (identical(arg, choices)) {
-      return(arg[1L])
+    arg_string(x, arg = arg)
+
+    if (identical(x, choices)) {
+      return(x[1L])
     }
   }
 
-  i <- pmatch(arg, choices, nomatch = 0L, duplicates.ok = TRUE)
+  i <- pmatch(x, choices, nomatch = 0L, duplicates.ok = TRUE)
 
   if (all(i == 0L)) {
-    .err(sprintf("the argument to `%s` should be %s%s",
-                 arg.name,
-                 ngettext(length(choices), "", if (several.ok) "at least one of " else "one of "),
-                 word_list(choices, and.or = "or", quotes = 2L)))
+    one_of <- {
+      if (length(choices) <= 1L) NULL
+      else if (several.ok) "at least one of"
+      else "one of"
+    }
+
+    if (is_null(context)) {
+      .err("{.arg {arg}} should be {one_of} {.or {.val {choices}}}")
+    }
+    else {
+      .err(sprintf("%s {.arg {arg}} should be {one_of} {.or {.val {choices}}}",
+                   context))
+    }
   }
 
   i <- i[i > 0L]
@@ -1227,6 +1226,11 @@ check_if_call_from_fun <- function(fun) {
   attr(x, which, exact = TRUE)
 }
 
+.bug_report_url <- function() {
+  pkg <- utils::packageName()
+  utils::packageDescription(pkg)[["BugReports"]]
+}
+
 #Extract variables from ..., similar to ...elt(), by name without evaluating list(...)
 ...get <- function(x, ifnotfound = NULL) {
   expr <- quote({
@@ -1279,15 +1283,13 @@ check_if_call_from_fun <- function(fun) {
       }
     }
     else if (is_null(from) || isFALSE(from)) {
-      .wrn(w, tidy = FALSE)
+      .wrn("{w}")
     }
     else if (isTRUE(from)) {
-      .wrn(sprintf("(from `%s()`): %s", rlang::call_name(call), w),
-           tidy = FALSE)
+      .wrn("(from {.fun {rlang::call_name(call)}}): {w}")
     }
     else {
-      .wrn(sprintf("(from %s): %s", paste(from, collapse = ""), w),
-           tidy = FALSE)
+      .wrn('(from {paste(from, collapse = "")}): {w}')
     }
 
     invokeRestart("muffleWarning")
@@ -1302,15 +1304,13 @@ check_if_call_from_fun <- function(fun) {
       }
     }
     else if (is_null(from) || isFALSE(from)) {
-      .err(e, tidy = FALSE)
+      .err("{e}")
     }
     else if (isTRUE(from)) {
-      .err(sprintf("(from `%s()`): %s", rlang::call_name(call), e),
-           tidy = FALSE)
+      .err("(from {.fun {rlang::call_name(call)}}): {e}")
     }
     else {
-      .err(sprintf("(from %s): %s", paste(from, collapse = ""), e),
-           tidy = FALSE)
+      .err('(from {paste(from, collapse = "")}): {e}')
     }
   })
 
@@ -1402,6 +1402,6 @@ all_apply <- function(X, FUN, ...) {
 }
 
 #crayon utilities
-.it <- function(...) crayon::italic(...)
-.ul <- function(...) crayon::underline(...)
-.st <- function(...) crayon::strikethrough(...)
+.it <- function(...) cli::style_italic(...)
+.ul <- function(...) cli::style_underline(...)
+.st <- function(...) cli::style_strikethrough(...)

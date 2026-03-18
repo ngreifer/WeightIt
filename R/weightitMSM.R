@@ -185,7 +185,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
-    .wrn("`by` has replaced `exact` in the `weightit()` syntax, but `exact` will always work")
+    .wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
     by <- A[["exact"]]
     by.arg <- "exact"
   }
@@ -198,7 +198,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
   if (is_null(formula.list) || !is.list(formula.list) ||
       !all_apply(formula.list, rlang::is_formula, lhs = TRUE)) {
-    .err("`formula.list` must be a list of formulas")
+    .err("{.arg formula.list} must be a list of formulas")
   }
 
   for (i in seq_along(formula.list)) {
@@ -212,11 +212,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     treat.list[[i]] <- t.c[["treat"]]
 
     if (is_null(covs.list[[i]])) {
-      .err(sprintf("no covariates were specified in the %s formula", ordinal(i)))
+      .err("no covariates were specified in the {ordinal(i)} formula")
     }
 
     if (is_null(treat.list[[i]])) {
-      .err(sprintf("no treatment variable was specified in the %s formula", ordinal(i)))
+      .err("no treatment variable was specified in the {ordinal(i)} formula")
     }
 
     n <- length(treat.list[[i]])
@@ -230,8 +230,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     treat.name <- .attr(treat.list[[i]], "treat.name")
 
     if (anyNA(treat.list[[i]]) || !all(is.finite(treat.list[[i]]))) {
-      .err(sprintf("no missing or non-finite values are allowed in the treatment variable. Missing or non-finite values found in %s",
-                   treat.name))
+      .err("no missing or non-finite values are allowed in the treatment variable. Missing or non-finite values found in {.var treat.name}")
     }
 
     names(treat.list)[i] <- treat.name
@@ -266,15 +265,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   }
   else if (is_not_null(num.formula)) {
     if (!isTRUE(stabilize)) {
-      .msg("setting `stabilize` to `TRUE` based on `num.formula` input")
+      .msg("setting {.arg stabilize} to {.val {TRUE}} based on {.arg num.formula} input")
     }
     stabilize <- TRUE
   }
 
   if (stabilize) {
     if (!is.function(method) && !.weightit_methods[[method]]$stabilize_ok) {
-      .wrn(sprintf("`stabilize` cannot be used with %s and will be ignored",
-                   .method_to_phrase(method)))
+      .wrn("{.arg stabilize} cannot be used with {(.method_to_phrase(method))} and will be ignored")
       stabilize <- FALSE
       num.formula <- NULL
     }
@@ -315,7 +313,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         A[["link"]] <- rep.int(A[["link"]], length(formula.list))
       }
       else if (length(A[["link"]]) != length(formula.list)) {
-        .err(sprintf("the argument to `link` must have length 1 or %s", length(formula.list)))
+        .err("the argument to {.arg link} must have length {.or {unique(c(1, length(formula.list)))}}")
       }
     }
 
@@ -431,7 +429,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   }
 
   if (is_not_null(method) && all_the_same(w)) {
-    .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1L]))
+    .wrn("all weights are {.val w[1L]}, possibly indicating an estimation failure")
   }
 
   ## Assemble output object----
@@ -580,7 +578,7 @@ print.weightitMSM <- function(x, ...) {
     trim.at <- NULL
   }
 
-  if (is_not_null(trim.at) && chk::vld_number(trim.at)) {
+  if (is_not_null(trim.at) && is.numeric(trim.at) && length(trim.at == 1L)) {
     if (trim.at < 1) {
       if (trim.lower) {
         trim.at <- c(1 - trim.at, trim.at)
