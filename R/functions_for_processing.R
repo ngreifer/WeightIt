@@ -383,8 +383,9 @@
   if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
   chk::chk_number(A[["eps_rel"]], "`eps_rel`")
 
-  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
-  chk::chk_number(A[["time_limit"]], "`time_limit`")
+  if (is_not_null(A[["time_limit"]])) {
+    chk::chk_number(A[["time_limit"]], "`time_limit`")
+  }
 
   if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 50L
   chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
