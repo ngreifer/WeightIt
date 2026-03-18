@@ -476,11 +476,11 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
     .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
+                 options.list[["max_iter"]]))
   }
   else if (identical(opt.out$info$status, "run time limit reached")) {
     .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
+                 options.list[["time_limit"]]))
   }
   else if (!startsWith(opt.out$info$status, "solved")) {
     .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
@@ -716,11 +716,11 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
     .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
+                 options.list[["max_iter"]]))
   }
   else if (identical(opt.out$info$status, "run time limit reached")) {
     .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
+                 options.list[["time_limit"]]))
   }
   else if (!startsWith(opt.out$info$status, "solved")) {
     .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
@@ -920,11 +920,11 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   if (identical(opt.out$info$status, "maximum iterations reached")) {
     .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
+                 options.list[["max_iter"]]))
   }
   else if (identical(opt.out$info$status, "run time limit reached")) {
     .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
+                 options.list[["time_limit"]]))
   }
   else if (!startsWith(opt.out$info$status, "solved")) {
     .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
