@@ -231,7 +231,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   d <- ...get("dist.mat", "scaled_euclidean")
 
-  if (chk::vld_string(d)) {
+  if (rlang::is_string(d)) {
     d <- transform_covariates(data = covs, method = d,
                               s.weights = s.weights, discarded = !subset) |>
       eucdist_internal() |>
@@ -246,8 +246,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
         !all(check_if_zero(diag(d))) ||
         any(d < 0) ||
         !isSymmetric(unname(d))) {
-      .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
-                   word_list(weightit_distances(), "or", quotes = TRUE)))
+      .err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
     }
   }
 
@@ -269,10 +268,10 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   covs <- scale(covs)
 
   min.w <- ...get("min.w", 1e-8)
-  chk::chk_number(min.w)
+  arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  chk::chk_number(lambda)
+  arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -281,7 +280,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (add_constraints) {
     tols <- ...get("tols", 0)
-    chk::chk_number(tols)
+    arg_number(tols)
     tols <- abs(tols)
   }
 
@@ -300,7 +299,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    chk::chk_flag(improved)
+    arg_flag(improved)
 
     nn <- tcrossprod(cbind(s.weights_n_0, s.weights_n_1))
 
@@ -474,17 +473,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
                                 pars = options.list)
   }, verbose = verbose)
 
-  if (identical(opt.out$info$status, "maximum iterations reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
-  }
-  else if (identical(opt.out$info$status, "run time limit reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
-  }
-  else if (!startsWith(opt.out$info$status, "solved")) {
-    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
-  }
+  opt.out <- .process_osqp_output(opt.out, options.list)
 
   if (estimand == "ATT") {
     w <- rep.int(1, n)
@@ -497,6 +486,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
   else {
     w <- opt.out$x
   }
+
+  # Fix inaccuracies in weights
+  w[w < min.w] <- min.w
 
   # Shrink tiny weights to 0
   if (abs(min.w) < 1e-10) {
@@ -519,7 +511,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   d <- ...get("dist.mat", "scaled_euclidean")
 
-  if (chk::vld_string(d)) {
+  if (rlang::is_string(d)) {
     d <- transform_covariates(data = covs, method = d,
                               s.weights = s.weights, discarded = !subset) |>
       eucdist_internal() |>
@@ -533,8 +525,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     if (!is.matrix(d) || !all(dim(d) == length(treat)) ||
         !all(check_if_zero(diag(d))) || any(d < 0) ||
         !isSymmetric(unname(d))) {
-      .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
-                   word_list(weightit_distances(), "or", quotes = TRUE)))
+      .err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
     }
 
   }
@@ -554,10 +545,10 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
   levels_treat <- levels(treat)
 
   min.w <- ...get("min.w", 1e-8)
-  chk::chk_number(min.w)
+  arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  chk::chk_number(lambda)
+  arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -566,7 +557,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   if (add_constraints) {
     tols <- ...get("tols", 0)
-    chk::chk_number(tols)
+    arg_number(tols)
     tols <- abs(tols)
     covs <- scale(covs)
   }
@@ -587,7 +578,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    chk::chk_flag(improved)
+    arg_flag(improved)
 
     nn <- tcrossprod(s.weights_n_t)
 
@@ -714,17 +705,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
                                 pars = options.list)
   }, verbose = verbose)
 
-  if (identical(opt.out$info$status, "maximum iterations reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
-  }
-  else if (identical(opt.out$info$status, "run time limit reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
-  }
-  else if (!startsWith(opt.out$info$status, "solved")) {
-    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
-  }
+  opt.out <- .process_osqp_output(opt.out, options.list)
 
   if (estimand == "ATE") {
     w <- opt.out$x
@@ -733,6 +714,9 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     w <- rep.int(1, n)
     w[treat != focal] <- opt.out$x
   }
+
+  # Fix inaccuracies in weights
+  w[w < min.w] <- min.w
 
   # Shrink tiny weights to 0
   if (abs(min.w) < 1e-10) {
@@ -754,7 +738,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   Xdist <- ...get("dist.mat", "scaled_euclidean")
 
-  if (chk::vld_string(Xdist)) {
+  if (rlang::is_string(Xdist)) {
     Xdist <- transform_covariates(data = covs, method = Xdist,
                                   s.weights = s.weights, discarded = !subset) |>
       eucdist_internal() |>
@@ -768,8 +752,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     if (!is.matrix(Xdist) || !all(dim(Xdist) == length(treat)) ||
         !all(check_if_zero(diag(Xdist))) || any(Xdist < 0) ||
         !isSymmetric(unname(Xdist))) {
-      .err(sprintf("`dist.mat` must be one of %s or a square, symmetric distance matrix with a value for all pairs of units",
-                   word_list(weightit_distances(), "or", quotes = TRUE)))
+      .err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
     }
   }
 
@@ -788,7 +771,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     if (!is.matrix(Adist) || !all(dim(Adist) == length(treat)) ||
         !all(check_if_zero(diag(Adist))) || any(Adist < 0) ||
         !isSymmetric(unname(Adist))) {
-      .err("`treat.dist.mat` must be a square, symmetric distance matrix with a value for all pairs of units")
+      .err("{.arg treat.dist.mat} must be a square, symmetric distance matrix with a value for all pairs of units")
     }
   }
 
@@ -805,10 +788,10 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   s.weights <- n * s.weights / sum(s.weights)
 
   min.w <- ...get("min.w", 1e-8)
-  chk::chk_number(min.w)
+  arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  chk::chk_number(lambda)
+  arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -816,17 +799,17 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   if (add_constraints) {
     tols <- ...get("tols", 0)
-    chk::chk_number(tols)
+    arg_number(tols)
     tols <- abs(tols)
   }
 
   options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   d.moments <- max(...get("d.moments", 0), moments)
-  chk::chk_count(d.moments)
+  arg_count(d.moments)
 
   dimension.adj <- ...get("dimension.adj", TRUE)
-  chk::chk_flag(dimension.adj)
+  arg_flag(dimension.adj)
 
   Xmeans <- colMeans(Xdist)
   Xgrand_mean <- mean(Xmeans)
@@ -918,19 +901,12 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
                                 pars = options.list)
   }, verbose = verbose)
 
-  if (identical(opt.out$info$status, "maximum iterations reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
-  }
-  else if (identical(opt.out$info$status, "run time limit reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
-  }
-  else if (!startsWith(opt.out$info$status, "solved")) {
-    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
-  }
+  opt.out <- .process_osqp_output(opt.out, options.list)
 
   w <- opt.out$x
+
+  # Fix inaccuracies in weights
+  w[w < min.w] <- min.w
 
   # Shrink tiny weights to 0
   if (abs(min.w) < 1e-10) {

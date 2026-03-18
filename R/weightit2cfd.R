@@ -214,10 +214,10 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
   diagn <- diag(n)
 
   min.w <- ...get("min.w", 1e-8)
-  chk::chk_number(min.w)
+  arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  chk::chk_number(lambda)
+  arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -228,7 +228,7 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- scale(covs)
 
     tols <- ...get("tols", 0)
-    chk::chk_number(tols)
+    arg_number(tols)
     tols <- abs(tols)
   }
 
@@ -249,7 +249,7 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    chk::chk_flag(improved)
+    arg_flag(improved)
 
     nn <- tcrossprod(cbind(s.weights_n_0, s.weights_n_1))
 
@@ -416,24 +416,12 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
                       ATC = diag(P) + lambda * s.weights_n_1[t1]^2 / 2)
   }
 
-
   verbosely({
-    opt.out <- osqp::solve_osqp(P = 2 * P, q = q,
-                                A = t(Amat), l = lvec, u = uvec,
+    opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
                                 pars = options.list)
   }, verbose = verbose)
 
-  if (identical(opt.out$info$status, "maximum iterations reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
-  }
-  else if (identical(opt.out$info$status, "run time limit reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
-  }
-  else if (!startsWith(opt.out$info$status, "solved")) {
-    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
-  }
+  opt.out <- .process_osqp_output(opt.out, options.list)
 
   if (estimand == "ATT") {
     w <- rep.int(1, n)
@@ -446,6 +434,9 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
   else {
     w <- opt.out$x
   }
+
+  # Fix inaccuracies in weights
+  w[w < min.w] <- min.w
 
   # Shrink tiny weights to 0
   if (abs(min.w) <= 1e-10) {
@@ -487,10 +478,10 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   levels_treat <- levels(treat)
 
   min.w <- ...get("min.w", 1e-8)
-  chk::chk_number(min.w)
+  arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  chk::chk_number(lambda)
+  arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -501,7 +492,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- scale(covs)
 
     tols <- ...get("tols", 0)
-    chk::chk_number(tols)
+    arg_number(tols)
     tols <- abs(tols)
   }
 
@@ -523,7 +514,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    chk::chk_flag(improved)
+    arg_flag(improved)
 
     nn <- tcrossprod(s.weights_n_t)
 
@@ -648,17 +639,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                 pars = options.list)
   }, verbose = verbose)
 
-  if (identical(opt.out$info$status, "maximum iterations reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `max_iter` (current value: %s)",
-                 A[["max_iter"]]))
-  }
-  else if (identical(opt.out$info$status, "run time limit reached")) {
-    .wrn(sprintf("the optimization failed to converge. Try increasing `time_limit` (current value: %s)",
-                 A[["time_limit"]]))
-  }
-  else if (!startsWith(opt.out$info$status, "solved")) {
-    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
-  }
+  opt.out <- .process_osqp_output(opt.out, options.list)
 
   if (estimand == "ATE") {
     w <- opt.out$x
@@ -667,6 +648,9 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     w <- rep.int(1, n)
     w[treat != focal] <- opt.out$x
   }
+
+  # Fix inaccuracies in weights
+  w[w < min.w] <- min.w
 
   # Shrink tiny weights to 0
   if (abs(min.w) <= 1e-10) {
@@ -680,7 +664,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
 .process_kernel <- function(X, s.weights, subset, kernel = "gaussian",
                             bw_scale = 1, nu = NULL, nsim = 5000) {
-  chk::chk_string(kernel)
+  arg_string(kernel)
 
   kernel <- match_arg(kernel, c("gaussian", "matern", "energy", "laplace", "t"))
 
@@ -703,8 +687,8 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     return(-D)
   }
 
-  chk::chk_number(bw_scale)
-  chk::chk_gt(bw_scale, 0)
+  arg_number(bw_scale)
+  arg_gt(bw_scale, 0)
 
   bw <- median(D[lower.tri(D)]) * bw_scale
 
@@ -717,9 +701,9 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       nu <- 3/2
     }
 
-    chk::chk_number(nu)
-    chk::chk_gt(nu, 0)
-    chk::chk_lte(nu, 21/2)
+    arg_number(nu)
+    arg_gt(nu, 0)
+    arg_lte(nu, 21/2)
 
     if (nu == 1/2) {
       return(exp(-D / bw))
@@ -747,11 +731,11 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     nu <- 5
   }
 
-  chk::chk_number(nu)
-  chk::chk_gt(nu, 0)
+  arg_number(nu)
+  arg_gt(nu, 0)
 
-  chk::chk_count(nsim)
-  chk::chk_gte(nsim, 10)
+  arg_count(nsim)
+  arg_gte(nsim, 10)
 
   V.random <- matrix(rt(ncol(X) * nsim, df = nu) / bw,
                      nrow = nsim)

@@ -32,23 +32,20 @@
   }
 
   if (identical(method, "twang")) {
-    .err('"twang" is no longer an acceptable argument to `method`. Please use "gbm" for generalized boosted modeling')
+    .err('{.val twang} is no longer an acceptable argument to {.arg method}. Please use {.val gbm} for generalized boosted modeling')
   }
 
   if ((!is.character(method) && !is.function(method)) ||
       (is.character(method) && (length(method) > 1L ||
                                 !utils::hasName(.weightit_methods,
                                                 .method_to_proper_method(method))))) {
-    .err(sprintf("`method` must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods:\n%s",
-                 word_list(names(.weightit_methods), and.or = FALSE, quotes = 2L)),
-         tidy = FALSE)
+    .err("{.arg method} must be a string of length 1 containing the name of an acceptable weighting method or a function that produces weights. Allowable methods: {.val {names(.weightit_methods)}}")
   }
 
   if (msm && !force && is.character(method)) {
     m <- .method_to_proper_method(method)
     if (!.weightit_methods[[m]]$msm_valid) {
-      .err(sprintf("the use of %s with longitudinal treatments has not been validated. Set `weightit.force = TRUE` to bypass this error",
-                   .method_to_phrase(m)))
+      .err("the use of {(.method_to_phrase(m))} with longitudinal treatments has not been validated. Set {.code weightit.force = TRUE} to bypass this error")
     }
   }
 }
@@ -57,14 +54,12 @@
   if (is_not_null(method) && is.character(method) &&
       utils::hasName(.weightit_methods, method) &&
       (treat.type %nin% .weightit_methods[[method]]$treat_type)) {
-    .err(sprintf("%s can only be used with a %s treatment",
-                 .method_to_phrase(method),
-                 word_list(.weightit_methods[[method]]$treat_type, and.or = "or")))
+    .err("{(.method_to_phrase(method))} can only be used with a {.or {(.weightit_methods[[method]]$treat_type)}} treatment")
   }
 }
 
 .check_required_packages <- function(method) {
-  if (!chk::vld_string(method) ||
+  if (!rlang::is_string(method) ||
       !utils::hasName(.weightit_methods, method)) {
     return(invisible(NULL))
   }
@@ -97,16 +92,16 @@
     return(s.weights)
   }
 
-  if (!chk::vld_string(s.weights)) {
-    .err("the argument to `s.weights` must be a vector or data frame of sampling weights or the (quoted) names of the variable in `data` that contains sampling weights")
+  if (!rlang::is_string(s.weights)) {
+    .err("the argument to {.arg s.weights} must be a vector or data frame of sampling weights or the (quoted) names of the variable in {.arg data} that contains sampling weights")
   }
 
   if (is_null(data)) {
-    .err("`s.weights` was specified as a string but there was no argument to `data`")
+    .err("{.arg s.weights} was specified as a string but there was no argument to {.arg data}")
   }
 
   if (!utils::hasName(data, s.weights)) {
-    .err("the name supplied to `s.weights` is not the name of a variable in `data`")
+    .err("the name supplied to {.arg s.weights} is not the name of a variable in {.arg data}")
   }
 
   data[[s.weights]]
@@ -117,8 +112,7 @@
       !is.function(method) &&
       !.weightit_methods[[method]]$s.weights_ok &&
       !all_the_same(s.weights)) {
-    .err(sprintf("sampling weights cannot be used with %s",
-                 .method_to_phrase(method)))
+    .err("sampling weights cannot be used with {(.method_to_phrase(method))}")
   }
 }
 
@@ -144,19 +138,23 @@
 .process_estimand <- function(estimand, method, treat.type) {
 
   if (is.function(method)) {
-    chk::chk_null_or(estimand, vld = chk::vld_string)
+    if (is_null(estimand)) {
+      return(NULL)
+    }
+
+    arg_string(estimand)
     return(toupper(estimand))
   }
 
   if (treat.type == "continuous") {
-    if (is_not_null(estimand) && (!chk::vld_string(estimand) || !identical(toupper(estimand), "ATE"))) {
-      .wrn("`estimand` is ignored for continuous treatments")
+    if (is_not_null(estimand) && (!rlang::is_string(estimand) || !identical(toupper(estimand), "ATE"))) {
+      .wrn("{.arg estimand} is ignored for continuous treatments")
     }
 
     return("ATE")
   }
 
-  chk::chk_string(estimand)
+  arg_string(estimand)
 
   allowable_estimands <- {
     if (is_null(method)) unique(unlist(grab(.weightit_methods, "estimand")))
@@ -168,9 +166,7 @@
   }
 
   if (toupper(estimand) %nin% allowable_estimands) {
-    .err(sprintf("%s is not an allowable estimand for %s with a %s treatment. Only %s allowed",
-                 add_quotes(estimand), .method_to_phrase(method), treat.type,
-                 word_list(allowable_estimands, quotes = TRUE, and.or = "and", is.are = TRUE)))
+    .err("{.val {estimand}} is not an allowable estimand for {(.method_to_phrase(method))} with a {treat.type} treatment. Only {.val {allowable_estimands}} {?is/are} allowed")
   }
 
   toupper(estimand)
@@ -182,8 +178,7 @@
     subclass_ok <- .weightit_methods[[method]]$subclass_ok
 
     if (treat.type == "continuous" || !subclass_ok) {
-      .err(sprintf("subclasses are not compatible with %s with a %s treatment",
-                   .method_to_phrase(method), treat.type))
+      .err("subclasses are not compatible with {(.method_to_phrase(method))} with a {treat.type} treatment")
     }
   }
 }
@@ -202,10 +197,8 @@
                is_not_null(quantile))
 
       if (any(mi0)) {
-        .wrn(sprintf("%s not compatible with %s. Ignoring %s",
-                     word_list(c("moments", "int", "quantile")[mi0], and.or = "and", is.are = TRUE, quotes = "`"),
-                     .method_to_phrase(method),
-                     word_list(c("moments", "int", "quantile")[mi0], and.or = "and", quotes = "`")))
+        mi0_msg <- c("moments", "int", "quantile")[mi0]
+        .wrn("{.arg {mi0_msg}} {?is/are} not compatible with {(.method_to_phrase(method))}. Ignoring {.arg {mi0_msg}}")
       }
     }
 
@@ -218,7 +211,7 @@
     int <- FALSE
   }
   else {
-    chk::chk_flag(int)
+    arg_flag(int)
   }
 
   if (is_not_null(quantile)) {
@@ -249,23 +242,23 @@
     }
 
     if (bad.q) {
-      .err("`quantile` must be a number between 0 and 1, a named list or vector of such values, or a named list of vectors of such values")
+      .err("{.arg quantile} must be a number between 0 and 1, a named list or vector of such values, or a named list of vectors of such values")
     }
   }
 
   if (is_not_null(moments)) {
-    chk::chk_whole_numeric(moments)
+    arg_whole_numeric(moments)
 
     if (length(moments) > 1L && (is_null(names(moments)) || !all(nzchar(names(moments))))) {
-      .err("`moments` must be an integer or a named vector of integers")
+      .err("{.arg moments} must be an integer or a named vector of integers")
     }
 
-    chk::chk_gte(moments,
-                 if (is_null(quantile)) .weightit_methods[[method]]$moments_default
-                 else 0)
+    arg_gte(moments,
+            if (is_null(quantile)) .weightit_methods[[method]]$moments_default
+            else 0)
 
     if (int && any(moments < 1)) {
-      .err("when `int = TRUE`, `moments` must be greater than or equal to 1")
+      .err("when {.code int = TRUE}, {.arg moments} must be greater than or equal to 1")
     }
 
     moments[] <- as.integer(moments)
@@ -289,7 +282,7 @@
 
   if (is.function(method)) {
     if (isTRUE(is.MSM.method)) {
-      .err("currently, only user-defined methods that work with `is.MSM.method = FALSE` are allowed")
+      .err("currently, only user-defined methods that work with {.code is.MSM.method = FALSE} are allowed")
     }
 
     return(FALSE)
@@ -300,11 +293,10 @@
       return(TRUE)
     }
 
-    chk::chk_flag(is.MSM.method)
+    arg_flag(is.MSM.method)
 
     if (!is.MSM.method) {
-      .msg(sprintf("%s can be used with a single model when multiple time points are present. Using a seperate model for each time point. To use a single model, set `is.MSM.method` to `TRUE`",
-                   .method_to_phrase(method)))
+      .msg("{(.method_to_phrase(method))} can be used with a single model when multiple time points are present. Using a seperate model for each time point. To use a single model, set {.arg is.MSM.method} to {.val {TRUE}}")
     }
 
     return(is.MSM.method)
@@ -312,11 +304,10 @@
 
   if (is_not_null(is.MSM.method)) {
 
-    chk::chk_flag(is.MSM.method)
+    arg_flag(is.MSM.method)
 
     if (is.MSM.method) {
-      .wrn(sprintf("%s cannot be used with a single model when multiple time points are present. Using a seperate model for each time point",
-                   .method_to_phrase(method)))
+      .wrn("{(.method_to_phrase(method))} cannot be used with a single model when multiple time points are present. Using a seperate model for each time point")
     }
   }
 
@@ -331,17 +322,14 @@
   allowable.missings <- .weightit_methods[[method]]$missing
 
   if (is_null(missing)) {
-    .wrn(sprintf("missing values are present in the covariates. See `?WeightIt::method_%s` for information on how these are handled",
-                 method))
+    .wrn("missing values are present in the covariates. See {.help [{.code ?method_{method}}](WeightIt::method_{method})} for information on how these are handled")
     return(allowable.missings[1L])
   }
 
-  chk::chk_string(missing)
+  arg_string(missing)
 
   if (missing %nin% allowable.missings) {
-    .err(sprintf("only %s allowed for `missing` with %s",
-                 word_list(allowable.missings, quotes = 2L, is.are = TRUE),
-                 .method_to_phrase(method)))
+    .err("only {.val {allowable.missings}} {?is/are} allowed for {.arg missing} with {(.method_to_phrase(method))}")
   }
 
   missing
@@ -366,44 +354,66 @@
 .process_osqp_settings <- function(min.w, verbose, ...) {
   A <- ...mget(rlang::fn_fmls_names(osqp::osqpSettings))
 
-  eps <- ...get("eps", squish(min.w, lo = 1e-12, hi = 1e-8))
+  eps <- ...get("eps", 1e-6)
   if (is_not_null(eps)) {
-    chk::chk_number(eps)
+    arg_number(eps)
+    arg_gt(eps, 0)
     if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- eps
     if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- eps
   }
 
   if (is_null(A[["max_iter"]])) A[["max_iter"]] <- 5e4L
-  chk::chk_count(A[["max_iter"]], "`max_iter`")
-  chk::chk_lt(A[["max_iter"]], Inf, "`max_iter`")
+  arg_count(A[["max_iter"]], "max_iter")
+  arg_lt(A[["max_iter"]], Inf, "max_iter")
 
-  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-8
-  chk::chk_number(A[["eps_abs"]], "`eps_abs`")
+  if (is_null(A[["eps_abs"]])) A[["eps_abs"]] <- 1e-6
+  arg_number(A[["eps_abs"]], "eps_abs")
+  arg_gt(A[["eps_abs"]], 0, "eps_abs")
 
   if (is_null(A[["eps_rel"]])) A[["eps_rel"]] <- 1e-6
-  chk::chk_number(A[["eps_rel"]], "`eps_rel`")
+  arg_number(A[["eps_rel"]], "eps_rel")
+  arg_gt(A[["eps_rel"]], 0, "eps_rel")
 
-  if (is_null(A[["time_limit"]])) A[["time_limit"]] <- 0
-  chk::chk_number(A[["time_limit"]], "`time_limit`")
+  if (is_not_null(A[["time_limit"]])) {
+    arg_number(A[["time_limit"]], "time_limit")
+    arg_gt(A[["time_limit"]], 0, "time_limit")
+  }
 
   if (is_null(A[["adaptive_rho_interval"]])) A[["adaptive_rho_interval"]] <- 50L
-  chk::chk_count(A[["adaptive_rho_interval"]], "`adaptive_rho_interval`")
+  arg_count(A[["adaptive_rho_interval"]], "adaptive_rho_interval")
 
-  if (packageVersion("osqp") >= "1.0.0") {
+  if (utils::packageVersion("osqp") >= "1.0.0") {
     A[["polishing"]] <- ...get("polishing") %or% ...get("polish") %or% TRUE
-    chk::chk_flag(A[["polishing"]], "`polishing`")
+    arg_flag(A[["polishing"]], "polishing")
+    A["polish"] <- list(NULL)
   }
   else {
     A[["polish"]] <- ...get("polish") %or% ...get("polishing") %or% TRUE
-    chk::chk_flag(A[["polish"]], "`polish`")
+    arg_flag(A[["polish"]], "polish")
   }
 
   if (is_null(A[["polish_refine_iter"]])) A[["polish_refine_iter"]] <- 20L
-  chk::chk_count(A[["polish_refine_iter"]], "`polish_refine_iter`")
+  arg_count(A[["polish_refine_iter"]], "polish_refine_iter")
 
   A[["verbose"]] <- verbose
 
-  do.call(osqp::osqpSettings, A)
+  # do.call(osqp::osqpSettings, A)
+
+  A
+}
+
+.process_osqp_output <- function(opt.out, options.list) {
+  if (identical(opt.out$info$status, "maximum iterations reached")) {
+    .wrn('the optimization failed to converge. Try increasing {.arg max_iter} (current value: {options.list[["max_iter"]]})')
+  }
+  else if (identical(opt.out$info$status, "run time limit reached")) {
+    .wrn('the optimization failed to converge. Try increasing {.arg time_limit} (current value: {options.list[["time_limit"]]})')
+  }
+  else if (!startsWith(opt.out$info$status, "solved")) {
+    .wrn("no feasible solution could be found that satisfies all constraints. Relax any constraints supplied")
+  }
+
+  opt.out
 }
 
 .check_user_method <- function(method) {
@@ -413,7 +423,7 @@
   # else if (all(c("covs.list", "treat.list") %in% rlang::fn_fmls_names(method))) {
   # }
   else {
-    .err("the user-provided function to `method` must contain `covs` and `treat` as named parameters")
+    .err("the user-provided function to {.arg method} must contain {.arg covs} and {.arg treat} as named parameters")
   }
 }
 
@@ -422,28 +432,28 @@
     return(NULL)
   }
 
-  if (chk::vld_string(ps)) {
+  if (rlang::is_string(ps)) {
     if (is_null(data)) {
-      .err("`ps` was specified as a string but there was no argument to `data`")
+      .err("{.arg ps} was specified as a string but there was no argument to {.arg data}")
     }
 
     if (!utils::hasName(data, ps)) {
-      .err("the name supplied to `ps` is not the name of a variable in `data`")
+      .err("the name supplied to {.arg ps} is not the name of a variable in {.arg data}")
     }
 
     ps <- data[[ps]]
 
     if (!is.numeric(ps)) {
-      .err("the name supplied to `ps` must correspond to a numeric variable in `data`")
+      .err("the name supplied to {.arg ps} must correspond to a numeric variable in {.arg data}")
     }
   }
   else if (is.numeric(ps)) {
     if (length(ps) != length(treat)) {
-      .err("`ps` must have the same number of units as the treatment")
+      .err("{.arg ps} must have the same number of units as the treatment")
     }
   }
   else {
-    .err("the argument to `ps` must be a vector of propensity scores or the (quoted) name of a numeric variable in `data` that contains propensity scores")
+    .err("the argument to {.arg ps} must be a vector of propensity scores or the (quoted) name of a numeric variable in {.arg data} that contains propensity scores")
   }
 
   ps
@@ -462,8 +472,7 @@
   }
 
   if (estimand %nin% c("ATT", "ATC") && is_not_null(focal)) {
-    .wrn(sprintf('`estimand = %s` is not compatible with `focal`. Setting `estimand` to "ATT"',
-                 add_quotes(estimand)))
+    .wrn('{.code estimand = "{estimand}"} is not compatible with {.arg focal}. Setting {.arg estimand} to {.val ATT}')
     reported.estimand <- estimand <- "ATT"
   }
 
@@ -479,7 +488,7 @@
   }
   else {
     unique.vals <- {
-      if (chk::vld_character_or_factor(treat))
+      if (is.character(treat) || is.factor(treat))
         levels(factor(treat, nmax = ceiling(length(treat) / 4)))
       else
         sort(unique(treat, nmax = ceiling(length(treat) / 4)))
@@ -487,13 +496,13 @@
 
     #Check focal
     if (is_not_null(focal) && (length(focal) > 1L || focal %nin% unique.vals)) {
-      .err("the argument supplied to `focal` must be the name of a level of treatment")
+      .err("the argument supplied to {.arg focal} must be the name of a level of treatment")
     }
 
     if (estimand == "ATT") {
       if (is_null(focal)) {
         if (is_null(treated) || treated %nin% unique.vals) {
-          .err('when `estimand = "ATT"` for multi-category treatments, an argument must be supplied to `focal`')
+          .err('when {.code estimand = "ATT"} for multi-category treatments, an argument must be supplied to {.arg focal}')
         }
 
         focal <- treated
@@ -501,7 +510,7 @@
     }
     else if (estimand == "ATC") {
       if (is_null(focal)) {
-        .err('when `estimand = "ATC"` for multi-category treatments, an argument must be supplied to `focal`')
+        .err('when {.code estimand = "ATC"} for multi-category treatments, an argument must be supplied to {.arg focal}')
       }
 
       estimand <- "ATT"
@@ -526,7 +535,7 @@
   throw_message <- FALSE
 
   unique.vals <- {
-    if (chk::vld_character_or_factor(treat))
+    if (is.character(treat) || is.factor(treat))
       levels(factor(treat, nmax = 2L))
     else
       sort(unique(treat, nmax = 2L))
@@ -534,7 +543,7 @@
 
   if (is_not_null(focal)) {
     if (length(focal) > 1L || focal %nin% unique.vals) {
-      .err("the argument supplied to `focal` must be the name of a level of treatment")
+      .err("the argument supplied to {.arg focal} must be the name of a level of treatment")
     }
 
     if (estimand == "ATC") {
@@ -553,7 +562,7 @@
   }
   else if (is_not_null(treated)) {
     if (length(treated) > 1L || treated %nin% unique.vals) {
-      .err("the argument supplied to `treated` must be the name of a level of treatment")
+      .err("the argument supplied to {.arg treated} must be the name of a level of treatment")
     }
   }
   else if (is.logical(treat)) {
@@ -610,17 +619,14 @@
 
   if (throw_message) {
     if (estimand == "ATT") {
-      .msg(sprintf("assuming %s is the treated level. If not, supply an argument to `focal`",
-                   add_quotes(treated, !is.numeric(unique.vals))))
+      .msg("assuming {.val {treated}} is the treated level. If not, supply an argument to {.arg focal}")
 
     }
     else if (estimand == "ATC") {
-      .msg(sprintf("assuming %s is the control level. If not, supply an argument to `focal`",
-                   add_quotes(control, !is.numeric(unique.vals))))
+      .msg("assuming {.val {control}} is the control level. If not, supply an argument to {.arg focal}")
     }
     else {
-      .msg(sprintf("assuming %s is the treated level. If not, recode the treatment so that 1 is treated and 0 is control",
-                   add_quotes(treated, !is.numeric(unique.vals))))
+      .msg("assuming {.val {treated}} is the treated level. If not, recode the treatment so that 1 is treated and 0 is control")
     }
   }
 
@@ -650,7 +656,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     by <- NULL
     by.name <- NULL
   }
-  else if (chk::vld_string(by) && utils::hasName(data, by)) {
+  else if (rlang::is_string(by) && utils::hasName(data, by)) {
     by.name <- by
     by <- data[[by]]
   }
@@ -662,8 +668,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     t.c <- get_covs_and_treat_from_formula2(by, data)
     by <- t.c[["reported.covs"]]
     if (NCOL(by) != 1L) {
-      .err(sprintf("only one variable can be on the right-hand side of the formula for `%s`",
-                   by.arg))
+      .err("only one variable can be on the right-hand side of the formula for {.arg {by.arg}}")
     }
     by.name <- colnames(by)
   }
@@ -672,13 +677,11 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 
   if (bad.by) {
-    .err(sprintf("`%s` must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side",
-                 by.arg))
+    .err("{.arg {by.arg}} must be a string containing the name of the variable in data for which weighting is to occur within strata or a one-sided formula with the stratifying variable on the right-hand side")
   }
 
   if (anyNA(by)) {
-    .err(sprintf("the variable supplied to `%s` cannot contain any missing (NA) values",
-                 by.arg))
+    .err("the variable supplied to {.arg {by.arg}} cannot contain any missing ({.val {NA}}) values")
   }
 
   by.components <- data.frame(by)
@@ -693,10 +696,12 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
 
   if (treat.type != "continuous" &&
       any_apply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]))) {
-    .err(sprintf("not all the groups formed by `%s` contain all treatment levels%s. Consider coarsening `%s`",
-                 by.arg,
-                 if (is_not_null(treat.name)) sprintf(" in %s", treat.name) else "",
-                 by.arg))
+    if (is_null(treat.name)) {
+      .err("not all the groups formed by {.arg {by.arg}} contain all treatment levels. Consider coarsening {.arg {by.arg}}")
+    }
+    else {
+      .err("not all the groups formed by {.arg {by.arg}} contain all treatment levels in {.var treat}. Consider coarsening {.arg {by.arg}}")
+    }
   }
 
   attr(by.components, "by.factor") <- by.factor
@@ -707,7 +712,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
 .check_num.formula <- function(num.formula, data, env, formula.list) {
   if (rlang::is_formula(num.formula)) {
     if (!rlang::is_formula(num.formula, lhs = FALSE)) {
-      .err("the argument to `num.formula` must have right hand side variables but not a response variable (e.g., ~ V1 + V2)")
+      .err("the argument to {.arg num.formula} must have right hand side variables but not a response variable (e.g., {.code ~ V1 + V2})")
     }
 
     rhs.vars.mentioned.lang <- .attr(terms(num.formula), "variables")[-1L]
@@ -717,18 +722,16 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     }, logical(1L))
 
     if (any(rhs.vars.failed)) {
-      .err(sprintf("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: %s",
-                   word_list(rhs.vars.mentioned[rhs.vars.failed], and.or = FALSE)),
-           tidy = FALSE)
+      .err("all variables in {.arg num.formula} must be variables in {.arg data} or objects in the global environment. Missing variables: {.var {rhs.vars.mentioned[rhs.vars.failed]}}")
     }
   }
   else if (is.list(num.formula)) {
     if (length(num.formula) != length(formula.list)) {
-      .err("when supplied as a list, `num.formula` must have as many entries as `formula.list`")
+      .err("when supplied as a list, {.arg num.formula} must have as many entries as {.arg formula.list}")
     }
 
     if (!all_apply(num.formula, rlang::is_formula, lhs = FALSE)) {
-      .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
+      .err("{.arg num.formula} must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
     }
 
     rhs.vars.mentioned.lang.list <- lapply(num.formula, function(nf) .attr(terms(nf), "variables")[-1L])
@@ -739,13 +742,11 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     }, logical(1L))
 
     if (any(rhs.vars.failed)) {
-      .err(sprintf("All variables in `num.formula` must be variables in `data` or objects in the global environment.\nMissing variables: %s",
-                   word_list(rhs.vars.mentioned[rhs.vars.failed], and.or = FALSE)),
-           tidy = FALSE)
+      .err("all variables in {.arg num.formula} must be variables in {.arg data} or objects in the global environment. Missing variables: {.var {rhs.vars.mentioned[rhs.vars.failed]}}")
     }
   }
   else {
-    .err("`num.formula` must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
+    .err("{.arg num.formula} must be a single formula with no response variable and with the stabilization factors on the right hand side or a list thereof")
   }
 }
 
@@ -760,7 +761,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
 }
 
 .make_closer_to_1 <- function(x) {
-  if (chk::vld_character_or_factor(x) || all_the_same(x)) {
+  if (is.character(x) || is.factor(x) || all_the_same(x)) {
     return(x)
   }
 
@@ -866,7 +867,7 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
     }
     else {
       if (any(names(quantile) %in% colnames(d)[binary.vars])) {
-        .wrn("ignoring `quantile` constraints on binary and categorical variables")
+        .wrn("ignoring {.arg quantile} constraints on binary and categorical variables")
       }
 
       in_qu_and_quantile <- intersect(names(qu), names(quantile))
@@ -967,7 +968,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 
   extreme.warn <- FALSE
   if (all_the_same(w)) {
-    .wrn(sprintf("all weights are %s, possibly indicating an estimation failure", w[1L]))
+    .wrn("all weights are {.val {w[1L]}}, possibly indicating an estimation failure")
   }
   else if (treat.type == "continuous") {
     w.cv <- sd(tw, na.rm = TRUE) / mean(tw, na.rm = TRUE)
@@ -990,15 +991,12 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
     }
 
     if (any(bad.treat.groups)) {
-      n <- sum(bad.treat.groups)
-      .wrn(sprintf("all weights are `NA` or 0 in treatment %s %s",
-                   ngettext(n, "group", "groups"),
-                   word_list(t.levels[bad.treat.groups], quotes = TRUE)))
+      .wrn("all weights are {.or {.val {c(NA, 0)}}} in treatment {cli::qty(sum(bad.treat.groups))} group{?s} {.val {t.levels[bad.treat.groups]}}")
     }
   }
 
   if (extreme.warn) {
-    .wrn("some extreme weights were generated. Examine them with `summary()` and maybe trim them with `trim()`")
+    .wrn("some extreme weights were generated. Examine them with {.fun summary} and maybe trim them with {.fun trim}")
   }
 
   if (any(tw < 0)) {
@@ -1007,7 +1005,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 }
 
 .subclass_ps_multi <- function(ps_mat, treat, estimand = "ATE", focal = NULL, subclass) {
-  chk::chk_count(subclass)
+  arg_count(subclass)
   subclass <- round(subclass)
 
   estimand <- toupper(estimand)
@@ -1071,7 +1069,7 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 }
 
 .subclass_ps_bin <- function(ps, treat, estimand = "ATE", subclass) {
-  chk::chk_count(subclass)
+  arg_count(subclass)
   subclass <- round(subclass)
 
   estimand <- toupper(estimand)
@@ -1208,11 +1206,11 @@ stabilize_w <- function(weights, treat) {
 
   if (!isFALSE(use.kernel)) {
     if (isTRUE(use.kernel)) {
-      .wrn('`use.kernel` is deprecated; use `density = "kernel"` instead. Setting `density = "kernel"`')
+      .wrn('{.arg use.kernel} is deprecated; use {.code density = "kernel"} instead. Setting {.code density = "kernel"}')
       density <- "kernel"
     }
     else {
-      .wrn("`use.kernel` is deprecated")
+      .wrn("{.arg use.kernel} is deprecated")
     }
   }
 
@@ -1251,36 +1249,30 @@ stabilize_w <- function(weights, treat) {
       else
         exp(-abs(x - mu) / b) / (2 * b)
     }
-    else if (chk::vld_string(density)) {
+    else if (rlang::is_string(density)) {
       splitdens <- strsplit(density, "_", fixed = TRUE)[[1L]]
 
       splitdens1 <- get0(splitdens[1L], mode = "function", envir = parent.frame())
 
       if (is_null(splitdens1)) {
-        .err(sprintf("%s is not an appropriate argument to `density` because %s is not an available function",
-                     density, splitdens[1L]))
+        .err("{.arg {density}} is not an appropriate argument to {.arg density} because {splitdens[1L]} is not an available function")
       }
 
       if (length(splitdens) > 1L && !can_str2num(splitdens[-1L])) {
-        .err(sprintf("%s is not an appropriate argument to `density` because %s cannot be coerced to numeric",
-                     density, word_list(splitdens[-1L], and.or = "or", quotes = TRUE)))
+        .err("{.arg {density}} is not an appropriate argument to {.arg density} because {.or {.val {splitdens[-1L]}}} cannot be coerced to numeric")
       }
 
       .density <- function(x, log = FALSE) {
         if (utils::hasName(formals(splitdens1), "log")) {
           out <- tryCatch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1L])))),
                           error = function(e) {
-                            .err(sprintf("Error in applying density:\n  %s",
-                                         conditionMessage(e)),
-                                 tidy = FALSE)
+                            .err("error in applying density:\n  {conditionMessage(e)}")
                           })
         }
         else {
           out <- tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1L])))),
                           error = function(e) {
-                            .err(sprintf("Error in applying density:\n  %s",
-                                         conditionMessage(e)),
-                                 tidy = FALSE)
+                            .err("error in applying density:\n  {conditionMessage(e)}")
                           })
 
           if (log) out <- log(out)
@@ -1290,7 +1282,7 @@ stabilize_w <- function(weights, treat) {
       }
     }
     else {
-      .err("the argument to `density` cannot be evaluated as a density function")
+      .err("the argument to {.arg density} cannot be evaluated as a density function")
     }
 
     densfun <- function(p, log = FALSE) {
@@ -1298,12 +1290,12 @@ stabilize_w <- function(weights, treat) {
       # sd <- sqrt(col.w.v(p, s.weights))
       dens <- .density(p, log = log)
       if (is_null(dens) || !is.numeric(dens) || anyNA(dens)) {
-        .err("there was a problem with the output of `density`. Try another density function or leave it blank to use the Gaussian density")
+        .err("there was a problem with the output of {.arg density}. Try another density function or leave it blank to use the Gaussian density")
       }
 
       if ((log && !all(is.finite(dens))) ||
           (!log && any(dens <= 0))) {
-        .err("the input to density may not accept the full range of standardized treatment values or residuals")
+        .err("the input to {.arg density} may not accept the full range of standardized treatment values or residuals")
       }
 
       x <- seq.int(min(p) - 3 * adjust * bw.nrd0(p),
@@ -1972,7 +1964,7 @@ generalized_inverse <- function(sigma, .try = TRUE) {
     return(link)
   }
 
-  if (!chk::vld_string(link) || !link %in% c("clog", "loglog")) {
+  if (!rlang::is_string(link) || !link %in% c("clog", "loglog")) {
     .err("link function not recognized")
   }
 
