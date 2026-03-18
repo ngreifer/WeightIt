@@ -493,7 +493,9 @@ summary(Wmsm.out)
     ## treated       1.779 0.775   0.573       0
     ## control       1.331 0.752   0.486       0
     ## 
-    ## - Mean of Weights = 0.981
+    ## - Mean of Weights = 0.98
+    ## 
+    ## - Mean of Weights = 1
     ## 
     ## - Effective Sample Sizes:
     ## 
@@ -523,7 +525,9 @@ summary(Wmsm.out)
     ## treated       1.797 0.779   0.580       0
     ## control       1.359 0.750   0.488       0
     ## 
-    ## - Mean of Weights = 0.991
+    ## - Mean of Weights = 0.99
+    ## 
+    ## - Mean of Weights = 1
     ## 
     ## - Effective Sample Sizes:
     ## 
@@ -553,7 +557,9 @@ summary(Wmsm.out)
     ## treated       2.008 0.931   0.753       0
     ## control       1.269 0.672   0.407       0
     ## 
-    ## - Mean of Weights = 1.040.97
+    ## - Mean of Weights = 1.04
+    ## 
+    ## - Mean of Weights = 0.97
     ## 
     ## - Effective Sample Sizes:
     ## 
@@ -617,7 +623,7 @@ fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
 
 Then, we compute the average expected potential outcomes under each
 treatment regime using
-[`marginaleffects::avg_predictions()`](https://marginaleffects.com/man/r/predictions.html):
+[`marginaleffects::avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html):
 
 ``` r
 library("marginaleffects")
@@ -641,14 +647,14 @@ p
     ## Type: probs
 
 We can compare the expected potential outcomes under each regime using
-[`marginaleffects::hypotheses()`](https://marginaleffects.com/man/r/hypotheses.html).
+[`marginaleffects::hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html).
 To get all pairwise comparisons, supply the
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html)
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 output to `hypotheses(., ~ pairwise)`. To compare individual regimes, we
 can use
-[`hypotheses()`](https://marginaleffects.com/man/r/hypotheses.html),
+[`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html),
 identifying the rows of the
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html)
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 output. For example, to compare the regimes with no treatment for all
 three time points vs. the regime with treatment for all three time
 points, we would run

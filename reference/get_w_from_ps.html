@@ -15,7 +15,7 @@ of weights that target the provided estimand."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -292,12 +292,12 @@ nonexperimental data. <em>Psychological Methods</em>, 17(1), 44–60.
 <span class="r-in"><span><span class="va">ps.multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="va">multi.fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ps.multi</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           A         B         C</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.3976058 0.2609169 0.3414773</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.2793092 0.2324854 0.4882054</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.3728859 0.2908927 0.3362214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.3711736 0.2665370 0.3622894</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.3310437 0.2942148 0.3747415</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.3485804 0.3109687 0.3404509</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.3275345 0.2714686 0.4009970</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.3110696 0.3349112 0.3540192</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.3261981 0.3602605 0.3135413</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.3176130 0.3061721 0.3762149</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.3214072 0.3244588 0.3541339</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.3294088 0.3469696 0.3236216</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">w5</span> <span class="op">&lt;-</span> <span class="fu">get_w_from_ps</span><span class="op">(</span><span class="va">ps.multi</span>, treat <span class="op">=</span> <span class="va">T3</span>,</span></span>
 <span class="r-in"><span>                    estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span></span>

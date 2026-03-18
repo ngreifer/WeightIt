@@ -375,7 +375,7 @@ estimate the weights, we will need the following packages to perform the
 analyses:
 
 - *marginaleffects* provides the
-  [`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+  [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
   function for performing g-computation and estimating the SEs and
   confidence intervals of the average estimate potential outcomes and
   treatment effects
@@ -391,13 +391,13 @@ library("marginaleffects")
 ```
 
 Effect estimates will be computed using
-[`marginaleffects::avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html),
+[`marginaleffects::avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
 even when its use may be superfluous (e.g., for comparing the weighted
 difference in means). As previously mentioned, this is because it is
 useful to have a single workflow that works no matter the situation,
 perhaps with very slight modifications to accommodate different
 contexts. Using
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 has several advantages, even when the alternatives are simple: it only
 provides the effect estimate and not other coefficients, and it always
 produces average marginal effects for the correct population if
@@ -420,7 +420,7 @@ incorporates the estimated weights using
 or
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 then estimating the treatment effect using g-computation (i.e., using
-[`marginaleffects::avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)).
+[`marginaleffects::avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)).
 This procedure is the same for continuous and binary outcomes with and
 without covariates. This method uses the asymptotically correct
 M-estimation-based SEs when available and robust SEs otherwise or
@@ -482,7 +482,7 @@ fit <- lm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 +
 ```
 
 Next, we use
-[`marginaleffects::avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+[`marginaleffects::avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 to estimate the ATE.
 
 ``` r
@@ -499,7 +499,7 @@ avg_comparisons(fit, variables = "A")
 
 If, in addition to the effect estimate, we want the average estimated
 potential outcomes, we can use
-[`marginaleffects::avg_predictions()`](https://marginaleffects.com/man/r/predictions.html),
+[`marginaleffects::avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html),
 which we demonstrate below. Note the interpretation of the resulting
 estimates as the expected potential outcomes is only valid if all
 covariates present in the outcome model (if any) are interacted with the
@@ -519,9 +519,9 @@ avg_predictions(fit, variables = "A")
 We can see that the difference in potential outcome means is equal to
 the average treatment effect computed previously[²](#fn2). The arguments
 to
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html)
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 are the same as those to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html).
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html).
 
 ### Adjustments to the Standard Case
 
@@ -532,13 +532,13 @@ following special circumstances occur.
 
 When weighting for the ATT, everything is identical to the Standard Case
 except that in the calls to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 and
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html),
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html),
 the `newdata` argument must additionally be supplied to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 and
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html)
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 as
 
 ``` r
@@ -555,9 +555,9 @@ from one naturally defined by the data, e.g., for the ATO, ATM, or ATOS,
 or when trimming weights in such a way that trimmed units are dropped
 from the sample (i.e., receive a weight of 0), an adjustment needs to be
 made to the call to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 and
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html).
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html).
 For the estimands listed, we need to supply the estimated weights to the
 `wts` argument. So, after weighting for the ATO for example, we need to
 specify the following:
@@ -574,13 +574,13 @@ several measures of the effect one can consider, which include the odds
 ratio (OR), risk ratio/relative risk (RR), and risk difference (RD) for
 binary outcomes and the count/incidence ratio for count outcomes, and
 the syntax to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 depends on which one is desired. The outcome model should be one
 appropriate for the outcomes (e.g., logistic regression for binary
 outcomes or Poisson regression for count outcomes) but is unrelated to
 the desired effect measure because we can compute any of the above
 effect measures using
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
 after fitting the model.
 
 To fit a generalized linear model, change
@@ -594,10 +594,10 @@ to change[³](#fn3).
 
 To compute the marginal RR or count/incidence ratio, first we need to
 add `comparison = "lnratioavg"` to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html);
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html);
 this computes the marginal log ratio. To get the marginal ratio itself,
 we need to add `transform = "exp"` to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html),
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
 which exponentiates the marginal log ratio and its confidence interval.
 The code below computes the effects and displays the statistics of
 interest for a binary outcome `Y_B`:
@@ -720,12 +720,12 @@ population, they must be included in the call to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 to estimate the balancing weights, in the outcome model, and in the call
 to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html),
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
 etc. In most cases, this can be handled without modifying the standard
 case except that `s.weights` must be supplied to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 and `wts = W$s.weights` must be supplied to
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html),
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
 etc.
 [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 and
@@ -843,11 +843,11 @@ W
 Typically one would assess the performance of the weights (balance and
 effective sample size) but we will skip that for now. Next, we fit the
 outcome model and perform weighted g-computation. We use
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html)
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 first to compute the expected potential outcome under each treatment for
 the focal group, and the use
-[`hypotheses()`](https://marginaleffects.com/man/r/hypotheses.html) to
-test all pairwise comparisons.
+[`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html)
+to test all pairwise comparisons.
 
 ``` r
 #Fit the outcome model
@@ -938,7 +938,7 @@ fit <- lm_weightit(Y_C ~ splines::ns(Ac, df = 4) *
 ```
 
 Next we use
-[`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html)
+[`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 first to compute the expected potential outcome under a representative
 set of treatment values. We’ll examine 31 treatment values from the 10th
 to 90th percentiles of `Ac` because estimates outside those ranges tend
@@ -980,7 +980,7 @@ examine the average marginal effect function (AMEF), which is a function
 that relates the value of treatment to the derivative of the ADRF. When
 this derivative is different from zero, there is evidence of a treatment
 effect at the corresponding value of treatment. Below, we use
-[`avg_slopes()`](https://marginaleffects.com/man/r/slopes.html) to
+[`avg_slopes()`](https://rdrr.io/pkg/marginaleffects/man/slopes.html) to
 compute the pointwise derivatives of the ADRF across levels of `Ac` and
 then plot it[⁵](#fn5).
 
@@ -1067,7 +1067,7 @@ fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
 
 Then, we compute the average expected potential outcomes under each
 treatment regime using
-[`marginaleffects::avg_predictions()`](https://marginaleffects.com/man/r/predictions.html):
+[`marginaleffects::avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html):
 
 ``` r
 p <- avg_predictions(fit,
@@ -1090,7 +1090,7 @@ p
     ## Type: probs
 
 We can compare individual predictions using
-[`marginaleffects::hypotheses()`](https://marginaleffects.com/man/r/hypotheses.html).
+[`marginaleffects::hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html).
 For example, to compare all treatment histories to just the first
 treatment history (i.e., in which all units are untreated for all time
 periods), we can run the following:
@@ -1186,7 +1186,7 @@ fit <- lm_weightit(Y_C ~ A * X5 * (X1 + X2 + X3),
 ```
 
 To estimate the subgroup ATEs, we can use
-[`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html),
+[`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
 this time specifying the `by` argument to signify that we want treatment
 effects stratified by the moderator.
 
@@ -1207,7 +1207,7 @@ a
 
 We can see that the subgroup mean differences differ from each other,
 and we can formally test for moderation using
-[`hypotheses()`](https://marginaleffects.com/man/r/hypotheses.html):
+[`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html):
 
 ``` r
 hypotheses(a, ~pairwise)
@@ -1224,8 +1224,8 @@ is no evidence of moderation by `X5`.
 When the moderator has more than two levels, it is possible to run an
 omnibus test for moderation by changing `hypothesis` to `~reference` and
 supplying the output to
-[`hypotheses()`](https://marginaleffects.com/man/r/hypotheses.html) with
-`joint = TRUE`, e.g.,
+[`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html)
+with `joint = TRUE`, e.g.,
 
 ``` r
 avg_comparisons(fit, variables = "A",
@@ -1268,7 +1268,7 @@ the analysis. Results should at least include the following:
   (e.g.,
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
   in *WeightIt*,
-  [`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+  [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
   in *marginaleffects*)
 - The effect and its SE and confidence interval
 
@@ -1508,29 +1508,29 @@ d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S)
     not mean previous analyses using weighted averages are invalid.
 
 2.  To verify that they are equal, supply the output of
-    [`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html)
+    [`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
     to
-    [`hypotheses()`](https://marginaleffects.com/man/r/hypotheses.html),
+    [`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html),
     e.g., `avg_predictions(...) |> hypotheses(~pairwise)`; this
     explicitly compares the average potential outcomes and should yield
     identical estimates to the
-    [`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html)
+    [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
     call.
 
 3.  Note that for low or high average expected risks computed with
-    [`avg_predictions()`](https://marginaleffects.com/man/r/predictions.html),
+    [`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html),
     the confidence intervals may go below 0 or above 1; this is because
     an approximation is used. To avoid this problem, bootstrapping or
     simulation-based inference can be used instead.
 
 4.  You can also use
-    [`marginaleffects::plot_predictions()`](https://marginaleffects.com/man/r/plot_predictions.html),
+    [`marginaleffects::plot_predictions()`](https://rdrr.io/pkg/marginaleffects/man/plot_predictions.html),
     though after requesting the predictions in the prior step it is
     quicker to use
     [`ggplot()`](https://ggplot2.tidyverse.org/reference/ggplot.html).
 
 5.  You can also use
-    [`plot_slopes()`](https://marginaleffects.com/man/r/plot_slopes.html)
+    [`plot_slopes()`](https://rdrr.io/pkg/marginaleffects/man/plot_slopes.html)
 
 6.  Currently, when `by` is used, M-estimation based standard errors
     cannot be computed, but all methods compatible with M-estimation

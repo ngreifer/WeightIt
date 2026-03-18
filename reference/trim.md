@@ -274,27 +274,27 @@ summary(W)
 #> - Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 0.005 |----------------------|      11.484
-#> control 0.004 |---------------------------| 13.9  
+#> treated 0.004 |---------------------------| 13.9  
+#> control 0.005 |--------------------------|  13.524
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                           
-#>              75     46    39     33      9
-#>  treated  6.131  6.444 6.591  9.601 11.484
-#>             344    329   309    255      7
-#>  control 10.478 11.104 11.27 13.524   13.9
+#>                                          
+#>            132     90    38      6      2
+#>  treated 7.237 10.478 11.27 11.484   13.9
+#>            337    335   316    172     19
+#>  control 8.855  9.384 9.601 11.104 13.524
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.973 0.684   0.398       0
-#> control       1.039 0.772   0.454       0
+#> treated       1.155 0.815   0.533       0
+#> control       0.967 0.723   0.405       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
-#> Unweighted  361.    139.  
-#> Weighted    173.91   71.65
+#> Unweighted  363.    137.  
+#> Weighted    187.91   58.96
 
 summary(trim(W, at = .95))
 #> Trimming weights to 95%.
@@ -303,25 +303,25 @@ summary(trim(W, at = .95))
 #> - Weight ranges:
 #> 
 #>           Min                                 Max
-#> treated 0.005 |---------------------------| 6.404
-#> control 0.004 |---------------------------| 6.404
+#> treated 0.004 |---------------------------| 6.404
+#> control 0.005 |---------------------------| 6.404
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                       
-#>             75     9    33    39    46
-#>  treated 6.131 6.404 6.404 6.404 6.404
-#>              2     3     7    16    37
+#>              2     6    31    38    74
+#>  treated 6.404 6.404 6.404 6.404 6.404
+#>             10    19    22    41    71
 #>  control 6.404 6.404 6.404 6.404 6.404
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.875 0.668   0.361       0
-#> control       0.918 0.745   0.402       0
+#> treated       0.975 0.773   0.452       0
+#> control       0.881 0.705   0.370       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
-#> Unweighted  361.    139.  
-#> Weighted    196.13   78.98
+#> Unweighted  363.    137.  
+#> Weighted    204.52   70.46
 ```

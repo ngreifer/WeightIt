@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,10 +44,11 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
-<code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="1.6.0" id="weightit-160">
+<code>WeightIt</code> 1.6.0<a class="anchor" aria-label="anchor" href="#weightit-160"></a></h2>
 <ul><li><p>Added <code>method = "cfd"</code> for characteristic function distance balancing as described by <a href="http://arxiv.org/abs/2601.15449" class="external-link">Santra, Chen, and Park (2026)</a>. Energy balancing is a special case of this method.</p></li>
 <li><p>Added support for the new version of <em>osqp</em>, which changes some optional argument names and defaults for <code>method = "energy"</code>. These should not impact results.</p></li>
+<li><p><em>chk</em> and <em>crayon</em> have been removed as dependencies in favor of <em>cli</em>.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.5.1" id="weightit-151">
@@ -191,7 +192,7 @@
 <li><p>Fixed a bug when <code>criterion</code> was not specified when using <code>method = "gbm"</code>.</p></li>
 <li><p>Fixed a bug when <code>ps</code> was supplied for continuous treatments. Thanks to <a href="https://github.com/taylordunn" class="external-link">@taylordunn</a>. (<a href="https://github.com/ngreifer/WeightIt/issues/53" class="external-link">#53</a>)</p></li>
 <li><p>Warning messages now display immediately rather than at the end of evaluation.</p></li>
-<li><p>The vignettes have been changed to use a slightly different estimator for weighted g-computation. The estimated weights are no longer to be included in the call to <code><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons()</a></code>, etc.; that is, they are only used to fit the outcome model. This makes the estimators more consistent with other software, including <code>teffects ipwra</code> in Stata, and most of the literature on weighted g-computation. Note this will not effect any estimates for the ATT or ATC and will only yield at most minor changes for the ATE. For other estimands (e.g., ATO), the weights are still to be included.</p></li>
+<li><p>The vignettes have been changed to use a slightly different estimator for weighted g-computation. The estimated weights are no longer to be included in the call to <code><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons()</a></code>, etc.; that is, they are only used to fit the outcome model. This makes the estimators more consistent with other software, including <code>teffects ipwra</code> in Stata, and most of the literature on weighted g-computation. Note this will not effect any estimates for the ATT or ATC and will only yield at most minor changes for the ATE. For other estimands (e.g., ATO), the weights are still to be included.</p></li>
 <li><p>The word “multinomial” to describe treatments with more than two categories has been replaced with “multi-category” in all documentation and messages.</p></li>
 <li><p>Transferred all help files to Roxygen and reorganized package scripts.</p></li>
 <li><p>Reorganization of some functions.</p></li>

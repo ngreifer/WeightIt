@@ -1,6 +1,6 @@
 # Changelog
 
-## `WeightIt` (development version)
+## `WeightIt` 1.6.0
 
 - Added `method = "cfd"` for characteristic function distance balancing
   as described by [Santra, Chen, and Park
@@ -10,6 +10,9 @@
 - Added support for the new version of *osqp*, which changes some
   optional argument names and defaults for `method = "energy"`. These
   should not impact results.
+
+- *chk* and *crayon* have been removed as dependencies in favor of
+  *cli*.
 
 ## `WeightIt` 1.5.1
 
@@ -581,7 +584,7 @@ CRAN release: 2024-03-23
 - The vignettes have been changed to use a slightly different estimator
   for weighted g-computation. The estimated weights are no longer to be
   included in the call to
-  [`avg_comparisons()`](https://marginaleffects.com/man/r/comparisons.html),
+  [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
   etc.; that is, they are only used to fit the outcome model. This makes
   the estimators more consistent with other software, including
   `teffects ipwra` in Stata, and most of the literature on weighted

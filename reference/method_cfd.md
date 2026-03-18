@@ -273,49 +273,47 @@ summary(W1)
 #> - Weight ranges:
 #> 
 #>         Min                                  Max
-#> treated   0 |------------------|          11.685
-#> control   0 |---------------------------| 16.628
+#> treated   0 |----------------------|      11.685
+#> control   0 |---------------------------| 14.136
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                            
-#>             184    176    172    131     82
-#>  treated  8.282  8.608  9.163 10.923 11.685
-#>             423    372    136    118     37
-#>  control 10.134 10.217 10.518 14.278 16.628
+#>                                           
+#>            184    176    172    131     82
+#>  treated  8.28  8.609  9.161 10.923 11.685
+#>            423    333    136    118     37
+#>  control 8.557 10.199 11.256  12.79 14.136
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
 #> treated       2.169 1.453   1.534       0
-#> control       1.972 1.274   1.262       0
+#> control       1.864 1.242   1.186       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
-#> Unweighted   429.   185.  
-#> Weighted      87.9   32.57
+#> Unweighted  429.    185.  
+#> Weighted     96.05   32.57
 
 cobalt::bal.tab(W1)
 #> Balance Measures
 #>             Type Diff.Adj
-#> age      Contin.  -0.0308
+#> age      Contin.  -0.0309
 #> educ     Contin.   0.0019
 #> married   Binary  -0.0080
 #> nodegree  Binary   0.0037
-#> re74     Contin.  -0.0222
+#> re74     Contin.  -0.0221
 #> 
 #> Effective sample sizes
 #>            Control Treated
-#> Unadjusted   429.   185.  
-#> Adjusted      87.9   32.57
+#> Unadjusted  429.    185.  
+#> Adjusted     96.05   32.57
 
 #Using a different kernel:
 (W1b <- weightit(treat ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "cfd", estimand = "ATE",
                 kernel = "matern", nu = 5/2))
-#> Warning: Some weights are negative; these cannot be used in most model fitting
-#> functions.
 #> A weightit object
 #>  - method: "cfd" (characteristic function distance balancing)
 #>  - number of obs.: 614
@@ -330,27 +328,27 @@ summary(W1b)
 #> - Weight ranges:
 #> 
 #>         Min                                  Max
-#> treated  -0 |---------------------------| 11.213
-#> control  -0 |----------------------|       9.265
+#> treated   0 |---------------------------| 11.198
+#> control   0 |--------------------|         8.343
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                        
 #>            185   184   181    82     44
-#>  treated 6.945 7.517 7.836 8.774 11.213
-#>            423   326   136   118     37
-#>  control 6.947 8.895  9.04 9.212  9.265
+#>  treated 6.959 7.514 7.831 8.376 11.198
+#>            423   415   326   118     37
+#>  control 5.626  5.73  5.74 5.919  8.343
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       2.068 1.445   1.339       0
-#> control       1.449 0.988   0.778       0
+#> treated       2.038 1.431   1.461       0
+#> control       1.158 0.847   0.610       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.    185.  
-#> Weighted    138.59   35.21
+#> Weighted    183.54   36.06
 
 cobalt::bal.tab(W1b)
 #> Balance Measures
@@ -364,15 +362,13 @@ cobalt::bal.tab(W1b)
 #> Effective sample sizes
 #>            Control Treated
 #> Unadjusted  429.    185.  
-#> Adjusted    138.59   35.21
+#> Adjusted    183.54   36.06
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
                   nodegree + re74, data = lalonde,
                 method = "cfd", estimand = "ATT",
                 focal = "black"))
-#> Warning: Some weights are negative; these cannot be used in most model fitting
-#> functions.
 #> A weightit object
 #>  - method: "cfd" (characteristic function distance balancing)
 #>  - number of obs.: 614
@@ -389,41 +385,41 @@ summary(W2)
 #>        Min                                  Max
 #> black    1   ||                           1.   
 #> hispan   0 |-----------------|           10.955
-#> white   -0 |---------------------------| 17.069
+#> white    0 |---------------------------| 16.951
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                           
-#>              1      2      3      4      5
-#>   black      1      1      1      1      1
-#>             69     59     48     28      2
-#>  hispan  5.033  5.133  5.336   6.45 10.955
-#>             17     15      7      4      3
-#>   white 11.269 12.203 13.019 16.934 17.069
+#>                                         
+#>              1      2      3    4      5
+#>   black      1      1      1    1      1
+#>             69     59     48   28      2
+#>  hispan  5.033  5.133  5.336 6.45 10.955
+#>             17     15      7    4      3
+#>   white 10.795 11.883 12.356 12.8 16.951
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
 #> black        0.000 0.000   0.000       0
 #> hispan       1.963 1.356   1.337       0
-#> white        2.485 1.446   1.268       1
+#> white        2.342 1.414   1.546       0
 #> 
 #> - Effective Sample Sizes:
 #> 
-#>            black hispan white
-#> Unweighted   243  72.   299. 
-#> Weighted     243  15.01  41.8
+#>            black hispan  white
+#> Unweighted   243  72.   299.  
+#> Weighted     243  15.01  46.24
 
 cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.0842
-#> educ     Contin.       0.0427
+#> age      Contin.       0.0843
+#> educ     Contin.       0.0426
 #> married   Binary       0.0042
 #> nodegree  Binary       0.0098
 #> re74     Contin.       0.0081
 #> 
 #> Effective sample sizes
-#>            hispan white black
-#> Unadjusted  72.   299.    243
-#> Adjusted    15.01  41.8   243
+#>            hispan  white black
+#> Unadjusted  72.   299.     243
+#> Adjusted    15.01  46.24   243
 ```

@@ -116,27 +116,27 @@ summary(W)
 #> - Weight ranges:
 #> 
 #>           Min                                  Max
-#> treated 0.004 |-------------------------|   11.167
-#> control 0.006 |---------------------------| 12.028
+#> treated 0.019 |-------------------|          8.843
+#> control 0.004 |---------------------------| 12.028
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                        
-#>            147   126    58    21     19
-#>  treated 6.888 7.372 7.614  8.83 11.167
-#>            294   280   109    59     44
-#>  control 8.195 8.826 8.843 9.904 12.028
+#>                                         
+#>            124    84    35     29     23
+#>  treated  6.23 7.314 7.614   7.65  8.843
+#>            297   286   127    114     31
+#>  control 8.826  8.83 9.904 11.167 12.028
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.980 0.736   0.410       0
-#> control       0.977 0.739   0.422       0
+#> treated       0.947 0.766   0.411       0
+#> control       1.002 0.734   0.430       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
-#> Unweighted  343.    157.  
-#> Weighted    175.77   80.33
+#> Unweighted  346.    154.  
+#> Weighted    172.99   81.44
 
 # See ?weightit.fit for using as.weightit() with a
 # weightit.fit object.

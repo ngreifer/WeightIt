@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-02-19</h4>
+            <h4 data-toc-skip class="date">2026-03-18</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -348,7 +348,7 @@ extract a treatment effect estimation from the outcome model.</p>
 <code class="sourceCode R"><span><span class="co"># G-computation for the treatment effect</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://marginaleffects.com/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://marginaleffects.com/man/r/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"treat"</span>,</span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/comparisons.html" class="external-link">avg_comparisons</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="st">"treat"</span>,</span>
 <span>                newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">treat</span> <span class="op">==</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Estimate Std. Error    z Pr(&gt;|z|)   S 2.5 % 97.5 %</span></span>
@@ -515,7 +515,9 @@ and the output. We can take a look at the quality of the weights with
 <span><span class="co">## treated       1.779 0.775   0.573       0</span></span>
 <span><span class="co">## control       1.331 0.752   0.486       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.981</span></span>
+<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.98</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 1</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
@@ -545,7 +547,9 @@ and the output. We can take a look at the quality of the weights with
 <span><span class="co">## treated       1.797 0.779   0.580       0</span></span>
 <span><span class="co">## control       1.359 0.750   0.488       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.991</span></span>
+<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.99</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 1</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
@@ -575,7 +579,9 @@ and the output. We can take a look at the quality of the weights with
 <span><span class="co">## treated       2.008 0.931   0.753       0</span></span>
 <span><span class="co">## control       1.269 0.672   0.407       0</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 1.040.97</span></span>
+<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 1.04</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## - <span style="font-style: italic;">Mean of Weights</span> = 0.97</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Effective Sample Sizes</span>:</span></span>
 <span><span class="co">## </span></span>
@@ -629,11 +635,11 @@ supplied:</p>
 <span>                    family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span></code></pre></div>
 <p>Then, we compute the average expected potential outcomes under each
 treatment regime using
-<code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>:</p>
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">marginaleffects::avg_predictions()</a></code>:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="st"><a href="https://marginaleffects.com/" class="external-link">"marginaleffects"</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions</a></span><span class="op">(</span><span class="va">fit</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"A_1"</span>, <span class="st">"A_2"</span>, <span class="st">"A_3"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">p</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
@@ -649,15 +655,15 @@ treatment regime using
 <span><span class="co">## </span></span>
 <span><span class="co">## Type: probs</span></span></code></pre>
 <p>We can compare the expected potential outcomes under each regime
-using <code><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">marginaleffects::hypotheses()</a></code>. To get all pairwise
-comparisons, supply the <code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions()</a></code> output to
+using <code><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">marginaleffects::hypotheses()</a></code>. To get all pairwise
+comparisons, supply the <code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> output to
 <code>hypotheses(., ~ pairwise)</code>. To compare individual regimes,
-we can use <code><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses()</a></code>, identifying the rows of the
-<code><a href="https://marginaleffects.com/man/r/predictions.html" class="external-link">avg_predictions()</a></code> output. For example, to compare the
+we can use <code><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses()</a></code>, identifying the rows of the
+<code><a href="https://rdrr.io/pkg/marginaleffects/man/predictions.html" class="external-link">avg_predictions()</a></code> output. For example, to compare the
 regimes with no treatment for all three time points vs. the regime with
 treatment for all three time points, we would run</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://marginaleffects.com/man/r/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"b8 - b1 = 0"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/marginaleffects/man/hypotheses.html" class="external-link">hypotheses</a></span><span class="op">(</span><span class="va">p</span>, <span class="st">"b8 - b1 = 0"</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## </span></span>
 <span><span class="co">##  Hypothesis Estimate Std. Error     z Pr(&gt;|z|)    S  2.5 % 97.5 %</span></span>
 <span><span class="co">##     b8-b1=0   -0.265     0.0308 -8.61   &lt;0.001 56.9 -0.325 -0.204</span></span></code></pre>

@@ -23,7 +23,7 @@ differ from the some uses of the word "trim" (see the drop argument below).'><me
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.5.1.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -309,27 +309,27 @@ which all the weights are the same will not be considered in the trimming.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.005 |----------------------|      11.484</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.004 |---------------------------| 13.9  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.004 |---------------------------| 13.9  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.005 |--------------------------|  13.524</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              75     46    39     33      9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated  6.131  6.444 6.591  9.601 11.484</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             344    329   309    255      7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 10.478 11.104 11.27 13.524   13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                          </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            132     90    38      6      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 7.237 10.478 11.27 11.484   13.9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            337    335   316    172     19</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 8.855  9.384 9.601 11.104 13.524</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.973 0.684   0.398       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.039 0.772   0.454       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       1.155 0.815   0.533       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.967 0.723   0.405       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  361.    139.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    173.91   71.65</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  363.    137.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    187.91   58.96</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">trim</span><span class="op">(</span><span class="va">W</span>, at <span class="op">=</span> <span class="fl">.95</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Trimming weights to 95%.</span>
@@ -338,27 +338,27 @@ which all the weights are the same will not be considered in the trimming.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.005 |---------------------------| 6.404</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.004 |---------------------------| 6.404</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 0.004 |---------------------------| 6.404</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.005 |---------------------------| 6.404</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             75     9    33    39    46</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 6.131 6.404 6.404 6.404 6.404</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              2     3     7    16    37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              2     6    31    38    74</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated 6.404 6.404 6.404 6.404 6.404</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             10    19    22    41    71</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 6.404 6.404 6.404 6.404 6.404</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.875 0.668   0.361       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.918 0.745   0.402       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.975 0.773   0.452       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.881 0.705   0.370       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  361.    139.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    196.13   78.98</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  363.    137.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    204.52   70.46</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
