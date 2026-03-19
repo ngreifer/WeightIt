@@ -15,7 +15,7 @@ parametric modeling, machine learning, or optimization. *WeightIt* also
 provides functionality for fitting regression models in weighted samples
 that account for estimation of the weights in quantifying uncertainty.
 *WeightIt* uses a familiar formula interface and is meant to complement
-`MatchIt` as a package that provides a unified interface to basic and
+*MatchIt* as a package that provides a unified interface to basic and
 advanced weighting methods.
 
 For a complete vignette, see the
