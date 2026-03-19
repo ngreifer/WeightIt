@@ -482,7 +482,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   p.score <- .fam$linkinv(drop(mod_covs %*% par_out))
 
-  if (out$converge != 0) {
+  if (!isTRUE(all.equal(out$converge, 0))) {
     .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
@@ -811,7 +811,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
     par_out <- out$par
   }
 
-  if (out$converge != 0) {
+  if (!isTRUE(all.equal(out$converge, 0))) {
     .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
@@ -1071,7 +1071,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     par_out <- out$par
   }
 
-  if (out$converge != 0) {
+  if (!isTRUE(all.equal(out$converge, 0))) {
     .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
@@ -1329,8 +1329,11 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       }, verbose = FALSE), silent = TRUE)
     })
 
-    if (!null_or_error(out) && out$estim.precis < 1e-5) {
-      par_alpha <- out$root
+    if (!null_or_error(out) && utils::hasName(out, "root") &&
+        utils::hasName(out, "estim.precis") &&
+        is_number(out[["estim.precis"]]) &&
+        out[["estim.precis"]] < 1e-5) {
+      par_alpha <- out[["root"]]
     }
   }
 
@@ -1432,7 +1435,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     par_out <- out$par
   }
 
-  if (out$converge != 0) {
+  if (!isTRUE(all.equal(out$converge, 0))) {
     .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 

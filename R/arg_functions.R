@@ -90,9 +90,8 @@ arg_numeric <- function(x, arg = rlang::caller_arg(x)) {
 }
 
 arg_whole_numeric <- function(x, arg = rlang::caller_arg(x)) {
-  arg_numeric(x, arg = arg)
-
-  if (!is.integer(x) && !check_if_zero(x - trunc(x))) {
+  if (!is.numeric(x) ||
+      (!is.integer(x) && !all(check_if_zero(x - round(x))))) {
     .err("{.arg {arg}} must be a whole numeric vector")
   }
 }

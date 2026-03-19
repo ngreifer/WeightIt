@@ -1,6 +1,6 @@
 test_that("moments works as expected, binary", {
   skip_if_not_installed("rootSolve")
-  skip_if_not_installed("optweight")
+  skip_if_not_installed("optweight", minimum_version = "2.0.1")
   skip_if_not_installed("cobalt")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1
@@ -64,7 +64,7 @@ test_that("moments works as expected, binary", {
 
 test_that("moments works as expected, multi", {
   skip_if_not_installed("rootSolve")
-  skip_if_not_installed("optweight")
+  skip_if_not_installed("optweight", minimum_version = "2.0.1")
   skip_if_not_installed("cobalt")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-1

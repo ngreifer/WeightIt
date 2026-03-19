@@ -17,14 +17,14 @@ An object of class \code{list} of length 11.
 Each component is itself a list containing the following components:
 \describe{
 \item{\code{treat_type}}{at least one of \code{"binary"}, \code{"multinomial"}, or \code{"continuous"} indicating which treatment types are available for this method.}
-\item{\code{estimand}}{which estimands are available for this method. All methods that support binary and multi-category treatments accept \code{"ATE"}, \code{"ATT"}, and \code{"ATC"}, as well as some other estimands depending on the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for more details about what each estimand means.}
+\item{\code{estimand}}{which estimands are available for this method. Most methods that support binary and multi-category treatments accept \code{"ATE"}, \code{"ATT"}, and \code{"ATC"}, as well as some other estimands depending on the method. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for more details about what each estimand means.}
 \item{\code{alias}}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is \code{"ebal"}, but \code{"ebalance"} and \code{"entropy"} also work. The first value is the canonical name.}
 \item{\code{description}}{a string containing the description of the name in English.}
 \item{\code{ps}}{a logical for whether propensity scores are returned by the method for binary treatments. Propensity scores are never returned for multi-category or continuous treatments.}
 \item{\code{msm_valid}}{a logical for whether the method can be validly used with longitudinal treatments.}
 \item{\code{msm_method_available}}{a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the \code{is.MSM.method} argument of \code{weightitMSM()}.}
 \item{\code{subclass_ok}}{a logical for whether \code{subclass} can be supplied to compute subclassification weights from the propensity scores.}
-\item{\code{packages_needed}}{a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.}
+\item{\code{packages_needed}}{a character vector of the minimal packages required to use the method. Some methods may require additional packages (not listed) for certain options.}
 \item{\code{package_versions_needed}}{a named character vector of the minimal package versions required to use the method. Only present when \code{packages_needed} is not empty.}
 \item{\code{s.weights_ok}}{a logical for whether sampling weights can be used with the method.}
 \item{\code{missing}}{a character vector of the allowed options that can be supplied to \code{missing} when missing data is present. All methods accept \code{"ind"} for the missingness indicator approach; some other methods accept additional values.}

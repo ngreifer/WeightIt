@@ -602,9 +602,6 @@ w.quantile <- function(x, probs = seq(0, 1, 0.25), w = NULL, na.rm = FALSE, ...)
 }
 
 #Formulas
-hasbar <- function(term) {
-  any(c("|", "||") %in% all.names(term))
-}
 get_varnames <- function(expr) {
   recurse <- function(e) {
     if (is.symbol(e)) {
@@ -1071,27 +1068,6 @@ is_not_null <- function(x) {!is_null(x)}
   # like `%||%` but works for non-NULL length 0 objects
   if (is_null(x)) y else x
 }
-if_null_then <- function(x1 = NULL, x2 = NULL, ...) {
-  if (is_not_null(x1)) {
-    return(x1)
-  }
-
-  dots_len <- ...length()
-
-  if (is_not_null(x2) || dots_len == 0L) {
-    return(x2)
-  }
-
-  if (dots_len > 1L) {
-    for (k in seq_len(dots_len - 1L)) {
-      if (is_not_null(...elt(k))) {
-        return(...elt(k))
-      }
-    }
-  }
-
-  ...elt(dots_len)
-}
 clear_null <- function(x) {
   x[lengths(x) == 0L] <- NULL
   x
@@ -1137,7 +1113,7 @@ match_arg <- function(x, choices, several.ok = FALSE, context = NULL,
     arg_string(x, arg = arg)
 
     if (identical(x, choices)) {
-      return(x[1L])
+      return(choices[1L])
     }
   }
 

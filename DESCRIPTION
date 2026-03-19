@@ -29,7 +29,7 @@ Imports:
 Suggests:
     rootSolve (>= 1.8.2.4),
     CBPS (>= 0.18),
-    optweight (>= 1.0.0),
+    optweight (>= 2.0.1),
     SuperLearner (>= 2.0-25),
     mclogit,
     MNP (>= 3.1-4),

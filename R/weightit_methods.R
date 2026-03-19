@@ -7,14 +7,14 @@
 #' Each component is itself a list containing the following components:
 #' \describe{
 #' \item{`treat_type`}{at least one of `"binary"`, `"multinomial"`, or `"continuous"` indicating which treatment types are available for this method.}
-#' \item{`estimand`}{which estimands are available for this method. All methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
+#' \item{`estimand`}{which estimands are available for this method. Most methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
 #' \item{`alias`}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is `"ebal"`, but `"ebalance"` and `"entropy"` also work. The first value is the canonical name.}
 #' \item{`description`}{a string containing the description of the name in English.}
 #' \item{`ps`}{a logical for whether propensity scores are returned by the method for binary treatments. Propensity scores are never returned for multi-category or continuous treatments.}
 #' \item{`msm_valid`}{a logical for whether the method can be validly used with longitudinal treatments.}
 #' \item{`msm_method_available`}{a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the `is.MSM.method` argument of `weightitMSM()`.}
 #' \item{`subclass_ok`}{a logical for whether `subclass` can be supplied to compute subclassification weights from the propensity scores.}
-#' \item{`packages_needed`}{a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.}
+#' \item{`packages_needed`}{a character vector of the minimal packages required to use the method. Some methods may require additional packages (not listed) for certain options.}
 #' \item{`package_versions_needed`}{a named character vector of the minimal package versions required to use the method. Only present when `packages_needed` is not empty.}
 #' \item{`s.weights_ok`}{a logical for whether sampling weights can be used with the method.}
 #' \item{`missing`}{a character vector of the allowed options that can be supplied to `missing` when missing data is present. All methods accept `"ind"` for the missingness indicator approach; some other methods accept additional values.}
@@ -206,7 +206,7 @@
     msm_method_available = FALSE,
     subclass_ok = FALSE,
     packages_needed = "optweight",
-    package_versions_needed = c(optweight = "1.0.0"),
+    package_versions_needed = c(optweight = "2.0.1"),
     s.weights_ok = TRUE,
     missing = "ind",
     moments_int_ok = TRUE,
