@@ -4,7 +4,7 @@
 
 - Added `method = "cfd"` for characteristic function distance balancing
   as described by [Santra, Chen, and Park
-  (2026)](http://arxiv.org/abs/2601.15449). Energy balancing is a
+  (2026)](https://arxiv.org/abs/2601.15449). Energy balancing is a
   special case of this method.
 
 - Added support for the new version of *osqp*, which changes some

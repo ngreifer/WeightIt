@@ -63,7 +63,7 @@
 <dd><p>at least one of <code>"binary"</code>, <code>"multinomial"</code>, or <code>"continuous"</code> indicating which treatment types are available for this method.</p></dd>
 
 <dt><code>estimand</code></dt>
-<dd><p>which estimands are available for this method. All methods that support binary and multi-category treatments accept <code>"ATE"</code>, <code>"ATT"</code>, and <code>"ATC"</code>, as well as some other estimands depending on the method. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for more details about what each estimand means.</p></dd>
+<dd><p>which estimands are available for this method. Most methods that support binary and multi-category treatments accept <code>"ATE"</code>, <code>"ATT"</code>, and <code>"ATC"</code>, as well as some other estimands depending on the method. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for more details about what each estimand means.</p></dd>
 
 <dt><code>alias</code></dt>
 <dd><p>a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is <code>"ebal"</code>, but <code>"ebalance"</code> and <code>"entropy"</code> also work. The first value is the canonical name.</p></dd>
@@ -84,7 +84,7 @@
 <dd><p>a logical for whether <code>subclass</code> can be supplied to compute subclassification weights from the propensity scores.</p></dd>
 
 <dt><code>packages_needed</code></dt>
-<dd><p>a character vector of the minimal packages required to use the method. Some methods may require additional packages for certain options.</p></dd>
+<dd><p>a character vector of the minimal packages required to use the method. Some methods may require additional packages (not listed) for certain options.</p></dd>
 
 <dt><code>package_versions_needed</code></dt>
 <dd><p>a named character vector of the minimal package versions required to use the method. Only present when <code>packages_needed</code> is not empty.</p></dd>

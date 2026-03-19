@@ -236,8 +236,6 @@ data("lalonde", package = "cobalt")
                   nodegree + re74, data = lalonde,
                 method = "optweight", estimand = "ATT",
                 tols = 0))
-#> Warning: ! The `polish` argument is deprecated.
-#> ℹ Use `polishing` instead.
 #> A weightit object
 #>  - method: "optweight" (stable balancing weights)
 #>  - number of obs.: 614
@@ -298,8 +296,6 @@ plot(W1)
                   nodegree + re74, data = lalonde,
                 method = "optweight", estimand = "ATE",
                 tols = .01))
-#> Warning: ! The `polish` argument is deprecated.
-#> ℹ Use `polishing` instead.
 #> A weightit object
 #>  - method: "optweight" (stable balancing weights)
 #>  - number of obs.: 614
@@ -361,8 +357,6 @@ plot(W2)
 (W3 <- weightit(re75 ~ age + educ + race +
                   nodegree + re74, data = lalonde,
                 method = "optweight", tols = .02))
-#> Warning: ! The `polish` argument is deprecated.
-#> ℹ Use `polishing` instead.
 #> A weightit object
 #>  - method: "optweight" (stable balancing weights)
 #>  - number of obs.: 614

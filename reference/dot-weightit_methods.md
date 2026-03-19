@@ -33,7 +33,7 @@ Each component is itself a list containing the following components:
 
 - `estimand`:
 
-  which estimands are available for this method. All methods that
+  which estimands are available for this method. Most methods that
   support binary and multi-category treatments accept `"ATE"`, `"ATT"`,
   and `"ATC"`, as well as some other estimands depending on the method.
   See
@@ -79,7 +79,8 @@ Each component is itself a list containing the following components:
 - `packages_needed`:
 
   a character vector of the minimal packages required to use the method.
-  Some methods may require additional packages for certain options.
+  Some methods may require additional packages (not listed) for certain
+  options.
 
 - `package_versions_needed`:
 
