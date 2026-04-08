@@ -184,34 +184,18 @@ NULL
 weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, missing,
                                verbose, ...) {
 
+  bw <- .process_b.weights(..., treat = treat)
+
+  treat <- factor(treat[subset])
   covs <- covs[subset, , drop = FALSE]
   s.weights <- s.weights[subset]
+  bw <- bw[subset]
 
   missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
-
-  for (i in c("b.weights", "base.weights", "base.weight")) {
-    bw <- ...get(i)
-
-    if (is_not_null(bw)) {
-      if (!is.numeric(bw) || length(bw) != length(treat)) {
-        .err("the argument to {.arg {i}} must be a numeric vector with length equal to the number of units")
-      }
-
-      break
-    }
-  }
-
-  if (is_null(bw)) {
-    bw <- rep_with(1, treat)
-  }
-
-  treat <- factor(treat[subset])
-
-  bw <- bw[subset]
 
   covs <- .apply_moments_int_quantile(covs,
                                       moments = ...get("moments"),
@@ -231,7 +215,7 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
   A[["verbose"]] <- TRUE
 
   if (is_not_null(A[["targets"]])) {
-    .wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
+    arg::wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
     A[["targets"]] <- NULL
   }
 
@@ -247,35 +231,18 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 weightit2optweight.multi <- weightit2optweight
 
 weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
+  bw <- .process_b.weights(..., treat = treat)
 
+  treat <- treat[subset]
   covs <- covs[subset, , drop = FALSE]
   s.weights <- s.weights[subset]
+  bw <- bw[subset]
 
   missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
     covs <- add_missing_indicators(covs)
   }
-
-  for (i in c("b.weights", "base.weights", "base.weight")) {
-    bw <- ...get(i)
-
-    if (is_not_null(bw)) {
-      if (!is.numeric(bw) || length(bw) != length(treat)) {
-        .err("the argument to {.arg {i}} must be a numeric vector with length equal to the number of units")
-      }
-
-      break
-    }
-  }
-
-  if (is_null(bw)) {
-    bw <- rep_with(1, treat)
-  }
-
-  treat <- treat[subset]
-
-  bw <- bw[subset]
 
   covs <- covs |>
     .apply_moments_int_quantile(moments = ...get("moments"),
@@ -292,7 +259,7 @@ weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, ver
   A[["verbose"]] <- TRUE
 
   if (is_not_null(A[["targets"]])) {
-    .wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
+    arg::wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
     A[["targets"]] <- NULL
   }
 

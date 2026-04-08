@@ -27,7 +27,7 @@ word_list <- function(word.list = NULL, and.or = "and", is.are = FALSE, quotes =
     out <- toString(word.list)
   }
   else {
-    and.or <- match_arg(and.or, c("and", "or"))
+    and.or <- arg::match_arg(and.or, c("and", "or"))
 
     if (L == 2L) {
       out <- sprintf("%s %s %s",
@@ -98,24 +98,33 @@ num_to_superscript <- function(x) {
     vapply(function(y) paste(nums[y], collapse = ""), character(1L))
 }
 ordinal <- function(x) {
-  if (is_null(x) || !is.numeric(x)) {
-    stop("'x' must be a numeric vector.")
+  if (is_null(x)) {
+    return(x)
   }
 
-  if (length(x) > 1L) {
-    out <- setNames(vapply(x, ordinal, character(1L)), names(x))
-    return(out)
-  }
+  arg::arg_whole_numeric(x)
 
-  x0 <- abs(x)
-  out <- paste0(x0, switch(substring(x0, nchar(x0), nchar(x0)),
-                           "1" = "st",
-                           "2" = "nd",
-                           "3" = "rd",
-                           "th"))
-  if (x < 0) out <- sprintf("-%s", out)
+  vapply(x, function(.x) {
+    x0 <- abs(.x) |> as.character()
 
-  setNames(out, names(x))
+    if (any(endsWith(x0, c("11", "12", "13")))) {
+      out <- paste0(x0, "th")
+    }
+    else {
+      out <- paste0(x0, switch(substring(x0, nchar(x0), nchar(x0)),
+                               "1" = "st",
+                               "2" = "nd",
+                               "3" = "rd",
+                               "th"))
+    }
+
+    if (.x < 0) {
+      out <- sprintf("-%s", out)
+    }
+
+    out
+  }, character(1L)) |>
+    setNames(names(x))
 }
 round_df_char <- function(df, digits, pad = "0", na_vals = "") {
   if (NROW(df) == 0L || NCOL(df) == 0L) {
@@ -304,6 +313,10 @@ squish <- function(p, lo = 1e-6, hi = 1 - lo) {
 
   p
 }
+sign1 <- function(x, e = 1000) {
+  #Smooth version of sign()
+  tanh(e * x)
+}
 
 #Statistics
 binarize <- function(variable, zero = NULL, one = NULL) {
@@ -321,12 +334,12 @@ binarize <- function(variable, zero = NULL, one = NULL) {
   }
 
   if (length(unique.vals) != 2L) {
-    .err("cannot binarize {.var {var.name}}: more than two levels")
+    arg::err("cannot binarize {.var {var.name}}: more than two levels")
   }
 
   if (is_not_null(zero)) {
     if (zero %nin% unique.vals) {
-      .err("the argument to {.arg zero} is not the name of a level of {.var {var.name}}")
+      arg::err("the argument to {.arg zero} is not the name of a level of {.var {var.name}}")
     }
 
     return(setNames(as.integer(variable != zero), names(variable)))
@@ -334,7 +347,7 @@ binarize <- function(variable, zero = NULL, one = NULL) {
 
   if (is_not_null(one)) {
     if (one %nin% unique.vals) {
-      .err("the argument to {.arg one} is not the name of a level of {.var {var.name}}")
+      arg::err("the argument to {.arg one} is not the name of a level of {.var {var.name}}")
     }
 
     return(setNames(as.integer(variable == one), names(variable)))
@@ -527,13 +540,19 @@ col.w.r <- function(mat, y, w = NULL, s.weights = NULL, bin.vars = NULL, na.rm =
 scale_w <- function(x, w = NULL) {
   if (length(dim(x)) == 2L) {
     for (i in seq_col(x)) {
-      x[, i] <- scale_w(x[, i], w)
+      x[, i] <- Recall(x[, i], w)
     }
 
     return(x)
   }
 
-  (x - w.m(x, w)) / sqrt(col.w.v(x, w))
+  wm <- w.m(x, w)
+
+  if (is_binary(x)) {
+    return((x - wm) / sqrt(wm * (1 - wm)))
+  }
+
+  (x - wm) / sqrt(col.w.v(x, w))
 }
 center_w <- function(x, w = NULL) {
   center(x, at = col.w.m(x, w))
@@ -631,10 +650,10 @@ get_varnames <- function(expr) {
 get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   if (!rlang::is_formula(f)) {
-    .err("{.arg formula} must be a formula")
+    arg::err("{.arg formula} must be a formula")
   }
 
-  arg_string(sep)
+  arg::arg_string(sep)
 
   env <- environment(f)
 
@@ -647,7 +666,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     data.specified <- TRUE
   }
   else {
-    .wrn("the argument supplied to {.arg data} is not a data frame object. This may causes errors or unexpected results")
+    arg::wrn("the argument supplied to {.arg data} is not a data frame object. This may causes errors or unexpected results")
     data <- env
     data.specified <- FALSE
   }
@@ -659,9 +678,9 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   },
   error = function(e) {
     if (identical(conditionMessage(e), "'.' in formula and no 'data' argument"))
-      .err("`.` is not allowed in formulas without {.arg data}")
+      arg::err("`.` is not allowed in formulas without {.arg data}")
     else
-      .err("{conditionMessage(e)}")
+      arg::err("{conditionMessage(e)}")
   })
 
   treat <- ...get("treat")
@@ -679,7 +698,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     if (inherits(test, "simpleError")) {
       m <- conditionMessage(test)
       if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
-        .err("{m}")
+        arg::err("{m}")
       }
 
       resp.var.failed <- TRUE
@@ -698,7 +717,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     else {
       resp <- utils::strcapture("object '(.*)' not found", m, character(1L))[[1L]]
 
-      .err('the given response variable, {.var {resp}}, is not a variable in {.or {c("data", "the global environment")[c(data.specified, TRUE)]}}')
+      arg::err('the given response variable, {.var {resp}}, is not a variable in {.or {c("data", "the global environment")[c(data.specified, TRUE)]}}')
     }
   }
 
@@ -747,7 +766,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
         m <- conditionMessage(test)
 
         if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
-          .err("{m}")
+          arg::err("{m}")
         }
 
         return(NULL)
@@ -780,7 +799,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     if (inherits(test, "simpleError")) {
       m <- conditionMessage(test)
       if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
-        .err("{m}")
+        arg::err("{m}")
       }
 
       rhs.vars.failed[i] <- TRUE
@@ -797,7 +816,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
       rhs.df[i] <- TRUE
 
       if (rhs.vars.mentioned.char[i] %in% terms.with.interactions) {
-        .err("interactions with data frames are not allowed in the input formula")
+        arg::err("interactions with data frames are not allowed in the input formula")
       }
 
       if (inherits(test, "rms")) {
@@ -816,7 +835,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   }
 
   if (any(rhs.vars.failed)) {
-    .err("all variables in {.arg formula} must be variables in {.arg data} or objects in the global environment.\nMissing variables: {rhs.vars.mentioned.char[rhs.vars.failed]}")
+    arg::err("all variables in {.arg formula} must be variables in {.arg data} or objects in the global environment.\nMissing variables: {rhs.vars.mentioned.char[rhs.vars.failed]}")
   }
 
   rhs.term.labels.list <- setNames(as.list(rhs.term.labels), rhs.term.labels)
@@ -851,11 +870,11 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   covs <- tryCatch(eval(mf.covs),
                    error = function(e) {
-                     .err("{conditionMessage(e)}")
+                     arg::err("{conditionMessage(e)}")
                    })
 
   if (is_not_null(treat.name) && utils::hasName(covs, treat.name)) {
-    .err("the variable on the left side of the formula appears on the right side too")
+    arg::err("the variable on the left side of the formula appears on the right side too")
   }
 
   s <- nzchar(sep)
@@ -907,7 +926,7 @@ assign_treat_type <- function(treat, use.multi = FALSE) {
   nunique.treat <- nunique(treat)
 
   if (nunique.treat < 2L) {
-    .err("the treatment must have at least two unique values")
+    arg::err("the treatment must have at least two unique values")
   }
 
   if (!use.multi && nunique.treat == 2L) {
@@ -1085,59 +1104,12 @@ clear_attr <- function(x, all = FALSE) {
 }
 probably_a_bug <- function() {
   fun <- paste(deparse1(sys.call(-1L)), collapse = "\n")
-  .err("an error was produced and is likely a bug. Please let the maintainer know a bug was produced by the function {.fun {fun}}")
+  arg::err("an error was produced and is likely a bug. Please let the maintainer know a bug was produced by the function {.fun {fun}}")
 }
 `%nin%` <- function(x, table) is.na(match(x, table, nomatch = NA_integer_))
 null_or_error <- function(x) {is_null(x) || inherits(x, "try-error")}
 is_number <- function(x) {
   is.numeric(x) && length(x) == 1L && !anyNA(x)
-}
-
-#More informative and cleaner version of base::match.arg(). Uses arg.
-match_arg <- function(x, choices, several.ok = FALSE, context = NULL,
-                      arg = rlang::caller_arg(x)) {
-  arg_supplied(x, arg = arg)
-  arg_supplied(choices)
-  arg_character(choices)
-
-  if (is_null(x)) {
-    return(choices[1L])
-  }
-
-  arg_flag(several.ok)
-
-  if (several.ok) {
-    arg_character(x, arg = arg)
-  }
-  else {
-    arg_string(x, arg = arg)
-
-    if (identical(x, choices)) {
-      return(choices[1L])
-    }
-  }
-
-  i <- pmatch(x, choices, nomatch = 0L, duplicates.ok = TRUE)
-
-  if (all(i == 0L)) {
-    one_of <- {
-      if (length(choices) <= 1L) NULL
-      else if (several.ok) "at least one of"
-      else "one of"
-    }
-
-    if (is_null(context)) {
-      .err("{.arg {arg}} should be {one_of} {.or {.val {choices}}}")
-    }
-    else {
-      .err(sprintf("%s {.arg {arg}} should be {one_of} {.or {.val {choices}}}",
-                   context))
-    }
-  }
-
-  i <- i[i > 0L]
-
-  choices[i]
 }
 
 grab <- function(x, what) {
@@ -1255,17 +1227,17 @@ check_if_call_from_fun <- function(fun) {
 
     if (is_not_null(wmatch)) {
       if (!is.na(warnings[wmatch[1L]])) {
-        .wrn(warnings[wmatch[1L]])
+        arg::wrn(warnings[wmatch[1L]])
       }
     }
     else if (is_null(from) || isFALSE(from)) {
-      .wrn("{w}")
+      arg::wrn("{w}")
     }
     else if (isTRUE(from)) {
-      .wrn("(from {.fun {rlang::call_name(call)}}): {w}")
+      arg::wrn("(from {.fun {rlang::call_name(call)}}): {w}")
     }
     else {
-      .wrn('(from {paste(from, collapse = "")}): {w}')
+      arg::wrn('(from {paste(from, collapse = "")}): {w}')
     }
 
     invokeRestart("muffleWarning")
@@ -1276,17 +1248,17 @@ check_if_call_from_fun <- function(fun) {
 
     if (is_not_null(ematch)) {
       if (!is.na(errors[ematch[1L]])) {
-        .err(errors[ematch[1L]])
+        arg::err(errors[ematch[1L]])
       }
     }
-    else if (is_null(from) || isFALSE(from)) {
-      .err("{e}")
+    else if (is_null(from) || isFALSE(from) || is_null(rlang::call_name(call))) {
+      arg::err(e)
     }
     else if (isTRUE(from)) {
-      .err("(from {.fun {rlang::call_name(call)}}): {e}")
+      arg::err(sprintf("(from {.fun {rlang::call_name(call)}}): %s", e))
     }
     else {
-      .err('(from {paste(from, collapse = "")}): {e}')
+      arg::err(sprintf('(from {paste(from, collapse = "")}): %s', e))
     }
   })
 

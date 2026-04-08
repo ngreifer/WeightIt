@@ -1,591 +1,13 @@
-# Makes a phrase from vcov_type to be printed by print() and summary()
-.vcov_to_phrase <- function(vcov_type, cluster = FALSE) {
-  switch(vcov_type,
-         const = "maximum likelihood",
-         asympt = {
-           if (cluster) "HC0 cluster-robust (adjusted for estimation of weights)"
-           else"HC0 robust (adjusted for estimation of weights)"
-         },
-         HC0 = {
-           if (cluster) "HC0 cluster-robust"
-           else "HC0 robust"
-         },
-         BS = {
-           if (cluster) "traditional cluster bootstrap"
-           else "traditional bootstrap"
-         },
-         FWB = {
-           if (cluster) "fractional weighted cluster bootstrap"
-           else "fractional weighted bootstrap"
-         },
-         none = "none",
-         "user-supplied")
-}
-
-# Processes the vcov argument from glm_weightit(); returns vcov_type with attributes
-.process_vcov <- function(vcov = NULL, weightit = NULL, R = 500L, fwb.args = list(),
-                          m_est_supported = TRUE) {
-  if (is_null(weightit)) {
-    if (is_null(vcov)) {
-      return("HC0")
-    }
-
-    allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
-  }
-  else {
-    arg_is(weightit, "weightit")
-
-    if (!m_est_supported ||
-        (is_null(.attr(weightit, "Mparts")) &&
-         is_null(.attr(weightit, "Mparts.list")))) {
-
-      if (is_null(vcov)) {
-        return("HC0")
-      }
-
-      allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
-    }
-    else {
-      if (is_null(vcov)) {
-        vcov <- "asympt"
-      }
-
-      allowable_vcov <- c("none", "const", "asympt", "HC0", "BS", "FWB")
-    }
-  }
-
-  arg_string(vcov)
-  vcov <- match_arg(vcov, allowable_vcov)
-
-  if (is_not_null(weightit) && vcov == "const") {
-    .wrn('{.code vcov = "const"} should not be used when {.arg weightit} is supplied; the resulting standard errors are invalid and should not be interpreted')
-  }
-
-  bootstrap <- vcov %in% c("BS", "FWB")
-
-  if (bootstrap) {
-    arg_count(R)
-    arg_gt(R, 0L)
-    attr(vcov, "R") <- R
-
-    if (vcov == "FWB") {
-      #Error for weighting methods that don't accept s.weights
-      if (is_not_null(weightit)) {
-        if (is.character(weightit$method) &&
-            !.weightit_methods[[weightit$method]]$s.weights_ok) {
-          .err('{.code vcov = "FWB"} cannot be used with {.code method = "{weightit$method}"}')
-        }
-
-        if (identical(weightit$missing, "saem")) {
-          .err('{.code vcov = "FWB"} cannot be used with {.code missing = "saem"}')
-        }
-      }
-
-      rlang::check_installed("fwb")
-
-      arg_list(fwb.args)
-    }
-
-    attr(vcov, "fwb.args") <- fwb.args
-  }
-
-  vcov
-}
-
-# Process a user-supplied vcov for use in summary.glm_weightit()
-.process_vcov_summary <- function(object, vcov. = NULL, ...) {
-  if (is_null(vcov.)) {
-    V <- stats::vcov(object)
-    vcov_type <- object$vcov_type
-    cluster <- .attr(object, "cluster")
-  }
-  else if (is.function(vcov.)) {
-    V <- vcov.(object, ...)
-
-    if (!is.cov_like(V)) {
-      .err("the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
-    }
-
-    vcov_type <- "custom"
-    cluster <- NULL
-  }
-  else if (is.cov_like(vcov.)) {
-    V <- vcov.
-
-    vcov_type <- "custom"
-    cluster <- NULL
-  }
-  else if (rlang::is_string(vcov.)) {
-    V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
-
-    vcov_type <- .attr(V, "vcov_type")
-    cluster <- .attr(V, "cluster")
-  }
-  else {
-    .err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
-  }
-
-  .modify_vcov_info(V, vcov_type = vcov_type, cluster = cluster)
-}
-
-# Process a user-supplied vcov for use in anova.glm_weightit()
-.process_vcov_anova <- function(object, object2 = NULL, vcov. = NULL, b1 = NULL, ...) {
-
-  if (is_null(vcov.)) {
-    if (identical(object[["vcov_type"]], "none") || is_null(stats::vcov(object))) {
-      .err("no variance matrix found in {.arg object}; please supply an argument to {.arg vcov}")
-    }
-
-    if (!identical(object[["vcov_type"]], object2[["vcov_type"]]) &&
-        !identical(object2[["vcov_type"]], "none")) {
-      .wrn("different {.arg vcov} types detected for each model; using the variance matrix from the larger model")
-    }
-
-    V <- stats::vcov(object)
-    vcov_type <- object$vcov_type
-    cluster <- .attr(object, "cluster")
-  }
-  else if (is.function(vcov.)) {
-    V <- vcov.(object, ...)
-
-    if (!is.cov_like(V)) {
-      .err("the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
-    }
-
-    vcov_type <- "custom"
-    cluster <- NULL
-  }
-  else if (is.cov_like(vcov.)) {
-    V <- vcov.
-
-    vcov_type <- "custom"
-    cluster <- NULL
-  }
-  else if (rlang::is_string(vcov.)) {
-    V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
-
-    vcov_type <- .attr(V, "vcov_type")
-    cluster <- .attr(V, "cluster")
-  }
-  else {
-    .err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
-  }
-
-  if (is_null(V)) {
-    .err("no variance matrix was found. See the {.arg vcov} argument of {.fun anova.glm_weightit} for details")
-  }
-
-  if (is_not_null(b1)) {
-    if (!all(names(b1) %in% rownames(V)) || !all(names(b1) %in% colnames(V))) {
-      .err("all coefficients in {.arg object} must have entries in the supplied variance matrix")
-    }
-
-    V <- V[names(b1), names(b1), drop = FALSE]
-  }
-
-  .modify_vcov_info(V, vcov_type = vcov_type, cluster = cluster)
-}
-
-# Sets the vcov, vcov_type, and cluster components when given a user-supplied vcov;
-# for use in summary.glm_weightit()
-.set_vcov <- function(object, vcov, vcov_type = NULL) {
-  object$vcov_type <- {
-    if (is_null(vcov)) "none"
-    else vcov_type %or% .attr(vcov, "vcov_type")
-  }
-
-  attr(object, "cluster") <- .attr(vcov, "cluster")
-
-  object$vcov <- .modify_vcov_info(vcov)
-
-  object
-}
-
-# Dispatches computation of vcov; for using in vcov.glm_weightit() and summary.glm_weightit()
-.vcov_glm_weightit.internal <- function(object, vcov. = NULL, ...) {
-
-  if (is_null(vcov.)) {
-    vcov. <- ...get("type")
-  }
-
-  if (is_null(vcov.) && ...length() == 0L) {
-    if (is_not_null(object[["vcov"]])) {
-      return(.modify_vcov_info(object[["vcov"]],
-                               vcov_type = object[["vcov_type"]],
-                               cluster = .attr(object, "cluster")))
-    }
-
-    if (!identical(object[["vcov_type"]], "none")) {
-      .err("no variance-covariance matrix was found in the supplied object; this is likely a bug")
-    }
-
-    .wrn('{.arg vcov} was specified as {.val none} in the original fitting call, so no variance-covariance matrix will be returned')
-
-    return(NULL)
-  }
-
-  R <- ...get("R", 500L)
-  fwb.args <- ...get("fwb.args", list())
-
-  vcov. <- .process_vcov(vcov., object[["weightit"]], R, fwb.args)
-
-  if (vcov. == "none") {
-    return(NULL)
-  }
-
-  cluster <- {
-    if ("cluster" %in% ...names()) ...get("cluster")
-    else .attr(object, "cluster")
-  }
-
-  internal_model_call <- .build_internal_model_call(object, vcov = vcov.)
-
-  .compute_vcov(object, object[["weightit"]], vcov., cluster,
-                object[["call"]], internal_model_call)
-}
-
-.modify_vcov_info <- function(vcov, vcov_type = NULL, cluster = NULL) {
-  attr(vcov, "vcov_type") <- vcov_type
-  attr(vcov, "cluster") <- cluster
-
-  vcov
-}
-
-# Custom printCoefmat for glm_weightit objects
-.printCoefmat_glm_weightit <- function(x,
-                                       digits = max(3L, getOption("digits") - 2L),
-                                       signif.stars = TRUE,
-                                       signif.legend = FALSE,
-                                       dig.tst = max(1L, min(5L, digits - 1L)),
-                                       cs.ind = NULL,
-                                       tst.ind = NULL,
-                                       p.ind = NULL,
-                                       zap.ind = integer(),
-                                       P.values = NULL,
-                                       has.Pvalue = TRUE,
-                                       eps.Pvalue = 1e-6,
-                                       na.print = ".",
-                                       quote = FALSE,
-                                       right = TRUE,
-                                       ...) {
-  d <- dim(x)
-
-  if (length(d) != 2L) {
-    .err("{.arg x} must be coefficient matrix/data frame")
-  }
-
-  nm <- colnames(x)
-
-  arg_flag(has.Pvalue)
-
-  if (has.Pvalue) {
-    if (is_null(p.ind)) {
-      if (is_null(nm)) {
-        .err("{.arg has.Pvalue} set to {.val {TRUE}} but {.arg p.ind} is {.val {list(NULL)}} and no colnames present")
-      }
-
-      p.ind <- which(substr(nm, 1L, 3L) %in% c("Pr(", "p-v"))
-
-      if (is_null(p.ind)) {
-        .err("{.arg has.Pvalue} set to {.val {TRUE}} but {.arg p.ind} is {.val {list(NULL)}} and no colnames match p-value strings")
-      }
-    }
-    else {
-      arg_whole_number(p.ind)
-      arg_subset(p.ind, seq_col(x))
-    }
-  }
-  else if (is_not_null(p.ind)) {
-    .err("{.arg has.Pvalue} set to {.val {FALSE}} but {.arg p.ind} is not {.val {list(NULL)}}")
-  }
-
-  if (is_null(P.values)) {
-    scp <- getOption("show.coef.Pvalues")
-    if (!is.logical(scp) || is.na(scp)) {
-      .wrn('option {.val show.coef.Pvalues} is invalid: assuming {.val {TRUE}}')
-      scp <- TRUE
-    }
-    P.values <- has.Pvalue && scp
-  }
-  else {
-    arg_flag(P.values)
-  }
-
-  if (P.values && !has.Pvalue) {
-    .err("{.arg P.values} is {.val {TRUE}}, but {.arg has.Pvalue} is not")
-  }
-
-  if (is_null(cs.ind)) {
-    cs.ind <- which(nm %in% c("Estimate", "Std. Error") | endsWith(nm, " %"))
-  }
-  else {
-    arg_whole_numeric(cs.ind)
-    arg_subset(cs.ind, seq_col(x))
-  }
-
-  cs.ind <- setdiff(cs.ind, p.ind)
-
-  if (is_null(tst.ind)) {
-    tst.ind <- which(endsWith(nm, "value"))
-  }
-  else {
-    arg_whole_numeric(tst.ind)
-    arg_subset(tst.ind, seq_col(x))
-  }
-
-  tst.ind <- setdiff(tst.ind, p.ind)
-
-  if (any(tst.ind %in% cs.ind)) {
-    .err("{.arg tst.ind} must not overlap with {.arg cs.ind}")
-  }
-
-  xm <- data.matrix(x)
-
-  if (is_null(tst.ind)) {
-    tst.ind <- setdiff(which(endsWith(nm, "value")), p.ind)
-  }
-
-  Cf <- array("", dim = d, dimnames = dimnames(xm))
-
-  ina <- is.na(xm)
-  ok <- !ina
-
-  for (i in zap.ind) {
-    xm[, i] <- zapsmall(xm[, i], digits)
-  }
-
-  if (is_not_null(cs.ind)) {
-    coef.se <- xm[, cs.ind, drop = FALSE]
-    acs <- abs(coef.se)
-    ia <- is.finite(acs)
-    if (any(ia)) {
-      acs <- acs[ia & acs != 0]
-
-      digmin <- {
-        if (is_null(acs)) 1
-        else 1 + floor(log10(range(acs[acs != 0], finite = TRUE)))
-      }
-
-      Cf[, cs.ind] <- format(round(coef.se, max(1L, digits - digmin)), digits = digits)
-    }
-  }
-
-  if (is_not_null(tst.ind)) {
-    Cf[, tst.ind] <- format(round(xm[, tst.ind], digits = dig.tst),
-                            digits = digits)
-  }
-
-  r.ind <- setdiff(seq_col(xm), c(cs.ind, tst.ind, p.ind))
-  if (is_not_null(r.ind)) {
-    for (i in r.ind) {
-      Cf[, i] <- format(xm[, i], digits = digits)
-    }
-  }
-
-  ok[, tst.ind] <- FALSE
-  okP <- if (has.Pvalue) ok[, -p.ind] else ok
-
-  x1 <- Cf[okP]
-  dec <- getOption("OutDec")
-
-  if (dec != ".") {
-    x1 <- chartr(dec, ".", x1)
-  }
-
-  x0 <- (xm[okP] == 0) != (as.numeric(x1) == 0)
-
-  not.both.0 <- which(x0 & !is.na(x0))
-  if (is_not_null(not.both.0)) {
-    Cf[okP][not.both.0] <- format(xm[okP][not.both.0], digits = max(1L, digits - 1L))
-  }
-
-  if (any(ina)) {
-    Cf[ina] <- na.print
-  }
-
-  inan <- is.nan(xm)
-  if (any(inan)) {
-    Cf[inan] <- "NaN"
-  }
-
-  if (P.values) {
-    arg_flag(signif.stars)
-
-    okP <- ok[, p.ind]
-
-    if (any(okP)) {
-      pv <- as.vector(xm[, p.ind])
-      Cf[okP, p.ind] <- format.pval(pv[okP], digits = dig.tst,
-                                    eps = eps.Pvalue)
-
-      signif.stars <- signif.stars && any(pv[okP] < 0.1)
-
-      if (signif.stars) {
-        Signif <- symnum(pv, corr = FALSE, na = FALSE,
-                         cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
-                         symbols = c("***", "**", "*", ".", " "))
-        Cf <- cbind(Cf, format(Signif))
-      }
-    }
-    else signif.stars <- FALSE
-  }
-  else {
-    if (has.Pvalue) {
-      Cf <- Cf[, -p.ind, drop = FALSE]
-    }
-    signif.stars <- FALSE
-  }
-
-  print.default(Cf, quote = quote, right = right, na.print = na.print, ...)
-
-  if (signif.stars) {
-    arg_flag(signif.legend)
-
-    if (signif.legend) {
-      w <- getOption("width")
-      sleg <- .attr(Signif, "legend")
-
-      if (w < nchar(sleg)) {
-        sleg <- strwrap(sleg, width = w - 2L, prefix = space(2L))
-      }
-
-      cat0("---\nSignif. codes:  ", sleg, fill = w + 4L + max(nchar(sleg, "bytes") - nchar(sleg)))
-    }
-  }
-
-  invisible(x)
-}
-
-# Constructs a model call, used in .compute_vcov() to compute variance
-.build_internal_model_call <- function(object = NULL, model = "glm", model_call,
-                                       weightit = NULL, vcov = NULL, br = FALSE) {
-
-  if (is_not_null(object)) {
-    model <- {
-      if (inherits(object, "coxph_weightit")) "coxph"
-      else if (inherits(object, "multinom_weightit")) "multinom"
-      else if (inherits(object, "ordinal_weightit")) "ordinal"
-      else if (inherits(object, "glm_weightit")) "glm"
-      else if (inherits(object, "lm_weightit")) "lm"
-      else .err("can't build model call. This is probably a bug")
-    }
-
-    if (missing(model_call) || is_null(model_call)) {
-      model_call <- object[["call"]]
-    }
-
-    if (is_null(weightit)) {
-      weightit <- object[["weightit"]]
-    }
-
-    if (is_null(vcov)) {
-      vcov <- object[["vcov_type"]]
-    }
-
-    br <- isTRUE(object[["br"]])
-  }
-
-  if (is_not_null(weightit)) {
-    if (!inherits(weightit, c("weightit", "weightitMSM"))) {
-      .err("{.arg weightit} must be a {.cls weightit} or {.cls weightitMSM} object")
-    }
-
-    if (is_null(weightit[["s.weights"]])) {
-      weightit[["s.weights"]] <- rep.int(1, nobs(weightit))
-    }
-  }
-
-  if (model == "glm") {
-    arg_flag(br)
-
-    model_call[[1L]] <- quote(stats::glm)
-
-    if (is_not_null(weightit)) {
-      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
-    }
-    model_call$x <- TRUE
-    model_call$y <- TRUE
-    model_call$model <- TRUE
-    model_call$na.action <- "na.fail"
-
-    if (br) {
-      rlang::check_installed("brglm2")
-      model_call$method <- quote(brglm2::brglmFit)
-      ctrl <- brglm2::brglmControl
-    }
-    else {
-      model_call$method <- quote(stats::glm.fit)
-      ctrl <- stats::glm.control
-    }
-
-    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(stats::glm), rlang::fn_fmls_names(ctrl)))] <- NULL
-  }
-  else if (model == "lm") {
-    model_call[[1L]] <- quote(stats::glm)
-
-    if (is_not_null(weightit)) {
-      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
-    }
-    model_call$x <- TRUE
-    model_call$y <- TRUE
-    model_call$model <- TRUE
-    model_call$na.action <- "na.fail"
-    model_call$family <- "gaussian"
-
-    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(stats::glm), rlang::fn_fmls_names(stats::glm.control)))] <- NULL
-  }
-  else if (model == "ordinal") {
-    model_call[[1L]] <- .ordinal_weightit
-    model_call[setdiff(names(model_call), rlang::fn_fmls_names(.ordinal_weightit))] <- NULL
-
-    if (is_not_null(weightit)) {
-      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
-    }
-    model_call$x <- TRUE
-    model_call$y <- TRUE
-    model_call$model <- TRUE
-    model_call$hess <- vcov %nin% c("none", "BS", "FWB")
-  }
-  else if (model == "multinom") {
-    model_call[[1L]] <- .multinom_weightit
-    model_call[setdiff(names(model_call), rlang::fn_fmls_names(.multinom_weightit))] <- NULL
-
-    if (is_not_null(weightit)) {
-      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
-    }
-    model_call$x <- TRUE
-    model_call$y <- TRUE
-    model_call$model <- TRUE
-    model_call$hess <- vcov %nin% c("none", "BS", "FWB")
-  }
-  else if (model == "coxph") {
-    model_call[[1L]] <- quote(survival::coxph)
-
-    if (is_not_null(weightit)) {
-      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
-    }
-    model_call$x <- TRUE
-    model_call$y <- TRUE
-    model_call$model <- TRUE
-    model_call$robust <- vcov == "HC0"
-
-    model_call$cluster <- NULL
-    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(survival::coxph), rlang::fn_fmls_names(survival::coxph.control)))] <- NULL
-  }
-
-  model_call
-}
-
 # Computes variance from model fit and call; used in glm_weightit()
 .compute_vcov <- function(fit, weightit = NULL, vcov, cluster = NULL, model_call,
                           internal_model_call) {
   # Check missing
   if (is_not_null(fit[["na.action"]])) {
-    .err("missing values are not allowed in the model variables")
+    arg::err("missing values are not allowed in the model variables")
   }
 
   if (is_not_null(cluster) && vcov %in% c("none", "const")) {
-    .wrn('{.arg cluster} is not used when {.code vcov = "{vcov}"}')
+    arg::wrn('{.arg cluster} is not used when {.code vcov = "{vcov}"}')
   }
 
   if (vcov == "none") {
@@ -613,7 +35,11 @@
       V <- .solve_hessian(-fit[["hessian"]])
     }
     else if (inherits(fit, "coxph_weightit")) {
-      V <- fit[["naive.var"]] %or% fit[["var"]]
+      if (is_null(fit[["hessian"]])) {
+        fit[["hessian"]] <- .get_hess_coxph(fit)
+      }
+
+      V <- .solve_hessian(-fit[["hessian"]])
     }
     else {
       .declass <- function(obj) {
@@ -671,10 +97,10 @@
     }
 
     if (nrow(cluster) != length(Y)) {
-      .err("the number of observations in {.arg cluster} must equal that in {.arg data}")
+      arg::err("the number of observations in {.arg cluster} must equal that in {.arg data}")
     }
 
-    arg_no_NA(cluster)
+    arg::arg_no_NA(cluster)
 
     p <- ncol(cluster)
     if (p > 1L) {
@@ -712,7 +138,7 @@
 
     if (is_not_null(weightit)) {
       if (!came_from_weightit(weightit)) {
-        .err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
+        arg::err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
       }
 
       wcall <- weightit[["call"]]
@@ -775,16 +201,20 @@
     fwb.args <- fwb.args[names(fwb.args) %in% rlang::fn_fmls_names(fwb::fwb)]
 
     if (is_null(cluster)) {
-      fwb_out <- eval(as.call(c(list(quote(fwb::fwb)), fwb.args)))
+      with_delayed_warnings({
+        fwb_out <- eval(as.call(c(list(quote(fwb::fwb)), fwb.args)))
+      })
       V <- cov(fwb_out$t)
     }
     else {
       V <- 0
-      for (i in seq_along(clu)) {
-        fwb.args$cluster <- cluster[[i]]
-        fwb_out <- eval(as.call(c(list(quote(fwb::fwb)), fwb.args)))
-        V <- V + sgn[i] * cov(fwb_out[["t"]])
-      }
+      with_delayed_warnings({
+        for (i in seq_along(clu)) {
+          fwb.args$cluster <- cluster[[i]]
+          fwb_out <- eval(as.call(c(list(quote(fwb::fwb)), fwb.args)))
+          V <- V + sgn[i] * cov(fwb_out[["t"]])
+        }
+      })
     }
   }
   else if (vcov == "BS") {
@@ -798,7 +228,7 @@
 
     if (is_not_null(weightit)) {
       if (!came_from_weightit(weightit)) {
-        .err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
+        arg::err("the supplied {.cls weightit} object does not appear to be the result of a call to {.fun weightit} or {.fun weightitMSM}, so bootstrapping cannot be used")
       }
 
       wcall <- weightit[["call"]]
@@ -806,7 +236,7 @@
 
       data <- eval(wcall$data, wenv)
       if (is_null(data)) {
-        .err('a dataset must have been supplied to {.arg data} in the original call to {.fun {rlang::call_name(wcall)}} to use {.code vcov = "BS"}')
+        arg::err('a dataset must have been supplied to {.arg data} in the original call to {.fun {rlang::call_name(wcall)}} to use {.code vcov = "BS"}')
       }
 
       if (is_not_null(.attr(weightit, "calibrate"))) {
@@ -834,7 +264,7 @@
       data <- eval(internal_model_call$data, genv)
 
       if (is_null(data)) {
-        .err('a dataset must have been supplied to {.arg data} in the original call to {.fun {rlang::call_name(model_call)}} to use {.code vcov = "BS"}')
+        arg::err('a dataset must have been supplied to {.arg data} in the original call to {.fun {rlang::call_name(model_call)}} to use {.code vcov = "BS"}')
       }
     }
 
@@ -865,42 +295,28 @@
     }
 
     if (is_null(cluster)) {
-      boot_out <- do.call("rbind", lapply(seq_len(R), function(i) {
-        ind <- sample.int(nrow(data), replace = TRUE)
-        bootfun(data, ind)
-      }))
-
+      with_delayed_warnings({
+        boot_out <- do.call("rbind", lapply(seq_len(R), function(i) {
+          ind <- sample.int(nrow(data), replace = TRUE)
+          bootfun(data, ind)
+        }))
+      })
       V <- cov(boot_out)
     }
     else {
       V <- 0
-      for (i in seq_along(clu)) {
-        cli <- split(seq_along(cluster[[i]]), cluster[[i]])
+      with_delayed_warnings({
+        for (i in seq_along(clu)) {
+          cli <- split(seq_along(cluster[[i]]), cluster[[i]])
 
-        boot_out <- do.call("rbind", lapply(seq_len(R), function(i) {
-          ind <- unlist(cli[sample.int(length(cli), replace = TRUE)])
-          bootfun(data, ind)
-        }))
+          boot_out <- do.call("rbind", lapply(seq_len(R), function(i) {
+            ind <- unlist(cli[sample.int(length(cli), replace = TRUE)])
+            bootfun(data, ind)
+          }))
 
-        V <- V + sgn[i] * cov(boot_out)
-      }
-    }
-  }
-  else if (inherits(fit, "coxph")) {
-    if (is_null(cluster)) {
-      V <- fit$var[!aliased, !aliased, drop = FALSE]
-    }
-    else {
-      V <- 0
-
-      for (i in seq_along(clu)) {
-        adj <- g[i] / (g[i] - 1)
-        temp <- residuals(fit, type = "dfbeta",
-                          collapse = cluster[[i]],
-                          weighted = TRUE)
-
-        V <- V + sgn[i] * adj * crossprod(temp[, !aliased, drop = FALSE])
-      }
+          V <- V + sgn[i] * cov(boot_out)
+        }
+      })
     }
   }
   else {
@@ -919,7 +335,10 @@
     psi_b <- fit[["gradient"]] %or% psi_out(bout, W, Y, Xout, SW, offset)
 
     H <- fit[["hessian"]] %or% {
-      if (inherits(fit, "ordinal_weightit")) {
+      if (inherits(fit, "coxph_weightit")) {
+        .get_hess_coxph(fit)
+      }
+      else if (inherits(fit, "ordinal_weightit")) {
         .get_hess_ordinal(fit)
       }
       else if (inherits(fit, "multinom_weightit")) {
@@ -928,11 +347,10 @@
       else if (inherits(fit, "glm")) {
         .get_hess_glm(fit)
       }
-      else {
-        .gradient(function(Bout) {
-          colSums(psi_out(Bout, W, Y, Xout, SW, offset))
-        }, .x = bout)
-      }
+    } %or% {
+      .gradient(function(Bout) {
+        colSums(psi_out(Bout, W, Y, Xout, SW, offset))
+      }, .x = bout)
     }
 
     if (is_not_null(Mparts)) {
@@ -1060,6 +478,578 @@
   .modify_vcov_info(V, vcov_type = vcov, cluster = cluster)
 }
 
+# Makes a phrase from vcov_type to be printed by print() and summary()
+.vcov_to_phrase <- function(vcov_type, cluster = FALSE) {
+  switch(vcov_type,
+         const = "maximum likelihood",
+         asympt = {
+           if (cluster) "HC0 cluster-robust (adjusted for estimation of weights)"
+           else"HC0 robust (adjusted for estimation of weights)"
+         },
+         HC0 = {
+           if (cluster) "HC0 cluster-robust"
+           else "HC0 robust"
+         },
+         BS = {
+           if (cluster) "traditional cluster bootstrap"
+           else "traditional bootstrap"
+         },
+         FWB = {
+           if (cluster) "fractional weighted cluster bootstrap"
+           else "fractional weighted bootstrap"
+         },
+         none = "none",
+         "user-supplied")
+}
+
+# Processes the vcov argument from glm_weightit(); returns vcov_type with attributes
+.process_vcov <- function(vcov = NULL, weightit = NULL, R = 500L, fwb.args = list(),
+                          m_est_supported = TRUE) {
+  if (is_null(weightit)) {
+    if (is_null(vcov)) {
+      return("HC0")
+    }
+
+    allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
+  }
+  else {
+    arg::arg_is(weightit, "weightit")
+
+    if (!m_est_supported ||
+        (is_null(.attr(weightit, "Mparts")) &&
+         is_null(.attr(weightit, "Mparts.list")))) {
+
+      if (is_null(vcov)) {
+        return("HC0")
+      }
+
+      allowable_vcov <- c("none", "const", "HC0", "BS", "FWB")
+    }
+    else {
+      if (is_null(vcov)) {
+        vcov <- "asympt"
+      }
+
+      allowable_vcov <- c("none", "const", "asympt", "HC0", "BS", "FWB")
+    }
+  }
+
+  vcov <- arg::match_arg(vcov, allowable_vcov)
+
+  if (is_not_null(weightit) && vcov == "const") {
+    arg::wrn('{.code vcov = "{vcov}"} should not be used when {.arg weightit} is supplied; the resulting standard errors are invalid and should not be interpreted')
+  }
+
+  bootstrap <- vcov %in% c("BS", "FWB")
+
+  if (bootstrap) {
+    arg::arg_count(R)
+    arg::arg_gt(R, 0L)
+    attr(vcov, "R") <- R
+
+    if (vcov == "FWB") {
+      #Error for weighting methods that don't accept s.weights
+      if (is_not_null(weightit)) {
+        if (is.character(weightit$method) &&
+            !.weightit_methods[[weightit$method]]$s.weights_ok) {
+          arg::err('{.code vcov = "{vcov}"} cannot be used with {.code method = "{weightit$method}"}')
+        }
+
+        if (identical(weightit$missing, "saem")) {
+          arg::err('{.code vcov = "{vcov}"} cannot be used with {.code missing = "{weightit$missing}"}')
+        }
+      }
+
+      rlang::check_installed("fwb")
+
+      arg::arg_list(fwb.args)
+    }
+
+    attr(vcov, "fwb.args") <- fwb.args
+  }
+
+  vcov
+}
+
+# Process a user-supplied vcov for use in summary.glm_weightit()
+.process_vcov_summary <- function(object, vcov. = NULL, ...) {
+  if (is_null(vcov.)) {
+    V <- stats::vcov(object)
+    vcov_type <- object$vcov_type
+    cluster <- .attr(object, "cluster")
+  }
+  else if (is.function(vcov.)) {
+    V <- vcov.(object, ...)
+
+    arg::arg_cov(V,
+                 .msg = "the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
+
+    vcov_type <- "custom"
+    cluster <- NULL
+  }
+  else if (is.cov_like(vcov.)) {
+    V <- vcov.
+
+    vcov_type <- "custom"
+    cluster <- NULL
+  }
+  else if (rlang::is_string(vcov.)) {
+    V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
+
+    vcov_type <- .attr(V, "vcov_type")
+    cluster <- .attr(V, "cluster")
+  }
+  else {
+    arg::err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
+  }
+
+  .modify_vcov_info(V, vcov_type = vcov_type, cluster = cluster)
+}
+
+# Process a user-supplied vcov for use in anova.glm_weightit()
+.process_vcov_anova <- function(object, object2 = NULL, vcov. = NULL, b1 = NULL, ...) {
+
+  if (is_null(vcov.)) {
+    if (identical(object[["vcov_type"]], "none") || is_null(stats::vcov(object))) {
+      arg::err("no variance matrix found in {.arg object}; please supply an argument to {.arg vcov}")
+    }
+
+    if (!identical(object[["vcov_type"]], object2[["vcov_type"]]) &&
+        !identical(object2[["vcov_type"]], "none")) {
+      arg::wrn("different {.arg vcov} types detected for each model; using the variance matrix from the larger model")
+    }
+
+    V <- stats::vcov(object)
+    vcov_type <- object$vcov_type
+    cluster <- .attr(object, "cluster")
+  }
+  else if (is.function(vcov.)) {
+    V <- vcov.(object, ...)
+
+    arg::arg_cov(V,
+                 .msg = "the function supplied to {.arg vcov} must return a variance matrix (i.e., a square, symmetric matrix with a non-negative diagonal")
+
+    vcov_type <- "custom"
+    cluster <- NULL
+  }
+  else if (is.cov_like(vcov.)) {
+    V <- vcov.
+
+    vcov_type <- "custom"
+    cluster <- NULL
+  }
+  else if (rlang::is_string(vcov.)) {
+    V <- .vcov_glm_weightit.internal(object, vcov. = vcov., ...)
+
+    vcov_type <- .attr(V, "vcov_type")
+    cluster <- .attr(V, "cluster")
+  }
+  else {
+    arg::err("{.arg vcov} must be {.val {list(NULL)}}, a string corresponding to a method of computing the parameter variance matrix, a function that computes a variance matrix, or a variance matrix itself")
+  }
+
+  if (is_null(V)) {
+    arg::err("no variance matrix was found. See the {.arg vcov} argument of {.fun anova.glm_weightit} for details")
+  }
+
+  if (is_not_null(b1)) {
+    if (!all(names(b1) %in% rownames(V)) || !all(names(b1) %in% colnames(V))) {
+      arg::err("all coefficients in {.arg object} must have entries in the supplied variance matrix")
+    }
+
+    V <- V[names(b1), names(b1), drop = FALSE]
+  }
+
+  .modify_vcov_info(V, vcov_type = vcov_type, cluster = cluster)
+}
+
+# Sets the vcov, vcov_type, and cluster components when given a user-supplied vcov;
+# for use in summary.glm_weightit()
+.set_vcov <- function(object, vcov, vcov_type = NULL) {
+  object$vcov_type <- {
+    if (is_null(vcov)) "none"
+    else vcov_type %or% .attr(vcov, "vcov_type")
+  }
+
+  attr(object, "cluster") <- .attr(vcov, "cluster")
+
+  object$vcov <- .modify_vcov_info(vcov)
+
+  object
+}
+
+# Dispatches computation of vcov; for using in vcov.glm_weightit() and summary.glm_weightit()
+.vcov_glm_weightit.internal <- function(object, vcov. = NULL, ...) {
+
+  if (is_null(vcov.)) {
+    vcov. <- ...get("type")
+  }
+
+  if (is_null(vcov.) && ...length() == 0L) {
+    if (is_not_null(object[["vcov"]])) {
+      return(.modify_vcov_info(object[["vcov"]],
+                               vcov_type = object[["vcov_type"]],
+                               cluster = .attr(object, "cluster")))
+    }
+
+    if (!identical(object[["vcov_type"]], "none")) {
+      arg::err("no variance-covariance matrix was found in the supplied object; this is likely a bug")
+    }
+
+    arg::wrn('{.arg vcov} was specified as {.val none} in the original fitting call, so no variance-covariance matrix will be returned')
+
+    return(NULL)
+  }
+
+  R <- ...get("R", 500L)
+  fwb.args <- ...get("fwb.args", list())
+
+  vcov. <- .process_vcov(vcov., object[["weightit"]], R, fwb.args)
+
+  if (vcov. == "none") {
+    return(NULL)
+  }
+
+  cluster <- {
+    if ("cluster" %in% ...names()) ...get("cluster")
+    else .attr(object, "cluster")
+  }
+
+  internal_model_call <- .build_internal_model_call(object, vcov = vcov.)
+
+  .compute_vcov(object, object[["weightit"]], vcov., cluster,
+                object[["call"]], internal_model_call)
+}
+
+.modify_vcov_info <- function(vcov, vcov_type = NULL, cluster = NULL) {
+  attr(vcov, "vcov_type") <- vcov_type
+  attr(vcov, "cluster") <- cluster
+
+  vcov
+}
+
+# Custom printCoefmat for glm_weightit objects
+.printCoefmat_glm_weightit <- function(x,
+                                       digits = max(3L, getOption("digits") - 2L),
+                                       signif.stars = TRUE,
+                                       signif.legend = FALSE,
+                                       dig.tst = max(1L, min(5L, digits - 1L)),
+                                       cs.ind = NULL,
+                                       tst.ind = NULL,
+                                       p.ind = NULL,
+                                       zap.ind = integer(),
+                                       P.values = NULL,
+                                       has.Pvalue = TRUE,
+                                       eps.Pvalue = 1e-6,
+                                       na.print = ".",
+                                       quote = FALSE,
+                                       right = TRUE,
+                                       ...) {
+  d <- dim(x)
+
+  if (length(d) != 2L) {
+    arg::err("{.arg x} must be coefficient matrix/data frame")
+  }
+
+  nm <- colnames(x)
+
+  arg::arg_flag(has.Pvalue)
+
+  if (has.Pvalue) {
+    if (is_null(p.ind)) {
+      if (is_null(nm)) {
+        arg::err("{.arg has.Pvalue} set to {.val {TRUE}} but {.arg p.ind} is {.val {list(NULL)}} and no colnames present")
+      }
+
+      p.ind <- which(substr(nm, 1L, 3L) %in% c("Pr(", "p-v"))
+
+      if (is_null(p.ind)) {
+        arg::err("{.arg has.Pvalue} set to {.val {TRUE}} but {.arg p.ind} is {.val {list(NULL)}} and no colnames match p-value strings")
+      }
+    }
+    else {
+      arg::arg_whole_number(p.ind)
+      arg::arg_element(p.ind, seq_col(x))
+    }
+  }
+  else if (is_not_null(p.ind)) {
+    arg::err("{.arg has.Pvalue} set to {.val {FALSE}} but {.arg p.ind} is not {.val {list(NULL)}}")
+  }
+
+  if (is_null(P.values)) {
+    scp <- getOption("show.coef.Pvalues")
+    if (!is.logical(scp) || is.na(scp)) {
+      arg::wrn('option {.val show.coef.Pvalues} is invalid: assuming {.val {TRUE}}')
+      scp <- TRUE
+    }
+    P.values <- has.Pvalue && scp
+  }
+  else {
+    arg::arg_flag(P.values)
+  }
+
+  if (P.values && !has.Pvalue) {
+    arg::err("{.arg P.values} is {.val {TRUE}}, but {.arg has.Pvalue} is not")
+  }
+
+  if (is_null(cs.ind)) {
+    cs.ind <- which(nm %in% c("Estimate", "Std. Error") | endsWith(nm, " %"))
+  }
+  else {
+    arg::arg_whole_numeric(cs.ind)
+    arg::arg_element(cs.ind, seq_col(x))
+  }
+
+  cs.ind <- setdiff(cs.ind, p.ind)
+
+  if (is_null(tst.ind)) {
+    tst.ind <- which(endsWith(nm, "value"))
+  }
+  else {
+    arg::arg_whole_numeric(tst.ind)
+    arg::arg_element(tst.ind, seq_col(x))
+  }
+
+  tst.ind <- setdiff(tst.ind, p.ind)
+
+  if (any(tst.ind %in% cs.ind)) {
+    arg::err("{.arg tst.ind} must not overlap with {.arg cs.ind}")
+  }
+
+  xm <- data.matrix(x)
+
+  if (is_null(tst.ind)) {
+    tst.ind <- setdiff(which(endsWith(nm, "value")), p.ind)
+  }
+
+  Cf <- array("", dim = d, dimnames = dimnames(xm))
+
+  ina <- is.na(xm)
+  ok <- !ina
+
+  for (i in zap.ind) {
+    xm[, i] <- zapsmall(xm[, i], digits)
+  }
+
+  if (is_not_null(cs.ind)) {
+    coef.se <- xm[, cs.ind, drop = FALSE]
+    acs <- abs(coef.se)
+    ia <- is.finite(acs)
+    if (any(ia)) {
+      acs <- acs[ia & acs != 0]
+
+      digmin <- {
+        if (is_null(acs)) 1
+        else 1 + floor(log10(range(acs[acs != 0], finite = TRUE)))
+      }
+
+      Cf[, cs.ind] <- format(round(coef.se, max(1L, digits - digmin)), digits = digits)
+    }
+  }
+
+  if (is_not_null(tst.ind)) {
+    Cf[, tst.ind] <- format(round(xm[, tst.ind], digits = dig.tst),
+                            digits = digits)
+  }
+
+  r.ind <- setdiff(seq_col(xm), c(cs.ind, tst.ind, p.ind))
+  if (is_not_null(r.ind)) {
+    for (i in r.ind) {
+      Cf[, i] <- format(xm[, i], digits = digits)
+    }
+  }
+
+  ok[, tst.ind] <- FALSE
+  okP <- if (has.Pvalue) ok[, -p.ind] else ok
+
+  x1 <- Cf[okP]
+  dec <- getOption("OutDec")
+
+  if (dec != ".") {
+    x1 <- chartr(dec, ".", x1)
+  }
+
+  x0 <- (xm[okP] == 0) != (as.numeric(x1) == 0)
+
+  not.both.0 <- which(x0 & !is.na(x0))
+  if (is_not_null(not.both.0)) {
+    Cf[okP][not.both.0] <- format(xm[okP][not.both.0], digits = max(1L, digits - 1L))
+  }
+
+  if (any(ina)) {
+    Cf[ina] <- na.print
+  }
+
+  inan <- is.nan(xm)
+  if (any(inan)) {
+    Cf[inan] <- "NaN"
+  }
+
+  if (P.values) {
+    arg::arg_flag(signif.stars)
+
+    okP <- ok[, p.ind]
+
+    if (any(okP)) {
+      pv <- as.vector(xm[, p.ind])
+      Cf[okP, p.ind] <- format.pval(pv[okP], digits = dig.tst,
+                                    eps = eps.Pvalue)
+
+      signif.stars <- signif.stars && any(pv[okP] < 0.1)
+
+      if (signif.stars) {
+        Signif <- symnum(pv, corr = FALSE, na = FALSE,
+                         cutpoints = c(0, 0.001, 0.01, 0.05, 0.1, 1),
+                         symbols = c("***", "**", "*", ".", " "))
+        Cf <- cbind(Cf, format(Signif))
+      }
+    }
+    else signif.stars <- FALSE
+  }
+  else {
+    if (has.Pvalue) {
+      Cf <- Cf[, -p.ind, drop = FALSE]
+    }
+    signif.stars <- FALSE
+  }
+
+  print.default(Cf, quote = quote, right = right, na.print = na.print, ...)
+
+  if (signif.stars) {
+    arg::arg_flag(signif.legend)
+
+    if (signif.legend) {
+      w <- getOption("width")
+      sleg <- .attr(Signif, "legend")
+
+      if (w < nchar(sleg)) {
+        sleg <- strwrap(sleg, width = w - 2L, prefix = space(2L))
+      }
+
+      cat0("---\nSignif. codes:  ", sleg, fill = w + 4L + max(nchar(sleg, "bytes") - nchar(sleg)))
+    }
+  }
+
+  invisible(x)
+}
+
+# Constructs a model call, used in .compute_vcov() to compute variance
+.build_internal_model_call <- function(object = NULL, model = "glm", model_call,
+                                       weightit = NULL, vcov = NULL, br = FALSE) {
+
+  if (is_not_null(object)) {
+    model <- {
+      if (inherits(object, "coxph_weightit")) "coxph"
+      else if (inherits(object, "multinom_weightit")) "multinom"
+      else if (inherits(object, "ordinal_weightit")) "ordinal"
+      else if (inherits(object, "glm_weightit")) "glm"
+      else if (inherits(object, "lm_weightit")) "lm"
+      else arg::err("can't build model call. This is probably a bug")
+    }
+
+    if (missing(model_call) || is_null(model_call)) {
+      model_call <- object[["call"]]
+    }
+
+    if (is_null(weightit)) {
+      weightit <- object[["weightit"]]
+    }
+
+    if (is_null(vcov)) {
+      vcov <- object[["vcov_type"]]
+    }
+
+    br <- isTRUE(object[["br"]])
+  }
+
+  if (is_not_null(weightit)) {
+    arg::arg_is(weightit, c("weightit", "weightitMSM"))
+
+    if (is_null(weightit[["s.weights"]])) {
+      weightit[["s.weights"]] <- rep.int(1, nobs(weightit))
+    }
+  }
+
+  if (model == "glm") {
+    arg::arg_flag(br)
+
+    model_call[[1L]] <- quote(stats::glm)
+
+    if (is_not_null(weightit)) {
+      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
+    }
+    model_call$x <- TRUE
+    model_call$y <- TRUE
+    model_call$model <- TRUE
+    model_call$na.action <- "na.fail"
+
+    if (br) {
+      rlang::check_installed("brglm2")
+      model_call$method <- quote(brglm2::brglmFit)
+      ctrl <- brglm2::brglmControl
+    }
+    else {
+      model_call$method <- quote(stats::glm.fit)
+      ctrl <- stats::glm.control
+    }
+
+    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(stats::glm), rlang::fn_fmls_names(ctrl)))] <- NULL
+  }
+  else if (model == "lm") {
+    model_call[[1L]] <- quote(stats::glm)
+
+    if (is_not_null(weightit)) {
+      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
+    }
+    model_call$x <- TRUE
+    model_call$y <- TRUE
+    model_call$model <- TRUE
+    model_call$na.action <- "na.fail"
+    model_call$family <- "gaussian"
+
+    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(stats::glm),
+                                            rlang::fn_fmls_names(stats::glm.control)))] <- NULL
+  }
+  else if (model == "ordinal") {
+    model_call[[1L]] <- .ordinal_weightit
+    model_call[setdiff(names(model_call), rlang::fn_fmls_names(.ordinal_weightit))] <- NULL
+
+    if (is_not_null(weightit)) {
+      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
+    }
+    model_call$x <- TRUE
+    model_call$y <- TRUE
+    model_call$model <- TRUE
+    model_call$hess <- vcov %nin% c("none", "BS", "FWB")
+  }
+  else if (model == "multinom") {
+    model_call[[1L]] <- .multinom_weightit
+    model_call[setdiff(names(model_call), rlang::fn_fmls_names(.multinom_weightit))] <- NULL
+
+    if (is_not_null(weightit)) {
+      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
+    }
+    model_call$x <- TRUE
+    model_call$y <- TRUE
+    model_call$model <- TRUE
+    model_call$hess <- vcov %nin% c("none", "BS", "FWB")
+  }
+  else if (model == "coxph") {
+    model_call[[1L]] <- .coxph_weightit
+    model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(.coxph_weightit),
+                                            rlang::fn_fmls_names(survival::coxph.control)))] <- NULL
+
+    if (is_not_null(weightit)) {
+      model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
+    }
+    model_call$x <- TRUE
+    model_call$y <- TRUE
+    model_call$model <- TRUE
+  }
+
+  model_call
+}
+
 # Processes fit for output; used in glm_weightit()
 .process_fit <- function(fit, weightit = NULL, vcov, model_call, x, y) {
   if (is_not_null(weightit) && is_not_null(fit[["model"]])) {
@@ -1067,16 +1057,16 @@
     fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
   }
 
-  fit$vcov_type <- .attr(fit[["vcov"]], "vcov_type")
+  fit[["vcov_type"]] <- .attr(fit[["vcov"]], "vcov_type")
 
-  fit$call <- model_call
+  fit[["call"]] <- model_call
 
   if (is_not_null(weightit)) {
-    fit$weightit <- weightit
+    fit[["weightit"]] <- weightit
   }
 
-  if (isFALSE(x)) fit$x <- NULL
-  if (isFALSE(y)) fit$y <- NULL
+  if (isFALSE(x) && utils::hasName(fit, "x")) fit[["x"]] <- NULL
+  if (isFALSE(y) && utils::hasName(fit, "y")) fit[["y"]] <- NULL
 
   attr(fit, "cluster") <- .attr(fit[["vcov"]], "cluster")
 
@@ -1085,39 +1075,30 @@
   fit
 }
 
-.get_hess_glm <- function(fit) {
-  X <- fit[["x"]] %or% model.matrix(fit)
-
-  d1mus <- fit$family$mu.eta(fit$linear.predictors)
-  varmus <- fit$family$variance(fit$fitted.values)
-
-  crossprod(X, X * (-d1mus^2 * fit$prior.weights / varmus))
-}
-
 .solve_hessian <- function(h, ..., model = "out") {
-  model <- match_arg(model, c("out", "weights"))
+  model <- arg::match_arg(model, c("out", "weights"))
 
   withCallingHandlers({
     solve(h, ...)
   },
   warning = function(w) {
-    .wrn("{conditionMessage(w)}")
-    invokeRestart("muffleWarning")
+    arg::wrn(conditionMessage(w))
+    tryInvokeRestart("muffleWarning")
   },
   error = function(e) {
     .e <- conditionMessage(e)
 
-    if (grepl("system is computationally singular", .e, fixed = TRUE) ||
-        grepl("Lapack routine dgesv: system is exactly singular", .e, fixed = TRUE)) {
+    if (cli::ansi_grepl("system is computationally singular", .e, fixed = TRUE) ||
+        cli::ansi_grepl("Lapack routine dgesv: system is exactly singular", .e, fixed = TRUE)) {
       if (model == "out") {
-        .err('the Hessian for the outcome model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or a model that is too complex. Estimates from this model should not be trusted. Investigate the problem by refitting with {.code vcov = "none"}. Simplifying the model can sometimes help')
+        arg::err('the Hessian for the outcome model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or a model that is too complex. Estimates from this model should not be trusted. Investigate the problem by refitting with {.code vcov = "none"}. Simplifying the model can sometimes help')
       }
 
       if (model == "weights") {
-        .err('the Hessian for the weighting model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or failure to converge. Consider treating the weights as fixed by setting {.code vcov = "HC0"}')
+        arg::err('the Hessian for the weighting model could not be inverted, which indicates an estimation failure, possibly due to perfect separation or failure to converge. Consider treating the weights as fixed by setting {.code vcov = "HC0"}')
       }
     }
 
-    .err("{(.e)}")
+    arg::err(.e)
   })
 }
