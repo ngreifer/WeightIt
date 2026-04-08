@@ -246,7 +246,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
         !all(check_if_zero(diag(d))) ||
         any(d < 0) ||
         !isSymmetric(unname(d))) {
-      .err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
+      arg::err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
     }
   }
 
@@ -263,15 +263,13 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   sw0 <- check_if_zero(s.weights)
 
-  diagn <- diag(n)
-
   covs <- scale(covs)
 
   min.w <- ...get("min.w", 1e-8)
-  arg_number(min.w)
+  arg::arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  arg_number(lambda)
+  arg::arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -280,9 +278,11 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (add_constraints) {
     tols <- ...get("tols", 0)
-    arg_number(tols)
+    arg::arg_number(tols)
     tols <- abs(tols)
   }
+
+  options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   t0 <- which(treat == 0)
   t1 <- which(treat == 1)
@@ -299,7 +299,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    arg_flag(improved)
+    arg::arg_flag(improved)
 
     nn <- tcrossprod(cbind(s.weights_n_0, s.weights_n_1))
 
@@ -312,17 +312,9 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     q <- ((s.weights * 2 / n) %*% d) * (s.weights_n_0 + s.weights_n_1)
 
     #Constraints for positivity and sum of weights
-    Amat <- cbind(diagn, s.weights_n_0, s.weights_n_1)
+    Amat <- cbind(diag(n), s.weights_n_0, s.weights_n_1)
     lvec <- c(ifelse(sw0, 1, min.w), 1, 1)
     uvec <- c(ifelse(sw0, 1, Inf), 1, 1)
-
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -361,14 +353,6 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(ifelse(sw0[t0], 1, min.w), 1)
     uvec <- c(ifelse(sw0[t0], 1, Inf), 1)
 
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
-
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- .apply_moments_int_quantile(covs,
@@ -405,14 +389,6 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     Amat <- cbind(diag(n1), s.weights_n_1[t1])
     lvec <- c(ifelse(sw0[t1], 1, min.w), 1)
     uvec <- c(ifelse(sw0[t1], 1, Inf), 1)
-
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -466,7 +442,13 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
                       ATC = diag(P) + lambda * s.weights_n_1[t1]^2 / 2)
   }
 
-  options.list <- .process_osqp_settings(min.w, verbose, ...)
+  unbounded <- lvec == -Inf & uvec == Inf
+
+  if (any(unbounded)) {
+    Amat <- Amat[, !unbounded, drop = FALSE]
+    lvec <- lvec[!unbounded]
+    uvec <- uvec[!unbounded]
+  }
 
   verbosely({
     opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
@@ -525,7 +507,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     if (!is.matrix(d) || !all(dim(d) == length(treat)) ||
         !all(check_if_zero(diag(d))) || any(d < 0) ||
         !isSymmetric(unname(d))) {
-      .err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
+      arg::err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
     }
 
   }
@@ -540,15 +522,13 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   sw0 <- check_if_zero(s.weights)
 
-  diagn <- diag(n)
-
   levels_treat <- levels(treat)
 
   min.w <- ...get("min.w", 1e-8)
-  arg_number(min.w)
+  arg::arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  arg_number(lambda)
+  arg::arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -557,10 +537,12 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   if (add_constraints) {
     tols <- ...get("tols", 0)
-    arg_number(tols)
+    arg::arg_number(tols)
     tols <- abs(tols)
     covs <- scale(covs)
   }
+
+  options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
                     dimnames = list(NULL, levels_treat))
@@ -578,7 +560,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    arg_flag(improved)
+    arg::arg_flag(improved)
 
     nn <- tcrossprod(s.weights_n_t)
 
@@ -594,17 +576,9 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     q <- ((s.weights * 2 / n) %*% d) * rowSums(s.weights_n_t)
 
     #Constraints for positivity and sum of weights
-    Amat <- cbind(diagn, s.weights_n_t)
+    Amat <- cbind(diag(n), s.weights_n_t)
     lvec <- c(ifelse(sw0, 1, min.w), rep.int(1, length(levels_treat)))
-    uvec <- c(ifelse(sw0, 1, Inf), rep.int(1, length(levels_treat)))
-
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
+    uvec <- c(ifelse(sw0, 1, Inf),   rep.int(1, length(levels_treat)))
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -649,14 +623,6 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     lvec <- c(ifelse(sw0[!in_focal], 1, min.w), rep.int(1, length(non_focal)))
     uvec <- c(ifelse(sw0[!in_focal], 1, Inf), rep.int(1, length(non_focal)))
 
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
-
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- .apply_moments_int_quantile(covs,
@@ -692,13 +658,22 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     e <- eigen(P, symmetric = TRUE, only.values = TRUE)
     e.min <- min(e$values)
     if (e.min < 0) {
-      lambda <- -e.min * n^2
+      diag(P) <- diag(P) - e.min + .Machine$double.eps
     }
   }
+  else if (lambda != 0) {
+    diag(P) <- switch(estimand,
+                      ATE = diag(P) + lambda * rowSums(s.weights_n_t)^2 / 2,
+                      ATT = diag(P) + lambda * rowSums(s.weights_n_t[!in_focal, non_focal, drop = FALSE])^2 / 2)
+  }
 
-  diag(P) <- diag(P) + lambda / n^2
+  unbounded <- lvec == -Inf & uvec == Inf
 
-  options.list <- .process_osqp_settings(min.w, verbose, ...)
+  if (any(unbounded)) {
+    Amat <- Amat[, !unbounded, drop = FALSE]
+    lvec <- lvec[!unbounded]
+    uvec <- uvec[!unbounded]
+  }
 
   verbosely({
     opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
@@ -752,7 +727,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     if (!is.matrix(Xdist) || !all(dim(Xdist) == length(treat)) ||
         !all(check_if_zero(diag(Xdist))) || any(Xdist < 0) ||
         !isSymmetric(unname(Xdist))) {
-      .err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
+      arg::err("{.arg dist.mat} must be one of {.or {.val {weightit_distances()}}} or a square, symmetric distance matrix with a value for all pairs of units")
     }
   }
 
@@ -771,7 +746,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     if (!is.matrix(Adist) || !all(dim(Adist) == length(treat)) ||
         !all(check_if_zero(diag(Adist))) || any(Adist < 0) ||
         !isSymmetric(unname(Adist))) {
-      .err("{.arg treat.dist.mat} must be a square, symmetric distance matrix with a value for all pairs of units")
+      arg::err("{.arg treat.dist.mat} must be a square, symmetric distance matrix with a value for all pairs of units")
     }
   }
 
@@ -788,10 +763,10 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   s.weights <- n * s.weights / sum(s.weights)
 
   min.w <- ...get("min.w", 1e-8)
-  arg_number(min.w)
+  arg::arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  arg_number(lambda)
+  arg::arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -799,17 +774,17 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   if (add_constraints) {
     tols <- ...get("tols", 0)
-    arg_number(tols)
+    arg::arg_number(tols)
     tols <- abs(tols)
   }
 
   options.list <- .process_osqp_settings(min.w, verbose, ...)
 
   d.moments <- max(...get("d.moments", 0), moments)
-  arg_count(d.moments)
+  arg::arg_count(d.moments)
 
   dimension.adj <- ...get("dimension.adj", TRUE)
-  arg_flag(dimension.adj)
+  arg::arg_flag(dimension.adj)
 
   Xmeans <- colMeans(Xdist)
   Xgrand_mean <- mean(Xmeans)
@@ -849,14 +824,6 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
   lvec <- c(ifelse(sw0, 1, min.w), n)
   uvec <- c(ifelse(sw0, 1, Inf), n)
 
-  unbounded <- lvec == -Inf & uvec == Inf
-
-  if (any(unbounded)) {
-    Amat <- Amat[, !unbounded, drop = FALSE]
-    lvec <- lvec[!unbounded]
-    uvec <- uvec[!unbounded]
-  }
-
   if (d.moments > 0) {
     d.covs <- .apply_moments_int_quantile(covs, moments = d.moments)
     d.treat <- cbind(poly(treat, degree = d.moments))
@@ -877,7 +844,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     covs <- scale_w(covs, s.weights)
     treat <- scale_w(treat, s.weights)
 
-    Amat <- cbind(Amat, covs * treat * s.weights / n)
+    Amat <- cbind(Amat, covs * treat * s.weights / (n - 1))
 
     lvec <- c(lvec, rep.int(-tols, ncol(covs)))
     uvec <- c(uvec, rep.int(tols, ncol(covs)))
@@ -890,11 +857,20 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     e.min <- min(e$values)
 
     if (e.min < 0) {
-      lambda <- -e.min * n^2
+      diag(P) <- diag(P) - e.min + .Machine$double.eps
     }
   }
+  else if (lambda != 0) {
+    diag(P) <- diag(P) + lambda * s.weights^2 / 2
+  }
 
-  diag(P) <- diag(P) + lambda / n^2
+  unbounded <- lvec == -Inf & uvec == Inf
+
+  if (any(unbounded)) {
+    Amat <- Amat[, !unbounded, drop = FALSE]
+    lvec <- lvec[!unbounded]
+    uvec <- uvec[!unbounded]
+  }
 
   verbosely({
     opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
