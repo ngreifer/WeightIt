@@ -165,8 +165,8 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   link <- ...get("link", "logit")
 
   if (is.character(link) && length(link) == 1L) {
-    arg_subset(link, c("logit", "probit", "cloglog", "loglog",
-                            "cauchit", "log", "clog"))
+    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog",
+                             "cauchit", "log", "clog"))
 
     link <- .make_link(link)
   }
@@ -181,7 +181,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err('{.arg link} must be a string or an object of class {.cls link-glm}')
+    arg::err('{.arg link} must be a string or an object of class {.cls link-glm}')
   }
 
   .fam <- quasibinomial(link)
@@ -265,7 +265,7 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   if (any(unlist(grab(fit.list, "estim.precis")) > 1e-5)) {
-    .wrn("the optimization failed to converge; consider using fewer covariates or a different link function")
+    arg::wrn("the optimization failed to converge; consider using fewer covariates or a different link function")
   }
 
   w <- .get_w_from_ps_internal_bin(ps, treat, estimand = estimand)
@@ -382,7 +382,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   link <- ...get("link", "logit")
 
   if (is.character(link) && length(link) == 1L) {
-    arg_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
+    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
 
     link <- .make_link(link)
   }
@@ -397,7 +397,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err('{.arg link} must be a string or an object of class {.cls link-glm}')
+    arg::err('{.arg link} must be a string or an object of class {.cls link-glm}')
   }
 
   .fam <- quasibinomial(link)
@@ -413,7 +413,8 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   k <- ncol(C)
 
   f <- function(B, X, A, SW, .psi) {
-    .colMeans(.psi(B, X, A, SW), length(A), k)
+    .psi(B, X, A, SW) |>
+      .colMeans(length(A), k)
   }
 
   if (estimand == "ATE") {
@@ -482,7 +483,7 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   if (any(unlist(grab(fit.list, "estim.precis")) > 1e-5)) {
-    .wrn("the optimization failed to converge; consider using fewer covariates or a different link function")
+    arg::wrn("the optimization failed to converge; consider using fewer covariates or a different link function")
   }
 
   Mparts <- list(
@@ -617,5 +618,5 @@ weightit2ipt.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2ipt.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
-  .err('{.code method = "ipt"} cannot be used with continuous treatments')
+  arg::err('{.code method = "ipt"} cannot be used with continuous treatments')
 }

@@ -77,29 +77,27 @@
 anova.glm_weightit <- function(object, object2, test = "Chisq",
                                method = "Wald", tolerance = 1e-7, vcov = NULL, ...) {
 
-  arg_supplied(object)
+  arg::arg_supplied(object)
 
-  arg_supplied(object2)
-  arg_is(object2, class(object)[1L])
+  arg::arg_supplied(object2)
+  arg::arg_is(object2, class(object)[1L])
 
   if (!identical(nobs(object), nobs(object2)) ||
       !identical(weights(object), weights(object2))) {
-    .err("models must be fit with the same units to be compared")
+    arg::err("models must be fit with the same units to be compared")
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with {.code y = TRUE} to be compared")
+    arg::err("models must be fit with {.code y = TRUE} to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
-    .err("models must be fit with the same outcomes to be compared")
+    arg::err("models must be fit with the same outcomes to be compared")
   }
 
-  arg_string(test)
-  test <- match_arg(test, "Chisq")
+  test <- arg::match_arg(test, "Chisq")
 
-  arg_string(method)
-  method <- match_arg(method, "Wald")
+  method <- arg::match_arg(method, "Wald")
 
   b1 <- coef(object, complete = FALSE)
   b2 <- coef(object2, complete = FALSE)
@@ -108,7 +106,7 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
   df2 <- nobs(object2) - length(b2)
 
   if (df1 >= df2) {
-    .err("{.arg object2} does not appear to be nested within {.arg object}")
+    arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   Z1 <- .lm.fit(x = model.matrix(object2)[, names(b2), drop = FALSE],
@@ -119,7 +117,7 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
   .q <- sum(keep)
 
   if (.q > df2 - df1) {
-    .err("{.arg object2} does not appear to be nested within {.arg object}")
+    arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   L <- t(Z1_svd[["v"]][, keep, drop = FALSE])
@@ -166,30 +164,28 @@ anova.glm_weightit <- function(object, object2, test = "Chisq",
 anova.ordinal_weightit <- function(object, object2, test = "Chisq",
                                    method = "Wald", tolerance = 1e-7, vcov = NULL, ...) {
 
-  arg_supplied(object)
-  arg_supplied(object2)
-  arg_is(object2, class(object)[1L])
+  arg::arg_supplied(object)
+  arg::arg_supplied(object2)
+  arg::arg_is(object2, class(object)[1L])
 
   if (!identical(nobs(object), nobs(object2)) ||
       !identical(weights(object), weights(object2))) {
-    .err("models must be fit with the same units to be compared")
+    arg::err("models must be fit with the same units to be compared")
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with {.code y = TRUE} to be compared")
+    arg::err("models must be fit with {.code y = TRUE} to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
-    .err("models must be fit with the same outcomes to be compared")
+    arg::err("models must be fit with the same outcomes to be compared")
   }
 
   nthreshold <- ncol(object$fitted.values) - 1L
 
-  arg_string(test)
-  test <- match_arg(test, "Chisq")
+  test <- arg::match_arg(test, "Chisq")
 
-  arg_string(method)
-  method <- match_arg(method, "Wald")
+  method <- arg::match_arg(method, "Wald")
 
   b1 <- coef(object)
   b2 <- coef(object2)
@@ -198,7 +194,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   df2 <- nobs(object2) - sum(!is.na(b2))
 
   if (df1 >= df2) {
-    .err("{.arg object2} does not appear to be nested within {.arg object}")
+    arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   b1 <- b1[seq_len(length(b1) - nthreshold)]
@@ -219,7 +215,7 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
   .q <- sum(keep)
 
   if (.q > df2 - df1) {
-    .err("{.arg object2} does not appear to be nested within {.arg object}")
+    arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   L <- t(Z1_svd$v[, keep, drop = FALSE])
@@ -268,32 +264,30 @@ anova.ordinal_weightit <- function(object, object2, test = "Chisq",
 anova.multinom_weightit <- function(object, object2, test = "Chisq",
                                     method = "Wald", tolerance = 1e-7, vcov = NULL, ...) {
 
-  arg_supplied(object)
-  arg_supplied(object2)
-  arg_is(object2, class(object)[1L])
+  arg::arg_supplied(object)
+  arg::arg_supplied(object2)
+  arg::arg_is(object2, class(object)[1L])
 
   if (!identical(nobs(object), nobs(object2)) ||
       !identical(weights(object), weights(object2))) {
-    .err("models must be fit with the same units to be compared")
+    arg::err("models must be fit with the same units to be compared")
   }
 
   if (is_null(object[["y"]]) || is_null(object2[["y"]])) {
-    .err("models must be fit with {.code y = TRUE} to be compared")
+    arg::err("models must be fit with {.code y = TRUE} to be compared")
   }
 
   if (!identical(object[["y"]], object2[["y"]])) {
-    .err("models must be fit with the same outcomes to be compared")
+    arg::err("models must be fit with the same outcomes to be compared")
   }
 
-  arg_string(test)
-  test <- match_arg(test, "Chisq")
+  test <- arg::match_arg(test, "Chisq")
 
-  arg_string(method)
-  method <- match_arg(method, "Wald")
+  method <- arg::match_arg(method, "Wald")
 
   if (!identical(.attr(object, "vcov_type"), .attr(object2, "vcov_type")) &&
       !identical(.attr(object2, "vcov_type"), "none")) {
-    .wrn("different {.arg vcov`}types detected for each model; using the {.arg vcov} from the larger model")
+    arg::wrn("different {.arg vcov`}types detected for each model; using the {.arg vcov} from the larger model")
   }
 
   b1 <- coef(object)
@@ -303,7 +297,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   df2 <- nobs(object2) - sum(!is.na(b2))
 
   if (df1 >= df2) {
-    .err("{.arg object2} does not appear to be nested within {.arg object}")
+    arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   X1 <- model.matrix(object)
@@ -330,7 +324,7 @@ anova.multinom_weightit <- function(object, object2, test = "Chisq",
   .q <- length(keep)
 
   if (.q > df2 - df1) {
-    .err("{.arg object2} does not appear to be nested within {.arg object}")
+    arg::err("{.arg object2} does not appear to be nested within {.arg object}")
   }
 
   L <- t(Z1_svd$v[, keep, drop = FALSE])

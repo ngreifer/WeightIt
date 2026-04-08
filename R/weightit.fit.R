@@ -128,21 +128,21 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     treat.type <- get_treat_type(treat)
   }
   else {
-    arg_supplied(covs)
-    arg_matrix(covs)
-    arg_numeric(covs)
+    arg::arg_supplied(covs)
+    arg::arg_matrix(covs)
+    arg::arg_numeric(covs)
 
-    arg_supplied(treat)
-    arg_vector(treat)
-    arg_numeric(treat)
-    arg_no_NA(treat)
+    arg::arg_supplied(treat)
+    arg::arg_vector(treat)
+    arg::arg_numeric(treat)
+    arg::arg_no_NA(treat)
 
-    arg_flag(stabilize)
-    arg_flag(verbose)
-    arg_flag(include.obj)
+    arg::arg_flag(stabilize)
+    arg::arg_flag(verbose)
+    arg::arg_flag(include.obj)
 
     if (length(treat) != nrow(covs)) {
-      .err("{.arg treat} and {.arg covs} must contain the same number of units")
+      arg::err("{.arg treat} and {.arg covs} must contain the same number of units")
     }
 
     treat <- as.treat(treat, process = TRUE)
@@ -152,46 +152,46 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     .check_method_treat.type(method, treat.type)
 
-    if (is_not_null(ps)) {
-      arg_vector(ps)
-      arg_numeric(ps)
+    arg::when_not_null(ps,
+                       arg::arg_vector,
+                       arg::arg_numeric)
 
+    if (is_not_null(ps)) {
       if (length(ps) != length(treat)) {
-        .err("{.arg ps} and {.arg treat} must be the same length")
+        arg::err("{.arg ps} and {.arg treat} must be the same length")
       }
 
-      if (is_not_null(ps) && is_not_null(method) &&
-          !is.function(method) &&
+      if (is_not_null(method) && !is.function(method) &&
           !identical(method, "glm")) {
-        .wrn("{.arg ps} is supplied, so {.arg method} will be ignored")
+        arg::wrn("{.arg ps} is supplied, so {.arg method} will be ignored")
       }
 
       method <- NULL
     }
 
+    arg::when_not_null(s.weights,
+                       arg::arg_vector,
+                       arg::arg_numeric)
+
     if (is_null(s.weights)) {
       s.weights <- rep_with(1, treat)
     }
     else {
-      arg_vector(s.weights)
-      arg_numeric(s.weights)
-
       .check_method_s.weights(method, s.weights)
 
       if (length(s.weights) != length(treat)) {
-        .err("{.arg s.weights} and {.arg treat} must be the same length")
+        arg::err("{.arg s.weights} and {.arg treat} must be the same length")
       }
     }
+
+    arg::when_not_null(by.factor,
+                       arg::arg_factor)
 
     if (is_null(by.factor)) {
       by.factor <- gl(1L, length(treat))
     }
-    else {
-      arg_factor(by.factor)
-
-      if (length(by.factor) != length(treat)) {
-        .err("{.arg by.factor} and {.arg treat} must be the same length")
-      }
+    else if (length(by.factor) != length(treat)) {
+      arg::err("{.arg by.factor} and {.arg treat} must be the same length")
     }
 
     #Process estimand and focal
@@ -205,8 +205,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
 
     if (is_null(missing)) {
-      if (is_not_null(method) && anyNA(covs)) missing <- "ind"
-      else missing <- ""
+      missing <- {
+        if (is_not_null(method) && anyNA(covs)) "ind"
+        else ""
+      }
     }
     else if (nzchar(missing) && anyNA(covs)) {
       missing <- .process_missing(missing, method)
@@ -279,15 +281,15 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
     #Extract weights
     if (is_null(obj)) {
-      .err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
     }
 
     if (is_null(obj$w) || all(is.na(obj$w))) {
-      .wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
     }
 
     if (!all(is.finite(obj$w))) {
-      .wrn("some weights were estimated as {.val {NA}}, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
+      arg::wrn("some weights were estimated as {.val {NA}}, which means a value was impossible to compute (e.g., {.val {Inf}}). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
       obj$w[!is.finite(obj$w)] <- 0
     }
     # else if (any(!is.finite(obj$w))) probably_a_bug()
@@ -312,7 +314,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       out$fit.obj <- fit.obj
     }
     else {
-      .wrn("{.arg include.obj} was set to {.val {TRUE}}, but no fit object was returned by the fitting function")
+      arg::wrn("{.arg include.obj} was set to {.val {TRUE}}, but no fit object was returned by the fitting function")
     }
   }
 
@@ -357,40 +359,40 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     }
   }
   else {
-    arg_supplied(covs.list)
-    arg_list(covs.list)
+    arg::arg_supplied(covs.list)
+    arg::arg_list(covs.list)
 
     for (i in seq_along(covs.list)) {
-      arg_matrix(covs.list[[i]], sprintf("covs.list[[%s]]", i))
-      arg_numeric(covs.list[[i]], sprintf("covs.list[[%s]]", i))
+      arg::arg_matrix(covs.list[[i]], sprintf("covs.list[[%s]]", i))
+      arg::arg_numeric(covs.list[[i]], sprintf("covs.list[[%s]]", i))
     }
 
-    arg_supplied(treat.list)
-    arg_list(treat.list)
+    arg::arg_supplied(treat.list)
+    arg::arg_list(treat.list)
 
     for (i in seq_along(treat.list)) {
-      arg_vector(treat.list[[i]], sprintf("treat.list[[%s]]", i))
-      arg_numeric(treat.list[[i]], sprintf("treat.list[[%s]]", i))
-      arg_no_NA(treat.list[[i]], sprintf("treat.list[[%s]]", i))
+      arg::arg_vector(treat.list[[i]], sprintf("treat.list[[%s]]", i))
+      arg::arg_numeric(treat.list[[i]], sprintf("treat.list[[%s]]", i))
+      arg::arg_no_NA(treat.list[[i]], sprintf("treat.list[[%s]]", i))
     }
 
-    arg_flag(stabilize)
-    arg_flag(verbose)
-    arg_flag(include.obj)
+    arg::arg_flag(stabilize)
+    arg::arg_flag(verbose)
+    arg::arg_flag(include.obj)
 
     for (i in seq_along(treat.list)) {
       n <- length(treat.list[[i]])
 
       if (i > 1L && n != length(treat.list[[1L]])) {
-        .err("the number of units must be the same for each time point")
+        arg::err("the number of units must be the same for each time point")
       }
 
       if (nrow(covs.list[[i]]) != n) {
-        .err("treatment and covariates must have the same number of units")
+        arg::err("treatment and covariates must have the same number of units")
       }
 
       if (anyNA(treat.list[[i]])) {
-        .err("no missing values are allowed in the treatment variable. Missing values found in treat.list[[{i}]]")
+        arg::err("no missing values are allowed in the treatment variable. Missing values found in treat.list[[{i}]]")
       }
 
       treat.list[[i]] <- assign_treat_type(treat.list[[i]])
@@ -403,29 +405,29 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
       else .process_missing(missing, method)
     }
 
+    arg::when_not_null(s.weights,
+                       arg::arg_vector,
+                       arg::arg_numeric)
+
     if (is_null(s.weights)) {
       s.weights <- rep.int(1, n)
     }
     else {
-      arg_vector(s.weights)
-      arg_numeric(s.weights)
-
       .check_method_s.weights(method, s.weights)
 
       if (length(s.weights) != n) {
-        .err("{.arg s.weights} must have length equal to the number of units")
+        arg::err("{.arg s.weights} must have length equal to the number of units")
       }
     }
+
+    arg::when_not_null(by.factor,
+                       arg::arg_factor)
 
     if (is_null(by.factor)) {
       by.factor <- gl(1L, n)
     }
-    else {
-      arg_factor(by.factor)
-
-      if (length(by.factor) != n) {
-        .err("{.arg by.factor} must have length equal to the number of units")
-      }
+    else if (length(by.factor) != n) {
+      arg::err("{.arg by.factor} must have length equal to the number of units")
     }
 
     #Process moments and int
@@ -474,15 +476,15 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
 
     #Extract weights
     if (is_null(obj)) {
-      .err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::err("no object was created. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
     }
 
     if (is_null(obj$w) || all(is.na(obj$w))) {
-      .wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
+      arg::wrn("no weights were estimated. This is probably a bug, and you should report it at {.url {(.bug_report_url)}}")
     }
 
     if (!all(is.finite(obj$w))) {
-      .wrn("some weights were estimated as {.val {NA}}, which means a value was impossible to compute (e.g., Inf). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
+      arg::wrn("some weights were estimated as {.val {NA}}, which means a value was impossible to compute (e.g., {.val {Inf}}). Check for extreme values of the treatment or covariates and try removing them. Non-finite weights will be set to 0")
       obj$w[!is.finite(obj$w)] <- 0
     }
     # else if (any(!is.finite(obj$w))) probably_a_bug()
@@ -504,7 +506,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
       out$fit.obj <- fit.obj
     }
     else {
-      .wrn("{.arg include.obj} was set to {.val {TRUE}}, but no fit object was returned by the fitting function")
+      arg::wrn("{.arg include.obj} was set to {.val {TRUE}}, but no fit object was returned by the fitting function")
     }
   }
 

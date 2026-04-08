@@ -185,7 +185,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
-    .wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
+    arg::wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
     by <- A[["exact"]]
     by.arg <- "exact"
   }
@@ -198,7 +198,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
   if (is_null(formula.list) || !is.list(formula.list) ||
       !all_apply(formula.list, rlang::is_formula, lhs = TRUE)) {
-    .err("{.arg formula.list} must be a list of formulas")
+    arg::err("{.arg formula.list} must be a list of formulas")
   }
 
   for (i in seq_along(formula.list)) {
@@ -212,17 +212,17 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     treat.list[[i]] <- t.c[["treat"]]
 
     if (is_null(covs.list[[i]])) {
-      .err("no covariates were specified in the {ordinal(i)} formula")
+      arg::err("no covariates were specified in the {ordinal(i)} formula")
     }
 
     if (is_null(treat.list[[i]])) {
-      .err("no treatment variable was specified in the {ordinal(i)} formula")
+      arg::err("no treatment variable was specified in the {ordinal(i)} formula")
     }
 
     n <- length(treat.list[[i]])
 
     if (nrow(covs.list[[i]]) != n) {
-      .err("treatment and covariates must have the same number of units")
+      arg::err("the treatment and covariates must have the same number of units")
     }
 
     treat.list[[i]] <- as.treat(treat.list[[i]], process = TRUE)
@@ -230,7 +230,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     treat.name <- .attr(treat.list[[i]], "treat.name")
 
     if (anyNA(treat.list[[i]]) || !all(is.finite(treat.list[[i]]))) {
-      .err("no missing or non-finite values are allowed in the treatment variable. Missing or non-finite values found in {.var treat.name}")
+      arg::err(c("No missing or non-finite values are allowed in the treatment variable.",
+                 "i" = "Missing or non-finite values found in {.var treat.name}"))
     }
 
     names(treat.list)[i] <- treat.name
@@ -265,14 +266,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   }
   else if (is_not_null(num.formula)) {
     if (!isTRUE(stabilize)) {
-      .msg("setting {.arg stabilize} to {.val {TRUE}} based on {.arg num.formula} input")
+      arg::msg("setting {.arg stabilize} to {.val {TRUE}} based on {.arg num.formula} input")
     }
     stabilize <- TRUE
   }
 
   if (stabilize) {
     if (!is.function(method) && !.weightit_methods[[method]]$stabilize_ok) {
-      .wrn("{.arg stabilize} cannot be used with {(.method_to_phrase(method))} and will be ignored")
+      arg::wrn("{.arg stabilize} cannot be used with {(.method_to_phrase(method))} and will be ignored")
       stabilize <- FALSE
       num.formula <- NULL
     }
@@ -313,7 +314,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         A[["link"]] <- rep.int(A[["link"]], length(formula.list))
       }
       else if (length(A[["link"]]) != length(formula.list)) {
-        .err("the argument to {.arg link} must have length {.or {unique(c(1, length(formula.list)))}}")
+        arg::err("the argument to {.arg link} must have length {.or {unique(c(1, length(formula.list)))}}")
       }
     }
 
@@ -429,7 +430,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   }
 
   if (is_not_null(method) && all_the_same(w)) {
-    .wrn("all weights are {.val w[1L]}, possibly indicating an estimation failure")
+    arg::wrn("all weights are {.val w[1L]}, possibly indicating an estimation failure")
   }
 
   ## Assemble output object----
@@ -507,8 +508,8 @@ print.weightitMSM <- function(x, ...) {
                        continuous = "continuous",
                        `multi-category` =,
                        multinomial = sprintf("%s-category (%s)",
-                                                  nunique(x[["treat.list"]][[i]]),
-                                                  word_list(levels(x[["treat.list"]][[i]]), and.or = FALSE)),
+                                             nunique(x[["treat.list"]][[i]]),
+                                             word_list(levels(x[["treat.list"]][[i]]), and.or = FALSE)),
                        binary = "2-category")))
   }
 

@@ -67,18 +67,17 @@ calibrate <- function(x, ...) {
 #' @exportS3Method calibrate default
 #' @rdname calibrate
 calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = "platt", ...) {
-  arg_supplied(treat)
+  arg::arg_supplied(treat)
 
   if (length(unique(treat)) != 2L) {
-    .err("{.fun calibrate} can only be used with binary treatments")
+    arg::err("{.fun calibrate} can only be used with binary treatments")
   }
 
-  arg_numeric(x)
+  arg::arg_numeric(x)
 
-  arg_string(method)
-  method <- match_arg(method, c("platt", "isoreg"))
+  method <- arg::match_arg(method, c("platt", "isoreg"))
 
-  s.weights <- .process.s.weights(s.weights, data) %or% rep_with(1, x)
+  s.weights <- .process.s.weights(s.weights, data) %or% rep_with(1.0, x)
 
   if (method == "platt") {
     p <- glm.fit(cbind(1, x), treat, weights = s.weights,
@@ -104,11 +103,11 @@ calibrate.default <- function(x, treat, s.weights = NULL, data = NULL, method = 
 #' @rdname calibrate
 calibrate.weightit <- function(x, method = "platt", ...) {
   if (is_null(x[["ps"]])) {
-    .err("{.fun calibrate} can only be used on {.cls weightit} objects when propensity scores have been estimated")
+    arg::err("{.fun calibrate} can only be used on {.cls weightit} objects when propensity scores have been estimated")
   }
 
   if (!identical(get_treat_type(x[["treat"]]), "binary")) {
-    .err("{.fun calibrate} can only be used with binary treatments")
+    arg::err("{.fun calibrate} can only be used with binary treatments")
   }
 
   x$ps[] <- calibrate.default(x[["ps"]], treat = x[["treat"]],

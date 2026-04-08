@@ -211,13 +211,11 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
 
   sw0 <- check_if_zero(s.weights)
 
-  diagn <- diag(n)
-
   min.w <- ...get("min.w", 1e-8)
-  arg_number(min.w)
+  arg::arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  arg_number(lambda)
+  arg::arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -228,7 +226,7 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- scale(covs)
 
     tols <- ...get("tols", 0)
-    arg_number(tols)
+    arg::arg_number(tols)
     tols <- abs(tols)
   }
 
@@ -249,7 +247,7 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    arg_flag(improved)
+    arg::arg_flag(improved)
 
     nn <- tcrossprod(cbind(s.weights_n_0, s.weights_n_1))
 
@@ -262,20 +260,12 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
     q <- -((s.weights * 2 / n) %*% d) * (s.weights_n_0 + s.weights_n_1)
 
     #Constraints for positivity and sum of weights
-    Amat <- cbind(diagn, s.weights_n_0, s.weights_n_1)
+    Amat <- cbind(diag(n), s.weights_n_0, s.weights_n_1)
     lvec <- c(ifelse(sw0, 1, min.w), 1, 1)
     uvec <- c(ifelse(sw0, 1, Inf), 1, 1)
 
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
-
     if (add_constraints) {
-      #Exactly balance moments, interactions, and/or quantiles
+      #Balance moments, interactions, and/or quantiles
       covs <- .apply_moments_int_quantile(covs,
                                           moments = moments,
                                           int = int,
@@ -310,14 +300,6 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
     Amat <- cbind(diag(n0), s.weights_n_0[t0])
     lvec <- c(ifelse(sw0[t0], 1, min.w), 1)
     uvec <- c(ifelse(sw0[t0], 1, Inf), 1)
-
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -355,14 +337,6 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
     Amat <- cbind(diag(n1), s.weights_n_1[t1])
     lvec <- c(ifelse(sw0[t1], 1, min.w), 1)
     uvec <- c(ifelse(sw0[t1], 1, Inf), 1)
-
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -416,8 +390,17 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
                       ATC = diag(P) + lambda * s.weights_n_1[t1]^2 / 2)
   }
 
+  unbounded <- lvec == -Inf & uvec == Inf
+
+  if (any(unbounded)) {
+    Amat <- Amat[, !unbounded, drop = FALSE]
+    lvec <- lvec[!unbounded]
+    uvec <- uvec[!unbounded]
+  }
+
   verbosely({
-    opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
+    opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat),
+                                l = lvec, u = uvec,
                                 pars = options.list)
   }, verbose = verbose)
 
@@ -473,15 +456,13 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   sw0 <- check_if_zero(s.weights)
 
-  diagn <- diag(n)
-
   levels_treat <- levels(treat)
 
   min.w <- ...get("min.w", 1e-8)
-  arg_number(min.w)
+  arg::arg_number(min.w)
 
   lambda <- ...get("lambda", 1e-4)
-  arg_number(lambda)
+  arg::arg_number(lambda)
 
   moments <- ...get("moments", 0)
   int <- isTRUE(...get("int", FALSE))
@@ -492,7 +473,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     covs <- scale(covs)
 
     tols <- ...get("tols", 0)
-    arg_number(tols)
+    arg::arg_number(tols)
     tols <- abs(tols)
   }
 
@@ -514,7 +495,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   if (estimand == "ATE") {
     improved <- ...get("improved", TRUE)
-    arg_flag(improved)
+    arg::arg_flag(improved)
 
     nn <- tcrossprod(s.weights_n_t)
 
@@ -530,17 +511,9 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     q <- -((s.weights * 2 / n) %*% d) * rowSums(s.weights_n_t)
 
     #Constraints for positivity and sum of weights
-    Amat <- cbind(diagn, s.weights_n_t)
+    Amat <- cbind(diag(n), s.weights_n_t)
     lvec <- c(ifelse(sw0, 1, min.w), rep.int(1, length(levels_treat)))
     uvec <- c(ifelse(sw0, 1, Inf), rep.int(1, length(levels_treat)))
-
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
 
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
@@ -585,14 +558,6 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     lvec <- c(ifelse(sw0[!in_focal], 1, min.w), rep.int(1, length(non_focal)))
     uvec <- c(ifelse(sw0[!in_focal], 1, Inf), rep.int(1, length(non_focal)))
 
-    unbounded <- lvec == -Inf & uvec == Inf
-
-    if (any(unbounded)) {
-      Amat <- Amat[, !unbounded, drop = FALSE]
-      lvec <- lvec[!unbounded]
-      uvec <- uvec[!unbounded]
-    }
-
     if (add_constraints) {
       #Exactly balance moments, interactions, and/or quantiles
       covs <- .apply_moments_int_quantile(covs,
@@ -634,6 +599,14 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
   diag(P) <- diag(P) + lambda / n^2
 
+  unbounded <- lvec == -Inf & uvec == Inf
+
+  if (any(unbounded)) {
+    Amat <- Amat[, !unbounded, drop = FALSE]
+    lvec <- lvec[!unbounded]
+    uvec <- uvec[!unbounded]
+  }
+
   verbosely({
     opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat), l = lvec, u = uvec,
                                 pars = options.list)
@@ -664,9 +637,8 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
 .process_kernel <- function(X, s.weights, subset, kernel = "gaussian",
                             bw_scale = 1, nu = NULL, nsim = 5000) {
-  arg_string(kernel)
 
-  kernel <- match_arg(kernel, c("gaussian", "matern", "energy", "laplace", "t"))
+  kernel <- arg::match_arg(kernel, c("gaussian", "matern", "energy", "laplace", "t"))
 
   transform_method <- {
     if (kernel %in% c("gaussian", "matern")) "mahalanobis"
@@ -687,8 +659,8 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     return(-D)
   }
 
-  arg_number(bw_scale)
-  arg_gt(bw_scale, 0)
+  arg::arg_number(bw_scale)
+  arg::arg_gt(bw_scale, 0)
 
   bw <- median(D[lower.tri(D)]) * bw_scale
 
@@ -701,9 +673,9 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       nu <- 3/2
     }
 
-    arg_number(nu)
-    arg_gt(nu, 0)
-    arg_lte(nu, 21/2)
+    arg::arg_number(nu)
+    arg::arg_gt(nu, 0)
+    arg::arg_lte(nu, 21/2)
 
     if (nu == 1/2) {
       return(exp(-D / bw))
@@ -731,11 +703,11 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     nu <- 5
   }
 
-  arg_number(nu)
-  arg_gt(nu, 0)
+  arg::arg_number(nu)
+  arg::arg_gt(nu, 0)
 
-  arg_count(nsim)
-  arg_gte(nsim, 10)
+  arg::arg_count(nsim)
+  arg::arg_gte(nsim, 10)
 
   V.random <- matrix(rt(ncol(X) * nsim, df = nu) / bw,
                      nrow = nsim)

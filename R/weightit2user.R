@@ -179,23 +179,23 @@ weightit2user <- function(Fun, covs, treat, s.weights, subset, estimand, focal,
     names(obj)[names(obj) == "weights"] <- "w"
   }
   else {
-    .err('the output of the user-provided function must be a list with an entry named {.or {.val {c("w", "weights")}}} containing the estimated weights')
+    arg::err('the output of the user-provided function must be a list with an entry named {.or {.val {c("w", "weights")}}} containing the estimated weights')
   }
 
   if (is_null(obj[["w"]])) {
-    .err("no weights were estimated")
+    arg::err("no weights were estimated")
   }
 
   if (!is.numeric(obj[["w"]]) || length(dim(obj[["w"]])) > 1L) {
-    .err('the {.or {.val {c("w", "weights")}}} entry of the output of the user-provided function must be a numeric vector of weights')
+    arg::err('the {.or {.val {c("w", "weights")}}} entry of the output of the user-provided function must be a numeric vector of weights')
   }
 
   if (all(is.na(obj[["w"]]))) {
-    .err("all weights were estimated as {.val {NA}}")
+    arg::err("all weights were estimated as {.val {NA}}")
   }
 
   if (length(obj[["w"]]) != length(treat)) {
-    .err('{length(obj[["w"]])} weight{?s} {?was/were} estimated, but there are {length(treat)} unit{?s}')
+    arg::err('{length(obj[["w"]])} weight{?s} {?was/were} estimated, but there are {length(treat)} unit{?s}')
   }
 
   obj
@@ -257,23 +257,23 @@ weightitMSM2user <- function(Fun, covs.list, treat.list, s.weights, subset, stab
     names(obj)[names(obj) == "weights"] <- "w"
   }
   else {
-    .err('the output of the user-provided function must be a list with an entry named {.or {.val {c("w", "weights")}}} containing the estimated weights')
+    arg::err('the output of the user-provided function must be a list with an entry named {.or {.val {c("w", "weights")}}} containing the estimated weights')
   }
 
   if (is_null(obj[["w"]])) {
-    .err("no weights were estimated")
+    arg::err("no weights were estimated")
   }
 
   if (!is.numeric(obj[["w"]]) || length(dim(obj[["w"]])) > 1L) {
-    .err('the {.or {.val {c("w", "weights")}}} entry of the output of the user-provided function must be a numeric vector of weights')
+    arg::err('the {.or {.val {c("w", "weights")}}} entry of the output of the user-provided function must be a numeric vector of weights')
   }
 
   if (all(is.na(obj[["w"]]))) {
-    .err("all weights were generated as {.val {NA}}")
+    arg::err("all weights were generated as {.val {NA}}")
   }
 
   if (length(obj[["w"]]) != length(treat.list[[1L]])) {
-    .err('{length(obj[["w"]])} weight{?s} {?was/were} estimated, but there are {length(treat.list[[1L]])} unit{?s}')
+    arg::err('{length(obj[["w"]])} weight{?s} {?was/were} estimated, but there are {length(treat.list[[1L]])} unit{?s}')
   }
 
   obj

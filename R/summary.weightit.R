@@ -57,9 +57,9 @@
 #' @exportS3Method summary weightit
 summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...) {
 
-  arg_count(top)
-  arg_flag(ignore.s.weights)
-  arg_flag(weight.range)
+  arg::arg_count(top)
+  arg::arg_flag(ignore.s.weights)
+  arg::arg_flag(weight.range)
 
   outnames <- c("weight.range", "weight.top", "weight.mean",
                 "coef.of.var", "scaled.mad", "negative.entropy",
@@ -219,10 +219,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
     bins <- binwidth <- NULL
   }
 
-  subtitle <- {
-    if (is_not_null(focal)) sprintf("For Units Not in Treatment Group %s", add_quotes(focal))
-    else NULL
-  }
+  subtitle <- if (is_not_null(focal)) sprintf("For Units Not in Treatment Group %s", add_quotes(focal))
 
   if (treat.type == "continuous") {
     p <- ggplot(data = data.frame(w), mapping = aes(x = .data$w)) +
@@ -273,9 +270,9 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
 #' @rdname summary.weightit
 summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...) {
 
-  arg_count(top)
-  arg_flag(ignore.s.weights)
-  arg_flag(weight.range)
+  arg::arg_count(top)
+  arg::arg_flag(ignore.s.weights)
+  arg::arg_flag(weight.range)
 
   out.list <- make_list(names(object$treat.list))
 
@@ -297,7 +294,7 @@ summary.weightitMSM <- function(object, top = 5L, ignore.s.weights = FALSE, weig
 
 #' @exportS3Method print summary.weightitMSM
 print.summary.weightitMSM <- function(x, digits = 3L, ...) {
-  arg_whole_number(digits)
+  arg::arg_whole_number(digits)
 
   only.one <- length(x) == 1L || all_apply(x, function(y) isTRUE(all.equal(x[[1L]], y)))
 
@@ -323,7 +320,7 @@ print.summary.weightitMSM <- function(x, digits = 3L, ...) {
 #' @rdname summary.weightit
 plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1L, ...) {
   if (!is.numeric(time) || length(time) != 1L || time %nin% seq_along(x)) {
-    .err("{.arg time} must be a number corresponding to the time point for which to display the distribution of weights")
+    arg::err("{.arg time} must be a number corresponding to the time point for which to display the distribution of weights")
   }
 
   plot.summary.weightit(x[[time]], binwidth = binwidth, bins = bins, ...) +

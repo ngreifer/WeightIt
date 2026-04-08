@@ -115,7 +115,7 @@
 sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL, smooth = FALSE, full.search) {
 
   if (is_null(obj2) && is_null(moderator)) {
-    .err("either {.arg obj2} or {.arg moderator} must be specified")
+    arg::err("either {.arg obj2} or {.arg moderator} must be specified")
   }
 
   treat <- obj[["treat"]]
@@ -133,7 +133,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   if (is_not_null(obj2)) {
     if (!inherits(obj2, "weightit")) {
-      .err("{.arg obj2} must be a {.cls weightit} object, ideally with a {.field by} component")
+      arg::err("{.arg obj2} must be a {.cls weightit} object, ideally with a {.field by} component")
     }
 
     if (is_not_null(obj2[["by"]])) {
@@ -143,11 +143,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
         moderator.factor <- .attr(processed.moderator, "by.factor")
       }
       else if (is_null(processed.moderator)) {
-        .err("cannot figure out moderator. Please supply a value to {.arg moderator}")
+        arg::err("cannot figure out moderator. Please supply a value to {.arg moderator}")
       }
     }
     else if (is_null(processed.moderator)) {
-      .err("no moderator was specified")
+      arg::err("no moderator was specified")
     }
   }
   else {
@@ -167,7 +167,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
   }
 
   if (smooth && (is_null(obj[["ps"]]) || is_null(obj2[["ps"]]))) {
-    .err("smooth SBPS can only be used with methods that produce a propensity score")
+    arg::err("smooth SBPS can only be used with methods that produce a propensity score")
   }
 
   if (is_null(formula)) {
@@ -179,15 +179,15 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
     get_covs_and_treat_from_formula2(combined.data)
 
   if (is_null(t.c[["reported.covs"]])) {
-    .err("no covariates were found")
+    arg::err("no covariates were found")
   }
 
   covs <- t.c[["model.covs"]]
   s.weights <- obj[["s.weights"]]
 
   mod.split <- cobalt::splitfactor(moderator.factor, drop.first = "if2")
-  same.as.moderator <- apply(covs, 2L, function(c) {
-    any_apply(mod.split, equivalent.factors, c)
+  same.as.moderator <- apply(covs, 2L, function(.c) {
+    any_apply(mod.split, equivalent.factors, .c)
   })
   covs <- covs[, !same.as.moderator, drop = FALSE]
 
@@ -200,7 +200,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 
   if (smooth) {
     if (!missing(full.search)) {
-      .wrn("{.arg full.search} is ignored when {.code smooth = TRUE}")
+      arg::wrn("{.arg full.search} is ignored when {.code smooth = TRUE}")
     }
 
     ps_o <- obj[["ps"]]
@@ -305,7 +305,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       full.search <- (length(R) <= 8)
     }
     else {
-      arg_flag(full.search)
+      arg::arg_flag(full.search)
     }
 
     get_w <- function(s, moderator.factor, w_o, w_s) {

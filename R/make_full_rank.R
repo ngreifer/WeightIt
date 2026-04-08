@@ -52,7 +52,7 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
 
   if (is.data.frame(mat)) {
     if (!all_apply(mat, is.numeric)) {
-      .err("all columns in {.arg mat} must be numeric")
+      arg::err("all columns in {.arg mat} must be numeric")
     }
 
     mat <- as.matrix(mat)
@@ -60,16 +60,16 @@ make_full_rank <- function(mat, with.intercept = TRUE) {
   }
   else if (is.matrix(mat)) {
     if (!is.numeric(mat)) {
-      .err("{.arg mat} must be a numeric matrix")
+      arg::err("{.arg mat} must be a numeric matrix")
     }
 
     is.mat <- TRUE
   }
   else {
-    .err("{.arg mat} must be a numeric matrix or data frame")
+    arg::err("{.arg mat} must be a numeric matrix or data frame")
   }
 
-  arg_no_NA(mat)
+  arg::arg_no_NA(mat)
 
   keep <- rep.int(TRUE, ncol(mat))
 

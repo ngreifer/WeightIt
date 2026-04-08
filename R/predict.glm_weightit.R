@@ -143,22 +143,22 @@
 #' @name predict.glm_weightit
 predict.glm_weightit <- function(object, newdata = NULL, type = "response",
                                  na.action = na.pass, ...) {
-  arg_string(type)
+  arg::arg_string(type)
   type <- switch(type, probs = "response", lp = "link", type)
-  type <- match_arg(type, c("response", "link"))
+  type <- arg::match_arg(type, c("response", "link"))
 
   stats::predict.glm(object, newdata = newdata, type = type,
                      na.action = na.action, se.fit = FALSE,
                      dispersion = NULL, terms = NULL, ...)
 }
 
-#' @exportS3Method predict ordinal_weightit
+#' @exportS3Method predict multinom_weightit
 #' @rdname predict.glm_weightit
-predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
+predict.multinom_weightit <- function(object, newdata = NULL, type = "response",
                                      na.action = na.pass, values = NULL,
                                      level = NULL, ...) {
 
-  arg_string(type)
+  arg::arg_string(type)
   old_type <- type
   type <- switch(old_type, probs = "response", lp = "link", lv = "link", old_type)
 
@@ -166,17 +166,17 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 
   acceptable_types <- c("response", "link"[ord], "class", "mean", "stdlv"[ord])
 
-  type <- match_arg(type, acceptable_types)
+  type <- arg::match_arg(type, acceptable_types)
 
   if (ord && type == "stdlv" && !object$family$link %in% c("probit", "logit", "cloglog", "loglog")) {
-    .err('{.code type = "stdlv"} cannot be used with {.code link = "{object$family$link}"}')
+    arg::err('{.code type = "stdlv"} cannot be used with {.code link = "{object$family$link}"}')
   }
 
   outcome_levels <- colnames(object$fitted.values)
 
   if (is_not_null(level)) {
     if (type != "response") {
-      .wrn('{.arg level} is ignored when {.code type = "{old_type}"}')
+      arg::wrn('{.arg level} is ignored when {.code type = "{old_type}"}')
 
       level <- NULL
     }
@@ -187,17 +187,17 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
       level <- as.integer(trunc(level))
     }
     else {
-      .err("{.arg level} must be the name or index of a response level")
+      arg::err("{.arg level} must be the name or index of a response level")
     }
   }
 
   if (type == "mean") {
     if (is_not_null(values)) {
-      arg_numeric(values)
-      arg_named(values)
+      arg::arg_numeric(values)
+      arg::arg_named(values)
 
       if (!all(outcome_levels %in% names(values))) {
-        .err('when {.code type = "mean"}, all outcome levels must be named in {.arg values}')
+        arg::err('when {.code type = "mean"}, all outcome levels must be named in {.arg values}')
       }
     }
     else if (can_str2num(outcome_levels)) {
@@ -206,11 +206,11 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
         setNames(outcome_levels)
     }
     else {
-      .err('when {.code type = "mean"} and {.arg values} is not set, the outcome levels must be able to be read as numbers')
+      arg::err('when {.code type = "mean"} and {.arg values} is not set, the outcome levels must be able to be read as numbers')
     }
   }
   else if (is_not_null(values)) {
-    .wrn('{.arg values} is ignored when {.code type = "{old_type}"}')
+    arg::wrn('{.arg values} is ignored when {.code type = "{old_type}"}')
   }
 
   na.act <- object$na.action
@@ -218,11 +218,9 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
 
   if (is_null(newdata)) {
     if (type == "response") {
-      if (is_not_null(level)) {
-        out <- object$fitted.values[, level]
-      }
-      else {
-        out <- object$fitted.values
+      out <- {
+        if (is_null(level)) object$fitted.values
+        else object$fitted.values[, level]
       }
     }
     else if (type == "link") {
@@ -330,13 +328,13 @@ predict.ordinal_weightit <- function(object, newdata = NULL, type = "response",
                   labels = colnames(p),
                   ordered = ord)
   }
-  else if (type == "mean") {
+  else {#if (type == "mean") {
     out <- drop(p %*% values[colnames(p)])
   }
 
   out
 }
 
-#' @exportS3Method predict multinom_weightit
+#' @exportS3Method predict ordinal_weightit
 #' @rdname predict.glm_weightit
-predict.multinom_weightit <- predict.ordinal_weightit
+predict.ordinal_weightit <- predict.multinom_weightit

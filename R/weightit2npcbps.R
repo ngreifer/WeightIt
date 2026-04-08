@@ -140,6 +140,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, verbose, ..
   new.data <- data.frame(treat = treat, covs)
 
   corprior <- ...get("corprior", .01)
+  arg::arg_number(corprior)
 
   tryCatch({verbosely({
     fit <- CBPS::npCBPS(formula(new.data),
@@ -148,7 +149,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, verbose, ..
                         print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
-    .err("(from {.fun CBPS::npCBPS}): {conditionMessage(e)}")
+    arg::err("(from {.fun CBPS::npCBPS}): {conditionMessage(e)}")
   })
 
   w <- fit$weights
@@ -182,6 +183,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, verbos
   new.data <- data.frame(treat = treat, covs)
 
   corprior <- ...get("corprior", .01)
+  arg::arg_number(corprior)
 
   tryCatch({verbosely({
     fit <- CBPS::npCBPS(formula(new.data),
@@ -190,7 +192,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, verbos
                         print.level = 1)
   }, verbose = verbose)},
   error = function(e) {
-    .err("(from {.fun CBPS::npCBPS}): {conditionMessage(e)}")
+    arg::err("(from {.fun CBPS::npCBPS}): {conditionMessage(e)}")
   })
 
   w <- fit$weights

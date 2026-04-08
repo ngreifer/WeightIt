@@ -284,14 +284,14 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
-  arg_character(SL.library)
+  arg::arg_character(SL.library)
 
   if (is_null(cvControl[["stratifyCV"]])) {
     cvControl[["stratifyCV"]] <- TRUE
   }
 
   discrete <- ...get("discrete", FALSE)
-  arg_flag(discrete)
+  arg::arg_flag(discrete)
 
   if (identical(SL.method, "method.balance")) {
 
@@ -299,10 +299,10 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
 
     if (is_null(criterion)) {
       criterion <- "smd.mean"
-      .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
+      arg::wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
     }
     else {
-      arg_string(criterion)
+      arg::arg_string(criterion)
     }
 
     available.criteria <- cobalt::available.stats("binary")
@@ -315,7 +315,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
       }
     }
 
-    criterion <- match_arg(criterion, available.criteria)
+    criterion <- arg::match_arg(criterion, available.criteria)
 
     init <- cobalt::bal.init(covs,
                              treat = treat,
@@ -351,7 +351,7 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
                         env = env))
   }, verbose = verbose)},
   error = function(e) {
-    .err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
+    arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
   })
 
   ps <- {
@@ -395,13 +395,13 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
-  arg_character(SL.library)
+  arg::arg_character(SL.library)
 
   discrete <- ...get("discrete", FALSE)
-  arg_flag(discrete)
+  arg::arg_flag(discrete)
 
   if (identical(SL.method, "method.balance")) {
-    .err('{.val method.balance} cannot be used with multi-category treatments')
+    arg::err('{.val method.balance} cannot be used with multi-category treatments')
   }
 
   fit.list <- info <- make_list(levels(treat))
@@ -426,7 +426,7 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
                                     env = env))
     }, verbose = verbose)},
     error = function(e) {
-      .err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
+      arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
     })
 
     ps[[i]] <- {
@@ -482,10 +482,10 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
-  arg_character(SL.library)
+  arg::arg_character(SL.library)
 
   discrete <- ...get("discrete", FALSE)
-  arg_flag(discrete)
+  arg::arg_flag(discrete)
 
   if (identical(SL.method, "method.balance")) {
 
@@ -493,15 +493,15 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
     if (is_null(criterion)) {
       criterion <- "p.mean"
-      .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
+      arg::wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
     }
     else {
-      arg_string(criterion)
+      arg::arg_string(criterion)
     }
 
     available.criteria <- cobalt::available.stats("continuous")
 
-    criterion <- match_arg(criterion, available.criteria)
+    criterion <- arg::match_arg(criterion, available.criteria)
 
     init <- cobalt::bal.init(covs,
                              treat = treat,
@@ -534,7 +534,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                         env = env))
   }, verbose = verbose)},
   error = function(e) {
-    .err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
+    arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
   })
 
   gp.score <- {

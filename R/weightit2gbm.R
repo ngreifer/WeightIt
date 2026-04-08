@@ -309,10 +309,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (is_null(criterion)) {
     criterion <- "smd.mean"
-    .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
+    arg::wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
   }
   else {
-    arg_string(criterion)
+    arg::arg_string(criterion)
   }
 
   available.criteria <- cobalt::available.stats(switch(treat.type,
@@ -334,13 +334,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
     if (!startsWith(criterion, "cv") ||
         !can_str2num(substr(criterion, 3L, nchar(criterion)))) {
-      .err('{.arg criterion} must be one of {.or {.val {c(available.criteria, "cv{#}")}}}')
+      arg::err('{.arg criterion} must be one of {.or {.val {c(available.criteria, "cv{#}")}}}')
     }
 
     cv <- round(str2num(substr(criterion, 3L, nchar(criterion))))
 
     if (cv < 2) {
-      .err("at least 2 CV-folds must be specified in {.arg criterion}")
+      arg::err("at least 2 CV-folds must be specified in {.arg criterion}")
     }
   }
   else {
@@ -352,17 +352,17 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   trim.at <- ...get("trim.at", 0)
 
   n.trees <- ...get("n.trees", 1e4L)
-  arg_count(n.trees)
-  arg_gt(n.trees, 1L)
+  arg::arg_count(n.trees)
+  arg::arg_gt(n.trees, 1L)
 
-  arg_names <- setdiff(names(formals(gbm::gbm.fit)),
+  A_names <- setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
                          "response.name", "group",
                          "n.trees", tunable))
 
-  A <- ...mget(arg_names)
+  A <- ...mget(A_names)
 
-  for (f in arg_names) {
+  for (f in A_names) {
     if (is_null(A[[f]])) {
       A[f] <- list(switch(f,
                           bag.fraction = 1,
@@ -383,13 +383,13 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (cv == 0) {
     start.tree <- ...get("start.tree", 1L)
-    arg_count(start.tree)
-    arg_range(start.tree, c(1L, n.trees))
+    arg::arg_count(start.tree)
+    arg::arg_between(start.tree, c(1, n.trees))
 
     n.grid <- ...get("n.grid",
                      round(1 + sqrt(2 * (n.trees - start.tree + 1))))
-    arg_count(n.grid)
-    arg_range(n.grid, c(2L, n.trees))
+    arg::arg_count(n.grid)
+    arg::arg_between(n.grid, c(2, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -417,20 +417,20 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
   ## Distribution
   distribution <- ...get("distribution", available.distributions[1L])
-  B[["distribution"]] <- match_arg(distribution, available.distributions, several.ok = TRUE)
+  B[["distribution"]] <- arg::match_arg(distribution, available.distributions, several.ok = TRUE)
 
   ## Offset
   use.offset <- ...get("use.offset", FALSE)
-  arg_logical(use.offset)
-  arg_no_NA(use.offset)
+  arg::arg_logical(use.offset)
+  arg::arg_no_NA(use.offset)
 
   if (any(use.offset)) {
     if (treat.type %in% c("multinomial", "multi-category")) {
-      .err("{.arg use.offset} cannot be used with multi-category treatments")
+      arg::err("{.arg use.offset} cannot be used with multi-category treatments")
     }
 
     if (!identical(B[["distribution"]], "bernoulli")) {
-      .err('{.arg use.offset} can only be used with {.code distribution = "bernoulli"}')
+      arg::err('{.arg use.offset} can only be used with {.code distribution = "bernoulli"}')
     }
 
     fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
@@ -479,7 +479,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       iters.grid <- unique(round(seq(start.tree, n.trees, length.out = n.grid)))
 
       if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) {
-        .err("a problem has occurred")
+        arg::err("a problem has occurred")
       }
 
       ps <- {
@@ -513,7 +513,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         iters.to.check <- iters[between(iters, iters[it])]
 
         if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) {
-          .err("a problem has occurred")
+          arg::err("a problem has occurred")
         }
 
         ps <- {
@@ -646,10 +646,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (is_null(criterion)) {
     criterion <- "p.mean"
-    .wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
+    arg::wrn('no {.arg criterion} was provided. Using {.val {criterion}}')
   }
   else {
-    arg_string(criterion)
+    arg::arg_string(criterion)
   }
 
   available.criteria <- cobalt::available.stats("continuous")
@@ -660,13 +660,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   if (anyNA(s.m.matches) || s.m.matches == 0L) {
     if (!startsWith(criterion, "cv") ||
         !can_str2num(substr(criterion, 3L, nchar(criterion)))) {
-      .err('{.arg criterion} must be one of {.or {.val {c(available.criteria, "cv{#}")}}}')
+      arg::err('{.arg criterion} must be one of {.or {.val {c(available.criteria, "cv{#}")}}}')
     }
 
     cv <- round(str2num(substr(criterion, 3L, nchar(criterion))))
 
     if (cv < 2) {
-      .err("at least 2 CV-folds must be specified in {.arg criterion}")
+      arg::err("at least 2 CV-folds must be specified in {.arg criterion}")
     }
   }
   else {
@@ -678,17 +678,17 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   trim.at <- ...get("trim.at", 0)
 
   n.trees <- ...get("n.trees", 2e4L)
-  arg_count(n.trees)
-  arg_gt(n.trees, 1L)
+  arg::arg_count(n.trees)
+  arg::arg_gt(n.trees, 1L)
 
-  arg_names <- setdiff(names(formals(gbm::gbm.fit)),
+  A_names <- setdiff(names(formals(gbm::gbm.fit)),
                        c("x", "y", "misc", "w", "verbose", "var.names",
                          "response.name", "group",
                          "n.trees", tunable))
 
-  A <- ...mget(arg_names)
+  A <- ...mget(A_names)
 
-  for (f in arg_names) {
+  for (f in A_names) {
     if (is_null(A[[f]])) {
       A[f] <- list(switch(f,
                           bag.fraction = 1,
@@ -701,13 +701,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (cv == 0) {
     start.tree <- ...get("start.tree", 1L)
-    arg_count(start.tree)
-    arg_range(start.tree, c(1L, n.trees))
+    arg::arg_count(start.tree)
+    arg::arg_between(start.tree, c(1L, n.trees))
 
     n.grid <- ...get("n.grid",
                      round(1 + sqrt(2 * (n.trees - start.tree + 1))))
-    arg_count(n.grid)
-    arg_range(n.grid, c(2L, n.trees))
+    arg::arg_count(n.grid)
+    arg::arg_between(n.grid, c(2L, n.trees))
 
     init <- cobalt::bal.init(
       if (!anyNA(covs)) covs
@@ -736,13 +736,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   distribution <- ...get("distribution")
   B[["distribution"]] <- {
     if (is_null(distribution)) available.distributions[1L]
-    else match_arg(distribution, available.distributions, several.ok = TRUE)
+    else arg::match_arg(distribution, available.distributions, several.ok = TRUE)
   }
 
   ## Offset
   use.offset <- ...get("use.offset", FALSE)
-  arg_logical(use.offset)
-  arg_no_NA(use.offset)
+  arg::arg_logical(use.offset)
+  arg::arg_no_NA(use.offset)
 
   if (any(use.offset)) {
     fit <- lm.wfit(x = as.matrix(cbind(1, covs)), y = treat,
@@ -814,7 +814,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       iters.grid <- unique(round(seq(start.tree, n.trees, length.out = n.grid)))
 
       if (is_null(iters.grid) || anyNA(iters.grid) || any(iters.grid > n.trees)) {
-        .err("a problem has occurred")
+        arg::err("a problem has occurred")
       }
 
       gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
@@ -846,7 +846,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         iters.to.check <- iters[between(iters, iters[it])]
 
         if (is_null(iters.to.check) || anyNA(iters.to.check) || any(iters.to.check > n.trees)) {
-          .err("a problem has occurred")
+          arg::err("a problem has occurred")
         }
 
         gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)

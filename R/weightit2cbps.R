@@ -273,47 +273,44 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (rlang::is_installed("rootSolve")) {
-      solver <- "multiroot"
-    }
-    else {
-      solver <- "optim"
+    solver <- {
+      if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
     }
   }
   else {
-    arg_string(solver)
-    solver <- match_arg(solver, c("optim", "multiroot"))
-  }
+    solver <- arg::match_arg(solver, c("optim", "multiroot"))
 
-  if (solver == "multiroot") {
-    rlang::check_installed("rootSolve")
+    if (solver == "multiroot") {
+      rlang::check_installed("rootSolve")
+    }
   }
 
   over <- ...get("over", FALSE)
-  arg_flag(over)
+  arg::arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    arg_flag(twostep)
+    arg::arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
+    arg::wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  arg_number(reltol)
+  arg::arg_number(reltol)
 
   maxit <- ...get("maxit", 5e3L)
-  arg_count(maxit)
+  arg::arg_count(maxit)
 
   N <- sum(s.weights)
 
   link <- ...get("link", "logit")
 
   if (rlang::is_string(link)) {
-    arg_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit",
-                       "log", "clog", "identity"))
+    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit",
+                             "log", "clog", "identity"))
 
     link <- .make_link(link)
 
@@ -332,7 +329,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err('{.arg link} must be a string or an object of class {.cls link-glm}')
+    arg::err('{.arg link} must be a string or an object of class {.cls link-glm}')
   }
 
   .fam <- quasibinomial(link)
@@ -483,40 +480,37 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   p.score <- .fam$linkinv(drop(mod_covs %*% par_out))
 
   if (!isTRUE(all.equal(out$converge, 0))) {
-    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
+    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   w <- .get_w_from_ps_internal_bin(p.score, treat, estimand = estimand,
                                    stabilize = stabilize)
 
-  Mparts <- NULL
-  if (!over) {
-    Mparts <- list(
-      psi_treat = function(Btreat, Xtreat, A, SW) {
-        psi_bal(Btreat, Xtreat, Xtreat, A, SW)
-      },
-      wfun = function(Btreat, Xtreat, A) {
-        ps <- .fam$linkinv(drop(Xtreat %*% Btreat))
-        .get_w_from_ps_internal_bin(ps, A, estimand = estimand,
-                                    stabilize = stabilize)
-      },
-      dw_dBtreat = function(Btreat, Xtreat, A, SW) {
-        XB <- drop(Xtreat %*% Btreat)
-        ps <- .fam$linkinv(XB)
-        .dw_dp_bin(ps, A, estimand = estimand) * .fam$mu.eta(XB) * Xtreat
-      },
-      hess_treat = function(Btreat, Xtreat, A, SW) {
-        XB <- drop(Xtreat %*% Btreat)
-        ps <- .fam$linkinv(XB)
+  Mparts <- if (!over) {list(
+    psi_treat = function(Btreat, Xtreat, A, SW) {
+      psi_bal(Btreat, Xtreat, Xtreat, A, SW)
+    },
+    wfun = function(Btreat, Xtreat, A) {
+      ps <- .fam$linkinv(drop(Xtreat %*% Btreat))
+      .get_w_from_ps_internal_bin(ps, A, estimand = estimand,
+                                  stabilize = stabilize)
+    },
+    dw_dBtreat = function(Btreat, Xtreat, A, SW) {
+      XB <- drop(Xtreat %*% Btreat)
+      ps <- .fam$linkinv(XB)
+      .dw_dp_bin(ps, A, estimand = estimand) * .fam$mu.eta(XB) * Xtreat
+    },
+    hess_treat = function(Btreat, Xtreat, A, SW) {
+      XB <- drop(Xtreat %*% Btreat)
+      ps <- .fam$linkinv(XB)
 
-        dw <- .dw_dp_bin(ps, A, estimand = estimand) * .fam$mu.eta(XB) * SW
-        crossprod(Xtreat, dw * (2 * A - 1) * Xtreat)
-      },
-      Xtreat = mod_covs,
-      A = treat,
-      btreat = par_out
-    )
-  }
+      dw <- .dw_dp_bin(ps, A, estimand = estimand) * .fam$mu.eta(XB) * SW
+      crossprod(Xtreat, dw * (2 * A - 1) * Xtreat)
+    },
+    Xtreat = mod_covs,
+    A = treat,
+    btreat = par_out
+  )}
 
   list(w = w, ps = p.score, fit.obj = out,
        Mparts = Mparts)
@@ -548,39 +542,36 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (rlang::is_installed("rootSolve")) {
-      solver <- "multiroot"
-    }
-    else {
-      solver <- "optim"
+    solver <- {
+      if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
     }
   }
   else {
-    arg_string(solver)
-    solver <- match_arg(solver, c("optim", "multiroot"))
-  }
+    solver <- arg::match_arg(solver, c("optim", "multiroot"))
 
-  if (solver == "multiroot") {
-    rlang::check_installed("rootSolve")
+    if (solver == "multiroot") {
+      rlang::check_installed("rootSolve")
+    }
   }
 
   over <- ...get("over", FALSE)
-  arg_flag(over)
+  arg::arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    arg_flag(twostep)
+    arg::arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
+    arg::wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  arg_number(reltol)
+  arg::arg_number(reltol)
 
   maxit <- ...get("maxit", 1e3L)
-  arg_count(maxit)
+  arg::arg_count(maxit)
 
   N <- sum(s.weights)
 
@@ -812,7 +803,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   if (!isTRUE(all.equal(out$converge, 0))) {
-    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
+    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   pp <- get_pp(par_out, mod_covs)
@@ -824,48 +815,45 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
 
   out$pp <- pp
 
-  Mparts <- NULL
-  if (!over) {
-    Mparts <- list(
-      psi_treat = function(Btreat, Xtreat, A, SW) {
-        psi_bal(Btreat, Xtreat, Xtreat, A, SW)
-      },
-      wfun = function(Btreat, Xtreat, A) {
-        ps <- get_pp(Btreat, Xtreat)
-        .get_w_from_ps_internal_multi(ps, A, estimand = estimand, focal = focal,
-                                      stabilize = stabilize)
-      },
-      dw_dBtreat = function(Btreat, Xtreat, A, SW) {
-        ps <- get_pp(Btreat, Xtreat)
-        dw <- .dw_dp_multi(ps, A, estimand = estimand, focal = focal)
+  Mparts <- if (!over) {list(
+    psi_treat = function(Btreat, Xtreat, A, SW) {
+      psi_bal(Btreat, Xtreat, Xtreat, A, SW)
+    },
+    wfun = function(Btreat, Xtreat, A) {
+      ps <- get_pp(Btreat, Xtreat)
+      .get_w_from_ps_internal_multi(ps, A, estimand = estimand, focal = focal,
+                                    stabilize = stabilize)
+    },
+    dw_dBtreat = function(Btreat, Xtreat, A, SW) {
+      ps <- get_pp(Btreat, Xtreat)
+      dw <- .dw_dp_multi(ps, A, estimand = estimand, focal = focal)
 
-        do.call("cbind", lapply(levels(A)[-1L], function(i) {
-          Xtreat * Reduce("+", lapply(levels(A), function(j) {
-            dw[, j] * ps[, j] * ((i == j) - ps[, i])
-          }))
+      do.call("cbind", lapply(levels(A)[-1L], function(i) {
+        Xtreat * Reduce("+", lapply(levels(A), function(j) {
+          dw[, j] * ps[, j] * ((i == j) - ps[, i])
         }))
-      },
-      hess_treat = function(Btreat, Xtreat, A, SW) {
-        ps <- get_pp(Btreat, Xtreat)
-        dw <- .dw_dp_multi(ps, A, estimand = estimand, focal = focal)
+      }))
+    },
+    hess_treat = function(Btreat, Xtreat, A, SW) {
+      ps <- get_pp(Btreat, Xtreat)
+      dw <- .dw_dp_multi(ps, A, estimand = estimand, focal = focal)
 
-        dpsi_dw <- do.call("cbind", lapply(levels(A)[-1L], function(i) {
-          ((A == levels(A)[1L]) - (A == i)) * SW * Xtreat
+      dpsi_dw <- do.call("cbind", lapply(levels(A)[-1L], function(i) {
+        ((A == levels(A)[1L]) - (A == i)) * SW * Xtreat
+      }))
+
+      dw_dB <- do.call("cbind", lapply(levels(A)[-1L], function(i) {
+        Xtreat * Reduce("+", lapply(levels(A), function(j) {
+          dw[, j] * ps[, j] * ((i == j) - ps[, i])
         }))
+      }))
 
-        dw_dB <- do.call("cbind", lapply(levels(A)[-1L], function(i) {
-          Xtreat * Reduce("+", lapply(levels(A), function(j) {
-            dw[, j] * ps[, j] * ((i == j) - ps[, i])
-          }))
-        }))
-
-        crossprod(dpsi_dw, dw_dB)
-      },
-      Xtreat = mod_covs,
-      A = treat,
-      btreat = par_out
-    )
-  }
+      crossprod(dpsi_dw, dw_dB)
+    },
+    Xtreat = mod_covs,
+    A = treat,
+    btreat = par_out
+  )}
 
   list(w = w, fit.obj = out,
        Mparts = Mparts)
@@ -900,39 +888,36 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
   solver <- ...get("solver", NULL)
   if (is_null(solver)) {
-    if (rlang::is_installed("rootSolve")) {
-      solver <- "multiroot"
-    }
-    else {
-      solver <- "optim"
+    solver <- {
+      if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
     }
   }
   else {
-    arg_string(solver)
-    solver <- match_arg(solver, c("optim", "multiroot"))
-  }
+    solver <- arg::match_arg(solver, c("optim", "multiroot"))
 
-  if (solver == "multiroot") {
-    rlang::check_installed("rootSolve")
+    if (solver == "multiroot") {
+      rlang::check_installed("rootSolve")
+    }
   }
 
   over <- ...get("over", FALSE)
-  arg_flag(over)
+  arg::arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    arg_flag(twostep)
+    arg::arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
+    arg::wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  arg_number(reltol)
+  arg::arg_number(reltol)
 
   maxit <- ...get("maxit", 1e4L)
-  arg_count(maxit)
+  arg::arg_count(maxit)
 
   s.weights <- s.weights / mean_fast(s.weights)
 
@@ -1072,7 +1057,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   }
 
   if (!isTRUE(all.equal(out$converge, 0))) {
-    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
+    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   un_s2 <- exp(par_out[1L])
@@ -1150,31 +1135,30 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     }
   }
   else {
-    arg_string(solver)
-    solver <- match_arg(solver, c("optim", "multiroot"))
-  }
+    solver <- arg::match_arg(solver, c("optim", "multiroot"))
 
-  if (solver == "multiroot") {
-    rlang::check_installed("rootSolve")
+    if (solver == "multiroot") {
+      rlang::check_installed("rootSolve")
+    }
   }
 
   over <- ...get("over", FALSE)
-  arg_flag(over)
+  arg::arg_flag(over)
 
   twostep <- ...get("twostep", TRUE)
 
   if (over) {
-    arg_flag(twostep)
+    arg::arg_flag(twostep)
   }
   else if (!isTRUE(twostep)) {
-    .wrn("{.arg twostep} is ignored when {.code over = FALSE}")
+    arg::wrn("{.arg twostep} is ignored when {.code over = FALSE}")
   }
 
   reltol <- ...get("reltol", 1e-10)
-  arg_number(reltol)
+  arg::arg_number(reltol)
 
   maxit <- ...get("maxit", 1e4L)
-  arg_count(maxit)
+  arg::arg_count(maxit)
 
   coef_ind <- make_list(length(treat.list))
   for (i in seq_along(treat.list)) {
@@ -1436,7 +1420,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   }
 
   if (!isTRUE(all.equal(out$converge, 0))) {
-    .wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
+    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
   }
 
   w <- Reduce("*", lapply(seq_along(treat.list), function(i) {

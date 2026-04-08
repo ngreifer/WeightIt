@@ -21,13 +21,15 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
     X <- X[, !no_variance, drop = FALSE]
   }
 
-  method <- match_arg(method, weightit_distances())
+  method <- arg::match_arg(method, weightit_distances())
 
   if (is_null(discarded)) {
     discarded <- rep.int(FALSE, nrow(X))
   }
 
   if (method == "mahalanobis") {
+
+    arg::when_not_null(var, arg::arg_cov)
 
     if (is_null(var)) {
       X <- scale(X)
@@ -37,8 +39,8 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
         else cov.wt(X[!discarded, , drop = FALSE], s.weights[!discarded])[["cov"]]
       }
     }
-    else if (!is.cov_like(var)) {
-      .err("if {.arg var} is not {.val {list(NULL)}}, it must be a covariance matrix with as many entries as supplied variables")
+    else if (all(dim(var) == ncol(X))) {
+      arg::err("when {.arg var} is not {.val {list(NULL)}}, it must be a covariance matrix with as many entries as supplied variables")
     }
 
     inv_var <- generalized_inverse(var)
@@ -77,18 +79,26 @@ transform_covariates <- function(formula = NULL, data = NULL, method = "mahalano
     #Do nothing
   }
   else if (method == "scaled_euclidean") {
+    arg::when_not_null(var,
+                       arg::arg_or(
+                         arg::arg_cov,
+                         arg::arg_and(
+                           arg::arg_numeric,
+                           arg::arg_gte(0)
+                       )))
+
     if (is_null(var)) {
       sds <- sqrt(col.w.v(X[!discarded, , drop = FALSE],
                           w = s.weights[!discarded]))
     }
-    else if (is.cov_like(var, X)) {
+    else if (is.matrix(var) && all(dim(var) == ncol(X))) {
       sds <- sqrt(diag(var))
     }
-    else if (is.numeric(var) && is.cov_like(diag(var), X)) {
+    else if (is.numeric(var) && length(var) == ncol(X)) {
       sds <- sqrt(var)
     }
     else {
-      .err("if {.arg var} is not {.val {list(NULL)}}, it must be a covariance matrix or a vector of variances with as many entries as supplied variables")
+      arg::err("when {.arg var} is not {.val {list(NULL)}}, it must be a covariance matrix or a vector of variances with as many entries as supplied variables")
     }
 
     for (i in seq_col(X)) {
@@ -190,15 +200,15 @@ check_X <- function(X) {
   }
 
   if (anyNA(X)) {
-    .err("missing values are not allowed in the covariates")
+    arg::err("missing values are not allowed in the covariates")
   }
 
   if (!all(is.finite(X))) {
-    .err("non-finite values are not allowed in the covariates")
+    arg::err("non-finite values are not allowed in the covariates")
   }
 
   if (!is.numeric(X) || length(dim(X)) != 2L) {
-    .err("bad X")
+    arg::err("bad X")
   }
 
   attr(X, "checked") <- TRUE

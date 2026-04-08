@@ -43,7 +43,7 @@ weightit2ps <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   if (is_null(p.score)) {
-    .err("{.arg ps} must be a numeric vector with a propensity score for each unit")
+    arg::err("{.arg ps} must be a numeric vector with a propensity score for each unit")
   }
 
   #ps should be matrix of probs for each treat
@@ -96,7 +96,7 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   }
 
   if (bad.ps) {
-    .err("{.arg ps} must be a numeric vector with a propensity score for each unit or a matrix with the probability of being in each treatment for each unit")
+    arg::err("{.arg ps} must be a numeric vector with a propensity score for each unit or a matrix with the probability of being in each treatment for each unit")
   }
 
   #ps should be matrix of probs for each treat

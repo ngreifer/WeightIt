@@ -230,7 +230,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   treat.type <- get_treat_type(treat)
 
   if (treat.type == "continuous") {
-    .err("{.fun get_w_from_ps} can only be used with binary or multi-category treatments")
+    arg::err("{.fun get_w_from_ps} can only be used with binary or multi-category treatments")
   }
 
   estimand <- .process_estimand(estimand, method = "glm", treat.type = treat.type)
@@ -243,7 +243,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   ps_mat <- .ps_to_ps_mat(ps, treat, assumed.treated, treat.type, treated, estimand)
 
   if (nrow(ps_mat) != length(treat)) {
-    .err("{.arg ps} and {.arg treat} must have the same number of units")
+    arg::err("{.arg ps} and {.arg treat} must have the same number of units")
   }
 
   if (is_not_null(subclass)) {
@@ -334,13 +334,13 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
   if (treat.type == "binary") {
     if (is.matrix(ps)) {
       if (!is.numeric(ps)) {
-        .err("{.arg ps} must be numeric when supplied as a matrix")
+        arg::err("{.arg ps} must be numeric when supplied as a matrix")
       }
       ps.names <- rownames(ps)
     }
     else if (is.data.frame(ps)) {
       if (!all_apply(ps, is.numeric)) {
-        .err("all columns of {.arg ps} must be numeric when supplied as a data frame")
+        arg::err("all columns of {.arg ps} must be numeric when supplied as a data frame")
       }
       ps.names <- rownames(ps)
       ps <- as.matrix(ps)
@@ -350,13 +350,13 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
       ps <- matrix(ps, ncol = 1L)
     }
     else {
-      .err("{.arg ps} must be a matrix, data frame, or vector of propensity scores")
+      arg::err("{.arg ps} must be a matrix, data frame, or vector of propensity scores")
     }
 
     if (ncol(ps) == 1L) {
       if (is_not_null(treated)) {
         if (treated %nin% t.levels) {
-          .err("the argument to {.arg treated} must be a value in {.var treat}")
+          arg::err("the argument to {.arg treated} must be a value in {.var treat}")
         }
         treated.level <- treated
       }
@@ -371,7 +371,7 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
         treated.level <- colnames(ps)
       }
       else {
-        .err("if the treatment has two non-0/1 levels and {.arg ps} is a vector or has only one column, an argument to {.arg treated} must be supplied")
+        arg::err("if the treatment has two non-0/1 levels and {.arg ps} is a vector or has only one column, an argument to {.arg treated} must be supplied")
       }
 
       t.levels <- c(setdiff(t.levels, treated.level), treated.level)
@@ -379,38 +379,37 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
                    dimnames = list(ps.names, as.character(t.levels)))
     }
     else if (ncol(ps) != 2L) {
-      .err("{.arg ps} cannot have more than two columns if the treatment is binary")
+      arg::err("{.arg ps} cannot have more than two columns if the treatment is binary")
     }
     else if (!all(as.character(t.levels) %in% colnames(ps))) {
-      .err("if {.arg ps} has two columns, they must be named with the treatment levels")
+      arg::err("if {.arg ps} has two columns, they must be named with the treatment levels")
     }
   }
   else if (treat.type %in% c("multinomial", "multi-category")) {
     if (is.matrix(ps)) {
       if (!is.numeric(ps)) {
-        .err("{.arg ps} must be numeric when supplied as a matrix")
+        arg::err("{.arg ps} must be numeric when supplied as a matrix")
       }
       ps.names <- rownames(ps)
     }
     else if (is.data.frame(ps)) {
       if (!all_apply(ps, is.numeric)) {
-        .err("all columns of {.arg ps} must be numeric when supplied as a data frame")
+        arg::err("all columns of {.arg ps} must be numeric when supplied as a data frame")
       }
       ps.names <- rownames(ps)
       ps <- as.matrix(ps)
     }
     else {
-      .err("{.arg ps} must be a matrix or data frame of propensity scores")
+      arg::err("{.arg ps} must be a matrix or data frame of propensity scores")
     }
 
     if (ncol(ps) != nunique(treat)) {
-      .err("{.arg ps} must have as many columns as there are treatment levels")
+      arg::err("{.arg ps} must have as many columns as there are treatment levels")
     }
 
     if (!all(t.levels %in% colnames(ps))) {
-      .err("the columns of {.arg ps} must be named with the treatment levels")
+      arg::err("the columns of {.arg ps} must be named with the treatment levels")
     }
-
   }
 
   ps

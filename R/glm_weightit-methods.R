@@ -116,11 +116,11 @@ summary.glm_weightit <- function(object,
 
   if ("conf.int" %in% ...names()) {
     conf.int <- ...elt(match("conf.int", ...names()))
-    arg_flag(conf.int)
+    arg::arg_flag(conf.int)
     ci <- conf.int
   }
   else {
-    arg_flag(ci)
+    arg::arg_flag(ci)
   }
 
   df.r <- object$df.residual
@@ -132,7 +132,7 @@ summary.glm_weightit <- function(object,
     else if (fam$family %in% c("poisson", "binomial", "multinomial")) 1
     else if (df.r > 0) {
       if (any(object$weights == 0)) {
-        .wrn("observations with zero weight not used for calculating dispersion")
+        arg::wrn("observations with zero weight not used for calculating dispersion")
       }
       sum((object$weights * object$residuals^2)[object$weights > 0]) / df.r
     }
@@ -187,7 +187,7 @@ summary.glm_weightit <- function(object,
 
   transformed_coefs <- transform(coef.table[, "Estimate"])
   if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
-    .err("{.arg transform} must return a numeric vector")
+    arg::err("{.arg transform} must return a numeric vector")
   }
 
   identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
@@ -232,11 +232,11 @@ summary.multinom_weightit <- function(object,
                                       ...) {
   if ("conf.int" %in% ...names()) {
     conf.int <- ...elt(match("conf.int", ...names()))
-    arg_flag(conf.int)
+    arg::arg_flag(conf.int)
     ci <- conf.int
   }
   else {
-    arg_flag(ci)
+    arg::arg_flag(ci)
   }
 
   df.r <- object$df.residual
@@ -286,7 +286,7 @@ summary.multinom_weightit <- function(object,
 
   transformed_coefs <- transform(coef.table[, "Estimate"])
   if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
-    .err("`transform` must return a numeric vector")
+    arg::err("{.arg transform} must return a numeric vector")
   }
 
   identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
@@ -331,7 +331,7 @@ summary.ordinal_weightit <- function(object,
                                      vcov = NULL,
                                      ...) {
 
-  arg_flag(thresholds)
+  arg::arg_flag(thresholds)
 
   out <- summary.multinom_weightit(object, ci = ci, level = level,
                                    transform = transform, vcov = vcov, ...)
@@ -360,14 +360,14 @@ summary.coxph_weightit <- function(object,
                                    ...) {
   if ("conf.int" %in% ...names()) {
     conf.int <- ...elt(match("conf.int", ...names()))
-    arg_flag(conf.int)
+    arg::arg_flag(conf.int)
     ci <- conf.int
   }
   else {
-    arg_flag(ci)
+    arg::arg_flag(ci)
   }
 
-  if (is.null(transform)) transform <- base::identity
+  if (is_null(transform)) transform <- base::identity
   else transform <- match.fun(transform)
 
   coef.p <- coef(object)
@@ -407,7 +407,7 @@ summary.coxph_weightit <- function(object,
 
   transformed_coefs <- transform(coef.table[, "Estimate"])
   if (!is.numeric(transformed_coefs) || length(transformed_coefs) != length(coef.table[, "Estimate"])) {
-    .err("{.arg transform} must return a numeric vector")
+    arg::err("{.arg transform} must return a numeric vector")
   }
 
   identity_transform <- all(transformed_coefs == coef.table[, "Estimate"])
@@ -443,8 +443,8 @@ print.summary.glm_weightit <- function(x, digits = max(3L, getOption("digits") -
                                        signif.stars = getOption("show.signif.stars"),
                                        call = TRUE,
                                        ...) {
-  arg_count(digits)
-  arg_flag(call)
+  arg::arg_count(digits)
+  arg::arg_flag(call)
 
   if (call) {
     cat0("\n", .ul("Call:"), "\n", paste(deparse(x$call), sep = "\n", collapse = "\n"),
@@ -534,53 +534,41 @@ print.glm_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ..
 }
 
 #' @exportS3Method print multinom_weightit
-print.multinom_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
-  print.glm_weightit(x, digits = digits, ...)
-}
+print.multinom_weightit <- print.glm_weightit
 
 #' @exportS3Method print ordinal_weightit
-print.ordinal_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
-  print.glm_weightit(x, digits = digits, ...)
-}
+print.ordinal_weightit <- print.glm_weightit
 
 #' @exportS3Method print coxph_weightit
-print.coxph_weightit <- function(x, digits = max(3L, getOption("digits") - 3L), ...) {
-  print.glm_weightit(x, digits = digits, ...)
-}
+print.coxph_weightit <- print.glm_weightit
 
 # vcov() methods
 #' @exportS3Method stats::vcov glm_weightit
 #' @rdname glm_weightit-methods
 vcov.glm_weightit <- function(object, complete = TRUE, vcov = NULL, ...) {
-  arg_flag(complete)
+  arg::arg_flag(complete)
 
-  .vcov_glm_weightit.internal(object, vcov. = vcov, ...) |>
+  object |>
+    .vcov_glm_weightit.internal(vcov. = vcov, ...) |>
     .modify_vcov_info() |>
     .vcov.aliased(aliased = is.na(object$coefficients),
                   complete = complete)
 }
 
 #' @exportS3Method stats::vcov multinom_weightit
-vcov.multinom_weightit <- function(object, complete = TRUE, vcov = NULL, ...) {
-  vcov.glm_weightit(object = object, complete = complete, vcov = vcov, ...)
-}
+vcov.multinom_weightit <- vcov.glm_weightit
 
 #' @exportS3Method stats::vcov ordinal_weightit
-vcov.ordinal_weightit <- function(object, complete = TRUE, vcov = NULL, ...) {
-  vcov.glm_weightit(object = object, complete = complete, vcov = vcov, ...)
-}
+vcov.ordinal_weightit <- vcov.glm_weightit
 
 #' @exportS3Method stats::vcov coxph_weightit
-vcov.coxph_weightit <- function(object, complete = TRUE, vcov = NULL, ...) {
-  vcov.glm_weightit(object = object, complete = complete, vcov = vcov, ...)
-}
+vcov.coxph_weightit <- vcov.glm_weightit
 
 # confint() methods
 #' @exportS3Method stats::confint glm_weightit
 confint.glm_weightit <- function(object, parm, level = 0.95, vcov = NULL, ...) {
-  arg_number(level)
-  arg_gt(level, .5)
-  arg_lt(level, 1)
+  arg::arg_number(level)
+  arg::arg_between(level, c(0, 1), inclusive = c(TRUE, FALSE))
 
   object$df.residual <- Inf
 
@@ -592,19 +580,13 @@ confint.glm_weightit <- function(object, parm, level = 0.95, vcov = NULL, ...) {
 }
 
 #' @exportS3Method stats::confint multinom_weightit
-confint.multinom_weightit <- function(object, parm, level = 0.95, vcov = NULL, ...) {
-  confint.glm_weightit(object = object, parm = parm, level = level, vcov = vcov, ...)
-}
+confint.multinom_weightit <- confint.glm_weightit
 
 #' @exportS3Method stats::confint ordinal_weightit
-confint.ordinal_weightit <- function(object, parm, level = 0.95, vcov = NULL, ...) {
-  confint.glm_weightit(object = object, parm = parm, level = level, vcov = vcov, ...)
-}
+confint.ordinal_weightit <- confint.glm_weightit
 
 #' @exportS3Method stats::confint coxph_weightit
-confint.coxph_weightit <- function(object, parm, level = 0.95, vcov = NULL, ...) {
-  confint.glm_weightit(object = object, parm = parm, level = level, vcov = vcov, ...)
-}
+confint.coxph_weightit <- confint.glm_weightit
 
 #' @exportS3Method stats::model.matrix multinom_weightit
 model.matrix.multinom_weightit <- function(object, ...) {
@@ -619,8 +601,8 @@ model.matrix.ordinal_weightit <- function(object, ...) {
   x[, colnames(x) != "(Intercept)", drop = FALSE]
 }
 
-#' @exportS3Method stats::nobs ordinal_weightit
-nobs.ordinal_weightit <- function(object, ...) {
+#' @exportS3Method stats::nobs multinom_weightit
+nobs.multinom_weightit <- function(object, ...) {
   if (is_not_null(object[["weights"]])) {
     sum(object[["weights"]] != 0)
   }
@@ -629,10 +611,11 @@ nobs.ordinal_weightit <- function(object, ...) {
   }
 }
 
+#' @exportS3Method stats::nobs ordinal_weightit
+nobs.ordinal_weightit <- nobs.multinom_weightit
+
 #' @exportS3Method stats::nobs multinom_weightit
-nobs.multinom_weightit <- function(object, ...) {
-  nobs.ordinal_weightit(object, ...)
-}
+nobs.coxph_weightit <- nobs.multinom_weightit
 
 #' @importFrom sandwich estfun
 #' @exportS3Method sandwich::estfun glm_weightit
@@ -641,7 +624,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
 
   # Check missing
   if (is_not_null(x[["na.action"]])) {
-    .err("missing values are not allowed in the model variables")
+    arg::err("missing values are not allowed in the model variables")
   }
 
   bout <- x[["coefficients"]]
@@ -683,7 +666,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   Mparts.list <- .attr(x[["weightit"]], "Mparts.list")
 
   if (is_not_null(Mparts) || is_not_null(Mparts.list)) {
-    arg_flag(asympt)
+    arg::arg_flag(asympt)
   }
   else {
     asympt <- FALSE
@@ -804,14 +787,13 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
 }
 
 #' @exportS3Method sandwich::estfun multinom_weightit
-estfun.multinom_weightit <- function(x, asympt = TRUE, ...) {
-  estfun.glm_weightit(x, asympt = asympt, ...)
-}
+estfun.multinom_weightit <- estfun.glm_weightit
 
 #' @exportS3Method sandwich::estfun ordinal_weightit
-estfun.ordinal_weightit <- function(x, asympt = TRUE, ...) {
-  estfun.glm_weightit(x, asympt = asympt, ...)
-}
+estfun.ordinal_weightit <- estfun.glm_weightit
+
+#' @exportS3Method sandwich::estfun coxph_weightit
+estfun.coxph_weightit <- estfun.glm_weightit
 
 #' @importFrom sandwich bread
 #' @exportS3Method sandwich::bread glm_weightit
@@ -820,8 +802,13 @@ bread.glm_weightit <- function(x, ...) {
   bout <- x[["coefficients"]]
   aliased <- is.na(bout)
 
+  H <- NULL
+
   if (is_not_null(x[["hessian"]])) {
     H <- x$hessian
+  }
+  else if (inherits(x, "coxph_weightit")) {
+    H <- .get_hess_coxph(x)
   }
   else if (inherits(x, "ordinal_weightit")) {
     H <- .get_hess_ordinal(x)
@@ -832,7 +819,8 @@ bread.glm_weightit <- function(x, ...) {
   else if (inherits(x, "glm")) {
     H <- .get_hess_glm(x)
   }
-  else {
+
+  if (is_null(H)) {
     Xout <- x[["x"]] %or% model.matrix(x)
     Y <- x[["y"]] %or% model.response(model.frame(x))
 
@@ -881,14 +869,13 @@ bread.glm_weightit <- function(x, ...) {
 }
 
 #' @exportS3Method sandwich::bread multinom_weightit
-bread.multinom_weightit <- function(x, ...) {
-  bread.glm_weightit(x, ...)
-}
+bread.multinom_weightit <- bread.glm_weightit
 
 #' @exportS3Method sandwich::bread ordinal_weightit
-bread.ordinal_weightit <- function(x, ...) {
-  bread.glm_weightit(x, ...)
-}
+bread.ordinal_weightit <- bread.glm_weightit
+
+#' @exportS3Method sandwich::bread coxph_weightit
+bread.coxph_weightit <- bread.glm_weightit
 
 #' @importFrom generics tidy
 #' @exportS3Method generics::tidy glm_weightit
@@ -908,19 +895,13 @@ tidy.glm_weightit <- function(x, conf.int = FALSE, conf.level = 0.95, exponentia
 }
 
 #' @exportS3Method generics::tidy multinom_weightit
-tidy.multinom_weightit <- function(x, conf.int = FALSE, conf.level = 0.95, exponentiate = FALSE, ...) {
-  tidy.glm_weightit(x = x, conf.int = conf.int, conf.level = conf.level, exponentiate = exponentiate, ...)
-}
+tidy.multinom_weightit <- tidy.glm_weightit
 
 #' @exportS3Method generics::tidy ordinal_weightit
-tidy.ordinal_weightit <- function(x, conf.int = FALSE, conf.level = 0.95, exponentiate = FALSE, ...) {
-  tidy.glm_weightit(x = x, conf.int = conf.int, conf.level = conf.level, exponentiate = exponentiate, ...)
-}
+tidy.ordinal_weightit <- tidy.glm_weightit
 
 #' @exportS3Method generics::tidy coxph_weightit
-tidy.coxph_weightit <- function(x, conf.int = FALSE, conf.level = 0.95, exponentiate = FALSE, ...) {
-  tidy.glm_weightit(x = x, conf.int = conf.int, conf.level = conf.level, exponentiate = exponentiate, ...)
-}
+tidy.coxph_weightit <- tidy.glm_weightit
 
 #' @importFrom generics glance
 #' @exportS3Method generics::glance glm_weightit
@@ -932,19 +913,13 @@ glance.glm_weightit <- function(x, ...) {
 }
 
 #' @exportS3Method generics::glance multinom_weightit
-glance.multinom_weightit <- function(x, ...) {
-  glance.glm_weightit(x, ...)
-}
+glance.multinom_weightit <- glance.glm_weightit
 
 #' @exportS3Method generics::glance ordinal_weightit
-glance.ordinal_weightit <- function(x, ...) {
-  glance.glm_weightit(x, ...)
-}
+glance.ordinal_weightit <- glance.glm_weightit
 
 #' @exportS3Method generics::glance coxph_weightit
-glance.coxph_weightit <- function(x, ...) {
-  glance.glm_weightit(x, ...)
-}
+glance.coxph_weightit <- glance.glm_weightit
 
 #' @exportS3Method stats::update glm_weightit
 #' @rdname glm_weightit-methods
@@ -952,10 +927,10 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
   obj_call <- getCall(object)
 
   if (is_null(obj_call)) {
-    .err("need an object with a {.field call} component")
+    arg::err("need an object with a {.field call} component")
   }
 
-  arg_flag(evaluate)
+  arg::arg_flag(evaluate)
 
   refit <- TRUE
 
@@ -967,7 +942,7 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
   }
 
   if (all(c("weights", "s.weights") %in% names(extras))) {
-    .err("{.arg weights} and {.arg s.weights} cannot both be supplied to {.fun update}")
+    arg::err("{.arg weights} and {.arg s.weights} cannot both be supplied to {.fun update}")
   }
 
   if (utils::hasName(extras, "weights")) {
@@ -1006,11 +981,11 @@ update.glm_weightit <- function(object, formula. = NULL, ..., evaluate = TRUE) {
     }
     else if (any(names(extras) %in% weightit_args)) {
       if (utils::hasName(extras, "weightit")) {
-        .err("when {.arg weightit} is supplied, {.arg {intersect(weightit_args, names(extras))}} cannot be supplied")
+        arg::err("when {.arg weightit} is supplied, {.arg {intersect(weightit_args, names(extras))}} cannot be supplied")
       }
 
       if (!evaluate) {
-        .err("{.arg evaluate} must be {.val {TRUE}} when {.or {.arg {intersect(weightit_args, names(extras))}}} {?is/are} supplied")
+        arg::err("{.arg evaluate} must be {.val {TRUE}} when {.or {.arg {intersect(weightit_args, names(extras))}}} {?is/are} supplied")
       }
 
       weightit_args <- intersect(weightit_args, names(extras))

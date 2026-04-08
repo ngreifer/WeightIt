@@ -209,7 +209,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   #Checks
   if (is_null(formula) || !rlang::is_formula(formula, lhs = TRUE)) {
-    .err("{.arg formula} must be a formula relating treatment to covariates")
+    arg::err("{.arg formula} must be a formula relating treatment to covariates")
   }
 
   #Process treat and covs from formula and data
@@ -221,33 +221,33 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   treat <- t.c[["treat"]]
 
   if (is_null(treat)) {
-    .err("no treatment variable was specified")
+    arg::err("no treatment variable was specified")
   }
 
   if (length(treat) != nrow(covs)) {
-    .err("the treatment and covariates must have the same number of units")
+    arg::err("the treatment and covariates must have the same number of units")
   }
 
   n <- length(treat)
 
   if (anyNA(treat)) {
-    .err("missing values are not allowed in the treatment variable")
+    arg::err("missing values are not allowed in the treatment variable")
   }
 
   #Get treat type
   treat <- as.treat(treat, process = TRUE)
   treat.type <- get_treat_type(treat)
 
-  arg_flag(verbose)
-  arg_flag(include.obj)
-  arg_flag(keep.mparts)
+  arg::arg_flag(verbose)
+  arg::arg_flag(include.obj)
+  arg::arg_flag(keep.mparts)
 
   #Process ps
   ps <- .process_ps(ps, data, treat)
   if (is_not_null(ps) && is_not_null(method) &&
       !is.function(method) &&
       !identical(method, "glm")) {
-    .wrn("{.arg ps} is supplied, so {.arg method} will be ignored")
+    arg::wrn("{.arg ps} is supplied, so {.arg method} will be ignored")
     method <- "glm"
   }
 
@@ -300,7 +300,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
   else if (isTRUE(stabilize)) {
     if (treat.type == "continuous") {
-      .wrn('setting {.code stabilize = TRUE} does nothing for continuous treatments, so it will be set to {.val {FALSE}}. See {.fun WeightIt::weightit} for details')
+      arg::wrn('setting {.code stabilize = TRUE} does nothing for continuous treatments, so it will be set to {.val {FALSE}}. See {.fun WeightIt::weightit} for details')
       stabilize <- NULL
     }
     else {
@@ -310,16 +310,16 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   if (is_not_null(stabilize)) {
     if (is.character(method) && !.weightit_methods[[method]]$stabilize_ok) {
-      .wrn("{.arg stabilize} cannot be used with {(.method_to_phrase(method))} and will be ignored")
+      arg::wrn("{.arg stabilize} cannot be used with {(.method_to_phrase(method))} and will be ignored")
       stabilize <- NULL
     }
     else {
       if (treat.type != "continuous" && estimand != "ATE") {
-        .err('{.arg stabilize} can only be supplied when {.code estimand = "ATE"}')
+        arg::err('{.arg stabilize} can only be supplied when {.code estimand = "ATE"}')
       }
 
       if (!rlang::is_formula(stabilize)) {
-        .err("{.arg stabilize} must be {.val {TRUE}}, {.val {FALSE}}, or a formula with the stabilization factors on the right hand side")
+        arg::err("{.arg stabilize} must be {.val {TRUE}}, {.val {FALSE}}, or a formula with the stabilization factors on the right hand side")
       }
 
       stabilize <- update(formula, update(stabilize, NULL ~ .))
@@ -328,7 +328,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   ##Process by
   if (is_not_null(A[["exact"]])) {
-    .wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
+    arg::wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
     by <- A[["exact"]]
     by.arg <- "exact"
   }

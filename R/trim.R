@@ -116,15 +116,15 @@ trim.weightit <- function(x, at = 0, lower = FALSE, drop = FALSE, ...) {
     return(x)
   }
 
-  arg_number(at)
-  arg_gte(at, 0)
+  arg::arg_number(at)
+  arg::arg_gte(at, 0)
 
   if (check_if_zero(at)) {
     return(x)
   }
 
-  arg_flag(lower)
-  arg_flag(drop)
+  arg::arg_flag(lower)
+  arg::arg_flag(drop)
 
   x[["weights"]] <- .trim_weights(x[["weights"]],
                                   at = at,
@@ -145,15 +145,15 @@ trim.weightit <- function(x, at = 0, lower = FALSE, drop = FALSE, ...) {
 trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, ...) {
 
   if (!is.numeric(x) && !inherits(x, "weightit")) {
-    .err("{.arg x} must be a numeric vector or {.cls weightit} object")
+    arg::err("{.arg x} must be a numeric vector or {.cls weightit} object")
   }
 
   if (is_null(at)) {
     return(x)
   }
 
-  arg_number(at)
-  arg_gte(at, 0)
+  arg::arg_number(at)
+  arg::arg_gte(at, 0)
 
   if (check_if_zero(at)) {
     return(x)
@@ -171,7 +171,7 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
   if (is_not_null(treat) && treat.type != "continuous") {
     w_all_same <- tapply(x, treat, all_the_same)
     if (all(w_all_same)) {
-      .wrn("weights are all the same in each treatment group and will not be trimmed")
+      arg::wrn("weights are all the same in each treatment group and will not be trimmed")
       return(x)
     }
 
@@ -180,12 +180,12 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
     }
   }
   else if (all_the_same(x)) {
-    .wrn("weights are all the same and will not be trimmed")
+    arg::wrn("weights are all the same and will not be trimmed")
     return(x)
   }
 
-  arg_flag(lower)
-  arg_flag(drop)
+  arg::arg_flag(lower)
+  arg::arg_flag(drop)
 
   .trim_weights(x, at = at,
                 treat = treat,
@@ -212,12 +212,12 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
 
       if (drop) {
         weights[to.be.trimmed & (weights < trim.w[1L] | weights > trim.w[2L])] <- 0
-        .msg('setting weights beyond {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")} where treat is not {.or {groups.not.to.trim}} to 0')
+        arg::msg('setting weights beyond {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")} where treat is not {.or {groups.not.to.trim}} to 0')
       }
       else {
         weights[to.be.trimmed & weights < trim.w[1L]] <- trim.w[1L]
         weights[to.be.trimmed & weights > trim.w[2L]] <- trim.w[2L]
-        .msg('trimming weights where treat is not {.or {groups.not.to.trim}} to {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")}')
+        arg::msg('trimming weights where treat is not {.or {groups.not.to.trim}} to {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")}')
       }
 
     }
@@ -226,13 +226,13 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
 
       if (drop) {
         weights[weights < trim.w[1L] | weights > trim.w[2L]] <- 0
-        .msg('setting weights beyond {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")} to 0')
+        arg::msg('setting weights beyond {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")} to 0')
       }
       else {
         weights[weights < trim.w[1L]] <- trim.w[1L]
         weights[weights > trim.w[2L]] <- trim.w[2L]
 
-        .msg('trimming weights to {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")}')
+        arg::msg('trimming weights to {paste0(round(100 * trim.q[c(lower, TRUE)], 2L), "%")}')
       }
 
     }
@@ -240,7 +240,7 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
   else if (is_not_null(groups.not.to.trim)) {
     to.be.trimmed <- treat %nin% groups.not.to.trim
     if (at >= sum(to.be.trimmed)) {
-      .wrn("{.arg at} must be less than {sum(to.be.trimmed)}, the number of units for which treat is not {.or {groups.not.to.trim}}. Weights will not be trimmed")
+      arg::wrn("{.arg at} must be less than {sum(to.be.trimmed)}, the number of units for which treat is not {.or {groups.not.to.trim}}. Weights will not be trimmed")
 
       return(weights)
     }
@@ -263,18 +263,18 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
     if (drop) {
       weights[to.be.trimmed & (weights < trim.w[1L] | weights > trim.w[2L])] <- 0
 
-      .msg('setting the {c("top", "bottom")[c(TRUE, lower)]} {weights.text} where treat is not {.or {groups.not.to.trim}} to 0')
+      arg::msg('setting the {c("top", "bottom")[c(TRUE, lower)]} {weights.text} where treat is not {.or {groups.not.to.trim}} to 0')
     }
     else {
       weights[to.be.trimmed & weights < trim.w[1L]] <- trim.w[1L]
       weights[to.be.trimmed & weights > trim.w[2L]] <- trim.w[2L]
 
-      .msg('trimming the {c("top", "bottom")[c(TRUE, lower)]} {weights.text} where treat is not {.or {groups.not.to.trim}}')
+      arg::msg('trimming the {c("top", "bottom")[c(TRUE, lower)]} {weights.text} where treat is not {.or {groups.not.to.trim}}')
     }
   }
   else {
     if (at >= length(weights)) {
-      .wrn("{.arg at} must be less than {length(weights)}, the number of units. Weights will not be trimmed")
+      arg::wrn("{.arg at} must be less than {length(weights)}, the number of units. Weights will not be trimmed")
 
       return(weights)
     }
@@ -297,13 +297,13 @@ trim.default <- function(x, at = 0, lower = FALSE, treat = NULL, drop = FALSE, .
     if (drop) {
       weights[weights < trim.w[1L] | weights > trim.w[2L]] <- 0
 
-      .msg('setting the {c("top", "bottom")[c(TRUE, lower)]} {weights.text} to 0')
+      arg::msg('setting the {c("top", "bottom")[c(TRUE, lower)]} {weights.text} to 0')
     }
     else {
       weights[weights < trim.w[1L]] <- trim.w[1L]
       weights[weights > trim.w[2L]] <- trim.w[2L]
 
-      .msg('trimming the {c("top", "bottom")[c(TRUE, lower)]} {weights.text}')
+      arg::msg('trimming the {c("top", "bottom")[c(TRUE, lower)]} {weights.text}')
     }
   }
 
