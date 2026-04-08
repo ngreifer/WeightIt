@@ -1,9 +1,10 @@
 test_that("moments works as expected, binary", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("optweight", minimum_version = "2.0.1")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -63,11 +64,12 @@ test_that("moments works as expected, binary", {
 })
 
 test_that("moments works as expected, multi", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("optweight", minimum_version = "2.0.1")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -127,10 +129,11 @@ test_that("moments works as expected, multi", {
 })
 
 test_that("moments works as expected, cont", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 

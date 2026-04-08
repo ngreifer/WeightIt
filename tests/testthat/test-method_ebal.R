@@ -1,8 +1,9 @@
 test_that("Binary treatment", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -54,6 +55,10 @@ test_that("Binary treatment", {
         expect_true(is_null((!!{{ str2lang(n) }})$ps))
         expect_false(is_null((!!{{ str2lang(n) }})$obj))
 
+        if (estimand %in% c("ATT", "ATC")) {
+          expect_ATT_weights_okay(W, tolerance = eps)
+        }
+
         for (i in 0:1) {
           e <- {
             if (estimand == "ATT" && i == 1) expect_equal
@@ -88,7 +93,7 @@ test_that("Binary treatment", {
   expect_error({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "ebal", estimand = "ATO")
-  }, "not an allowable estimand")
+  }, "not an allowable estimand", ignore.case = TRUE)
 
   #Non-full rank
   expect_no_condition({
@@ -109,6 +114,29 @@ test_that("Binary treatment", {
   })
 
   expect_M_parts_okay(W, tolerance = eps)
+
+  # tols > 0
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                   data = test_data, method = "ebal", estimand = "ATE",
+                   include.obj = TRUE, tols = .05)
+  })
+
+  expect_not_equal(W$weights, W0$weights)
+
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(any(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) > eps)) #Some worse than 0
+
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "ebal", estimand = "ATE",
+                  include.obj = TRUE, tols = .05, s.weights = "SW")
+  })
+
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(any(abs(cobalt::bal.tab(W)$Balance$Diff.Adj) > eps)) #Some worse than 0
 
   #Should be equivalent to CBPS and IPT with logit link for ATT
   for (sw in sw.opts) {
@@ -156,10 +184,11 @@ test_that("Binary treatment", {
 })
 
 test_that("Multi-category treatment", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -213,6 +242,10 @@ test_that("Multi-category treatment", {
         expect_true(is_null((!!{{ str2lang(n) }})$ps))
         expect_false(is_null((!!{{ str2lang(n) }})$obj))
 
+        if (estimand %in% c("ATT", "ATC")) {
+          expect_ATT_weights_okay(W, tolerance = eps)
+        }
+
         for (i in levels(W$treat)) {
           e <- {
             if (estimand == "ATT" && i == W$focal) expect_equal
@@ -241,13 +274,37 @@ test_that("Multi-category treatment", {
       }
     }
   }
+
+  # tols > 0
+  expect_no_condition({
+    W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "ebal", estimand = "ATE",
+                  include.obj = TRUE, tols = .05)
+  })
+
+  expect_not_equal(W$weights, W0$weights)
+
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(any(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) > eps)) #Some worse than 0
+
+  expect_no_condition({
+    W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "ebal", estimand = "ATE",
+                  include.obj = TRUE, tols = .05, s.weights = "SW")
+  })
+
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(any(abs(cobalt::bal.tab(W)$Balance$Max.Diff.Adj) > eps)) #Some worse than 0
 })
 
 test_that("Continuous treatment", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -334,4 +391,27 @@ test_that("Continuous treatment", {
 
   expect_M_parts_okay(W, tolerance = eps)
   expect_equal(W$weights, W0$weights, tolerance = eps)
+
+  # tols > 0
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "ebal", estimand = "ATE",
+                  include.obj = TRUE, tols = .05)
+  })
+
+  expect_not_equal(W$weights, W0$weights)
+
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(any(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) > eps)) #Some worse than 0
+
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "ebal", estimand = "ATE",
+                  include.obj = TRUE, tols = .05, s.weights = "SW")
+  })
+
+  expect_true(all(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) <= .05 + eps)) #None worse than tols
+  expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= eps)) #Some exactly tols
+  expect_true(any(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) > eps)) #Some worse than 0
 })

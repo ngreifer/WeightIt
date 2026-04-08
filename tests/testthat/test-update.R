@@ -1,6 +1,7 @@
 test_that("update.glm_weightit() works", {
-  skip_if(!capabilities("long.double"))
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  # skip_if(!capabilities("long.double"))
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -68,11 +69,11 @@ test_that("update.glm_weightit() works", {
 
   expect_error({
     update(fit2, family = binomial("probit"))
-  }, "bad error")
+  }, "bad error", ignore.case = TRUE)
 
   expect_error({
     update(fit2)
-  }, "bad error")
+  }, "bad error", ignore.case = TRUE)
 
   expect_no_condition({
     fit2c <- update(fit2, cluster = ~clus)
@@ -115,8 +116,9 @@ test_that("update.glm_weightit() works", {
 })
 
 test_that("update.weightit() works", {
-  skip_if(!capabilities("long.double"))
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  # skip_if(!capabilities("long.double"))
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -175,8 +177,9 @@ test_that("update.weightit() works", {
 })
 
 test_that("update.glm_weightit() works with weightit", {
-  skip_if(!capabilities("long.double"))
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  # skip_if(!capabilities("long.double"))
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -250,11 +253,11 @@ test_that("update.glm_weightit() works with weightit", {
 
   expect_error({
     update(fit2, family = binomial("probit"))
-  }, "bad error")
+  }, "bad error", ignore.case = TRUE)
 
   expect_error({
     update(fit2)
-  }, "bad error")
+  }, "bad error", ignore.case = TRUE)
 
   expect_no_condition({
     fit2c <- update(fit2, cluster = ~clus)
@@ -322,8 +325,9 @@ test_that("update.glm_weightit() works with weightit", {
 })
 
 test_that("update.multinom_weightit() works with weightit", {
-  skip_if(!capabilities("long.double"))
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  # skip_if(!capabilities("long.double"))
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_M <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
@@ -399,7 +403,7 @@ test_that("update.multinom_weightit() works with weightit", {
 
   expect_error({
     update(fit2)
-  }, "bad error")
+  }, "bad error", ignore.case = TRUE)
 
   expect_no_condition({
     fit2c <- update(fit2, cluster = ~clus)
@@ -467,8 +471,9 @@ test_that("update.multinom_weightit() works with weightit", {
 })
 
 test_that("update.ordinal_weightit() works with weightit", {
-  skip_if(!capabilities("long.double"))
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  # skip_if(!capabilities("long.double"))
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_O <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
@@ -544,7 +549,7 @@ test_that("update.ordinal_weightit() works with weightit", {
 
   expect_error({
     update(fit2)
-  }, "bad error")
+  }, "bad error", ignore.case = TRUE)
 
   expect_no_condition({
     fit2c <- update(fit2, cluster = ~clus)
@@ -612,10 +617,11 @@ test_that("update.ordinal_weightit() works with weightit", {
 })
 
 test_that("update.coxph_weightit() works with weightit", {
-  skip_if(!capabilities("long.double"))
+  skip_on_cran()
+  # skip_if(!capabilities("long.double"))
   skip_if_not_installed("survival")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -686,12 +692,12 @@ test_that("update.coxph_weightit() works with weightit", {
   if (exists("fit2", inherits = FALSE)) {
     i <- TRUE
     expect_error({
-      update(fit2, ties = "breslow")
-    }, "bad error")
+      update(fit2, x = TRUE)
+    }, "bad error", ignore.case = TRUE)
 
     expect_error({
       update(fit2)
-    }, "bad error")
+    }, "bad error", ignore.case = TRUE)
 
     expect_no_condition({
       fit2c <- update(fit2, cluster = ~clus)

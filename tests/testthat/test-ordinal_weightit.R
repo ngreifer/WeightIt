@@ -1,8 +1,9 @@
 test_that("No weights", {
+  skip_on_cran()
   skip_if_not_installed("MASS")
   skip_if_not_installed("sandwich")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_O <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
@@ -97,9 +98,10 @@ test_that("No weights", {
 })
 
 test_that("Binary treatment", {
+  skip_on_cran()
   skip_if_not_installed("MASS")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_O <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),

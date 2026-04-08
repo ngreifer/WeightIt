@@ -1,5 +1,6 @@
 test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   set.seed(123)
@@ -137,13 +138,13 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
                tolerance = eps)
 
   expect_error(anova(fit_asympt_clus, fit_small, vcov = "none"),
-               "No variance matrix was found")
+               "no variance matrix was found", ignore.case = TRUE)
 
   fit_small_hc0 <- glm_weightit(Y_C ~ A,
                             data = test_data, weightit = W, vcov = "HC0")
 
   expect_warning(anova(fit_asympt, fit_small_hc0),
-                 "Different `vcov` types detected")
+                 "different `vcov` types detected", ignore.case = TRUE)
 
   expect_no_condition(anova(fit_hc0, fit_small_hc0))
 
@@ -201,7 +202,8 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
 })
 
 test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit", {
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   set.seed(123)
@@ -341,13 +343,13 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
                tolerance = eps)
 
   expect_error(anova(fit_asympt_clus, fit_small, vcov = "none"),
-               "No variance matrix was found")
+               "no variance matrix was found", ignore.case = TRUE)
 
   fit_small_hc0 <- ordinal_weightit(Y_O ~ A,
                                 data = test_data, weightit = W, vcov = "HC0")
 
   expect_warning(anova(fit_asympt, fit_small_hc0),
-                 "Different `vcov` types detected")
+                 "different `vcov` types detected", ignore.case = TRUE)
 
   expect_no_condition(anova(fit_hc0, fit_small_hc0))
 
@@ -404,7 +406,8 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
 })
 
 test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weightit", {
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_M <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
@@ -544,13 +547,13 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
                tolerance = eps)
 
   expect_error(anova(fit_asympt_clus, fit_small, vcov = "none"),
-               "No variance matrix was found")
+               "no variance matrix was found", ignore.case = TRUE)
 
   fit_small_hc0 <- multinom_weightit(Y_M ~ A,
                                     data = test_data, weightit = W, vcov = "HC0")
 
   expect_warning(anova(fit_asympt, fit_small_hc0),
-                 "Different `vcov` types detected")
+                 "different `vcov` types detected", ignore.case = TRUE)
 
   expect_no_condition(anova(fit_hc0, fit_small_hc0))
 

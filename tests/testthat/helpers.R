@@ -1,5 +1,5 @@
 expect_ATT_weights_okay <- function(W, focal = NULL, ...) {
-  if (is.null(focal)) {
+  if (is_null(focal)) {
     focal <- W$focal
   }
   else {
@@ -18,9 +18,9 @@ expect_not_equal <- function(object, expected, ...,
                              tolerance = if (edition_get() >= 3) testthat_tolerance(),
                              info = NULL, label = NULL, expected.label = NULL) {
 
-  if (!capabilities("long.double")) {
-    return(NULL)
-  }
+  # if (!capabilities("long.double")) {
+  #   return(invisible(NULL))
+  # }
 
   act <- quasi_label(enquo(object), label, arg = "object")
   exp <- quasi_label(enquo(expected), expected.label, arg = "expected")

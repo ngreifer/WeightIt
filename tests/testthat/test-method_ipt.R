@@ -1,8 +1,9 @@
 test_that("Binary treatment", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -51,6 +52,10 @@ test_that("Binary treatment", {
         expect_true(is.numeric((!!{{ str2lang(n) }})$ps))
         expect_false(is_null((!!{{ str2lang(n) }})$obj))
 
+        if (estimand %in% c("ATT", "ATC")) {
+          expect_ATT_weights_okay(W, tolerance = eps)
+        }
+
         for (i in 0:1) {
           e <- {
             if (estimand == "ATT" && i == 1) expect_equal
@@ -85,7 +90,7 @@ test_that("Binary treatment", {
   expect_error({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "ipt", estimand = "ATO")
-  }, "not an allowable estimand")
+  }, "not an allowable estimand", ignore.case = TRUE)
 
   #Non-full rank
   expect_no_condition({
@@ -131,10 +136,11 @@ test_that("Binary treatment", {
 })
 
 test_that("Multi-category treatment", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -185,6 +191,10 @@ test_that("Multi-category treatment", {
 
         expect_true(is_null((!!{{ str2lang(n) }})$ps))
         expect_false(is_null((!!{{ str2lang(n) }})$obj))
+
+        if (estimand %in% c("ATT", "ATC")) {
+          expect_ATT_weights_okay(W, tolerance = eps)
+        }
 
         for (i in levels(W$treat)) {
           e <- {

@@ -1,10 +1,11 @@
 test_that("Binary treatment", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
   skip_if_not_installed("cobalt")
   skip_if_not_installed("brglm2")
   skip_if_not_installed("logistf")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -46,6 +47,8 @@ test_that("Binary treatment", {
   expect_equal(W$weights[W$treat == 1], rep(1, sum(W$treat == 1)),
                tolerance = eps)
 
+  expect_ATT_weights_okay(W, tolerance = eps)
+
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATC")
@@ -55,6 +58,8 @@ test_that("Binary treatment", {
 
   expect_equal(W$weights[W$treat == 0], rep(1, sum(W$treat == 0)),
                tolerance = eps)
+
+  expect_ATT_weights_okay(W, tolerance = eps)
 
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -233,7 +238,8 @@ test_that("Binary treatment", {
                     Xx,
                   data = test_data, method = "glm", estimand = "ATE",
                   include.obj = TRUE)
-  }, "Propensity scores numerically equal to 0 or 1 were estimated")
+  }, "Propensity scores numerically equal to 0 or 1 were estimated",
+  ignore.case = TRUE)
 
   # expect_failure(expect_M_parts_okay(W))
 
@@ -241,7 +247,8 @@ test_that("Binary treatment", {
 })
 
 test_that("Treatment guessing works for non-0/1 treatment", {
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  skip_on_cran()
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
@@ -348,9 +355,10 @@ test_that("Treatment guessing works for non-0/1 treatment", {
 })
 
 test_that("Ordinal treatment", {
+  skip_on_cran()
   skip_if_not_installed("rootSolve")
 
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-1
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Ao <- ordered(findInterval(test_data$Ac, quantile(test_data$Ac, seq(0, 1, length.out = 5)),
