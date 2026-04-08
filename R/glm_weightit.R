@@ -1,21 +1,16 @@
-#' Fitting Weighted Generalized Linear Models
+#' Fitting (Weighted) Generalized Linear Models
 #'
 #' @description
 #' `glm_weightit()` is used to fit generalized linear models with a
 #' covariance matrix that accounts for estimation of weights, if supplied.
 #' `lm_weightit()` is a wrapper for `glm_weightit()` with the Gaussian family
-#' and identity link (i.e., a linear model). `ordinal_weightit()` fits
-#' proportional odds ordinal regression models. `multinom_weightit()` fits
-#' multinomial logistic regression models. `coxph_weightit()` fits a Cox
-#' proportional hazards model and is a wrapper for [survival::coxph()]. By
+#' and identity link (i.e., a linear model). By
 #' default, these functions use M-estimation to construct a robust covariance
 #' matrix using the estimating equations for the weighting model and the outcome
 #' model when available.
 #'
-#' @param formula an object of class "formula" (or one that can be coerced to
-#'   that class): a symbolic description of the model to be fitted. For
-#'   `coxph_weightit()`, see [survival::coxph()] for how this should be
-#'   specified.
+#' @param formula an object of class [`formula`] (or one that can be coerced to
+#'   that class): a symbolic description of the model to be fitted.
 #' @param data a data frame containing the variables in the model. If not found
 #'   in data, the variables are taken from `environment(formula)`, typically the
 #'   environment from which the function is called.
@@ -23,11 +18,6 @@
 #'   used in the model. This can be a character string naming a family function,
 #'   a family function or the result of a call to a family function. See
 #'   [family] for details of family functions.
-#' @param link for `ordinal_weightit()` and `multinom_weightit()`, a string
-#'   corresponding to the desired link function. For `ordinal_weightit()`, any
-#'   allowed by [binomial()] are accepted; for `multinom_weightit()`, only
-#'   `"logit"` is allowed. Default is `"logit"` for ordinal or multinomial
-#'   logistic regression, respectively.
 #' @param weightit a `weightit` or `weightitMSM` object; the output of a call to
 #'   [weightit()] or [weightitMSM()]. If not supplied, an unweighted model will
 #'   be fit.
@@ -55,7 +45,7 @@
 #' @param R the number of bootstrap replications when `vcov` is `"BS"` or
 #'   `"FWB"`. Default is 500. Ignored otherwise.
 #' @param offset optional; a numeric vector containing the model offset. See
-#'   [offset()]. An offset can also be preset in the model formula.
+#'   [offset()]. An offset can also be present in the model formula.
 #' @param start optional starting values for the coefficients.
 #' @param etastart,mustart optional starting values for the linear predictor and
 #'   vector of means. Passed to [glm()].
@@ -68,17 +58,13 @@
 #' @param fwb.args an optional list of further arguments to supply to
 #'   \pkgfun{fwb}{fwb} when `vcov = "FWB"`.
 #' @param br `logical`; whether to use bias-reduced regression as implemented by
-#'   \pkgfun{brglm2}{brglmFit}. If `TRUE`, arguments passed to `control` or
+#'   \pkgfun{brglm2}{brglmFit} (including Firth logistic regression). If `TRUE`, arguments passed to `control` or
 #'   \dots will be passed to \pkgfun{brglm2}{brglmControl}.
 #' @param \dots arguments to be used to form the default control argument if it
 #'   is not supplied directly.
 #'
 #' @returns
-#' For `lm_weightit()` and `glm_weightit()`, a `glm_weightit` object,
-#' which inherits from `glm`. For `ordinal_weightit()` and
-#' `multinom_weightit()`, an `ordinal_weightit` or `multinom_weightit` object,
-#' respectively. For `coxph_weightit()`, a `coxph_weightit` object, which
-#' inherits from `coxph`. See [survival::coxph()] for details.
+#' A `glm_weightit` object, which inherits from `glm`.
 #'
 #' Unless `vcov = "none"`, the `vcov` component contains the covariance matrix
 #' adjusted for the estimation of the weights if requested and a compatible
@@ -97,7 +83,9 @@
 #' [glm_weightit()] is essentially a wrapper for [glm()] that
 #' optionally computes a coefficient variance matrix that can be adjusted to
 #' account for estimation of the weights if a `weightit` or `weightitMSM` object
-#' is supplied to the `weightit` argument. When no argument is supplied to
+#' is supplied to the `weightit` argument.
+#'
+#' When no argument is supplied to
 #' `weightit` or there is no `"Mparts"` attribute in the supplied object, the
 #' default variance matrix returned will be the "HC0" sandwich variance matrix,
 #' which is robust to misspecification of the outcome family (including
@@ -122,27 +110,7 @@
 #' error if it doesn't). Setting `vcov = "FWB"` and supplying `fwb.args = list(wtype = "multinom")`
 #' also performs the resampling-based bootstrap but
 #' with the additional features \pkg{fwb} provides (e.g., a progress bar and
-#' parallelization) at the expense of needing to have \pkg{fwb} installed.
-#'
-#' `multinom_weightit()` implements multinomial logistic regression using a
-#' custom function in \pkg{WeightIt}. This implementation is less robust to
-#' failures than other multinomial logistic regression solvers and should be
-#' used with caution. Estimation of coefficients should align with that from
-#' `mlogit::mlogit()` and `mclogit::mblogit()`.
-#'
-#' `ordinal_weightit()` implements proportional odds ordinal regression using a
-#' custom function in \pkg{WeightIt}. Estimation of coefficients should align
-#' with that from `MASS::polr()`.
-#'
-#' `coxph_weightit()` is a wrapper for [survival::coxph()] to fit weighted
-#' survival models. It differs from `coxph()` in that the `cluster` argument (if
-#' used) should be specified as a one-sided formula (which can include multiple
-#' clustering variables) and uses a small sample correction for cluster variance
-#' estimates when specified. Currently, M-estimation is not supported, so
-#' bootstrapping (i.e., `vcov = "BS"` or `"FWB"`) is the only way to correctly
-#' adjust for estimation of the weights. By default, the robust variance is
-#' estimated treating weights as fixed, which is the same variance returned when
-#' `robust = TRUE` in `coxph()`.
+#' parallelization).
 #'
 #' Functions in the \pkg{sandwich} package can be to compute standard errors
 #' after fitting, regardless of how `vcov` was specified, though these will
@@ -155,10 +123,12 @@
 #' for all models.
 #'
 #' @seealso
-#' [lm()] and [glm()] for fitting generalized linear models without
-#' adjusting standard errors for estimation of the weights. [survival::coxph()]
-#' for fitting Cox proportional hazards models without adjusting standard errors
-#' for estimation of the weights.
+#' * [lm()] and [glm()] for fitting (generalized) linear models without
+#' adjusting standard errors for estimation of the weights.
+#' * [glm_weightit()] for fitting generalized linear models that adjust for estimation of the weights.
+#' * [multinom_weightit()] for fitting multinomial regression models that adjust for estimation of the weights.
+#' * [ordinal_weightit()] for fitting ordinal regression models that adjust for estimation of the weights.
+#' * [coxph_weightit()] for fitting Cox proportional hazards models that adjust for estimation of the weights.
 #'
 #' @examples
 #' data("lalonde", package = "cobalt")
@@ -198,26 +168,6 @@
 #'                     fwb.args = list(wtype = "mammen"))
 #'
 #' summary(fit3)
-#' @examples
-#' # Multinomial logistic regression outcome model
-#' # that adjusts for estimation of weights
-#' lalonde$re78_3 <- factor(findInterval(lalonde$re78,
-#'                                       c(0, 5e3, 1e4)))
-#'
-#' fit4 <- multinom_weightit(re78_3 ~ treat,
-#'                           data = lalonde,
-#'                           weightit = w.out)
-#'
-#' summary(fit4)
-#'
-#' # Ordinal probit regression that adjusts for estimation
-#' # of weights
-#' fit5 <- ordinal_weightit(ordered(re78_3) ~ treat,
-#'                          data = lalonde,
-#'                          link = "probit",
-#'                          weightit = w.out)
-#'
-#' summary(fit5)
 
 #' @export
 #' @name glm_weightit
@@ -238,7 +188,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
   model_call <- match.call()
 
   if (identical(family, "multinomial")) {
-    .wrn('using {.fun glm_weightit}  with {.code family = "multinomial"} is deprecated. Please use {.fun multinom_weightit} instead')
+    arg::wrn('using {.fun glm_weightit}  with {.code family = "multinomial"} is deprecated. Please use {.fun multinom_weightit} instead')
     model_call[[1L]] <- quote(WeightIt::multinom_weightit)
     model_call[["family"]] <- NULL
 
@@ -246,7 +196,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
   }
 
   ###
-  arg_flag(br)
+  arg::arg_flag(br)
 
   internal_model_call <- .build_internal_model_call(model = "glm",
                                                     model_call = model_call,
@@ -259,7 +209,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
                    errors = c("missing values in object" = "missing values are not allowed in the model variables"))
 
   if (br && vcov %in% c("asympt", "HC0") && identical(fit$type, "correction")) {
-    .err('{.code type = "correction"} cannot be used with the specified {.arg vcov}')
+    arg::err('{.code type = "correction"} cannot be used with the specified {.arg vcov}')
   }
 
   fit$psi <- .get_glm_psi(fit)
@@ -295,7 +245,8 @@ lm_weightit <- function(formula, data, weightit = NULL,
 
   ###
   if (is_not_null(...get("family"))) {
-    .err("{.arg family} cannot be used with {.fun lm_weightit}. Did you mean to use {.fun glm_weightit} instead?")
+    arg::err(c("{.arg family} cannot be used with {.fun lm_weightit}.",
+               "i" = "Did you mean to use {.fun glm_weightit} instead?"))
   }
 
   internal_model_call <- .build_internal_model_call(model = "lm",
@@ -321,128 +272,11 @@ lm_weightit <- function(formula, data, weightit = NULL,
   fit
 }
 
-#' @export
-#' @rdname glm_weightit
-ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
-                             vcov = NULL, cluster, R = 500L,
-                             offset, start = NULL,
-                             control = list(...),
-                             x = FALSE, y = TRUE,
-                             contrasts = NULL, fwb.args = list(), ...) {
+.get_hess_glm <- function(fit) {
+  X <- fit[["x"]] %or% model.matrix(fit)
 
-  vcov <- .process_vcov(vcov, weightit, R, fwb.args)
+  d1mus <- fit$family$mu.eta(fit$linear.predictors)
+  varmus <- fit$family$variance(fit$fitted.values)
 
-  if (missing(cluster)) {
-    cluster <- NULL
-  }
-
-  model_call <- match.call()
-
-  ###
-  if (is_not_null(...get("family"))) {
-    .err("{.arg family} cannot be used with {.fun ordinal_weightit}. Did you mean to use {.arg link} instead?")
-  }
-
-  internal_model_call <- .build_internal_model_call(model = "ordinal",
-                                                    model_call = model_call,
-                                                    weightit = weightit,
-                                                    vcov = vcov)
-
-  fit <- .eval_fit(internal_model_call,
-                   errors = c("missing values in object" = "missing values are not allowed in the model variables"),
-                   from = FALSE)
-
-  fit$family$family <- "ordinal"
-  ###
-
-  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
-
-  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
-
-  class(fit) <- "ordinal_weightit"
-
-  fit
-}
-
-#' @export
-#' @rdname glm_weightit
-multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
-                              vcov = NULL, cluster, R = 500L,
-                              offset, start = NULL,
-                              control = list(...),
-                              x = FALSE, y = TRUE,
-                              contrasts = NULL, fwb.args = list(), ...) {
-
-  vcov <- .process_vcov(vcov, weightit, R, fwb.args)
-
-  if (missing(cluster)) {
-    cluster <- NULL
-  }
-
-  model_call <- match.call()
-
-  ###
-  if (is_not_null(...get("family"))) {
-    .err("{.arg family} cannot be used with {.fun multinom_weightit}")
-  }
-
-  internal_model_call <- .build_internal_model_call(model = "multinom",
-                                                    model_call = model_call,
-                                                    weightit = weightit,
-                                                    vcov = vcov)
-
-  fit <- .eval_fit(internal_model_call,
-                   errors = c("missing values in object" = "missing values are not allowed in the model variables"),
-                   from = FALSE)
-
-  fit$family <- list(family = "multinomial",
-                     link = "logit")
-  ###
-
-  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
-
-  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
-
-  class(fit) <- "multinom_weightit"
-
-  fit
-}
-
-#' @export
-#' @rdname glm_weightit
-coxph_weightit <- function(formula, data, weightit = NULL,
-                           vcov = NULL, cluster, R = 500L,
-                           x = FALSE, y = TRUE,
-                           fwb.args = list(), ...) {
-
-  rlang::check_installed("survival")
-
-  vcov <- .process_vcov(vcov, weightit, R, fwb.args,
-                        m_est_supported = FALSE)
-
-  if (missing(cluster)) {
-    cluster <- NULL
-  }
-
-  ##
-
-  model_call <- match.call()
-
-  internal_model_call <- .build_internal_model_call(model = "coxph",
-                                                    model_call = model_call,
-                                                    weightit = weightit,
-                                                    vcov = vcov)
-
-  fit <- .eval_fit(internal_model_call,
-                   errors = c("missing values in object" = "missing values are not allowed in the model variables"))
-
-  ##
-
-  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
-
-  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
-
-  class(fit) <- c("coxph_weightit", class(fit))
-
-  fit
+  crossprod(X, X * (-d1mus^2 * fit$prior.weights / varmus))
 }

@@ -1,12 +1,146 @@
+#' Fitting (Weighted) Ordinal Regression Models
+#'
+#' @description
+#' `ordinal_weightit()` fits an ordinal regression model with a
+#' covariance matrix that accounts for estimation of weights, if supplied. By default, this function uses M-estimation to construct a robust covariance
+#' matrix using the estimating equations for the weighting model and the outcome
+#' model when available.
+#'
+#' @inheritParams glm_weightit
+#' @param link a string corresponding to the desired link function. Any
+#'   allowed by [binomial()] are accepted. Default is `"logit"` for ordinal
+#'   logistic regression, respectively.
+#'
+#' @returns
+#' An `ordinal_weightit` object.
+#'
+#' Unless `vcov = "none"`, the `vcov` component contains the covariance matrix
+#' adjusted for the estimation of the weights if requested and a compatible
+#' `weightit` object was supplied. The `vcov_type` component contains the type
+#' of variance matrix requested. If `cluster` is supplied, it will be stored in
+#' the `"cluster"` attribute of the output object, even if not used.
+#'
+#' The `model` component of the output object (also the `model.frame()` output)
+#' will include two extra columns when `weightit` is supplied: `(weights)`
+#' containing the weights used in the model (the product of the estimated
+#' weights and the sampling weights, if any) and `(s.weights)` containing the
+#' sampling weights, which will be 1 if `s.weights` is not supplied in the
+#' original `weightit()` call.
+#'
+#' @details
+#' `ordinal_weightit()` implements proportional odds ordinal regression using a
+#' custom function in \pkg{WeightIt} that optionally computes a coefficient variance matrix that can be adjusted to
+#' account for estimation of the weights if a `weightit` or `weightitMSM` object
+#' is supplied to the `weightit` argument. Estimation of coefficients should align with that from
+#' `MASS::polr()`.
+#'
+#' When no argument is supplied to
+#' `weightit` or there is no `"Mparts"` attribute in the supplied object, the
+#' default variance matrix returned will be the "HC0" sandwich variance matrix,
+#' which is robust to misspecification of the outcome family (including
+#' heteroscedasticity). Otherwise, the default variance matrix uses M-estimation
+#' to additionally adjust for estimation of the weights. When possible, this
+#' often yields smaller (and more accurate) standard errors. See the individual
+#' methods pages to see whether and when an `"Mparts"` attribute is included in
+#' the supplied object. To request that a variance matrix be computed that
+#' doesn't account for estimation of the weights even when a compatible
+#' `weightit` object is supplied, set `vcov = "HC0"`, which treats the weights
+#' as fixed.
+#'
+#' Bootstrapping can also be used to compute the coefficient variance matrix;
+#' when `vcov = "BS"` or `vcov = "FWB"`, which implement the traditional
+#' resampling-based and fractional weighted bootstrap, respectively, the entire
+#' process of estimating the weights and fitting the outcome model is repeated
+#' in bootstrap samples (if a `weightit` object is supplied). This accounts for
+#' estimation of the weights and can be used with any weighting method. It is
+#' important to set a seed using `set.seed()` to ensure replicability of the
+#' results. The fractional weighted bootstrap is more reliable but requires the
+#' weighting method to accept sampling weights (which most do, and you'll get an
+#' error if it doesn't). Setting `vcov = "FWB"` and supplying `fwb.args = list(wtype = "multinom")`
+#' also performs the resampling-based bootstrap but
+#' with the additional features \pkg{fwb} provides (e.g., a progress bar and
+#' parallelization).
+#'
+#' @seealso
+#' * [glm_weightit()] for fitting generalized linear models that adjust for estimation of the weights.
+#' * [multinom_weightit()] for fitting multinomial regression models that adjust for estimation of the weights.
+#' * [coxph_weightit()] for fitting Cox proportional hazards models that adjust for estimation of the weights.
+#' * \pkgfun{MASS}{polr} for fitting ordinal regression models that do not account for estimation of the weights.
+#'
+#' @examples
+#' data("lalonde", package = "cobalt")
+#'
+#' # Logistic regression ATT weights
+#' w.out <- weightit(treat ~ age + educ + married + re74,
+#'                   data = lalonde, method = "glm",
+#'                   estimand = "ATT")
+#'
+#' lalonde$re78_3o <- factor(findInterval(lalonde$re78,
+#'                                       c(0, 5e3, 1e4)),
+#'                          ordered = TRUE)
+#'
+#'
+#' # Ordinal probit regression that adjusts for estimation
+#' # of weights
+#' fit <- ordinal_weightit(re78_3o ~ treat,
+#'                          data = lalonde,
+#'                          link = "probit",
+#'                          weightit = w.out)
+#'
+#' summary(fit)
+
+#' @export
+ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
+                             vcov = NULL, cluster, R = 500L,
+                             offset, start = NULL,
+                             control = list(...),
+                             x = FALSE, y = TRUE,
+                             contrasts = NULL, fwb.args = list(), ...) {
+
+  vcov <- .process_vcov(vcov, weightit, R, fwb.args)
+
+  if (missing(cluster)) {
+    cluster <- NULL
+  }
+
+  model_call <- match.call()
+
+  ###
+  if (is_not_null(...get("family"))) {
+    arg::err(c("{.arg family} cannot be used with {.fun ordinal_weightit}.",
+               "i" = "Did you mean to use {.arg link} instead?"))
+  }
+
+  internal_model_call <- .build_internal_model_call(model = "ordinal",
+                                                    model_call = model_call,
+                                                    weightit = weightit,
+                                                    vcov = vcov)
+
+  fit <- .eval_fit(internal_model_call,
+                   errors = c("missing values in object" = "missing values are not allowed in the model variables"),
+                   from = FALSE)
+
+  fit$family$family <- "ordinal"
+  ###
+
+  fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
+
+  fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
+
+  class(fit) <- "ordinal_weightit"
+
+  fit
+}
+
 # Ordinal regression
 .ordinal_weightit.fit <- function(x, y, weights = NULL, start = NULL, offset = NULL,
                                   link = "logit", hess = TRUE, control = list(), ...) {
-  arg_atomic(y)
-  arg_numeric(x)
-  arg_matrix(x)
+  arg::arg_atomic(y)
+  arg::arg_numeric(x)
+  arg::arg_matrix(x)
 
   if (rlang::is_string(link)) {
-    arg_subset(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
+    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
 
     link <- .make_link(link)
   }
@@ -21,13 +155,13 @@
     class(link) <- "link-glm"
   }
   else if (!inherits(link, "link-glm")) {
-    .err("{.arg link} must be a string or an object of class {.cls link-glm}")
+    arg::err("{.arg link} must be a string or an object of class {.cls link-glm}")
   }
 
   fam <- binomial(link)
 
   if (!is.function(fam$linkinv)) {
-    .err("the supplied link seems not to create a valid binomial family object")
+    arg::err("the supplied link seems not to create a valid binomial family object")
   }
 
   .linkfun <- fam$linkfun
@@ -38,13 +172,13 @@
   n <- length(y)
 
   if (is_null(weights)) weights <- rep.int(1, n)
-  else arg_numeric(weights)
+  else arg::arg_numeric(weights)
 
   if (is_null(offset)) offset <- rep.int(0, n)
-  else arg_numeric(offset)
+  else arg::arg_numeric(offset)
 
   if (!all_the_same(c(length(y), nrow(x), length(weights), length(offset)))) {
-    .err('{.arg {c("y", "x", "weights", "offset")}} must all have the same number of units')
+    arg::err('{.arg {c("y", "x", "weights", "offset")}} must all have the same number of units')
   }
 
   x <- x[, colnames(x) != "(Intercept)", drop = FALSE]
@@ -80,13 +214,13 @@
     }
   }
   else {
-    arg_numeric(start)
-    arg_length(start, k0)
+    arg::arg_numeric(start)
+    arg::arg_length(start, k0)
 
     start <- start[!aliased_B]
 
     if (any(diff(start[-seq_col(x)]) <= 0)) {
-      .err("starting values for the thresholds must be in ascending order")
+      arg::err("starting values for the thresholds must be in ascending order")
     }
   }
 
@@ -314,16 +448,20 @@
                               x = FALSE, y = TRUE, contrasts = NULL, ...) {
   cal <- match.call()
 
-  arg_flag(hess)
-  arg_flag(model)
-  arg_flag(x)
-  arg_flag(y)
-  arg_string(link)
+  arg::arg_supplied(formula)
+  arg::arg_string(link)
+  arg::arg_flag(hess)
+  arg::arg_flag(model)
+  arg::arg_flag(x)
+  arg::arg_flag(y)
 
-  if (missing(data))
+  if (missing(data)) {
     data <- environment(formula)
+  }
+
   mf <- match.call(expand.dots = FALSE)
-  m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"), names(mf), 0L)
+  m <- match(c("formula", "data", "subset", "weights", "na.action", "offset"),
+             names(mf), 0L)
   mf <- mf[c(1L, m)]
   mf$drop.unused.levels <- TRUE
   mf[[1L]] <- quote(stats::model.frame)
@@ -346,16 +484,19 @@
   }
 
   weights <- as.vector(model.weights(mf))
+
   if (is_not_null(weights)) {
-    arg_numeric(weights)
-    arg_gte(weights)
+    arg::arg_numeric(weights)
+    arg::arg_gte(weights, 0)
   }
 
   offset <- as.vector(model.offset(mf))
   if (is_not_null(offset)) {
-    arg_numeric(offset)
-    if (length(offset) != NROW(Y))
-      .err("number of offsets is {length(offset)}; should equal {NROW(Y)} (number of observations)")
+    arg::arg_numeric(offset)
+
+    if (length(offset) != NROW(Y)) {
+      arg::err("number of offsets is {length(offset)}; should equal {NROW(Y)} (number of observations)")
+    }
   }
 
   fit <- eval(call(".ordinal_weightit.fit",
