@@ -30,10 +30,11 @@ pre code {
 
 ```{r, cache = FALSE, include = FALSE, eval = TRUE}
 knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
-options(width = 200, digits= 4)
+options(width = 200, digits = 4L, marginaleffects_safe = FALSE)
 
 me_ok <- rlang::is_installed("marginaleffects (>= 0.29.0)")
 su_ok <- rlang::is_installed("survival")
+adrf_ok <- rlang::is_installed("adrftools")
 ```
 
 ```{r, include = FALSE}
@@ -107,9 +108,13 @@ Am <- gen_Am(A)
 
 Y_C <- gen_Y_C(A, X)
 Y_B <- gen_Y_B(A, X)
-Y_S <- gen_Y_S(A, X)
 
-d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S)
+Y_S_ <- gen_Y_S(A, X)
+cens_time <- 500
+Y_death <- as.integer(Y_S_ < cens_time)
+Y_S <- pmin(Y_S_, cens_time)
+
+d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S, Y_death)
 ```
 
 ## Introduction
@@ -162,7 +167,7 @@ Uncertainty estimation (i.e., of SEs, confidence intervals, and p-values) may co
 
 M-estimation involves specifying a stack of estimating equations, one for each parameter to be estimated, that are each a function of the parameters. The final parameter estimates are those that yield a vector of 0s for the solutions of the estimating equations. These estimating equations include the parameters of the weighting model (e.g., the coefficients in the logistic regression model for the propensity score) and the parameters of the outcome model (i.e., the coefficients on treatment and the covariates). It is possible to compute the joint covariance matrix of all the estimated parameters using functions of the estimating equations and the estimated parameters. We refer curious readers to @stefanskiCalculusMEstimation2002 for an introduction.
 
-Most theoretical developments on the estimation of asymptotically correct standard errors for propensity score-weighted treatment effect estimates rely on M-estimation theory [@luncefordStratificationWeightingPropensity2004; @reifeisVarianceTreatmentEffect2022; @gabrielInverseProbabilityTreatment2024]. This method can only be used when the model used to estimate the weights involves estimating equations. Currently, only weights estimated using a generalized linear model propensity score, entropy balancing, inverse probability tilting, or the just-identified covariate balancing propensity score can be accommodated with this method. `glm_weightit()` can be used to fit generalized linear models for the outcome that account for estimation of the weights; `ordinal_weightit()`, `multinom_weightit()`, and `coxph_weightit()` can be used to fit ordinal, multinomial, and Cox proportional hazards models. When estimating equations are not available for a given method, the weights are treated as fixed and known, and the M-estimation standard errors are equal to the robust standard errors described below.
+Most theoretical developments on the estimation of asymptotically correct standard errors for propensity score-weighted treatment effect estimates rely on M-estimation theory [@luncefordStratificationWeightingPropensity2004; @reifeisVarianceTreatmentEffect2022; @gabrielInverseProbabilityTreatment2024; @shuVarianceEstimationInverse2021]. This method can only be used when the model used to estimate the weights involves estimating equations. Currently, only weights estimated using a generalized linear model propensity score, entropy balancing, inverse probability tilting, or the just-identified covariate balancing propensity score can be accommodated with this method. `glm_weightit()` can be used to fit generalized linear models for the outcome that account for estimation of the weights; `ordinal_weightit()`, `multinom_weightit()`, and `coxph_weightit()` can be used to fit ordinal, multinomial, and Cox proportional hazards models, respectively. When estimating equations are not available for a given method, the weights are treated as fixed and known, and the M-estimation standard errors are equal to the robust standard errors described below.
 
 #### Robust Standard Errors
 
@@ -188,12 +193,13 @@ We'll be using a simulated toy dataset `d` with several outcome and treatment ty
 head(d)
 ```
 
-`A` is a binary treatment variable, `X1` through `X9` are covariates, `Y_C` is a continuous outcome, `Y_B` is a binary outcome, and `Y_S` is a survival outcome. `Am` and `Ac` are multi-category and continuous treatment variables, respectively.
+`A` is a binary treatment variable, `X1` through `X9` are covariates, `Y_C` is a continuous outcome, `Y_B` is a binary outcome, and `Y_S` is a survival outcome (time-to-death) where `Y_death` denotes whether the unit died (`1`) or was censored (`0`). `Am` and `Ac` are multi-category and continuous treatment variables, respectively.
 
 In addition to *WeightIt* and whatever package may be required to estimate the weights, we will need the following packages to perform the analyses:
 
 -   *marginaleffects* provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
--   *survival* provides `coxph()` to estimate the coefficients in a Cox-proportional hazards model for the marginal hazard ratio, which is called internally by `coxph_weightit()` for survival outcomes
+-   *survival* provides functionality to estimate the coefficients in a Cox proportional hazards model for the marginal hazard ratio, which is called internally by `coxph_weightit()` for survival outcomes
+-   *ardftools* provides tools for estimating, visualizing, and testing the effect of a continuous treatment on an outcome
 
 ```{r,message=FALSE,warning=FALSE, eval= if (me_ok) TRUE else 1L}
 library("WeightIt")
@@ -202,11 +208,11 @@ library("marginaleffects")
 
 Effect estimates will be computed using `marginaleffects::avg_comparisons()`, even when its use may be superfluous (e.g., for comparing the weighted difference in means). As previously mentioned, this is because it is useful to have a single workflow that works no matter the situation, perhaps with very slight modifications to accommodate different contexts. Using `avg_comparisons()` has several advantages, even when the alternatives are simple: it only provides the effect estimate and not other coefficients, and it always produces average marginal effects for the correct population if requested.
 
-Other packages may be of use but are not used here. There are alternatives to the *marginaleffects* package for computing average marginal effects, including *margins* and *stdReg*. The *survey* package can be used to estimate robust SEs incorporating weights and provides functions for survey-weighted generalized linear models and Cox-proportional hazards models. Much of the code here can be adapted to be used with *survey*, and we will demonstrate that as well.
+Other packages may be of use but are not used here. There are alternatives to the *marginaleffects* package for computing average marginal effects, including *margins* and *stdReg*. The *survey* package can be used to estimate robust SEs incorporating weights and provides functions for survey-weighted generalized linear models and Cox proportional hazards models. Much of the code here can be adapted to be used with *survey*, and we will demonstrate that as well.
 
 ### The Standard Case: Binary Treatment with Asymptotically Correct SEs
 
-For many weighting methods, estimating the effect after weighting is straightforward and involves fitting a model for the outcome that incorporates the estimated weights using `lm_weightit()` or `glm_weightit()`, then estimating the treatment effect using g-computation (i.e., using `marginaleffects::avg_comparisons()`). This procedure is the same for continuous and binary outcomes with and without covariates. This method uses the asymptotically correct M-estimation-based SEs when available and robust SEs otherwise or bootstrap standard errors if requested.
+For many weighting methods, estimating the effect after weighting is straightforward and involves fitting a model for the outcome that incorporates the estimated weights using `lm_weightit()` or `glm_weightit()`, then estimating the treatment effect using g-computation (i.e., using `avg_comparisons()`). This procedure is the same for continuous and binary outcomes with and without covariates. This method uses the asymptotically correct M-estimation-based SEs when available and robust SEs otherwise or bootstrap standard errors if requested.
 
 There are a few adjustments that need to be made for certain scenarios, which we describe in the section "Adjustments to the Standard Case". These adjustments include for the following cases: when weighting for the ATT or ATC, for estimating effects with binary outcomes, and for estimating effects with survival outcomes. Estimation for all estimands other than the ATT and ATC proceeds as it does for the ATE. You must read the Standard Case to understand the basic procedure before reading about these special scenarios. We also demonstrate how to estimate effects for multi-category, continuous, and sequential treatments.
 
@@ -233,13 +239,13 @@ fit <- lm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 +
                     data = d, weightit = W)
 ```
 
-Next, we use `marginaleffects::avg_comparisons()` to estimate the ATE.
+Next, we use `avg_comparisons()` to estimate the ATE.
 
 ```{r, eval=me_ok}
 avg_comparisons(fit, variables = "A")
 ```
 
-If, in addition to the effect estimate, we want the average estimated potential outcomes, we can use `marginaleffects::avg_predictions()`, which we demonstrate below. Note the interpretation of the resulting estimates as the expected potential outcomes is only valid if all covariates present in the outcome model (if any) are interacted with the treatment.
+If, in addition to the effect estimate, we want the average estimated potential outcomes, we can use `avg_predictions()`, which we demonstrate below. Note the interpretation of the resulting estimates as the expected potential outcomes is only valid if all covariates present in the outcome model (if any) are interacted with the treatment.
 
 ```{r, eval=me_ok}
 avg_predictions(fit, variables = "A")
@@ -271,7 +277,7 @@ When weighting for an estimand that changes the target population away from one 
 wts = W$weights
 ```
 
-#### Binary and count outcomes
+#### Binary, count, and categorical outcomes
 
 Estimating effects on binary and count outcomes is essentially the same as for continuous outcomes. The main difference is that there are several measures of the effect one can consider, which include the odds ratio (OR), risk ratio/relative risk (RR), and risk difference (RD) for binary outcomes and the count/incidence ratio for count outcomes, and the syntax to `avg_comparisons()` depends on which one is desired. The outcome model should be one appropriate for the outcomes (e.g., logistic regression for binary outcomes or Poisson regression for count outcomes) but is unrelated to the desired effect measure because we can compute any of the above effect measures using `avg_comparisons()` after fitting the model.
 
@@ -279,7 +285,9 @@ To fit a generalized linear model, change `lm_weightit()` to `glm_weightit()` an
 
 [^3]: Note that for low or high average expected risks computed with `avg_predictions()`, the confidence intervals may go below 0 or above 1; this is because an approximation is used. To avoid this problem, bootstrapping or simulation-based inference can be used instead.
 
-To compute the marginal RR or count/incidence ratio, first we need to add `comparison = "lnratioavg"` to `avg_comparisons()`; this computes the marginal log ratio. To get the marginal ratio itself, we need to add `transform = "exp"` to `avg_comparisons()`, which exponentiates the marginal log ratio and its confidence interval. The code below computes the effects and displays the statistics of interest for a binary outcome `Y_B`:
+To compute the marginal RR or count/incidence ratio, first we need to add `comparison = "lnratioavg"` to `avg_comparisons()`; this computes the marginal log ratio. To get the marginal ratio itself, we need to add `transform = "exp"` to `avg_comparisons()`, which exponentiates the marginal log ratio and its confidence interval[^4]. The code below computes the effects and displays the statistics of interest for a binary outcome `Y_B`:
+
+[^4]: Note: do not use `comparison = "ratioavg"` to compute the risk ratio. The confidence intervals around the estimate will be incorrect.
 
 ```{r, eval=me_ok}
 #Logistic regression model with covariates
@@ -299,18 +307,18 @@ The output displays the marginal RR, its Z-value, the p-value for the Z-test of 
 
 For the marginal OR, the only thing that needs to change is that `comparison` should be set to `"lnoravg"`.
 
-Multi-category outcomes can be modeled using `ordinal_weightit()` and `multinom_weightit()`, which fit ordinal and multinomial regression models, respectively.
+Categorical outcomes can be modeled using `ordinal_weightit()` and `multinom_weightit()`, which fit ordinal and multinomial regression models, respectively.
 
 #### Survival outcomes
 
-There are several measures of effect size for survival outcomes, some of which are described by @mao2018. When using the Cox proportional hazards model, the quantity of interest is the hazard ratio (HR) between the treated and control groups. As with the OR, the HR is non-collapsible, which means the estimated HR will only be a valid estimate of the marginal HR when no other covariates are included in the model. Other effect measures, such as the difference in mean survival times or probability of survival after a given time, can be treated just like continuous and binary outcomes as previously described.
+There are several measures of effect size for survival outcomes, some of which are described by @mao2018. A common quantity of interest is the hazard ratio (HR) between the treated and control groups, which can be estimated using a Cox proportional hazards model. As with the OR, the HR is non-collapsible, which means the estimated HR will only be a valid estimate of the marginal HR when no other covariates are included in the model. Other effect measures, such as the difference in mean survival times or probability of survival after a given time, can be treated just like continuous and binary outcomes as previously described.
 
-For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph_weightit()`, which adapts `coxph()` from the *survival* package but allows for estimation of SEs that account for estimation of the weights. Robust SEs for HRs were studied by @austin2016 and were found to be conservative. Other formulas have been developed for estimating standard errors more accurately [@mao2018; @hajage2018], though @austin2016 also found the bootstrap to be adequate. The HC0 robust standard error is requested by default, and bootstrap standard errors can be requested by setting `vcov` to `"BS"` or `"FWB"`.
+For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph_weightit()`, which adapts `coxph()` from the *survival* package but allows for estimation of SEs that account for estimation of the weights. Robust SEs for HRs were studied by @austin2016 and were found to be conservative. Other formulas have been developed for estimating standard errors more accurately [@mao2018; @hajage2018; @shuVarianceEstimationInverse2021], though @austin2016 also found the bootstrap to be adequate. The M-estimation-based standard error as decribed by @shuVarianceEstimationInverse2021 is requested by default, and bootstrap standard errors can be requested by setting `vcov` to `"BS"` or `"FWB"`.
 
 ```{r, eval=su_ok, message=F}
 #Cox Regression for marginal HR
-fit <- coxph_weightit(survival::Surv(Y_S) ~ A, data = d,
-                      weightit = W)
+fit <- coxph_weightit(survival::Surv(Y_S, Y_death) ~ A,
+                      data = d, weightit = W)
 
 #Log HR estimates
 summary(fit)
@@ -318,12 +326,22 @@ summary(fit)
 
 Note that the output differs from that of `survival::coxph()` and is more similar to that of `glm()`. The `Estimate` column contains the log HR. We can request the HR by setting `transform = "exp"` in the call to `summary()`.
 
-```{r}
+```{r, eval=su_ok}
 #HR and CIs; requested by exponentiating log HRs
 summary(fit, ci = TRUE, transform = "exp")
 ```
 
-The [*adjustedCurves*](https://cran.r-project.org/package=adjustedCurves) package provides integration with *WeightIt* to estimate adjusted survival estimands. We strongly recommend using this package to estimate effects after weighting.
+A more interpretable estimand is the survival probability difference at a given time, which can be computed using `avg_comparisons()` on the `coxph_weightit()` output. We must specify the desired follow-up time (in this case, 300 days) using the `newdata` argument as follows:
+
+```{r, eval = me_ok && su_ok, warn = FALSE, message = FALSE}
+avg_comparisons(fit, variables = "A",
+                type = "survival",
+                newdata = datagrid(Y_S = 300, grid_type = "counterfactual"))
+```
+
+A negative value for the survival probability difference indicates that the treatment decreases the probability of survival for 300 days (i.e., increases the probability of death within 300 days), consistent with a positive HR (also indicating an increased probability of death). For the survival probability difference, additional covariates can be included in the Cox regression model and the estimate retains its interpretation as a marginal effect.
+
+The [*adjustedCurves*](https://cran.r-project.org/package=adjustedCurves) package provides limited integration with *WeightIt* to estimate adjusted survival estimands. We recommend using this package to estimate effects after weighting.
 
 #### Using sampling weights and/or clustered data
 
@@ -416,11 +434,17 @@ We find significant ATTs between the focal treatment and control levels (`T - C1
 
 ### Continuous Treatments
 
-For continuous treatments, one estimand of interest is the average dose-response function (ADRF), which links the value of the treatment to the expected potential outcome under that treatment value across the full sample. We do not provide a detailed account of the ADRF but will demonstrate how to estimate weights that balance covariates with respect to a continuous treatment and how to estimate and plot the ADRF in the weighted sample. We'll use the continuous treatment `Ac`, which ranges from -10.37 to 6.26, and estimate its effect on the continuous outcome `Y_C`.
+For continuous treatments, one estimand of interest is the average dose-response function (ADRF), which links the value of the treatment to the expected potential outcome under that treatment value across the full sample. The [*adrftools*](https://ngreifer.github.io/adrftools/) package implements methods for estimating, visualizing, and testing the ADRF and related estimands.
+
+```{r, eval = adrf_ok, warning=FALSE, message=FALSE}
+library("adrftools")
+```
+
+We do not provide a detailed account of the ADRF but will demonstrate how to estimate weights that balance covariates with respect to a continuous treatment and how to estimate, plot, and test the ADRF in the weighted sample. We'll use the continuous treatment `Ac`, which ranges from -10.37 to 6.26, and estimate its effect on the binary outcome `Y_B`.
 
 First, we'll estimate entropy balancing weights [@vegetabileNonparametricEstimationPopulation2021] using `weightit()`.
 
-```{r}
+```{r, eval = adrf_ok, warning=FALSE}
 W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + 
                 X6 + X7 + X8 + X9, data = d,
               moments = 2, int = TRUE,
@@ -428,69 +452,50 @@ W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 +
 W
 ```
 
-Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model and perform weighted g-computation. For the outcome model, we will use a natural cubic spline on `Ac` with 4 df. You can use any transformation of the treatment, e.g., a polynomial transformation using `poly()`, as long as it is flexible enough to capture any possible ADRF; purely nonparametric methods like kernel regression can be used as well, but inference for them is more challenging. Covariates can be included in the model, but with many covariates, many basis functions for the treatment, and a full set of treatment-covariate interactions, the resulting estimates may be imprecise.
+Typically one would assess the performance of the weights (balance and effective sample size) but we will skip that for now. Next, we fit the outcome model, on which we will perform weighted g-computation. For the outcome model, we will use a logistic regression with a natural cubic spline on `Ac` with 4 df. One can use any transformation of the treatment, e.g., a polynomial transformation using `poly()`, as long as it is flexible enough to capture any possible ADRF. Covariates can be included in the model, but with many covariates, many basis functions for the treatment, and a full set of treatment-covariate interactions, the resulting estimates may be imprecise.
 
-```{r}
+```{r, eval = adrf_ok, warning=FALSE}
 #Fit the outcome model
-fit <- lm_weightit(Y_C ~ splines::ns(Ac, df = 4) *
+fit <- glm_weightit(Y_B ~ splines::ns(Ac, df = 4) *
                      (X1 + X2 + X3 + X4 + X5 + 
                         X6 + X7 + X8 + X9),
-                   data = d, weightit = W)
+                   data = d,
+                   weightit = W,
+                   family = binomial)
 ```
 
-Next we use `avg_predictions()` first to compute the expected potential outcome under a representative set of treatment values. We'll examine 31 treatment values from the 10th to 90th percentiles of `Ac` because estimates outside those ranges tend to be imprecise.
+Next we use `adrf()` in *adrftools* to perform g-computation to estimate the ADRF:
 
-```{r, eval = me_ok}
-#Represenative values of Ac:
-values <- with(d, seq(quantile(Ac, .1),
-                      quantile(Ac, .9),
-                      length.out = 31))
+```{r, eval = adrf_ok, warning=FALSE}
+ADRF_Ac <- adrf(fit, treat = "Ac")
 
-#G-computation
-p <- avg_predictions(fit,
-                     variables = list(Ac = values))
+ADRF_Ac
 ```
 
-Although one can examine the expected potential outcomes, it is often more useful to see them plotted. We can generate a plot of the ADRF and its pointwise confidence band using *ggplot2*[^4]:
+We can generate a plot of the ADRF and its simultaneous confidence band using `plot()`:
 
-[^4]: You can also use `marginaleffects::plot_predictions()`, though after requesting the predictions in the prior step it is quicker to use `ggplot()`.
-
-```{r, eval = me_ok, fig.height=3.5, fig.width=7}
-library("ggplot2")
-ggplot(p, aes(x = Ac)) +
-  geom_line(aes(y = estimate)) +
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
-              alpha = .3) +
-  labs(x = "Ac", y = "E[Y|Ac]") +
-  theme_bw()
+```{r, eval = adrf_ok, warning=FALSE, fig.height=3.5, fig.width=7}
+plot(ADRF_Ac)
 ```
 
-We can see that the ADRF has an elbow-shape, with a zone of no evidence of treatment effect followed by a zone of increasing values of the outcome as the treatment increases.
+We can see that the ADRF has a bit of an elbow-shape, with a zone of little evidence of treatment effect (between, say -6 and -2) followed by a zone of increasing values of the outcome as the treatment increases.
 
-Another way to characterize the effect of continuous treatments is to examine the average marginal effect function (AMEF), which is a function that relates the value of treatment to the derivative of the ADRF. When this derivative is different from zero, there is evidence of a treatment effect at the corresponding value of treatment. Below, we use `avg_slopes()` to compute the pointwise derivatives of the ADRF across levels of `Ac` and then plot it[^5].
+We can test the null hypothesis that the ADRF is flat using `summary()`:
 
-[^5]: You can also use `plot_slopes()`
-
-```{r, eval = me_ok, fig.height=3.5, fig.width=7}
-# Estimate the pointwise derivatives at representative
-# values of Ac
-s <- avg_slopes(fit,
-                variables = "Ac",
-                newdata = datagrid(Ac = values,
-                                   grid_type = "counterfactual"),
-                by = "Ac")
-
-# Plot the AMEF
-ggplot(s, aes(x = Ac)) +
-  geom_line(aes(y = estimate)) +
-  geom_ribbon(aes(ymin = conf.low, ymax = conf.high),
-              alpha = .3) +
-  geom_hline(yintercept = 0, linetype = "dashed") +
-  labs(x = "Ac", y = "dE[Y|Ac]/dAc") +
-  theme_bw()
+```{r, eval = adrf_ok, warning=FALSE}
+summary(ADRF_Ac, hypothesis = "flat")
 ```
 
-We can see that between values of -1.8 and .5, there is evidence of a positive effect of `Ac` on `Y_C` (i.e., because the confidence intervals for the slope of the ADRF at those values of `Ac` exclude 0). This is in line with our observation above that the treatment only appears to have an effect at higher values of `Ac`.
+The small p-value indicates that the ADRF is not flat and therefore that there is an effect of `Ac` on `Y_B`.
+
+We can produce estimates of the ADRF at different values of `Ac`, which can aid in interpreting the output quantitatively:
+
+```{r, eval = adrf_ok, warning=FALSE}
+ADRF_Ac(c(-6, -4, -2, 0, 2)) |>
+  summary()
+```
+
+For more information on all of the capabilities of *adrftools*, see its [website](https://ngreifer.github.io/adrftools/).
 
 ### Longitudinal Treatments
 
@@ -540,9 +545,9 @@ hypotheses(p, ~reference)
 
 Moderation analysis involves determining whether a treatment effect differs across levels of another variable. The use of weighting with moderation analysis is described in @griffinTutorialPropensityScore2023. The goal is to achieve balance within each subgroup of the potential moderating variable, and there are several ways of doing so. Broadly, one can either perform weighting in the full dataset and interact the moderator with the other covariates in the weighting model, or one can perform completely separate analyses in each subgroup.
 
-In some cases, e.g., when using unregularized parametric methods like GLM propensity score weighting, CBPS, entropy balancing, or inverse probability tilting, both methods yield identical results. To fit a weighting model within each subgroup, one can use the `by` argument to `weightit()`, which does just this[^6]. There is also the possibility of using the subgroup balancing propensity score [@dongSubgroupBalancingPropensity2020] implemented using `sbps()`, which determines whether a single weighting model fit to the whole or a subgroup-specific weighting model is best for each subgroup and overall. The chosen approach should be that which achieves the best balance, though we don't demonstrate assessing balance here to maintain focus on effect estimation.
+In some cases, e.g., when using unregularized parametric methods like GLM propensity score weighting, CBPS, entropy balancing, or inverse probability tilting, both methods yield identical results. To fit a weighting model within each subgroup, one can use the `by` argument to `weightit()`, which does just this[^5]. There is also the possibility of using the subgroup balancing propensity score [@dongSubgroupBalancingPropensity2020] implemented using `sbps()`, which determines whether a single weighting model fit to the whole or a subgroup-specific weighting model is best for each subgroup and overall. The chosen approach should be that which achieves the best balance, though we don't demonstrate assessing balance here to maintain focus on effect estimation.
 
-[^6]: Currently, when `by` is used, M-estimation based standard errors cannot be computed, but all methods compatible with M-estimation yield identical results when using `by` vs. interacting the moderator with the other covariates in the weighting model. Here, we demonstrate using `by` because it is more generalizable to other methods.
+[^5]: Currently, when `by` is used, M-estimation based standard errors cannot be computed, but all methods compatible with M-estimation yield identical results when using `by` vs. interacting the moderator with the other covariates in the weighting model. Here, we demonstrate using `by` because it is more generalizable to other methods.
 
 We'll consider the binary variable `X5` to be the potential moderator of the effect of `A` on `Y_C`. Below, we'll estimate weights using CBPS for the ATE within each level of `X5` by supplying it to the `by` argument.
 
@@ -595,6 +600,8 @@ This produces a single p-value for the test that all pairwise differences betwee
 
 It is important to remember that the presence of moderation does not imply that the moderator causes differences in the treatment effect; it may simply be associated with a variable that interacts with the treatment [@vanderweeleDistinctionInteractionEffect2009]. In addition, depending on which variables are adjusted for and how, moderation may not necessarily represent a disparity, even if one group experiences less benefit than another group [@jacksonMeaningfulCausalDecompositions2021].
 
+For continuous treatments, moderation analysis is possible using *adrftools*.
+
 ## Reporting Results
 
 It is important to be as thorough and complete as possible when describing the methods of estimating the treatment effect and the results of the analysis. This improves transparency and replicability of the analysis. Results should at least include the following:
@@ -602,7 +609,7 @@ It is important to be as thorough and complete as possible when describing the m
 -   a description of the outcome model used (e.g., logistic regression, a linear model with treatment-covariate interactions and covariates, a Cox proportional hazards model with the propensity score weights applied)
 -   the way the effect was estimated (e.g., using g-computation or as the coefficient in the outcome model)
 -   the way SEs were estimated (e.g., using M-estimation, using robust SEs that treat the weights as fixed, using the fractional weighted bootstrap with 1000 bootstrap replications and the entire process of weighting and effect estimation included in each replication)
--   R packages and functions used in estimating the effect and its SE (e.g., `glm_weightit()` in *WeightIt*, `avg_comparisons()` in *marginaleffects*)
+-   R packages and functions used in estimating the effect and its SE (e.g., `glm_weightit()` in *WeightIt*, `avg_comparisons()` in *marginaleffects*, `adrf()` in *adrftools*)
 -   The effect and its SE and confidence interval
 
 All this is in addition to information about the weighting method, estimand, propensity score estimation procedure (if used), balance assessment, etc.
@@ -683,7 +690,11 @@ Am <- gen_Am(A)
 
 Y_C <- gen_Y_C(A, X)
 Y_B <- gen_Y_B(A, X)
-Y_S <- gen_Y_S(A, X)
 
-d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S)
+Y_S_ <- gen_Y_S(A, X)
+cens_time <- 500
+Y_death <- as.integer(Y_S_ < cens_time)
+Y_S <- pmin(Y_S_, cens_time)
+
+d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S, Y_death)
 ```
