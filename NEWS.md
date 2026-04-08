@@ -1,6 +1,22 @@
 WeightIt News and Updates
 ======
 
+# `WeightIt` (development version)
+
+* `coxph_weightit()` can now estimate standard errors that account for estimation of the weights using M-estimation as described by [Shu et al. (2021)](https://doi.org/10.1111/biom.13332).
+
+* `weightit()` with `method = "ebal"` now accepts an optional `tols` argument, which can be used to set a balance threshold for inexact balance. This uses a new algorithm for optimizing with L1 regularization.
+
+* Fixed bugs in entropy balancing that made the M-estimation covariance slightly too small. Thanks to Chad Hazlett for pointing them out.
+
+* When using the `tols` argument with `method = "energy"` with a continuous treatment, the imbalance tolerances now yield correlations no larger than the imbalance tolerance as computed with `cobalt:col_w_corr()`. Previously, they were allowed to be slightly too large.
+
+* `glm_weightit()`, `multinom_weightit()`, `ordinal_weightit()`, and `coxph_weightit()` are now each documented on their own page.
+
+* The Estimating Effects vignettes (`vignette("estimating-effects")`) now describes how to use the [*adrftools*](https://ngreifer.github.io/adrftools/) package to estimate the effect of a continuous treatment.
+
+* [*arg*](https://ngreifer.github.io/arg/) is a new dependency for producing error messages and checking arguments.
+
 # `WeightIt` 1.6.0
 
 * Added `method = "cfd"` for characteristic function distance balancing as described by [Santra, Chen, and Park (2026)](https://arxiv.org/abs/2601.15449). Energy balancing is a special case of this method.

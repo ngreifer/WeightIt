@@ -26,8 +26,8 @@ run twice, once for each treatment group.
 
 For multi-category treatments, this method estimates the weights using
 \code{optim()}. The following estimands are allowed: ATE and ATT. When the ATE is
-requested, \code{optim()} is run once for each treatment group. When the ATT is
-requested, \code{optim()} is run once for each non-focal (i.e., control) group.
+requested, the optimization is run once for each treatment group. When the ATT is
+requested, the optimization is run once for each non-focal (i.e., control) group.
 }
 
 \subsection{Continuous Treatments}{
@@ -62,7 +62,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 
 \subsection{M-estimation}{
 
-M-estimation is supported for all scenarios. See \code{\link[=glm_weightit]{glm_weightit()}} and
+M-estimation is supported for all treatment types and estimands except when \code{tols} is greater than 0. See \code{\link[=glm_weightit]{glm_weightit()}} and
 \code{vignette("estimating-effects")} for details.
 }
 }
@@ -87,7 +87,9 @@ is a logistic regression of the treatment on the covariates or when the true
 outcome model for the control units is a linear regression of the outcome on
 the covariates, and it attains a semi-parametric efficiency bound when both
 are true. Entropy balancing will always yield exact mean balance on the
-included terms.
+included terms unless an imbalance tolerance is requested with \code{tols}.
+
+When \code{tols} is greater than 0, inexact balance is allowed on the covariates. This can improve precision while allowing a small amount of bias in. The optimization problem is an L1 regularization problem and is solved using the Fast Iterative Shrinkage-Thresholding Algorithm (FISTA).
 }
 \section{Additional Arguments}{
 
@@ -103,6 +105,7 @@ included terms.
 }
 \item{\code{quantile}}{a named list of quantiles (values between 0 and 1) for each continuous covariate, which are used to create additional variables that when balanced ensure balance on the corresponding quantile of the variable. For example, setting \verb{quantile = list(x1 = c(.25, .5. , .75))} ensures the 25th, 50th, and 75th percentiles of \code{x1} in each treatment group will be balanced in the weighted sample. Can also be a single number (e.g., \code{.5}) or a vector (e.g., \code{c(.25, .5, .75)}) to request the same quantile(s) for all continuous covariates. Only allowed with binary and multi-category treatments.
 }
+\item{\code{tols}}{a number corresponding to the maximum allowed standardized mean difference (for binary and multi-category treatments) or treatment-covariate correlation (for continuous treatments) allowed. Default is 0 for exact balance.}
 \item{\code{d.moments}}{\code{integer}; with continuous treatments, the number of moments of the treatment and covariate distributions that are constrained to be the same in the weighted sample as in the original sample. For example, setting \code{d.moments = 3} ensures that the mean, variance, and skew of the treatment and covariates are the same in the weighted sample as in the unweighted sample. \code{d.moments} should be greater than or equal to \code{moments} and will be automatically set accordingly if not (or if not specified). Vegetabile et al. (2021) recommend setting \code{d.moments = 3}, even if \code{moments} is less than 3. This argument corresponds to the tuning parameters \eqn{r} and \eqn{s} in Vegetabile et al. (2021) (which here are set to be equal). Ignored for binary and multi-category treatments.}
 }
 
@@ -152,6 +155,17 @@ summary(W3)
 
 cobalt::bal.tab(W3, poly = 2,
                 stats = c("c", "m"))
+
+#Balancing covariates between treatment groups (binary),
+#allowing for inexact balance
+(W1b <- weightit(treat ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "ebal", estimand = "ATT",
+                tols = .02))
+
+summary(W1b)
+
+cobalt::bal.tab(W1, weights = list(inexact = W1b))
 }
 \references{
 \subsection{Binary Treatments}{
@@ -180,5 +194,5 @@ Vegetabile, B. G., Griffin, B. A., Coffman, D. L., Cefalu, M., Robbins, M. W., &
 \code{\link[=weightit]{weightit()}}, \code{\link[=weightitMSM]{weightitMSM()}}
 
 \link{method_ipt} and \link{method_cbps} for inverse probability tilting and CBPS,
-which work similarly.
+which work similarly. \link{method_optweight} for another implementation of entropy balancing (by setting \code{"norm = entropy"}).
 }

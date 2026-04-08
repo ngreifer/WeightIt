@@ -2,13 +2,13 @@
 % Please edit documentation in R/predict.glm_weightit.R
 \name{predict.glm_weightit}
 \alias{predict.glm_weightit}
-\alias{predict.ordinal_weightit}
 \alias{predict.multinom_weightit}
+\alias{predict.ordinal_weightit}
 \title{Predictions for \code{glm_weightit} objects}
 \usage{
 \method{predict}{glm_weightit}(object, newdata = NULL, type = "response", na.action = na.pass, ...)
 
-\method{predict}{ordinal_weightit}(
+\method{predict}{multinom_weightit}(
   object,
   newdata = NULL,
   type = "response",
@@ -18,7 +18,7 @@
   ...
 )
 
-\method{predict}{multinom_weightit}(
+\method{predict}{ordinal_weightit}(
   object,
   newdata = NULL,
   type = "response",

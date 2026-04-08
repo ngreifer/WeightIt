@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 1.6.0
+Version: 1.6.0.9000
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -14,7 +14,7 @@ Description: Generates balancing weights for causal effect estimation in observa
              allows for assessment of weights and checking of covariate balance by interfacing directly
              with the 'cobalt' package. Methods for estimating weighted regression models that take into account 
              uncertainty in the estimation of the weights via M-estimation or bootstrapping are available. See the vignette "Installing Supporting Packages" for instructions on how
-             to install any package 'WeightIt' uses, including those that may not be on CRAN.
+             to install any optional package 'WeightIt' uses, including those that may not be on CRAN.
 Depends:
     R (>= 4.1.0)
 Imports:
@@ -25,7 +25,8 @@ Imports:
     sandwich,
     generics,
     utils,
-    stats
+    stats,
+    arg (>= 0.1.0)
 Suggests:
     rootSolve (>= 1.8.2.4),
     CBPS (>= 0.18),
@@ -41,6 +42,7 @@ Suggests:
     fwb (>= 0.2.0),
     splines,
     marginaleffects (>= 0.19.0),
+    adrftools,
     MASS,
     gbm (>= 2.1.9),
     dbarts (>= 0.9-29),
@@ -62,3 +64,5 @@ LazyData: true
 RoxygenNote: 7.3.3
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
+Remotes:  
+    ngreifer/arg
