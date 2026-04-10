@@ -3,10 +3,10 @@
 This page documents methods for objects returned by
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
 and
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md).
 [`predict()`](https://rdrr.io/r/stats/predict.html) methods are
 described at
 [`predict.glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
@@ -142,7 +142,7 @@ update(object, formula. = NULL, ..., evaluate = TRUE)
 [`summary()`](https://rdrr.io/r/base/summary.html) returns a
 `summary.glm_weightit()` object, which has its own
 [`print()`](https://rdrr.io/r/base/print.html) method. For
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
 objects, the [`print()`](https://rdrr.io/r/base/print.html) and
 [`summary()`](https://rdrr.io/r/base/summary.html) methods are more like
 those for `glm` objects than for `coxph` objects.
@@ -210,10 +210,10 @@ details.
 for the page documenting
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
 and
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md).
 [`summary.glm()`](https://rdrr.io/r/stats/summary.glm.html),
 [`vcov()`](https://rdrr.io/r/stats/vcov.html),
 [`confint()`](https://rdrr.io/r/stats/confint.html) for the relevant

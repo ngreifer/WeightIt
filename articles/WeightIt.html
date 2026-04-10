@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-03-19</h4>
+            <h4 data-toc-skip class="date">2026-04-10</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -274,16 +274,16 @@ dispersion) of the weights.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight ranges</span>:</span></span>
 <span><span class="co">## </span></span>
-<span><span class="co">##           Min                                Max</span></span>
-<span><span class="co">## treated 1.       ||                         1.  </span></span>
-<span><span class="co">## control 0.019 |---------------------------| 9.42</span></span>
+<span><span class="co">##           Min                                 Max</span></span>
+<span><span class="co">## treated 1.           ||                     1.   </span></span>
+<span><span class="co">## control 0.008 |---------------------------| 4.062</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span></span>
-<span><span class="co">##                                    </span></span>
-<span><span class="co">##              1     2   3     4    5</span></span>
-<span><span class="co">##  treated     1     1   1     1    1</span></span>
-<span><span class="co">##            423   412 226   196  118</span></span>
-<span><span class="co">##  control 7.127 7.501   8 9.036 9.42</span></span>
+<span><span class="co">##                                      </span></span>
+<span><span class="co">##              1     2    3     4     5</span></span>
+<span><span class="co">##  treated     1     1    1     1     1</span></span>
+<span><span class="co">##            423   412  226   196   118</span></span>
+<span><span class="co">##  control 3.073 3.235 3.45 3.897 4.062</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## - <span style="font-style: italic;">Weight statistics</span>:</span></span>
 <span><span class="co">## </span></span>
@@ -303,13 +303,13 @@ there are any gains in terms of balance:</p>
 <span>        thresholds <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>m <span class="op">=</span> <span class="fl">.05</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## <span style="text-decoration: underline;">Balance Measures</span></span></span>
 <span><span class="co">##                Type Diff.Adj     M.Threshold V.Ratio.Adj</span></span>
-<span><span class="co">## age         Contin.        0 Balanced, &lt;0.05       0.410</span></span>
-<span><span class="co">## educ        Contin.        0 Balanced, &lt;0.05       0.664</span></span>
+<span><span class="co">## age         Contin.       -0 Balanced, &lt;0.05       0.410</span></span>
+<span><span class="co">## educ        Contin.       -0 Balanced, &lt;0.05       0.664</span></span>
 <span><span class="co">## race_black   Binary        0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## race_hispan  Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## race_white   Binary        0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## married      Binary        0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## race_hispan  Binary        0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## married      Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## nodegree     Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>

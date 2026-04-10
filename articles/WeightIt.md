@@ -219,16 +219,16 @@ summary(W.out)
     ## 
     ## - Weight ranges:
     ## 
-    ##           Min                                Max
-    ## treated 1.       ||                         1.  
-    ## control 0.019 |---------------------------| 9.42
+    ##           Min                                 Max
+    ## treated 1.           ||                     1.   
+    ## control 0.008 |---------------------------| 4.062
     ## 
     ## - Units with the 5 most extreme weights by group:
-    ##                                    
-    ##              1     2   3     4    5
-    ##  treated     1     1   1     1    1
-    ##            423   412 226   196  118
-    ##  control 7.127 7.501   8 9.036 9.42
+    ##                                      
+    ##              1     2    3     4     5
+    ##  treated     1     1    1     1     1
+    ##            423   412  226   196   118
+    ##  control 3.073 3.235 3.45 3.897 4.062
     ## 
     ## - Weight statistics:
     ## 
@@ -252,13 +252,13 @@ bal.tab(W.out, stats = c("m", "v"),
 
     ## Balance Measures
     ##                Type Diff.Adj     M.Threshold V.Ratio.Adj
-    ## age         Contin.        0 Balanced, <0.05       0.410
-    ## educ        Contin.        0 Balanced, <0.05       0.664
+    ## age         Contin.       -0 Balanced, <0.05       0.410
+    ## educ        Contin.       -0 Balanced, <0.05       0.664
     ## race_black   Binary        0 Balanced, <0.05           .
-    ## race_hispan  Binary       -0 Balanced, <0.05           .
-    ## race_white   Binary        0 Balanced, <0.05           .
-    ## married      Binary        0 Balanced, <0.05           .
-    ## nodegree     Binary       -0 Balanced, <0.05           .
+    ## race_hispan  Binary        0 Balanced, <0.05           .
+    ## race_white   Binary       -0 Balanced, <0.05           .
+    ## married      Binary       -0 Balanced, <0.05           .
+    ## nodegree     Binary        0 Balanced, <0.05           .
     ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 

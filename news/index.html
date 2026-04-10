@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -44,8 +44,19 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
+<code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
+<ul><li><p><code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code> can now estimate standard errors that account for estimation of the weights using M-estimation as described by <a href="https://doi.org/10.1111/biom.13332" class="external-link">Shu et al. (2021)</a>.</p></li>
+<li><p><code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "ebal"</code> now accepts an optional <code>tols</code> argument, which can be used to set a balance threshold for inexact balance. This uses a new algorithm for optimizing with L1 regularization.</p></li>
+<li><p>Fixed bugs in entropy balancing that made the M-estimation covariance slightly too small. Thanks to Chad Hazlett for pointing them out.</p></li>
+<li><p>When using the <code>tols</code> argument with <code>method = "energy"</code> with a continuous treatment, the imbalance tolerances now yield correlations no larger than the imbalance tolerance as computed with <code>cobalt:col_w_corr()</code>. Previously, they were allowed to be slightly too large.</p></li>
+<li><p><code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, <code><a href="../reference/multinom_weightit.html">multinom_weightit()</a></code>, <code><a href="../reference/ordinal_weightit.html">ordinal_weightit()</a></code>, and <code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code> are now each documented on their own page.</p></li>
+<li><p>The Estimating Effects vignettes (<code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>) now describes how to use the <a href="https://ngreifer.github.io/adrftools/" class="external-link"><em>adrftools</em></a> package to estimate the effect of a continuous treatment.</p></li>
+<li><p><a href="https://ngreifer.github.io/arg/" class="external-link"><em>arg</em></a> is a new dependency for producing error messages and checking arguments.</p></li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.6.0" id="weightit-160">
-<code>WeightIt</code> 1.6.0<a class="anchor" aria-label="anchor" href="#weightit-160"></a></h2>
+<code>WeightIt</code> 1.6.0<a class="anchor" aria-label="anchor" href="#weightit-160"></a></h2><p class="text-muted">CRAN release: 2026-03-19</p>
 <ul><li><p>Added <code>method = "cfd"</code> for characteristic function distance balancing as described by <a href="https://arxiv.org/abs/2601.15449" class="external-link">Santra, Chen, and Park (2026)</a>. Energy balancing is a special case of this method.</p></li>
 <li><p>Added support for the new version of <em>osqp</em>, which changes some optional argument names and defaults for <code>method = "energy"</code>. These should not impact results.</p></li>
 <li><p><em>chk</em> and <em>crayon</em> have been removed as dependencies in favor of <em>cli</em>.</p></li>
@@ -72,7 +83,7 @@
 <li><p>Fixed a bug in which the output of <code>bread()</code> was off by a factor of -1. This doesn’t affect its use in <code><a href="https://sandwich.R-Forge.R-project.org/reference/sandwich.html" class="external-link">sandwich::sandwich()</a></code>.</p></li>
 <li><p>Fixed a bug in which <code>bag.fraction</code> for <code>method = "gbm"</code> with binary and multi-category treatments had a default of .5 instead of the stated 1.</p></li>
 <li><p>Fixed bugs relating to <code>method = "optweight"</code>; sampling weights and the fractional weighted bootstrap can now be used with it.</p></li>
-<li><p>Fixed bugs related to <code><a href="../reference/glm_weightit.html">coxph_weightit()</a></code> with aliased coefficients and multi-state models. Thanks to Mads Jeppe Tarp-Johansen.</p></li>
+<li><p>Fixed bugs related to <code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code> with aliased coefficients and multi-state models. Thanks to Mads Jeppe Tarp-Johansen.</p></li>
 <li><p>Fixed a bug in which messages about assuming which treatment level was “treated” were printed many times, including when bootstrapping.</p></li>
 <li><p>Fixed a bug in which CBPS for continuous treatments would not yield correct balance in the presence of some extreme density estimates.</p></li>
 <li><p>Typo fixes in vignettes and documentation.</p></li>
@@ -128,7 +139,7 @@
 <li><p><code>missing</code> no longer allows partial matching.</p></li>
 <li><p><code>moments</code> can now be set to 0 when <code>quantile</code> is supplied to ensure balance on the quantiles without the moments for the methods that accepts <code>quantiles</code>. Thanks to <a href="https://github.com/BERENZ" class="external-link">@BERENZ</a> for the suggestion.</p></li>
 <li><p>For <code>ordinal_weightit</code> objects, <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> now has the option to omit thresholds from the output.</p></li>
-<li><p>Fixed a bug in <code><a href="../reference/glm_weightit.html">ordinal_weightit()</a></code> where the Hessian (and therefore the HC0 robust variance) were calculated incorrectly when come coefficients were aliased (i.e., due to linearly dependent predictors).</p></li>
+<li><p>Fixed a bug in <code><a href="../reference/ordinal_weightit.html">ordinal_weightit()</a></code> where the Hessian (and therefore the HC0 robust variance) were calculated incorrectly when come coefficients were aliased (i.e., due to linearly dependent predictors).</p></li>
 <li><p>Fixed a bug in <code>print.summary.glm_weightit()</code> when confidence intervals were requested. A new printing function is used that produces slightly nicer tables.</p></li>
 <li><p>Fixes to vignettes and tests to satisfy CRAN checks.</p></li>
 <li><p>Minor bug, performance, and readability fixes.</p></li>
@@ -136,7 +147,7 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.2.0" id="weightit-120">
 <code>WeightIt</code> 1.2.0<a class="anchor" aria-label="anchor" href="#weightit-120"></a></h2><p class="text-muted">CRAN release: 2024-07-26</p>
-<ul><li><p>Added two new functions, <code><a href="../reference/glm_weightit.html">multinom_weightit()</a></code> and <code><a href="../reference/glm_weightit.html">ordinal_weightit()</a></code> for multinomial logistic regression and ordinal regression with capabilities to estimate a covariance matrix that accounts for estimation of the weights using M-estimation. Previously, multinomial logistic regression could be requested using <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with <code>family = "multinomial"</code>; this has been deprecated.</p></li>
+<ul><li><p>Added two new functions, <code><a href="../reference/multinom_weightit.html">multinom_weightit()</a></code> and <code><a href="../reference/ordinal_weightit.html">ordinal_weightit()</a></code> for multinomial logistic regression and ordinal regression with capabilities to estimate a covariance matrix that accounts for estimation of the weights using M-estimation. Previously, multinomial logistic regression could be requested using <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with <code>family = "multinomial"</code>; this has been deprecated.</p></li>
 <li><p>M-estimation can now be used for weighting with ordinal regression for weights with multi-category ordered treatments with <code>method = "glm"</code>.</p></li>
 <li><p>M-estimation can now be used with bias-reduced regression as implemented in <code>brglm2</code> for the propensity score (<code>method = "glm"</code> with <code>link = "br.{.}"</code>) and for the outcome model (<code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> with <code>br = TRUE</code>). Thanks to Ioannis Kosmidis for supplying some starter code to implement this.</p></li>
 <li><p>For any weighting methods with continuous treatments that support a <code>density</code> argument to specify the numerator and denominator densities of the weights, <code>density</code> can now be specified as <code>"kernel"</code> to request kernel density estimation. Previously, this was requested by setting <code>use.kernel = TRUE</code>, which is now deprecated.</p></li>
@@ -161,7 +172,7 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.1.0" id="weightit-110">
 <code>WeightIt</code> 1.1.0<a class="anchor" aria-label="anchor" href="#weightit-110"></a></h2><p class="text-muted">CRAN release: 2024-05-04</p>
-<ul><li><p>Added a new function, <code><a href="../reference/glm_weightit.html">coxph_weightit()</a></code>, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> methods for <code>glm_weightit</code> objects, which are different from those for <code>coxph</code> objects.</p></li>
+<ul><li><p>Added a new function, <code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code>, for fitting Cox proportional hazards models in the weighted sample, with the option of accounting for estimation of the weights in computing standard errors via bootstrapping. This function uses the <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> and <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> methods for <code>glm_weightit</code> objects, which are different from those for <code>coxph</code> objects.</p></li>
 <li><p><code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> gets a new <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method that omits some invalid statistics displayed by the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method for <code>glm</code> objects and displays the type of standard error estimated.</p></li>
 <li><p><code><a href="../reference/glm_weightit-methods.html">summary.glm_weightit()</a></code> (which is also used for <code>coxph_weightit</code> objects) gets a new argument, <code>transform</code>, which can be used to transform the displayed coefficients and confidence interval bounds (if requested), e.g., by exponentiating them.</p></li>
 <li><p>M-estimation is now supported for <code>method = "glm"</code> with continuous treatments.</p></li>

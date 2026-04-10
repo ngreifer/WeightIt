@@ -21,7 +21,7 @@ anova.glm_weightit()."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,8 +54,8 @@ anova.glm_weightit()."><meta property="og:image" content="https://ngreifer.githu
 
     <div class="ref-description section level2">
     <p>This page documents methods for objects returned by
-<code><a href="glm_weightit.html">glm_weightit()</a></code>, <code><a href="glm_weightit.html">lm_weightit()</a></code>, <code><a href="glm_weightit.html">ordinal_weightit()</a></code>,
-<code><a href="glm_weightit.html">multinom_weightit()</a></code>, and <code><a href="glm_weightit.html">coxph_weightit()</a></code>. <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> methods are
+<code><a href="glm_weightit.html">glm_weightit()</a></code>, <code><a href="glm_weightit.html">lm_weightit()</a></code>, <code><a href="ordinal_weightit.html">ordinal_weightit()</a></code>,
+<code><a href="multinom_weightit.html">multinom_weightit()</a></code>, and <code><a href="coxph_weightit.html">coxph_weightit()</a></code>. <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> methods are
 described at <code><a href="predict.glm_weightit.html">predict.glm_weightit()</a></code> and <code><a href="https://rdrr.io/r/stats/anova.html" class="external-link">anova()</a></code> methods are described at
 <code><a href="anova.glm_weightit.html">anova.glm_weightit()</a></code>.</p>
     </div>
@@ -179,7 +179,7 @@ return it.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns a <code>summary.glm_weightit()</code> object, which has its
-own <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method. For <code><a href="glm_weightit.html">coxph_weightit()</a></code> objects, the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and
+own <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> method. For <code><a href="coxph_weightit.html">coxph_weightit()</a></code> objects, the <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and
 <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> methods are more like those for <code>glm</code> objects than for <code>coxph</code>
 objects.</p>
 <p>Otherwise, all methods return the same type of object as their generics.</p>
@@ -221,8 +221,8 @@ will be created.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="glm_weightit.html">glm_weightit()</a></code> for the page documenting <code><a href="glm_weightit.html">glm_weightit()</a></code>,
-<code><a href="glm_weightit.html">lm_weightit()</a></code>, <code><a href="glm_weightit.html">ordinal_weightit()</a></code>, <code><a href="glm_weightit.html">multinom_weightit()</a></code>, and
-<code><a href="glm_weightit.html">coxph_weightit()</a></code>. <code><a href="https://rdrr.io/r/stats/summary.glm.html" class="external-link">summary.glm()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for the relevant
+<code><a href="glm_weightit.html">lm_weightit()</a></code>, <code><a href="ordinal_weightit.html">ordinal_weightit()</a></code>, <code><a href="multinom_weightit.html">multinom_weightit()</a></code>, and
+<code><a href="coxph_weightit.html">coxph_weightit()</a></code>. <code><a href="https://rdrr.io/r/stats/summary.glm.html" class="external-link">summary.glm()</a></code>, <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> for the relevant
 methods pages. <code><a href="predict.glm_weightit.html">predict.glm_weightit()</a></code> for computing predictions from the
 models. <code><a href="anova.glm_weightit.html">anova.glm_weightit()</a></code> for comparing models using a Wald test.</p>
 <p><code><a href="https://sandwich.R-Forge.R-project.org/reference/estfun.html" class="external-link">sandwich::estfun()</a></code> and <code><a href="https://sandwich.R-Forge.R-project.org/reference/bread.html" class="external-link">sandwich::bread()</a></code> for the <code>estfun()</code> and <code>bread()</code> generics.</p></div>

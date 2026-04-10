@@ -25,11 +25,9 @@ for each treatment group.
 
 For multi-category treatments, this method estimates the weights using
 [`optim()`](https://rdrr.io/r/stats/optim.html). The following estimands
-are allowed: ATE and ATT. When the ATE is requested,
-[`optim()`](https://rdrr.io/r/stats/optim.html) is run once for each
-treatment group. When the ATT is requested,
-[`optim()`](https://rdrr.io/r/stats/optim.html) is run once for each
-non-focal (i.e., control) group.
+are allowed: ATE and ATT. When the ATE is requested, the optimization is
+run once for each treatment group. When the ATT is requested, the
+optimization is run once for each non-focal (i.e., control) group.
 
 ### Continuous Treatments
 
@@ -68,7 +66,8 @@ are allowed:
 
 ### M-estimation
 
-M-estimation is supported for all scenarios. See
+M-estimation is supported for all treatment types and estimands except
+when `tols` is greater than 0. See
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 and
 [`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md)
@@ -96,7 +95,13 @@ regression of the treatment on the covariates or when the true outcome
 model for the control units is a linear regression of the outcome on the
 covariates, and it attains a semi-parametric efficiency bound when both
 are true. Entropy balancing will always yield exact mean balance on the
-included terms.
+included terms unless an imbalance tolerance is requested with `tols`.
+
+When `tols` is greater than 0, inexact balance is allowed on the
+covariates. This can improve precision while allowing a small amount of
+bias in. The optimization problem is an L1 regularization problem and is
+solved using the Fast Iterative Shrinkage-Thresholding Algorithm
+(FISTA).
 
 ## Additional Arguments
 
@@ -166,6 +171,13 @@ included terms.
   (e.g., `.5`) or a vector (e.g., `c(.25, .5, .75)`) to request the same
   quantile(s) for all continuous covariates. Only allowed with binary
   and multi-category treatments.
+
+- `tols`:
+
+  a number corresponding to the maximum allowed standardized mean
+  difference (for binary and multi-category treatments) or
+  treatment-covariate correlation (for continuous treatments) allowed.
+  Default is 0 for exact balance.
 
 - `d.moments`:
 
@@ -242,6 +254,9 @@ Methodology*, 21(1), 69–110.
 and
 [method_cbps](https://ngreifer.github.io/WeightIt/reference/method_cbps.md)
 for inverse probability tilting and CBPS, which work similarly.
+[method_optweight](https://ngreifer.github.io/WeightIt/reference/method_optweight.md)
+for another implementation of entropy balancing (by setting
+`"norm = entropy"`).
 
 ## Examples
 
@@ -265,16 +280,16 @@ summary(W1)
 #> 
 #> - Weight ranges:
 #> 
-#>          Min                                 Max
-#> treated 1.         ||                      1.   
-#> control 0.04 |---------------------------| 5.247
+#>           Min                                 Max
+#> treated 1.                 ||               1.   
+#> control 0.017 |---------------------------| 2.263
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                       
 #>              1     2     3     4     5
 #>  treated     1     1     1     1     1
 #>            410   404   224   111    84
-#>  control 3.396 3.443 3.655 4.043 5.247
+#>  control 1.464 1.485 1.576 1.743 2.263
 #> 
 #> - Weight statistics:
 #> 
@@ -295,7 +310,7 @@ cobalt::bal.tab(W1)
 #> educ     Contin.        0
 #> married   Binary       -0
 #> nodegree  Binary       -0
-#> re74     Contin.       -0
+#> re74     Contin.        0
 #> 
 #> Effective sample sizes
 #>            Control Treated
@@ -319,19 +334,19 @@ summary(W2)
 #> 
 #> - Weight ranges:
 #> 
-#>          Min                                 Max
-#> black  0.553   |-------------------------| 5.35 
-#> hispan 0.141 |----------------|            3.332
-#> white  0.398  |-------|                    1.923
+#>          Min                                  Max
+#> black  1.397 |-----------|                 13.517
+#> hispan 1.201 |---------------------------| 28.417
+#> white  0.817 |-|                            3.949
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                      
-#>           203   166   163   153   152
-#>   black 2.521 2.549 2.806 3.555  5.35
-#>            67    43    39    36    28
-#>  hispan 2.046  2.53 2.632 2.705 3.332
-#>           291   285   258   205     6
-#>   white 1.711 1.723 1.743 1.774 1.923
+#>                                           
+#>            203    166    163    153    152
+#>   black  6.371  6.441   7.09  8.983 13.517
+#>             67     43     39     36     28
+#>  hispan 17.451 21.573 22.447 23.067 28.417
+#>            291    285    258    205      6
+#>   white  3.513  3.537   3.58  3.643  3.949
 #> 
 #> - Weight statistics:
 #> 
@@ -379,40 +394,97 @@ summary(W3)
 #> 
 #> - Weight ranges:
 #> 
-#>     Min                                 Max
-#> all   0 |---------------------------| 17.65
+#>     Min                                  Max
+#> all   0 |---------------------------| 17.664
 #> 
 #> - Units with the 5 most extreme weights:
-#>                                    
-#>        484   200   180    171   166
-#>  all 6.745 7.616 8.523 10.266 17.65
+#>                                     
+#>        484   200   180    171    166
+#>  all 6.755 7.602 8.518 10.251 17.664
 #> 
 #> - Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.252 0.614   0.423       0
+#> all       1.253 0.615   0.423       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted   239.32
+#> Weighted   239.19
 
 cobalt::bal.tab(W3, poly = 2,
                 stats = c("c", "m"))
 #> Balance Measures
 #>             Type Corr.Adj Diff.Target.Adj
-#> age      Contin.  -0.0000              -0
-#> educ     Contin.  -0.0001              -0
-#> married   Binary  -0.0001               0
-#> nodegree  Binary   0.0005               0
-#> re74     Contin.  -0.0001               0
-#> age²     Contin.  -0.0000              -0
-#> educ²    Contin.  -0.0001              -0
-#> re74²    Contin.  -0.0000               0
+#> age      Contin.       -0               0
+#> educ     Contin.        0              -0
+#> married   Binary        0              -0
+#> nodegree  Binary       -0               0
+#> re74     Contin.       -0               0
+#> age²     Contin.       -0               0
+#> educ²    Contin.        0              -0
+#> re74²    Contin.       -0               0
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   239.32
+#> Adjusted   239.19
+
+#Balancing covariates between treatment groups (binary),
+#allowing for inexact balance
+(W1b <- weightit(treat ~ age + educ + married +
+                  nodegree + re74, data = lalonde,
+                method = "ebal", estimand = "ATT",
+                tols = .02))
+#> A weightit object
+#>  - method: "ebal" (entropy balancing)
+#>  - number of obs.: 614
+#>  - sampling weights: none
+#>  - treatment: 2-category
+#>  - estimand: ATT (focal: 1)
+#>  - covariates: age, educ, married, nodegree, re74
+
+summary(W1b)
+#>                   Summary of weights
+#> 
+#> - Weight ranges:
+#> 
+#>           Min                                 Max
+#> treated 1.                     ||           1.   
+#> control 0.023 |---------------------------| 1.738
+#> 
+#> - Units with the 5 most extreme weights by group:
+#>                                       
+#>              1     2     3     4     5
+#>  treated     1     1     1     1     1
+#>            410   404   224   111    84
+#>  control 1.277 1.284 1.302 1.423 1.738
+#> 
+#> - Weight statistics:
+#> 
+#>         Coef of Var   MAD Entropy # Zeros
+#> treated       0.000 0.000   0.000       0
+#> control       0.752 0.658   0.287       0
+#> 
+#> - Effective Sample Sizes:
+#> 
+#>            Control Treated
+#> Unweighted  429.       185
+#> Weighted    274.27     185
+
+cobalt::bal.tab(W1, weights = list(inexact = W1b))
+#> Balance Measures
+#>             Type Diff.weightit Diff.inexact
+#> age      Contin.             0         0.02
+#> educ     Contin.             0         0.02
+#> married   Binary            -0        -0.02
+#> nodegree  Binary            -0         0.02
+#> re74     Contin.             0        -0.02
+#> 
+#> Effective sample sizes
+#>          Control Treated
+#> All       429.       185
+#> weightit  252.12     185
+#> inexact   274.27     185
 ```

@@ -1,6 +1,45 @@
 # Changelog
 
+## `WeightIt` (development version)
+
+- [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  can now estimate standard errors that account for estimation of the
+  weights using M-estimation as described by [Shu et
+  al. (2021)](https://doi.org/10.1111/biom.13332).
+
+- [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  with `method = "ebal"` now accepts an optional `tols` argument, which
+  can be used to set a balance threshold for inexact balance. This uses
+  a new algorithm for optimizing with L1 regularization.
+
+- Fixed bugs in entropy balancing that made the M-estimation covariance
+  slightly too small. Thanks to Chad Hazlett for pointing them out.
+
+- When using the `tols` argument with `method = "energy"` with a
+  continuous treatment, the imbalance tolerances now yield correlations
+  no larger than the imbalance tolerance as computed with
+  `cobalt:col_w_corr()`. Previously, they were allowed to be slightly
+  too large.
+
+- [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  are now each documented on their own page.
+
+- The Estimating Effects vignettes
+  ([`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md))
+  now describes how to use the
+  [*adrftools*](https://ngreifer.github.io/adrftools/) package to
+  estimate the effect of a continuous treatment.
+
+- [*arg*](https://ngreifer.github.io/arg/) is a new dependency for
+  producing error messages and checking arguments.
+
 ## `WeightIt` 1.6.0
+
+CRAN release: 2026-03-19
 
 - Added `method = "cfd"` for characteristic function distance balancing
   as described by [Santra, Chen, and Park
@@ -101,7 +140,7 @@ CRAN release: 2025-09-18
   the fractional weighted bootstrap can now be used with it.
 
 - Fixed bugs related to
-  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   with aliased coefficients and multi-state models. Thanks to Mads Jeppe
   Tarp-Johansen.
 
@@ -318,7 +357,7 @@ CRAN release: 2024-08-24
   to omit thresholds from the output.
 
 - Fixed a bug in
-  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
   where the Hessian (and therefore the HC0 robust variance) were
   calculated incorrectly when come coefficients were aliased (i.e., due
   to linearly dependent predictors).
@@ -336,9 +375,9 @@ CRAN release: 2024-08-24
 CRAN release: 2024-07-26
 
 - Added two new functions,
-  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
   and
-  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
   for multinomial logistic regression and ordinal regression with
   capabilities to estimate a covariance matrix that accounts for
   estimation of the weights using M-estimation. Previously, multinomial
@@ -418,7 +457,7 @@ CRAN release: 2024-07-26
 CRAN release: 2024-05-04
 
 - Added a new function,
-  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md),
   for fitting Cox proportional hazards models in the weighted sample,
   with the option of accounting for estimation of the weights in
   computing standard errors via bootstrapping. This function uses the

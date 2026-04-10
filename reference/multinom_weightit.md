@@ -1,45 +1,25 @@
-# Fitting (Weighted) Generalized Linear Models
+# Fitting (Weighted) Multinomial Regression Models
 
-`glm_weightit()` is used to fit generalized linear models with a
-covariance matrix that accounts for estimation of weights, if supplied.
-`lm_weightit()` is a wrapper for `glm_weightit()` with the Gaussian
-family and identity link (i.e., a linear model). By default, these
-functions use M-estimation to construct a robust covariance matrix using
-the estimating equations for the weighting model and the outcome model
-when available.
+`multinom_weightit()` fits a multinomial logistic regression model with
+a covariance matrix that accounts for estimation of weights, if
+supplied. By default, this function uses M-estimation to construct a
+robust covariance matrix using the estimating equations for the
+weighting model and the outcome model when available.
 
 ## Usage
 
 ``` r
-glm_weightit(
+multinom_weightit(
   formula,
   data,
-  family = gaussian,
+  link = "logit",
   weightit = NULL,
   vcov = NULL,
   cluster,
   R = 500L,
   offset,
   start = NULL,
-  etastart,
-  mustart,
   control = list(...),
-  x = FALSE,
-  y = TRUE,
-  contrasts = NULL,
-  fwb.args = list(),
-  br = FALSE,
-  ...
-)
-
-lm_weightit(
-  formula,
-  data,
-  weightit = NULL,
-  vcov = NULL,
-  cluster,
-  R = 500L,
-  offset,
   x = FALSE,
   y = TRUE,
   contrasts = NULL,
@@ -62,13 +42,10 @@ lm_weightit(
   data, the variables are taken from `environment(formula)`, typically
   the environment from which the function is called.
 
-- family:
+- link:
 
-  a description of the error distribution and link function to be used
-  in the model. This can be a character string naming a family function,
-  a family function or the result of a call to a family function. See
-  [family](https://rdrr.io/r/stats/family.html) for details of family
-  functions.
+  a string corresponding to the desired link function. Currently, only
+  `"logit"` is allowed.
 
 - weightit:
 
@@ -123,11 +100,6 @@ lm_weightit(
 
   optional starting values for the coefficients.
 
-- etastart, mustart:
-
-  optional starting values for the linear predictor and vector of means.
-  Passed to [`glm()`](https://rdrr.io/r/stats/glm.html).
-
 - control:
 
   a list of parameters for controlling the fitting process.
@@ -149,15 +121,6 @@ lm_weightit(
   [`fwb::fwb()`](https://ngreifer.github.io/fwb/reference/fwb.html) when
   `vcov = "FWB"`.
 
-- br:
-
-  `logical`; whether to use bias-reduced regression as implemented by
-  [`brglm2::brglmFit()`](https://rdrr.io/pkg/brglm2/man/brglmFit.html)
-  (including Firth logistic regression). If `TRUE`, arguments passed to
-  `control` or ... will be passed to
-  [`brglm2::brglmControl()`](https://rdrr.io/pkg/brglm2/man/brglmControl.html)
-  .
-
 - ...:
 
   arguments to be used to form the default control argument if it is not
@@ -165,7 +128,7 @@ lm_weightit(
 
 ## Value
 
-A `glm_weightit` object, which inherits from `glm`.
+A `multinom_weightit` object.
 
 Unless `vcov = "none"`, the `vcov` component contains the covariance
 matrix adjusted for the estimation of the weights if requested and a
@@ -186,11 +149,18 @@ call.
 
 ## Details
 
-`glm_weightit()` is essentially a wrapper for
-[`glm()`](https://rdrr.io/r/stats/glm.html) that optionally computes a
-coefficient variance matrix that can be adjusted to account for
-estimation of the weights if a `weightit` or `weightitMSM` object is
-supplied to the `weightit` argument.
+`multinom_weightit()` implements multinomial logistic regression using a
+custom function in WeightIt that optionally computes a coefficient
+variance matrix that can be adjusted to account for estimation of the
+weights if a `weightit` or `weightitMSM` object is supplied to the
+`weightit` argument. This implementation is less robust to failures than
+other multinomial logistic regression solvers and should be used with
+caution. Estimation of coefficients should align with that from
+[`mlogit::mlogit()`](https://rdrr.io/pkg/mlogit/man/mlogit.html) and
+[`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
+but might differ from
+[`nnet::multinom()`](https://rdrr.io/pkg/nnet/man/multinom.html) due to
+the relaxed convergence thresholds of the latter.
 
 When no argument is supplied to `weightit` or there is no `"Mparts"`
 attribute in the supplied object, the default variance matrix returned
@@ -220,29 +190,11 @@ reliable but requires the weighting method to accept sampling weights
 performs the resampling-based bootstrap but with the additional features
 fwb provides (e.g., a progress bar and parallelization).
 
-Functions in the sandwich package can be to compute standard errors
-after fitting, regardless of how `vcov` was specified, though these will
-ignore estimation of the weights, if any. When no adjustment is done for
-estimation of the weights (i.e., because no `weightit` argument was
-supplied or there was no `"Mparts"` component in the supplied object),
-the default variance matrix produced by `glm_weightit()` should align
-with that from `sandwich::vcovHC(. type = "HC0")` or
-`sandwich::vcovCL(., type = "HC0", cluster = cluster)` when `cluster` is
-supplied. Not all types are available for all models.
-
 ## See also
 
-- [`lm()`](https://rdrr.io/r/stats/lm.html) and
-  [`glm()`](https://rdrr.io/r/stats/glm.html) for fitting (generalized)
-  linear models without adjusting standard errors for estimation of the
-  weights.
-
-- `glm_weightit()` for fitting generalized linear models that adjust for
-  estimation of the weights.
-
-- [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
-  for fitting multinomial regression models that adjust for estimation
-  of the weights.
+- [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  for fitting generalized linear models that adjust for estimation of
+  the weights.
 
 - [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
   for fitting ordinal regression models that adjust for estimation of
@@ -251,6 +203,10 @@ supplied. Not all types are available for all models.
 - [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   for fitting Cox proportional hazards models that adjust for estimation
   of the weights.
+
+- [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
+  for fitting multinomial regression models that do not account for
+  estimation of the weights.
 
 ## Examples
 
@@ -262,75 +218,26 @@ w.out <- weightit(treat ~ age + educ + married + re74,
                   data = lalonde, method = "glm",
                   estimand = "ATT")
 
-# Linear regression outcome model that adjusts
-# for estimation of weights
-fit1 <- lm_weightit(re78 ~ treat, data = lalonde,
-                    weightit = w.out)
+# Multinomial logistic regression outcome model
+# that adjusts for estimation of weights
+lalonde$re78_3 <- factor(findInterval(lalonde$re78,
+                                      c(0, 5e3, 1e4)))
 
-summary(fit1)
+fit <- multinom_weightit(re78_3 ~ treat,
+                         data = lalonde,
+                         weightit = w.out)
+
+summary(fit)
 #> 
 #> Call:
-#> lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = w.out)
+#> multinom_weightit(formula = re78_3 ~ treat, data = lalonde, weightit = w.out)
 #> 
 #> Coefficients:
-#>             Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)   5515.9      376.5  14.649   <1e-06 ***
-#> treat          833.2      669.1   1.245    0.213    
+#>               Estimate Std. Error z value Pr(>|z|)    
+#> 2~(Intercept) -0.90398    0.14906  -6.064   <1e-06 ***
+#> 2~treat        0.05006    0.23633   0.212    0.832    
+#> 3~(Intercept) -1.02170    0.15699  -6.508   <1e-06 ***
+#> 3~treat        0.12015    0.23835   0.504    0.614    
 #> Standard error: HC0 robust (adjusted for estimation of weights)
-#> 
-
-# Linear regression outcome model that treats weights
-# as fixed
-fit2 <- lm_weightit(re78 ~ treat, data = lalonde,
-                    weightit = w.out,
-                    vcov = "HC0")
-
-summary(fit2)
-#> 
-#> Call:
-#> lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = w.out, 
-#>     vcov = "HC0")
-#> 
-#> Coefficients:
-#>             Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)   5515.9      353.5  15.604   <1e-06 ***
-#> treat          833.2      676.6   1.232    0.218    
-#> Standard error: HC0 robust
-#> 
-
-# Can also just call summary() with `vcov` option
-summary(fit1, vcov = "HC0")
-#> 
-#> Call:
-#> lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = w.out)
-#> 
-#> Coefficients:
-#>             Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)   5515.9      353.5  15.604   <1e-06 ***
-#> treat          833.2      676.6   1.232    0.218    
-#> Standard error: HC0 robust
-#> 
-# Linear regression outcome model that bootstraps
-# estimation of weights and outcome model fitting
-# using fractional weighted bootstrap with "Mammen"
-# weights
-set.seed(123)
-fit3 <- lm_weightit(re78 ~ treat, data = lalonde,
-                    weightit = w.out,
-                    vcov = "FWB",
-                    R = 50, #should use way more
-                    fwb.args = list(wtype = "mammen"))
-
-summary(fit3)
-#> 
-#> Call:
-#> lm_weightit(formula = re78 ~ treat, data = lalonde, weightit = w.out, 
-#>     vcov = "FWB", R = 50, fwb.args = list(wtype = "mammen"))
-#> 
-#> Coefficients:
-#>             Estimate Std. Error z value Pr(>|z|)    
-#> (Intercept)   5515.9      361.5  15.257   <1e-06 ***
-#> treat          833.2      644.4   1.293    0.196    
-#> Standard error: fractional weighted bootstrap
 #> 
 ```

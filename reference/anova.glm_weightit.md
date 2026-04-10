@@ -4,9 +4,9 @@
 nested models fit with
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 `mutinom_weightit()`,
-[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
 or
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
 using a Wald test that incorporates uncertainty in estimating the
 weights (if any).
 
@@ -84,10 +84,10 @@ the coefficients of the smaller model is not used.
 for the page documenting
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
 and
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md).
 [`anova.glm()`](https://rdrr.io/r/stats/anova.glm.html) for model
 comparison of `glm` objects.
 

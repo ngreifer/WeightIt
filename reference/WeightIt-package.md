@@ -10,8 +10,8 @@ of covariate balance by interfacing directly with the 'cobalt' package.
 Methods for estimating weighted regression models that take into account
 uncertainty in the estimation of the weights via M-estimation or
 bootstrapping are available. See the vignette "Installing Supporting
-Packages" for instructions on how to install any package 'WeightIt'
-uses, including those that may not be on CRAN.
+Packages" for instructions on how to install any optional package
+'WeightIt' uses, including those that may not be on CRAN.
 
 ## See also
 

@@ -12,6 +12,7 @@
 <url><loc>https://ngreifer.github.io/WeightIt/reference/anova.glm_weightit.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/as.weightit.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/calibrate.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/coxph_weightit.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.html</loc></url>
@@ -31,6 +32,8 @@
 <url><loc>https://ngreifer.github.io/WeightIt/reference/method_super.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/method_user.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/msmdata.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/multinom_weightit.html</loc></url>
+<url><loc>https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/plot.weightit.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.html</loc></url>
 <url><loc>https://ngreifer.github.io/WeightIt/reference/sbps.html</loc></url>

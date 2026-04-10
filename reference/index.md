@@ -43,26 +43,15 @@
 
 ## Fit weighted regression models
 
-- [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  : Fitting Weighted Generalized Linear Models
-
-- [`predict(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
-  [`predict(`*`<ordinal_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
-  [`predict(`*`<multinom_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
-  :
-
-  Predictions for `glm_weightit` objects
-
 - [`anova(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/anova.glm_weightit.md)
   :
 
   Methods for
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
   objects
+
+- [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  : Fitting (Weighted) Cox Proportional Hazards Models
 
 - [`summary(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
   [`summary(`*`<multinom_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/glm_weightit-methods.md)
@@ -77,6 +66,23 @@
   Methods for
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
   objects
+
+- [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  : Fitting (Weighted) Generalized Linear Models
+
+- [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  : Fitting (Weighted) Multinomial Regression Models
+
+- [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  : Fitting (Weighted) Ordinal Regression Models
+
+- [`predict(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
+  [`predict(`*`<multinom_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
+  [`predict(`*`<ordinal_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/predict.glm_weightit.md)
+  :
+
+  Predictions for `glm_weightit` objects
 
 ## Modify weights
 

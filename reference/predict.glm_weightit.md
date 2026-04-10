@@ -3,20 +3,20 @@
 [`predict()`](https://rdrr.io/r/stats/predict.html) generates
 predictions for models fit using
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
 or
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md).
 This page only details the
 [`predict()`](https://rdrr.io/r/stats/predict.html) methods after using
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
-[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
 or
-[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md).
 See
 [`survival::predict.coxph()`](https://rdrr.io/pkg/survival/man/predict.coxph.html)
 for predictions when fitting Cox proportional hazards models using
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md).
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md).
 
 ## Usage
 
@@ -24,7 +24,7 @@ for predictions when fitting Cox proportional hazards models using
 # S3 method for class 'glm_weightit'
 predict(object, newdata = NULL, type = "response", na.action = na.pass, ...)
 
-# S3 method for class 'ordinal_weightit'
+# S3 method for class 'multinom_weightit'
 predict(
   object,
   newdata = NULL,
@@ -35,7 +35,7 @@ predict(
   ...
 )
 
-# S3 method for class 'multinom_weightit'
+# S3 method for class 'ordinal_weightit'
 predict(
   object,
   newdata = NULL,

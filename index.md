@@ -226,11 +226,11 @@ to compute weights from propensity scores.
 the uncertainty in estimating the weights. These include
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 for fitting generalized linear models,
-[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
 for ordinal regression models,
-[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
 for multinomial regression models, and
-[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
 for Cox proportional hazards models. Several methods are available for
 computing the parameter variances, including asymptotically correct
 M-estimation-based variances, robust variances that treat the weights as
