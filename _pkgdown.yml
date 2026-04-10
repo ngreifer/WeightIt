@@ -14,7 +14,7 @@ reference:
 - contents: starts_with("method_")
 - title: Fit weighted regression models
 - contents:
-  - glm_weightit
+  - ends_with("_weightit")
   - predict.glm_weightit
   - anova.glm_weightit
   - glm_weightit-methods

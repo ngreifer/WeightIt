@@ -1,146 +1,150 @@
 #Cox PH model using M-estimation
-#Can estimate parameters, but can't get sandwich vcov, so not going anywhere
 
-#Generating data similar to Austin (2009) for demonstrating treatment effect estimation
-gen_X <- function(n) {
-  X <- matrix(rnorm(9 * n), nrow = n, ncol = 9)
-  X[,5] <- as.numeric(X[,5] < .5)
-  X
+# Shu et al (2021)
+# Y_S = T (event time)
+# Y_event = δ (event occurred = 1)
+
+test_data <- readRDS(testthat::test_path("fixtures", "test_data.rds"))
+# cens_time <- runif(nrow(test_data), min(test_data$Y_S), max(test_data$Y_S))
+cens_time <- 400
+test_data$Y_death <- as.numeric(test_data$Y_S <= cens_time)
+test_data$Y_S <- pmin(test_data$Y_S, cens_time)
+
+X <- as.matrix(test_data[c("A", "X5")])
+
+m_estimate <- function(start, psi, ...) {
+  gr <- function(B, ...) {
+    colSums(psi(B = B, ...))
+  }
+
+  out <- rootSolve::multiroot(gr, start = 1.1 * start,
+                              ...,
+                              maxiter = 1e5, rtol = 1e-9, atol = 1e-9, ctol = 1e-9)
+
+  hess <- WeightIt:::.gradient(gr, .x = out$root, .method = "rich", ...)
+  meat <- crossprod(psi(B = out$root, ...))
+
+  V <- tryCatch({solve(hess, t(solve(hess, meat)))},
+                error = function(e) {
+                  matrix(NA_real_, length(out$root), length(out$root))
+                })
+
+  list(est = out$root,
+       vcov = V)
 }
 
-gen_Ac <- function(X) {
-  LP_A <- -1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] - log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
-  LP_A + rlogis(nrow(X))
+gr <- function(B, ..., .psi) {
+  colSums(.psi(B = B, ...))
 }
 
-#~20% treated
-gen_A <- function(Ac) {
-  1 * (Ac > 0)
+
+
+get_V <- function(hess, meat) {
+  tryCatch({solve(hess, t(solve(hess, meat)))},
+           error = function(e) {
+             matrix(NA_real_, length(out$root), length(out$root))
+           })
 }
 
-gen_Am <- function(A) {
-  factor(ifelse(A == 1, "T", sample(c("C1", "C2"), length(A), TRUE)))
+vcov(fit)
+
+psi_1 <- function(B, Y_S, Y_death, X, W) {
+  p <- exp(drop(X %*% B))
+
+  S0 <- vapply(Y_S, function(y) sum((Y_S >= y) * W * p), numeric(1L))
+  S1 <- do.call("cbind", lapply(1:ncol(X), function(k) {
+    vapply(Y_S, function(y) sum((Y_S >= y) * W * p * X[,k]), numeric(1L))
+  }))
+
+  M <- Y_death * (X - S1 / S0)
+
+  for (i in 1:nrow(X)) {
+    z <- (Y_S <= Y_S[i]) & Y_death
+
+    M[i, ] <- M[i, , drop = FALSE] -
+      p[i] * X[i, , drop = FALSE] * sum(W[z] / S0[z]) +
+      p[i] * colSums(W[z] * S1[z, , drop = FALSE] / S0[z]^2)
+  }
+
+  W * M
 }
 
-# Continuous outcome
-gen_Y_C <- function(A, X) {
-  2*A + 2*X[,1] + 2*X[,2] + 2*X[,3] + 1*X[,4] + 2*X[,5] + 1*X[,6] + rnorm(length(A), 0, 5)
-}
-#Conditional:
-#  MD: 2
-#Marginal:
-#  MD: 2
+w <- test_data$SW
 
-# Binary outcome
-gen_Y_B <- function(A, X) {
-  LP_B <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] + log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
-  P_B <- plogis(LP_B)
-  rbinom(length(A), 1, P_B)
-}
-#Conditional:
-#  OR:   2.4
-#  logOR: .875
-#Marginal:
-#  RD:    .144
-#  RR:   1.54
-#  logRR: .433
-#  OR:   1.92
-#  logOR  .655
+out_1 <- m_estimate(start = rep(0, ncol(X)),
+                    psi = psi_1,
+                    Y_S = test_data$Y_S,
+                    Y_death = test_data$Y_death,
+                    X = X, W = w)
+out_1
 
-# Survival outcome
-gen_Y_S <- function(A, X) {
-  LP_S <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] + log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
-  sqrt(-log(runif(length(A)))*2e4*exp(-LP_S))
-}
-#Conditional:
-#  HR:   2.4
-#  logHR: .875
-#Marginal:
-#  HR:   1.57
-#  logHR: .452
+fit <- coxph(Surv(Y_S, Y_death) ~ A + X5, data = test_data,
+             weights = SW, ties = "bres",
+             robust = TRUE, control = coxph.control(eps = 1e-12, iter.max = 500, toler.chol = 1e-13))
+coef(fit)
+vcov(fit)
 
-n <- 200
-X <- gen_X(n)
-Ac <- gen_Ac(X)
-A <- gen_A(Ac)
-Am <- gen_Am(A)
+opt_1 <- rootSolve::multiroot(gr, start = rep(0, ncol(X)), .psi = psi_1,
+                            Y_S = test_data$Y_S,
+                            Y_death = test_data$Y_death,
+                            X = X, W = w)
 
-Y_C <- gen_Y_C(A, X)
-Y_B <- gen_Y_B(A, X)
-Y_S <- gen_Y_S(A, X)
+hess_1 <- WeightIt:::.gradient(gr, .x = opt_1$root, .psi = psi_1,
+                               Y_S = test_data$Y_S,
+                               Y_death = test_data$Y_death,
+                               X = X, W = w,
+                               .method = "rich")
 
-d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S)
-d$sw <- 1#runif(nrow(d))
+meat_1 <- crossprod(psi_1(B = opt_1$root, Y_S = test_data$Y_S,
+                            Y_death = test_data$Y_death,
+                            X = X, W = w))
 
-library(survival)
-fit <- coxph(Surv(Y_S) ~ X1 + X2, data = d, weights = d$sw, robust = T)
+get_V(hess_1, meat_1)
 
-X <- model.matrix(fit)
-Y <- d$Y_S
-ord <- order(Y, decreasing = T)
+all.equal(residuals(fit, type = "score", weighted = T),
+          psi_1(B = opt_1$root, Y_S = test_data$Y_S, Y_death = test_data$Y_death, X = X, W = w),
+          check.attributes = F)
 
-psi <- function(B, X, SW) {
-  psi_ <- 0 * X
-  X <- X[ord,, drop = FALSE]
-  SW <- SW[ord]
+psi_1b <- function(B, Y_S, Y_death, X, W) {
+  n  <- length(Y_S)
+  p  <- exp(drop(X %*% B))
+  Wp <- W * p
 
-  swexlp <- SW * exp(drop(X %*% B))
+  # Map each unique Y_S value to an integer rank (ties get same rank)
+  # This lets us treat the risk set condition as a comparison of integer ranks
+  ranks <- rank(Y_S, ties.method = "min")
 
-  out <- SW * (X - apply(X, 2, function(x) cumsum(x * swexlp)) /
-                 cumsum(swexlp))
-  psi_[ord,] <- out
-  psi_
-}
+  # Aggregate Wp and Wp*X by rank, then compute cumulative sums from the top
+  # S0[i] = sum of Wp over all j where Y_S[j] >= Y_S[i]
+  #       = sum of rank_Wp[r] for r >= ranks[i]  (cumsum from top)
+  rank_Wp   <- rowsum(Wp,     ranks, reorder = TRUE)        # (max(ranks) x 1)
+  rank_WpX  <- rowsum(Wp * X, ranks, reorder = TRUE)        # (max(ranks) x ncol(X))
 
-gradfun <- function(B, X, SW) {
-  colSums(psi(B, X, SW))
-}
+  cum_Wp  <- rev(cumsum(rev(rank_Wp)))                      # cumsum from top rank down
+  cum_WpX <- apply(rank_WpX, 2L, function(col) rev(cumsum(rev(col))))
 
-out <- rootSolve::multiroot(gradfun,
-                            rep(0, ncol(X)),
-                            X = X,
-                            SW = d$sw)
-out$root
-unname(fit$coefficients)
+  S0 <- cum_Wp[ranks]                                       # (n x 1)
+  S1 <- cum_WpX[ranks, , drop = FALSE]                      # (n x ncol(X))
 
+  M <- Y_death * (X - S1 / S0)
 
-psi_b <- psi(out$root, X = X, SW = d$sw)
-B <- crossprod(psi_b)
+  # For the loop correction terms, we need for each i:
+  #   term1[i] = sum_{j: Y_S[j] <= Y_S[i], Y_death[j]} W[j] / S0[j]
+  #   term2[i] = colSums of W[j] * S1[j,] / S0[j]^2 over same j
 
-hess <- gradient(gradfun,
-                 .x = out$root,
-                 X = X,
-                 SW = d$sw)
+  WdS0     <- W * Y_death / S0
+  WS1dS0sq <- W * Y_death * S1 / S0^2
 
-A1 <- solve(-hess)
-V <- A1 %*% tcrossprod(B, A1)
+  rank_WdS0     <- rowsum(WdS0,     ranks, reorder = TRUE)
+  rank_WS1dS0sq <- rowsum(WS1dS0sq, ranks, reorder = TRUE)
 
-V
-fit$var
-crossprod(residuals(fit, type = "dfbeta",
-                    weighted = TRUE))
+  cum_WdS0     <- cumsum(rank_WdS0)                          # cumsum from bottom rank up
+  cum_WS1dS0sq <- apply(rank_WS1dS0sq, 2L, cumsum)
 
-A1
-fit$naive.var
+  term1 <- cum_WdS0[ranks]
+  term2 <- cum_WS1dS0sq[ranks, , drop = FALSE]
 
-head(psi_b)
-head(residuals(fit, type = "score"))
+  M <- M - p * term1 * X + p * term2
 
-#Lin & Wei 1989
-getW <- function(B, X, SW) {
-  X <- X[ord,, drop = FALSE]
-  SW <- SW[ord]
-
-  swexlp <- SW * exp(drop(X %*% B))
-
-  S1 <- apply(X, 2, function(x) cumsum(x * swexlp))
-  S0 <- cumsum(swexlp)
-
-  (X - S1/S0) - cumsum(1 - )
-
-  out <- SW * (X - apply(X, 2, function(x) cumsum(x * swexlp)) /
-                 cumsum(swexlp))
-
-  (X - apply(X, 2, function(x) cumsum(x * swexlp)) /
-      cumsum(swexlp))
+  W * M
 }

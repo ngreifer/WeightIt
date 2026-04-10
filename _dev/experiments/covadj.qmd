@@ -1,0 +1,464 @@
+---
+title: "On Covariate Adjustment after Weighting"
+author: "Noah Greifer"
+date: "`r Sys.Date()`"
+format: 
+  html:
+    self-contained: true
+---
+
+I think your claim is that adjusting for covariates in the outcome model always increases the precision of a weighted effect estimate because it partials out variation in the outcome, which means less variation must be accounted for by the treatment, even when the weights exactly balance the covariate means. This improvement shows up in the fixed-weight robust SEs, even though the point estimate for the weighted difference in means and covariate-adjust effect are identical.
+
+I argue that it not the case that including covariates in the outcome model increases the precision of a weighted effect estimate when the weights exactly balance the covariate means. The difference between the robust SEs from the weighted difference in means and the covariate-adjusted effects is misleading because neither are correct estimates of the true SE. Using the asymptotically correct M-estimation SEs shows that covariate adjustment does not increase the precision of the effect estimate when the covariate means are made equal by the weights; this SE "gives credit" to the weights for balancing the covariates, which is actually what causes the increase in precision, not the partialling out of variance from the outcome.
+
+My argument has two main pieces of evidence:
+
+1. The M-estimation-based SEs do not change whether covariates are included in the outcome model or not, which suggests that whatever uncertainty is adjusted for is adjusted for by the weights, not the covariate adjustment in the regression model
+2. When using weights that exactly reproduce the covariate-adjusted treatment effect estimate, the SEs arising from the weighted difference in means is exactly equal to the SE arising from the covariate-adjusted estimate, also suggesting that it is not the partialling out of variability in the outcome model that is responsible for the reduction in variance (i.e., because the weights do nto reduce variability in the outcome).
+
+## Notation
+
+We'll consider treatment $A$ taking on values of 0 and 1, covariates $X$, and an outcome $Y$. Weights will be denoted $w$. The sample size is $n$.
+
+## M-estimation
+
+M-estimation is a method of smultaneous estimation of multiple quantites that makes it easy to adjust the variance in each quantity for the estimation of the others. It involves specifying a system of estimating equations for a parameter vector $\theta$ such that $\hat\theta$ is the solution to the following system:
+$$
+\sum_{i=1}^n{\psi(X_i, \hat\theta)}=0
+$$
+Often the estimating equations are the derivatives of the log-likelihood, but they can be arbitrary. A nice thing about M-estimation is that we can get the variance of the estimated parameters as $V=G^{-1}B(G^{-1})'$, where
+$$
+G = -\sum_{i=1}^n{\left.\frac{\partial\psi(X_i, \theta)}{\partial\theta}\right|_{\theta=\hat\theta}}
+$$
+(i.e., the negative gradient of $\psi(.)$, which is often the negative Hessian when $\psi$ is the derivative of the log-likelihood) and
+$$
+B = \sum_{i=1}^n{\psi(X_i, \hat\theta)\psi(X_i, \hat\theta)'}
+$$
+
+To use M-estimation, we just need the estimating equations that correspond to our quantities of interest, and then we can numerically solve them and numerically compute the components of $V$ to get our estimate of $V$.
+
+For example, let's say we want to estimate the coefficients of a linear regression model of $Y$ on $A$ and $X$ (with an intercept). The estimating equations are the derivative of the log-likelihood for the Gaussian GLM, which are
+$$
+\psi_{\text{OLS}}=(Y_i-Z_i\beta)Z_i=\left(\array{Y_i-Z_i\beta \\ (Y_i-Z_i\beta)A_i \\ (Y_i-Z_i\beta)X_i}\right)
+$$
+where $Z_i = \array[1 \ A_i \ X_i]$ and $\beta=\array[\beta_0 \ \beta_1 \ \beta_2]$.
+
+In R, this is easy to program with a few steps. We need a function $\psi$ and a function $g(\theta)=\sum_{i=1}^n{\psi(X_i, \theta)}$, and we supply those and the model inputs to a root solver, e.g., `rootSolve::multiroot()`. To compute the hessian, we simply compute a finite difference approximation by perturbing $g(\theta)$ around the estimated $\hat\theta$. This can be done using `rootSolve::gradient()`
+
+Let's do this for linear regression, and show that we get the same results as the sandwich variance from `lm()`.
+
+```{r}
+library(WeightIt)
+test_data <- readRDS(url("https://github.com/ngreifer/WeightIt/raw/refs/heads/master/tests/testthat/fixtures/test_data.rds"))
+
+A <- test_data$A
+X <- as.matrix(test_data[c("X1", "X2", "X3", "X4")])
+Y <- test_data$Y_C
+
+Z <- cbind(1, A, X)
+```
+
+
+
+```{r}
+#Using lm
+fit <- lm(Y ~ 1 + A + X1 + X2 + X3 + X4,
+          data = test_data)
+
+#Psi and g
+psi <- function(theta, Z, Y) {
+  #OLS score equations
+  Yhat <- drop(Z %*% theta)
+  (Y - Yhat) * Z
+}
+
+g <- function(theta, Z, Y) {
+  colSums(psi(theta, Z, Y))
+}
+
+start <- rep(0, ncol(Z))
+
+est <- rootSolve::multiroot(g, start, Z = Z, Y = Y)
+
+#Coefficient estimates
+data.frame("lm" = coef(fit),
+           "m_est" = est$root)
+
+G <- rootSolve::gradient(g, est$root, Z = Z, Y = Y)
+B <- crossprod(psi(est$root, Z = Z, Y = Y))
+
+V <- solve(G, B %*% t(solve(G)))
+
+#Standard errors
+data.frame("sandwich" = sqrt(diag(sandwich::sandwich(fit))),
+           "m_est" = sqrt(diag(V)))
+
+```
+
+We can see that the coefficients and robust SEs computed using M-estimation are equal to those computed using `lm()` and `sandwich()`.
+
+M-estimation is also how we get the variance for the weighted difference in means that accounts for estimation of the weights. Here is how we do that below using logistic regression propensity scores for the ATE:
+
+```{r}
+#Manually using glm()
+fit <- glm(A ~ X1 + X2 + X3 + X4,
+           data = test_data, family = binomial)
+
+psi <- function(theta, A, X1, Y) {
+  beta <- theta[1:ncol(X1)] #LR coefs
+  
+  #Compute propensity scores
+  ps <- plogis(drop(X1 %*% beta))
+  
+  #Compute ATE weights
+  w <- A / ps + (1 - A) / (1 - ps)
+  
+  #Fit weighted outcome regression model
+  Z <- cbind(1, A)
+  alpha <- theta[ncol(X1) + 1:ncol(Z)] #Y coefs
+  Yhat <- drop(Z %*% alpha)
+  
+  cbind((A - ps) * X1,
+        w * (Y - Yhat) * Z)
+}
+
+g <- function(theta, A, X1, Y) {
+  colSums(psi(theta, A, X1, Y))
+}
+
+X1 <- cbind(1, X)
+start <- rep(0, ncol(X1) + 2)
+
+est <- rootSolve::multiroot(g, start, A = A, X1 = X1, Y = Y,
+                            rtol = 1e-10)
+
+#Coefficient estimates
+data.frame("glm" = coef(fit),
+           "m_est" = est$root[1:ncol(X1)])
+
+G <- rootSolve::gradient(g, est$root, A = A, X1 = X1, Y = Y)
+B <- crossprod(psi(est$root, A = A, X1 = X1, Y = Y))
+
+V <- solve(G, B %*% t(solve(G)))
+
+#Standard errors
+data.frame("sandwich" = sqrt(diag(sandwich::sandwich(fit))),
+           "m_est" = sqrt(diag(V))[1:ncol(X1)])
+
+#Treatment effect estimates
+ps <- fit$fitted.values
+w <- A / ps + (1 - A) / (1 - ps)
+
+fity <- lm(Y ~ A, data = test_data, weights = w)
+
+#Tretament effect estimates
+data.frame("lm" = coef(fity),
+           "m_est" = est$root[ncol(X1) + 1:2])
+
+#Standard errors
+data.frame("sandwich" = sqrt(diag(sandwich::sandwich(fity))),
+           "m_est" = sqrt(diag(V))[ncol(X1) + 1:2])
+```
+
+We can see that the sandwich standard errors treating the weights as fixed are larger than the M-estimation standard errors. Below is how `WeightIt` computes these:
+
+```{r}
+W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data)
+
+fit <- lm_weightit(Y ~ A, data = test_data, weightit = W)
+
+#M-estimation SEs
+summary(fit)
+
+#Sandwich SEs (too large)
+summary(fit, vcov = "HC0")
+```
+
+## Argument 1
+
+My first argument is that covariate adjustment in the outcome model does not increase precision when the covariate means are exactly balanced. To demonstrate, I'll use the just identified CBPS, which balances the covariate means. I'll do this both manually and using `WeightIt`.
+
+```{r}
+#M-estimation
+
+## No covariate adjustment
+psi1 <- function(theta, A, X1, Y) {
+  #CBPS: logistic regression but with a different
+  #score function
+  beta <- theta[1:ncol(X1)] #LR coefs
+  
+  #Compute propensity scores
+  ps <- plogis(drop(X1 %*% beta))
+  
+  #Compute ATE weights
+  w <- A / ps + (1 - A) / (1 - ps)
+  
+  #Fit weighted outcome regression model
+  Z <- cbind(1, A)
+  alpha <- theta[ncol(X1) + 1:ncol(Z)] #Y coefs
+  Yhat <- drop(Z %*% alpha)
+
+  cbind(w * A * X1 - w * (1 - A) * X1, #CBPS score
+        w * (Y - Yhat) * Z)
+}
+
+g1 <- function(theta, A, X1, Y) {
+  colSums(psi1(theta, A, X1, Y))
+}
+
+X1 <- cbind(1, X)
+start <- rep(0, ncol(X1) + 2)
+
+est1 <- rootSolve::multiroot(g1, start, A = A, X1 = X1, Y = Y,
+                             rtol = 1e-10)
+
+G <- rootSolve::gradient(g1, est1$root, A = A, X1 = X1, Y = Y)
+B <- crossprod(psi1(est1$root, A = A, X1 = X1, Y = Y))
+
+V1 <- solve(G, B %*% t(solve(G)))
+```
+
+
+
+```{r}
+## With covariate adjustment
+psi2 <- function(theta, A, X1, Y) {
+  #CBPS: logistic regression but with a different
+  #score function
+  beta <- theta[1:ncol(X1)] #LR coefs
+  
+  #Compute propensity scores
+  ps <- plogis(drop(X1 %*% beta))
+  
+  #Compute ATE weights
+  w <- A / ps + (1 - A) / (1 - ps)
+  
+  #Fit weighted outcome regression model
+  Z <- cbind(X1, A)
+  alpha <- theta[ncol(X1) + 1:ncol(Z)] #Y coefs
+  Yhat <- drop(Z %*% alpha)
+
+  cbind(w * A * X1 - w * (1 - A) * X1, #CBPS score
+        w * (Y - Yhat) * Z)
+}
+
+g2 <- function(theta, A, X1, Y) {
+  colSums(psi2(theta, A, X1, Y))
+}
+
+X1 <- cbind(1, X)
+start <- rep(0, ncol(X1) + ncol(X1) + 1)
+
+est2 <- rootSolve::multiroot(g2, start, A = A, X1 = X1, Y = Y,
+                             rtol = 1e-10)
+
+G <- rootSolve::gradient(g2, est2$root, A = A, X1 = X1, Y = Y)
+B <- crossprod(psi2(est2$root, A = A, X1 = X1, Y = Y))
+
+V2 <- solve(G, B %*% t(solve(G)))
+```
+
+```{r}
+data.frame(Adj = c("No adj", "Adj"),
+           Type = "M-est",
+           Est = c(est1$root[length(est1$root)], est2$root[length(est2$root)]),
+           SE = c(sqrt(V1[nrow(V1), ncol(V1)]),
+                  sqrt(V2[nrow(V2), ncol(V2)])))
+```
+
+We can see that when using M-estimation, we get identical effect estimates and SEs regardless of whether we adjust for covariates because the covariate means are exactly balanced.
+
+Below I'll show you how to get the same results using `WeightIt`:
+
+```{r}
+# Using WeightIt
+W <- weightit(A ~ X1 + X2 + X3 + X4, data = test_data,
+              method = "cbps", estimand = "ATE")
+
+## No covariate adjustment in outcome model
+fit1 <- glm_weightit(Y ~ A,
+                     data = test_data, weightit = W)
+
+#M-estimation SEs
+summary(fit1, vcov = "asympt")
+
+#Sandwich SEs treating weights as fixed
+summary(fit1, vcov = "HC0")
+
+## Covariate adjustment in outcome model
+fit2 <- glm_weightit(Y ~ A + X1 + X2 + X3 + X4,
+                     data = test_data, weightit = W)
+
+#M-estimation SEs
+summary(fit2, vcov = "asympt")
+
+#Sandwich SEs treating weights as fixed
+summary(fit2, vcov = "HC0")
+```
+
+```{r}
+data.frame(Adj = c("No adj", "No adj", "Adj", "Adj"),
+           Type = c("Fixed w", "M-est", "Fixed w", "M-est"),
+           Est = c(coef(fit1)["A"], coef(fit1)["A"], coef(fit2)["A"], coef(fit2)["A"]),
+           SE = c(sqrt(vcov(fit1, type = "HC0")["A","A"]),
+                  sqrt(vcov(fit1, type = "asympt")["A","A"]),
+                  sqrt(vcov(fit2, type = "HC0")["A","A"]),
+                  sqrt(vcov(fit2, type = "asympt")["A","A"])))
+```
+
+When using M-estimation to compute the SEs, we get the same estimates regardless of whether we adjust for covariates or not, consistent with getting the same point estimate whether we adjust for covariates or not. It is the weights that provide the increase in precision due to balancing, not due to explaining variability in the outcome. When using the weighting estimator that treats weights as fixed, it makes a difference whether we use regression to adjust for covariates or not. Adjusting for covariates "gives credit" for balancing the covariates that is not done by the fixed-weight SE. That means covariate adjustment should be seen as a way to adjust an incorrect SE to make it closer to the correct SE rather than as a way to increase precision.
+
+When treatment-covariate interactions are included in the outcome model, there is strong treatment effect heterogeneity, and we use `avg_comparisons()` to perform g-computation to estimate the treatment effect, covariate adjustment actually makes the SEs too small because the sample is treated as fixed, even when the variance of the outcome model parameters is estimated accounting for estimation of the weights. This is the feature we are working on and why it isn't a good idea to adjust for covariates in the outcome model until we have figured this out.
+
+## Argument 2
+
+Regression adjustment is equivalent to a kind of weighting in that both yield identical effect estimates, as explained by Chattopadhyay and Zubizarreta (2023). When we compute the weighted difference in means and correctly account for uncertainty, we get the same estimates as when we perform regression adjustment. The M-estimation SEs "give credit" to the weights for balancing the covariates. This also shows that it is not the partialling out of the variability in the outcome that leads to the increased precision.
+
+To demonstrate, I'll generate data from an RCT. I'll show that regression adjustment and weighting yield identical estimates and SEs when using M-estimation for both. I'll also show that the weights do not reduce the variability of the outcome; they increase precision by balancing the covariates.
+
+```{r}
+set.seed(1234)
+n <- 300
+X <- cbind(rnorm(n),
+           rchisq(n, 2),
+           rt(n, 4))
+A <- rbinom(n, 1, .5)
+Y <- A * (5 + 2 * X[,1] - .6 * X[,2] + 1 * X[,3] + rnorm(n, 0)) +
+  (1 - A) * (6 - 2 * X[,1] - 1.6 * X[,2] - 3 * X[,3] + rnorm(n, 2))
+
+cobalt::bal.tab(X, A)
+```
+
+The covariates are slightly imbalanced, but it's okay because treatment is randomly assigned. Rather than thinking of regression removing variability in the outcome, it may be more valid to think of it as balancing the covariates.
+
+Below we'll estimate the weights corresponding to an outcome regression model. These weights are described in Wang and Zubizarreta (2020).
+
+```{r}
+# Weighting
+psi1 <- function(theta, A, X1, Y) {
+  beta0 <- theta[1:ncol(X1)]
+  ps0 <- 1 - 1 / (1 - drop(X1 %*% beta0)/2)
+  
+  beta1 <- theta[ncol(X1) + 1:ncol(X1)]
+  ps1 <- 1 / (1 - drop(X1 %*% beta1)/2)
+  
+  #Compute ATE weights
+  w <- ifelse(A == 1, 1 / ps1, 1 / (1 - ps0))
+
+  Z <- cbind(1, A)
+  alpha <- theta[2 * ncol(X1) + 1:ncol(Z)] #Y coefs
+  Yhat <- drop(Z %*% alpha)
+
+  cbind(w * (1 - A) * X1 - X1,
+        w * A * X1 - X1,
+        w * (Y - Yhat) * Z)
+}
+
+g1 <- function(theta, A, X1, Y) {
+  colSums(psi1(theta, A, X1, Y))
+}
+
+X1 <- cbind(1, X)
+start <- rep(.1, 2 * ncol(X1) + 2)
+
+est1 <- rootSolve::multiroot(g1, start, A = A, X1 = X1, Y = Y,
+                             rtol = 1e-10)
+
+G <- rootSolve::gradient(g1, est1$root, A = A, X1 = X1, Y = Y)
+B <- crossprod(psi1(est1$root, A = A, X1 = X1, Y = Y))
+
+V1 <- solve(G) %*% B %*% t(solve(G))
+```
+
+Next we fit the outcome regression model and use g-computation to estimate the treatment effect. No weights are estimated. We use g-computation here to ensure that the uncertainty due to sampling is accounted for; traditional robust SEs (e.g., described in Lin (2013)) assume the covariates are fixed.
+
+```{r}
+#Regression
+psi2 <- function(theta, A, X1, Y) {
+  Z <- cbind(X1, A * X1)
+  alpha <- theta[1:ncol(Z)] #Y coefs
+  Yhat <- drop(Z %*% alpha)
+  
+  tau <- theta[ncol(Z) + 1:3]
+  Y0 <- drop(cbind(X1, 0 * X1) %*% alpha)
+  Y1 <- drop(cbind(X1, 1 * X1) %*% alpha)
+
+  cbind((Y - Yhat) * Z,
+        Y0 - tau[1],
+        Y1 - tau[2],
+        Y1 - Y0 - tau[3])
+}
+
+g2 <- function(theta, A, X1, Y) {
+  colSums(psi2(theta, A, X1, Y))
+}
+
+X1 <- cbind(1, X)
+start <- rep(0, 2 * ncol(X1) + 3)
+
+est2 <- rootSolve::multiroot(g2, start, A = A, X1 = X1, Y = Y,
+                             rtol = 1e-10)
+
+G <- rootSolve::gradient(g2, est2$root, A = A, X1 = X1, Y = Y)
+B <- crossprod(psi2(est2$root, A = A, X1 = X1, Y = Y))
+
+V2 <- solve(G) %*% B %*% t(solve(G))
+```
+
+Below, we can see that the effect estimates and SE estimates are identical, indicating that weighting does not increase precision by a means different from regression.
+
+```{r}
+data.frame(Method = c("Weights", "G-comp"),
+           Est = c(est1$root[length(est1$root)],
+                   est2$root[length(est2$root)]),
+           SE = c(sqrt(V1[nrow(V1), ncol(V1)]),
+                  sqrt(V2[nrow(V2), ncol(V2)])))
+```
+
+We can see that the variability of the outcome within each group does not change when weighting, so this is not why the weighted estimate is more precise than no weighting:
+
+```{r}
+beta0 <- est1$root[1:ncol(X1)]
+ps0 <- 1 - 1 / (1 - drop(X1 %*% beta0)/2)
+
+beta1 <- est1$root[ncol(X1) + 1:ncol(X1)]
+ps1 <- 1 / (1 - drop(X1 %*% beta1)/2)
+
+#Compute ATE weights
+w <- ifelse(A == 1, 1 / ps1, 1 / (1 - ps0))
+
+#Unweighted variability in Y
+sd(Y[A == 0])
+sd(Y[A == 1])
+
+#Weighted variability in Y
+cobalt::col_w_sd(Y, w, subset = A == 0)
+cobalt::col_w_sd(Y, w, subset = A == 1)
+
+#Treatment effect estimate as weighted mean diff
+cobalt::col_w_smd(Y, A, w, std = FALSE)
+```
+
+This is in contrast to the usual explanation for the increase in precision with regression, which does reduce the variability in the outcome:
+
+```{r}
+fit <- lm(Y ~ A * X1)
+
+#Residual variability in Y
+sd(fit$residuals[A == 0])
+sd(fit$residuals[A == 1])
+
+#Treatment effect estimate using g-comp
+marginaleffects::avg_comparisons(fit, variables = "A",
+                                 vcov = FALSE)$estimate
+```
+
+## Conclusion
+
+M-estimation for computing standard errors with PS weighting isn't just an optional method to be technically correct; it eliminates apparent contradictions and provides an alternative explanation for how covariate adjustment (either through weighting or regression) increases precision. M-estimation "gives credit" to the weights for balancing the covariates, which is what increases the precision. Though the idea that regression increases precision by reducing variability in the outcome is appealing and seems to connect to the formula for the OLS SE, it doesn't explain why the weighting equivalent to regression, which does not reduce variability in the outcome, yields identical standard errors when the same sources of variability in the estimate are accounted for. Perhaps an alternative explanation is that covariate adjustment increases precision through balancing, which is why no additional precision is gained when covariate adjustment is used on an already-balanced dataset. The idea that weighting is less precise the regression is due to using weighting methods that do not optimize the precision of the weighted estimate (i.e., because they prioritize valid modeling of the treatment or restrict the weights to be positive), not an inherent difference between the two methods.
+
+This doesn't mean covariate adjustment isn't useful. We can't always use M-estimation. For example, SBWs exactly balance the covariate means but it isn't straightforward how to use M-estimation because of the constraints on the positivity of the weights. In that case, regression adjustment with a fixed-weight SE may bring the estimated SE closer to its correct value. But this is still only an approximation because if a weighting method balances other components of the covariates that are not included in the outcome model, the fixed-weight SEs can't give credit to the weights for balancing those components.
+
+This suggests that covariate adjustment is almost always preferred; either it makes no difference (i.e., the covariate means are balanced and M-estimation SEs are used) or it improves estimation (i.e., fixed-weight SEs are used). The only weakness of covariate adjustment is the current omission of correctly accounting for sampling when treatment-covariate interactions are included in the outcome model, in which case M-estimation with no covariate adjustment should be done. Once this feature is added to `marginaleffects`, covariate adjustment will again either make no difference or be an improvement.
+
+Note that all the above only applies to linear outcome models. For non-linear models, we don't know the equivalence between the regression and a form of weighting, covariate adjustment can change the effect estimate even when the covariate means are exactly balanced, and the problem of correctly accounting for sampling occurs even when there are no treatment-covariate interactions in the outcome model. This is one reason why adding the feature to `marginaleffects` is so important.
