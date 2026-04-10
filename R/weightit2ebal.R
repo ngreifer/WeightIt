@@ -299,9 +299,9 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 
     if (solver == "FISTA") {
       opt.out <- .FISTA_ebal(coef_start, S = s.weights_t,
-                            C = C, Q = Q, N = N,
-                            M = M, tols = tols,
-                            reltol = reltol, maxit = maxit)
+                             C = C, Q = Q, N = N,
+                             M = M, tols = tols,
+                             reltol = reltol, maxit = maxit)
     }
     else if (solver == "multiroot") {
       out <- suppressWarnings({
@@ -563,9 +563,9 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
     if (solver == "FISTA") {
       opt.out <- .FISTA_ebal(coef_start, S = s.weights_t,
-                            C = C, Q = Q, N = N,
-                            M = M, tols = tols,
-                            reltol = reltol, maxit = maxit)
+                             C = C, Q = Q, N = N,
+                             M = M, tols = tols,
+                             reltol = reltol, maxit = maxit)
     }
     else if (solver == "multiroot") {
       out <- suppressWarnings({
@@ -674,8 +674,6 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     -drop(w %*% C) / N + M
   }
 
-  # Gradient of smooth part only (no L1 term)
-
   # Soft threshold operator
   soft_thresh <- function(Z, lambda) {
     sign(Z) * squish(abs(Z) - lambda, lo = 0, hi = Inf)
@@ -686,7 +684,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   L <- 1
   Z <- start
   Y <- Z          # FISTA momentum term
-  t_old <- 1
+  a_old <- 1
 
   w <- W(Y)
   lossY <- loss_EB_smooth(Y, w)
@@ -713,10 +711,18 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
     Z <- Z_new
 
-    # FISTA momentum update
-    t_new <- (1 + sqrt(1 + 4 * t_old^2)) / 2
-    Y     <- Z + ((t_old - 1) / t_new) * (Z - Z_old)
-    t_old <- t_new
+
+    if (sum((Y - Z) * (Z - Z_old)) >= 0) {
+      # FISTA momentum restart
+      a_new <- 1
+    }
+    else {
+      # FISTA momentum update
+      a_new <- (1 + sqrt(1 + 4 * a_old^2)) / 2
+    }
+
+    Y <- Z + ((a_old - 1) / a_new) * (Z - Z_old)
+    a_old <- a_new
 
     # Recompute at new Y for next iteration
     w <- W(Y)
