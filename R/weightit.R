@@ -452,58 +452,58 @@ print.weightit <- function(x, ...) {
         ""
     }
 
-    cat(sprintf(" - method: %s%s\n",
-                method_name,
-                method_note))
+    cli::cat_line(sprintf(" - method: %s%s",
+                          method_name,
+                          method_note))
   }
   else if (all_the_same(x[["weights"]])) {
-    cat(" - method: no weighting\n")
+    cli::cat_line(" - method: no weighting")
   }
   else if (is_not_null(x[["ps"]])) {
-    cat(" - method: propensity score weighting\n")
+    cli::cat_line(" - method: propensity score weighting")
   }
 
-  cat(sprintf(" - number of obs.: %s\n",
-              nobs(x)))
+  cli::cat_line(sprintf(" - number of obs.: %s",
+                        nobs(x)))
 
-  cat(sprintf(" - sampling weights: %s\n",
-              if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present"))
+  cli::cat_line(sprintf(" - sampling weights: %s",
+                        if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present"))
 
-  cat(sprintf(" - treatment: %s\n",
-              switch(treat.type,
-                     continuous = "continuous",
-                     `multi-category` =,
-                     multinomial = sprintf("%s-category (%s)",
-                                           nunique(x[["treat"]]),
-                                           word_list(levels(x[["treat"]]), and.or = FALSE)),
-                     binary = "2-category")))
+  cli::cat_line(sprintf(" - treatment: %s",
+                        switch(treat.type,
+                               continuous = "continuous",
+                               `multi-category` =,
+                               multinomial = sprintf("%s-category (%s)",
+                                                     nunique(x[["treat"]]),
+                                                     word_list(levels(x[["treat"]]), and.or = FALSE)),
+                               binary = "2-category")))
 
   if (is_not_null(x[["estimand"]])) {
-    cat(sprintf(" - estimand: %s\n",
-                if (is_null(x[["focal"]])) x[["estimand"]]
-                else sprintf("%s (focal: %s)", x[["estimand"]], x[["focal"]])))
+    cli::cat_line(sprintf(" - estimand: %s",
+                          if (is_null(x[["focal"]])) x[["estimand"]]
+                          else sprintf("%s (focal: %s)", x[["estimand"]], x[["focal"]])))
   }
 
   if (is_not_null(x[["covs"]])) {
-    cat(sprintf(" - covariates: %s\n",
-                if (length(names(x[["covs"]])) > 60L) "too many to name"
-                else word_list(names(x[["covs"]]), and.or = FALSE)))
+    cli::cat_line(sprintf(" - covariates: %s",
+                          if (length(names(x[["covs"]])) > 60L) "too many to name"
+                          else word_list(names(x[["covs"]]), and.or = FALSE)))
   }
 
   if (is_not_null(x[["missing"]]) && !identical(x[["missing"]], "")) {
-    cat(sprintf(" - missingness method: %s\n",
-                .missing_to_phrase(x[["missing"]])))
+    cli::cat_line(sprintf(" - missingness method: %s",
+                          .missing_to_phrase(x[["missing"]])))
   }
 
   if (is_not_null(x[["by"]])) {
-    cat(sprintf(" - by: %s\n", word_list(names(x[["by"]]), and.or = FALSE)))
+    cli::cat_line(sprintf(" - by: %s", word_list(names(x[["by"]]), and.or = FALSE)))
   }
 
   if (is_not_null(x[["moderator"]])) {
     nsubgroups <- nlevels(.attr(x[["moderator"]], "by.factor"))
-    cat(sprintf(" - moderator: %s (%s subgroups)\n",
-                word_list(names(x[["moderator"]]), and.or = FALSE),
-                nsubgroups))
+    cli::cat_line(sprintf(" - moderator: %s (%s subgroups)",
+                          word_list(names(x[["moderator"]]), and.or = FALSE),
+                          nsubgroups))
   }
 
   #trim
@@ -527,15 +527,15 @@ print.weightit <- function(x, ...) {
         trim.at <- c(1 - trim.at, trim.at)
       }
 
-      cat(sprintf(" - weights trimmed at %s%s\n",
-                  word_list(paste0(round(100 * trim.at, 2L), "%")),
-                  if (trim.drop) " and units dropped" else ""))
+      cli::cat_line(sprintf(" - weights trimmed at %s%s",
+                            word_list(paste0(round(100 * trim.at, 2L), "%")),
+                            if (trim.drop) " and units dropped" else ""))
     }
     else {
-      cat(sprintf(" - weights trimmed at the %s %s%s\n",
-                  if (trim.lower) "top and bottom" else "top",
-                  trim.at,
-                  if (trim.drop) " and units dropped" else ""))
+      cli::cat_line(sprintf(" - weights trimmed at the %s %s%s",
+                            if (trim.lower) "top and bottom" else "top",
+                            trim.at,
+                            if (trim.drop) " and units dropped" else ""))
     }
   }
 

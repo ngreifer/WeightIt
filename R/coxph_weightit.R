@@ -365,9 +365,6 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 
     # Map each unique Y_S value to an integer rank (ties get same rank)
     # This lets us treat the risk set condition as a comparison of integer ranks
-    # ranks <- rank(.y[, "time"]) |>
-    #   factor() |>
-    #   unclass()
 
     # Aggregate Wp and Wp*X by rank, then compute cumulative sums from the top
     # S0[i] = sum of Wp over all j where Y_S[j] >= Y_S[i]

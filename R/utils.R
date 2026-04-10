@@ -649,10 +649,7 @@ get_varnames <- function(expr) {
 #treat/covs
 get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
-  if (!rlang::is_formula(f)) {
-    arg::err("{.arg formula} must be a formula")
-  }
-
+  arg::arg_formula(f, .arg = "formula")
   arg::arg_string(sep)
 
   env <- environment(f)
