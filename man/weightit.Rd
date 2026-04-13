@@ -131,7 +131,7 @@ specified, \code{keep.mparts} is set to \code{FALSE}.
 \description{
 \code{weightit()} allows for the easy generation of balancing weights
 using a variety of available methods for binary, continuous, and
-multi-category treatments. Many of these methods exist in other packages,
+multi-category treatments. Some of these methods require functions in other packages,
 which \code{weightit()} calls; these packages must be installed to use the desired
 method.
 }

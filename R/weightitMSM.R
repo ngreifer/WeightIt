@@ -154,8 +154,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
                         include.obj = FALSE, keep.mparts = TRUE,
                         is.MSM.method, weightit.force = FALSE, ...) {
 
-  A <- list(...)
-
   call <- match.call()
 
   ## Checks and processing ----
@@ -184,9 +182,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   }
 
   ##Process by
-  if (is_not_null(A[["exact"]])) {
+  if (is_not_null(...get("exact"))) {
     arg::wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
-    by <- A[["exact"]]
+    by <- ...get("exact")
     by.arg <- "exact"
   }
   else {
@@ -286,6 +284,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   #Process moments and int
   m.i.q <- .process_moments_int_quantile(method = method, ...)
 
+  A <- list(...)
   A["s.weights"] <- list(s.weights)
   A["by.factor"] <- list(.attr(processed.by, "by.factor"))
   A["method"] <- list(method)

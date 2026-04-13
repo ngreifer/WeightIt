@@ -106,8 +106,7 @@
 #' @references
 #' ## `estimand = "ATE"`
 #'
-#' Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability
-#' Tilting for Moment Condition Models with Missing Data. *The Review of Economic Studies*, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
+#' Graham, B. S., De Xavier Pinto, C. C., & Egel, D. (2012). Inverse Probability Tilting for Moment Condition Models with Missing Data. *The Review of Economic Studies*, 79(3), 1053–1079. \doi{10.1093/restud/rdr047}
 #'
 #' ## `estimand = "ATT"`
 #'

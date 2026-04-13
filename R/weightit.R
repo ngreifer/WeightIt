@@ -3,7 +3,7 @@
 #' @description
 #' `weightit()` allows for the easy generation of balancing weights
 #' using a variety of available methods for binary, continuous, and
-#' multi-category treatments. Many of these methods exist in other packages,
+#' multi-category treatments. Some of these methods require functions in other packages,
 #' which `weightit()` calls; these packages must be installed to use the desired
 #' method.
 #'
@@ -205,7 +205,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   ## Checks and processing ----
 
-  A <- list(...)
+
 
   #Checks
   if (is_null(formula) || !rlang::is_formula(formula, lhs = TRUE)) {
@@ -327,9 +327,9 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   ##Process by
-  if (is_not_null(A[["exact"]])) {
+  if (is_not_null(...get("exact"))) {
     arg::wrn("{.arg by} has replaced {.arg exact} in the {.fun weightit} syntax, but {.arg exact} will always work")
-    by <- A[["exact"]]
+    by <- ...get("exact")
     by.arg <- "exact"
   }
   else {
@@ -345,6 +345,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   ## Running models ----
 
+  A <- list(...)
   A["treat"] <- list(treat)
   A["covs"] <- list(covs)
   A["s.weights"] <- list(s.weights)
@@ -389,16 +390,16 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   out <- list(weights = obj$weights,
               treat = treat,
               covs = simple.covs,
-              estimand = if (treat.type == "continuous") NULL else reported.estimand,
+              estimand = if (treat.type != "continuous") reported.estimand,
               method = method,
-              ps = if (is_null(obj$ps) || all(is.na(obj$ps))) NULL else obj$ps,
+              ps = if (is_not_null(obj$ps) && !all(is.na(obj$ps))) obj$ps,
               s.weights = s.weights,
-              focal = if (reported.estimand %in% c("ATT", "ATC")) focal else NULL,
+              focal = if (reported.estimand %in% c("ATT", "ATC")) focal,
               by = processed.by,
               call = call,
               formula = formula,
               stabilize = stabilize,
-              missing = if (nzchar(missing)) missing else NULL,
+              missing = if (nzchar(missing)) missing,
               env = parent.frame(),
               info = obj$info,
               obj = obj$fit.obj) |>

@@ -2040,7 +2040,8 @@ generalized_inverse <- function(sigma, .try = TRUE) {
 
   suppressWarnings({
     fit <- try(glm.fit(X, Y, weights = w, offset = offset, family = family,
-                       mustart = mustart, control = list(maxit = 1e4L)), silent = TRUE)
+                       mustart = mustart, control = list(maxit = 1e4L)),
+               silent = TRUE)
   })
 
   if (!null_or_error(fit) && isTRUE(fit$converged)) {
@@ -2051,7 +2052,8 @@ generalized_inverse <- function(sigma, .try = TRUE) {
 
   suppressWarnings({
     fit <- try(glm.fit(X, Y, weights = w, offset = offset, family = family,
-                       start = coef_start, control = list(maxit = 1e4L)), silent = TRUE)
+                       start = coef_start, control = list(maxit = 1e4L)),
+               silent = TRUE)
   })
 
   if (null_or_error(fit) || !isTRUE(fit$converged)) {
