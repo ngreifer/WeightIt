@@ -11,13 +11,13 @@ Source:
 [`DESCRIPTION`](https://github.com/ngreifer/WeightIt/blob/master/DESCRIPTION)
 
 Greifer N (2026). *WeightIt: Weighting for Covariate Balance in
-Observational Studies*. R package version 1.6.0.9001,
+Observational Studies*. R package version 1.7.0,
 <https://ngreifer.github.io/WeightIt/>.
 
     @Manual{,
       title = {WeightIt: Weighting for Covariate Balance in Observational Studies},
       author = {Noah Greifer},
       year = {2026},
-      note = {R package version 1.6.0.9001},
+      note = {R package version 1.7.0},
       url = {https://ngreifer.github.io/WeightIt/},
     }

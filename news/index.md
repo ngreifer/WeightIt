@@ -1,6 +1,6 @@
 # Changelog
 
-## `WeightIt` (development version)
+## `WeightIt` 1.7.0
 
 - [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   can now estimate standard errors that account for estimation of the
