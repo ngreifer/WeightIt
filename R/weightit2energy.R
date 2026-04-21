@@ -760,7 +760,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
 
   sw0 <- check_if_zero(s.weights)
 
-  s.weights <- n * s.weights / sum(s.weights)
+  s.weights <- s.weights * n / sum(s.weights)
 
   min.w <- ...get("min.w", 1e-8)
   arg::arg_number(min.w)

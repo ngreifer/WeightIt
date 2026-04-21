@@ -578,7 +578,7 @@ print.weightitMSM <- function(x, ...) {
     trim.at <- NULL
   }
 
-  if (is_not_null(trim.at) && is.numeric(trim.at) && length(trim.at == 1L)) {
+  if (is_not_null(trim.at) && is_number(trim.at)) {
     if (trim.at < 1) {
       if (trim.lower) {
         trim.at <- c(1 - trim.at, trim.at)

@@ -79,10 +79,7 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
 
   treat.type[treat.type == "multinomial"] <- "multi-category"
 
-  ww <- setNames(w * sw, seq_along(sw))
-
-  attr(out, "weights") <- ww
-  attr(out, "treat") <- t
+  ww <- setNames(w * sw, names(t) %or% seq_along(t))
 
   if (treat.type == "binary") {
     treated <- get_treated_level(t, object$estimand, object$focal)
@@ -102,12 +99,7 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
     out$weight.range <- lapply(tx, function(ti) c(min(ww[ti]), max(w[ti]))) |>
       setNames(names(tx))
 
-    top.weights <- lapply(tx, function(ti) sort(ww[ti], decreasing = TRUE)[seq_len(top)]) |>
-      setNames(names(tx))
-
-    out$weight.top <- lapply(names(tx), function(i) {
-      sort(setNames(top.weights[[i]], which(ww[tx[[i]]] %in% top.weights[[i]])[seq_len(top)]))
-    }) |>
+    out$weight.top <- lapply(tx, function(ti) rev(sort(ww[ti], decreasing = TRUE)[seq_len(top)])) |>
       setNames(names(tx))
   }
 
@@ -143,7 +135,9 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
 
   out$effective.sample.size <- nn
 
-  attr(w, "focal") <- object$focal %or% NULL
+  attr(ww, "focal") <- object$focal %or% NULL
+  attr(out, "weights") <- ww
+  attr(out, "treat") <- t
 
   class(out) <- "summary.weightit"
 
@@ -154,6 +148,10 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
 print.summary.weightit <- function(x, digits = 3L, ...) {
   cli::cat_line(space(18L), .ul("Summary of weights"), "\n")
 
+  .print_summary_weightit_internal(x, digits = digits, ...)
+}
+
+.print_summary_weightit_internal <- function(x, digits = 3L, ...) {
   if (is_not_null(x$weight.range)) {
     cli::cat_line("- ", .it("Weight ranges"), ":\n")
 
@@ -186,7 +184,7 @@ print.summary.weightit <- function(x, digits = 3L, ...) {
         x$num.zeros) |>
     as.data.frame() |>
     setNames(c("Coef of Var", "MAD", "Entropy", "# Zeros")) |>
-    round_df_char(digits = 3L) |>
+    round_df_char(digits = 3L, pad = " ") |>
     print.data.frame()
 
   if (is_not_null(x$weight.mean)) {
@@ -226,7 +224,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
       geom_histogram(binwidth = binwidth,
                      bins = bins,
                      breaks = breaks,
-                     center = mean(w),
+                     boundary = 0,
                      color = "gray70",
                      fill = "gray70", alpha = 1) +
       scale_y_continuous(expand = expansion(c(0, .05))) +
@@ -251,6 +249,7 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
       geom_histogram(binwidth = binwidth,
                      bins = bins,
                      breaks = breaks,
+                     boundary = 0,
                      color = "gray70",
                      fill = "gray70", alpha = 1) +
       scale_y_continuous(expand = expansion(c(0, .05))) +
@@ -260,7 +259,8 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
       theme_bw() +
       facet_wrap(vars(.data$t), ncol = 1L, scales = "free") +
       theme(panel.background = element_blank(),
-            panel.border = element_rect(fill = NA, color = "black", size = .25))
+            panel.border = element_rect(fill = NA, color = "black",
+                                        linewidth = .25))
   }
 
   p
@@ -305,7 +305,7 @@ print.summary.weightitMSM <- function(x, digits = 3L, ...) {
            .st(space(23L)), "\n")
     }
 
-    print(x[[ti]])
+    .print_summary_weightit_internal(x[[ti]], digits = digits, ...)
     cat("\n")
 
     if (only.one) {
@@ -319,7 +319,7 @@ print.summary.weightitMSM <- function(x, digits = 3L, ...) {
 #' @exportS3Method plot summary.weightitMSM
 #' @rdname summary.weightit
 plot.summary.weightitMSM <- function(x, binwidth = NULL, bins = NULL, time = 1L, ...) {
-  if (!is.numeric(time) || length(time) != 1L || time %nin% seq_along(x)) {
+  if (!is_number(time) || time %nin% seq_along(x)) {
     arg::err("{.arg time} must be a number corresponding to the time point for which to display the distribution of weights")
   }
 

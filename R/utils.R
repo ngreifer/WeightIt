@@ -55,7 +55,7 @@ add_quotes <- function(x, quotes = 2L) {
   }
 
   if (isTRUE(quotes)) {
-    quotes <- '"'
+    quotes <- 2L
   }
 
   if (rlang::is_string(quotes)) {
@@ -126,7 +126,7 @@ ordinal <- function(x) {
   }, character(1L)) |>
     setNames(names(x))
 }
-round_df_char <- function(df, digits, pad = "0", na_vals = "") {
+round_df_char <- function(df, digits, pad = " ", na_vals = "") {
   if (NROW(df) == 0L || NCOL(df) == 0L) {
     return(df)
   }
@@ -652,7 +652,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   arg::arg_formula(f, .arg = "formula")
   arg::arg_string(sep)
 
-  env <- environment(f)
+  env <- rlang::f_env(f)
 
   #Check if data exists
   if (is_null(data)) {
@@ -686,11 +686,13 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   #Check if response exists
   if (rlang::is_formula(tt, lhs = TRUE)) {
-    resp.var.mentioned <- .attr(tt, "variables")[[2L]]
-    resp.var.mentioned.char <- deparse1(resp.var.mentioned)
+    resp.form <- update(tt, . ~ 0)
 
-    test <- tryCatch(eval(resp.var.mentioned, data, env),
-                     error = identity)
+    test <- tryCatch({
+      model.frame(resp.form, data = data,
+                  drop.unused.levels = TRUE,
+                  na.action = "na.pass")
+    }, error = identity)
 
     if (inherits(test, "simpleError")) {
       m <- conditionMessage(test)
@@ -698,15 +700,15 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
         arg::err("{m}")
       }
 
-      resp.var.failed <- TRUE
+      resp.var.okay <- FALSE
     }
     else {
-      resp.var.failed <- is_null(test)
+      resp.var.okay <- is_not_null(test)
     }
 
-    if (!resp.var.failed) {
-      treat.name <- resp.var.mentioned.char
-      treat <- test
+    if (resp.var.okay) {
+      treat.name <- names(test)[1L]
+      treat <- model.response(test)
     }
     else if (is_not_null(treat)) {
       tt <- delete.response(tt)
@@ -732,7 +734,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
       covs.matrix <- model.matrix(tt.covs, data = covs)
     }
     else {
-      covs <- make_df(ncol = 0L, nrow = length(treat))
+      covs <- make_df(ncol = 0L, nrow = names(treat) %or% length(treat))
       covs.matrix <- model.matrix(tt.covs, data = covs)
 
       class(treat) <- unique(c("treat", class(treat)))
@@ -787,7 +789,9 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   rhs.vars.failed <- rhs.df <- rep_with(FALSE, rhs.vars.mentioned.char)
   addl.dfs <- make_list(rhs.vars.mentioned.char)
-  terms.with.interactions <- unlist(lapply(rhs.term.labels[rhs.term.orders > 1], strsplit, ":", fixed = TRUE))
+  terms.with.interactions <- rhs.term.labels[rhs.term.orders > 1] |>
+    lapply(strsplit, ":", fixed = TRUE) |>
+    unlist()
 
   for (i in seq_along(rhs.vars.mentioned.char)) {
     test <- tryCatch(eval(rhs.vars.mentioned[[i]], data, env),
@@ -866,12 +870,15 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
                                       na.action = "na.pass"))
 
   covs <- tryCatch(eval(mf.covs),
+                   warning = function(w) {
+                     arg::wrn("{conditionMessage(w)}")
+                   },
                    error = function(e) {
                      arg::err("{conditionMessage(e)}")
                    })
 
   if (is_not_null(treat.name) && utils::hasName(covs, treat.name)) {
-    arg::err("the variable on the left side of the formula appears on the right side too")
+    arg::err("the variable on the left side of the formula ({.var {treat.name}}) must not appear on the right side")
   }
 
   s <- nzchar(sep)
@@ -998,7 +1005,7 @@ make_list <- function(n) {
   if (is_null(n)) {
     vector("list", 0L)
   }
-  else if (length(n) == 1L && is.numeric(n) && n >= 0) {
+  else if (rlang::is_scalar_integerish(n) && n >= 0) {
     vector("list", as.integer(n))
   }
   else if (is.atomic(n)) {
@@ -1014,7 +1021,7 @@ make_df <- function(ncol, nrow = 0L, types = "numeric") {
     ncol <- 0L
   }
 
-  if (length(ncol) == 1L && is.numeric(ncol)) {
+  if (rlang::is_scalar_integerish(ncol)) {
     col_names <- NULL
     ncol <- as.integer(ncol)
   }
@@ -1027,7 +1034,7 @@ make_df <- function(ncol, nrow = 0L, types = "numeric") {
     nrow <- 0L
   }
 
-  if (length(nrow) == 1L && is.numeric(nrow)) {
+  if (rlang::is_scalar_integerish(nrow)) {
     row_names <- NULL
     nrow <- as.integer(nrow)
   }
@@ -1184,9 +1191,7 @@ check_if_call_from_fun <- function(fun) {
       .ifnotfound
     }
     else {
-      .m2 <- ...elt(.m1[1L])
-      if (is_not_null(.m2)) .m2
-      else .ifnotfound
+      ...elt(.m1[1L]) %or% .ifnotfound
     }
   })
 

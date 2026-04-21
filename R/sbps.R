@@ -31,13 +31,13 @@
 #'   `FALSE`, a stochastic search as described in DZZL will be used instead. If
 #'   `TRUE`, all \eqn{2^R} combinations will be checked, where \eqn{R} is the
 #'   number of subgroups, which can take a long time with many subgroups. If
-#'   unspecified, will default to `TRUE` if \eqn{R <= 8} and `FALSE` otherwise.
+#'   unspecified, will default to `TRUE` if \eqn{R \le 8} and `FALSE` otherwise.
 #'
 #' @returns
 #' A `weightit.sbps` object, which inherits from `weightit`. This
 #' contains all the information in `obj` with the weights, propensity scores,
 #' call, and possibly covariates updated from `sbps()`. In addition, the
-#' `prop.subgroup` component contains the values of the coefficients C for the
+#' `prop.subgroup` component contains the values of the coefficients \eqn{C} for the
 #' subgroups (which are either 0 or 1 for the standard SBPS), and the
 #' `moderator` component contains a data.frame with the moderator.
 #'
@@ -50,8 +50,8 @@
 #' The SBPS relies on two sets of weights: one estimated in the overall
 #' sample and one estimated within each subgroup. The algorithm decides whether
 #' each subgroup should use the weights estimated in the overall sample or those
-#' estimated in the subgroup. There are 2^R permutations of overall and subgroup
-#' weights, where R is the number of subgroups. The optimal permutation is
+#' estimated in the subgroup. There are \eqn{2^R} permutations of overall and subgroup
+#' weights, where \eqn{R} is the number of subgroups. The optimal permutation is
 #' chosen as that which minimizes a balance criterion as described in DZZL. The
 #' balance criterion used here is, for binary and multi-category treatments, the
 #' sum of the squared standardized mean differences within subgroups and
@@ -62,12 +62,12 @@
 #'
 #' The smooth version estimates weights that determine the relative contribution
 #' of the overall and subgroup propensity scores to a weighted average
-#' propensity score for each subgroup. If P_O are the propensity scores
-#' estimated in the overall sample and P_S are the propensity scores estimated
-#' in each subgroup, the smooth SBPS finds R coefficients C so that for each
+#' propensity score for each subgroup. If \eqn{P_O} are the propensity scores
+#' estimated in the overall sample and \eqn{P_S} are the propensity scores estimated
+#' in each subgroup, the smooth SBPS finds \eqn{R} coefficients \eqn{C} so that for each
 #' subgroup, the ultimate propensity score is \eqn{C*P_S + (1-C)*P_O}, and
 #' weights are computed from this propensity score. The coefficients are
-#' estimated using [optim()] with `method = "L-BFGS-B"`. When C is estimated to
+#' estimated using [optim()] with `method = "L-BFGS-B"`. When \eqn{C} is estimated to
 #' be 1 or 0 for each subgroup, the smooth SBPS coincides with the standard
 #' SBPS.
 #'
@@ -81,9 +81,7 @@
 #' @seealso [weightit()], [summary.weightit()]
 #'
 #' @references
-#' Dong, J., Zhang, J. L., Zeng, S., & Li, F. (2020). Subgroup
-#' balancing propensity score. *Statistical Methods in Medical Research*, 29(3),
-#' 659–676. \doi{10.1177/0962280219870836}
+#' Dong, J., Zhang, J. L., Zeng, S., & Li, F. (2020). Subgroup balancing propensity score. *Statistical Methods in Medical Research*, 29(3), 659–676. \doi{10.1177/0962280219870836}
 #'
 #' @examples
 #' library("cobalt")
@@ -98,21 +96,29 @@
 #'                 nodegree + race + re74, data = lalonde,
 #'                 method = "glm", estimand = "ATT",
 #'                 by = "race"))
+#'
 #' S <- sbps(W1, W2)
+#'
 #' print(S)
+#'
 #' summary(S)
+#'
 #' bal.tab(S, cluster = "race")
 #'
 #' #Could also have run
-#' #  sbps(W1, moderator = "race")
+#' #S <- sbps(W1, moderator = "race")
 #'
 #' S_ <- sbps(W1, W2, smooth = TRUE)
+#'
 #' print(S_)
+#'
 #' summary(S_)
+#'
 #' bal.tab(S_, cluster = "race")
 
 #' @export
-sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL, smooth = FALSE, full.search) {
+sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL,
+                 data = NULL, smooth = FALSE, full.search) {
 
   if (is_null(obj2) && is_null(moderator)) {
     arg::err("either {.arg obj2} or {.arg moderator} must be specified")
@@ -288,7 +294,7 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       sum(F0_o^2) + sum(F0_s^2) #+ sum(F0_g^2)
     }
 
-    opt.out <- optim(rep.int(.5, length(R)), fn = get_F_smooth,
+    opt.out <- optim(rep_with(.5, R), fn = get_F_smooth,
                      ps_o = ps_o, ps_s = ps_s, treat.type = treat.type,
                      lower = 0, upper = 1,
                      method = "L-BFGS-B")
@@ -409,9 +415,9 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
       }
     }
     else {
-      #Stochastic search described by Dong et al (2019)
+      #Stochastic search described by DZZL
 
-      s_min <- setNames(rep.int(0, length(R)), R)
+      s_min <- setNames(rep_with(0, R), R)
       F_min <- get_F(s_min, moderator.factor, w_o, w_s, treat.type)
 
       L1 <- 25L
@@ -484,142 +490,66 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL, data = NULL
 }
 
 #' @exportS3Method summary weightit.sbps
-summary.weightit.sbps <- function(object, top = 5L, ignore.s.weights = FALSE, ...) {
+summary.weightit.sbps <- function(object, top = 5L, ignore.s.weights = FALSE, weight.range = TRUE, ...) {
 
-  sw_ <- {
-    if (ignore.s.weights || is_null(object$s.weights)) rep_with(1, object$weights)
+  arg::arg_count(top)
+  arg::arg_flag(ignore.s.weights)
+  arg::arg_flag(weight.range)
+
+
+  sw <- {
+    if (ignore.s.weights || is_null(object$s.weights)) rep.int(1, nobs(object))
     else object$s.weights
   }
-  w_ <- object$weights * sw_
-  t_ <- object$treat
+
   mod <- object$moderator
   mod_factor <- .attr(mod, "by.factor")
-  mod_levels <- levels(mod_factor)
-  treat.type <- get_treat_type(object[["treat"]])
 
-  out.list <- lapply(mod_levels, function(i) {
-    outnames <- c("weight.range", "weight.top", "weight.ratio",
-                  "coef.of.var",
-                  "effective.sample.size")
-    out <- make_list(outnames)
+  out.list <- make_list(levels(mod_factor))
 
-    in.subgroup <- mod_factor == i
-    w <- w_[in.subgroup]
-    sw <- sw_[in.subgroup]
-    t <- t_[in.subgroup]
-    if (treat.type == "continuous") {
-      out$weight.range <- list(all = c(min(w[w != 0]),
-                                       max(w[w != 0])))
-      out$weight.ratio <- c(all = out$weight.range[["all"]][2L] / out$weight.range[["all"]][1L])
-      top.weights <- sort(w, decreasing = TRUE)[seq_len(top)]
-      out$weight.top <- list(all = sort(setNames(top.weights, which(w %in% top.weights)[seq_len(top)])))
-      out$coef.of.var <- c(all = sd(w) / mean_fast(w))
+  for (i in levels(mod_factor)) {
+    in_i<- which(mod_factor == i)
 
-      nn <- make_df("Total", c("Unweighted", "Weighted"))
-      nn["Unweighted", ] <- ESS(sw)
-      nn["Weighted", ] <- ESS(w)
+    obj <- as.weightit(object$weights[in_i],
+                       treat = object$treat[in_i],
+                       s.weights = sw[in_i])
 
-    }
-    else if (treat.type == "binary") {
-      top0 <- c(treated = min(top, sum(t == 1)),
-                control = min(top, sum(t == 0)))
-      out$weight.range <- list(treated = c(min(w[w > 0 & t == 1]),
-                                           max(w[w > 0 & t == 1])),
-                               control = c(min(w[w > 0 & t == 0]),
-                                           max(w[w > 0 & t == 0])))
-      out$weight.ratio <- c(treated = out$weight.range$treated[2L] / out$weight.range$treated[1L],
-                            control = out$weight.range$control[2L] / out$weight.range$control[1L],
-                            overall = max(unlist(out$weight.range) / min(unlist(out$weight.range))))
-      top.weights <- list(treated = sort(w[t == 1], decreasing = TRUE)[seq_len(top0["treated"])],
-                          control = sort(w[t == 0], decreasing = TRUE)[seq_len(top0["control"])])
-      out$weight.top <- setNames(lapply(names(top.weights), function(x) {
-        sort(setNames(top.weights[[x]],
-                      which(w %in% top.weights[[x]] & t == switch(x, control = 0, 1))[seq_len(top0[x])]))
-      }),
-      names(top.weights))
-
-      out$coef.of.var <- c(treated = sd(w[t == 1]) / mean_fast(w[t == 1]),
-                           control = sd(w[t == 0]) / mean_fast(w[t == 0]),
-                           overall = sd(w) / mean_fast(w))
-
-      #dc <- weightit$discarded
-
-      nn <- make_df(c("Control", "Treated"), c("Unweighted", "Weighted"))
-      nn["Unweighted", ] <- c(ESS(sw[t == 0]),
-                              ESS(sw[t == 1]))
-      nn["Weighted", ] <- c(ESS(w[t == 0]),
-                            ESS(w[t == 1]))
-    }
-    else if (treat.type %in% c("multinomial", "multi-category")) {
-      out$weight.range <- setNames(lapply(levels(t), function(x) c(min(w[w > 0 & t == x]),
-                                                                   max(w[w > 0 & t == x]))),
-                                   levels(t))
-      out$weight.ratio <- setNames(c(vapply(out$weight.range, function(x) x[2L] / x[1L], numeric(1L)),
-                                     max(unlist(out$weight.range) / min(unlist(out$weight.range)))),
-                                   c(levels(t), "overall"))
-      top.weights <- setNames(lapply(levels(t), function(x) sort(w[t == x], decreasing = TRUE)[seq_len(top)]),
-                              levels(t))
-      out$weight.top <- setNames(lapply(names(top.weights), function(x) {
-        sort(setNames(top.weights[[x]],
-                      which(w %in% top.weights[[x]] & t == x)[seq_len(top)]))
-      }), names(top.weights))
-      out$coef.of.var <- c(vapply(levels(t), function(x) sd(w[t == x]) / mean(w[t == x]), numeric(1L)),
-                           overall = sd(w) / mean(w))
-
-      nn <- make_df(levels(t), c("Unweighted", "Weighted"))
-      for (i in levels(t)) {
-        nn["Unweighted", i] <- ESS(sw[t == i])
-        nn["Weighted", i] <- ESS(w[t == i])
-      }
-    }
-
-    out$effective.sample.size <- nn
-
-    if (is_not_null(object$focal)) {
-      w <- w[t != object$focal]
-      attr(w, "focal") <- object$focal
-    }
-    attr(out, "weights") <- w
-
-    out
-  })
+    out.list[[i]] <- summary.weightit(obj, top = top, ignore.s.weights = ignore.s.weights,
+                                      weight.range = weight.range, ...)
+  }
 
   attr(out.list, "prop.subgroup") <- matrix(c(1 - object$prop.subgroup,
                                               object$prop.subgroup),
                                             nrow = 2L, byrow = TRUE,
                                             dimnames = list(c("Overall", "Subgroup"),
                                                             names(object$prop.subgroup)))
-  names(out.list) <- mod_levels
+
   class(out.list) <- "summary.weightit.sbps"
+
   out.list
 }
 
 #' @exportS3Method print summary.weightit.sbps
 print.summary.weightit.sbps <- function(x, ...) {
-  cat("Summary of weights:\n")
-  cat("\n - Overall vs. subgroup proportion contribution:\n")
-  print.data.frame(round_df_char(.attr(x, "prop.subgroup"), 2L))
+  cli::cat_line(space(18L), .ul("Summary of weights"), "\n")
+
+  cli::cat_line("- ",
+                .it("Overall vs. subgroup proportion contribution"),
+                ":\n")
+
+  .attr(x, "prop.subgroup") |>
+    round_df_char(2L, pad = " ") |>
+    print.data.frame()
 
   for (g in seq_along(x)) {
-    cat(sprintf("\n - - - - - - - Subgroup %s - - - - - - -\n", names(x)[g]))
-    top <- max(lengths(x[[g]]$weight.top))
-    cat("- Weight ranges:\n")
-    print.data.frame(round_df_char(text_box_plot(x[[g]]$weight.range, 28L), 4L), ...)
-    df <- setNames(data.frame(unlist(lapply(names(x[[g]]$weight.top), function(j) c(" ", j))),
-                              matrix(unlist(lapply(x[[g]]$weight.top, function(j) {
-                                c(names(j), character(top - length(j)),
-                                  round(j, 4L), character(top - length(j)))
-                              })),
-                              byrow = TRUE, nrow = 2L * length(x[[g]]$weight.top))),
-                   character(1L + top))
-    cat(sprintf("\n- Units with %s greatest weights by group:\n", top))
-    print.data.frame(df, row.names = FALSE)
     cat("\n")
-    print.data.frame(round_df_char(as.data.frame(matrix(c(x[[g]]$weight.ratio, x[[g]]$coef.of.var), ncol = 2L,
-                                                        dimnames = list(names(x[[g]]$weight.ratio),
-                                                                        c("Ratio", "Coef of Var")))), 4L))
-    cat("\n- Effective Sample Sizes:\n")
-    print.data.frame(round_df_char(x[[g]]$effective.sample.size, 3L))
+
+    cli::cat_line(.st(space(19L)),
+                  .it(sprintf(" Subgroup: %s ", names(x)[g])),
+                  .st(space(19L)))
+
+    cat("\n")
+    .print_summary_weightit_internal(x[[g]], ...)
   }
 
   invisible(x)

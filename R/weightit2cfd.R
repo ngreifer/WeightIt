@@ -280,8 +280,9 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
         bin.vars <- is_binary_col(covs)
 
         if (!all(bin.vars)) {
-          sds[!bin.vars] <- sqrt(colMeans(rbind(col.w.v(covs[t1, !bin.vars, drop = FALSE], w = s.weights[t1]),
-                                                col.w.v(covs[t0, !bin.vars, drop = FALSE], w = s.weights[t0]))))
+          sds[!bin.vars] <- rbind(col.w.v(covs[t1, !bin.vars, drop = FALSE], w = s.weights[t1]),
+                                  col.w.v(covs[t0, !bin.vars, drop = FALSE], w = s.weights[t0])) |>
+            colMeans() |> sqrt()
         }
       }
 
@@ -310,7 +311,8 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
                                           s.weights = s.weights, focal = 1,
                                           treat = treat)
 
-      targets <- col.w.m(covs[t1, , drop = FALSE], s.weights[t1])
+      targets <- col.w.m(covs[t1, , drop = FALSE],
+                         w = s.weights[t1])
 
       sds <- rep.int(1, ncol(covs))
 
@@ -318,7 +320,8 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
         bin.vars <- is_binary_col(covs)
 
         if (!all(bin.vars)) {
-          sds[!bin.vars] <- sqrt(col.w.v(covs[t1, !bin.vars, drop = FALSE], w = s.weights[t1]))
+          sds[!bin.vars] <- sqrt(col.w.v(covs[t1, !bin.vars, drop = FALSE],
+                                         w = s.weights[t1]))
         }
       }
 
@@ -347,13 +350,17 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
                                           s.weights = s.weights, focal = 0,
                                           treat = treat)
 
-      targets <- col.w.m(covs[t0, , drop = FALSE], s.weights[t0])
+      targets <- col.w.m(covs[t0, , drop = FALSE],
+                         s.weights[t0])
+
+      sds <- rep.int(1, ncol(covs))
 
       if (tols > 0) {
         bin.vars <- is_binary_col(covs)
 
         if (!all(bin.vars)) {
-          sds[!bin.vars] <- sqrt(col.w.v(covs[t0, !bin.vars, drop = FALSE], w = s.weights[t0]))
+          sds[!bin.vars] <- sqrt(col.w.v(covs[t0, !bin.vars, drop = FALSE],
+                                         w = s.weights[t0]))
         }
       }
 
@@ -533,12 +540,13 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         if (!all(bin.vars)) {
           sds[!bin.vars] <- sqrt(colMeans(do.call("rbind",
                                                   lapply(levels_treat, function(t) {
-                                                    col.w.v(covs[treat == t, !bin.vars, drop = FALSE], w = s.weights[treat == t])
+                                                    col.w.v(covs[treat == t, !bin.vars, drop = FALSE],
+                                                            w = s.weights[treat == t])
                                                   }))))
         }
       }
 
-      Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t, 2L, function(x) covs * x, simplify = FALSE)))
+      Amat <- cbind(Amat, do.call("cbind", apply(s.weights_n_t, 2L, function(s) covs * s, simplify = FALSE)))
       lvec <- c(lvec, rep.int(targets - sds * tols / 2, length(levels_treat)))
       uvec <- c(uvec, rep.int(targets + sds * tols / 2, length(levels_treat)))
     }
@@ -567,7 +575,8 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                           s.weights = s.weights, focal = focal,
                                           treat = treat)
 
-      targets <- col.w.m(covs[in_focal, , drop = FALSE], s.weights[in_focal])
+      targets <- col.w.m(covs[in_focal, , drop = FALSE],
+                         s.weights[in_focal])
 
       sds <- rep.int(1, ncol(covs))
 
@@ -575,7 +584,8 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         bin.vars <- is_binary_col(covs)
 
         if (!all(bin.vars)) {
-          sds[!bin.vars] <- sqrt(col.w.v(covs[in_focal, !bin.vars, drop = FALSE], w = s.weights[in_focal]))
+          sds[!bin.vars] <- sqrt(col.w.v(covs[in_focal, !bin.vars, drop = FALSE],
+                                         w = s.weights[in_focal]))
         }
       }
 

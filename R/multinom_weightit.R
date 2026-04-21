@@ -261,13 +261,13 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
                          names = nm[!aliased_B])
 
     for (i in seq_len(K)) {
-      i_ind <- (i - 1L) * ncol(x_) + seq_len(ncol(x_))
+      i_ind <- (i - 1L) * ncol(x_) + seq_col(x_)
       for (j in seq_len(i)) {
         if (i == j) {
           hessian[i_ind, i_ind] <- -crossprod(x_ * ((1 - pp[, i + 1L]) * pp[, i + 1L] * weights), x_)
         }
         else {
-          j_ind <- (j - 1L) * ncol(x_) + seq_len(ncol(x_))
+          j_ind <- (j - 1L) * ncol(x_) + seq_col(x_)
 
           hessian[i_ind, j_ind] <- -crossprod(x_ * (-pp[, i + 1L] * pp[, j + 1L] * weights), x_)
           hessian[j_ind, i_ind] <- t(hessian[i_ind, j_ind])
@@ -385,13 +385,13 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
                        names = names(theta0))
 
   for (i in seq_len(K)) {
-    i_ind <- (i - 1L) * ncol(x_) + seq_len(ncol(x_))
+    i_ind <- (i - 1L) * ncol(x_) + seq_col(x_)
     for (j in seq_len(i)) {
       if (i == j) {
         hessian[i_ind, i_ind] <- -crossprod(x_ * ((1 - pp[, i + 1L]) * pp[, i + 1L] * weights), x_)
       }
       else {
-        j_ind <- (j - 1L) * ncol(x_) + seq_len(ncol(x_))
+        j_ind <- (j - 1L) * ncol(x_) + seq_col(x_)
 
         hessian[i_ind, j_ind] <- -crossprod(x_ * (-pp[, i + 1L] * pp[, j + 1L] * weights), x_)
         hessian[j_ind, i_ind] <- t(hessian[i_ind, j_ind])

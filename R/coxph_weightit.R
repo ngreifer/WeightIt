@@ -285,7 +285,7 @@ coxph_weightit <- function(formula, data, weightit = NULL,
     ncoef <- ncol(X)
 
     rval <- list(coefficients = setNames(rep.int(NA_real_, ncoef), colnames(X)),
-                 var = matrix(0, ncoef, ncoef),
+                 var = sq_matrix(0, ncoef),
                  loglik = c(0, 0), score = 0, iter = 0, linear.predictors = offset,
                  residuals = rep(0, data.n), means = Xmeans,
                  method = "breslow", n = data.n, nevent = 0, terms = Terms,

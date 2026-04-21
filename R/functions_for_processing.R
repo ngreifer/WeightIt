@@ -103,7 +103,13 @@
     arg::err("when supplied as a string, {.arg s.weights} must be the name of a variable in {.arg data}")
   }
 
-  data[[s.weights]]
+  s.weights <- data[[s.weights]]
+
+  if (!is.numeric(s.weights)) {
+    arg::err("the variable named in {.arg s.weights} must be numeric")
+  }
+
+  s.weights
 }
 
 .process_b.weights <- function(..., treat) {
@@ -465,14 +471,16 @@
     if (!is.numeric(ps)) {
       arg::err("when supplied as a string, {.arg ps} must be the name of a numeric variable in {.arg data}")
     }
+
+    return(ps)
   }
-  else if (is.numeric(ps)) {
-    if (length(ps) != length(treat)) {
-      arg::err("{.arg ps} must have the same number of units as the treatment")
-    }
-  }
-  else {
+
+  if (!is.numeric(ps)) {
     arg::err("the argument to {.arg ps} must be a vector of propensity scores or the (quoted) name of a numeric variable in {.arg data} that contains propensity scores")
+  }
+
+  if (length(ps) != length(treat)) {
+    arg::err("{.arg ps} must have the same number of units as the treatment")
   }
 
   ps
@@ -639,7 +647,6 @@
   if (throw_message) {
     if (estimand == "ATT") {
       arg::msg("assuming {.val {treated}} is the treated level. If not, supply an argument to {.arg focal}")
-
     }
     else if (estimand == "ATC") {
       arg::msg("assuming {.val {control}} is the control level. If not, supply an argument to {.arg focal}")
@@ -710,7 +717,10 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   by.factor <- {
     if (is_null(by)) gl(1, n)
     else factor(by.components[[1L]], levels = sort(unique(by.components[[1L]])),
-                labels = paste(names(by.components), "=", sort(unique(by.components[[1L]]))))
+                labels = paste(names(by.components), "=",
+                               add_quotes(sort(unique(by.components[[1L]])),
+                                          is.character(by.components[[1L]]) ||
+                                            is.factor(by.components[[1L]]))))
   }
 
   if (treat.type != "continuous" &&
