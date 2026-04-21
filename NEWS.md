@@ -1,7 +1,7 @@
 WeightIt News and Updates
 ======
 
-# `WeightIt` (development version)
+# `WeightIt` 1.7.0
 
 * `coxph_weightit()` can now estimate standard errors that account for estimation of the weights using M-estimation as described by [Shu et al. (2021)](https://doi.org/10.1111/biom.13332).
 
