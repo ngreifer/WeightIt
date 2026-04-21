@@ -44,7 +44,8 @@ test_that("Binary treatment", {
 
   expect_M_parts_okay(W, tolerance = eps)
 
-  expect_equal(W$weights[W$treat == 1], rep(1, sum(W$treat == 1)),
+  expect_equal(unname(W$weights[W$treat == 1]),
+               rep(1, sum(W$treat == 1)),
                tolerance = eps)
 
   expect_ATT_weights_okay(W, tolerance = eps)
@@ -56,7 +57,8 @@ test_that("Binary treatment", {
 
   expect_M_parts_okay(W, tolerance = eps)
 
-  expect_equal(W$weights[W$treat == 0], rep(1, sum(W$treat == 0)),
+  expect_equal(unname(W$weights[W$treat == 0]),
+               rep(1, sum(W$treat == 0)),
                tolerance = eps)
 
   expect_ATT_weights_okay(W, tolerance = eps)

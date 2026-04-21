@@ -8,7 +8,9 @@ expect_ATT_weights_okay <- function(W, focal = NULL, ...) {
 
   expect_true(W$estimand %in% c("ATT", "ATC"))
 
-  expect_equal(ESS(W$weights[W$treat == focal]), sum(W$treat == focal), ...)
+  expect_equal(ESS(W$weights[W$treat == focal]),
+               sum(W$treat == focal), ...)
+
   for (i in setdiff(unique(W$treat), focal)) {
     expect_not_equal(ESS(W$weights[W$treat == i]), sum(W$treat == i), ...)
   }

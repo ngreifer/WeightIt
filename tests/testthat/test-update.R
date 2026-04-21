@@ -17,7 +17,8 @@ test_that("update.glm_weightit() works", {
   })
 
   expect_equal(update(fit0, formula = . ~ A),
-               fit1, tolerance = eps,
+               fit1,
+               tolerance = eps,
                ignore_attr = "class",
                ignore_formula_env = TRUE)
 
@@ -31,7 +32,8 @@ test_that("update.glm_weightit() works", {
   })
 
   expect_equal(update(fit0, data = test_data_s),
-               fit1, tolerance = eps,
+               fit1,
+               tolerance = eps,
                ignore_attr = "class",
                ignore_formula_env = TRUE)
 
@@ -47,7 +49,8 @@ test_that("update.glm_weightit() works", {
   })
 
   expect_equal(update(fit0, vcov = "const"),
-               fit1, tolerance = eps,
+               fit1,
+               tolerance = eps,
                ignore_attr = "class",
                ignore_formula_env = TRUE)
 

@@ -66,7 +66,7 @@ test_that("Binary treatment", {
             else expect_not_equal
           }
 
-          e(W$weights[W$treat == i],
+          e(unname(W$weights[W$treat == i]),
             rep(1, sum(W$treat == i)),
             label = sprintf("%s weights for %s", i, n),
             expected.label = "all 1s",
@@ -74,7 +74,7 @@ test_that("Binary treatment", {
         }
 
         for (i in seq_len(k - 1)) {
-          expect_not_equal(W$weights, weight.mat[,i],
+          expect_not_equal(unname(W$weights), weight.mat[,i],
                            label = sprintf("Weights for %s", n),
                            expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
                            tolerance = eps)
@@ -252,7 +252,7 @@ test_that("Multi-category treatment", {
             else expect_not_equal
           }
 
-          e(W$weights[W$treat == i],
+          e(unname(W$weights[W$treat == i]),
             rep(1, sum(W$treat == i)),
             label = sprintf("%s weights for %s", i, n),
             expected.label = "all 1s",
@@ -260,7 +260,7 @@ test_that("Multi-category treatment", {
         }
 
         for (i in seq_len(k - 1)) {
-          expect_not_equal(W$weights, weight.mat[,i],
+          expect_not_equal(unname(W$weights), weight.mat[,i],
                            label = sprintf("Weights for %s", n),
                            expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
                            tolerance = eps)
@@ -366,7 +366,7 @@ test_that("Continuous treatment", {
         expect_false(is_null((!!{{ str2lang(n) }})$obj))
 
         for (i in seq_len(k - 1)) {
-          expect_not_equal(W$weights, weight.mat[,i],
+          expect_not_equal(unname(W$weights), weight.mat[,i],
                            label = sprintf("Weights for %s", n),
                            expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
                            tolerance = eps)

@@ -43,13 +43,13 @@ combination of subgroup and overall weights should be evaluated. If
 \code{FALSE}, a stochastic search as described in DZZL will be used instead. If
 \code{TRUE}, all \eqn{2^R} combinations will be checked, where \eqn{R} is the
 number of subgroups, which can take a long time with many subgroups. If
-unspecified, will default to \code{TRUE} if \eqn{R <= 8} and \code{FALSE} otherwise.}
+unspecified, will default to \code{TRUE} if \eqn{R \le 8} and \code{FALSE} otherwise.}
 }
 \value{
 A \code{weightit.sbps} object, which inherits from \code{weightit}. This
 contains all the information in \code{obj} with the weights, propensity scores,
 call, and possibly covariates updated from \code{sbps()}. In addition, the
-\code{prop.subgroup} component contains the values of the coefficients C for the
+\code{prop.subgroup} component contains the values of the coefficients \eqn{C} for the
 subgroups (which are either 0 or 1 for the standard SBPS), and the
 \code{moderator} component contains a data.frame with the moderator.
 
@@ -71,8 +71,8 @@ criterion that includes subgroup as well as overall balance.
 The SBPS relies on two sets of weights: one estimated in the overall
 sample and one estimated within each subgroup. The algorithm decides whether
 each subgroup should use the weights estimated in the overall sample or those
-estimated in the subgroup. There are 2^R permutations of overall and subgroup
-weights, where R is the number of subgroups. The optimal permutation is
+estimated in the subgroup. There are \eqn{2^R} permutations of overall and subgroup
+weights, where \eqn{R} is the number of subgroups. The optimal permutation is
 chosen as that which minimizes a balance criterion as described in DZZL. The
 balance criterion used here is, for binary and multi-category treatments, the
 sum of the squared standardized mean differences within subgroups and
@@ -83,12 +83,12 @@ treatment within subgroups and overall, which are computed using
 
 The smooth version estimates weights that determine the relative contribution
 of the overall and subgroup propensity scores to a weighted average
-propensity score for each subgroup. If P_O are the propensity scores
-estimated in the overall sample and P_S are the propensity scores estimated
-in each subgroup, the smooth SBPS finds R coefficients C so that for each
+propensity score for each subgroup. If \eqn{P_O} are the propensity scores
+estimated in the overall sample and \eqn{P_S} are the propensity scores estimated
+in each subgroup, the smooth SBPS finds \eqn{R} coefficients \eqn{C} so that for each
 subgroup, the ultimate propensity score is \eqn{C*P_S + (1-C)*P_O}, and
 weights are computed from this propensity score. The coefficients are
-estimated using \code{\link[=optim]{optim()}} with \code{method = "L-BFGS-B"}. When C is estimated to
+estimated using \code{\link[=optim]{optim()}} with \code{method = "L-BFGS-B"}. When \eqn{C} is estimated to
 be 1 or 0 for each subgroup, the smooth SBPS coincides with the standard
 SBPS.
 
@@ -112,23 +112,28 @@ data("lalonde", package = "cobalt")
                 nodegree + race + re74, data = lalonde,
                 method = "glm", estimand = "ATT",
                 by = "race"))
+
 S <- sbps(W1, W2)
+
 print(S)
+
 summary(S)
+
 bal.tab(S, cluster = "race")
 
 #Could also have run
-#  sbps(W1, moderator = "race")
+#S <- sbps(W1, moderator = "race")
 
 S_ <- sbps(W1, W2, smooth = TRUE)
+
 print(S_)
+
 summary(S_)
+
 bal.tab(S_, cluster = "race")
 }
 \references{
-Dong, J., Zhang, J. L., Zeng, S., & Li, F. (2020). Subgroup
-balancing propensity score. \emph{Statistical Methods in Medical Research}, 29(3),
-659–676. \doi{10.1177/0962280219870836}
+Dong, J., Zhang, J. L., Zeng, S., & Li, F. (2020). Subgroup balancing propensity score. \emph{Statistical Methods in Medical Research}, 29(3), 659–676. \doi{10.1177/0962280219870836}
 }
 \seealso{
 \code{\link[=weightit]{weightit()}}, \code{\link[=summary.weightit]{summary.weightit()}}

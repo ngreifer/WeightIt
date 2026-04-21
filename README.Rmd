@@ -131,3 +131,12 @@ In addition, *WeightIt* implements the subgroup balancing propensity score using
 *WeightIt* provides functions to fit weighted models that account for the uncertainty in estimating the weights. These include `glm_weightit()` for fitting generalized linear models, `ordinal_weightit()` for ordinal regression models, `multinom_weightit()` for multinomial regression models, and `coxph_weightit()` for Cox proportional hazards models. Several methods are available for computing the parameter variances, including asymptotically correct M-estimation-based variances, robust variances that treat the weights as fixed, and traditional and fractional weighted bootstrap variances. Clustered variances are supported. See `vignette("estimating-effects")` for information on how to use these after weighting to estimate treatment effects.
 
 Please submit bug reports, questions, comments, or other issues to https://github.com/ngreifer/WeightIt/issues. If you would like to see your package or method integrated into *WeightIt*, please contact the author. Fan mail is greatly appreciated.
+
+### Citing WeightIt
+
+To generate a citation for *WeightIt*, please use the following:
+
+```{r, eval = FALSE}
+citation("WeightIt")
+```
+

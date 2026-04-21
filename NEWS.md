@@ -17,6 +17,10 @@ WeightIt News and Updates
 
 * [*arg*](https://ngreifer.github.io/arg/) is a new dependency for producing error messages and checking arguments.
 
+* Minor changes to `plot.summary.weightit()`, in particular to remove a deprecation warning from *ggplot2*.
+
+* In the `summary.weightit()` output, units with the highest weights are now named according to their rownames in `data`. `summary.weightit.sbps()` has been updated to be more in line with `summary.weightit()`.
+
 # `WeightIt` 1.6.0
 
 * Added `method = "cfd"` for characteristic function distance balancing as described by [Santra, Chen, and Park (2026)](https://arxiv.org/abs/2601.15449). Energy balancing is a special case of this method.
