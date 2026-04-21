@@ -278,9 +278,9 @@ summary(W1)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                           
-#>            184    176    172    131     82
+#>            131    172    176     82    184
 #>  treated  8.28  8.609  9.161 10.923 11.685
-#>            423    333    136    118     37
+#>            518    321    608    303    222
 #>  control 8.557 10.199 11.256  12.79 14.136
 #> 
 #> - Weight statistics:
@@ -333,16 +333,16 @@ summary(W1b)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                        
-#>            185   184   181    82     44
+#>            185    44   181    82    184
 #>  treated 6.959 7.514 7.831 8.376 11.198
-#>            423   415   326   118     37
+#>            303   222   511   600    608
 #>  control 5.626  5.73  5.74 5.919  8.343
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
 #> treated       2.038 1.431   1.461       0
-#> control       1.158 0.847   0.610       0
+#> control       1.158 0.847   0.61        0
 #> 
 #> - Effective Sample Sizes:
 #> 
@@ -389,17 +389,17 @@ summary(W2)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                         
-#>              1      2      3    4      5
+#>              6      5      4    3      1
 #>   black      1      1      1    1      1
-#>             69     59     48   28      2
+#>            269     28    570  512    424
 #>  hispan  5.033  5.133  5.336 6.45 10.955
-#>             17     15      7    4      3
+#>             76    166     23  140     42
 #>   white 10.795 11.883 12.356 12.8 16.951
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.000 0.000   0.000       0
+#> black        0.    0.      0.          0
 #> hispan       1.963 1.356   1.337       0
 #> white        2.342 1.414   1.546       0
 #> 

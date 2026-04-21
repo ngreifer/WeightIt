@@ -172,16 +172,16 @@ data("lalonde", package = "cobalt")
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                       
-#>            182   181   172    69    58
+#>            172    69    58   181   182
 #>  treated 3.363 4.199 8.369  8.44 9.886
-#>            410   226   224   111    84
+#>            411   595   269   409   296
 #>  control 1.645 1.663 1.741 1.825 2.129
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
 #> treated       1.143 0.512   0.302       0
-#> control       0.269 0.230   0.035       0
+#> control       0.269 0.23    0.035       0
 #> 
 #> - Effective Sample Sizes:
 #> 
@@ -227,18 +227,18 @@ data("lalonde", package = "cobalt")
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                      
-#>           241   166   163   153   152
+#>           226   244   605   181   182
 #>   black 2.537 2.728 3.089 4.505 9.367
-#>            67    43    39    36    28
+#>           392   564   269   371   345
 #>  hispan 2.006 2.232 3.075 4.275 5.525
-#>           291   285   258   205     6
+#>            68   457   599   589   531
 #>   white  1.95 1.971 2.017 2.134 2.515
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.753 0.413   0.160       0
-#> hispan       0.820 0.462   0.220       0
+#> black        0.753 0.413   0.16        0
+#> hispan       0.82  0.462   0.22        0
 #> white        0.414 0.331   0.079       0
 #> 
 #> - Effective Sample Sizes:

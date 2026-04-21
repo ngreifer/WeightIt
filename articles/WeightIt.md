@@ -144,15 +144,15 @@ summary(W.out)
     ## 
     ## - Units with the 5 most extreme weights by group:
     ##                                     
-    ##             1     2    3     4     5
+    ##             5     4    3     2     1
     ##  treated    1     1    1     1     1
-    ##           412   388  226   196   118
+    ##           597   573  381   411   303
     ##  control 3.03 3.059 3.24 3.523 3.743
     ## 
     ## - Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       0.000 0.000   0.000       0
+    ## treated       0.    0.      0.          0
     ## control       1.818 1.289   1.098       0
     ## 
     ## - Effective Sample Sizes:
@@ -225,15 +225,15 @@ summary(W.out)
     ## 
     ## - Units with the 5 most extreme weights by group:
     ##                                      
-    ##              1     2    3     4     5
+    ##              5     4    3     2     1
     ##  treated     1     1    1     1     1
-    ##            423   412  226   196   118
+    ##            608   381  597   303   411
     ##  control 3.073 3.235 3.45 3.897 4.062
     ## 
     ## - Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       0.000 0.000   0.000       0
+    ## treated       0.    0.      0.          0
     ## control       1.834 1.287   1.101       0
     ## 
     ## - Effective Sample Sizes:
@@ -472,8 +472,6 @@ summary(Wmsm.out)
 ```
 
     ##                         Time 1                        
-    ##                   Summary of weights
-    ## 
     ## - Weight ranges:
     ## 
     ##           Min                                 Max
@@ -482,9 +480,9 @@ summary(Wmsm.out)
     ## 
     ## - Units with the 5 most extreme weights by group:
     ##                                            
-    ##            3172   2446   2115   2025   1938
+    ##            4390   3440   3774   3593   5685
     ##  treated 22.101 24.128   25.7 27.786 57.079
-    ##            2943   2778   2726   1121    832
+    ##            6659   6284   1875   6163   2533
     ##  control 12.894  13.09 14.523 14.705 20.465
     ## 
     ## - Weight statistics:
@@ -504,8 +502,6 @@ summary(Wmsm.out)
     ## Weighted      1193    1007
     ## 
     ##                         Time 2                        
-    ##                   Summary of weights
-    ## 
     ## - Weight ranges:
     ## 
     ##           Min                                 Max
@@ -514,16 +510,16 @@ summary(Wmsm.out)
     ## 
     ## - Units with the 5 most extreme weights by group:
     ##                                            
-    ##            2902   2266   1954   1869   1779
+    ##            4390   3440   3774   3593   5685
     ##  treated 22.101 24.128   25.7 27.786 57.079
-    ##            3389   3023   3021    911    620
+    ##            1875   6163   6862   1286   6158
     ##  control 14.523 14.705 14.808 16.231 20.486
     ## 
     ## - Weight statistics:
     ## 
     ##         Coef of Var   MAD Entropy # Zeros
-    ## treated       1.797 0.779   0.580       0
-    ## control       1.359 0.750   0.488       0
+    ## treated       1.797 0.779   0.58        0
+    ## control       1.359 0.75    0.488       0
     ## 
     ## - Mean of Weights = 0.99
     ## 
@@ -536,8 +532,6 @@ summary(Wmsm.out)
     ## Weighted      1300   898.2
     ## 
     ##                         Time 3                        
-    ##                   Summary of weights
-    ## 
     ## - Weight ranges:
     ## 
     ##           Min                                 Max
@@ -546,9 +540,9 @@ summary(Wmsm.out)
     ## 
     ## - Units with the 5 most extreme weights by group:
     ##                                            
-    ##            1991   1558   1254   1244   1195
+    ##            3576   4390   3440   3593   5685
     ##  treated 20.583 22.101 24.128 27.786 57.079
-    ##            4479   4025   4021   2455    112
+    ##            6163   6862    168   6158   3774
     ##  control 14.705 14.808  16.97 20.486   25.7
     ## 
     ## - Weight statistics:

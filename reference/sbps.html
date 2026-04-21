@@ -25,7 +25,7 @@ criterion that includes subgroup as well as overall balance."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,7 +124,7 @@ combination of subgroup and overall weights should be evaluated. If
 <code>FALSE</code>, a stochastic search as described in DZZL will be used instead. If
 <code>TRUE</code>, all \(2^R\) combinations will be checked, where \(R\) is the
 number of subgroups, which can take a long time with many subgroups. If
-unspecified, will default to <code>TRUE</code> if \(R &lt;= 8\) and <code>FALSE</code> otherwise.</p></dd>
+unspecified, will default to <code>TRUE</code> if \(R \le 8\) and <code>FALSE</code> otherwise.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -132,7 +132,7 @@ unspecified, will default to <code>TRUE</code> if \(R &lt;= 8\) and <code>FALSE<
     <p>A <code>weightit.sbps</code> object, which inherits from <code>weightit</code>. This
 contains all the information in <code>obj</code> with the weights, propensity scores,
 call, and possibly covariates updated from <code>sbps()</code>. In addition, the
-<code>prop.subgroup</code> component contains the values of the coefficients C for the
+<code>prop.subgroup</code> component contains the values of the coefficients \(C\) for the
 subgroups (which are either 0 or 1 for the standard SBPS), and the
 <code>moderator</code> component contains a data.frame with the moderator.</p>
 <p>This object has its own summary method and is compatible with <span class="pkg">cobalt</span>
@@ -145,8 +145,8 @@ subgroups.</p>
     <p>The SBPS relies on two sets of weights: one estimated in the overall
 sample and one estimated within each subgroup. The algorithm decides whether
 each subgroup should use the weights estimated in the overall sample or those
-estimated in the subgroup. There are 2^R permutations of overall and subgroup
-weights, where R is the number of subgroups. The optimal permutation is
+estimated in the subgroup. There are \(2^R\) permutations of overall and subgroup
+weights, where \(R\) is the number of subgroups. The optimal permutation is
 chosen as that which minimizes a balance criterion as described in DZZL. The
 balance criterion used here is, for binary and multi-category treatments, the
 sum of the squared standardized mean differences within subgroups and
@@ -156,12 +156,12 @@ treatment within subgroups and overall, which are computed using
 <code><a href="https://ngreifer.github.io/cobalt/reference/balance-summary.html" class="external-link">cobalt::col_w_corr()</a></code>.</p>
 <p>The smooth version estimates weights that determine the relative contribution
 of the overall and subgroup propensity scores to a weighted average
-propensity score for each subgroup. If P_O are the propensity scores
-estimated in the overall sample and P_S are the propensity scores estimated
-in each subgroup, the smooth SBPS finds R coefficients C so that for each
+propensity score for each subgroup. If \(P_O\) are the propensity scores
+estimated in the overall sample and \(P_S\) are the propensity scores estimated
+in each subgroup, the smooth SBPS finds \(R\) coefficients \(C\) so that for each
 subgroup, the ultimate propensity score is \(C*P_S + (1-C)*P_O\), and
 weights are computed from this propensity score. The coefficients are
-estimated using <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> with <code>method = "L-BFGS-B"</code>. When C is estimated to
+estimated using <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> with <code>method = "L-BFGS-B"</code>. When \(C\) is estimated to
 be 1 or 0 for each subgroup, the smooth SBPS coincides with the standard
 SBPS.</p>
 <p>If <code>obj2</code> is not specified and <code>moderator</code> is, <code>sbps()</code> will attempt to refit
@@ -173,9 +173,7 @@ and supply these to <code>sbps()</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
-    <p>Dong, J., Zhang, J. L., Zeng, S., &amp; Li, F. (2020). Subgroup
-balancing propensity score. <em>Statistical Methods in Medical Research</em>, 29(3),
-659–676. <a href="https://doi.org/10.1177/0962280219870836" class="external-link">doi:10.1177/0962280219870836</a></p>
+    <p>Dong, J., Zhang, J. L., Zeng, S., &amp; Li, F. (2020). Subgroup balancing propensity score. <em>Statistical Methods in Medical Research</em>, 29(3), 659–676. <a href="https://doi.org/10.1177/0962280219870836" class="external-link">doi:10.1177/0962280219870836</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -211,7 +209,9 @@ balancing propensity score. <em>Statistical Methods in Medical Research</em>, 29
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, race, re74</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - by: race</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">S</span> <span class="op">&lt;-</span> <span class="fu">sbps</span><span class="op">(</span><span class="va">W1</span>, <span class="va">W2</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit.sbps</span> object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
@@ -221,82 +221,97 @@ balancing propensity score. <em>Statistical Methods in Medical Research</em>, 29
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, race, re74</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - moderator: race (3 subgroups)</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">S</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Summary of weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Overall vs. subgroup proportion contribution:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          race = black race = hispan race = white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overall             0             0            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Subgroup            1             1            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Overall vs. subgroup proportion contribution</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - - - - - - - Subgroup race = black - - - - - - -</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Weight ranges:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.000      ||                       1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.466 |---------------------------| 3.5903</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          race = "black" race = "hispan" race = "white"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall               0               0              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Subgroup              1               1              1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2     3      4      5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1     1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             221    228   188    185    174</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.9494 2.9494 3.006 3.0637 3.5903</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "black" </span><span style="text-decoration: line-through;">                   </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Ratio Coef of Var</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000      0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 7.7042      0.4250</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> overall 7.7042      0.4616</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Effective Sample Sizes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.         ||                       1.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.466 |---------------------------| 3.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              6     5     4     3    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            559   381   573   303  411</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.949 2.949 3.006 3.064 3.59</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.425 0.366   0.093       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  87.000     156</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    73.818     156</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   87.       156</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     73.82     156</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - - - - - - - Subgroup race = hispan - - - - - - -</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Weight ranges:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                              || 1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0209   |------------|                0.5046</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "hispan" </span><span style="text-decoration: line-through;">                   </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4      5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              56     54     49     48     47</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.4117 0.4767 0.4835 0.4968 0.5046</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Ratio Coef of Var</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated  1.0000      0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 24.1741      0.7143</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> overall 47.9120      1.0352</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                                 || 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.021   |------------|                0.505</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Effective Sample Sizes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            100    87    44    28     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            425   456   480   424   412</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.412 0.477 0.484 0.497 0.505</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.714 0.579   0.246       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  61.000      11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    40.616      11</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   61.        11</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     40.62      11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - - - - - - - Subgroup race = white - - - - - - -</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Weight ranges:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                              || 1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0002   |---------|                   0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "white" </span><span style="text-decoration: line-through;">                   </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4     5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             289    287    285    280   267</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.2393 0.2699 0.2937 0.2956 0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Ratio Coef of Var</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated    1.000      0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1825.568      1.1538</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> overall 4742.156      1.9499</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated   1                              || 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   0   |---------|                   0.385</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Effective Sample Sizes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             60   42    23    22    10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1    1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            592  589   595   546   580</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.239 0.27 0.294 0.296 0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.154 0.952   0.619       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 281.000      18</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   120.777      18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  281.        18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    120.78      18</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">S</span>, cluster <span class="op">=</span> <span class="st">"race"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance by cluster</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -348,9 +363,10 @@ balancing propensity score. <em>Statistical Methods in Medical Research</em>, 29
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Could also have run</span></span></span>
-<span class="r-in"><span><span class="co">#  sbps(W1, moderator = "race")</span></span></span>
+<span class="r-in"><span><span class="co">#S &lt;- sbps(W1, moderator = "race")</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">S_</span> <span class="op">&lt;-</span> <span class="fu">sbps</span><span class="op">(</span><span class="va">W1</span>, <span class="va">W2</span>, smooth <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">S_</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> A <span style="font-style: italic;">weightit.sbps</span> object</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - method: "glm" (propensity score weighting with GLM)</span>
@@ -360,82 +376,97 @@ balancing propensity score. <em>Statistical Methods in Medical Research</em>, 29
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - estimand: ATT (focal: 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - covariates: age, educ, married, nodegree, race, re74</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  - moderator: race (3 subgroups)</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">S_</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Summary of weights:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                   <span style="text-decoration: underline;">Summary of weights</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - Overall vs. subgroup proportion contribution:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          race = black race = hispan race = white</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Overall          0.17          0.25            0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Subgroup         0.83          0.75            1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Overall vs. subgroup proportion contribution</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - - - - - - - Subgroup race = black - - - - - - -</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Weight ranges:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000      ||                       1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.4654 |---------------------------| 3.5703</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          race = "black" race = "hispan" race = "white"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Overall            0.17            0.25              0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Subgroup           0.83            0.75              1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4      5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             221    228    188    185    174</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.9787 2.9787 3.0338 3.0899 3.5703</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "black" </span><span style="text-decoration: line-through;">                   </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>          Ratio Coef of Var</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000      0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 7.6708      0.4264</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> overall 7.6708      0.4625</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Effective Sample Sizes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.         ||                       1.  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.465 |---------------------------| 3.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              6     5     4    3    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1    1    1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            559   381   573  303  411</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 2.979 2.979 3.034 3.09 3.57</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.426 0.366   0.094       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  87.000     156</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    73.744     156</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   87.       156</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     73.74     156</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - - - - - - - Subgroup race = hispan - - - - - - -</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Weight ranges:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                    Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                              || 1.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0254   |-----------|                 0.4743</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "hispan" </span><span style="text-decoration: line-through;">                   </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                            </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4      5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              56     54     48     47     28</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.3908 0.4496 0.4557 0.4704 0.4743</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>           Ratio Coef of Var</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated  1.0000      0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 18.6516      0.6795</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> overall 39.3245      1.0314</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                                 || 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.025   |-----------|                 0.474</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Effective Sample Sizes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                     </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            100   87    44   28     2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1    1     1    1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            269  456   480  424   412</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.391 0.45 0.456 0.47 0.474</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       0.679 0.553   0.225       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   61.00      11</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted   61.        11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Weighted     41.95      11</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - - - - - - - Subgroup race = white - - - - - - -</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Weight ranges:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Min                                   Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.0000                              || 1.000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.0002   |---------|                   0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: line-through;">                   </span><span style="font-style: italic;"> Subgroup: race = "white" </span><span style="text-decoration: line-through;">                   </span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Units with 5 greatest weights by group:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>               1      2      3      4     5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  treated      1      1      1      1     1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             289    287    285    280   267</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.2393 0.2699 0.2937 0.2956 0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            Ratio Coef of Var</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> treated    1.000      0.0000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 1825.568      1.1538</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> overall 4742.156      1.9499</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Min                                   Max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated   1                              || 1.   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control   0   |---------|                   0.385</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> - Effective Sample Sizes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                      </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             60   42    23    22    10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1    1     1     1     1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            592  589   595   546   580</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 0.239 0.27 0.294 0.296 0.385</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treated       0.    0.      0.          0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.154 0.952   0.619       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 281.000      18</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted   120.777      18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  281.        18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    120.78      18</span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">S_</span>, cluster <span class="op">=</span> <span class="st">"race"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance by cluster</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

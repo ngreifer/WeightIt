@@ -37,6 +37,17 @@
 - [*arg*](https://ngreifer.github.io/arg/) is a new dependency for
   producing error messages and checking arguments.
 
+- Minor changes to
+  [`plot.summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md),
+  in particular to remove a deprecation warning from *ggplot2*.
+
+- In the
+  [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
+  output, units with the highest weights are now named according to
+  their rownames in `data`. `summary.weightit.sbps()` has been updated
+  to be more in line with
+  [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md).
+
 ## `WeightIt` 1.6.0
 
 CRAN release: 2026-03-19

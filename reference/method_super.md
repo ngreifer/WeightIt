@@ -342,15 +342,15 @@ summary(W1)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                       
-#>              1     2     3     4     5
+#>              5     4     3     2     1
 #>  treated     1     1     1     1     1
-#>            404   226   224   111    84
+#>            411   589   269   409   296
 #>  control 2.193 2.279 2.454 2.939 4.561
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.000 0.000   0.000       0
+#> treated       0.    0.      0.          0
 #> control       1.017 0.726   0.407       0
 #> 
 #> - Effective Sample Sizes:
@@ -400,11 +400,11 @@ summary(W2)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                           
-#>            203    157    155    153    152
+#>            190    184    485    182    181
 #>   black  7.216  7.725  9.668 12.442  12.53
-#>             43     39     37     36     28
+#>            346    392    371    269    345
 #>  hispan 16.522 16.999 17.031 17.565 18.972
-#>            285    258    205     94      3
+#>            531     23    457    296    589
 #>   white      4   4.06  4.152  4.333  4.587
 #> 
 #> - Weight statistics:
@@ -458,7 +458,7 @@ summary(W3)
 #> 
 #> - Units with the 5 most extreme weights:
 #>                                       
-#>        485    484    483    431    354
+#>        431    483    484    485    354
 #>  all 9.823 15.787 18.967 22.164 24.927
 #> 
 #> - Weight statistics:
@@ -515,15 +515,15 @@ summary(W4)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                    
-#>             1     2   3     4     5
+#>             5     4   3     2     1
 #>  treated    1     1   1     1     1
-#>           410   226 224   111    84
+#>           411   595 269   409   296
 #>  control 1.33 1.437 1.5 1.637 2.044
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
-#> treated       0.000 0.000    0.00       0
+#> treated       0.    0.       0.         0
 #> control       0.823 0.701    0.33       0
 #> 
 #> - Effective Sample Sizes:

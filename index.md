@@ -114,15 +114,15 @@ summary(W)
 ## 
 ## - Units with the 5 most extreme weights by group:
 ##                                     
-##             1     2    3     4     5
+##             5     4    3     2     1
 ##  treated    1     1    1     1     1
-##           412   388  226   196   118
+##           597   573  381   411   303
 ##  control 3.03 3.059 3.24 3.523 3.743
 ## 
 ## - Weight statistics:
 ## 
 ##         Coef of Var   MAD Entropy # Zeros
-## treated       0.000 0.000   0.000       0
+## treated       0.    0.      0.          0
 ## control       1.818 1.289   1.098       0
 ## 
 ## - Effective Sample Sizes:
@@ -244,3 +244,11 @@ Please submit bug reports, questions, comments, or other issues to
 <https://github.com/ngreifer/WeightIt/issues>. If you would like to see
 your package or method integrated into *WeightIt*, please contact the
 author. Fan mail is greatly appreciated.
+
+### Citing WeightIt
+
+To generate a citation for *WeightIt*, please use the following:
+
+``` r
+citation("WeightIt")
+```

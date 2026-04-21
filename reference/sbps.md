@@ -70,7 +70,7 @@ sbps(
   stochastic search as described in DZZL will be used instead. If
   `TRUE`, all \\2^R\\ combinations will be checked, where \\R\\ is the
   number of subgroups, which can take a long time with many subgroups.
-  If unspecified, will default to `TRUE` if \\R \<= 8\\ and `FALSE`
+  If unspecified, will default to `TRUE` if \\R \le 8\\ and `FALSE`
   otherwise.
 
 ## Value
@@ -78,9 +78,9 @@ sbps(
 A `weightit.sbps` object, which inherits from `weightit`. This contains
 all the information in `obj` with the weights, propensity scores, call,
 and possibly covariates updated from `sbps()`. In addition, the
-`prop.subgroup` component contains the values of the coefficients C for
-the subgroups (which are either 0 or 1 for the standard SBPS), and the
-`moderator` component contains a data.frame with the moderator.
+`prop.subgroup` component contains the values of the coefficients \\C\\
+for the subgroups (which are either 0 or 1 for the standard SBPS), and
+the `moderator` component contains a data.frame with the moderator.
 
 This object has its own summary method and is compatible with cobalt
 functions. The `cluster` argument should be used with cobalt functions
@@ -92,13 +92,13 @@ subgroups.
 The SBPS relies on two sets of weights: one estimated in the overall
 sample and one estimated within each subgroup. The algorithm decides
 whether each subgroup should use the weights estimated in the overall
-sample or those estimated in the subgroup. There are 2^R permutations of
-overall and subgroup weights, where R is the number of subgroups. The
-optimal permutation is chosen as that which minimizes a balance
-criterion as described in DZZL. The balance criterion used here is, for
-binary and multi-category treatments, the sum of the squared
-standardized mean differences within subgroups and overall, which are
-computed using
+sample or those estimated in the subgroup. There are \\2^R\\
+permutations of overall and subgroup weights, where \\R\\ is the number
+of subgroups. The optimal permutation is chosen as that which minimizes
+a balance criterion as described in DZZL. The balance criterion used
+here is, for binary and multi-category treatments, the sum of the
+squared standardized mean differences within subgroups and overall,
+which are computed using
 [`cobalt::col_w_smd()`](https://ngreifer.github.io/cobalt/reference/balance-summary.html),
 and for continuous treatments, the sum of the squared correlations
 between each covariate and treatment within subgroups and overall, which
@@ -107,14 +107,14 @@ are computed using
 
 The smooth version estimates weights that determine the relative
 contribution of the overall and subgroup propensity scores to a weighted
-average propensity score for each subgroup. If P_O are the propensity
-scores estimated in the overall sample and P_S are the propensity scores
-estimated in each subgroup, the smooth SBPS finds R coefficients C so
-that for each subgroup, the ultimate propensity score is \\C\*P_S +
-(1-C)\*P_O\\, and weights are computed from this propensity score. The
-coefficients are estimated using
+average propensity score for each subgroup. If \\P_O\\ are the
+propensity scores estimated in the overall sample and \\P_S\\ are the
+propensity scores estimated in each subgroup, the smooth SBPS finds
+\\R\\ coefficients \\C\\ so that for each subgroup, the ultimate
+propensity score is \\C\*P_S + (1-C)\*P_O\\, and weights are computed
+from this propensity score. The coefficients are estimated using
 [`optim()`](https://rdrr.io/r/stats/optim.html) with
-`method = "L-BFGS-B"`. When C is estimated to be 1 or 0 for each
+`method = "L-BFGS-B"`. When \\C\\ is estimated to be 1 or 0 for each
 subgroup, the smooth SBPS coincides with the standard SBPS.
 
 If `obj2` is not specified and `moderator` is, `sbps()` will attempt to
@@ -166,7 +166,9 @@ data("lalonde", package = "cobalt")
 #>  - estimand: ATT (focal: 1)
 #>  - covariates: age, educ, married, nodegree, race, re74
 #>  - by: race
+
 S <- sbps(W1, W2)
+
 print(S)
 #> A weightit.sbps object
 #>  - method: "glm" (propensity score weighting with GLM)
@@ -176,82 +178,97 @@ print(S)
 #>  - estimand: ATT (focal: 1)
 #>  - covariates: age, educ, married, nodegree, race, re74
 #>  - moderator: race (3 subgroups)
+
 summary(S)
-#> Summary of weights:
+#>                   Summary of weights
 #> 
-#>  - Overall vs. subgroup proportion contribution:
-#>          race = black race = hispan race = white
-#> Overall             0             0            0
-#> Subgroup            1             1            1
+#> - Overall vs. subgroup proportion contribution:
 #> 
-#>  - - - - - - - Subgroup race = black - - - - - - -
+#>          race = "black" race = "hispan" race = "white"
+#> Overall               0               0              0
+#> Subgroup              1               1              1
+#> 
+#>                     Subgroup: race = "black"                    
+#> 
 #> - Weight ranges:
-#>           Min                                  Max
-#> treated 1.000      ||                       1.0000
-#> control 0.466 |---------------------------| 3.5903
 #> 
-#> - Units with 5 greatest weights by group:
-#>                                           
-#>               1      2     3      4      5
-#>  treated      1      1     1      1      1
-#>             221    228   188    185    174
-#>  control 2.9494 2.9494 3.006 3.0637 3.5903
+#>           Min                                Max
+#> treated 1.         ||                       1.  
+#> control 0.466 |---------------------------| 3.59
 #> 
-#>          Ratio Coef of Var
-#> treated 1.0000      0.0000
-#> control 7.7042      0.4250
-#> overall 7.7042      0.4616
+#> - Units with the 5 most extreme weights by group:
+#>                                      
+#>              6     5     4     3    1
+#>  treated     1     1     1     1    1
+#>            559   381   573   303  411
+#>  control 2.949 2.949 3.006 3.064 3.59
+#> 
+#> - Weight statistics:
+#> 
+#>         Coef of Var   MAD Entropy # Zeros
+#> treated       0.    0.      0.          0
+#> control       0.425 0.366   0.093       0
 #> 
 #> - Effective Sample Sizes:
+#> 
 #>            Control Treated
-#> Unweighted  87.000     156
-#> Weighted    73.818     156
+#> Unweighted   87.       156
+#> Weighted     73.82     156
 #> 
-#>  - - - - - - - Subgroup race = hispan - - - - - - -
+#>                     Subgroup: race = "hispan"                    
+#> 
 #> - Weight ranges:
-#>            Min                                    Max
-#> treated 1.0000                              || 1.0000
-#> control 0.0209   |------------|                0.5046
 #> 
-#> - Units with 5 greatest weights by group:
-#>                                            
-#>               1      2      3      4      5
-#>  treated      1      1      1      1      1
-#>              56     54     49     48     47
-#>  control 0.4117 0.4767 0.4835 0.4968 0.5046
+#>           Min                                   Max
+#> treated 1.                                 || 1.   
+#> control 0.021   |------------|                0.505
 #> 
-#>           Ratio Coef of Var
-#> treated  1.0000      0.0000
-#> control 24.1741      0.7143
-#> overall 47.9120      1.0352
+#> - Units with the 5 most extreme weights by group:
+#>                                       
+#>            100    87    44    28     2
+#>  treated     1     1     1     1     1
+#>            425   456   480   424   412
+#>  control 0.412 0.477 0.484 0.497 0.505
+#> 
+#> - Weight statistics:
+#> 
+#>         Coef of Var   MAD Entropy # Zeros
+#> treated       0.    0.      0.          0
+#> control       0.714 0.579   0.246       0
 #> 
 #> - Effective Sample Sizes:
+#> 
 #>            Control Treated
-#> Unweighted  61.000      11
-#> Weighted    40.616      11
+#> Unweighted   61.        11
+#> Weighted     40.62      11
 #> 
-#>  - - - - - - - Subgroup race = white - - - - - - -
+#>                     Subgroup: race = "white"                    
+#> 
 #> - Weight ranges:
-#>            Min                                   Max
-#> treated 1.0000                              || 1.000
-#> control 0.0002   |---------|                   0.385
 #> 
-#> - Units with 5 greatest weights by group:
-#>                                           
-#>               1      2      3      4     5
-#>  treated      1      1      1      1     1
-#>             289    287    285    280   267
-#>  control 0.2393 0.2699 0.2937 0.2956 0.385
+#>         Min                                   Max
+#> treated   1                              || 1.   
+#> control   0   |---------|                   0.385
 #> 
-#>            Ratio Coef of Var
-#> treated    1.000      0.0000
-#> control 1825.568      1.1538
-#> overall 4742.156      1.9499
+#> - Units with the 5 most extreme weights by group:
+#>                                      
+#>             60   42    23    22    10
+#>  treated     1    1     1     1     1
+#>            592  589   595   546   580
+#>  control 0.239 0.27 0.294 0.296 0.385
+#> 
+#> - Weight statistics:
+#> 
+#>         Coef of Var   MAD Entropy # Zeros
+#> treated       0.    0.      0.          0
+#> control       1.154 0.952   0.619       0
 #> 
 #> - Effective Sample Sizes:
+#> 
 #>            Control Treated
-#> Unweighted 281.000      18
-#> Weighted   120.777      18
+#> Unweighted  281.        18
+#> Weighted    120.78      18
+
 bal.tab(S, cluster = "race")
 #> Balance by cluster
 #> 
@@ -303,9 +320,10 @@ bal.tab(S, cluster = "race")
 #> 
 
 #Could also have run
-#  sbps(W1, moderator = "race")
+#S <- sbps(W1, moderator = "race")
 
 S_ <- sbps(W1, W2, smooth = TRUE)
+
 print(S_)
 #> A weightit.sbps object
 #>  - method: "glm" (propensity score weighting with GLM)
@@ -315,82 +333,97 @@ print(S_)
 #>  - estimand: ATT (focal: 1)
 #>  - covariates: age, educ, married, nodegree, race, re74
 #>  - moderator: race (3 subgroups)
+
 summary(S_)
-#> Summary of weights:
+#>                   Summary of weights
 #> 
-#>  - Overall vs. subgroup proportion contribution:
-#>          race = black race = hispan race = white
-#> Overall          0.17          0.25            0
-#> Subgroup         0.83          0.75            1
+#> - Overall vs. subgroup proportion contribution:
 #> 
-#>  - - - - - - - Subgroup race = black - - - - - - -
+#>          race = "black" race = "hispan" race = "white"
+#> Overall            0.17            0.25              0
+#> Subgroup           0.83            0.75              1
+#> 
+#>                     Subgroup: race = "black"                    
+#> 
 #> - Weight ranges:
-#>            Min                                  Max
-#> treated 1.0000      ||                       1.0000
-#> control 0.4654 |---------------------------| 3.5703
 #> 
-#> - Units with 5 greatest weights by group:
-#>                                            
-#>               1      2      3      4      5
-#>  treated      1      1      1      1      1
-#>             221    228    188    185    174
-#>  control 2.9787 2.9787 3.0338 3.0899 3.5703
+#>           Min                                Max
+#> treated 1.         ||                       1.  
+#> control 0.465 |---------------------------| 3.57
 #> 
-#>          Ratio Coef of Var
-#> treated 1.0000      0.0000
-#> control 7.6708      0.4264
-#> overall 7.6708      0.4625
+#> - Units with the 5 most extreme weights by group:
+#>                                     
+#>              6     5     4    3    1
+#>  treated     1     1     1    1    1
+#>            559   381   573  303  411
+#>  control 2.979 2.979 3.034 3.09 3.57
+#> 
+#> - Weight statistics:
+#> 
+#>         Coef of Var   MAD Entropy # Zeros
+#> treated       0.    0.      0.          0
+#> control       0.426 0.366   0.094       0
 #> 
 #> - Effective Sample Sizes:
+#> 
 #>            Control Treated
-#> Unweighted  87.000     156
-#> Weighted    73.744     156
+#> Unweighted   87.       156
+#> Weighted     73.74     156
 #> 
-#>  - - - - - - - Subgroup race = hispan - - - - - - -
+#>                     Subgroup: race = "hispan"                    
+#> 
 #> - Weight ranges:
-#>            Min                                    Max
-#> treated 1.0000                              || 1.0000
-#> control 0.0254   |-----------|                 0.4743
 #> 
-#> - Units with 5 greatest weights by group:
-#>                                            
-#>               1      2      3      4      5
-#>  treated      1      1      1      1      1
-#>              56     54     48     47     28
-#>  control 0.3908 0.4496 0.4557 0.4704 0.4743
+#>           Min                                   Max
+#> treated 1.                                 || 1.   
+#> control 0.025   |-----------|                 0.474
 #> 
-#>           Ratio Coef of Var
-#> treated  1.0000      0.0000
-#> control 18.6516      0.6795
-#> overall 39.3245      1.0314
+#> - Units with the 5 most extreme weights by group:
+#>                                     
+#>            100   87    44   28     2
+#>  treated     1    1     1    1     1
+#>            269  456   480  424   412
+#>  control 0.391 0.45 0.456 0.47 0.474
+#> 
+#> - Weight statistics:
+#> 
+#>         Coef of Var   MAD Entropy # Zeros
+#> treated       0.    0.      0.          0
+#> control       0.679 0.553   0.225       0
 #> 
 #> - Effective Sample Sizes:
+#> 
 #>            Control Treated
-#> Unweighted   61.00      11
+#> Unweighted   61.        11
 #> Weighted     41.95      11
 #> 
-#>  - - - - - - - Subgroup race = white - - - - - - -
+#>                     Subgroup: race = "white"                    
+#> 
 #> - Weight ranges:
-#>            Min                                   Max
-#> treated 1.0000                              || 1.000
-#> control 0.0002   |---------|                   0.385
 #> 
-#> - Units with 5 greatest weights by group:
-#>                                           
-#>               1      2      3      4     5
-#>  treated      1      1      1      1     1
-#>             289    287    285    280   267
-#>  control 0.2393 0.2699 0.2937 0.2956 0.385
+#>         Min                                   Max
+#> treated   1                              || 1.   
+#> control   0   |---------|                   0.385
 #> 
-#>            Ratio Coef of Var
-#> treated    1.000      0.0000
-#> control 1825.568      1.1538
-#> overall 4742.156      1.9499
+#> - Units with the 5 most extreme weights by group:
+#>                                      
+#>             60   42    23    22    10
+#>  treated     1    1     1     1     1
+#>            592  589   595   546   580
+#>  control 0.239 0.27 0.294 0.296 0.385
+#> 
+#> - Weight statistics:
+#> 
+#>         Coef of Var   MAD Entropy # Zeros
+#> treated       0.    0.      0.          0
+#> control       1.154 0.952   0.619       0
 #> 
 #> - Effective Sample Sizes:
+#> 
 #>            Control Treated
-#> Unweighted 281.000      18
-#> Weighted   120.777      18
+#> Unweighted  281.        18
+#> Weighted    120.78      18
+
 bal.tab(S_, cluster = "race")
 #> Balance by cluster
 #> 

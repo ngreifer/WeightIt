@@ -283,8 +283,6 @@ data("msmdata")
 #>     + after time 2: X1_2, X2_2, A_2, X1_1, X2_1, A_1, X1_0, X2_0
 summary(W1)
 #>                         Time 1                        
-#>                   Summary of weights
-#> 
 #> - Weight ranges:
 #> 
 #>           Min                                   Max
@@ -293,16 +291,16 @@ summary(W1)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                                 
-#>             3172    3065    2025    1938     731
+#>             5488    3440    3593    1286    5685
 #>  treated 166.992 170.555 196.414 213.193 403.483
-#>             2301    1275    1145    1121     832
+#>             2594    2932    5226    1875    2533
 #>  control 155.625 168.964  172.42 245.882 284.764
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
 #> treated       1.914 0.816   0.649       0
-#> control       1.706 0.862   0.670       0
+#> control       1.706 0.862   0.67        0
 #> 
 #> - Effective Sample Sizes:
 #> 
@@ -311,8 +309,6 @@ summary(W1)
 #> Weighted    845.79   899.4
 #> 
 #>                         Time 2                        
-#>                   Summary of weights
-#> 
 #> - Weight ranges:
 #> 
 #>           Min                                   Max
@@ -321,9 +317,9 @@ summary(W1)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                                 
-#>             2902    1869    1779    1509    1313
+#>             2932    3440    3593    2533    5685
 #>  treated 168.964 170.555 196.414 284.764 403.483
-#>             2684    2549    1250     911     620
+#>             2594    5488    5226    1286    1875
 #>  control 155.625 166.992  172.42 213.193 245.882
 #> 
 #> - Weight statistics:
@@ -339,8 +335,6 @@ summary(W1)
 #> Weighted    912.87  829.87
 #> 
 #>                         Time 3                        
-#>                   Summary of weights
-#> 
 #> - Weight ranges:
 #> 
 #>           Min                                   Max
@@ -349,9 +343,9 @@ summary(W1)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                                 
-#>             1991    1254     893     668     468
+#>             3593    1286    1875    2533    5685
 #>  treated 196.414 213.193 245.882 284.764 403.483
-#>             4479    4021    2455    2427     112
+#>             6862     168    3729    6158    3774
 #>  control  88.072  97.827 104.623 121.845 148.155
 #> 
 #> - Weight statistics:

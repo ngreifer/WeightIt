@@ -67,9 +67,9 @@ summary(W1)
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                            
-#>             184    182    181    172    124
+#>             124    184    172    181    182
 #>  treated 11.228 11.344 12.085 26.178 73.332
-#>             410    226    224    111     84
+#>             411    595    269    409    296
 #>  control   2.33  2.437    2.5  2.637  3.044
 #> 
 #> - Weight statistics:

@@ -155,7 +155,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -405,9 +405,9 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                           </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            184    176    172    131     82</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            131    172    176     82    184</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated  8.28  8.609  9.161 10.923 11.685</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            423    333    136    118     37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            518    321    608    303    222</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 8.557 10.199 11.256  12.79 14.136</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
@@ -460,16 +460,16 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            185   184   181    82     44</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            185    44   181    82    184</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated 6.959 7.514 7.831 8.376 11.198</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            423   415   326   118     37</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            303   222   511   600    608</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  control 5.626  5.73  5.74 5.919  8.343</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         Coef of Var   MAD Entropy # Zeros</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treated       2.038 1.431   1.461       0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.158 0.847   0.610       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control       1.158 0.847   0.61        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -516,17 +516,17 @@ entered covariates. The constraint on exact balance can be relaxed using the <co
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                         </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>              1      2      3    4      5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>              6      5      4    3      1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   black      1      1      1    1      1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             69     59     48   28      2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            269     28    570  512    424</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  hispan  5.033  5.133  5.336 6.45 10.955</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             17     15      7    4      3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             76    166     23  140     42</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   white 10.795 11.883 12.356 12.8 16.951</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>        Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.000 0.000   0.000       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> black        0.    0.      0.          0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> hispan       1.963 1.356   1.337       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> white        2.342 1.414   1.546       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

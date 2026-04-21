@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.6.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,6 +53,8 @@
 <li><p><code><a href="../reference/glm_weightit.html">glm_weightit()</a></code>, <code><a href="../reference/multinom_weightit.html">multinom_weightit()</a></code>, <code><a href="../reference/ordinal_weightit.html">ordinal_weightit()</a></code>, and <code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code> are now each documented on their own page.</p></li>
 <li><p>The Estimating Effects vignettes (<code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code>) now describes how to use the <a href="https://ngreifer.github.io/adrftools/" class="external-link"><em>adrftools</em></a> package to estimate the effect of a continuous treatment.</p></li>
 <li><p><a href="https://ngreifer.github.io/arg/" class="external-link"><em>arg</em></a> is a new dependency for producing error messages and checking arguments.</p></li>
+<li><p>Minor changes to <code><a href="../reference/summary.weightit.html">plot.summary.weightit()</a></code>, in particular to remove a deprecation warning from <em>ggplot2</em>.</p></li>
+<li><p>In the <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code> output, units with the highest weights are now named according to their rownames in <code>data</code>. <code>summary.weightit.sbps()</code> has been updated to be more in line with <code><a href="../reference/summary.weightit.html">summary.weightit()</a></code>.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.6.0" id="weightit-160">
