@@ -45,7 +45,7 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.7.0" id="weightit-170">
-<code>WeightIt</code> 1.7.0<a class="anchor" aria-label="anchor" href="#weightit-170"></a></h2>
+<code>WeightIt</code> 1.7.0<a class="anchor" aria-label="anchor" href="#weightit-170"></a></h2><p class="text-muted">CRAN release: 2026-04-22</p>
 <ul><li><p><code><a href="../reference/coxph_weightit.html">coxph_weightit()</a></code> can now estimate standard errors that account for estimation of the weights using M-estimation as described by <a href="https://doi.org/10.1111/biom.13332" class="external-link">Shu et al. (2021)</a>.</p></li>
 <li><p><code><a href="../reference/weightit.html">weightit()</a></code> with <code>method = "ebal"</code> now accepts an optional <code>tols</code> argument, which can be used to set a balance threshold for inexact balance. This uses a new algorithm for optimizing with L1 regularization.</p></li>
 <li><p>Fixed bugs in entropy balancing that made the M-estimation covariance slightly too small. Thanks to Chad Hazlett for pointing them out.</p></li>
