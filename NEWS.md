@@ -1,6 +1,10 @@
 WeightIt News and Updates
 ======
 
+# `WeightIt` (development version)
+
+* Fixed a bug when using energy balancing with `estimand = "ATC"` and `moments` greater than 0.
+
 # `WeightIt` 1.7.0
 
 * `coxph_weightit()` can now estimate standard errors that account for estimation of the weights using M-estimation as described by [Shu et al. (2021)](https://doi.org/10.1111/biom.13332).
@@ -9,7 +13,7 @@ WeightIt News and Updates
 
 * Fixed bugs in entropy balancing that made the M-estimation covariance slightly too small. Thanks to Chad Hazlett for pointing them out.
 
-* When using the `tols` argument with `method = "energy"` with a continuous treatment, the imbalance tolerances now yield correlations no larger than the imbalance tolerance as computed with `cobalt:col_w_corr()`. Previously, they were allowed to be slightly too large.
+* When using the `tols` argument with `method = "energy"` with a continuous treatment, the imbalance tolerances now yield correlations no larger than the imbalance tolerance as computed with `cobalt::col_w_corr()`. Previously, they were allowed to be slightly too large.
 
 * `glm_weightit()`, `multinom_weightit()`, `ordinal_weightit()`, and `coxph_weightit()` are now each documented on their own page.
 

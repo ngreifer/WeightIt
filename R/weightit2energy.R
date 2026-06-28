@@ -401,6 +401,8 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
 
       targets <- col.w.m(covs[t0, , drop = FALSE], s.weights[t0])
 
+      sds <- rep.int(1, ncol(covs))
+
       if (tols > 0) {
         bin.vars <- is_binary_col(covs)
 
