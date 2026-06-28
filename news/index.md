@@ -1,5 +1,10 @@
 # Changelog
 
+## `WeightIt` (development version)
+
+- Fixed a bug when using energy balancing with `estimand = "ATC"` and
+  `moments` greater than 0.
+
 ## `WeightIt` 1.7.0
 
 CRAN release: 2026-04-22
@@ -20,8 +25,8 @@ CRAN release: 2026-04-22
 - When using the `tols` argument with `method = "energy"` with a
   continuous treatment, the imbalance tolerances now yield correlations
   no larger than the imbalance tolerance as computed with
-  `cobalt:col_w_corr()`. Previously, they were allowed to be slightly
-  too large.
+  [`cobalt::col_w_corr()`](https://ngreifer.github.io/cobalt/reference/balance-summary.html).
+  Previously, they were allowed to be slightly too large.
 
 - [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
   [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),

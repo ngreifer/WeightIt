@@ -41,7 +41,7 @@ biom.13405. [doi:10.1111/biom.13405](https://doi.org/10.1111/biom.13405)
 
 ``` r
 library("cobalt")
-#>  cobalt (Version 4.6.2, Build Date: 2026-01-29)
+#>  cobalt (Version 4.6.3, Build Date: 2026-05-29)
 data("lalonde", package = "cobalt")
 
 #Balancing covariates between treatment groups (binary)

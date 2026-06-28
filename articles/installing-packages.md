@@ -45,6 +45,7 @@ When missing data is present and `missing = "saem"` is supplied, the
 *misaem* package is required. To install *misaem* from CRAN, run
 
 ``` r
+
 pak::pkg_install("misaem")
 ```
 
@@ -53,6 +54,7 @@ version from source, you can do so from the developer’s [GitHub
 repo](https://github.com/julierennes/misaem) using the following code:
 
 ``` r
+
 pak::pkg_install("julierennes/misaem")
 ```
 
@@ -63,6 +65,7 @@ For binary and multi-category treatments, when `link` is supplied as
 package is required. To install *brglm2* from CRAN, run
 
 ``` r
+
 pak::pkg_install("brglm2")
 ```
 
@@ -72,6 +75,7 @@ Kosmidis’s, [GitHub repo](https://github.com/ikosmidis/brglm2) using the
 following code:
 
 ``` r
+
 pak::pkg_install("ikosmidis/brglm2")
 ```
 
@@ -85,6 +89,7 @@ For multi-category treatments, when `multi.method = "mclogit"`, the
 install *mclogit* from CRAN, run
 
 ``` r
+
 pak::pkg_install("mclogit")
 ```
 
@@ -94,6 +99,7 @@ version from source, you can do so from the developer, Martin Elff’s,
 code:
 
 ``` r
+
 pak::pkg_install("melff/mclogit")
 ```
 
@@ -104,6 +110,7 @@ package is required for Bayesian multinomial probit regression. To
 install *MNP* from CRAN, run
 
 ``` r
+
 pak::pkg_install("MNP")
 ```
 
@@ -113,6 +120,7 @@ version from source, you can do so from the developer, Kosuke Imai’s,
 code:
 
 ``` r
+
 pak::pkg_install("kosukeimai/MNP")
 ```
 
@@ -126,6 +134,7 @@ using GBM. It does *not* rely on the `twang` package at all. To install
 *gbm* from CRAN, run
 
 ``` r
+
 pak::pkg_install("gbm")
 ```
 
@@ -134,6 +143,7 @@ version from source, you can do so from the developer’s [GitHub
 repo](https://github.com/gbm-developers/gbm) using the following code:
 
 ``` r
+
 pak::pkg_install("gbm-developers/gbm")
 ```
 
@@ -153,6 +163,7 @@ nonparametric covariate balancing propensity score weighting. To install
 *CBPS* from CRAN, run
 
 ``` r
+
 pak::pkg_install("CBPS")
 ```
 
@@ -162,6 +173,7 @@ version from source, you can do so from the developer, Kosuke Imai’s,
 code:
 
 ``` r
+
 pak::pkg_install("kosukeimai/CBPS")
 ```
 
@@ -178,6 +190,7 @@ required for inverse probability tilting. To install *rootSolve* from
 CRAN, run
 
 ``` r
+
 pak::pkg_install("rootSolve")
 ```
 
@@ -187,6 +200,7 @@ pak::pkg_install("rootSolve")
 weights. To install *optweight* from CRAN, run
 
 ``` r
+
 pak::pkg_install("optweight")
 ```
 
@@ -196,6 +210,7 @@ version from source, you can do so from the developer, Noah Greifer’s
 following code:
 
 ``` r
+
 pak::pkg_install("ngreifer/optweight")
 ```
 
@@ -212,6 +227,7 @@ score weights using SuperLearner. To install *SuperLearner* from CRAN,
 run
 
 ``` r
+
 pak::pkg_install("SuperLearner")
 ```
 
@@ -221,6 +237,7 @@ Polley’s, [GitHub repo](https://github.com/ecpolley/SuperLearner) using
 the following code:
 
 ``` r
+
 pak::pkg_install("ecpolley/SuperLearner")
 ```
 
@@ -241,6 +258,7 @@ these into your R session to be used with `method = "super"`, use
 URL. For example, to read in the code for `SL.dbarts`, run
 
 ``` r
+
 source("https://raw.githubusercontent.com/ecpolley/SuperLearnerExtra/master/SL/SL.dbarts.R")
 ```
 
@@ -250,6 +268,7 @@ source("https://raw.githubusercontent.com/ecpolley/SuperLearnerExtra/master/SL/S
 weights using BART. To install *dbarts* from CRAN, run
 
 ``` r
+
 pak::pkg_install("dbarts")
 ```
 
@@ -259,6 +278,7 @@ version from source, you can do so from the developer, Vincent Dorie’s,
 code:
 
 ``` r
+
 pak::pkg_install("vdorie/dbarts")
 ```
 
@@ -271,6 +291,7 @@ software installed on your computer to install it from source.
 required for energy balancing. To install *osqp* from CRAN, run
 
 ``` r
+
 pak::pkg_install("osqp")
 ```
 

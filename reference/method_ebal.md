@@ -308,8 +308,8 @@ cobalt::bal.tab(W1)
 #>             Type Diff.Adj
 #> age      Contin.        0
 #> educ     Contin.        0
-#> married   Binary       -0
-#> nodegree  Binary       -0
+#> married   Binary        0
+#> nodegree  Binary        0
 #> re74     Contin.        0
 #> 
 #> Effective sample sizes
@@ -478,8 +478,8 @@ cobalt::bal.tab(W1, weights = list(inexact = W1b))
 #>             Type Diff.weightit Diff.inexact
 #> age      Contin.             0         0.02
 #> educ     Contin.             0         0.02
-#> married   Binary            -0        -0.02
-#> nodegree  Binary            -0         0.02
+#> married   Binary             0        -0.02
+#> nodegree  Binary             0         0.02
 #> re74     Contin.             0        -0.02
 #> 
 #> Effective sample sizes

@@ -18,8 +18,8 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Using WeightIt to Estimate Balancing Weights">
 </head>
@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-04-22</h4>
+            <h4 data-toc-skip class="date">2026-06-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -88,7 +88,7 @@ assessing balancing weights for observational studies. These weights can
 be used to estimate the causal parameters of marginal structural models.
 I will not go into the basics of causal inference methods here. For good
 introductory articles, see <span class="citation">Austin (<a href="#ref-austinIntroductionPropensityScore2011">2011</a>)</span>,
-<span class="citation">Austin and Stuart (<a href="#ref-austinMovingBestPractice2015">2015</a>)</span>, <span class="citation">Robins, Hernán, and Brumback (<a href="#ref-robinsMarginalStructuralModels2000">2000</a>)</span>, or
+<span class="citation">Austin and Stuart (<a href="#ref-austinMovingBestPractice2015">2015</a>)</span>, <span class="citation">Robins et al. (<a href="#ref-robinsMarginalStructuralModels2000">2000</a>)</span>, or
 <span class="citation">Thoemmes and Ong (<a href="#ref-thoemmesPrimerInverseProbability2016">2016</a>)</span>.</p>
 <p>Typically, the analysis of an observational study might proceed as
 follows: identify the covariates for which balance is required; assess
@@ -309,7 +309,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## race_hispan  Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## married      Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## nodegree     Binary        0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
@@ -668,7 +668,7 @@ all.</p>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-austinIntroductionPropensityScore2011" class="csl-entry">
 Austin, Peter C. 2011. <span>“An Introduction to Propensity Score
 Methods for Reducing the Effects of Confounding in Observational

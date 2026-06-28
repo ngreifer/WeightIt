@@ -18,8 +18,8 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Estimating Effects After Weighting">
 </head>
@@ -31,7 +31,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-04-22</h4>
+            <h4 data-toc-skip class="date">2026-06-28</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/estimating-effects.Rmd" class="external-link"><code>vignettes/estimating-effects.Rmd</code></a></small>
       <div class="d-none name"><code>estimating-effects.Rmd</code></div>
@@ -164,19 +164,19 @@ assumptions.</p>
 <h3 id="g-computation">G-computation<a class="anchor" aria-label="anchor" href="#g-computation"></a>
 </h3>
 <p>To estimate marginal effects, we use a method known as g-computation
-<span class="citation">(<a href="#ref-snowdenImplementationGComputationSimulated2011">Snowden,
-Rose, and Mortimer 2011</a>)</span> or regression estimation <span class="citation">(<a href="#ref-schaferAverageCausalEffects2008">Schafer
-and Kang 2008</a>)</span>. This involves first specifying a model for
-the outcome as a function of the treatment and covariates. Then, for
-each unit, we compute their predicted values of the outcome setting
-their treatment status to treated, and then again for control, leaving
-us with two predicted outcome values for each unit, which are estimates
-of the potential outcomes under each treatment level. We compute the
-mean of each of the estimated potential outcomes across the entire
-sample, which leaves us with two average estimated potential outcomes.
-Finally, the contrast of these average estimated potential outcomes
-(e.g., their difference or ratio, depending on the effect measure
-desired) is the estimate of the treatment effect.</p>
+<span class="citation">(<a href="#ref-snowdenImplementationGComputationSimulated2011">Snowden et
+al. 2011</a>)</span> or regression estimation <span class="citation">(<a href="#ref-schaferAverageCausalEffects2008">Schafer and Kang
+2008</a>)</span>. This involves first specifying a model for the outcome
+as a function of the treatment and covariates. Then, for each unit, we
+compute their predicted values of the outcome setting their treatment
+status to treated, and then again for control, leaving us with two
+predicted outcome values for each unit, which are estimates of the
+potential outcomes under each treatment level. We compute the mean of
+each of the estimated potential outcomes across the entire sample, which
+leaves us with two average estimated potential outcomes. Finally, the
+contrast of these average estimated potential outcomes (e.g., their
+difference or ratio, depending on the effect measure desired) is the
+estimate of the treatment effect.</p>
 <p>When doing g-computation after weighting, a few additional
 considerations are required. First, the outcome model should be fit
 incorporating the estimated weights (e.g., using weighted least squares
@@ -191,7 +191,7 @@ this does not mean previous analyses using weighted averages are
 invalid.&lt;/p&gt;"><sup>1</sup></a>. Third, if we want to
 target the ATT or ATC, we only estimate potential outcomes for the
 treated or control group, respectively (though we still generate
-predicted values under both treatment and control) <span class="citation">(<a href="#ref-wangGcomputationAverageTreatment2017">Wang, Nianogo, and Arah
+predicted values under both treatment and control) <span class="citation">(<a href="#ref-wangGcomputationAverageTreatment2017">Wang et al.
 2017</a>)</span>.</p>
 <p>G-computation as a framework for estimating effects after weighting
 has a number of advantages over other approaches. It works the same
@@ -347,10 +347,10 @@ and White 1985</a>)</span>. They can also be adjusted to accommodate
 arbitrary levels of clustering in the data (e.g., when units are sampled
 from schools). Robust SEs have been shown to be conservative (i.e.,
 yielding overly large SEs and wide confidence intervals) for estimating
-the ATE after some forms of weighting <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins, Hernán, and
-Brumback 2000</a>)</span>, though they can be either conservative or not
-for other weighting methods and estimands, such as for the ATT <span class="citation">(<a href="#ref-reifeisVarianceTreatmentEffect2022">Reifeis and Hudgens
-2022</a>)</span> or for entropy balancing <span class="citation">(<a href="#ref-chanGloballyEfficientNonparametric2016">Chan, Yam, and Zhang
+the ATE after some forms of weighting <span class="citation">(<a href="#ref-robinsMarginalStructuralModels2000">Robins et al.
+2000</a>)</span>, though they can be either conservative or not for
+other weighting methods and estimands, such as for the ATT <span class="citation">(<a href="#ref-reifeisVarianceTreatmentEffect2022">Reifeis and Hudgens
+2022</a>)</span> or for entropy balancing <span class="citation">(<a href="#ref-chanGloballyEfficientNonparametric2016">Chan et al.
 2016</a>)</span>. Robust SEs treat the estimated weights as if they were
 fixed and known, ignoring uncertainty in their estimation that is
 otherwise accounted for by the asymptotically correct standard errors
@@ -979,8 +979,7 @@ increases.</p>
 <span><span class="co">##   P-value</span></span>
 <span><span class="co">##  &lt; 0.0001</span></span>
 <span><span class="co">## ───────────────────────────────────────────────────────</span></span>
-<span><span class="co">## <span style="font-style: italic;">Computed using a simulation approximation with</span></span></span>
-<span><span class="co">##   <span style="font-style: italic;">1,000,000 replicates</span></span></span></code></pre>
+<span><span class="co">## <span style="font-style: italic;">Computed using the Imhof approximation</span></span></span></code></pre>
 <p>The small p-value indicates that the ADRF is not flat and therefore
 that there is an effect of <code>Ac</code> on <code>Y_B</code>.</p>
 <p>We can produce estimates of the ADRF at different values of
@@ -1234,16 +1233,17 @@ assessment, etc.</p>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
+<div id="refs" class="references csl-bib-body hanging-indent">
 <div id="ref-austin2016" class="csl-entry">
 Austin, Peter C. 2016. <span>“Variance Estimation When Using Inverse
 Probability of Treatment Weighting (IPTW) with Survival
 Analysis.”</span> <em>Statistics in Medicine</em> 35 (30): 5642–55. <a href="https://doi.org/10.1002/sim.7084" class="external-link">https://doi.org/10.1002/sim.7084</a>.
 </div>
 <div id="ref-austin2022" class="csl-entry">
-———. 2022. <span>“Bootstrap Vs Asymptotic Variance Estimation When Using
-Propensity Score Weighting with Continuous and Binary Outcomes.”</span>
-<em>Statistics in Medicine</em> 41 (22): 4426–43. <a href="https://doi.org/10.1002/sim.9519" class="external-link">https://doi.org/10.1002/sim.9519</a>.
+Austin, Peter C. 2022. <span>“Bootstrap Vs Asymptotic Variance
+Estimation When Using Propensity Score Weighting with Continuous and
+Binary Outcomes.”</span> <em>Statistics in Medicine</em> 41 (22):
+4426–43. <a href="https://doi.org/10.1002/sim.9519" class="external-link">https://doi.org/10.1002/sim.9519</a>.
 </div>
 <div id="ref-chanGloballyEfficientNonparametric2016" class="csl-entry">
 Chan, Kwun Chuen Gary, Sheung Chi Phillip Yam, and Zheng Zhang. 2016.
@@ -1263,22 +1263,20 @@ Standard Errors, Confidence Intervals, and Other Measures of Statistical
 Accuracy.”</span> <em>Statistical Science</em> 1 (1): 54–75. <a href="https://www.jstor.org/stable/2245500" class="external-link">https://www.jstor.org/stable/2245500</a>.
 </div>
 <div id="ref-gabrielInverseProbabilityTreatment2024" class="csl-entry">
-Gabriel, Erin E., Michael C. Sachs, Torben Martinussen, Ingeborg
-Waernbaum, Els Goetghebeur, Stijn Vansteelandt, and Arvid Sjölander.
-2024. <span>“Inverse Probability of Treatment Weighting with Generalized
+Gabriel, Erin E., Michael C. Sachs, Torben Martinussen, et al. 2024.
+<span>“Inverse Probability of Treatment Weighting with Generalized
 Linear Outcome Models for Doubly Robust Estimation.”</span>
 <em>Statistics in Medicine</em> 43 (3): 534–47. <a href="https://doi.org/10.1002/sim.9969" class="external-link">https://doi.org/10.1002/sim.9969</a>.
 </div>
 <div id="ref-greiferChoosingEstimandWhen2021" class="csl-entry">
 Greifer, Noah, and Elizabeth A. Stuart. 2021. <span>“Choosing the
 Estimand When Matching or Weighting in Observational Studies.”</span>
-<em>arXiv:2106.10577 [Stat]</em>, June. <a href="https://arxiv.org/abs/2106.10577" class="external-link">https://arxiv.org/abs/2106.10577</a>.
+<em>arXiv:2106.10577 [Stat]</em>, June 19. <a href="https://arxiv.org/abs/2106.10577" class="external-link">https://arxiv.org/abs/2106.10577</a>.
 </div>
 <div id="ref-griffinTutorialPropensityScore2023" class="csl-entry">
-Griffin, Beth Ann, Megan S. Schuler, Matt Cefalu, Lynsay Ayer, Mark
-Godley, Noah Greifer, Donna L. Coffman, and Daniel F. McCaffrey. 2023.
-<span>“A Tutorial for Propensity Score Weighting for Moderation Analysis
-With Categorical Variables: An Application Examining Smoking Disparities
+Griffin, Beth Ann, Megan S. Schuler, Matt Cefalu, et al. 2023. <span>“A
+Tutorial for Propensity Score Weighting for Moderation Analysis with
+Categorical Variables: An Application Examining Smoking Disparities
 Among Sexual Minority Adults.”</span> <em>Medical Care</em> 61 (12):
 836–45. <a href="https://doi.org/10.1097/MLR.0000000000001922" class="external-link">https://doi.org/10.1097/MLR.0000000000001922</a>.
 </div>
@@ -1297,7 +1295,7 @@ Outcome.”</span> <em>Biometrical Journal</em> 60 (6): 1151–63. <a href="http
 <div id="ref-hansenVarianceEstimationAverage2024" class="csl-entry">
 Hansen, Stefan Nygaard, and Morten Overgaard. 2024. <span>“Variance
 Estimation for Average Treatment Effects Estimated by
-g-Computation.”</span> <em>Metrika</em>, April. <a href="https://doi.org/10.1007/s00184-024-00962-4" class="external-link">https://doi.org/10.1007/s00184-024-00962-4</a>.
+g-Computation.”</span> <em>Metrika</em>, ahead of print, April. <a href="https://doi.org/10.1007/s00184-024-00962-4" class="external-link">https://doi.org/10.1007/s00184-024-00962-4</a>.
 </div>
 <div id="ref-hoMatchingNonparametricPreprocessing2007" class="csl-entry">
 Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.
@@ -1329,8 +1327,7 @@ Estimation, and Inference.”</span> <em>Statistics in Medicine</em> 37
 (26): 3745–63. <a href="https://doi.org/10.1002/sim.7839" class="external-link">https://doi.org/10.1002/sim.7839</a>.
 </div>
 <div id="ref-nguyenDoubleadjustmentPropensityScore2017" class="csl-entry">
-Nguyen, Tri-Long, Gary S. Collins, Jessica Spence, Jean-Pierre Daurès,
-P. J. Devereaux, Paul Landais, and Yannick Le Manach. 2017.
+Nguyen, Tri-Long, Gary S. Collins, Jessica Spence, et al. 2017.
 <span>“Double-Adjustment in Propensity Score Matching Analysis: Choosing
 a Threshold for Considering Residual Imbalance.”</span> <em>BMC Medical
 Research Methodology</em> 17: 78. <a href="https://doi.org/10.1186/s12874-017-0338-0" class="external-link">https://doi.org/10.1186/s12874-017-0338-0</a>.
@@ -1364,7 +1361,7 @@ Models.”</span> <em>Biometrics</em> 77 (3): 1101–17. <a href="https://doi.or
 </div>
 <div id="ref-snowdenImplementationGComputationSimulated2011" class="csl-entry">
 Snowden, Jonathan M., Sherri Rose, and Kathleen M. Mortimer. 2011.
-<span>“Implementation of G-Computation on a Simulated Data Set:
+<span>“Implementation of g-Computation on a Simulated Data Set:
 Demonstration of a Causal Inference Technique.”</span> <em>American
 Journal of Epidemiology</em> 173 (7): 731–38. <a href="https://doi.org/10.1093/aje/kwq472" class="external-link">https://doi.org/10.1093/aje/kwq472</a>.
 </div>

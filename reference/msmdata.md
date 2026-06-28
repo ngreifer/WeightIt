@@ -74,5 +74,6 @@ A data frame with 7500 observations on the following 10 variables.
 ## Examples
 
 ``` r
+
 data("msmdata")
 ```

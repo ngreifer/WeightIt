@@ -78,7 +78,7 @@ assumptions.
 ### G-computation
 
 To estimate marginal effects, we use a method known as g-computation
-([Snowden, Rose, and Mortimer
+([Snowden et al.
 2011](#ref-snowdenImplementationGComputationSimulated2011)) or
 regression estimation ([Schafer and Kang
 2008](#ref-schaferAverageCausalEffects2008)). This involves first
@@ -102,10 +102,10 @@ al. 2024](#ref-gabrielInverseProbabilityTreatment2024)). Second, when we
 take the average of the estimated potential outcomes under each
 treatment level, if an estimand other than the ATT, ATC, or ATE is used
 or sampling weights are included, this must be a weighted average that
-incorporates the weights[¹](#fn1). Third, if we want to target the ATT
-or ATC, we only estimate potential outcomes for the treated or control
+incorporates the weights[^1]. Third, if we want to target the ATT or
+ATC, we only estimate potential outcomes for the treated or control
 group, respectively (though we still generate predicted values under
-both treatment and control) ([Wang, Nianogo, and Arah
+both treatment and control) ([Wang et al.
 2017](#ref-wangGcomputationAverageTreatment2017)).
 
 G-computation as a framework for estimating effects after weighting has
@@ -272,18 +272,17 @@ They can also be adjusted to accommodate arbitrary levels of clustering
 in the data (e.g., when units are sampled from schools). Robust SEs have
 been shown to be conservative (i.e., yielding overly large SEs and wide
 confidence intervals) for estimating the ATE after some forms of
-weighting ([Robins, Hernán, and Brumback
+weighting ([Robins et al.
 2000](#ref-robinsMarginalStructuralModels2000)), though they can be
 either conservative or not for other weighting methods and estimands,
 such as for the ATT ([Reifeis and Hudgens
 2022](#ref-reifeisVarianceTreatmentEffect2022)) or for entropy balancing
-([Chan, Yam, and Zhang
-2016](#ref-chanGloballyEfficientNonparametric2016)). Robust SEs treat
-the estimated weights as if they were fixed and known, ignoring
-uncertainty in their estimation that is otherwise accounted for by the
-asymptotically correct standard errors described above. Although they
-are quick and simple to estimate using functionality in the *sandwich*
-and *survey* packages or using
+([Chan et al. 2016](#ref-chanGloballyEfficientNonparametric2016)).
+Robust SEs treat the estimated weights as if they were fixed and known,
+ignoring uncertainty in their estimation that is otherwise accounted for
+by the asymptotically correct standard errors described above. Although
+they are quick and simple to estimate using functionality in the
+*sandwich* and *survey* packages or using
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
 they should be used with caution, and the bootstrap (described below) or
 asymptotically correct standard errors should be preferred in most
@@ -356,6 +355,7 @@ treatment types. Code to generate the dataset is at the end of this
 document. Below we display the first six rows of `d`:
 
 ``` r
+
 head(d)
 ```
 
@@ -391,6 +391,7 @@ analyses:
   the effect of a continuous treatment on an outcome
 
 ``` r
+
 library("WeightIt")
 library("marginaleffects")
 ```
@@ -451,6 +452,7 @@ this section is critical even if you are using a different weighting
 method.
 
 ``` r
+
 #PS weighting for the ATE with a logistic regression PS
 W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
                 X6 + X7 + X8 + X9, data = d,
@@ -480,6 +482,7 @@ treatment-covariate interactions, which we do below, but this is not
 always necessary, especially when excellent balance has been achieved.
 
 ``` r
+
 #Linear model with covariates
 fit <- lm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + 
                         X6 + X7 + X8 + X9),
@@ -491,6 +494,7 @@ Next, we use
 to estimate the ATE.
 
 ``` r
+
 avg_comparisons(fit, variables = "A")
 ```
 
@@ -511,6 +515,7 @@ covariates present in the outcome model (if any) are interacted with the
 treatment.
 
 ``` r
+
 avg_predictions(fit, variables = "A")
 ```
 
@@ -522,8 +527,7 @@ avg_predictions(fit, variables = "A")
     ## Type: probs
 
 We can see that the difference in potential outcome means is equal to
-the average treatment effect computed previously[²](#fn2). The arguments
-to
+the average treatment effect computed previously[^2]. The arguments to
 [`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
 are the same as those to
 [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html).
@@ -547,6 +551,7 @@ and
 as
 
 ``` r
+
 newdata = subset(A == 1)
 ```
 
@@ -568,6 +573,7 @@ For the estimands listed, we need to supply the estimated weights to the
 specify the following:
 
 ``` r
+
 wts = W$weights
 ```
 
@@ -595,7 +601,7 @@ to
 and set `family = binomial` for binary outcomes or `family = poisson`
 for count outcomes. To compute the marginal RD or mean difference, we
 can use exactly the same syntax as in the Standard Case; nothing needs
-to change[³](#fn3).
+to change[^3].
 
 To compute the marginal RR or count/incidence ratio, first we need to
 add `comparison = "lnratioavg"` to
@@ -604,10 +610,11 @@ this computes the marginal log ratio. To get the marginal ratio itself,
 we need to add `transform = "exp"` to
 [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html),
 which exponentiates the marginal log ratio and its confidence
-interval[⁴](#fn4). The code below computes the effects and displays the
+interval[^4]. The code below computes the effects and displays the
 statistics of interest for a binary outcome `Y_B`:
 
 ``` r
+
 #Logistic regression model with covariates
 fit <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + 
                         X6 + X7 + X8 + X9),
@@ -676,6 +683,7 @@ and bootstrap standard errors can be requested by setting `vcov` to
 `"BS"` or `"FWB"`.
 
 ``` r
+
 #Cox Regression for marginal HR
 fit <- coxph_weightit(survival::Surv(Y_S, Y_death) ~ A,
                       data = d, weightit = W)
@@ -703,6 +711,7 @@ setting `transform = "exp"` in the call to
 [`summary()`](https://rdrr.io/r/base/summary.html).
 
 ``` r
+
 #HR and CIs; requested by exponentiating log HRs
 summary(fit, ci = TRUE, transform = "exp")
 ```
@@ -727,6 +736,7 @@ output. We must specify the desired follow-up time (in this case, 300
 days) using the `newdata` argument as follows:
 
 ``` r
+
 avg_comparisons(fit, variables = "A",
                 type = "survival",
                 newdata = datagrid(Y_S = 300, grid_type = "counterfactual"))
@@ -782,6 +792,7 @@ right side. These can be used with the traditional or fractional
 weighted bootstrap as well.
 
 ``` r
+
 #Estimate the balancing weights, with sampling weights called "sw"
 W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
                 X6 + X7 + X8 + X9, data = d,
@@ -809,6 +820,7 @@ balancing weights. See an example below for using *survey* to estimate
 effects after weighting.
 
 ``` r
+
 library("survey")
 
 #Multiply sampling weights and estimated weights
@@ -850,6 +862,7 @@ Below, we’ll estimate the ATTs of the multi-category treatment `Am` for
 a focal level.
 
 ``` r
+
 table(d$Am)
 ```
 
@@ -866,6 +879,7 @@ First, we estimate our weights using entropy balancing ([Hainmueller
 focal group using `focal`:
 
 ``` r
+
 W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5 + 
                 X6 + X7 + X8 + X9, data = d,
               method = "ebal", estimand = "ATT",
@@ -891,6 +905,7 @@ the focal group, and the use
 to test all pairwise comparisons.
 
 ``` r
+
 #Fit the outcome model
 fit <- lm_weightit(Y_C ~ Am * (X1 + X2 + X3 + X4 + X5 + 
                                  X6 + X7 + X8 + X9),
@@ -912,6 +927,7 @@ p
     ## Type: probs
 
 ``` r
+
 hypotheses(p, ~pairwise)
 ```
 
@@ -936,6 +952,7 @@ package implements methods for estimating, visualizing, and testing the
 ADRF and related estimands.
 
 ``` r
+
 library("adrftools")
 ```
 
@@ -951,6 +968,7 @@ First, we’ll estimate entropy balancing weights ([Vegetabile et al.
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 
 ``` r
+
 W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + 
                 X6 + X7 + X8 + X9, data = d,
               moments = 2, int = TRUE,
@@ -978,6 +996,7 @@ and a full set of treatment-covariate interactions, the resulting
 estimates may be imprecise.
 
 ``` r
+
 #Fit the outcome model
 fit <- glm_weightit(Y_B ~ splines::ns(Ac, df = 4) *
                      (X1 + X2 + X3 + X4 + X5 + 
@@ -992,6 +1011,7 @@ Next we use
 *adrftools* to perform g-computation to estimate the ADRF:
 
 ``` r
+
 ADRF_Ac <- adrf(fit, treat = "Ac")
 
 ADRF_Ac
@@ -1009,6 +1029,7 @@ We can generate a plot of the ADRF and its simultaneous confidence band
 using [`plot()`](https://rdrr.io/r/graphics/plot.default.html):
 
 ``` r
+
 plot(ADRF_Ac)
 ```
 
@@ -1022,6 +1043,7 @@ We can test the null hypothesis that the ADRF is flat using
 [`summary()`](https://rdrr.io/r/base/summary.html):
 
 ``` r
+
 summary(ADRF_Ac, hypothesis = "flat")
 ```
 
@@ -1033,8 +1055,7 @@ summary(ADRF_Ac, hypothesis = "flat")
     ##   P-value
     ##  < 0.0001
     ## ───────────────────────────────────────────────────────
-    ## Computed using a simulation approximation with
-    ##   1,000,000 replicates
+    ## Computed using the Imhof approximation
 
 The small p-value indicates that the ADRF is not flat and therefore that
 there is an effect of `Ac` on `Y_B`.
@@ -1043,6 +1064,7 @@ We can produce estimates of the ADRF at different values of `Ac`, which
 can aid in interpreting the output quantitatively:
 
 ``` r
+
 ADRF_Ac(c(-6, -4, -2, 0, 2)) |>
   summary()
 ```
@@ -1093,6 +1115,7 @@ factor, if any. We’ll use the toy dataset `msmdata` that comes with
 *WeightIt*.
 
 ``` r
+
 data("msmdata")
 
 Wmsm <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
@@ -1111,6 +1134,7 @@ which includes the baseline covariates (i.e., only those measured prior
 the first treatment).
 
 ``` r
+
 fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
                     data = msmdata, weightit = Wmsm,
                     family = binomial)
@@ -1121,6 +1145,7 @@ treatment regime using
 [`marginaleffects::avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html):
 
 ``` r
+
 p <- avg_predictions(fit,
                      variables = c("A_1", "A_2", "A_3"))
 
@@ -1147,6 +1172,7 @@ treatment history (i.e., in which all units are untreated for all time
 periods), we can run the following:
 
 ``` r
+
 hypotheses(p, ~reference)
 ```
 
@@ -1177,8 +1203,8 @@ GLM propensity score weighting, CBPS, entropy balancing, or inverse
 probability tilting, both methods yield identical results. To fit a
 weighting model within each subgroup, one can use the `by` argument to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
-which does just this[⁵](#fn5). There is also the possibility of using
-the subgroup balancing propensity score ([Dong et al.
+which does just this[^5]. There is also the possibility of using the
+subgroup balancing propensity score ([Dong et al.
 2020](#ref-dongSubgroupBalancingPropensity2020)) implemented using
 [`sbps()`](https://ngreifer.github.io/WeightIt/reference/sbps.md), which
 determines whether a single weighting model fit to the whole or a
@@ -1192,6 +1218,7 @@ the effect of `A` on `Y_C`. Below, we’ll estimate weights using CBPS for
 the ATE within each level of `X5` by supplying it to the `by` argument.
 
 ``` r
+
 Wm <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + 
                  X6 + X7 + X8 + X9, data = d,
                method = "cbps", estimand = "ATE",
@@ -1232,6 +1259,7 @@ including the just the first three covariates in addition to the
 treatment and moderator (allowing the covariates to interact with both).
 
 ``` r
+
 fit <- lm_weightit(Y_C ~ A * X5 * (X1 + X2 + X3),
                     data = d, weightit = Wm)
 ```
@@ -1242,6 +1270,7 @@ this time specifying the `by` argument to signify that we want treatment
 effects stratified by the moderator.
 
 ``` r
+
 a <- avg_comparisons(fit, variables = "A",
                      by = "X5")
 a
@@ -1261,6 +1290,7 @@ and we can formally test for moderation using
 [`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html):
 
 ``` r
+
 hypotheses(a, ~pairwise)
 ```
 
@@ -1279,6 +1309,7 @@ supplying the output to
 with `joint = TRUE`, e.g.,
 
 ``` r
+
 avg_comparisons(fit, variables = "A",
                 by = "X5",
                 hypothesis = ~reference) |>
@@ -1339,8 +1370,8 @@ Probability of Treatment Weighting (IPTW) with Survival Analysis.”
 *Statistics in Medicine* 35 (30): 5642–55.
 <https://doi.org/10.1002/sim.7084>.
 
-———. 2022. “Bootstrap Vs Asymptotic Variance Estimation When Using
-Propensity Score Weighting with Continuous and Binary Outcomes.”
+Austin, Peter C. 2022. “Bootstrap Vs Asymptotic Variance Estimation When
+Using Propensity Score Weighting with Continuous and Binary Outcomes.”
 *Statistics in Medicine* 41 (22): 4426–43.
 <https://doi.org/10.1002/sim.9519>.
 
@@ -1359,19 +1390,17 @@ Errors, Confidence Intervals, and Other Measures of Statistical
 Accuracy.” *Statistical Science* 1 (1): 54–75.
 <https://www.jstor.org/stable/2245500>.
 
-Gabriel, Erin E., Michael C. Sachs, Torben Martinussen, Ingeborg
-Waernbaum, Els Goetghebeur, Stijn Vansteelandt, and Arvid Sjölander.
-2024. “Inverse Probability of Treatment Weighting with Generalized
-Linear Outcome Models for Doubly Robust Estimation.” *Statistics in
-Medicine* 43 (3): 534–47. <https://doi.org/10.1002/sim.9969>.
+Gabriel, Erin E., Michael C. Sachs, Torben Martinussen, et al. 2024.
+“Inverse Probability of Treatment Weighting with Generalized Linear
+Outcome Models for Doubly Robust Estimation.” *Statistics in Medicine*
+43 (3): 534–47. <https://doi.org/10.1002/sim.9969>.
 
 Greifer, Noah, and Elizabeth A. Stuart. 2021. “Choosing the Estimand
 When Matching or Weighting in Observational Studies.” *arXiv:2106.10577
-\[Stat\]*, June. <https://arxiv.org/abs/2106.10577>.
+\[Stat\]*, June 19. <https://arxiv.org/abs/2106.10577>.
 
-Griffin, Beth Ann, Megan S. Schuler, Matt Cefalu, Lynsay Ayer, Mark
-Godley, Noah Greifer, Donna L. Coffman, and Daniel F. McCaffrey. 2023.
-“A Tutorial for Propensity Score Weighting for Moderation Analysis With
+Griffin, Beth Ann, Megan S. Schuler, Matt Cefalu, et al. 2023. “A
+Tutorial for Propensity Score Weighting for Moderation Analysis with
 Categorical Variables: An Application Examining Smoking Disparities
 Among Sexual Minority Adults.” *Medical Care* 61 (12): 836–45.
 <https://doi.org/10.1097/MLR.0000000000001922>.
@@ -1389,7 +1418,7 @@ Outcome.” *Biometrical Journal* 60 (6): 1151–63.
 
 Hansen, Stefan Nygaard, and Morten Overgaard. 2024. “Variance Estimation
 for Average Treatment Effects Estimated by g-Computation.” *Metrika*,
-April. <https://doi.org/10.1007/s00184-024-00962-4>.
+ahead of print, April. <https://doi.org/10.1007/s00184-024-00962-4>.
 
 Ho, Daniel E., Kosuke Imai, Gary King, and Elizabeth A. Stuart. 2007.
 “Matching as Nonparametric Preprocessing for Reducing Model Dependence
@@ -1416,8 +1445,7 @@ Score Weighting Analysis with Survival Outcome: Estimands, Estimation,
 and Inference.” *Statistics in Medicine* 37 (26): 3745–63.
 <https://doi.org/10.1002/sim.7839>.
 
-Nguyen, Tri-Long, Gary S. Collins, Jessica Spence, Jean-Pierre Daurès,
-P. J. Devereaux, Paul Landais, and Yannick Le Manach. 2017.
+Nguyen, Tri-Long, Gary S. Collins, Jessica Spence, et al. 2017.
 “Double-Adjustment in Propensity Score Matching Analysis: Choosing a
 Threshold for Considering Residual Imbalance.” *BMC Medical Research
 Methodology* 17: 78. <https://doi.org/10.1186/s12874-017-0338-0>.
@@ -1447,7 +1475,7 @@ Estimation in Inverse Probability Weighted Cox Models.” *Biometrics* 77
 (3): 1101–17. <https://doi.org/10.1111/biom.13332>.
 
 Snowden, Jonathan M., Sherri Rose, and Kathleen M. Mortimer. 2011.
-“Implementation of G-Computation on a Simulated Data Set: Demonstration
+“Implementation of g-Computation on a Simulated Data Set: Demonstration
 of a Causal Inference Technique.” *American Journal of Epidemiology* 173
 (7): 731–38. <https://doi.org/10.1093/aje/kwq472>.
 
@@ -1488,6 +1516,7 @@ American Statistician* 74 (4): 345–58.
 ## Code to Generate Data used in Examples
 
 ``` r
+
 #Generating data similar to Austin (2009) for demonstrating treatment effect estimation
 gen_X <- function(n) {
   X <- matrix(rnorm(9 * n), nrow = n, ncol = 9)
@@ -1565,13 +1594,11 @@ Y_S <- pmin(Y_S_, cens_time)
 d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S, Y_death)
 ```
 
-------------------------------------------------------------------------
-
-1.  Note: Previously, this guide recommended always including the
+[^1]: Note: Previously, this guide recommended always including the
     weights. We believe best practice is to omit them, though this does
     not mean previous analyses using weighted averages are invalid.
 
-2.  To verify that they are equal, supply the output of
+[^2]: To verify that they are equal, supply the output of
     [`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html)
     to
     [`hypotheses()`](https://rdrr.io/pkg/marginaleffects/man/hypotheses.html),
@@ -1581,17 +1608,17 @@ d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S, Y_death)
     [`avg_comparisons()`](https://rdrr.io/pkg/marginaleffects/man/comparisons.html)
     call.
 
-3.  Note that for low or high average expected risks computed with
+[^3]: Note that for low or high average expected risks computed with
     [`avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html),
     the confidence intervals may go below 0 or above 1; this is because
     an approximation is used. To avoid this problem, bootstrapping or
     simulation-based inference can be used instead.
 
-4.  Note: do not use `comparison = "ratioavg"` to compute the risk
+[^4]: Note: do not use `comparison = "ratioavg"` to compute the risk
     ratio. The confidence intervals around the estimate will be
     incorrect.
 
-5.  Currently, when `by` is used, M-estimation based standard errors
+[^5]: Currently, when `by` is used, M-estimation based standard errors
     cannot be computed, but all methods compatible with M-estimation
     yield identical results when using `by` vs. interacting the
     moderator with the other covariates in the weighting model. Here, we

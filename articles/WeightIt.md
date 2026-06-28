@@ -8,9 +8,9 @@ to estimate the causal parameters of marginal structural models. I will
 not go into the basics of causal inference methods here. For good
 introductory articles, see Austin
 ([2011](#ref-austinIntroductionPropensityScore2011)), Austin and Stuart
-([2015](#ref-austinMovingBestPractice2015)), Robins, Hernán, and
-Brumback ([2000](#ref-robinsMarginalStructuralModels2000)), or Thoemmes
-and Ong ([2016](#ref-thoemmesPrimerInverseProbability2016)).
+([2015](#ref-austinMovingBestPractice2015)), Robins et al.
+([2000](#ref-robinsMarginalStructuralModels2000)), or Thoemmes and Ong
+([2016](#ref-thoemmesPrimerInverseProbability2016)).
 
 Typically, the analysis of an observational study might proceed as
 follows: identify the covariates for which balance is required; assess
@@ -32,6 +32,7 @@ treatment. We’ll use the version of the data set that comes with the
 interested in the average treatment effect on the treated (ATT).
 
 ``` r
+
 library("cobalt")
 data("lalonde", package = "cobalt")
 head(lalonde)
@@ -51,6 +52,7 @@ covariates for which balance is desired (`age`, `educ`, `race`,
 examine the initial imbalance on the covariates:
 
 ``` r
+
 bal.tab(treat ~ age + educ + race + married + nodegree +
           re74 + re75,
         data = lalonde,
@@ -101,6 +103,7 @@ the method of estimation (`"glm"` for generalized linear model
 propensity score weights).
 
 ``` r
+
 library("WeightIt")
 W.out <- weightit(treat ~ age + educ + race + married + nodegree +
                     re74 + re75,
@@ -131,6 +134,7 @@ constitutes a “large enough” ESS is mostly relative, though, and must be
 considered with respect other constraints, including covariate balance.
 
 ``` r
+
 summary(W.out)
 ```
 
@@ -166,6 +170,7 @@ These weights have quite high variability, and yield an ESS of close to
 balance on our covariates.
 
 ``` r
+
 bal.tab(W.out, stats = c("m", "v"),
         thresholds = c(m = .05))
 ```
@@ -207,6 +212,7 @@ minimizing the negative entropy (a measure of dispersion) of the
 weights.
 
 ``` r
+
 W.out <- weightit(treat ~ age + educ + race + married + nodegree +
                     re74 + re75,
                   data = lalonde,
@@ -246,6 +252,7 @@ The variability of the weights has not changed much, but let’s see if
 there are any gains in terms of balance:
 
 ``` r
+
 bal.tab(W.out, stats = c("m", "v"),
         thresholds = c(m = .05))
 ```
@@ -258,7 +265,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_hispan  Binary        0 Balanced, <0.05           .
     ## race_white   Binary       -0 Balanced, <0.05           .
     ## married      Binary       -0 Balanced, <0.05           .
-    ## nodegree     Binary        0 Balanced, <0.05           .
+    ## nodegree     Binary       -0 Balanced, <0.05           .
     ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
@@ -293,6 +300,7 @@ use functions in *marginaleffects* to perform g-computation to extract a
 treatment effect estimation from the outcome model.
 
 ``` r
+
 # Fit outcome model
 fit <- lm_weightit(re78 ~ treat * (age + educ + race + married +
                                      nodegree + re74 + re75),
@@ -300,6 +308,7 @@ fit <- lm_weightit(re78 ~ treat * (age + educ + race + married +
 ```
 
 ``` r
+
 # G-computation for the treatment effect
 library("marginaleffects")
 
@@ -331,6 +340,7 @@ longitudinal treatment as well. This time, we’ll use the sample data set
 one row per unit.
 
 ``` r
+
 data("msmdata")
 
 head(msmdata)
@@ -358,6 +368,7 @@ Using *cobalt*, we can examine the initial imbalance at each time point
 and overall:
 
 ``` r
+
 library("cobalt") #if not already attached
 
 bal.tab(list(A_1 ~ X1_0 + X2_0,
@@ -427,6 +438,7 @@ for longitudinal treatments. We’ll use `method = "glm"` and
 using logistic regression.
 
 ``` r
+
 Wmsm.out <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                              A_2 ~ X1_1 + X2_1 +
                                A_1 + X1_0 + X2_0,
@@ -468,6 +480,7 @@ take a look at the quality of the weights with
 point treatments.
 
 ``` r
+
 summary(Wmsm.out)
 ```
 
@@ -566,6 +579,7 @@ with respect to variability. Next, we’ll examine how well they perform
 with respect to covariate balance.
 
 ``` r
+
 bal.tab(Wmsm.out, stats = c("m", "ks"),
         which.time = .none)
 ```
@@ -608,6 +622,7 @@ First, we fit a marginal structural model for the outcome using
 with the `weightit` object supplied:
 
 ``` r
+
 # Fit outcome model
 fit <- glm_weightit(Y_B ~ A_1 * A_2 * A_3 * (X1_0 + X2_0),
                     data = msmdata,
@@ -620,6 +635,7 @@ treatment regime using
 [`marginaleffects::avg_predictions()`](https://rdrr.io/pkg/marginaleffects/man/predictions.html):
 
 ``` r
+
 library("marginaleffects")
 
 p <- avg_predictions(fit, variables = c("A_1", "A_2", "A_3"))
@@ -654,6 +670,7 @@ three time points vs. the regime with treatment for all three time
 points, we would run
 
 ``` r
+
 hypotheses(p, "b8 - b1 = 0")
 ```
 

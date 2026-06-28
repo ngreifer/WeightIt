@@ -224,19 +224,19 @@ more information about them, including additional arguments and outputs
 (e.g., when `include.obj = TRUE`), how missing values are treated, which
 estimands are allowed, and whether sampling weights are allowed.
 
-|                                                                                    |                                                                            |
-|------------------------------------------------------------------------------------|----------------------------------------------------------------------------|
-| [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.md)             | Propensity score weighting using generalized linear models                 |
-| [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.md)             | Propensity score weighting using generalized boosted modeling              |
-| [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md)           | Covariate Balancing Propensity Score weighting                             |
-| [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.md)       | Non-parametric Covariate Balancing Propensity Score weighting              |
-| [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md)           | Entropy balancing                                                          |
-| [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.md)             | Inverse probability tilting                                                |
-| [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.md) | Stable balancing weights                                                   |
-| [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.md)         | Propensity score weighting using SuperLearner                              |
-| [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.md)           | Propensity score weighting using Bayesian additive regression trees (BART) |
-| [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.md)       | Energy balancing                                                           |
-| [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.md)             | Characteristic function distance balancing                                 |
+|  |  |
+|----|----|
+| [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.md) | Propensity score weighting using generalized linear models |
+| [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.md) | Propensity score weighting using generalized boosted modeling |
+| [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md) | Covariate Balancing Propensity Score weighting |
+| [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.md) | Non-parametric Covariate Balancing Propensity Score weighting |
+| [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.md) | Entropy balancing |
+| [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.md) | Inverse probability tilting |
+| [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.md) | Stable balancing weights |
+| [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.md) | Propensity score weighting using SuperLearner |
+| [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.md) | Propensity score weighting using Bayesian additive regression trees (BART) |
+| [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.md) | Energy balancing |
+| [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.md) | Characteristic function distance balancing |
 
 `method` can also be supplied as a user-defined function; see
 [`method_user`](https://ngreifer.github.io/WeightIt/reference/method_user.md)

@@ -18,8 +18,8 @@
     }
   };
 </script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Weighting for Covariate Balance in Observational Studies">
 <meta name="description" content='Generates balancing weights for causal effect estimation in observational studies with binary, multi-category, or continuous point or longitudinal treatments by easing and extending the functionality of several R packages and providing in-house estimation methods. Available methods include those that rely on parametric modeling, optimization, and machine learning. Also allows for assessment of weights and checking of covariate balance by interfacing directly with the cobalt package. Methods for estimating weighted regression models that take into account uncertainty in the estimation of the weights via M-estimation or bootstrapping are available. See the vignette "Installing Supporting Packages" for instructions on how to install any optional package WeightIt uses, including those that may not be on CRAN.'>
@@ -34,7 +34,7 @@
 
     <a class="navbar-brand me-2" href="index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -178,52 +178,52 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Method</th>
 <th><code>method</code></th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Binary regression PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_glm.html"><code>"glm"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Generalized boosted modeling PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_gbm.html"><code>"gbm"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Covariate balancing PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_cbps.html"><code>"cbps"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Non-Parametric covariate balancing PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_npcbps.html"><code>"npcbps"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Entropy balancing</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_ebal.html"><code>"ebal"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Inverse probability tilting</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_ipt.html"><code>"ipt"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Stable balancing weights</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_optweight.html"><code>"optweight"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>SuperLearner PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_super.html"><code>"super"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Bayesian additive regression trees PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_bart.html"><code>"bart"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Energy balancing</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_energy.html"><code>"energy"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Characteristic function distance balancing</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_cfd.html"><code>"cfd"</code></a></td>
 </tr>
@@ -238,52 +238,52 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Method</th>
 <th><code>method</code></th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Multinomial regression PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_glm.html"><code>"glm"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Generalized boosted modeling PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_gbm.html"><code>"gbm"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Covariate balancing PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_cbps.html"><code>"cbps"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Non-parametric covariate balancing PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_npcbps.html"><code>"npcbps"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Entropy balancing</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_ebal.html"><code>"ebal"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Inverse probability tilting</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_ipt.html"><code>"ipt"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Stable balancing weights</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_optweight.html"><code>"optweight"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>SuperLearner PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_super.html"><code>"super"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Bayesian additive regression trees PS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_bart.html"><code>"bart"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Energy balancing</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_energy.html"><code>"energy"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Characteristic function distance balancing</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_cfd.html"><code>"cfd"</code></a></td>
 </tr>
@@ -298,44 +298,44 @@
 <col width="50%">
 <col width="50%">
 </colgroup>
-<thead><tr class="header">
+<thead><tr>
 <th>Method</th>
 <th><code>method</code></th>
 </tr></thead>
 <tbody>
-<tr class="odd">
+<tr>
 <td>Generalized linear model GPS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_glm.html"><code>"glm"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Generalized boosted modeling GPS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_gbm.html"><code>"gbm"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Covariate balancing GPS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_cbps.html"><code>"cbps"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Non-parametric covariate balancing GPS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_npcbps.html"><code>"npcbps"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Entropy balancing</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_ebal.html"><code>"ebal"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Stable balancing weights</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_optweight.html"><code>"optweight"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>SuperLearner GPS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_super.html"><code>"super"</code></a></td>
 </tr>
-<tr class="even">
+<tr>
 <td>Bayesian additive regression trees GPS</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_bart.html"><code>"bart"</code></a></td>
 </tr>
-<tr class="odd">
+<tr>
 <td>Distance covariance optimal weighting</td>
 <td><a href="https://ngreifer.github.io/WeightIt/reference/method_energy.html"><code>"energy"</code></a></td>
 </tr>
