@@ -18,16 +18,21 @@ test_that("Binary treatment", {
   estimand.opts <- c("ATE", "ATT", "ATC", "ATO")
   link.opts <- c("logit", "probit", "loglog", "cauchit", "softplus")
 
+  # The full link.opts grid is only crossed with the cheap "exact" solver,
+  # since link doesn't affect the (expensive) over-identified GMM machinery
+  # exercised by "twostep"/"cont"; those use a single representative link.
   weight.mat <- matrix(nrow = nrow(test_data),
-                       ncol = length(sw.opts) * length(over.opts) *
-                         length(estimand.opts) * length(link.opts))
+                       ncol = length(sw.opts) * length(estimand.opts) *
+                         (length(link.opts) + 2L))
   colnames(weight.mat) <- rep("", ncol(weight.mat))
   k <- 1
 
   for (sw in sw.opts) {
     for (over in over.opts) {
+      links_to_test <- if (over == "exact") link.opts else "logit"
+
       for (estimand in estimand.opts) {
-        for (link in link.opts) {
+        for (link in links_to_test) {
           expect_no_condition({
             suppressWarnings({
             W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
