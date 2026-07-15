@@ -8,6 +8,15 @@
 - `link = "softplus"` can be used with `method = "cbps"` and
   `method = "ipt"` to use the softplus link.
 
+- Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could
+  cause the FISTA solver to stop before the requested balance tolerance
+  was reliably achieved. Thanks to Ivan Geshev for pointing it out.
+
+- Fixed a bug in `method = "ebal"` with `tols` greater than 0, a
+  continuous treatment, and sampling weights that could allow the
+  treatment-covariate correlation to slightly exceed the requested
+  tolerance.
+
 ## `WeightIt` 1.7.0
 
 CRAN release: 2026-04-22

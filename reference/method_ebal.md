@@ -308,7 +308,7 @@ cobalt::bal.tab(W1)
 #>             Type Diff.Adj
 #> age      Contin.        0
 #> educ     Contin.        0
-#> married   Binary       -0
+#> married   Binary        0
 #> nodegree  Binary        0
 #> re74     Contin.        0
 #> 
@@ -452,14 +452,14 @@ summary(W1b)
 #> 
 #>           Min                                 Max
 #> treated 1.                     ||           1.   
-#> control 0.023 |---------------------------| 1.738
+#> control 0.023 |---------------------------| 1.739
 #> 
 #> - Units with the 5 most extreme weights by group:
 #>                                       
 #>              5     4     3     2     1
 #>  treated     1     1     1     1     1
 #>            595   589   269   409   296
-#>  control 1.277 1.284 1.302 1.423 1.738
+#>  control 1.277 1.284 1.302 1.423 1.739
 #> 
 #> - Weight statistics:
 #> 
@@ -471,14 +471,14 @@ summary(W1b)
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
-#> Weighted    274.27     185
+#> Weighted    274.26     185
 
 cobalt::bal.tab(W1, weights = list(inexact = W1b))
 #> Balance Measures
 #>             Type Diff.weightit Diff.inexact
 #> age      Contin.             0         0.02
 #> educ     Contin.             0         0.02
-#> married   Binary            -0        -0.02
+#> married   Binary             0        -0.02
 #> nodegree  Binary             0         0.02
 #> re74     Contin.             0        -0.02
 #> 
@@ -486,5 +486,5 @@ cobalt::bal.tab(W1, weights = list(inexact = W1b))
 #>          Control Treated
 #> All       429.       185
 #> weightit  252.12     185
-#> inexact   274.27     185
+#> inexact   274.26     185
 ```

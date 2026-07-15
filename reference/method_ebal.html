@@ -159,7 +159,7 @@ vignette("estimating-effects") for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -426,7 +426,7 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       -0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -570,14 +570,14 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           Min                                 Max</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> treated 1.                     ||           1.   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.023 |---------------------------| 1.738</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> control 0.023 |---------------------------| 1.739</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights by group</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              5     4     3     2     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  treated     1     1     1     1     1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            595   589   269   409   296</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.277 1.284 1.302 1.423 1.738</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  control 1.277 1.284 1.302 1.423 1.739</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -589,14 +589,14 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>            Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted  429.       185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    274.27     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    274.26     185</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">cobalt</span><span class="fu">::</span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W1</span>, weights <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>inexact <span class="op">=</span> <span class="va">W1b</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Diff.weightit Diff.inexact</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.             0         0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.             0         0.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary            -0        -0.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary             0        -0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary             0         0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.             0        -0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -604,7 +604,7 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span>          Control Treated</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> All       429.       185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> weightit  252.12     185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> inexact   274.27     185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> inexact   274.26     185</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,6 +48,8 @@
 <code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
 <ul><li><p>Fixed a bug when using energy balancing with <code>estimand = "ATC"</code> and <code>moments</code> greater than 0.</p></li>
 <li><p><code>link = "softplus"</code> can be used with <code>method = "cbps"</code> and <code>method = "ipt"</code> to use the softplus link.</p></li>
+<li><p>Fixed a bug in <code>method = "ebal"</code> with <code>tols</code> greater than 0 that could cause the FISTA solver to stop before the requested balance tolerance was reliably achieved. Thanks to Ivan Geshev for pointing it out.</p></li>
+<li><p>Fixed a bug in <code>method = "ebal"</code> with <code>tols</code> greater than 0, a continuous treatment, and sampling weights that could allow the treatment-covariate correlation to slightly exceed the requested tolerance.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.7.0" id="weightit-170">
