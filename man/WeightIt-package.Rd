@@ -22,5 +22,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Noah Greifer \email{noah.greifer@gmail.com} (\href{https://orcid.org/0000-0003-3067-7154}{ORCID})
 
+Authors:
+\itemize{
+  \item Noah Greifer \email{noah.greifer@gmail.com} (\href{https://orcid.org/0000-0003-3067-7154}{ORCID})
+}
+
 }
 \keyword{internal}
