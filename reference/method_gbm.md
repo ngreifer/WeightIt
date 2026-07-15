@@ -24,11 +24,11 @@ section for more details.
 ### Binary Treatments
 
 For binary treatments, this method estimates the propensity scores using
-[`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) and then
-selects the optimal tuning parameter values using the method specified
-in the `criterion` argument. The following estimands are allowed: ATE,
-ATT, ATC, ATO, and ATM. The weights are computed from the estimated
-propensity scores using
+[`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
+and then selects the optimal tuning parameter values using the method
+specified in the `criterion` argument. The following estimands are
+allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the
+estimated propensity scores using
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md),
 which implements the standard formulas. Weights can also be computed
 using marginal mean weighting through stratification for the ATE, ATT,
@@ -39,11 +39,11 @@ for details.
 ### Multi-Category Treatments
 
 For binary treatments, this method estimates the propensity scores using
-[`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) and then
-selects the optimal tuning parameter values using the method specified
-in the `criterion` argument. The following estimands are allowed: ATE,
-ATT, ATC, ATO, and ATM. The weights are computed from the estimated
-propensity scores using
+[`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
+and then selects the optimal tuning parameter values using the method
+specified in the `criterion` argument. The following estimands are
+allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the
+estimated propensity scores using
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md),
 which implements the standard formulas. Weights can also be computed
 using marginal mean weighting through stratification for the ATE, ATT,
@@ -55,9 +55,9 @@ for details.
 
 For continuous treatments, this method estimates the generalized
 propensity score using
-[`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) and then
-selects the optimal tuning parameter values using the method specified
-in the `criterion` argument.
+[`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
+and then selects the optimal tuning parameter values using the method
+specified in the `criterion` argument.
 
 ### Longitudinal Treatments
 
@@ -192,9 +192,9 @@ The following additional arguments can be specified:
 
   A string with the distribution used in the loss function of the
   boosted model. This is supplied to the `distribution` argument in
-  [`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) . For
-  binary treatments, `"bernoulli"` and `"adaboost"` are available, with
-  `"bernoulli"` the default. For multi-category treatments, only
+  [`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
+  . For binary treatments, `"bernoulli"` and `"adaboost"` are available,
+  with `"bernoulli"` the default. For multi-category treatments, only
   `"multinomial"` is allowed. For continuous treatments `"gaussian"`,
   `"laplace"`, and `"tdist"` are available, with `"gaussian"` the
   default. This argument is tunable.
@@ -256,10 +256,10 @@ The following additional arguments can be specified:
   binary and continuous treatments. This argument is tunable.
 
 All other arguments take on the defaults of those in
-[`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) , and some
-are not used at all. For binary and multi-category treatments with a
-with cross-validation used as the criterion, `class.stratify.cv` is set
-to `TRUE` by default.
+[`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
+, and some are not used at all. For binary and multi-category treatments
+with a with cross-validation used as the criterion, `class.stratify.cv`
+is set to `TRUE` by default.
 
 The `w` argument in `gbm.fit()` is ignored because sampling weights are
 passed using `s.weights`.
@@ -388,8 +388,8 @@ Estimating Generalized Propensity Scores with Continuous Treatments.
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 
-[`gbm::gbm.fit()`](https://rdrr.io/pkg/gbm/man/gbm.fit.html) for the
-fitting function.
+[`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
+for the fitting function.
 
 ## Examples
 

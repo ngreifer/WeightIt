@@ -127,9 +127,10 @@ with some cost in precision.
   (generalized) propensity scores. Default is `"logit"`, which is used
   in the original description of the method by Graham, Pinto, and Egel
   (2012), but `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`,
-  and `"clog"` are also allowed. Note that negative weights are possible
-  with these last two and they should be used with caution. An object of
-  class `"link-glm"` can also be supplied. The argument is passed to
+  `"clog"`, and `"softplus"` are also allowed. Note that negative
+  weights are possible with these last two and they should be used with
+  caution. An object of class `"link-glm"` can also be supplied. The
+  argument is passed to
   [`quasibinomial()`](https://rdrr.io/r/stats/family.html).
 
 The `stabilize` argument is ignored.

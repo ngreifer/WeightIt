@@ -181,7 +181,7 @@ vignette("estimating-effects") for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9001</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -364,7 +364,7 @@ required.</p>
 <dd><p><code>logical</code>; when <code>over = TRUE</code>, whether to use the two-step approximation to the generalized method of moments variance. Default is <code>TRUE</code>. Setting to <code>FALSE</code> increases computation time but may improve estimation. Ignored with a warning when <code>over = FALSE</code>.</p></dd>
 
 <dt><code>link</code></dt>
-<dd><p>the link used in the generalized linear model for the propensity scores when treatment is binary. Default is <code>"logit"</code> for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including <code>"probit"</code>, <code>"cauchit"</code>, <code>"cloglog"</code>, <code>"loglog"</code>, <code>"log"</code>, <code>"clog"</code>, and <code>"identity"</code>. Note that negative weights are possible with these last three and they should be used with caution. An object of class <code>"link-glm"</code> can also be supplied. The argument is passed to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">quasibinomial()</a></code>. Ignored for multi-category, continuous, and longitudinal treatments.</p></dd>
+<dd><p>the link used in the generalized linear model for the propensity scores when treatment is binary. Default is <code>"logit"</code> for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including <code>"probit"</code>, <code>"cauchit"</code>, <code>"cloglog"</code>, <code>"loglog"</code>, <code>"log"</code>, <code>"clog"</code>, <code>"softplus"</code>, and <code>"identity"</code>. Note that negative weights are possible with these last three and they should be used with caution. An object of class <code>"link-glm"</code> can also be supplied. The argument is passed to <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">quasibinomial()</a></code>. Ignored for multi-category, continuous, and longitudinal treatments.</p></dd>
 
 <dt><code>reltol</code></dt>
 <dd><p>the relative tolerance for convergence of the optimization. Passed to the <code>control</code> argument of <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>. Default is <code>1e-10</code>.</p></dd>
@@ -771,7 +771,7 @@ tilting, which work similarly.</p></div>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

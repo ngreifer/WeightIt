@@ -18,10 +18,6 @@ weighting methods.
 .weightit_methods
 ```
 
-## Format
-
-An object of class `list` of length 11.
-
 ## Details
 
 Each component is itself a list containing the following components:

@@ -5,6 +5,9 @@
 - Fixed a bug when using energy balancing with `estimand = "ATC"` and
   `moments` greater than 0.
 
+- `link = "softplus"` can be used with `method = "cbps"` and
+  `method = "ipt"` to use the softplus link.
+
 ## `WeightIt` 1.7.0
 
 CRAN release: 2026-04-22

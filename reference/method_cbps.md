@@ -175,11 +175,11 @@ The following additional arguments can be specified:
   regression, which is used in the original description of the method by
   Imai and Ratkovic (2014), but others are allowed, including
   `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`,
-  and `"identity"`. Note that negative weights are possible with these
-  last three and they should be used with caution. An object of class
-  `"link-glm"` can also be supplied. The argument is passed to
-  [`quasibinomial()`](https://rdrr.io/r/stats/family.html). Ignored for
-  multi-category, continuous, and longitudinal treatments.
+  `"softplus"`, and `"identity"`. Note that negative weights are
+  possible with these last three and they should be used with caution.
+  An object of class `"link-glm"` can also be supplied. The argument is
+  passed to [`quasibinomial()`](https://rdrr.io/r/stats/family.html).
+  Ignored for multi-category, continuous, and longitudinal treatments.
 
 - `reltol`:
 
