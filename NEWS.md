@@ -7,6 +7,10 @@ WeightIt News and Updates
 
 * `link = "softplus"` can be used with `method = "cbps"` and `method = "ipt"` to use the softplus link.
 
+* Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could cause the FISTA solver to stop before the requested balance tolerance was reliably achieved. Thanks to Ivan Geshev for pointing it out.
+
+* Fixed a bug in `method = "ebal"` with `tols` greater than 0, a continuous treatment, and sampling weights that could allow the treatment-covariate correlation to slightly exceed the requested tolerance.
+
 # `WeightIt` 1.7.0
 
 * `coxph_weightit()` can now estimate standard errors that account for estimation of the weights using M-estimation as described by [Shu et al. (2021)](https://doi.org/10.1111/biom.13332).

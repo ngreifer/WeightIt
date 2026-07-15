@@ -16,7 +16,7 @@ test_that("Binary treatment", {
   sw.opts <- c(FALSE, TRUE)
   over.opts <- c("exact", "twostep", "cont")
   estimand.opts <- c("ATE", "ATT", "ATC", "ATO")
-  link.opts <- c("logit", "probit", "loglog", "cauchit")
+  link.opts <- c("logit", "probit", "loglog", "cauchit", "softplus")
 
   weight.mat <- matrix(nrow = nrow(test_data),
                        ncol = length(sw.opts) * length(over.opts) *

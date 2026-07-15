@@ -541,7 +541,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   targets[dist_ind] <- cobalt::col_w_mean(C[, dist_ind, drop = FALSE], s.weights = s.weights)
 
   tols_ <- rep.int(0, ncol(C))
-  tols_[-dist_ind] <- tols * (1 - 1 / N)
+  tols_[-dist_ind] <- tols * (1 - 1 / ESS(s.weights))
   tols <- tols_
 
   eb <- function(C, s.weights_t, Q, M) {
@@ -711,6 +711,7 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
 
     Z <- Z_new
 
+    viol <- pmax(abs(grad_EB_smooth(Z, w)) - tols, 0)
 
     if (sum((Y - Z) * (Z - Z_old)) >= 0) {
       # FISTA momentum restart
@@ -731,7 +732,8 @@ weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     # Termination check on full loss (including L1)
     loss_new <- lossY + sum(tols * abs(Z))
 
-    if (i > 1 && abs(loss_new - loss_old) < reltol * (abs(loss_new) + reltol)) {
+    if (i > 1 && abs(loss_new - loss_old) < reltol * (abs(loss_new) + reltol) &&
+        max(viol) < 5e-6) {
       break
     }
 
