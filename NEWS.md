@@ -5,6 +5,8 @@ WeightIt News and Updates
 
 * Fixed a bug when using energy balancing with `estimand = "ATC"` and `moments` greater than 0.
 
+* `link = "softplus"` can be used with `method = "cbps"` and `method = "ipt"` to use the softplus link.
+
 # `WeightIt` 1.7.0
 
 * `coxph_weightit()` can now estimate standard errors that account for estimation of the weights using M-estimation as described by [Shu et al. (2021)](https://doi.org/10.1111/biom.13332).

@@ -140,7 +140,8 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   arg::arg_matrix(x)
 
   if (rlang::is_string(link)) {
-    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog"))
+    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog",
+                             "softplus"))
 
     link <- .make_link(link)
   }

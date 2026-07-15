@@ -78,7 +78,7 @@
 #'     }
 #'     \item{`twostep`}{`logical`; when `over = TRUE`, whether to use the two-step approximation to the generalized method of moments variance. Default is `TRUE`. Setting to `FALSE` increases computation time but may improve estimation. Ignored with a warning when `over = FALSE`.
 #'     }
-#'     \item{`link`}{the link used in the generalized linear model for the propensity scores when treatment is binary. Default is `"logit"` for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`, and `"identity"`. Note that negative weights are possible with these last three and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()]. Ignored for multi-category, continuous, and longitudinal treatments.
+#'     \item{`link`}{the link used in the generalized linear model for the propensity scores when treatment is binary. Default is `"logit"` for logistic regression, which is used in the original description of the method by Imai and Ratkovic (2014), but others are allowed, including `"probit"`, `"cauchit"`, `"cloglog"`, `"loglog"`, `"log"`, `"clog"`, `"softplus"`, and `"identity"`. Note that negative weights are possible with these last three and they should be used with caution. An object of class `"link-glm"` can also be supplied. The argument is passed to [quasibinomial()]. Ignored for multi-category, continuous, and longitudinal treatments.
 #'     }
 #'     \item{`reltol`}{the relative tolerance for convergence of the optimization. Passed to the `control` argument of `optim()`. Default is `1e-10`.
 #'     }
@@ -310,7 +310,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   if (rlang::is_string(link)) {
     arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit",
-                             "log", "clog", "identity"))
+                             "log", "clog", "identity", "softplus"))
 
     link <- .make_link(link)
 

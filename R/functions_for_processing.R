@@ -2002,10 +2002,10 @@ generalized_inverse <- function(sigma, .try = TRUE) {
   link0 <- try(make.link(link), silent = TRUE)
 
   if (!null_or_error(link0)) {
-    return(link)
+    return(link0)
   }
 
-  if (!rlang::is_string(link) || !link %in% c("clog", "loglog")) {
+  if (!rlang::is_string(link)) {
     arg::err("link function not recognized")
   }
 
@@ -2018,13 +2018,23 @@ generalized_inverse <- function(sigma, .try = TRUE) {
   }
   else if (link == "loglog") {
     linkfun <- function(mu) -log(-log(mu))
-    linkinv <- function(eta) exp(-exp(-eta)) |> squish(.Machine$double.eps)
+    linkinv <- function(eta) exp(-exp(-eta)) |> squish(.Machine$double.eps, Inf)
     mu.eta <- function(eta) {
       eta <- squish(eta, -Inf, 700)
       exp(-eta - exp(-eta)) |> squish(.Machine$double.eps, Inf)
     }
     valideta <- function(eta) TRUE
     name <- "loglog"
+  }
+  else if (link == "softplus") {
+    linkfun <- function(mu, a = 10) s_log(mu, a)
+    linkinv <- function(eta, a = 10) s_exp(eta, a)
+    mu.eta <- function(eta, a = 10) plogis(a * eta)
+    valideta <- function(eta) TRUE
+    name <- "softplus"
+  }
+  else {
+    arg::err("link function not recognized")
   }
 
   out <- list(linkfun = linkfun,
@@ -2090,4 +2100,16 @@ came_from_weightit <- function(obj) {
 
   identical(fn, weightit, ignore.environment = TRUE) ||
     identical(fn, weightitMSM, ignore.environment = TRUE)
+}
+
+s_exp <- function(x, a = 10) {
+  log1p(exp(a * x)) / a
+}
+
+s_log <- function(x, a = 10) {
+  z <- numeric(length(x))
+  .i <- x < log(2) / a
+  z[.i] <- log(expm1(a * x[.i])) / a
+  z[!.i] <- x[!.i] + log(-expm1(-a * x[!.i])) / a
+  z
 }
