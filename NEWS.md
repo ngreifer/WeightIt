@@ -3,6 +3,10 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
+* M-estimation-based standard errors are now available when `by` is supplied to `weightit()`. Previously, specifying `by` omitted the M-estimation components entirely; now the per-stratum components are combined so that `glm_weightit()` produces standard errors asymptotically equivalent to those from estimating the weights from a single model in which the `by` variable is fully interacted with all the covariates. This works for `method` values `"glm"` (including `link = "br.logit"`), `"ebal"`, `"cbps"` (just-identified), and `"ipt"`, and composes with `stabilize`.
+
+* Similarly, M-estimation-based standard errors are now available when `by` is supplied to `weightitMSM()`, giving standard errors asymptotically equivalent to interacting the `by` variable with all the covariates at every time point. This works for `method = "glm"` and `method = "cbps"` (with `is.MSM.method = FALSE`) and composes with stabilization.
+
 * `link = "softplus"` can be used with `method = "cbps"` and `method = "ipt"` to use the softplus link.
 
 * Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could cause the FISTA solver to stop before the requested balance tolerance was reliably achieved. Thanks to Ivan Geshev for pointing it out.

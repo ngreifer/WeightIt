@@ -74,7 +74,13 @@
 #' When `keep.mparts` is `TRUE` (the default) and the chosen method is
 #' compatible with M-estimation, the components related to M-estimation for use
 #' in [glm_weightit()] are stored in the `"Mparts.list"` attribute. When `by` is
-#' specified, `keep.mparts` is set to `FALSE`.
+#' specified, the per-stratum components are combined into `"Mparts.list"` so
+#' that the standard errors produced by [glm_weightit()] are asymptotically
+#' equivalent to those from estimating the weights from models in which the `by`
+#' variable is fully interacted with all the covariates at every time point. (For
+#' `method = "cbps"`, this requires `is.MSM.method = FALSE`, i.e., estimating a
+#' separate model at each time point, as M-estimation is not supported for the
+#' single-model MSM version of CBPS.)
 #'
 #' @details
 #' Currently only "wide" data sets, where each row corresponds to a
@@ -305,7 +311,9 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     w <- obj[["weights"]]
     stabout <- NULL
     obj.list <- obj[["fit.obj"]]
-    Mparts.list <- .attr(obj, "Mparts")
+    #Wrap into the same list-of-lists shape used by the per-time-point path below
+    #so the shared combine step can flatten uniformly.
+    Mparts.list <- list(clear_null(list(.attr(obj, "Mparts"))))
   }
   else {
     if (is_not_null(A[["link"]])) {
@@ -345,7 +353,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
       w.list[i] <- list(obj[["weights"]])
       ps.list[i] <- list(obj[["ps"]])
       obj.list[i] <- list(obj[["fit.obj"]])
-      Mparts.list[i] <- list(.attr(obj, "Mparts"))
+      #A list of parts for this time point: one per `by` group (already expanded
+      #to full-sample size by weightit.fit()) when by has >1 level, otherwise the
+      #single Mparts. Empty when the method supplies no Mparts.
+      Mparts.list[[i]] <- clear_null(.attr(obj, "Mparts.list") %or% list(.attr(obj, "Mparts")))
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
@@ -391,20 +402,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         sw.list[[i]] <- 1 / sw_obj[["weights"]]
         stabout[[i]] <- stab.f[-2L]
 
-        stab.Mparts.list[i] <- list(.attr(sw_obj, "Mparts"))
-
-        if (is_not_null(stab.Mparts.list[[i]])) {
-          #Invert wfun and compute derivative of inverted wfun
-          .wfun <- stab.Mparts.list[[i]]$wfun
-          stab.Mparts.list[[i]]$wfun <- Invert(.wfun)
-
-          if (is_not_null(stab.Mparts.list[[i]]$dw_dBtreat)) {
-            .dw_dBtreat <- stab.Mparts.list[[i]]$dw_dBtreat
-            stab.Mparts.list[[i]]$dw_dBtreat <- function(Btreat, Xtreat, A, SW) {
-              -.dw_dBtreat(Btreat, Xtreat, A, SW) / .wfun(Btreat, Xtreat, A)^2
-            }
-          }
-        }
+        #Invert each numerator part (one per `by` group when by has >1 level).
+        stab.Mparts.list[[i]] <- lapply(
+          clear_null(.attr(sw_obj, "Mparts.list") %or% list(.attr(sw_obj, "Mparts"))),
+          .invert_num_Mpart)
       }
     }
 
@@ -451,7 +452,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   out <- clear_null(out)
 
   if (keep.mparts && all(lengths(Mparts.list) > 0L)) {
-    attr(out, "Mparts.list") <- clear_null(c(Mparts.list, stab.Mparts.list))
+    #Each slot holds a list of parts (per time point, and per `by` group within a
+    #time point); flatten one level into a single stacked Mparts.list.
+    attr(out, "Mparts.list") <- clear_null(c(do.call("c", Mparts.list),
+                                             do.call("c", stab.Mparts.list)))
   }
 
   class(out) <- c("weightitMSM", "weightit")

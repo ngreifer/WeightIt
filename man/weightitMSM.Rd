@@ -127,7 +127,13 @@ A \code{weightitMSM} object with the following elements:
 When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is
 compatible with M-estimation, the components related to M-estimation for use
 in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts.list"} attribute. When \code{by} is
-specified, \code{keep.mparts} is set to \code{FALSE}.
+specified, the per-stratum components are combined into \code{"Mparts.list"} so
+that the standard errors produced by \code{\link[=glm_weightit]{glm_weightit()}} are asymptotically
+equivalent to those from estimating the weights from models in which the \code{by}
+variable is fully interacted with all the covariates at every time point. (For
+\code{method = "cbps"}, this requires \code{is.MSM.method = FALSE}, i.e., estimating a
+separate model at each time point, as M-estimation is not supported for the
+single-model MSM version of CBPS.)
 }
 \description{
 \code{weightitMSM()} allows for the easy generation of balancing

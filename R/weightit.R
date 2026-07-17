@@ -98,7 +98,13 @@
 #' When `keep.mparts` is `TRUE` (the default) and the chosen method is
 #' compatible with M-estimation, the components related to M-estimation for use
 #' in [glm_weightit()] are stored in the `"Mparts"` attribute. When `by` is
-#' specified, `keep.mparts` is set to `FALSE`.
+#' specified, the per-stratum M-estimation components are instead combined and
+#' stored in the `"Mparts.list"` attribute; the resulting standard errors
+#' produced by [glm_weightit()] are asymptotically equivalent to those from
+#' estimating the weights from a single model in which the `by` variable is fully
+#' interacted with all the covariates. The same is true for [weightitMSM()],
+#' where the equivalent model interacts the `by` variable with all the covariates
+#' at every time point.
 #'
 #' @details
 #' The primary purpose of `weightit()` is as a dispatcher to functions
@@ -405,24 +411,27 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
               obj = obj$fit.obj) |>
     clear_null()
 
-  if (keep.mparts && is_not_null(.attr(obj, "Mparts"))) {
+  #The denominator model contributes either a single Mparts (no `by` or one `by`
+  #group) or an Mparts.list (one expanded part per `by` group, already stacked
+  #block-diagonally by weightit.fit()).
+  den.parts <- clear_null(.attr(obj, "Mparts.list") %or% list(.attr(obj, "Mparts")))
+
+  if (keep.mparts && is_not_null(den.parts)) {
     if (is_null(stabilize)) {
-      attr(out, "Mparts") <- .attr(obj, "Mparts")
+      if (length(den.parts) == 1L) {
+        attr(out, "Mparts") <- den.parts[[1L]]
+      }
+      else {
+        attr(out, "Mparts.list") <- den.parts
+      }
     }
     else {
-      stab.Mparts <- .attr(sw_obj, "Mparts")
-      #Invert wfun and compute derivative of inverted wfun
-      .wfun <- stab.Mparts$wfun
-      stab.Mparts$wfun <- Invert(.wfun)
+      #Stabilization: append the (inverted) numerator part(s), which likewise may
+      #be a single Mparts or one per `by` group.
+      num.parts <- clear_null(.attr(sw_obj, "Mparts.list") %or% list(.attr(sw_obj, "Mparts")))
+      num.parts <- lapply(num.parts, .invert_num_Mpart)
 
-      if (is_not_null(stab.Mparts$dw_dBtreat)) {
-        .dw_dBtreat <- stab.Mparts$dw_dBtreat
-        stab.Mparts$dw_dBtreat <- function(Btreat, Xtreat, A, SW) {
-          -.dw_dBtreat(Btreat, Xtreat, A, SW) / .wfun(Btreat, Xtreat, A)^2
-        }
-      }
-
-      attr(out, "Mparts.list") <- list(.attr(obj, "Mparts"), stab.Mparts)
+      attr(out, "Mparts.list") <- c(den.parts, num.parts)
     }
   }
 

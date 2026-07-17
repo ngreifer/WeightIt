@@ -238,6 +238,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
   info <- make_list(levels(by.factor))
 
+  Mparts.list <- make_list(levels(by.factor))
+
   obj <- NULL
 
   .check_required_packages(method)
@@ -303,6 +305,12 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       fit.obj[[i]] <- obj$fit.obj
     }
 
+    #Expand this group's Mparts to full-sample size so the per-group parts can be
+    #stacked block-diagonally (equivalent to interacting `by` with all predictors).
+    #Single-bracket assignment keeps a NULL entry in place (as length 0) rather
+    #than deleting it, so the all(lengths > 0L) guard below stays correct.
+    Mparts.list[i] <- list(.expand_Mparts_by(obj$Mparts, by.factor == i, treat))
+
     info[[i]] <- obj$info
   }
 
@@ -320,6 +328,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
   if (nlevels(by.factor) == 1L) {
     attr(out, "Mparts") <- obj$Mparts
+  }
+  else if (all(lengths(Mparts.list) > 0L)) {
+    #Every `by` group supplied Mparts; stack them (mirrors weightitMSM())
+    attr(out, "Mparts.list") <- Mparts.list
   }
 
   if (is_not_null(info) && nlevels(by.factor) == 1L) {

@@ -126,7 +126,13 @@ A \code{weightit} object with the following elements:
 When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is
 compatible with M-estimation, the components related to M-estimation for use
 in \code{\link[=glm_weightit]{glm_weightit()}} are stored in the \code{"Mparts"} attribute. When \code{by} is
-specified, \code{keep.mparts} is set to \code{FALSE}.
+specified, the per-stratum M-estimation components are instead combined and
+stored in the \code{"Mparts.list"} attribute; the resulting standard errors
+produced by \code{\link[=glm_weightit]{glm_weightit()}} are asymptotically equivalent to those from
+estimating the weights from a single model in which the \code{by} variable is fully
+interacted with all the covariates. The same is true for \code{\link[=weightitMSM]{weightitMSM()}},
+where the equivalent model interacts the \code{by} variable with all the covariates
+at every time point.
 }
 \description{
 \code{weightit()} allows for the easy generation of balancing weights

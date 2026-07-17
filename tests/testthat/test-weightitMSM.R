@@ -230,7 +230,7 @@ test_that("custom num.formula works with method = 'glm'", {
               tolerance = eps)
 })
 
-test_that("`by` is accepted and suppresses the Mparts.list attribute", {
+test_that("`by` is accepted and retains combined Mparts.list across strata and time points", {
   msmdata_by <- msmdata
   msmdata_by$grp <- factor(rep(c("a", "b"), length.out = nrow(msmdata_by)))
 
@@ -243,18 +243,15 @@ test_that("`by` is accepted and suppresses the Mparts.list attribute", {
   expect_false(is_null(W$by))
   expect_identical(names(W$by), "grp")
 
-  # Per weightitMSM()'s documented behavior ("When `by` is specified,
-  # keep.mparts is set to FALSE"): with a >1-level by-factor, weightit.fit()
-  # only attaches "Mparts" when nlevels(by.factor) == 1, so Mparts.list ends
-  # up empty for every time point and weightitMSM() never sets the
-  # "Mparts.list" attribute, matching the doc even though there's no direct
-  # `keep.mparts <- FALSE` override in the source.
-  expect_null(attr(W, "Mparts.list", exact = TRUE))
-
-  # Contrast: without `by`, keep.mparts = TRUE (default) does retain Mparts.list
-  # for a method (glm) that supports M-estimation.
+  # With `by`, the per-stratum, per-time-point Mparts are combined into a single
+  # "Mparts.list": one part per (time point x by-stratum). The formula list has
+  # 3 time points and `grp` has 2 levels, so 6 parts total. (Equivalence to the
+  # fully-interacted specification is checked in test-by_mest.R.)
   W_nb <- weightitMSM(msm_formulas, data = msmdata, method = "glm")
-  expect_false(is_null(attr(W_nb, "Mparts.list", exact = TRUE)))
+  n_nb <- length(attr(W_nb, "Mparts.list", exact = TRUE))
+  expect_false(is_null(attr(W, "Mparts.list", exact = TRUE)))
+  expect_identical(length(attr(W, "Mparts.list", exact = TRUE)),
+                   n_nb * nlevels(msmdata_by$grp))
 })
 
 test_that("s.weights works with method = 'glm'", {

@@ -738,6 +738,88 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   by.components
 }
 
+# Expand a single `by` group's Mparts (built on the group subset) to full-sample
+# size so it can be stacked block-diagonally with the other groups' Mparts by the
+# shared machinery in .compute_vcov(). Estimating weights separately within each
+# `by` group is asymptotically equivalent to a single joint model in which the
+# `by` variable is fully interacted with every predictor, and that joint model's
+# stacked estimating equations are exactly block-diagonal across groups: each
+# group's score/derivative contributes only for its own units and zero elsewhere,
+# and each group's weight function is 1 outside the group (so the product across
+# groups that .compute_vcov() forms reduces to each unit's own group weight).
+.expand_Mparts_by <- function(Mparts, subset, treat) {
+  if (is_null(Mparts)) {
+    return(NULL)
+  }
+
+  sub <- which(subset)
+  n <- length(treat)
+
+  #The method-specific design (mod_covs/C/moment expansions/etc.) and treatment
+  #are only available inside the per-group Mparts, so close over them; the
+  #Xtreat/A the stacker passes in are ignored by these wrapped functions.
+  Xg <- Mparts[["Xtreat"]]
+  Ag <- Mparts[["A"]]
+  psi_orig <- Mparts[["psi_treat"]]
+  wfun_orig <- Mparts[["wfun"]]
+  dw_orig <- Mparts[["dw_dBtreat"]]
+  hess_orig <- Mparts[["hess_treat"]]
+
+  Mparts[["psi_treat"]] <- function(Btreat, Xtreat, A, SW) {
+    res <- psi_orig(Btreat, Xg, Ag, SW[sub])
+    out <- matrix(0, nrow = n, ncol = ncol(res))
+    out[sub, ] <- res
+    out
+  }
+
+  Mparts[["wfun"]] <- function(Btreat, Xtreat, A) {
+    out <- rep.int(1, n)
+    out[sub] <- wfun_orig(Btreat, Xg, Ag)
+    out
+  }
+
+  if (is_not_null(dw_orig)) {
+    Mparts[["dw_dBtreat"]] <- function(Btreat, Xtreat, A, SW) {
+      res <- dw_orig(Btreat, Xg, Ag, SW[sub])
+      out <- matrix(0, nrow = n, ncol = ncol(res))
+      out[sub, ] <- res
+      out
+    }
+  }
+
+  if (is_not_null(hess_orig)) {
+    Mparts[["hess_treat"]] <- function(Btreat, Xtreat, A, SW) {
+      hess_orig(Btreat, Xg, Ag, SW[sub]) #q x q, unaffected by n
+    }
+  }
+
+  #Full-length placeholder so the stacker's rep_with(1, A.list[[1L]]) has length n
+  Mparts[["A"]] <- treat
+
+  Mparts
+}
+
+# Convert a stabilization-numerator Mpart for stacking: stabilization weights
+# enter the final weights as 1/w_num, so invert wfun and apply the quotient rule
+# to its derivative (d(1/w)/dB = -w'/w^2).
+.invert_num_Mpart <- function(Mparts) {
+  if (is_null(Mparts)) {
+    return(NULL)
+  }
+
+  .wfun <- Mparts[["wfun"]]
+  Mparts[["wfun"]] <- Invert(.wfun)
+
+  if (is_not_null(Mparts[["dw_dBtreat"]])) {
+    .dw_dBtreat <- Mparts[["dw_dBtreat"]]
+    Mparts[["dw_dBtreat"]] <- function(Btreat, Xtreat, A, SW) {
+      -.dw_dBtreat(Btreat, Xtreat, A, SW) / .wfun(Btreat, Xtreat, A)^2
+    }
+  }
+
+  Mparts
+}
+
 .check_num.formula <- function(num.formula, data, env, formula.list) {
   if (rlang::is_formula(num.formula)) {
     if (!rlang::is_formula(num.formula, lhs = FALSE)) {
