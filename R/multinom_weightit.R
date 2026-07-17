@@ -103,6 +103,12 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
   model_call <- match.call()
 
+  if (is_not_null(...get("weights"))) {
+    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
+
+    model_call[["weights"]] <- NULL
+  }
+
   ###
   if (is_not_null(...get("family"))) {
     arg::err("{.arg family} cannot be used with {.fun multinom_weightit}")

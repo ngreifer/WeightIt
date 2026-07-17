@@ -39,7 +39,7 @@
 #' estimates when specified
 #' * Special formula components, such as `strata()`, `cluster()`, `pspline()`, `frailty()`, `ridge()`, and `tt()` are not allowed
 #' * Only right censoring is allowed, and only two-state models are allowed (i.e., the `Surv()` component of `formula` must be of the form `Surv(time, event)`)
-#' * Time-varying predictors are not allowed and there must be one observation per unit (and the `id` argument to `coxph()` is not allowed)
+#' * Time-varying predictors are not allowed and there must be one observation per unit (and the `id` and `istate` arguments to `coxph()` are ignored)
 #'
 #' When no argument is supplied to
 #' `weightit` or there is no `"Mparts"` attribute in the supplied object, the
@@ -93,9 +93,15 @@ coxph_weightit <- function(formula, data, weightit = NULL,
     cluster <- NULL
   }
 
-  ##
-
   model_call <- match.call()
+
+  if (is_not_null(...get("weights"))) {
+    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
+
+    model_call[["weights"]] <- NULL
+  }
+
+  ##
 
   internal_model_call <- .build_internal_model_call(model = "coxph",
                                                     model_call = model_call,

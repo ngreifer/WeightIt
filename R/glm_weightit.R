@@ -187,6 +187,12 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
 
   model_call <- match.call()
 
+  if (is_not_null(...get("weights"))) {
+    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
+
+    model_call[["weights"]] <- NULL
+  }
+
   if (identical(family, "multinomial")) {
     arg::wrn('using {.fun glm_weightit}  with {.code family = "multinomial"} is deprecated. Please use {.fun multinom_weightit} instead')
     model_call[[1L]] <- quote(WeightIt::multinom_weightit)
@@ -242,6 +248,12 @@ lm_weightit <- function(formula, data, weightit = NULL,
   }
 
   model_call <- match.call()
+
+  if (is_not_null(...get("weights"))) {
+    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
+
+    model_call[["weights"]] <- NULL
+  }
 
   ###
   if (is_not_null(...get("family"))) {
