@@ -335,24 +335,33 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
 
-  tryCatch({verbosely({
-    #Note: do.call() is needed because arguments are quoted
-    fit <- do.call(SuperLearner::SuperLearner,
-                   list(Y = treat,
-                        X = covs,
-                        family = binomial(),
-                        SL.library = SL.library,
-                        verbose = FALSE,
-                        method = SL.method,
-                        id = NULL,
-                        obsWeights = s.weights,
-                        control = control,
-                        cvControl = cvControl,
-                        env = env))
-  }, verbose = verbose)},
-  error = function(e) {
-    arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
-  })
+  rlang::try_fetch(
+    {verbosely({
+      #Note: do.call() is needed because arguments are quoted
+      fit <- do.call(SuperLearner::SuperLearner,
+                     list(Y = treat,
+                          X = covs,
+                          family = binomial(),
+                          SL.library = SL.library,
+                          verbose = FALSE,
+                          method = SL.method,
+                          id = NULL,
+                          obsWeights = s.weights,
+                          control = control,
+                          cvControl = cvControl,
+                          env = env))
+    }, verbose = verbose)},
+    warning = function(w) {
+      w <- conditionMessage(w)
+      if (w != "non-integer #successes in a binomial glm!") {
+        arg::wrn("(from {.fun SuperLearner::SuperLearner}): {w}")
+      }
+      invokeRestart("muffleWarning")
+    },
+    error = function(e) {
+      arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
+    }
+  )
 
   ps <- {
     if (discrete) fit$library.predict[, which.min(fit$cvRisk)]
@@ -410,7 +419,7 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   for (i in levels(treat)) {
 
     treat_i <- as.numeric(treat == i)
-    tryCatch({verbosely({
+    rlang::try_fetch({verbosely({
       #Note: do.call() is needed because arguments are quoted
       fit.list[[i]] <- do.call(SuperLearner::SuperLearner,
                                list(Y = treat_i,
@@ -425,6 +434,13 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
                                     cvControl = cvControl,
                                     env = env))
     }, verbose = verbose)},
+    warning = function(w) {
+      w <- conditionMessage(w)
+      if (w != "non-integer #successes in a binomial glm!") {
+        arg::wrn("(from {.fun SuperLearner::SuperLearner}): {w}")
+      }
+      invokeRestart("muffleWarning")
+    },
     error = function(e) {
       arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
     })
@@ -518,7 +534,7 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     SL.method <- .method.balance.cont()
   }
 
-  tryCatch({verbosely({
+  rlang::try_fetch({verbosely({
     #Note: do.call() is needed because arguments are quoted
     fit <- do.call(SuperLearner::SuperLearner,
                    list(Y = treat,
@@ -533,6 +549,13 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
                         cvControl = cvControl,
                         env = env))
   }, verbose = verbose)},
+  warning = function(w) {
+    w <- conditionMessage(w)
+    if (w != "non-integer #successes in a binomial glm!") {
+      arg::wrn("(from {.fun SuperLearner::SuperLearner}): {w}")
+    }
+    invokeRestart("muffleWarning")
+  },
   error = function(e) {
     arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
   })
