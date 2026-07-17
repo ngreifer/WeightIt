@@ -130,6 +130,7 @@ test_that("by-stratified MSM M-estimation matches interacted model", {
     expect_identical(length(attr(W_by, "Mparts.list", exact = TRUE)),
                      length(fl_by) * nlevels(md$G))
     expect_M_parts_okay(W_by, tolerance = eps)
+    expect_M_parts_okay(W_int, tolerance = eps)
 
     f_by  <- glm_weightit(Y_B ~ A_1 * A_2 * G, data = md, weightit = W_by,
                           vcov = "asympt", family = binomial)
@@ -168,6 +169,7 @@ test_that("by-stratified MSM M-estimation composes with stabilization (glm)", {
   expect_identical(length(attr(W_by, "Mparts.list", exact = TRUE)),
                    2L * length(fl_by) * nlevels(md$G))
   expect_M_parts_okay(W_by, tolerance = eps)
+  expect_M_parts_okay(W_int, tolerance = eps)
 
   f_by  <- glm_weightit(Y_B ~ A_1 * A_2 * G, data = md, weightit = W_by,
                         vcov = "asympt", family = binomial)
