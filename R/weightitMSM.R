@@ -359,7 +359,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
             stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~",
                                                       paste(names(treat.list)[seq_along(names(treat.list)) < i],
                                                             collapse = " * "))),
-                                     as.formula(paste(num.formula, "+ .")))
+                                     as.formula(paste("~", deparse1(rlang::f_rhs(num.formula)), "+ .")))
           }
         }
         else if (is.list(num.formula)) {
