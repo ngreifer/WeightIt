@@ -60,8 +60,7 @@
 #'
 #' In the presence of missing data, the following value(s) for `missing` are allowed:
 #'     \describe{
-#'       \item{`"ind"` (default)}{First, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are added to the model formula as main effects. The missing values in the covariates are then replaced with the covariate medians (this value is arbitrary and does not affect estimation). The weight estimation then proceeds with this new formula and set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.}
-#'       \item{`"surr"`}{Surrogate splitting is used to process `NA`s. No missingness indicators are created. Nodes are split using only the non-missing values of each variable. To generate predicted values for each unit, a non-missing variable that operates similarly to the variable with missingness is used as a surrogate. Missing values are ignored when calculating balance statistics to choose the optimal tree.}
+#'       \item{`"ind"` (default)}{Missing variables are automatically handled by the boosting model. When using a `criterion` targeting covariate balance, for each variable with missingness, a new missingness indicator variable is created which takes the value 1 if the original covariate is `NA` and 0 otherwise. The missingness indicators are included as covariate to balance. The missing values in the covariates are then replaced with the covariate medians. Balance assessment then proceeds with this new set of covariates. The covariates output in the resulting `weightit` object will be the original covariates with the `NA`s.}
 #'     }
 #'
 #' ## M-estimation
@@ -188,6 +187,8 @@
 #'
 #' Estimated propensity scores are trimmed to \eqn{10^{-8}} and \eqn{1 - 10^{-8}} to ensure balance statistics can be computed.
 #'
+#' An additional `missing` argument, `"surr"`, used to be allowed; it is now set to `"ind"` with a warning.
+#'
 #' @seealso [weightit()], [weightitMSM()]
 #'
 #' \pkgfun{gbm}{gbm.fit} for the fitting function.
@@ -299,8 +300,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  if (missing == "ind") {
-    covs <- add_missing_indicators(covs, replace_with = NA)
+  if (missing == "surr") {
+    arg::wrn("{.arg missing} will be set to {.val ind}. See {.help WeightIt::method_gbm} for details")
+    missing <- "ind"
   }
 
   covs <- .make_covs_closer_to_1(covs)
@@ -356,9 +358,9 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   arg::arg_gt(n.trees, 1L)
 
   A_names <- setdiff(names(formals(gbm::gbm.fit)),
-                       c("x", "y", "misc", "w", "verbose", "var.names",
-                         "response.name", "group",
-                         "n.trees", tunable))
+                     c("x", "y", "misc", "w", "verbose", "var.names",
+                       "response.name", "group",
+                       "n.trees", tunable))
 
   A <- ...mget(A_names)
 
@@ -392,9 +394,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     arg::arg_between(n.grid, c(2, n.trees))
 
     init <- cobalt::bal.init(
-      if (!anyNA(covs)) covs
-      else if (missing == "surr") add_missing_indicators(covs)
-      else replace_na_with(covs),
+      if (!anyNA(covs)) covs else add_missing_indicators(covs),
       treat = treat, stat = criterion,
       estimand = estimand, s.weights = s.weights,
       focal = focal, ...)
@@ -433,8 +433,18 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       arg::err('{.arg use.offset} can only be used with {.code distribution = "bernoulli"}')
     }
 
-    fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
-                   weights = s.weights, family = quasibinomial())
+    rlang::try_fetch({
+      fit <- glm.fit(x = as.matrix(cbind(1, covs)), y = treat,
+                     weights = s.weights, family = quasibinomial())
+    },
+    warning = function(w) {
+      w <- conditionMessage(w)
+      if (w != "non-integer #successes in a binomial glm!") {
+        arg::wrn("(from {.fun stats::glm.fit}): {w}")
+      }
+      invokeRestart("muffleWarning")
+    })
+
     offset <- fit$linear.predictors
   }
   else {
@@ -461,18 +471,22 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     assign(".Random.seed", value = curr_seed, envir = genv)
 
     use.offset <- tune[["use.offset"]][i]
-    A[["offset"]] <- if (use.offset) offset else NULL
+    A["offset"] <- list(if (use.offset) offset else NULL)
     A[["distribution"]] <- list(name = tune[["distribution"]][i])
     tune_args <- as.list(tune[i, setdiff(tunable, c("distribution", "use.offset"))])
 
     gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
-                          A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))],
+                          A[names(A) %in% setdiff(rlang::fn_fmls_names(gbm::gbm.fit), names(tune_args))],
                           tune_args))
     verbosely({
       fit <- eval(gbm.call)
     }, verbose = verbose)
 
     if (cv == 0) {
+      if (i == 1L) {
+        tune[[paste.("best", criterion)]] <- NA_real_
+        tune[["best.tree"]] <- NA_integer_
+      }
 
       n.trees <- fit[["n.trees"]]
       iters <- seq_len(n.trees)
@@ -554,18 +568,20 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         current.best.loss <- best.loss
         best.tune.index <- i
       }
-
-      info <- list(best.tree = c(info$best.tree, setNames(best.tree, i)),
-                   tree.val = rbind(info$tree.val, cbind(tune = i, tree.val)))
     }
     else {
       if (i == 1L) {
+        tune[["best.error"]] <- NA_real_
+        tune[["best.tree"]] <- NA_integer_
+
         A["data"] <- list(data.frame(treat, covs))
         A[["cv.folds"]] <- cv
         A["n.cores"] <- list(...get("n.cores", 1L))
         A["var.names"] <- list(NULL)
         A[["nTrain"]] <- nrow(covs)
         A[["class.stratify.cv"]] <- ...get("class.stratify.cv", TRUE)
+        A["group"] <- list(NULL)
+        A["response.name"] <- list("y")
       }
 
       gbmCrossVal.call <- as.call(c(list(quote(gbm::gbmCrossVal)),
@@ -580,7 +596,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
       best.loss <- cv.results$error[best.tree.index]
       best.tree <- best.tree.index
 
-      tune[[paste.("best", names(fit$name))]][i] <- best.loss
+      tune[["best.error"]][i] <- best.loss
       tune[["best.tree"]][i] <- best.tree
 
       if (best.loss < current.best.loss) {
@@ -603,14 +619,14 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
         tree.val <- data.frame(tree = seq_along(cv.results$error),
                                error = cv.results$error)
 
-        info <- list(best.tree = best.tree,
-                     tree.val = tree.val)
-
         if (treat.type %in% c("multinomial", "multi-category")) {
           best.ps <- NULL
         }
       }
     }
+
+    info$best.tree <- c(info$best.tree, setNames(best.tree, i))
+    info$tree.val <- rbind(info$tree.val, cbind(tune = i, tree.val))
 
     if (treat.type %in% c("multinomial", "multi-category")) {
       ps <- NULL
@@ -636,8 +652,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
   missing <- .process_missing2(missing, covs)
 
-  if (missing == "ind") {
-    covs <- add_missing_indicators(covs, replace_with = NA)
+  if (missing == "surr") {
+    arg::wrn("{.arg missing} will be set to {.val ind}. See {.help WeightIt::method_gbm} for details")
+    missing <- "ind"
   }
 
   covs <- .make_covs_closer_to_1(covs)
@@ -682,9 +699,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
   arg::arg_gt(n.trees, 1L)
 
   A_names <- setdiff(names(formals(gbm::gbm.fit)),
-                       c("x", "y", "misc", "w", "verbose", "var.names",
-                         "response.name", "group",
-                         "n.trees", tunable))
+                     c("x", "y", "misc", "w", "verbose", "var.names",
+                       "response.name", "group",
+                       "n.trees", tunable))
 
   A <- ...mget(A_names)
 
@@ -710,9 +727,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     arg::arg_between(n.grid, c(2L, n.trees))
 
     init <- cobalt::bal.init(
-      if (!anyNA(covs)) covs
-      else if (missing == "surr") add_missing_indicators(covs)
-      else replace_na_with(covs),
+      if (!anyNA(covs)) covs else add_missing_indicators(covs),
       treat = treat, stat = criterion,
       s.weights = s.weights, ...)
   }
@@ -800,7 +815,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     }
 
     gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
-                          A[names(A) %in% setdiff(names(formals(gbm::gbm.fit)), names(tune_args))],
+                          A[names(A) %in% setdiff(rlang::fn_fmls_names(gbm::gbm.fit), names(tune_args))],
                           tune_args))
 
     verbosely({
@@ -808,6 +823,10 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     }, verbose = verbose)
 
     if (cv == 0) {
+      if (i == 1L) {
+        tune[[paste.("best", criterion)]] <- NA_real_
+        tune[["best.tree"]] <- NA_integer_
+      }
 
       n.trees <- fit[["n.trees"]]
       iters <- seq_len(n.trees)
@@ -818,7 +837,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       }
 
       gps <- gbm::predict.gbm(fit, n.trees = iters.grid, newdata = covs)
-      if (use.offset) gps <- gps + A[["offset"]]
+      if (use.offset) {
+        gps <- gps + A[["offset"]]
+      }
 
       w <- apply(gps, 2L, function(p) {
         r <- treat - p
@@ -850,7 +871,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         }
 
         gps <- gbm::predict.gbm(fit, n.trees = iters.to.check, newdata = covs)
-        if (use.offset) gps <- gps + A[["offset"]]
+        if (use.offset) {
+          gps <- gps + A[["offset"]]
+        }
 
         w <- apply(gps, 2L, function(p) {
           r <- treat - p
@@ -887,12 +910,19 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       }
     }
     else {
-      A["data"] <- list(data.frame(treat, covs))
-      A[["cv.folds"]] <- cv
-      A["n.cores"] <- list(A[["n.cores"]])
-      A["var.names"] <- list(A[["var.names"]])
-      A[["nTrain"]] <- floor(nrow(covs))
-      A[["class.stratify.cv"]] <- FALSE
+      if (i == 1L) {
+        tune[["best.error"]] <- NA_real_
+        tune[["best.tree"]] <- NA_integer_
+
+        A["data"] <- list(data.frame(treat, covs))
+        A[["cv.folds"]] <- cv
+        A["n.cores"] <- list(...get("n.cores", 1L))
+        A["var.names"] <- list(A[["var.names"]])
+        A[["nTrain"]] <- floor(nrow(covs))
+        A[["class.stratify.cv"]] <- FALSE
+        A["group"] <- list(NULL)
+        A["response.name"] <- list("y")
+      }
 
       gbmCrossVal.call <- as.call(c(list(quote(gbm::gbmCrossVal)),
                                     A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
@@ -906,16 +936,18 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       best.loss <- cv.results$error[best.tree.index]
       best.tree <- best.tree.index
 
-      tune[[paste.("best", "error")]][i] <- best.loss
+      tune[["best.error"]][i] <- best.loss
       tune[["best.tree"]][i] <- best.tree
 
       if (best.loss < current.best.loss) {
         best.fit <- fit
         best.gps <- gbm::predict.gbm(fit, n.trees = best.tree, newdata = covs)
-        if (use.offset) best.gps <- best.gps + A[["offset"]]
+        if (use.offset) {
+          best.gps <- best.gps + A[["offset"]]
+        }
 
         r <- treat - best.gps
-        log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), lo = TRUE)
+        log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
         best.w <- exp(log.dens.num - log.dens.denom)
 
         current.best.loss <- best.loss
@@ -926,8 +958,8 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                              error = cv.results$error)
     }
 
-    info <- list(best.tree = c(info$best.tree, setNames(best.tree, i)),
-                 tree.val = rbind(info$tree.val, cbind(tune = i, tree.val)))
+    info$best.tree <- c(info$best.tree, setNames(best.tree, i))
+    info$tree.val <- rbind(info$tree.val, cbind(tune = i, tree.val))
   }
 
   if (isTRUE(...get("plot"))) {
@@ -1034,21 +1066,24 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
       d$tune <- factor(d$tune)
 
       #Subsample if too big
-      ind <- unlist(lapply(split(seq_row(d), d["tune"]), function(i) {
-        if (length(i) <= subsample) {
-          return(i)
+      ind <- integer(0L)
+
+      for (i in levels(d$tune)) {
+        in_tune_i <- which(d$tune == i)
+
+        if (length(in_tune_i) <= subsample) {
+          ind <- c(ind, in_tune_i)
+          next
         }
 
-        t <- d$tune[i][1L]
+        trees <- round(seq(min(d$tree[in_tune_i]), max(d$tree[in_tune_i]), length.out = round(subsample * .8)))
+        trees <- c(trees, d$tree[in_tune_i][d$tree[in_tune_i] >= best$best.tree[best$tune == i] - subsample * .1 &
+                                              d$tree[in_tune_i] <= best$best.tree[best$tune == i] + subsample * .1])
 
-        trees <- round(seq(min(d$tree[i]), max(d$tree[i]), length.out = round(subsample * .8)))
-        trees <- c(trees, d$tree[i][d$tree[i] >= best$best.tree[best$tune == t] - subsample * .1 &
-                                      d$tree[i] <= best$best.tree[best$tune == t] + subsample * .1])
+        ind <- c(ind, in_tune_i[d$tree[in_tune_i] %in% trees])
+      }
 
-        i[d$tree[i] %in% trees]
-      }))
-
-      d <- d[sort(ind), ]
+      d <- d[ind, , drop = FALSE]
     }
     else {
       best <- data.frame(best.tree = info$best.tree,
@@ -1060,7 +1095,7 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         trees <- c(trees, d$tree[d$tree >= best$best.tree - subsample * .1 &
                                    d$tree <= best$best.tree + subsample * .1])
 
-        d <- d[d$tree %in% trees, ]
+        d <- d[d$tree %in% trees, , drop = FALSE]
       }
     }
   }
