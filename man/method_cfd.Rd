@@ -71,13 +71,13 @@ concerns covariate balance as measured by the CFD between groups.
 CFD balancing for binary and multi-category treatments involves minimizing
 the CFD between the treatment groups and between each treatment
 group and a target group (e.g., the full sample for the ATE). The CFD is a scalar measure of the difference between two multivariate
-distributions. The performance of CFD balance depends on the choice of kernel, controlled by the \code{kernel} argument. Each kernel corresponds to different assumptions about the form of the true outcome model. See Santra et al. (2026) for a comparison of these different kernels. Setting \code{kernel = "energy"} is equivalent to entropy balancing, which can also be requested by using \code{\link[=method_energy]{method = "energy"}}.
+distributions. The performance of CFD balance depends on the choice of kernel, controlled by the \code{kernel} argument. Each kernel corresponds to different assumptions about the form of the true outcome model. See Santra et al. (2026) for a comparison of these different kernels. Setting \code{kernel = "energy"} is equivalent to energy balancing, which can also be requested by using \code{\link[=method_energy]{method = "energy"}}.
 
 The primary benefit of CFD balancing is that all features of the covariate
-distribution are balanced, not just means, as with other optimization-based
+distribution are balanced, not just means, unlike with other optimization-based
 methods like entropy balancing. Still, it is possible to add additional
 balance constraints to require balance on individual terms using the
-\code{moments} argument, just like with entropy balancing. CFD balancing can
+\code{moments} argument, as with entropy balancing. CFD balancing can
 sometimes yield weights with high variability; the \code{lambda} argument can be
 supplied to penalize highly variable weights to increase the effective sample
 size at the expense of balance.
@@ -102,8 +102,8 @@ uncommon). Increasing \code{max_iter} or changing \code{adaptive_rho_interval} m
 help.
 
 If it seems like the weights are balancing the covariates but you still get a
-failure to converge, this usually indicates that more iterations are needs to
-find the optimal solutions. This can occur when \code{moments} or \code{int} are
+failure to converge, this usually indicates that more iterations are needed to
+find the optimal solution. This can occur when \code{moments} or \code{int} are
 specified. \code{max_iter} should be increased, and setting \code{verbose = TRUE}
 allows you to monitor the process and examine if the optimization is
 approaching convergence.
@@ -118,7 +118,7 @@ As of version 1.5.0, \code{polish} is now set to \code{TRUE} by default. This sh
 The following following additional arguments can be specified:
 
 \describe{
-\item{\code{kernel}}{the name of the kernel used to characterize the CFD. Allowable optiosn include \code{"gaussian"} for the multivariate Gaussian kernel (the default), \code{"matern"} for the multivariate Matern kernel, \code{"energy"} for the energy distance kernel, \code{"laplace"} for the univariate Laplacian kernel, and \code{"t"} for the univariate t-dsitribution kernel.}
+\item{\code{kernel}}{the name of the kernel used to characterize the CFD. Allowable optiosn include \code{"gaussian"} for the multivariate Gaussian kernel (the default), \code{"matern"} for the multivariate Matern kernel, \code{"energy"} for the energy distance kernel, \code{"laplace"} for the univariate Laplacian kernel, and \code{"t"} for the univariate t-distribution kernel.}
 \item{\code{nu}}{for \code{kernel = "matern"}, the \eqn{\nu} parameter used to control smoothness. The default value is 3/2. For any values other than 1/2, 3/2, and 5/2, the \pkg{GPBayes} package is required to compute the Matern kernel. For \code{kernel = "t"}, the degrees of freedom for the univariate t-distributions used in the kernel. The default value is 5. Ignored for other kernels.}
 \item{\code{nsim}}{for \code{kernel = "t"}, the number of simulations to use to compute the t-distribution kernel. Default is 5000. Greater is better but takes longer and uses more memory.}
 \item{\code{lambda}}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Default is .0001, which is essentially 0.}

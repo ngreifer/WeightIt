@@ -30,9 +30,7 @@ that class): a symbolic description of the model to be fitted.}
 in data, the variables are taken from \code{environment(formula)}, typically the
 environment from which the function is called.}
 
-\item{link}{a string corresponding to the desired link function. Any
-allowed by \code{\link[=binomial]{binomial()}} are accepted. Default is \code{"logit"} for ordinal
-logistic regression, respectively.}
+\item{link}{a string corresponding to the desired link function. Allowable options include \code{"logit"}, \code{"probit"}, \code{"loglog"}, \code{"cloglog"}, and \code{"cauchit"}. Default is \code{"logit"} for ordinal logistic regression.}
 
 \item{weightit}{a \code{weightit} or \code{weightitMSM} object; the output of a call to
 \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. If not supplied, an unweighted model will

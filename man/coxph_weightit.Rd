@@ -100,7 +100,7 @@ clustering variables) and uses a small sample correction for cluster variance
 estimates when specified
 \item Special formula components, such as \code{strata()}, \code{cluster()}, \code{pspline()}, \code{frailty()}, \code{ridge()}, and \code{tt()} are not allowed
 \item Only right censoring is allowed, and only two-state models are allowed (i.e., the \code{Surv()} component of \code{formula} must be of the form \code{Surv(time, event)})
-\item Time-varying predictors are not allowed and there must be one observation per unit (and the \code{id} argument to \code{coxph()} is not allowed)
+\item Time-varying predictors are not allowed and there must be one observation per unit (and the \code{id} and \code{istate} arguments to \code{coxph()} are ignored)
 }
 
 When no argument is supplied to
