@@ -19,7 +19,7 @@ model when available."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -179,7 +179,7 @@ clustering variables) and uses a small sample correction for cluster variance
 estimates when specified</p></li>
 <li><p>Special formula components, such as <code>strata()</code>, <code>cluster()</code>, <code>pspline()</code>, <code>frailty()</code>, <code>ridge()</code>, and <code>tt()</code> are not allowed</p></li>
 <li><p>Only right censoring is allowed, and only two-state models are allowed (i.e., the <code>Surv()</code> component of <code>formula</code> must be of the form <code>Surv(time, event)</code>)</p></li>
-<li><p>Time-varying predictors are not allowed and there must be one observation per unit (and the <code>id</code> argument to <code>coxph()</code> is not allowed)</p></li>
+<li><p>Time-varying predictors are not allowed and there must be one observation per unit (and the <code>id</code> and <code>istate</code> arguments to <code>coxph()</code> are ignored)</p></li>
 </ul><p>When no argument is supplied to
 <code>weightit</code> or there is no <code>"Mparts"</code> attribute in the supplied object, the
 default variance matrix returned will be the "HC0" sandwich variance matrix,

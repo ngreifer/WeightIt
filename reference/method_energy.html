@@ -169,7 +169,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -300,10 +300,10 @@ In addition, the energy distances between the treatment and covariate
 distributions in the weighted sample and the treatment and covariate
 distributions in the original sample are minimized.</p>
 <p>The primary benefit of energy balancing is that all features of the covariate
-distribution are balanced, not just means, as with other optimization-based
+distribution are balanced, not just means, unlike with other optimization-based
 methods like entropy balancing. Still, it is possible to add additional
 balance constraints to require balance on individual terms using the
-<code>moments</code> argument, just like with entropy balancing. Energy balancing can
+<code>moments</code> argument, as with entropy balancing. Energy balancing can
 sometimes yield weights with high variability; the <code>lambda</code> argument can be
 supplied to penalize highly variable weights to increase the effective sample
 size at the expense of balance.</p><div class="section">

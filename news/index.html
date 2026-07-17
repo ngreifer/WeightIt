@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,10 +46,18 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="weightit-development-version">
 <code>WeightIt</code> (development version)<a class="anchor" aria-label="anchor" href="#weightit-development-version"></a></h2>
-<ul><li><p>Fixed a bug when using energy balancing with <code>estimand = "ATC"</code> and <code>moments</code> greater than 0.</p></li>
-<li><p><code>link = "softplus"</code> can be used with <code>method = "cbps"</code> and <code>method = "ipt"</code> to use the softplus link.</p></li>
+<ul><li><p><code>link = "softplus"</code> can be used with <code>method = "cbps"</code> and <code>method = "ipt"</code> to use the softplus link.</p></li>
 <li><p>Fixed a bug in <code>method = "ebal"</code> with <code>tols</code> greater than 0 that could cause the FISTA solver to stop before the requested balance tolerance was reliably achieved. Thanks to Ivan Geshev for pointing it out.</p></li>
-<li><p>Fixed a bug in <code>method = "ebal"</code> with <code>tols</code> greater than 0, a continuous treatment, and sampling weights that could allow the treatment-covariate correlation to slightly exceed the requested tolerance.</p></li>
+<li><p>Fixed a bug in <code>method = "ebal"</code> and <code>method = "energy"</code> with <code>tols</code> greater than 0, a continuous treatment, and sampling weights that could allow the treatment-covariate correlation to slightly exceed the requested tolerance.</p></li>
+<li><p>Fixed a bug in which <code>method = "gbm"</code> with <code>criterion</code> set to a cross-validation specification (e.g., <code>"cv5"</code>) would fail with an error.</p></li>
+<li><p>With <code>method = "gbm"</code>, <code>method = "surr"</code> is no longer allowed, as it did nothing different from <code>"ind"</code>. It is now set to <code>"ind"</code> with a warning.</p></li>
+<li><p>Fixed a bug in <code>method = "energy"</code> with <code>estimand = "ATC"</code> and <code>moments</code> greater than 0.</p></li>
+<li><p>Fixed a bug in <code>method = "energy"</code> and <code>method = "cfd"</code> with <code>min.w</code> set to <code>-Inf</code>.</p></li>
+<li><p>Fixed a bug in <code><a href="../reference/weightitMSM.html">weightitMSM()</a></code> in which supplying a single formula to <code>num.formula</code> would fail to correctly incorporate its terms into the stabilization model at all but the first time point.</p></li>
+<li><p>Fixed a bug in which <code><a href="https://rdrr.io/r/stats/predict.html" class="external-link">predict()</a></code> on an <code>ordinal_weightit</code> object with <code>type = "link"</code> or <code>type = "stdlv"</code> and no <code>newdata</code> supplied could return incorrect values due to a scaling error.</p></li>
+<li><p>The <code>link</code> argument in <code><a href="../reference/ordinal_weightit.html">ordinal_weightit()</a></code> no longer accepts <code>"log"</code> and <code>"clog"</code> as valid links.</p></li>
+<li><p><code>weights</code> is now correctly ignored with a warning in <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> and friends.</p></li>
+<li><p>Added units tests for all weighting methods.</p></li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="1.7.0" id="weightit-170">

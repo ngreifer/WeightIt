@@ -44,9 +44,9 @@ ordinal_weightit(
 
 - link:
 
-  a string corresponding to the desired link function. Any allowed by
-  [`binomial()`](https://rdrr.io/r/stats/family.html) are accepted.
-  Default is `"logit"` for ordinal logistic regression, respectively.
+  a string corresponding to the desired link function. Allowable options
+  include `"logit"`, `"probit"`, `"loglog"`, `"cloglog"`, and
+  `"cauchit"`. Default is `"logit"` for ordinal logistic regression.
 
 - weightit:
 

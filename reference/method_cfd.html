@@ -155,7 +155,7 @@ M-estimation is not supported.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -268,12 +268,12 @@ concerns covariate balance as measured by the CFD between groups.</p>
 <p>CFD balancing for binary and multi-category treatments involves minimizing
 the CFD between the treatment groups and between each treatment
 group and a target group (e.g., the full sample for the ATE). The CFD is a scalar measure of the difference between two multivariate
-distributions. The performance of CFD balance depends on the choice of kernel, controlled by the <code>kernel</code> argument. Each kernel corresponds to different assumptions about the form of the true outcome model. See Santra et al. (2026) for a comparison of these different kernels. Setting <code>kernel = "energy"</code> is equivalent to entropy balancing, which can also be requested by using <code><a href="method_energy.html">method = "energy"</a></code>.</p>
+distributions. The performance of CFD balance depends on the choice of kernel, controlled by the <code>kernel</code> argument. Each kernel corresponds to different assumptions about the form of the true outcome model. See Santra et al. (2026) for a comparison of these different kernels. Setting <code>kernel = "energy"</code> is equivalent to energy balancing, which can also be requested by using <code><a href="method_energy.html">method = "energy"</a></code>.</p>
 <p>The primary benefit of CFD balancing is that all features of the covariate
-distribution are balanced, not just means, as with other optimization-based
+distribution are balanced, not just means, unlike with other optimization-based
 methods like entropy balancing. Still, it is possible to add additional
 balance constraints to require balance on individual terms using the
-<code>moments</code> argument, just like with entropy balancing. CFD balancing can
+<code>moments</code> argument, as with entropy balancing. CFD balancing can
 sometimes yield weights with high variability; the <code>lambda</code> argument can be
 supplied to penalize highly variable weights to increase the effective sample
 size at the expense of balance.</p><div class="section">
@@ -301,8 +301,8 @@ try another method or change the supplied parameters (though this is
 uncommon). Increasing <code>max_iter</code> or changing <code>adaptive_rho_interval</code> might
 help.</p>
 <p>If it seems like the weights are balancing the covariates but you still get a
-failure to converge, this usually indicates that more iterations are needs to
-find the optimal solutions. This can occur when <code>moments</code> or <code>int</code> are
+failure to converge, this usually indicates that more iterations are needed to
+find the optimal solution. This can occur when <code>moments</code> or <code>int</code> are
 specified. <code>max_iter</code> should be increased, and setting <code>verbose = TRUE</code>
 allows you to monitor the process and examine if the optimization is
 approaching convergence.</p>
@@ -316,7 +316,7 @@ approaching convergence.</p>
 
 <p>The following following additional arguments can be specified:</p>
 <dl><dt><code>kernel</code></dt>
-<dd><p>the name of the kernel used to characterize the CFD. Allowable optiosn include <code>"gaussian"</code> for the multivariate Gaussian kernel (the default), <code>"matern"</code> for the multivariate Matern kernel, <code>"energy"</code> for the energy distance kernel, <code>"laplace"</code> for the univariate Laplacian kernel, and <code>"t"</code> for the univariate t-dsitribution kernel.</p></dd>
+<dd><p>the name of the kernel used to characterize the CFD. Allowable optiosn include <code>"gaussian"</code> for the multivariate Gaussian kernel (the default), <code>"matern"</code> for the multivariate Matern kernel, <code>"energy"</code> for the energy distance kernel, <code>"laplace"</code> for the univariate Laplacian kernel, and <code>"t"</code> for the univariate t-distribution kernel.</p></dd>
 
 <dt><code>nu</code></dt>
 <dd><p>for <code>kernel = "matern"</code>, the \(\nu\) parameter used to control smoothness. The default value is 3/2. For any values other than 1/2, 3/2, and 5/2, the <span class="pkg">GPBayes</span> package is required to compute the Matern kernel. For <code>kernel = "t"</code>, the degrees of freedom for the univariate t-distributions used in the kernel. The default value is 5. Ignored for other kernels.</p></dd>

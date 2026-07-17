@@ -84,16 +84,16 @@ distributions. The performance of CFD balance depends on the choice of
 kernel, controlled by the `kernel` argument. Each kernel corresponds to
 different assumptions about the form of the true outcome model. See
 Santra et al. (2026) for a comparison of these different kernels.
-Setting `kernel = "energy"` is equivalent to entropy balancing, which
-can also be requested by using
+Setting `kernel = "energy"` is equivalent to energy balancing, which can
+also be requested by using
 [`method = "energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.md).
 
 The primary benefit of CFD balancing is that all features of the
-covariate distribution are balanced, not just means, as with other
+covariate distribution are balanced, not just means, unlike with other
 optimization-based methods like entropy balancing. Still, it is possible
 to add additional balance constraints to require balance on individual
-terms using the `moments` argument, just like with entropy balancing.
-CFD balancing can sometimes yield weights with high variability; the
+terms using the `moments` argument, as with entropy balancing. CFD
+balancing can sometimes yield weights with high variability; the
 `lambda` argument can be supplied to penalize highly variable weights to
 increase the effective sample size at the expense of balance.
 
@@ -121,7 +121,7 @@ might help.
 
 If it seems like the weights are balancing the covariates but you still
 get a failure to converge, this usually indicates that more iterations
-are needs to find the optimal solutions. This can occur when `moments`
+are needed to find the optimal solution. This can occur when `moments`
 or `int` are specified. `max_iter` should be increased, and setting
 `verbose = TRUE` allows you to monitor the process and examine if the
 optimization is approaching convergence.
@@ -143,7 +143,7 @@ The following following additional arguments can be specified:
   include `"gaussian"` for the multivariate Gaussian kernel (the
   default), `"matern"` for the multivariate Matern kernel, `"energy"`
   for the energy distance kernel, `"laplace"` for the univariate
-  Laplacian kernel, and `"t"` for the univariate t-dsitribution kernel.
+  Laplacian kernel, and `"t"` for the univariate t-distribution kernel.
 
 - `nu`:
 

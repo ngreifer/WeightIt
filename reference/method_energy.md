@@ -98,11 +98,11 @@ treatment and covariate distributions in the original sample are
 minimized.
 
 The primary benefit of energy balancing is that all features of the
-covariate distribution are balanced, not just means, as with other
+covariate distribution are balanced, not just means, unlike with other
 optimization-based methods like entropy balancing. Still, it is possible
 to add additional balance constraints to require balance on individual
-terms using the `moments` argument, just like with entropy balancing.
-Energy balancing can sometimes yield weights with high variability; the
+terms using the `moments` argument, as with entropy balancing. Energy
+balancing can sometimes yield weights with high variability; the
 `lambda` argument can be supplied to penalize highly variable weights to
 increase the effective sample size at the expense of balance.
 

@@ -154,8 +154,8 @@ weights if a `weightit` or `weightitMSM` object is supplied to the
   `Surv(time, event)`)
 
 - Time-varying predictors are not allowed and there must be one
-  observation per unit (and the `id` argument to `coxph()` is not
-  allowed)
+  observation per unit (and the `id` and `istate` arguments to `coxph()`
+  are ignored)
 
 When no argument is supplied to `weightit` or there is no `"Mparts"`
 attribute in the supplied object, the default variance matrix returned
