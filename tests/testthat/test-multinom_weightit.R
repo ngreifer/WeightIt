@@ -7,8 +7,8 @@ test_that("No weights", {
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data$Y_M <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
-                                                       all.inside = TRUE)))
+  test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
+
   set.seed(123)
   test_data$off <- runif(nrow(test_data))
   test_data$clus <- sample(1:50, nrow(test_data), replace = TRUE)
@@ -76,8 +76,8 @@ test_that("Binary treatment", {
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data$Y_M <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
-                                                       all.inside = TRUE)))
+  test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
+
   set.seed(123)
   test_data$off <- runif(nrow(test_data))
   test_data$clus <- sample(1:50, nrow(test_data), replace = TRUE)
@@ -155,4 +155,85 @@ test_that("Binary treatment", {
   expect_equal(vcov(fit0, type = "HC0"),
                sandwich::sandwich(fit0, asympt = FALSE),
                tolerance = eps)
+})
+
+test_that("Bootstrap vcov (BS, FWB)", {
+  skip_on_cran()
+  skip_if_not_installed("fwb")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
+
+  #Small/reduced formula for speed
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  include.obj = TRUE)
+  })
+
+  expect_no_condition({
+    fit0 <- multinom_weightit(Y_M ~ A + X1,
+                              data = test_data, weightit = W)
+  })
+
+  set.seed(123)
+  expect_no_condition({
+    fit_bs <- multinom_weightit(Y_M ~ A + X1,
+                                data = test_data, weightit = W,
+                                vcov = "BS", R = 30)
+  })
+
+  expect_equal(coef(fit0), coef(fit_bs), tolerance = eps)
+  expect_not_equal(vcov(fit0), vcov(fit_bs), tolerance = eps)
+
+  set.seed(123)
+  expect_no_condition({
+    fit_fwb <- multinom_weightit(Y_M ~ A + X1,
+                                 data = test_data, weightit = W,
+                                 vcov = "FWB", R = 30)
+  })
+
+  expect_equal(coef(fit0), coef(fit_fwb), tolerance = eps)
+  expect_not_equal(vcov(fit0), vcov(fit_fwb), tolerance = eps)
+})
+
+test_that("Binary (2-level factor) outcome reduces to binomial logit", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Y_B2 <- factor(test_data$Y_B, labels = c("no", "yes"))
+
+  #No weightit object -- coefficients and HC0 vcov should match glm_weightit()
+  #with a binomial family exactly (up to optimizer tolerance), since a
+  #2-category multinomial logit is a reparametrization of binomial logit.
+  expect_no_condition({
+    fit_m <- multinom_weightit(Y_B2 ~ A + X1 + X2 + X3, data = test_data, vcov = "HC0")
+  })
+
+  fit_glm <- glm_weightit(Y_B ~ A + X1 + X2 + X3, data = test_data, family = binomial)
+
+  expect_equal(unname(coef(fit_m)), unname(coef(fit_glm)), tolerance = eps)
+  expect_equal(unname(vcov(fit_m)), unname(vcov(fit_glm)), tolerance = eps)
+
+  #With a weightit object
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  include.obj = TRUE)
+  })
+
+  expect_no_condition({
+    fit_m_w <- multinom_weightit(Y_B2 ~ A + X1 + X2 + X3, data = test_data,
+                                 weightit = W, vcov = "HC0")
+  })
+
+  fit_glm_w <- glm_weightit(Y_B ~ A + X1 + X2 + X3, data = test_data,
+                            weightit = W, family = binomial, vcov = "HC0")
+
+  expect_equal(unname(coef(fit_m_w)), unname(coef(fit_glm_w)), tolerance = eps)
+  expect_equal(unname(vcov(fit_m_w)), unname(vcov(fit_glm_w)), tolerance = eps)
 })

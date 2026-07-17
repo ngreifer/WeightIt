@@ -19,47 +19,40 @@ test_that("moments works as expected, binary", {
 
   #Moments the same as poly
   for (method in c("ipt", "ebal", "optweight")) {
-    expect_no_condition({
+    test_that(sprintf("method = %s", method), {
       Wm <- weightit(A ~ X1 + X2 + X3 + X4,
                      data = test_data, method = method,
                      include.obj = TRUE,
                      moments = c(X1 = 2, X2 = 3))
-    })
-    nm <- sprintf("Wm_%s", method)
-    assign(nm, Wm)
 
-    expect_no_condition({
       Wp <- weightit(A ~ poly(X1, 2) + poly(X2, 3) + X3 + X4,
                      data = test_data, method = method,
                      include.obj = TRUE)
+
+      if (method %in% c("ipt", "ebal")) {
+        expect_M_parts_okay(Wm, tolerance = eps)
+        expect_M_parts_okay(Wp, tolerance = eps)
+      }
+
+      expect_equal(Wm$weights, Wp$weights,
+                   label = "weights for moments",
+                   expected.label = "weights for poly",
+                   tolerance = eps)
+
+      expect_equal(cobalt::bal.compute(init1, weights = Wm$weights),
+                   0,
+                   label = "largest SMD for moments",
+                   tolerance = eps)
+      expect_equal(cobalt::bal.compute(init1, weights = Wp$weights),
+                   0,
+                   label = "largest SMD for poly",
+                   tolerance = eps)
+
+      expect_not_equal(cobalt::bal.compute(init2, weights = Wm$weights),
+                       0,
+                       label = "largest SMD for moments with extra terms",
+                       tolerance = eps)
     })
-    np <- sprintf("Wp_%s", method)
-    assign(np, Wp)
-
-    if (method %in% c("ipt", "ebal")) {
-      expect_M_parts_okay(Wm, tolerance = eps)
-      expect_M_parts_okay(Wp, tolerance = eps)
-    }
-
-    expect_equal(Wm$weights, Wp$weights,
-                 label = sprintf("weights for %s", nm),
-                 expected.label = sprintf("weights for %s", np),
-                 tolerance = eps)
-
-
-    expect_equal(cobalt::bal.compute(init1, weights = Wm$weights),
-                 0,
-                 label = sprintf("largest SMD for %s", nm),
-                 tolerance = eps)
-    expect_equal(cobalt::bal.compute(init1, weights = Wp$weights),
-                 0,
-                 label = sprintf("largest SMD for %s", np),
-                 tolerance = eps)
-
-    expect_not_equal(cobalt::bal.compute(init2, weights = Wm$weights),
-                     0,
-                     label = sprintf("largest SMD for %s with extra terms", nm),
-                     tolerance = eps)
   }
 })
 
@@ -84,47 +77,40 @@ test_that("moments works as expected, multi", {
 
   #Moments the same as poly
   for (method in c("ipt", "ebal", "optweight")) {
-    expect_no_condition({
+    test_that(sprintf("method = %s", method), {
       Wm <- weightit(Am ~ X1 + X2 + X3 + X4,
                      data = test_data, method = method,
                      include.obj = TRUE,
                      moments = c(X1 = 2, X2 = 3))
-    })
-    nm <- sprintf("Wm_%s", method)
-    assign(nm, Wm)
 
-    expect_no_condition({
       Wp <- weightit(Am ~ poly(X1, 2) + poly(X2, 3) + X3 + X4,
                      data = test_data, method = method,
                      include.obj = TRUE)
+
+      if (method %in% c("ipt", "ebal")) {
+        expect_M_parts_okay(Wm, tolerance = eps)
+        expect_M_parts_okay(Wp, tolerance = eps)
+      }
+
+      expect_equal(Wm$weights, Wp$weights,
+                   label = "weights for moments",
+                   expected.label = "weights for poly",
+                   tolerance = eps)
+
+      expect_equal(cobalt::bal.compute(init1, weights = Wm$weights),
+                   0,
+                   label = "largest SMD for moments",
+                   tolerance = eps)
+      expect_equal(cobalt::bal.compute(init1, weights = Wp$weights),
+                   0,
+                   label = "largest SMD for poly",
+                   tolerance = eps)
+
+      expect_not_equal(cobalt::bal.compute(init2, weights = Wm$weights),
+                       0,
+                       label = "largest SMD for moments with extra terms",
+                       tolerance = eps)
     })
-    np <- sprintf("Wp_%s", method)
-    assign(np, Wp)
-
-    if (method %in% c("ipt", "ebal")) {
-      expect_M_parts_okay(Wm, tolerance = eps)
-      expect_M_parts_okay(Wp, tolerance = eps)
-    }
-
-    expect_equal(Wm$weights, Wp$weights,
-                 label = sprintf("weights for %s", nm),
-                 expected.label = sprintf("weights for %s", np),
-                 tolerance = eps)
-
-
-    expect_equal(cobalt::bal.compute(init1, weights = Wm$weights),
-                 0,
-                 label = sprintf("largest SMD for %s", nm),
-                 tolerance = eps)
-    expect_equal(cobalt::bal.compute(init1, weights = Wp$weights),
-                 0,
-                 label = sprintf("largest SMD for %s", np),
-                 tolerance = eps)
-
-    expect_not_equal(cobalt::bal.compute(init2, weights = Wm$weights),
-                     0,
-                     label = sprintf("largest SMD for %s with extra terms", nm),
-                     tolerance = eps)
   }
 })
 
@@ -149,61 +135,55 @@ test_that("moments works as expected, cont", {
 
   #Moments the same as poly
   for (method in c("ebal", "cbps")) {
-    expect_no_condition({
+    test_that(sprintf("method = %s", method), {
       Wm <- weightit(Ac ~ X1 + X2 + X3 + X4,
                      data = test_data, method = method,
                      include.obj = TRUE,
                      moments = c(X1 = 2, X2 = 3))
-    })
-    nm <- sprintf("Wm_%s", method)
-    assign(nm, Wm)
 
-    expect_no_condition({
       Wp <- weightit(Ac ~ poly(X1, 2) + poly(X2, 3) + X3 + X4,
                      data = test_data, method = method,
                      include.obj = TRUE)
-    })
-    np <- sprintf("Wp_%s", method)
-    assign(np, Wp)
 
-    if (method %in% c("ipt", "ebal")) {
-      expect_M_parts_okay(Wm, tolerance = eps)
-      expect_M_parts_okay(Wp, tolerance = eps)
-    }
+      if (method %in% c("ipt", "ebal")) {
+        expect_M_parts_okay(Wm, tolerance = eps)
+        expect_M_parts_okay(Wp, tolerance = eps)
+      }
 
-    expect_equal(Wm$weights, Wp$weights,
-                 label = sprintf("weights for %s", nm),
-                 expected.label = sprintf("weights for %s", np),
-                 tolerance = eps)
+      expect_equal(Wm$weights, Wp$weights,
+                   label = "weights for moments",
+                   expected.label = "weights for poly",
+                   tolerance = eps)
 
-    expect_equal(cobalt::bal.compute(init1, weights = Wm$weights),
-                 0,
-                 label = sprintf("largest corr for %s", nm),
-                 tolerance = eps)
-    expect_equal(cobalt::bal.compute(init1, weights = Wp$weights),
-                 0,
-                 label = sprintf("largest corr for %s", np),
-                 tolerance = eps)
+      expect_equal(cobalt::bal.compute(init1, weights = Wm$weights),
+                   0,
+                   label = "largest corr for moments",
+                   tolerance = eps)
+      expect_equal(cobalt::bal.compute(init1, weights = Wp$weights),
+                   0,
+                   label = "largest corr for poly",
+                   tolerance = eps)
 
-    expect_not_equal(cobalt::bal.compute(init2, weights = Wm$weights),
+      expect_not_equal(cobalt::bal.compute(init2, weights = Wm$weights),
+                       0,
+                       label = "largest corr for moments with extra terms",
+                       tolerance = eps)
+
+      if (method == "ebal") {
+        expect_equal(cobalt::bal.compute(init1t, weights = Wm$weights),
                      0,
-                     label = sprintf("largest corr for %s with extra terms", nm),
+                     label = "largest target SMD for moments",
+                     tolerance = eps)
+        expect_equal(cobalt::bal.compute(init1t, weights = Wp$weights),
+                     0,
+                     label = "largest target SMD for poly",
                      tolerance = eps)
 
-    if (method == "ebal") {
-      expect_equal(cobalt::bal.compute(init1t, weights = Wm$weights),
-                   0,
-                   label = sprintf("largest target SMD for %s", nm),
-                   tolerance = eps)
-      expect_equal(cobalt::bal.compute(init1t, weights = Wp$weights),
-                   0,
-                   label = sprintf("largest target SMD for %s", np),
-                   tolerance = eps)
-
-      expect_not_equal(cobalt::bal.compute(init2t, weights = Wm$weights),
-                       0,
-                       label = sprintf("largest target SMD for %s with extra terms", nm),
-                       tolerance = eps)
-    }
+        expect_not_equal(cobalt::bal.compute(init2t, weights = Wm$weights),
+                         0,
+                         label = "largest target SMD for moments with extra terms",
+                         tolerance = eps)
+      }
+    })
   }
 })

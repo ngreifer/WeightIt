@@ -33,7 +33,7 @@ test_that("Binary treatment", {
 
       for (estimand in estimand.opts) {
         for (link in links_to_test) {
-          expect_no_condition({
+          test_that(sprintf("CBPS: sw = %s, over = %s, estimand = %s, link = %s", sw, over, estimand, link), {
             suppressWarnings({
             W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                           data = test_data, method = "cbps", estimand = estimand,
@@ -42,55 +42,51 @@ test_that("Binary treatment", {
                           s.weights = if (sw) "SW" else NULL,
                           include.obj = TRUE, solver = "multiroot")
             })
+
+            if (over == "exact") {
+              expect_M_parts_okay(W, tolerance = eps)
+              expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights,
+                                             s.weights = W$s.weights),
+                           0 * cobalt::col_w_smd(W$covs, W$treat,
+                                                 s.weights = W$s.weights),
+                           expected.label = "all 0s",
+                           tolerance = eps)
+            }
+
+            expect_true(is.numeric(W$ps))
+            expect_false(is_null(W$obj))
+
+            if (estimand %in% c("ATT", "ATC")) {
+              expect_ATT_weights_okay(W, tolerance = eps)
+            }
+
+            for (i in 0:1) {
+              e <- {
+                if (estimand == "ATT" && i == 1) expect_equal
+                else if (estimand == "ATC" && i == 0) expect_equal
+                else expect_not_equal
+              }
+
+              e(unname(W$weights[W$treat == i]),
+                rep(1, sum(W$treat == i)),
+                label = sprintf("%s weights", i),
+                expected.label = "all 1s",
+                tolerance = eps)
+            }
+
+            if (link != "logit" || estimand != "ATO") {
+              for (i in seq_len(k)) {
+                expect_not_equal(unname(W$weights), weight.mat[,i],
+                                 expected.label = sprintf("weights for model %s", colnames(weight.mat)[i]),
+                                 tolerance = min(1e-8, eps))
+              }
+            }
+
+            n <- sprintf("W_%s_%s_%s_%s", sw, over, estimand, link)
+            weight.mat[,k] <<- W$weights
+            colnames(weight.mat)[k] <<- n
+            k <<- k + 1
           })
-
-          n <- sprintf("W_%s_%s_%s_%s", sw, over, estimand, link)
-          assign(n, W)
-
-          if (over == "exact") {
-            expect_M_parts_okay(W, tolerance = eps)
-            expect_equal(cobalt::col_w_smd(W$covs, W$treat, W$weights,
-                                           s.weights = W$s.weights),
-                         0 * cobalt::col_w_smd(W$covs, W$treat,
-                                               s.weights = W$s.weights),
-                         label = sprintf("SMDs for %s", n),
-                         expected.label = "all 0s",
-                         tolerance = eps)
-          }
-
-          expect_true(is.numeric((!!{{ str2lang(n) }})$ps))
-          expect_false(is_null((!!{{ str2lang(n) }})$obj))
-
-          if (estimand %in% c("ATT", "ATC")) {
-            expect_ATT_weights_okay(W, tolerance = eps)
-          }
-
-          for (i in 0:1) {
-            e <- {
-              if (estimand == "ATT" && i == 1) expect_equal
-              else if (estimand == "ATC" && i == 0) expect_equal
-              else expect_not_equal
-            }
-
-            e(unname(W$weights[W$treat == i]),
-              rep(1, sum(W$treat == i)),
-              label = sprintf("%s weights for %s", i, n),
-              expected.label = "all 1s",
-              tolerance = eps)
-          }
-
-          if (link != "logit" || estimand != "ATO") {
-            for (i in seq_len(k)) {
-              expect_not_equal(unname(W$weights), weight.mat[,i],
-                               label = sprintf("Weights for %s", n),
-                               expected.label = sprintf("weights for model %s", colnames(weight.mat)[i]),
-                               tolerance = min(1e-8, eps))
-            }
-          }
-
-          weight.mat[,k] <- W$weights
-          colnames(weight.mat)[k] <- n
-          k <- k + 1
         }
       }
     }
@@ -141,7 +137,7 @@ test_that("Multi-category treatment", {
   for (sw in sw.opts) {
     for (over in over.opts) {
       for (estimand in estimand.opts) {
-        expect_no_error({
+        test_that(sprintf("CBPS: sw = %s, over = %s, estimand = %s", sw, over, estimand), {
           suppressWarnings({
           W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
                         data = test_data, method = "cbps", estimand = estimand,
@@ -150,57 +146,52 @@ test_that("Multi-category treatment", {
                         s.weights = if (sw) "SW" else NULL,
                         include.obj = TRUE, solver = "multiroot")
           })
+
+          if (over == "exact") {
+            expect_M_parts_okay(W, tolerance = eps)
+            for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
+              in_tt <- W$treat %in% tt
+              expect_equal(cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt], W$weights[in_tt],
+                                             s.weights = W$s.weights[in_tt]),
+                           0 * cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt],
+                                                 s.weights = W$s.weights[in_tt]),
+                           label = sprintf("SMDs for %s", paste(tt, collapse = " vs. ")),
+                           expected.label = "all 0s",
+                           tolerance = eps)
+            }
+          }
+
+          expect_true(is_null(W$ps))
+          expect_false(is_null(W$obj))
+
+          if (estimand %in% c("ATT", "ATC")) {
+            expect_ATT_weights_okay(W, tolerance = eps)
+          }
+
+          for (i in levels(W$treat)) {
+            e <- {
+              if (estimand == "ATT" && i == W$focal) expect_equal
+              else expect_not_equal
+            }
+
+            e(unname(W$weights[W$treat == i]),
+              rep(1, sum(W$treat == i)),
+              label = sprintf("%s weights", i),
+              expected.label = "all 1s",
+              tolerance = eps)
+          }
+
+          for (i in seq_len(k - 1)) {
+            expect_not_equal(unname(W$weights), weight.mat[,i],
+                             expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
+                             tolerance = min(1e-8, eps))
+          }
+
+          n <- sprintf("W_%s_%s_%s", sw, over, estimand)
+          colnames(weight.mat)[k] <<- n
+          weight.mat[,k] <<- W$weights
+          k <<- k + 1
         })
-
-        n <- sprintf("W_%s_%s_%s", sw, over, estimand)
-        assign(n, W)
-
-        if (over == "exact") {
-          expect_M_parts_okay(W, tolerance = eps)
-          for (tt in combn(levels(W$treat), 2, simplify = FALSE)) {
-            in_tt <- W$treat %in% tt
-            expect_equal(cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt], W$weights[in_tt],
-                                           s.weights = W$s.weights[in_tt]),
-                         0 * cobalt::col_w_smd(W$covs[in_tt,], W$treat[in_tt],
-                                               s.weights = W$s.weights[in_tt]),
-                         label = sprintf("SMDs for %s", n),
-                         expected.label = "all 0s",
-                         tolerance = eps)
-          }
-        }
-
-        expect_true(is_null((!!{{ str2lang(n) }})$ps))
-        expect_false(is_null((!!{{ str2lang(n) }})$obj))
-
-        if (estimand %in% c("ATT", "ATC")) {
-          expect_ATT_weights_okay(W, tolerance = eps)
-        }
-
-        for (i in levels(W$treat)) {
-          e <- {
-            if (estimand == "ATT" && i == W$focal) expect_equal
-            else expect_not_equal
-          }
-
-          e(unname(W$weights[W$treat == i]),
-            rep(1, sum(W$treat == i)),
-            label = sprintf("%s weights for %s", i, n),
-            expected.label = "all 1s",
-            tolerance = eps)
-        }
-
-        for (i in seq_len(k - 1)) {
-          expect_not_equal(unname(W$weights), weight.mat[,i],
-                           label = sprintf("Weights for %s", n),
-                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                           tolerance = min(1e-8, eps))
-        }
-
-        colnames(weight.mat)[k] <- n
-        weight.mat[,k] <- W$weights
-        k <- k + 1
-
-        rm(list = n)
       }
     }
   }
@@ -233,7 +224,7 @@ test_that("Continuous treatment", {
 
   for (sw in sw.opts) {
     for (over in over.opts) {
-      expect_no_error({
+      test_that(sprintf("CBPS: sw = %s, over = %s", sw, over), {
         suppressWarnings({
         W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                       data = test_data, method = "cbps",
@@ -241,36 +232,30 @@ test_that("Continuous treatment", {
                       s.weights = if (sw) "SW" else NULL,
                       include.obj = TRUE, solver = "multiroot")
         })
+
+        if (over == "exact") {
+          expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                         s.weights = W$s.weights),
+                       0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
+                                             s.weights = W$s.weights),
+                       expected.label = "all 0s",
+                       tolerance = eps)
+        }
+
+        expect_true(is_null(W$ps))
+        expect_false(is_null(W$obj))
+
+        for (i in seq_len(k - 1)) {
+          expect_not_equal(unname(W$weights), weight.mat[,i],
+                           expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
+                           tolerance = min(1e-8, eps))
+        }
+
+        n <- sprintf("W_%s_%s", sw, over)
+        colnames(weight.mat)[k] <<- n
+        weight.mat[,k] <<- W$weights
+        k <<- k + 1
       })
-
-      n <- sprintf("W_%s_%s", sw, over)
-      assign(n, W)
-
-      if (over == "exact") {
-        expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
-                                       s.weights = W$s.weights),
-                     0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
-                                           s.weights = W$s.weights),
-                     label = sprintf("A-X correlations for %s", n),
-                     expected.label = "all 0s",
-                     tolerance = eps)
-      }
-
-      expect_true(is_null((!!{{ str2lang(n) }})$ps))
-      expect_false(is_null((!!{{ str2lang(n) }})$obj))
-
-      for (i in seq_len(k - 1)) {
-        expect_not_equal(unname(W$weights), weight.mat[,i],
-                         label = sprintf("Weights for %s", n),
-                         expected.label = sprintf("weights for %s", colnames(weight.mat)[i]),
-                         tolerance = min(1e-8, eps))
-      }
-
-      colnames(weight.mat)[k] <- n
-      weight.mat[,k] <- W$weights
-      k <- k + 1
-
-      rm(list = n)
     }
   }
 

@@ -46,17 +46,26 @@
   #  OR:   1.92
   #  logOR  .655
 
+  # Ordered outcome
+  gen_Y_O <- function(Y_C) {
+    factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
+                        all.inside = TRUE),
+           ordered = TRUE)
+  }
+
   # Survival outcome
   gen_Y_S <- function(A, X) {
     LP_S <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] + log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
+
     sqrt(-log(runif(length(A)))*2e4*exp(-LP_S))
   }
 
+  # Sampling weight
   gen_SW <- function(A, X) {
     LP_SP <- .5 + log(.4) * X[,1] - log(.7) * X[,2] + log(.5) * X[,3] - log(.1) * A
     P_SW <- plogis(LP_SP)
 
-    1/P_SW
+    1 / P_SW
   }
 
   X <- gen_X(n)
@@ -66,11 +75,12 @@
 
   Y_C <- gen_Y_C(A, X)
   Y_B <- gen_Y_B(A, X)
+  Y_O <- gen_Y_O(Y_C)
   Y_S <- gen_Y_S(A, X)
 
   SW <- gen_SW(A, X)
 
-  d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_S, SW)
+  d <- data.frame(A, Am, Ac, X, Y_C, Y_B, Y_O, Y_S, SW)
 
   d$X6 <- factor(cut(d$X6, 4), labels = LETTERS[1:4])
 

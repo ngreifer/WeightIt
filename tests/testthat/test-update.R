@@ -333,8 +333,7 @@ test_that("update.multinom_weightit() works with weightit", {
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data$Y_M <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
-                                                       all.inside = TRUE)))
+  test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
 
   expect_no_condition({
     W0 <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
@@ -479,8 +478,6 @@ test_that("update.ordinal_weightit() works with weightit", {
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data$Y_O <- with(test_data, factor(findInterval(Y_C, quantile(Y_C, seq(0, 1, length = 5)),
-                                                       all.inside = TRUE)))
 
   expect_no_condition({
     W0 <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,

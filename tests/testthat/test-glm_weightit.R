@@ -196,3 +196,97 @@ test_that("Binary treatment", {
                sandwich::sandwich(fit0, asympt = FALSE),
                tolerance = eps)
 })
+
+test_that("Gaussian and Poisson families", {
+  skip_on_cran()
+  skip_if_not_installed("sandwich")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  #Count outcome constructed locally for this test only (not part of the fixture)
+  set.seed(123)
+  test_data$Y_P <- rpois(nrow(test_data), lambda = exp(.3 + .05 * test_data$X1))
+
+  ##No weightit object -- Gaussian
+  expect_no_condition({
+    fit0 <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                         data = test_data, family = gaussian())
+  })
+
+  fit_g <- glm(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+              data = test_data, family = gaussian())
+
+  expect_equal(coef(fit0), coef(fit_g), tolerance = eps)
+  expect_equal(vcov(fit0), sandwich::sandwich(fit_g), tolerance = eps)
+
+  ##No weightit object -- Poisson
+  expect_no_condition({
+    fit0_p <- glm_weightit(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                           data = test_data, family = poisson())
+  })
+
+  fit_g_p <- glm(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                data = test_data, family = poisson())
+
+  expect_equal(coef(fit0_p), coef(fit_g_p), tolerance = eps)
+  expect_equal(vcov(fit0_p), sandwich::sandwich(fit_g_p), tolerance = eps)
+
+  ##With a weightit object
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", estimand = "ATE",
+                  include.obj = TRUE)
+  })
+
+  #Gaussian, M-estimation vs. HC0 (should differ but agree on coefficients)
+  expect_no_condition({
+    fit <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                        data = test_data, weightit = W, family = gaussian())
+  })
+
+  expect_no_condition({
+    fit_hc0 <- glm_weightit(Y_C ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                            data = test_data, weightit = W, family = gaussian(),
+                            vcov = "HC0")
+  })
+
+  expect_equal(coef(fit), coef(fit_hc0), tolerance = eps)
+  expect_not_equal(vcov(fit), vcov(fit_hc0), tolerance = eps)
+  expect_equal(vcov(fit_hc0), sandwich::sandwich(fit_hc0, asympt = FALSE), tolerance = eps)
+
+  #Poisson, M-estimation vs. HC0
+  expect_no_condition({
+    fit_p <- glm_weightit(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                          data = test_data, weightit = W, family = poisson())
+  })
+
+  expect_no_condition({
+    fit_p_hc0 <- glm_weightit(Y_P ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                              data = test_data, weightit = W, family = poisson(),
+                              vcov = "HC0")
+  })
+
+  expect_equal(coef(fit_p), coef(fit_p_hc0), tolerance = eps)
+  expect_not_equal(vcov(fit_p), vcov(fit_p_hc0), tolerance = eps)
+  expect_equal(vcov(fit_p_hc0), sandwich::sandwich(fit_p_hc0, asympt = FALSE), tolerance = eps)
+})
+
+test_that("family = 'multinomial' redirects to multinom_weightit() (deprecated)", {
+  skip_on_cran()
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
+
+  expect_warning({
+    fit <- glm_weightit(Y_M ~ A + X1 + X2, data = test_data, family = "multinomial")
+  }, "deprecated")
+
+  expect_s3_class(fit, "multinom_weightit")
+
+  #Coefficients should match calling multinom_weightit() directly
+  fit_direct <- multinom_weightit(Y_M ~ A + X1 + X2, data = test_data)
+
+  expect_equal(coef(fit), coef(fit_direct))
+})

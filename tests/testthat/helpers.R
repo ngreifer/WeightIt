@@ -53,3 +53,26 @@ expect_waldo_not_equal <- function(type, act, exp, info, ...) {
          info = info, trace_env = rlang::caller_env())
   invisible(act$val)
 }
+
+expect_balance_improved <- function(W, ...) {
+  weighted <- abs(cobalt::col_w_smd(W$covs, W$treat, W$weights,
+                                    s.weights = W$s.weights))
+  unweighted <- abs(cobalt::col_w_smd(W$covs, W$treat,
+                                      s.weights = W$s.weights))
+
+  expect_true(max(weighted) < max(unweighted), ...)
+}
+
+inject_missingness <- function(data, cols, prop = 0.1, seed = 4321) {
+  old_seed <- if (exists(".Random.seed", envir = globalenv())) get(".Random.seed", envir = globalenv()) else NULL
+  set.seed(seed)
+
+  for (col in cols) {
+    is.na(data[[col]]) <- sample(nrow(data), round(prop * nrow(data)))
+  }
+
+  if (is_null(old_seed)) rm(".Random.seed", envir = globalenv())
+  else assign(".Random.seed", old_seed, envir = globalenv())
+
+  data
+}
