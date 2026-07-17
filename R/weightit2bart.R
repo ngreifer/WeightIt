@@ -221,7 +221,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 
   bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
 
-  tryCatch({verbosely({
+  rlang::try_fetch({verbosely({
     fit <- eval(bart.call)
   }, verbose = verbose)},
   error = function(e) {
@@ -269,7 +269,7 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
     A[["data"]] <- as.integer(treat == i)
     bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
 
-    tryCatch({verbosely({
+    rlang::try_fetch({verbosely({
       fit.list[[i]] <- eval(bart.call)
     }, verbose = verbose)},
     error = function(e) {
@@ -325,7 +325,7 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
 
   #Estimate GPS
-  tryCatch({verbosely({
+  rlang::try_fetch({verbosely({
     fit <- eval(bart.call)
   }, verbose = verbose)},
   error = function(e) {

@@ -1078,7 +1078,7 @@
 .solve_hessian <- function(h, ..., model = "out") {
   model <- arg::match_arg(model, c("out", "weights"))
 
-  withCallingHandlers({
+  rlang::try_fetch({
     solve(h, ...)
   },
   warning = function(w) {

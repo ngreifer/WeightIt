@@ -343,7 +343,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 
     data <- data.frame(treat, covs)
 
-    withCallingHandlers({
+    rlang::try_fetch({
       verbosely({
         fit <- misaem::miss.glm(formula(data), data = data, control = as.list(control))
       }, verbose = verbose)
@@ -380,7 +380,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
                                          ...mget(setdiff(names(formals(modctrl_fun))[pmatch(...names(), names(formals(modctrl_fun)), 0L)],
                                                          names(...get("modctrl_fun"))))))
 
-    withCallingHandlers({verbosely({
+    rlang::try_fetch({verbosely({
       data <- data.frame(treat, covs)
       formula <- if (ncol(covs) > 0L) formula(data) else treat ~ 1
 
@@ -436,7 +436,7 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
       mustart <- .25 + .5 * treat
     }
 
-    withCallingHandlers({verbosely({
+    rlang::try_fetch({verbosely({
       if (isTRUE(...get("quick"))) {
         fit <- do.call(glm_method, list(y = treat,
                                         x = cbind(`(Intercept)` = 1, covs),
@@ -709,7 +709,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         mustart <- .25 + .5 * t_i
       }
 
-      withCallingHandlers({verbosely({
+      rlang::try_fetch({verbosely({
         fit.obj[[i]] <- do.call(stats::glm,
                                 list(formula(data_i),
                                      data = data_i,
@@ -743,7 +743,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     data <- data.frame(treat, covs)
     formula <- formula(data)
 
-    tryCatch({verbosely({
+    rlang::try_fetch({verbosely({
       fit.obj <- do.call(MASS::polr,
                          list(formula,
                               data = data,
@@ -772,7 +772,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     data <- data.frame(treat, covs)
     formula <- formula(data)
 
-    tryCatch({verbosely({
+    rlang::try_fetch({verbosely({
       fit.obj <- do.call(brglm2::bracl,
                          list(formula,
                               data = data,
@@ -809,7 +809,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       t_i <- as.numeric(treat == i)
       data_i <- data.frame(t_i, covs)
 
-      withCallingHandlers({
+      rlang::try_fetch({
         verbosely({
           fit.obj[[i]] <- misaem::miss.glm(formula(data_i), data = data_i,
                                            control = as.list(control))
@@ -836,7 +836,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     data <- data.frame(treat, covs)
     formula <- formula(data)
 
-    tryCatch({verbosely({
+    rlang::try_fetch({verbosely({
       fit.obj <- MNP::mnp(formula, data, verbose = TRUE)
     }, verbose = verbose)},
     error = function(e) {
@@ -867,7 +867,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     control <- c(as.list(...get("control")),
                  ...mget(setdiff(names(formals(ctrl_fun))[pmatch(...names(), names(formals(ctrl_fun)), 0L)],
                                  names(...get("control")))))
-    tryCatch({verbosely({
+    rlang::try_fetch({verbosely({
       fit.obj <- do.call(mclogit::mblogit,
                          list(form,
                               data = data,
@@ -897,7 +897,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                    ...mget(setdiff(names(formals(ctrl_fun))[pmatch(...names(), names(formals(ctrl_fun)), 0L)],
                                                    names(...get("control"))))))
 
-    tryCatch({verbosely({
+    rlang::try_fetch({verbosely({
       fit.obj <- do.call(brglm2::brmultinom,
                          list(formula, data,
                               weights = s.weights,
@@ -1029,7 +1029,7 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
     data <- data.frame(treat, covs)
     formula <- formula(data)
 
-    withCallingHandlers({verbosely({
+    rlang::try_fetch({verbosely({
       fit <- misaem::miss.lm(formula, data = data, control = as.list(...get("control")))
     }, verbose = verbose)},
     warning = function(w) {

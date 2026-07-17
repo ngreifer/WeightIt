@@ -142,7 +142,7 @@ weightit2npcbps <- function(covs, treat, s.weights, subset, missing, verbose, ..
   corprior <- ...get("corprior", .01)
   arg::arg_number(corprior)
 
-  tryCatch({verbosely({
+  rlang::try_fetch({verbosely({
     fit <- CBPS::npCBPS(formula(new.data),
                         data = new.data,
                         corprior = corprior,
@@ -185,7 +185,7 @@ weightit2npcbps.cont <- function(covs, treat, s.weights, subset, missing, verbos
   corprior <- ...get("corprior", .01)
   arg::arg_number(corprior)
 
-  tryCatch({verbosely({
+  rlang::try_fetch({verbosely({
     fit <- CBPS::npCBPS(formula(new.data),
                         data = new.data,
                         corprior = corprior,

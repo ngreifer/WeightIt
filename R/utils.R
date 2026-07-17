@@ -668,7 +668,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     data.specified <- FALSE
   }
 
-  tryCatch({
+  rlang::try_fetch({
     tt <- terms(f, data = data) |>
       update(~ .) |>
       terms(data = data)
@@ -688,7 +688,7 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   if (rlang::is_formula(tt, lhs = TRUE)) {
     resp.form <- update(tt, . ~ 0)
 
-    test <- tryCatch({
+    test <- rlang::try_fetch({
       model.frame(resp.form, data = data,
                   drop.unused.levels = TRUE,
                   na.action = "na.pass")
@@ -758,8 +758,8 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     lapply(function(i) {
       iexp <- safe_str2expression(i)
 
-      test <- tryCatch(eval(iexp, data, env),
-                       error = identity)
+      test <- rlang::try_fetch(eval(iexp, data, env),
+                               error = identity)
 
       if (inherits(test, "simpleError")) {
         m <- conditionMessage(test)
@@ -794,8 +794,8 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     unlist()
 
   for (i in seq_along(rhs.vars.mentioned.char)) {
-    test <- tryCatch(eval(rhs.vars.mentioned[[i]], data, env),
-                     error = identity)
+    test <- rlang::try_fetch(eval(rhs.vars.mentioned[[i]], data, env),
+                             error = identity)
 
     if (inherits(test, "simpleError")) {
       m <- conditionMessage(test)
@@ -869,13 +869,14 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
                                       drop.unused.levels = TRUE,
                                       na.action = "na.pass"))
 
-  covs <- tryCatch(eval(mf.covs),
-                   warning = function(w) {
-                     arg::wrn("{conditionMessage(w)}")
-                   },
-                   error = function(e) {
-                     arg::err("{conditionMessage(e)}")
-                   })
+  covs <- rlang::try_fetch(eval(mf.covs),
+                           warning = function(w) {
+                             arg::wrn("{conditionMessage(w)}")
+                             invokeRestart("muffleWarning")
+                           },
+                           error = function(e) {
+                             arg::err("{conditionMessage(e)}")
+                           })
 
   if (is_not_null(treat.name) && utils::hasName(covs, treat.name)) {
     arg::err("the variable on the left side of the formula ({.var {treat.name}}) must not appear on the right side")
@@ -1220,7 +1221,7 @@ check_if_call_from_fun <- function(fun) {
 #warnings and errors.
 .eval_fit <- function(call, envir = parent.frame(2L), warnings = NULL, errors = NULL,
                       from = TRUE) {
-  withCallingHandlers({
+  rlang::try_fetch({
     fit <- eval(call, envir = envir)
   },
   warning = function(w) {
