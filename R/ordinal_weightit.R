@@ -7,9 +7,7 @@
 #' model when available.
 #'
 #' @inheritParams glm_weightit
-#' @param link a string corresponding to the desired link function. Any
-#'   allowed by [binomial()] are accepted. Default is `"logit"` for ordinal
-#'   logistic regression, respectively.
+#' @param link a string corresponding to the desired link function. Allowable options include `"logit"`, `"probit"`, `"loglog"`, `"cloglog"`, and `"cauchit"`. Default is `"logit"` for ordinal logistic regression.
 #'
 #' @returns
 #' An `ordinal_weightit` object.
@@ -105,6 +103,12 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
   model_call <- match.call()
 
+  if (is_not_null(...get("weights"))) {
+    arg::wrn("{.arg weights} is not an allowable argument to {.fun {rlang::call_name(model_call)}} and will be ignored. To fit a weighted model, supply a {.cls weightit} or {.cls weightitMSM} object to the {.arg weightit} argument")
+
+    model_call[["weights"]] <- NULL
+  }
+
   ###
   if (is_not_null(...get("family"))) {
     arg::err(c("{.arg family} cannot be used with {.fun ordinal_weightit}.",
@@ -140,8 +144,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   arg::arg_matrix(x)
 
   if (rlang::is_string(link)) {
-    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit", "log", "clog",
-                             "softplus"))
+    arg::arg_element(link, c("logit", "probit", "loglog", "cloglog", "cauchit"))
 
     link <- .make_link(link)
   }
@@ -417,6 +420,11 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   # Residuals
   res <- setNames(1 - pp[ind_mat], rownames(x))
 
+  # Must be computed here, before theta is put back on the original scale
+  # below -- x_ is never de-standardized, so theta and x_ need to be on the
+  # same (standardized) scale when this is computed.
+  linear.predictors <- offset + drop(x_ %*% theta[seq_col(x_)])
+
   # Adjust estimates and gradient to be put on original scale
   if (!no_x) {
     theta <- theta / c(sds, rep.int(1, m - 1L))
@@ -430,7 +438,7 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
        residuals = res,
        fitted.values = pp,
        family = fam,
-       linear.predictors = offset + drop(x_ %*% theta[seq_col(x_)]),
+       linear.predictors = linear.predictors,
        solve = out0,
        psi = psi,
        f = gr,
@@ -477,6 +485,10 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
     if (is_not_null(nm)) {
       names(Y) <- nm
     }
+  }
+
+  if (is.character(Y) || (is.factor(Y) && !is.ordered(Y))) {
+    arg::wrn("the outcome variable is {.type {Y}} without a provided ordering, so the resulting estimates may be nonsensical. Code it as an {.help [ordered factor](base::ordered)} with a verified ordering to prevent invalid results")
   }
 
   X <- {
