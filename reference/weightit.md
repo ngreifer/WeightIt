@@ -212,8 +212,16 @@ When `keep.mparts` is `TRUE` (the default) and the chosen method is
 compatible with M-estimation, the components related to M-estimation for
 use in
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-are stored in the `"Mparts"` attribute. When `by` is specified,
-`keep.mparts` is set to `FALSE`.
+are stored in the `"Mparts"` attribute. When `by` is specified, the
+per-stratum M-estimation components are instead combined and stored in
+the `"Mparts.list"` attribute; the resulting standard errors produced by
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+are asymptotically equivalent to those from estimating the weights from
+a single model in which the `by` variable is fully interacted with all
+the covariates. The same is true for
+[`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+where the equivalent model interacts the `by` variable with all the
+covariates at every time point.
 
 ## Details
 

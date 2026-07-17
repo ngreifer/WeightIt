@@ -1278,8 +1278,8 @@ a
 
     ## 
     ##  X5 Estimate Std. Error    z Pr(>|z|)    S 2.5 % 97.5 %
-    ##   0     1.16      0.480 2.41   0.0159  6.0 0.217   2.10
-    ##   1     2.38      0.454 5.24   <0.001 22.5 1.487   3.27
+    ##   0     1.16      0.461 2.51    0.012  6.4 0.255   2.06
+    ##   1     2.38      0.427 5.56   <0.001 25.2 1.539   3.21
     ## 
     ## Term: A
     ## Type: probs
@@ -1296,7 +1296,7 @@ hypotheses(a, ~pairwise)
 
     ## 
     ##   Hypothesis Estimate Std. Error    z Pr(>|z|)   S   2.5 % 97.5 %
-    ##  (b2) - (b1)     1.22       0.66 1.85    0.065 3.9 -0.0759   2.51
+    ##  (b2) - (b1)     1.22      0.628 1.94   0.0524 4.3 -0.0124   2.45
 
 Though the subgroup effects differ from each other in the sample, this
 difference is not statistically significant at the .05 level, so there
