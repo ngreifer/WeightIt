@@ -3,13 +3,29 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
-* Fixed a bug when using energy balancing with `estimand = "ATC"` and `moments` greater than 0.
-
 * `link = "softplus"` can be used with `method = "cbps"` and `method = "ipt"` to use the softplus link.
 
 * Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could cause the FISTA solver to stop before the requested balance tolerance was reliably achieved. Thanks to Ivan Geshev for pointing it out.
 
-* Fixed a bug in `method = "ebal"` with `tols` greater than 0, a continuous treatment, and sampling weights that could allow the treatment-covariate correlation to slightly exceed the requested tolerance.
+* Fixed a bug in `method = "ebal"` and `method = "energy"` with `tols` greater than 0, a continuous treatment, and sampling weights that could allow the treatment-covariate correlation to slightly exceed the requested tolerance.
+
+* Fixed a bug in which `method = "gbm"` with `criterion` set to a cross-validation specification (e.g., `"cv5"`) would fail with an error.
+
+* With `method = "gbm"`, `method = "surr"` is no longer allowed, as it did nothing different from `"ind"`. It is now set to `"ind"` with a warning.
+
+* Fixed a bug in `method = "energy"` with `estimand = "ATC"` and `moments` greater than 0.
+
+* Fixed a bug in `method = "energy"` and `method = "cfd"` with `min.w` set to `-Inf`.
+
+* Fixed a bug in `weightitMSM()` in which supplying a single formula to `num.formula` would fail to correctly incorporate its terms into the stabilization model at all but the first time point.
+
+* Fixed a bug in which `predict()` on an `ordinal_weightit` object with `type = "link"` or `type = "stdlv"` and no `newdata` supplied could return incorrect values due to a scaling error.
+
+* The `link` argument in `ordinal_weightit()` no longer accepts `"log"` and `"clog"` as valid links.
+
+* `weights` is now correctly ignored with a warning in `glm_weightit()` and friends.
+
+* Added units tests for all weighting methods.
 
 # `WeightIt` 1.7.0
 
