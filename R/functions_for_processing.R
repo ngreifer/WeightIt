@@ -376,7 +376,7 @@
   missing
 }
 
-.process_osqp_settings <- function(min.w, verbose, ...) {
+.process_osqp_settings <- function(verbose, ...) {
   A <- ...mget(rlang::fn_fmls_names(osqp::osqpSettings))
 
   eps <- ...get("eps", 1e-6)
@@ -1294,16 +1294,16 @@ stabilize_w <- function(weights, treat) {
 
       .density <- function(x, log = FALSE) {
         if (utils::hasName(formals(splitdens1), "log")) {
-          out <- tryCatch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1L])))),
-                          error = function(e) {
-                            arg::err("error in applying density:\n  {conditionMessage(e)}")
-                          })
+          out <- rlang::try_fetch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1L])))),
+                                  error = function(e) {
+                                    arg::err("error in applying density:\n  {conditionMessage(e)}")
+                                  })
         }
         else {
-          out <- tryCatch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1L])))),
-                          error = function(e) {
-                            arg::err("error in applying density:\n  {conditionMessage(e)}")
-                          })
+          out <- rlang::try_fetch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1L])))),
+                                  error = function(e) {
+                                    arg::err("error in applying density:\n  {conditionMessage(e)}")
+                                  })
 
           if (log) out <- log(out)
         }
@@ -1744,7 +1744,7 @@ verbosely <- function(expr, verbose = TRUE) {
 }
 
 with_delayed_warnings <- function(expr) {
-  withCallingHandlers({
+  rlang::try_fetch({
     expr
   },
   warning = function(w) {
@@ -1765,10 +1765,10 @@ generalized_inverse <- function(sigma, .try = TRUE) {
     return(sigma_inv)
   }
 
-  tryCatch(solve(sigma),
-           error = function(e) {
-             generalized_inverse(sigma, .try = FALSE)
-           })
+  rlang::try_fetch(solve(sigma),
+                   error = function(e) {
+                     generalized_inverse(sigma, .try = FALSE)
+                   })
 }
 
 #Compute gradient numerically using centered difference
@@ -2027,9 +2027,10 @@ generalized_inverse <- function(sigma, .try = TRUE) {
     name <- "loglog"
   }
   else if (link == "softplus") {
-    linkfun <- function(mu, a = 10) s_log(mu, a)
-    linkinv <- function(eta, a = 10) s_exp(eta, a)
-    mu.eta <- function(eta, a = 10) plogis(a * eta)
+    a <- 10
+    linkfun <- function(mu) s_log(mu, a)
+    linkinv <- function(eta) s_exp(eta, a)
+    mu.eta <- function(eta) plogis(a * eta)
     valideta <- function(eta) TRUE
     name <- "softplus"
   }

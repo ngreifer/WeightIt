@@ -60,7 +60,7 @@
 #' The following following additional arguments can be specified:
 #'
 #' \describe{
-#'   \item{`kernel`}{the name of the kernel used to characterize the CFD. Allowable optiosn include `"gaussian"` for the multivariate Gaussian kernel (the default), `"matern"` for the multivariate Matern kernel, `"energy"` for the energy distance kernel, `"laplace"` for the univariate Laplacian kernel, and `"t"` for the univariate t-dsitribution kernel.}
+#'   \item{`kernel`}{the name of the kernel used to characterize the CFD. Allowable optiosn include `"gaussian"` for the multivariate Gaussian kernel (the default), `"matern"` for the multivariate Matern kernel, `"energy"` for the energy distance kernel, `"laplace"` for the univariate Laplacian kernel, and `"t"` for the univariate t-distribution kernel.}
 #'   \item{`nu`}{for `kernel = "matern"`, the \eqn{\nu} parameter used to control smoothness. The default value is 3/2. For any values other than 1/2, 3/2, and 5/2, the \pkg{GPBayes} package is required to compute the Matern kernel. For `kernel = "t"`, the degrees of freedom for the univariate t-distributions used in the kernel. The default value is 5. Ignored for other kernels.}
 #'   \item{`nsim`}{for `kernel = "t"`, the number of simulations to use to compute the t-distribution kernel. Default is 5000. Greater is better but takes longer and uses more memory.}
 #'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Default is .0001, which is essentially 0.}
@@ -104,13 +104,13 @@
 #' CFD balancing for binary and multi-category treatments involves minimizing
 #' the CFD between the treatment groups and between each treatment
 #' group and a target group (e.g., the full sample for the ATE). The CFD is a scalar measure of the difference between two multivariate
-#' distributions. The performance of CFD balance depends on the choice of kernel, controlled by the `kernel` argument. Each kernel corresponds to different assumptions about the form of the true outcome model. See Santra et al. (2026) for a comparison of these different kernels. Setting `kernel = "energy"` is equivalent to entropy balancing, which can also be requested by using [`method = "energy"`][method_energy].
+#' distributions. The performance of CFD balance depends on the choice of kernel, controlled by the `kernel` argument. Each kernel corresponds to different assumptions about the form of the true outcome model. See Santra et al. (2026) for a comparison of these different kernels. Setting `kernel = "energy"` is equivalent to energy balancing, which can also be requested by using [`method = "energy"`][method_energy].
 #'
 #' The primary benefit of CFD balancing is that all features of the covariate
-#' distribution are balanced, not just means, as with other optimization-based
+#' distribution are balanced, not just means, unlike with other optimization-based
 #' methods like entropy balancing. Still, it is possible to add additional
 #' balance constraints to require balance on individual terms using the
-#' `moments` argument, just like with entropy balancing. CFD balancing can
+#' `moments` argument, as with entropy balancing. CFD balancing can
 #' sometimes yield weights with high variability; the `lambda` argument can be
 #' supplied to penalize highly variable weights to increase the effective sample
 #' size at the expense of balance.
@@ -135,8 +135,8 @@
 #' help.
 #'
 #' If it seems like the weights are balancing the covariates but you still get a
-#' failure to converge, this usually indicates that more iterations are needs to
-#' find the optimal solutions. This can occur when `moments` or `int` are
+#' failure to converge, this usually indicates that more iterations are needed to
+#' find the optimal solution. This can occur when `moments` or `int` are
 #' specified. `max_iter` should be increased, and setting `verbose = TRUE`
 #' allows you to monitor the process and examine if the optimization is
 #' approaching convergence.
@@ -230,7 +230,7 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
     tols <- abs(tols)
   }
 
-  options.list <- .process_osqp_settings(min.w, verbose, ...)
+  options.list <- .process_osqp_settings(verbose = verbose, ...)
 
   t0 <- which(treat == 0)
   t1 <- which(treat == 1)
@@ -484,7 +484,7 @@ weightit2cfd.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     tols <- abs(tols)
   }
 
-  options.list <- .process_osqp_settings(min.w, verbose, ...)
+  options.list <- .process_osqp_settings(verbose = verbose, ...)
 
   treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
                     dimnames = list(NULL, levels_treat))

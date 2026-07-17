@@ -136,10 +136,10 @@
 #' distributions in the original sample are minimized.
 #'
 #' The primary benefit of energy balancing is that all features of the covariate
-#' distribution are balanced, not just means, as with other optimization-based
+#' distribution are balanced, not just means, unlike with other optimization-based
 #' methods like entropy balancing. Still, it is possible to add additional
 #' balance constraints to require balance on individual terms using the
-#' `moments` argument, just like with entropy balancing. Energy balancing can
+#' `moments` argument, as with entropy balancing. Energy balancing can
 #' sometimes yield weights with high variability; the `lambda` argument can be
 #' supplied to penalize highly variable weights to increase the effective sample
 #' size at the expense of balance.
@@ -282,7 +282,7 @@ weightit2energy <- function(covs, treat, s.weights, subset, estimand, focal,
     tols <- abs(tols)
   }
 
-  options.list <- .process_osqp_settings(min.w, verbose, ...)
+  options.list <- .process_osqp_settings(verbose = verbose, ...)
 
   t0 <- which(treat == 0)
   t1 <- which(treat == 1)
@@ -544,7 +544,7 @@ weightit2energy.multi <- function(covs, treat, s.weights, subset, estimand, foca
     covs <- scale(covs)
   }
 
-  options.list <- .process_osqp_settings(min.w, verbose, ...)
+  options.list <- .process_osqp_settings(verbose = verbose, ...)
 
   treat_t <- matrix(0, nrow = n, ncol = length(levels_treat),
                     dimnames = list(NULL, levels_treat))
@@ -780,7 +780,7 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     tols <- abs(tols)
   }
 
-  options.list <- .process_osqp_settings(min.w, verbose, ...)
+  options.list <- .process_osqp_settings(verbose = verbose, ...)
 
   d.moments <- max(...get("d.moments", 0), moments)
   arg::arg_count(d.moments)
@@ -846,7 +846,9 @@ weightit2energy.cont <- function(covs, treat, s.weights, subset, missing, verbos
     covs <- scale_w(covs, s.weights)
     treat <- scale_w(treat, s.weights)
 
-    Amat <- cbind(Amat, covs * treat * s.weights / (n - 1))
+    tols[] <- tols * (1 - 1 / ESS(s.weights))
+
+    Amat <- cbind(Amat, covs * treat * s.weights / n)
 
     lvec <- c(lvec, rep.int(-tols, ncol(covs)))
     uvec <- c(uvec, rep.int(tols, ncol(covs)))
