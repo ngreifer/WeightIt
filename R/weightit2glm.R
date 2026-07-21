@@ -57,6 +57,25 @@
 #' denominator by setting `density = "kernel"`. Other arguments to [density()]
 #' can be specified to refine the density estimation parameters.
 #'
+#' ## Multilevel Treatment Models
+#'
+#' When the model `formula` contains \CRANpkg{lme4}-style random effects terms
+#' (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel (mixed-effects) model is
+#' used to estimate the propensity scores. This can improve balance and overlap
+#' when units are clustered (e.g., patients within hospitals or students within
+#' schools). The grouping (and any random-slope) variables are taken from `data`.
+#' For binary treatments, the model is fit using \pkgfun{lme4}{glmer} with the
+#' requested `link` (`"logit"`, `"probit"`, or `"cloglog"`); for continuous
+#' treatments, using \pkgfun{lme4}{lmer} (only the identity link is allowed); and
+#' for multi-category treatments, using \pkgfun{mclogit}{mblogit} with its
+#' `random` argument (i.e., `multi.method` is set to `"mclogit"`). The propensity
+#' scores are the predicted probabilities (or conditional densities) that include
+#' the estimated random effects, i.e., cluster-specific predictions. M-estimation
+#' is not available for these models; robust (`HC0`) or bootstrap standard errors
+#' should be used instead when estimating treatment effects (see the M-estimation
+#' section below and [glm_weightit()]). Random effects are only supported with
+#' `method = "glm"`.
+#'
 #' ## Longitudinal Treatments
 #'
 #' For longitudinal treatments, the weights are the product of the weights
@@ -89,7 +108,9 @@
 #' `density` is not `"kernel"`. The conditional treatment variance and
 #' unconditional treatment mean and variance are included as parameters to
 #' estimate, as these all go into calculation of the weights. For all treatment
-#' types, M-estimation is not supported when `missing = "saem"`. See
+#' types, M-estimation is not supported when `missing = "saem"` or when the model
+#' `formula` includes random effects terms (i.e., a multilevel model is fit; see
+#' *Multilevel Treatment Models* above). See
 #' [glm_weightit()] and `vignette("estimating-effects")` for details. For
 #' longitudinal treatments, M-estimation is supported whenever the underlying
 #' methods are.
@@ -135,9 +156,15 @@
 #'   "saem"`, additional arguments are passed to \pkgfun{misaem}{miss.lm} and
 #'   \pkgfun{misaem}{predict.miss.lm}.
 #'
+#'   When the model `formula` includes random effects terms (see *Multilevel
+#'   Treatment Models* above), additional arguments are passed to the
+#'   corresponding fitting function: \pkgfun{lme4}{glmer} for binary treatments,
+#'   \pkgfun{lme4}{lmer} for continuous treatments, and \pkgfun{mclogit}{mblogit}
+#'   for multi-category treatments.
+#'
 #' @section Additional Outputs:
 #' \describe{
-#'   \item{`obj`}{When `include.obj = TRUE`, the (generalized) propensity score model fit. For binary treatments, the output of the call to [glm()] or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if `multi.method = "glm"`). For continuous treatments, the output of the call to `glm()` for the predicted values in the denominator density.
+#'   \item{`obj`}{When `include.obj = TRUE`, the (generalized) propensity score model fit. For binary treatments, the output of the call to [glm()] or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if `multi.method = "glm"`). For continuous treatments, the output of the call to `glm()` for the predicted values in the denominator density. When the model `formula` includes random effects terms, the output of the call to \pkgfun{lme4}{glmer} (binary), \pkgfun{lme4}{lmer} (continuous), or \pkgfun{mclogit}{mblogit} (multi-category).
 #'   }
 #' }
 #'
@@ -258,6 +285,57 @@
 #' bal.tab(W3)
 NULL
 
+#Build the data.frame and model formula for a random-effects (lme4-style) PS
+#model. `covs` is the processed fixed-effects design matrix (already subset);
+#`bars` is the list of bar terms from `.find_re_bars()`. The random-effects
+#variables (grouping factors and any random-slope variables) are pulled fresh
+#from the original `.data` (subset to the current `by` group), because `covs`
+#has already been expanded to a numeric model matrix. Fixed-effect columns are
+#renamed to non-syntactic-safe placeholders (`.x1`, `.x2`, ...) for the fit; the
+#coefficients are never interpreted, only the predictions.
+.make_re_data_formula <- function(covs, treat, s.weights, bars, .data, subset) {
+  re.vars <- unique(unlist(lapply(bars, all.vars)))
+
+  not.found <- setdiff(re.vars, names(.data))
+  if (is_not_null(not.found)) {
+    arg::err("the variable{?s} {.var {not.found}} in the random effects component of {.arg formula} {?was/were} not found in the dataset")
+  }
+
+  re.data <- as.data.frame(.data)[subset, re.vars, drop = FALSE]
+
+  if (anyNA(re.data)) {
+    arg::err("missing values are not allowed in the random effects grouping or slope variables")
+  }
+
+  if (ncol(covs) > 0L) {
+    fe.data <- as.data.frame(covs)
+    names(fe.data) <- paste0(".x", seq_len(ncol(covs)))
+    data <- cbind(data.frame(.treat = treat, .s.weights = s.weights),
+                  fe.data, re.data)
+    fe.string <- paste(names(fe.data), collapse = " + ")
+  }
+  else {
+    data <- cbind(data.frame(.treat = treat, .s.weights = s.weights),
+                  re.data)
+    fe.string <- "1"
+  }
+
+  re.string <- paste(sprintf("(%s)", vapply(bars, deparse1, character(1L))),
+                     collapse = " + ")
+
+  formula <- stats::as.formula(sprintf(".treat ~ %s + %s", fe.string, re.string))
+
+  list(data = data, formula = formula)
+}
+
+#Convert a list of lme4-style bar terms into the `random` argument accepted by
+#mclogit::mblogit(): a one-sided formula `~ 1 | group` (or a list thereof).
+.bars_to_mclogit_random <- function(bars) {
+  out <- lapply(bars, function(b) stats::as.formula(call("~", b)))
+
+  if (length(out) == 1L) out[[1L]] else out
+}
+
 weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
                          stabilize, missing, .data, verbose, ...) {
   fit.obj <- NULL
@@ -292,6 +370,63 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 
   t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
+
+  #Random effects (multilevel) PS model via lme4::glmer()
+  re.bars <- ...get(".random")
+
+  if (is_not_null(re.bars)) {
+    rlang::check_installed("lme4")
+
+    if (missing == "saem") {
+      arg::err('random effects are not supported with {.code missing = "saem"}')
+    }
+
+    #Process link (restricted to those supported by glmer's binomial family)
+    acceptable.links <- c("logit", "probit", "cloglog")
+    link <- ...get("link")
+
+    if (is_null(link)) {
+      link <- acceptable.links[1L]
+    }
+    else {
+      link_match <- pmatch(link, acceptable.links)
+      if (anyNA(link_match)) {
+        arg::err("only {.val {acceptable.links}} {?is/are} allowed as the link for binary treatments with random effects")
+      }
+      link <- acceptable.links[link_match][1L]
+    }
+
+    df <- .make_re_data_formula(covs, treat, s.weights, re.bars, .data, subset)
+
+    rlang::try_fetch({verbosely({
+      fit <- do.call(lme4::glmer,
+                     list(df[["formula"]], data = df[["data"]],
+                          family = binomial(link = link),
+                          weights = quote(.s.weights)))
+    }, verbose = verbose)},
+    warning = function(w) {
+      w <- conditionMessage(w)
+      if (w != "non-integer #successes in a binomial glm!") {
+        arg::wrn("(from {.fun lme4::glmer}): {w}")
+      }
+      invokeRestart("muffleWarning")
+    },
+    error = function(e) {
+      arg::err("(from {.fun lme4::glmer}): {conditionMessage(e)}")
+    })
+
+    p.score <- as.numeric(predict(fit, type = "response"))
+
+    if (any(p.score <= 1e-14) || any(p.score >= 1 - 1e-14)) {
+      arg::wrn("propensity scores numerically equal to 0 or 1 were estimated, indicating perfect separation. These may yield problems with inference. See {.help [{.code ?method_glm}](WeightIt::method_glm)} for details")
+    }
+
+    w <- .get_w_from_ps_internal_bin(ps = p.score, treat = treat, estimand,
+                                     stabilize = stabilize,
+                                     subclass = ...get("subclass"))
+
+    return(list(w = w, ps = p.score, fit.obj = fit, Mparts = NULL))
+  }
 
   #Process link
   acceptable.links <- {
@@ -574,6 +709,22 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   link <- ...get("link")
   link.ignored <- FALSE
 
+  #Random effects (multilevel) PS model: route to mclogit::mblogit()
+  re.bars <- ...get(".random")
+
+  if (is_not_null(re.bars)) {
+    if (missing == "saem") {
+      arg::err('random effects are not supported with {.code missing = "saem"}')
+    }
+
+    if (is_not_null(multi.method) &&
+        tolower(multi.method) %nin% c("mclogit", "mblogit")) {
+      arg::wrn('random effects terms in {.arg formula} require {.code multi.method = "mclogit"}; the supplied {.arg multi.method} will be ignored')
+    }
+
+    multi.method <- "mclogit"
+  }
+
   #Process multi.method
   if (is_null(multi.method)) {
     if (ord.treat) {
@@ -848,11 +999,32 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   else if (multi.method == "mclogit") {
     rlang::check_installed("mclogit")
 
-    if (is_not_null(...get("random"))) {
-      random <- get_covs_and_treat_from_formula2(...get("random"), data = .data)$reported.covs[subset, , drop = FALSE]
-      data <- cbind(data.frame(random), data.frame(treat = treat, .s.weights = s.weights, covs))
-      covnames <- names(data)[-c(seq_col(random), ncol(random) + (1:2))]
-      tname <- names(data)[ncol(random) + 1L]
+    #Random effects from formula bars (.random) take precedence over the
+    #legacy `random` argument (an mclogit-style formula supplied directly).
+    random.arg <- {
+      if (is_not_null(re.bars)) .bars_to_mclogit_random(re.bars)
+      else ...get("random")
+    }
+
+    if (is_not_null(random.arg)) {
+      re.vars <- unique(unlist(lapply(
+        if (rlang::is_formula(random.arg)) list(random.arg) else as.list(random.arg),
+        all.vars)))
+
+      not.found <- setdiff(re.vars, names(.data))
+      if (is_not_null(not.found)) {
+        arg::err("the variable{?s} {.var {not.found}} in the random effects component of {.arg formula} {?was/were} not found in the dataset")
+      }
+
+      re.data <- as.data.frame(.data)[subset, re.vars, drop = FALSE]
+
+      if (anyNA(re.data)) {
+        arg::err("missing values are not allowed in the random effects grouping or slope variables")
+      }
+
+      data <- data.frame(re.data, treat = treat, .s.weights = s.weights, covs)
+      covnames <- names(data)[-seq_len(ncol(re.data) + 2L)]
+      tname <- names(data)[ncol(re.data) + 1L]
       ctrl_fun <- mclogit::mmclogit.control
     }
     else {
@@ -864,15 +1036,16 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
 
     form <- reformulate(covnames, tname)
 
-    control <- c(as.list(...get("control")),
-                 ...mget(setdiff(names(formals(ctrl_fun))[pmatch(...names(), names(formals(ctrl_fun)), 0L)],
-                                 names(...get("control")))))
+    control <- do.call(ctrl_fun,
+                       c(as.list(...get("control")),
+                         ...mget(setdiff(names(formals(ctrl_fun))[pmatch(...names(), names(formals(ctrl_fun)), 0L)],
+                                         names(...get("control"))))))
     rlang::try_fetch({verbosely({
       fit.obj <- do.call(mclogit::mblogit,
                          list(form,
                               data = data,
                               weights = quote(.s.weights),
-                              random = ...get("random"),
+                              random = random.arg,
                               method = ...get("mclogit.method"),
                               estimator = ...get("estimator", eval(formals(mclogit::mclogit)[["estimator"]])),
                               dispersion = ...get("dispersion", eval(formals(mclogit::mclogit)[["dispersion"]])),
@@ -884,7 +1057,12 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       arg::err("there was a problem fitting the multinomial {link} regression with {.fun mblogit}. Try a different {.arg multi.method}. Error message: (from {.fun mclogit::mblogit}):\f{conditionMessage(e)}")
     })
 
-    ps <- fitted(fit.obj)
+    #fitted() does not work for random-effects (mmblogit) fits; predict() with
+    #conditional = TRUE (the default) returns cluster-specific probabilities.
+    ps <- {
+      if (is_not_null(random.arg)) predict(fit.obj, type = "response")
+      else fitted(fit.obj)
+    }
     colnames(ps) <- levels(treat)
   }
   else if (multi.method == "brmultinom") {
@@ -962,7 +1140,7 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
        Mparts = Mparts)
 }
 
-weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, verbose, ...) {
+weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing, .data, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -1008,7 +1186,38 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   #Estimate GPS
   link <- ...get("link", "identity")
 
-  if (missing == "saem") {
+  re.bars <- ...get(".random")
+
+  if (is_not_null(re.bars)) {
+    rlang::check_installed("lme4")
+
+    acceptable.links <- "identity"
+    link_match <- pmatch(link, acceptable.links)
+
+    if (anyNA(link_match)) {
+      arg::err("only {.val {acceptable.links}} {?is/are} allowed as the link for continuous treatments with random effects")
+    }
+
+    link <- acceptable.links[link_match][1L]
+
+    df <- .make_re_data_formula(covs, treat, s.weights, re.bars, .data, subset)
+
+    rlang::try_fetch({verbosely({
+      fit <- do.call(lme4::lmer,
+                     list(df[["formula"]], data = df[["data"]],
+                          weights = quote(.s.weights)))
+    }, verbose = verbose)},
+    warning = function(w) {
+      arg::wrn("(from {.fun lme4::lmer}): {conditionMessage(w)}")
+      invokeRestart("muffleWarning")
+    },
+    error = function(e) {
+      arg::err("(from {.fun lme4::lmer}): {conditionMessage(e)}")
+    })
+
+    p <- as.numeric(predict(fit))
+  }
+  else if (missing == "saem") {
 
     if (!all_the_same(s.weights)) {
       arg::err('sampling weights cannot be used with `missing = "saem"`')
@@ -1099,7 +1308,8 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
   }
 
   Mparts <- NULL
-  if (missing != "saem" && !identical(...get("density"), "kernel")) {
+  if (missing != "saem" && !identical(...get("density"), "kernel") &&
+      is_null(re.bars)) {
     Mparts <- list(
       psi_treat = function(Btreat, Xtreat, A, SW) {
         un_s2 <- exp(Btreat[1L])

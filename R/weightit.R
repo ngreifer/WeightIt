@@ -218,8 +218,14 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     arg::err("{.arg formula} must be a formula relating treatment to covariates")
   }
 
-  #Process treat and covs from formula and data
-  t.c <- get_covs_and_treat_from_formula2(formula, data)
+  #Detect lme4-style random effects terms, e.g. (1 | group)
+  re.bars <- .find_re_bars(formula)
+
+  #Process treat and covs from formula and data (fixed-effects part only when
+  #random effects are present; the RE terms are re-parsed by the fitting function)
+  t.c <- get_covs_and_treat_from_formula2(
+    if (is_null(re.bars)) formula else .no_re_bars(formula),
+    data)
   reported.covs <- t.c[["reported.covs"]]
   simple.covs <- t.c[["simple.covs"]]
 
@@ -272,6 +278,16 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     method.name <- deparse1(substitute(method))
     .check_user_method(method)
     attr(method, "name") <- method.name
+  }
+
+  #Random effects terms are only supported by method = "glm"
+  if (is_not_null(re.bars)) {
+    if (is_null(method) || is.function(method) || method != "glm") {
+      arg::err('random effects terms in {.arg formula} (e.g., {.code (1 | group)}) are only supported when {.code method = "glm"}')
+    }
+    if (is_not_null(ps)) {
+      arg::err("random effects terms in {.arg formula} cannot be used with a supplied {.arg ps}")
+    }
   }
 
   #Process estimand and focal
@@ -368,6 +384,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   A[".data"] <- list(data)
   A[".formula"] <- list(formula)
   A[".covs"] <- list(reported.covs)
+  A[".random"] <- list(re.bars)
 
   #Returns weights (weights) and propensity score (ps)
   obj <- do.call("weightit.fit", A)
@@ -382,6 +399,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     A["quantile"] <- list(list())
     A[".formula"] <- list(stabilize)
     A[".covs"] <- list(stab.t.c[["reported.covs"]])
+    A[".random"] <- list(NULL)
 
     sw_obj <- do.call("weightit.fit", A)
 

@@ -60,6 +60,26 @@ denominator by setting \code{density = "kernel"}. Other arguments to \code{\link
 can be specified to refine the density estimation parameters.
 }
 
+\subsection{Multilevel Treatment Models}{
+
+When the model \code{formula} contains \CRANpkg{lme4}-style random effects terms
+(e.g., \code{treat ~ x1 + x2 + (1 | school)}), a multilevel (mixed-effects) model is
+used to estimate the propensity scores. This can improve balance and overlap
+when units are clustered (e.g., patients within hospitals or students within
+schools). The grouping (and any random-slope) variables are taken from \code{data}.
+For binary treatments, the model is fit using \pkgfun{lme4}{glmer} with the
+requested \code{link} (\code{"logit"}, \code{"probit"}, or \code{"cloglog"}); for continuous
+treatments, using \pkgfun{lme4}{lmer} (only the identity link is allowed); and
+for multi-category treatments, using \pkgfun{mclogit}{mblogit} with its
+\code{random} argument (i.e., \code{multi.method} is set to \code{"mclogit"}). The propensity
+scores are the predicted probabilities (or conditional densities) that include
+the estimated random effects, i.e., cluster-specific predictions. M-estimation
+is not available for these models; robust (\code{HC0}) or bootstrap standard errors
+should be used instead when estimating treatment effects (see the M-estimation
+section below and \code{\link[=glm_weightit]{glm_weightit()}}). Random effects are only supported with
+\code{method = "glm"}.
+}
+
 \subsection{Longitudinal Treatments}{
 
 For longitudinal treatments, the weights are the product of the weights
@@ -95,7 +115,9 @@ or \code{"glm"}. M-estimation is not supported when \code{subclass} is specified
 \code{density} is not \code{"kernel"}. The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all treatment
-types, M-estimation is not supported when \code{missing = "saem"}. See
+types, M-estimation is not supported when \code{missing = "saem"} or when the model
+\code{formula} includes random effects terms (i.e., a multilevel model is fit; see
+\emph{Multilevel Treatment Models} above). See
 \code{\link[=glm_weightit]{glm_weightit()}} and \code{vignette("estimating-effects")} for details. For
 longitudinal treatments, M-estimation is supported whenever the underlying
 methods are.
@@ -140,12 +162,18 @@ are passed to \code{...} in \code{glm()}. In the presence of missing data with \
 
 For continuous treatments in the presence of missing data with \code{missing = "saem"}, additional arguments are passed to \pkgfun{misaem}{miss.lm} and
 \pkgfun{misaem}{predict.miss.lm}.
+
+When the model \code{formula} includes random effects terms (see \emph{Multilevel
+Treatment Models} above), additional arguments are passed to the
+corresponding fitting function: \pkgfun{lme4}{glmer} for binary treatments,
+\pkgfun{lme4}{lmer} for continuous treatments, and \pkgfun{mclogit}{mblogit}
+for multi-category treatments.
 }
 
 \section{Additional Outputs}{
 
 \describe{
-\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}} or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if \code{multi.method = "glm"}). For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density.
+\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}} or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if \code{multi.method = "glm"}). For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density. When the model \code{formula} includes random effects terms, the output of the call to \pkgfun{lme4}{glmer} (binary), \pkgfun{lme4}{lmer} (continuous), or \pkgfun{mclogit}{mblogit} (multi-category).
 }
 }
 }

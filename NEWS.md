@@ -3,6 +3,8 @@ WeightIt News and Updates
 
 # `WeightIt` (development version)
 
+* `method = "glm"` now supports multilevel (mixed-effects) propensity score models. When the model `formula` supplied to `weightit()` contains `lme4`-style random effects terms (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel model is fit to estimate the propensity scores: `lme4::glmer()` for binary treatments, `lme4::lmer()` for continuous treatments, and `mclogit::mblogit()` for multi-category treatments. The estimated propensity scores are cluster-specific (they include the estimated random effects). M-estimation-based standard errors are not available for these models; robust (`HC0`) or bootstrap standard errors should be used instead.
+
 * M-estimation-based standard errors are now available when `by` is supplied to `weightit()`. Previously, specifying `by` omitted the M-estimation components entirely; now the per-stratum components are combined so that `glm_weightit()` produces standard errors asymptotically equivalent to those from estimating the weights from a single model in which the `by` variable is fully interacted with all the covariates. This works for `method` values `"glm"` (including `link = "br.logit"`), `"ebal"`, `"cbps"` (just-identified), and `"ipt"`, and composes with `stabilize`.
 
 * Similarly, M-estimation-based standard errors are now available when `by` is supplied to `weightitMSM()`, giving standard errors asymptotically equivalent to interacting the `by` variable with all the covariates at every time point. This works for `method = "glm"` and `method = "cbps"` (with `is.MSM.method = FALSE`) and composes with stabilization.

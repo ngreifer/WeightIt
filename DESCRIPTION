@@ -37,6 +37,7 @@ Suggests:
     brglm2 (>= 0.5.2),
     enrichwith (>= 0.3.1),
     logistf (>= 1.26.0),
+    lme4 (>= 1.1-31),
     osqp (>= 1.0.0),
     survival (>= 3.6-2),
     fwb (>= 0.2.0),

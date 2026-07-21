@@ -84,6 +84,11 @@
 
   d$X6 <- factor(cut(d$X6, 4), labels = LETTERS[1:4])
 
+  #Grouping factor for multilevel/random-effects models. Generated last so the
+  #RNG stream for all variables above is unchanged (existing fixtures stay
+  #byte-identical); a single call adds one draw at the end of the stream.
+  d$cluster <- factor(sample(25L, nrow(d), replace = TRUE))
+
   d
 }
 

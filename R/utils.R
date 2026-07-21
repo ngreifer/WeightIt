@@ -646,6 +646,94 @@ get_varnames <- function(expr) {
   recurse(expr)
 }
 
+#Random effects (lme4-style) formula helpers -------------------------------
+
+#Return a list of the lme4-style bar terms (e.g. the language object `1 | group`)
+#present in the RHS of a formula, or NULL if there are none. Used to detect
+#random-effects specifications like `treat ~ x1 + x2 + (1 | group)`. Written
+#without a dependency on lme4 because detection runs on every call to
+#`weightit()` and the multi-category engine (mclogit) is not lme4.
+.find_re_bars <- function(f) {
+  rhs <- if (length(f) == 3L) f[[3L]] else f[[2L]]
+
+  recurse <- function(term) {
+    if (!is.call(term)) {
+      return(NULL)
+    }
+
+    head <- term[[1L]]
+
+    if (identical(head, quote(`|`)) || identical(head, quote(`||`))) {
+      return(list(term))
+    }
+
+    if (identical(head, quote(`(`))) {
+      return(recurse(term[[2L]]))
+    }
+
+    if (identical(head, quote(`+`)) || identical(head, quote(`*`)) ||
+        identical(head, quote(`:`)) || identical(head, quote(`-`))) {
+      return(c(recurse(term[[2L]]),
+               if (length(term) >= 3L) recurse(term[[3L]])))
+    }
+
+    NULL
+  }
+
+  bars <- recurse(rhs)
+
+  if (is_null(bars)) NULL else bars
+}
+
+#Remove all lme4-style bar terms from a formula, returning the fixed-effects-only
+#formula (LHS preserved). If nothing remains on the RHS (e.g. `treat ~ (1 | g)`),
+#the RHS becomes `1`.
+.no_re_bars <- function(f) {
+  strip <- function(term) {
+    if (!is.call(term)) {
+      return(term)
+    }
+
+    head <- term[[1L]]
+
+    if (identical(head, quote(`|`)) || identical(head, quote(`||`))) {
+      return(NULL)
+    }
+
+    if (identical(head, quote(`(`))) {
+      inner <- strip(term[[2L]])
+      if (is_null(inner)) return(NULL)
+      return(call("(", inner))
+    }
+
+    if (identical(head, quote(`+`))) {
+      lhs <- strip(term[[2L]])
+      rhs <- if (length(term) >= 3L) strip(term[[3L]]) else NULL
+
+      if (is_null(lhs) && is_null(rhs)) return(NULL)
+      if (is_null(lhs)) return(rhs)
+      if (is_null(rhs)) return(lhs)
+      return(call("+", lhs, rhs))
+    }
+
+    term
+  }
+
+  rhs <- if (length(f) == 3L) f[[3L]] else f[[2L]]
+  new.rhs <- strip(rhs)
+
+  if (is_null(new.rhs)) {
+    new.rhs <- 1
+  }
+
+  new.f <- {
+    if (length(f) == 3L) call("~", f[[2L]], new.rhs)
+    else call("~", new.rhs)
+  }
+
+  stats::as.formula(new.f, env = environment(f))
+}
+
 #treat/covs
 get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 

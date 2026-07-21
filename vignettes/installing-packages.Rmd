@@ -73,6 +73,24 @@ If *mclogit* is not on CRAN, or if you want to install the development version f
 pak::pkg_install("melff/mclogit")
 ```
 
+*mclogit* is also used for multi-category treatments when the model `formula` includes random effects terms (see below).
+
+### Multilevel treatment models with random effects
+
+When the model `formula` supplied to `weightit()` with `method = "glm"` contains `lme4`-style random effects terms (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel (mixed-effects) model is used to estimate the propensity scores. For binary and continuous treatments, the *lme4* package is required. To install *lme4* from CRAN, run
+
+```{r}
+pak::pkg_install("lme4")
+```
+
+If *lme4* is not on CRAN, or if you want to install the development version from source, you can do so from the developer's [GitHub repo](https://github.com/lme4/lme4) using the following code:
+
+```{r}
+pak::pkg_install("lme4/lme4")
+```
+
+*lme4* requires compilation, which means you may need additional software installed on your computer to install it from source. For multi-category treatments, the *mclogit* package is used instead (see above).
+
 ### Multi-category treatments with `multi.method = "mnp"`
 
 For multi-category treatments, when `multi.method = "mnp"`, the *MNP* package is required for Bayesian multinomial probit regression. To install *MNP* from CRAN, run
