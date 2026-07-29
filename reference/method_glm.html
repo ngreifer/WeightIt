@@ -13,7 +13,7 @@ In general, this method relies on estimating propensity scores with a
 parametric generalized linear model and then converting those propensity
 scores into weights using a formula that depends on the desired estimand. For
 binary and multi-category treatments, a binomial or multinomial regression
-model is used to estimate the propensity scores as the predicted probability
+model (logistic, by default) is used to estimate the propensity scores as the predicted probability
 of being in each treatment given the covariates. For ordinal treatments, an
 ordinal regression model is used to estimate generalized propensity scores.
 For continuous treatments, a generalized linear model is used to estimate
@@ -23,9 +23,7 @@ Binary Treatments
 
 
 For binary treatments, this method estimates the propensity scores using
-glm(). An additional argument is link, which uses the same options as
-link in family(). The default link is "logit", but others, including
-"probit", are allowed. The following estimands are allowed: ATE, ATT, ATC,
+glm(). The following estimands are allowed: ATE, ATT, ATC,
 ATO, ATM, and ATOS. Weights can also be computed using marginal mean
 weighting through stratification for the ATE, ATT, and ATC. See
 get_w_from_ps() for details.
@@ -39,10 +37,10 @@ For multi-category treatments, the propensity scores are estimated using
 multinomial regression from one of a few functions depending on the argument
 supplied to multi.method (see Additional Arguments below). The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-estimand are computed using the standard formulas or those mentioned above.
+estimand are computed using the standard formulas.
 Weights can also be computed using marginal mean weighting through
 stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
-Ordinal treatments are treated exactly the same as non-order multi-category
+Ordinal treatments are treated exactly the same as non-ordinal multi-category
 treatments except that additional models are available to estimate the
 generalized propensity score (e.g., ordinal logistic regression).
 
@@ -53,16 +51,43 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
-and \(f_{A|X}(a_i)\) (known as the generalized propensity score) is the
-conditional density of treatment given the covariates evaluated at the
-observed value of treatment. The shape of \(f_A(.)\) and \(f_{A|X}(.)\)
-is controlled by the density argument described below (normal distributions
-by default), and the predicted values used for the mean of the conditional
-density are estimated using linear regression. Kernel density estimation can
-be used instead of assuming a specific density for the numerator and
-denominator by setting density = "kernel". Other arguments to density()
-can be specified to refine the density estimation parameters.
+stabilization factor) is the unconditional density of treatment evaluated the
+observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed treatment value. The shape of
+\(f_{A|X}(.)\) is controlled by the density argument
+described below (normal distribution by default), and the predicted values
+used for the mean of the conditional density are estimated using linear
+regression. \(f_A(.)\) is estimated by marginalizing
+over \(f_{A|X}(.)\). Kernel density estimation can be used
+instead of assuming a specific density for the denominator by
+setting density = "kernel". Other arguments to density() can be specified
+to refine the density estimation parameters.
+
+
+
+Multilevel Treatment Models
+
+
+When the model formula contains lme4-style random effects terms
+(e.g., treat ~ x1 + x2 + (1 | school)), a multilevel (mixed-effects) model is
+used to estimate the propensity scores. This can improve balance and overlap
+when units are clustered (e.g., patients within hospitals or students within
+schools). The grouping (and any random-slope) variables are taken from data.
+For binary treatments, the model is fit using lme4::glmer()
+ with the
+requested link ("logit", "probit", or "cloglog"); for continuous
+treatments, using lme4::lmer()
+ or lme4::glmer()
+; and
+for multi-category treatments, using mclogit::mblogit()
+ with its
+random argument (i.e., multi.method is set to "mclogit"). The propensity
+scores are the predicted probabilities (or conditional densities) that include
+the estimated random effects, i.e., cluster-specific predictions. M-estimation
+is not available for these models; robust (HC0) or bootstrap standard errors
+should be used instead when estimating treatment effects (see the M-estimation
+section below and glm_weightit()).
 
 
 
@@ -111,7 +136,9 @@ or "glm". M-estimation is not supported when subclass is specified. For continuo
 density is not "kernel". The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all treatment
-types, M-estimation is not supported when missing = "saem". See
+types, M-estimation is not supported when missing = "saem" or when the model
+formula includes random effects terms (i.e., a multilevel model is fit; see
+Multilevel Treatment Models above). See
 glm_weightit() and vignette("estimating-effects") for details. For
 longitudinal treatments, M-estimation is supported whenever the underlying
 methods are.
@@ -124,7 +151,7 @@ In general, this method relies on estimating propensity scores with a
 parametric generalized linear model and then converting those propensity
 scores into weights using a formula that depends on the desired estimand. For
 binary and multi-category treatments, a binomial or multinomial regression
-model is used to estimate the propensity scores as the predicted probability
+model (logistic, by default) is used to estimate the propensity scores as the predicted probability
 of being in each treatment given the covariates. For ordinal treatments, an
 ordinal regression model is used to estimate generalized propensity scores.
 For continuous treatments, a generalized linear model is used to estimate
@@ -134,9 +161,7 @@ Binary Treatments
 
 
 For binary treatments, this method estimates the propensity scores using
-glm(). An additional argument is link, which uses the same options as
-link in family(). The default link is "logit", but others, including
-"probit", are allowed. The following estimands are allowed: ATE, ATT, ATC,
+glm(). The following estimands are allowed: ATE, ATT, ATC,
 ATO, ATM, and ATOS. Weights can also be computed using marginal mean
 weighting through stratification for the ATE, ATT, and ATC. See
 get_w_from_ps() for details.
@@ -150,10 +175,10 @@ For multi-category treatments, the propensity scores are estimated using
 multinomial regression from one of a few functions depending on the argument
 supplied to multi.method (see Additional Arguments below). The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-estimand are computed using the standard formulas or those mentioned above.
+estimand are computed using the standard formulas.
 Weights can also be computed using marginal mean weighting through
 stratification for the ATE, ATT, and ATC. See get_w_from_ps() for details.
-Ordinal treatments are treated exactly the same as non-order multi-category
+Ordinal treatments are treated exactly the same as non-ordinal multi-category
 treatments except that additional models are available to estimate the
 generalized propensity score (e.g., ordinal logistic regression).
 
@@ -164,16 +189,43 @@ Continuous Treatments
 
 For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
-and \(f_{A|X}(a_i)\) (known as the generalized propensity score) is the
-conditional density of treatment given the covariates evaluated at the
-observed value of treatment. The shape of \(f_A(.)\) and \(f_{A|X}(.)\)
-is controlled by the density argument described below (normal distributions
-by default), and the predicted values used for the mean of the conditional
-density are estimated using linear regression. Kernel density estimation can
-be used instead of assuming a specific density for the numerator and
-denominator by setting density = "kernel". Other arguments to density()
-can be specified to refine the density estimation parameters.
+stabilization factor) is the unconditional density of treatment evaluated the
+observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed treatment value. The shape of
+\(f_{A|X}(.)\) is controlled by the density argument
+described below (normal distribution by default), and the predicted values
+used for the mean of the conditional density are estimated using linear
+regression. \(f_A(.)\) is estimated by marginalizing
+over \(f_{A|X}(.)\). Kernel density estimation can be used
+instead of assuming a specific density for the denominator by
+setting density = "kernel". Other arguments to density() can be specified
+to refine the density estimation parameters.
+
+
+
+Multilevel Treatment Models
+
+
+When the model formula contains lme4-style random effects terms
+(e.g., treat ~ x1 + x2 + (1 | school)), a multilevel (mixed-effects) model is
+used to estimate the propensity scores. This can improve balance and overlap
+when units are clustered (e.g., patients within hospitals or students within
+schools). The grouping (and any random-slope) variables are taken from data.
+For binary treatments, the model is fit using lme4::glmer()
+ with the
+requested link ("logit", "probit", or "cloglog"); for continuous
+treatments, using lme4::lmer()
+ or lme4::glmer()
+; and
+for multi-category treatments, using mclogit::mblogit()
+ with its
+random argument (i.e., multi.method is set to "mclogit"). The propensity
+scores are the predicted probabilities (or conditional densities) that include
+the estimated random effects, i.e., cluster-specific predictions. M-estimation
+is not available for these models; robust (HC0) or bootstrap standard errors
+should be used instead when estimating treatment effects (see the M-estimation
+section below and glm_weightit()).
 
 
 
@@ -222,7 +274,9 @@ or "glm". M-estimation is not supported when subclass is specified. For continuo
 density is not "kernel". The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all treatment
-types, M-estimation is not supported when missing = "saem". See
+types, M-estimation is not supported when missing = "saem" or when the model
+formula includes random effects terms (i.e., a multilevel model is fit; see
+Multilevel Treatment Models above). See
 glm_weightit() and vignette("estimating-effects") for details. For
 longitudinal treatments, M-estimation is supported whenever the underlying
 methods are.
@@ -235,7 +289,7 @@ methods are.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -275,7 +329,7 @@ binary, multi-category, and continuous treatments.</p>
 parametric generalized linear model and then converting those propensity
 scores into weights using a formula that depends on the desired estimand. For
 binary and multi-category treatments, a binomial or multinomial regression
-model is used to estimate the propensity scores as the predicted probability
+model (logistic, by default) is used to estimate the propensity scores as the predicted probability
 of being in each treatment given the covariates. For ordinal treatments, an
 ordinal regression model is used to estimate generalized propensity scores.
 For continuous treatments, a generalized linear model is used to estimate
@@ -285,9 +339,7 @@ the covariates.</p><div class="section">
 
 
 <p>For binary treatments, this method estimates the propensity scores using
-<code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. An additional argument is <code>link</code>, which uses the same options as
-<code>link</code> in <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">family()</a></code>. The default link is <code>"logit"</code>, but others, including
-<code>"probit"</code>, are allowed. The following estimands are allowed: ATE, ATT, ATC,
+<code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. The following estimands are allowed: ATE, ATT, ATC,
 ATO, ATM, and ATOS. Weights can also be computed using marginal mean
 weighting through stratification for the ATE, ATT, and ATC. See
 <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.</p>
@@ -301,10 +353,10 @@ weighting through stratification for the ATE, ATT, and ATC. See
 multinomial regression from one of a few functions depending on the argument
 supplied to <code>multi.method</code> (see Additional Arguments below). The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-estimand are computed using the standard formulas or those mentioned above.
+estimand are computed using the standard formulas.
 Weights can also be computed using marginal mean weighting through
 stratification for the ATE, ATT, and ATC. See <code><a href="get_w_from_ps.html">get_w_from_ps()</a></code> for details.
-Ordinal treatments are treated exactly the same as non-order multi-category
+Ordinal treatments are treated exactly the same as non-ordinal multi-category
 treatments except that additional models are available to estimate the
 generalized propensity score (e.g., ordinal logistic regression).</p>
 </div>
@@ -315,16 +367,43 @@ generalized propensity score (e.g., ordinal logistic regression).</p>
 
 <p>For continuous treatments, weights are estimated as
 \(w_i = f_A(a_i) / f_{A|X}(a_i)\), where \(f_A(a_i)\) (known as the
-stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
-and \(f_{A|X}(a_i)\) (known as the generalized propensity score) is the
-conditional density of treatment given the covariates evaluated at the
-observed value of treatment. The shape of \(f_A(.)\) and \(f_{A|X}(.)\)
-is controlled by the <code>density</code> argument described below (normal distributions
-by default), and the predicted values used for the mean of the conditional
-density are estimated using linear regression. Kernel density estimation can
-be used instead of assuming a specific density for the numerator and
-denominator by setting <code>density = "kernel"</code>. Other arguments to <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code>
-can be specified to refine the density estimation parameters.</p>
+stabilization factor) is the unconditional density of treatment evaluated the
+observed treatment value and \(f_{A|X}(a_i)\) (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed treatment value. The shape of
+\(f_{A|X}(.)\) is controlled by the <code>density</code> argument
+described below (normal distribution by default), and the predicted values
+used for the mean of the conditional density are estimated using linear
+regression. \(f_A(.)\) is estimated by marginalizing
+over \(f_{A|X}(.)\). Kernel density estimation can be used
+instead of assuming a specific density for the denominator by
+setting <code>density = "kernel"</code>. Other arguments to <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> can be specified
+to refine the density estimation parameters.</p>
+</div>
+
+<div class="section">
+<h3 id="multilevel-treatment-models">Multilevel Treatment Models<a class="anchor" aria-label="anchor" href="#multilevel-treatment-models"></a></h3>
+
+
+<p>When the model <code>formula</code> contains <a href="https://CRAN.R-project.org/package=lme4" class="external-link"><span class="pkg">lme4</span></a>-style random effects terms
+(e.g., <code>treat ~ x1 + x2 + (1 | school)</code>), a multilevel (mixed-effects) model is
+used to estimate the propensity scores. This can improve balance and overlap
+when units are clustered (e.g., patients within hospitals or students within
+schools). The grouping (and any random-slope) variables are taken from <code>data</code>.
+For binary treatments, the model is fit using <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">lme4::glmer()</a></code>
+ with the
+requested <code>link</code> (<code>"logit"</code>, <code>"probit"</code>, or <code>"cloglog"</code>); for continuous
+treatments, using <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code>
+ or <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">lme4::glmer()</a></code>
+; and
+for multi-category treatments, using <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>
+ with its
+<code>random</code> argument (i.e., <code>multi.method</code> is set to <code>"mclogit"</code>). The propensity
+scores are the predicted probabilities (or conditional densities) that include
+the estimated random effects, i.e., cluster-specific predictions. M-estimation
+is not available for these models; robust (<code>HC0</code>) or bootstrap standard errors
+should be used instead when estimating treatment effects (see the M-estimation
+section below and <code><a href="glm_weightit.html">glm_weightit()</a></code>).</p>
 </div>
 
 <div class="section">
@@ -370,7 +449,9 @@ or <code>"glm"</code>. M-estimation is not supported when <code>subclass</code> 
 <code>density</code> is not <code>"kernel"</code>. The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all treatment
-types, M-estimation is not supported when <code>missing = "saem"</code>. See
+types, M-estimation is not supported when <code>missing = "saem"</code> or when the model
+<code>formula</code> includes random effects terms (i.e., a multilevel model is fit; see
+<em>Multilevel Treatment Models</em> above). See
 <code><a href="glm_weightit.html">glm_weightit()</a></code> and <code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code> for details. For
 longitudinal treatments, M-estimation is supported whenever the underlying
 methods are.</p>
@@ -396,7 +477,7 @@ methods are.</p>
 , <code>"mnp"</code> to use Bayesian multinomial probit regression as implemented in <code><a href="https://rdrr.io/pkg/MNP/man/mnp.html" class="external-link">MNP::MNP()</a></code>
 , and <code>"brmultinom"</code> to use bias-reduced multinomial logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>
 . <code>"weightit"</code> and <code>"mclogit"</code> should give near-identical results, the main difference being increased robustness and customizability when using <code>"mclogit"</code> at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include <code>"weightit"</code> (the default) to use ordinal regression implemented in <span class="pkg">WeightIt</span> or <code>"polr"</code> to use ordinal regression implemented in <code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>
-, unless <code>link</code> is <code>"br.logit"</code>, in which case bias-reduce ordinal logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code>
+, unless <code>link</code> is <code>"br.logit"</code>, in which case bias-reduced ordinal logistic regression as implemented in <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code>
  is used. Ignored when <code>missing = "saem"</code>. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.</p></dd>
 
 <dt><code>link</code></dt>
@@ -408,14 +489,11 @@ methods are.</p>
 
 </dl><p>For continuous treatments, the following additional arguments may be
 supplied:</p><dl><dt><code>density</code></dt>
-<dd><p>A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code> is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).</p>
-<p>Can also be <code>"kernel"</code> to use kernel density estimation, which calls <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> to estimate the numerator and denominator densities for the weights. (This used to be requested by setting <code>use.kernel = TRUE</code>, which is now deprecated.)</p></dd>
+<dd><p>A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, <code><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm()</a></code> is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if <code>density = "dt_2"</code> is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).</p>
+<p>Can also be <code>"kernel"</code> to use kernel density estimation, which calls <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> to estimate the denominator density for the weights. (This used to be requested by setting <code>use.kernel = TRUE</code>, which is now deprecated.)</p></dd>
 
 <dt><code>bw</code>, <code>adjust</code>, <code>kernel</code>, <code>n</code></dt>
-<dd><p>If <code>density = "kernel"</code>, the arguments to <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code>. The defaults are the same as those in <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code> except that <code>n</code> is 10 times the number of units in the sample.</p></dd>
-
-<dt><code>plot</code></dt>
-<dd><p>If <code>density = "kernel"</code>, whether to plot the estimated densities.</p></dd>
+<dd><p>If <code>density = "kernel"</code>, the arguments to <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code>. The defaults are the same as those in <code><a href="https://rdrr.io/r/stats/density.html" class="external-link">density()</a></code>.</p></dd>
 
 <dt><code>link</code></dt>
 <dd><p>The link used to fit the linear model for the generalized propensity score. Can be any allowed by <code><a href="https://rdrr.io/r/stats/family.html" class="external-link">gaussian()</a></code>.</p></dd>
@@ -425,7 +503,8 @@ supplied:</p><dl><dt><code>density</code></dt>
 for fitting. The <code>method</code> argument in <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> is renamed to <code>glm.method</code>.
 This can be used to supply alternative fitting functions, such as those
 implemented in the <a href="https://CRAN.R-project.org/package=glm2" class="external-link"><span class="pkg">glm2</span></a> package. Other arguments to <code><a href="weightit.html">weightit()</a></code>
-are passed to <code>...</code> in <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. In the presence of missing data with <code>link = "logit"</code> and <code>missing = "saem"</code>, additional arguments are passed to
+are passed to <code>...</code> in <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code>. In the presence of missing data with
+<code>link = "logit"</code> and <code>missing = "saem"</code>, additional arguments are passed to
 <code><a href="https://rdrr.io/pkg/misaem/man/miss.glm.html" class="external-link">misaem::miss.glm()</a></code>
  and <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.glm.html" class="external-link">misaem::predict.miss.glm()</a></code>
 , except the
@@ -433,16 +512,23 @@ are passed to <code>...</code> in <code><a href="https://rdrr.io/r/stats/glm.htm
  is replaced with
 <code>saem.method</code>.</p>
 <p>For continuous treatments in the presence of missing data with <code>missing = "saem"</code>, additional arguments are passed to <code><a href="https://rdrr.io/pkg/misaem/man/miss.lm.html" class="external-link">misaem::miss.lm()</a></code>
- and
-<code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.lm.html" class="external-link">misaem::predict.miss.lm()</a></code>
+ and <code><a href="https://rdrr.io/pkg/misaem/man/predict.miss.lm.html" class="external-link">misaem::predict.miss.lm()</a></code>
 .</p>
+<p>When the model <code>formula</code> includes random effects terms (see <em>Multilevel Treatment Models</em> above), additional arguments are passed to the corresponding fitting function: <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">lme4::glmer()</a></code>
+ for binary treatments, <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>
+ for multi-category treatments, and <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code>
+ or <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">lme4::glmer()</a></code>
+ for continuous treatments.</p>
     </div>
     <div class="section level2">
     <h2 id="additional-outputs">Additional Outputs<a class="anchor" aria-label="anchor" href="#additional-outputs"></a></h2>
 
 
 <dl><dt><code>obj</code></dt>
-<dd><p>When <code>include.obj = TRUE</code>, the (generalized) propensity score model fit. For binary treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if <code>multi.method = "glm"</code>). For continuous treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for the predicted values in the denominator density.</p></dd>
+<dd><p>When <code>include.obj = TRUE</code>, the (generalized) propensity score model fit. For binary treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if <code>multi.method = "glm"</code>). For continuous treatments, the output of the call to <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for the predicted values in the denominator density. When the model <code>formula</code> includes random effects terms, the output of the call to <code><a href="https://rdrr.io/pkg/lme4/man/glmer.html" class="external-link">lme4::glmer()</a></code>
+, <code><a href="https://rdrr.io/pkg/lme4/man/lmer.html" class="external-link">lme4::lmer()</a></code>
+, or <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>
+.</p></dd>
 
 
 </dl></div>
@@ -639,37 +725,37 @@ joint-modeling framework. <em>Computational Statistics &amp; Data Analysis</em>,
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight ranges</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       Min                                  Max</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.108 |---------------------------| 101.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all 0.043 |---------------------------| 44.225</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Units with the 5 most extreme weights</span>:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                       </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         482    481   484    483    485</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  all 69.644 69.709 85.92 94.337 101.66</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         482    481    484    483    485</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  all 30.586 30.632 37.608 41.195 44.225</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Weight statistics</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Coef of Var   MAD Entropy # Zeros</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> all       2.908 1.049   1.156       0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> all       2.405 0.933    0.92       0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> - <span style="font-style: italic;">Effective Sample Sizes</span>:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    65.03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Total</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unweighted 614. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Weighted    90.6</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">bal.tab</a></span><span class="op">(</span><span class="va">W3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Balance Measures</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Corr.Adj</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.  -0.0501</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0016</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary  -0.0427</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0196</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.  -0.0773</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.  -0.0712</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.   0.0100</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary  -0.0834</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary  -0.0186</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.  -0.1429</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Effective sample sizes</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>             Total</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614.  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    65.03</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            Total</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Unadjusted 614. </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Adjusted    90.6</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

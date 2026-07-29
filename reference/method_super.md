@@ -40,24 +40,28 @@ several calls to
 , one for each treatment group; the treatment probabilities are not
 normalized to sum to 1. The following estimands are allowed: ATE, ATT,
 ATC, ATO, and ATM. The weights for each estimand are computed using the
-standard formulas or those mentioned above. Weights can also be computed
-using marginal mean weighting through stratification for the ATE, ATT,
-and ATC. See
+standard formulas. Weights can also be computed using marginal mean
+weighting through stratification for the ATE, ATT, and ATC. See
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
 for details.
 
 ### Continuous Treatments
 
-For continuous treatments, the generalized propensity score is estimated
-using
+For continuous treatments, weights are estimated as \\w_i = f_A(a_i) /
+f\_{A\|X}(a_i)\\, where \\f_A(a_i)\\ (known as the stabilization factor)
+is the unconditional density of treatment evaluated the observed
+treatment value and \\f\_{A\|X}(a_i)\\ (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed treatment value. The shape of
+\\f\_{A\|X}(.)\\ is controlled by the `density` argument described below
+(normal distribution by default), and the predicted values used for the
+mean of the conditional density are estimated using
 [`SuperLearner::SuperLearner()`](https://rdrr.io/pkg/SuperLearner/man/SuperLearner.html)
-. In addition, kernel density estimation can be used instead of assuming
-a normal density for the numerator and denominator of the generalized
-propensity score by setting `density = "kernel"`. Other arguments to
+. \\f_A(.)\\ is estimated by marginalizing over \\f\_{A\|X}(.)\\. Kernel
+density estimation can be used instead of assuming a specific density
+for the denominator by setting `density = "kernel"`. Other arguments to
 [`density()`](https://rdrr.io/r/stats/density.html) can be specified to
-refine the density estimation parameters. `plot = TRUE` can be specified
-to plot the density for the numerator and denominator, which can be
-helpful in diagnosing extreme weights.
+refine the density estimation parameters.
 
 ### Longitudinal Treatments
 
@@ -115,9 +119,9 @@ SuperLearnerExtra, which can be found on GitHub at
 
 The `criterion` argument used to be called `stop.method`, which is its
 name in twang. `stop.method` still works for backward compatibility.
-Additionally, the criteria formerly named as `es.mean`, `es.max`, and
-`es.rms` have been renamed to `smd.mean`, `smd.max`, and `smd.rms`. The
-former are used in twang and will still work with
+Additionally, the criteria formerly named as `"es.mean"`, `"es.max"`,
+and `"es.rms"` have been renamed to `"smd.mean"`, `"smd.max"`, and
+`"smd.rms"`. The former are used in twang and will still work with
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 for backward compatibility.
 
@@ -174,8 +178,8 @@ For continuous treatments, the following arguments may be supplied:
 
   A function corresponding to the conditional density of the treatment.
   The standardized residuals of the treatment model will be fed through
-  this function to produce the numerator and denominator of the
-  generalized propensity score weights. If blank,
+  this function to produce the denominator of the generalized propensity
+  score weights. If blank,
   [`dnorm()`](https://rdrr.io/r/stats/Normal.html) is used as
   recommended by Robins et al. (2000). This can also be supplied as a
   string containing the name of the function to be called. If the string
@@ -188,20 +192,15 @@ For continuous treatments, the following arguments may be supplied:
 
   Can also be `"kernel"` to use kernel density estimation, which calls
   [`density()`](https://rdrr.io/r/stats/density.html) to estimate the
-  numerator and denominator densities for the weights. (This used to be
-  requested by setting `use.kernel = TRUE`, which is now deprecated.)
+  denominator density for the weights. (This used to be requested by
+  setting `use.kernel = TRUE`, which is now deprecated.)
 
 - `bw`, `adjust`, `kernel`, `n`:
 
   If `density = "kernel"`, the arguments to
   [`density()`](https://rdrr.io/r/stats/density.html). The defaults are
   the same as those in
-  [`density()`](https://rdrr.io/r/stats/density.html) except that `n` is
-  10 times the number of units in the sample.
-
-- `plot`:
-
-  If `density = "kernel"`, whether to plot the estimated densities.
+  [`density()`](https://rdrr.io/r/stats/density.html).
 
 ### Balance SuperLearner
 
@@ -454,37 +453,37 @@ summary(W3)
 #> - Weight ranges:
 #> 
 #>       Min                                  Max
-#> all 0.045 |---------------------------| 24.927
+#> all 0.036 |---------------------------| 20.635
 #> 
 #> - Units with the 5 most extreme weights:
-#>                                       
-#>        431    483    484    485    354
-#>  all 9.823 15.787 18.967 22.164 24.927
+#>                                      
+#>        431    483    484   485    354
+#>  all 8.713 14.213 17.078 19.96 20.635
 #> 
 #> - Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.438 0.519   0.369       0
+#> all       1.484 0.518   0.384       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted   200.42
+#> Weighted   191.94
 
 cobalt::bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.   0.0382
-#> educ     Contin.   0.0404
-#> married   Binary   0.0591
-#> nodegree  Binary  -0.0664
-#> re74     Contin.   0.0399
+#> age      Contin.   0.0279
+#> educ     Contin.   0.0347
+#> married   Binary   0.0425
+#> nodegree  Binary  -0.0709
+#> re74     Contin.   0.0205
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   200.42
+#> Adjusted   191.94
 
 # Balancing covariates between treatment groups (binary)
 # using balance SuperLearner to minimize the maximum

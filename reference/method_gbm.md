@@ -10,12 +10,12 @@ This method can be used with binary, multi-category, and continuous
 treatments.
 
 In general, this method relies on estimating propensity scores using
-generalized boosted modeling and then converting those propensity scores
-into weights using a formula that depends on the desired estimand. The
-algorithm involves using a balance-based or prediction-based criterion
-to optimize in choosing the value of tuning parameters (the number of
-trees and possibly others). The method relies on the
-[gbm](https://CRAN.R-project.org/package=gbm) package.
+generalized boosted modeling (GBM) and then converting those propensity
+scores into weights using a formula that depends on the desired
+estimand. The algorithm involves using a balance-based or
+prediction-based criterion to optimize in choosing the value of tuning
+parameters (the number of trees and possibly others). The method relies
+on the [gbm](https://CRAN.R-project.org/package=gbm) package.
 
 This method mimics the functionality of functions in the twang package,
 but has improved performance and more flexible options. See Details
@@ -38,12 +38,13 @@ for details.
 
 ### Multi-Category Treatments
 
-For binary treatments, this method estimates the propensity scores using
+For multi-category treatments, this method estimates the propensity
+scores using a single call to
 [`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
-and then selects the optimal tuning parameter values using the method
-specified in the `criterion` argument. The following estimands are
-allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed from the
-estimated propensity scores using
+with `distribution = "multinomial"` and then selects the optimal tuning
+parameter values using the method specified in the `criterion` argument.
+The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The
+weights are computed from the estimated propensity scores using
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md),
 which implements the standard formulas. Weights can also be computed
 using marginal mean weighting through stratification for the ATE, ATT,
@@ -53,11 +54,24 @@ for details.
 
 ### Continuous Treatments
 
-For continuous treatments, this method estimates the generalized
-propensity score using
+For continuous treatments, weights are estimated as \\w_i = f_A(a_i) /
+f\_{A\|X}(a_i)\\, where \\f_A(a_i)\\ (known as the stabilization factor)
+is the unconditional density of treatment evaluated the observed
+treatment value and \\f\_{A\|X}(a_i)\\ (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed treatment value. The shape of
+\\f\_{A\|X}(.)\\ is controlled by the `density` argument described below
+(normal distribution by default), and the predicted values used for the
+mean of the conditional density are estimated using GBM as implemented
+in
 [`gbm::gbm.fit()`](https://gbm-developers.github.io/gbm/reference/gbm.fit.html)
-and then selects the optimal tuning parameter values using the method
-specified in the `criterion` argument.
+with optimal tuning parameter values chosen using the method specified
+in the `criterion` argument. \\f_A(.)\\ is estimated by marginalizing
+over \\f\_{A\|X}(.)\\. Kernel density estimation can be used instead of
+assuming a specific density for the denominator by setting
+`density = "kernel"`. Other arguments to
+[`density()`](https://rdrr.io/r/stats/density.html) can be specified to
+refine the density estimation parameters.
 
 ### Longitudinal Treatments
 
@@ -283,19 +297,14 @@ For continuous treatments only, the following arguments may be supplied:
   `distribution`. If `"gaussian"` (the default),
   [`dnorm()`](https://rdrr.io/r/stats/Normal.html) is used. If
   `"tdist"`, a t-distribution with 4 degrees of freedom is used. If
-  `"laplace"`, a laplace distribution is used.
+  `"laplace"`, a Laplace distribution is used.
 
 - `bw`, `adjust`, `kernel`, `n`:
 
   If `density = "kernel"`, the arguments to
   [`density()`](https://rdrr.io/r/stats/density.html). The defaults are
   the same as those in
-  [`density()`](https://rdrr.io/r/stats/density.html) except that `n` is
-  10 times the number of units in the sample.
-
-- `plot`:
-
-  If `density = "kernel"`, whether to plot the estimated densities.
+  [`density()`](https://rdrr.io/r/stats/density.html).
 
 For tunable arguments, multiple entries may be supplied, and
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
@@ -531,38 +540,38 @@ summary(W3)
 #> 
 #> - Weight ranges:
 #> 
-#>      Min                                  Max
-#> all 0.07 |---------------------------| 11.818
+#>       Min                                 Max
+#> all 0.003 |---------------------------| 9.295
 #> 
 #> - Units with the 5 most extreme weights:
-#>                                        
-#>         407    395    375    354    308
-#>  all 11.818 11.818 11.818 11.818 11.818
+#>                                   
+#>        375   354   332   310   308
+#>  all 9.295 9.295 9.295 9.295 9.295
 #> 
 #> - Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.244 0.839   0.524       0
+#> all       1.368 0.817   0.553       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted   241.25
+#> Weighted   214.14
 
 cobalt::bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.   0.0031
-#> educ     Contin.   0.0158
-#> married   Binary   0.0410
-#> nodegree  Binary  -0.0242
-#> re74     Contin.   0.0927
+#> age      Contin.  -0.0064
+#> educ     Contin.   0.0268
+#> married   Binary   0.0102
+#> nodegree  Binary  -0.0243
+#> re74     Contin.   0.0340
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   241.25
+#> Adjusted   214.14
 
 #Using a t(3) density and illustrating the search for
 #more trees.
@@ -588,7 +597,7 @@ W4b <- weightit(re75 ~ age + educ + married +
 
 W4b$info$best.tree #13417; optimum has been found
 #>     1 
-#> 13417 
+#> 10465 
 
 plot(W4b) #increasing at right edge
 
@@ -596,16 +605,16 @@ plot(W4b) #increasing at right edge
 cobalt::bal.tab(W4b)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.   0.0362
-#> educ     Contin.   0.0502
-#> married   Binary   0.0717
-#> nodegree  Binary  -0.0665
-#> re74     Contin.   0.1041
+#> age      Contin.   0.0261
+#> educ     Contin.   0.0347
+#> married   Binary   0.0541
+#> nodegree  Binary  -0.0532
+#> re74     Contin.   0.0765
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   251.08
+#> Adjusted   236.97
 
 #Tuning hyperparameters
 (W5 <- weightit(treat ~ age + educ + married +

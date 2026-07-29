@@ -33,9 +33,8 @@ several calls to
 each treatment group; the treatment probabilities are not normalized to
 sum to 1. The following estimands are allowed: ATE, ATT, ATC, ATO, and
 ATM. The weights for each estimand are computed using the standard
-formulas or those mentioned above. Weights can also be computed using
-marginal mean weighting through stratification for the ATE, ATT, and
-ATC. See
+formulas. Weights can also be computed using marginal mean weighting
+through stratification for the ATE, ATT, and ATC. See
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
 for details.
 
@@ -46,16 +45,52 @@ f\_{A\|X}(a_i)\\, where \\f_A(a_i)\\ (known as the stabilization factor)
 is the unconditional density of treatment evaluated the observed
 treatment value and \\f\_{A\|X}(a_i)\\ (known as the generalized
 propensity score) is the conditional density of treatment given the
-covariates evaluated at the observed value of treatment. The shape of
-\\f_A(.)\\ and \\f\_{A\|X}(.)\\ is controlled by the `density` argument
-described below (normal distributions by default), and the predicted
-values used for the mean of the conditional density are estimated using
-BART as implemented in
-[`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html) . Kernel
+covariates evaluated at the observed treatment value. The shape of
+\\f\_{A\|X}(.)\\ is controlled by the `density` argument described below
+(normal distribution by default), and the predicted values used for the
+mean of the conditional density are estimated using BART as implemented
+in [`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html) .
+\\f_A(.)\\ is estimated by marginalizing over \\f\_{A\|X}(.)\\. Kernel
 density estimation can be used instead of assuming a specific density
-for the numerator and denominator by setting `density = "kernel"`. Other
-arguments to [`density()`](https://rdrr.io/r/stats/density.html) can be
-specified to refine the density estimation parameters.
+for the denominator by setting `density = "kernel"`. Other arguments to
+[`density()`](https://rdrr.io/r/stats/density.html) can be specified to
+refine the density estimation parameters.
+
+### Multilevel Treatment Models
+
+When the model `formula` contains
+[lme4](https://CRAN.R-project.org/package=lme4)-style random effects
+terms (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel BART model
+is fit using
+[`stan4bart::stan4bart()`](https://rdrr.io/pkg/stan4bart/man/stan4bart.html)
+instead of [`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html)
+. This combines a BART sum-of-trees for the covariates with a
+Stan-estimated parametric and random-effects component, and can improve
+balance and overlap when units are clustered (e.g., patients within
+hospitals or students within schools). Unlike the other multilevel
+methods, the full flexibility of
+[`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) random
+effects is available, including *multiple grouping factors* (e.g.,
+`(1 | school) + (1 | district)`) and random slopes. The grouping (and
+any random-slope) variables are taken from `data`; the covariates are
+placed in the BART component internally (i.e., the fitted model is
+`treat ~ bart(x1 + x2) + (1 | school)`). The estimated propensity scores
+(or conditional means for continuous treatments) include the estimated
+random effects, i.e., they are cluster-specific.
+
+`stan4bart()` uses a different set of control arguments from `bart2()`:
+the number of posterior draws and warmup iterations are controlled by
+`iter` and `warmup`, the number of chains and parallel workers by
+`chains` and `cores`, BART hyperparameters (e.g., `n.trees`) are
+supplied in a `bart_args` list, and Stan and prior options in a
+`stan_args` list; see
+[`stan4bart::stan4bart()`](https://rdrr.io/pkg/stan4bart/man/stan4bart.html)
+. For convenience, `bart2()`-style arguments are translated to their
+`stan4bart()` equivalents when supplied (e.g., `n.chains` to `chains`,
+`n.threads` to `cores`, and BART hyperparameters like `n.trees` to
+`bart_args`), so the same argument names can be used with or without
+random effects. As with the non-multilevel case, M-estimation is not
+supported.
 
 ### Longitudinal Treatments
 
@@ -120,11 +155,12 @@ details. To ensure reproducibility, one can do one of two things:
     sets the seed for single- and multi-threaded uses, or
 
 2.  call [`set.seed()`](https://rdrr.io/r/base/Random.html) and set
-    `n.threads = 1` to use single-threading. Note that to ensure
-    reproducibility on any machine, regardless of the number of cores
-    available, one should use single-threading by setting
-    `n.threads = 1` and either supply `seed` or call
-    [`set.seed()`](https://rdrr.io/r/base/Random.html).
+    `n.threads = 1` to use single-threading.
+
+Note that to ensure reproducibility on any machine, regardless of the
+number of cores available, one should use single-threading by setting
+`n.threads = 1` and either supply `seed` or call
+[`set.seed()`](https://rdrr.io/r/base/Random.html).
 
 ## Additional Arguments
 
@@ -161,8 +197,8 @@ For continuous treatments, the following arguments may be supplied:
 
   A function corresponding to the conditional density of the treatment.
   The standardized residuals of the treatment model will be fed through
-  this function to produce the numerator and denominator of the
-  generalized propensity score weights. If blank,
+  this function to produce the denominator of the generalized propensity
+  score weights. If blank,
   [`dnorm()`](https://rdrr.io/r/stats/Normal.html) is used as
   recommended by Robins et al. (2000). This can also be supplied as a
   string containing the name of the function to be called. If the string
@@ -175,30 +211,28 @@ For continuous treatments, the following arguments may be supplied:
 
   Can also be `"kernel"` to use kernel density estimation, which calls
   [`density()`](https://rdrr.io/r/stats/density.html) to estimate the
-  numerator and denominator densities for the weights. (This used to be
-  requested by setting `use.kernel = TRUE`, which is now deprecated.)
+  denominator density for the weights. (This used to be requested by
+  setting `use.kernel = TRUE`, which is now deprecated.)
 
 - `bw`, `adjust`, `kernel`, `n`:
 
   If `density = "kernel"`, the arguments to
   [`density()`](https://rdrr.io/r/stats/density.html). The defaults are
   the same as those in
-  [`density()`](https://rdrr.io/r/stats/density.html) except that `n` is
-  10 times the number of units in the sample.
-
-- `plot`:
-
-  If `density = "kernel"`, whether to plot the estimated densities.
+  [`density()`](https://rdrr.io/r/stats/density.html).
 
 ## Additional Outputs
 
 - `obj`:
 
   When `include.obj = TRUE`, the `bart2` fit(s) used to generate the
-  predicted values. With multi-category treatments, this will be a list
-  of the fits; otherwise, it will be a single fit. The predicted
-  probabilities used to compute the propensity scores can be extracted
-  using [`fitted()`](https://rdrr.io/pkg/dbarts/man/bart.html) .
+  predicted values (or the
+  [`stan4bart::stan4bart()`](https://rdrr.io/pkg/stan4bart/man/stan4bart.html)
+  fit(s) when the model `formula` contains random effects terms). With
+  multi-category treatments, this will be a list of the fits; otherwise,
+  it will be a single fit. The predicted probabilities used to compute
+  the propensity scores can be extracted using
+  [`fitted()`](https://rdrr.io/pkg/dbarts/man/bart.html) .
 
 ## References
 
@@ -252,43 +286,43 @@ summary(W1)
 #> 
 #> - Weight ranges:
 #> 
-#>           Min                                  Max
-#> treated 1.       ||                          1.   
-#> control 0.002 |---------------------------| 10.336
+#>           Min                                 Max
+#> treated 1.       ||                         1.   
+#> control 0.002 |---------------------------| 9.648
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                        
-#>              5     4     3     2      1
-#>  treated     1     1     1     1      1
-#>            585   569   592   374    608
-#>  control 2.366 2.867 3.216 3.619 10.336
+#>                                      
+#>              5     4     3    2     1
+#>  treated     1     1     1    1     1
+#>            585   569   592  374   608
+#>  control 2.455 2.546 2.783 3.25 9.648
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
 #> treated       0.    0.      0.          0
-#> control       1.923 0.955   0.774       0
+#> control       1.807 0.935   0.732       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
-#> Weighted     91.51     185
+#> Weighted    100.76     185
 
 cobalt::bal.tab(W1)
 #> Balance Measures
 #>                Type Diff.Adj
-#> prop.score Distance   0.4712
-#> age         Contin.   0.0673
-#> educ        Contin.  -0.0334
-#> married      Binary  -0.0301
-#> nodegree     Binary   0.0393
-#> re74        Contin.  -0.0466
+#> prop.score Distance   0.4908
+#> age         Contin.   0.0685
+#> educ        Contin.  -0.0231
+#> married      Binary  -0.0341
+#> nodegree     Binary   0.0287
+#> re74        Contin.  -0.0675
 #> 
 #> Effective sample sizes
 #>            Control Treated
 #> Unadjusted  429.       185
-#> Adjusted     91.51     185
+#> Adjusted    100.76     185
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
@@ -308,51 +342,51 @@ summary(W2)
 #> - Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.226 |----------------|             8.861
-#> hispan 2.649    |------------------------| 13.33 
-#> white  1.068 |--------------|               8.228
+#> black  1.242 |----------------|             8.996
+#> hispan 2.648    |------------------------| 13.226
+#> white  1.059 |---------------|              8.359
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                          
-#>            226    181    244    231   423
-#>   black   7.04  7.321  7.723   8.45 8.861
-#>            346    512    426    570   564
-#>  hispan 12.132 12.281 12.305 12.705 13.33
-#>             68     23     60     76   140
-#>   white  4.463  5.006  5.403  7.951 8.228
+#>                                           
+#>            226    181    244    423    231
+#>   black  7.119   7.52  8.097  8.256  8.996
+#>            346    512    426    570    564
+#>  hispan 12.058 12.551 12.599 13.083 13.226
+#>            409     23     60     76    140
+#>   white  4.413  5.133  5.478  7.978  8.359
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.577 0.373   0.126       0
-#> hispan       0.377 0.314   0.071       0
-#> white        0.461 0.318   0.084       0
+#> black        0.578 0.373   0.126       0
+#> hispan       0.383 0.317   0.073       0
+#> white        0.464 0.321   0.084       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             black hispan  white
 #> Unweighted 243.    72.   299.  
-#> Weighted   182.56  63.16 246.79
+#> Weighted   182.28  62.89 246.14
 
 cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.1862
-#> educ     Contin.       0.1649
-#> married   Binary       0.0545
-#> nodegree  Binary       0.0302
-#> re74     Contin.       0.1238
+#> age      Contin.       0.1920
+#> educ     Contin.       0.1585
+#> married   Binary       0.0513
+#> nodegree  Binary       0.0248
+#> re74     Contin.       0.1120
 #> 
 #> Effective sample sizes
 #>             black hispan  white
 #> Unadjusted 243.    72.   299.  
-#> Adjusted   182.56  63.16 246.79
+#> Adjusted   182.28  62.89 246.14
 
 #Balancing covariates with respect to re75 (continuous)
-#assuming t(3) conditional density for treatment
+#with kernel density estimation for GPS
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "bart", density = "dt_3"))
+                method = "bart", density = "kernel"))
 #> A weightit object
 #>  - method: "bart" (propensity score weighting with BART)
 #>  - number of obs.: 614
@@ -366,35 +400,35 @@ summary(W3)
 #> - Weight ranges:
 #> 
 #>       Min                                  Max
-#> all 0.078 |---------------------------| 20.179
+#> all 0.004 |---------------------------| 54.859
 #> 
 #> - Units with the 5 most extreme weights:
-#>                                     
-#>        469   310   308    487    484
-#>  all 7.955 8.007 8.268 15.935 20.179
+#>                                       
+#>         431    486   487    484    469
+#>  all 18.584 20.183 48.03 48.088 54.859
 #> 
 #> - Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       1.091 0.471   0.266       0
+#> all       2.683 0.923   0.955       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted   280.56
+#> Weighted    74.99
 
 cobalt::bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.   0.0306
-#> educ     Contin.   0.0570
-#> married   Binary   0.0810
-#> nodegree  Binary  -0.0836
-#> re74     Contin.   0.1255
+#> age      Contin.  -0.0303
+#> educ     Contin.   0.0116
+#> married   Binary  -0.0621
+#> nodegree  Binary  -0.0252
+#> re74     Contin.  -0.0608
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted   280.56
+#> Adjusted    74.99
 ```

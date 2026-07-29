@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,9 @@
 
 <dt><code>description</code></dt>
 <dd><p>a string containing the description of the name in English.</p></dd>
+
+<dt><code>re_ok</code></dt>
+<dd><p>a logical for whether random effects terms (e.g., <code>(1 | group)</code>) can be included in the model <code>formula</code> supplied to <code><a href="weightit.html">weightit()</a></code> to fit a multilevel version of the method.</p></dd>
 
 <dt><code>ps</code></dt>
 <dd><p>a logical for whether propensity scores are returned by the method for binary treatments. Propensity scores are never returned for multi-category or continuous treatments.</p></dd>

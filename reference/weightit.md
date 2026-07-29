@@ -474,7 +474,7 @@ bal.tab(W3)
 #>             Type Corr.Adj
 #> age      Contin.       -0
 #> educ     Contin.        0
-#> married   Binary       -0
+#> married   Binary        0
 #> nodegree  Binary       -0
 #> re74     Contin.        0
 #> 

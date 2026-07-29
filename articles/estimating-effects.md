@@ -764,7 +764,7 @@ package provides limited integration with *WeightIt* to estimate
 adjusted survival estimands. We recommend using this package to estimate
 effects after weighting.
 
-#### Using sampling weights and/or clustered data
+#### Using sampling weights with complex surveys
 
 When sampling weights are required to generalize to the correct
 population, they must be included in the call to

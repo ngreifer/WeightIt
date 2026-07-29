@@ -341,7 +341,7 @@ cobalt::bal.tab(W1a)
 #> age         Contin.  -0.0000
 #> educ        Contin.   0.0000
 #> married      Binary  -0.0000
-#> nodegree     Binary   0.0000
+#> nodegree     Binary  -0.0000
 #> re74        Contin.  -0.0000
 #> 
 #> Effective sample sizes
@@ -504,7 +504,7 @@ cobalt::bal.tab(W3)
 #>             Type Corr.Adj
 #> age      Contin.       -0
 #> educ     Contin.        0
-#> married   Binary       -0
+#> married   Binary        0
 #> nodegree  Binary       -0
 #> re74     Contin.        0
 #> 

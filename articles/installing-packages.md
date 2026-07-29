@@ -103,6 +103,39 @@ code:
 pak::pkg_install("melff/mclogit")
 ```
 
+*mclogit* is also used for multi-category treatments when the model
+`formula` includes random effects terms (see below).
+
+### Multilevel treatment models with random effects
+
+When the model `formula` supplied to
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+with `method = "glm"` contains `lme4`-style random effects terms (e.g.,
+`treat ~ x1 + x2 + (1 | school)`), a multilevel (mixed-effects) model is
+used to estimate the propensity scores. For binary and continuous
+treatments, the *lme4* package is required. To install *lme4* from CRAN,
+run
+
+``` r
+
+pak::pkg_install("lme4")
+```
+
+If *lme4* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer’s [GitHub
+repo](https://github.com/lme4/lme4) using the following code:
+
+``` r
+
+pak::pkg_install("lme4/lme4")
+```
+
+*lme4* requires compilation, which means you may need additional
+software installed on your computer to install it from source. For
+multi-category treatments, the *mclogit* package is used instead (see
+above). With `method = "bart"`, multilevel models are fit using the
+*stan4bart* package instead of *lme4* (see below).
+
 ### Multi-category treatments with `multi.method = "mnp"`
 
 For multi-category treatments, when `multi.method = "mnp"`, the *MNP*
@@ -283,6 +316,30 @@ pak::pkg_install("vdorie/dbarts")
 ```
 
 *dbarts* requires compilation, which means you may need additional
+software installed on your computer to install it from source.
+
+When the model `formula` supplied to
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+with `method = "bart"` contains `lme4`-style random effects terms (e.g.,
+`treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit using
+the *stan4bart* package instead. To install *stan4bart* from CRAN, run
+
+``` r
+
+pak::pkg_install("stan4bart")
+```
+
+If *stan4bart* is not on CRAN, or if you want to install the development
+version from source, you can do so from the developer, Vincent Dorie’s,
+[GitHub repo](https://github.com/vdorie/stan4bart) using the following
+code:
+
+``` r
+
+pak::pkg_install("vdorie/stan4bart")
+```
+
+*stan4bart* requires compilation, which means you may need additional
 software installed on your computer to install it from source.
 
 ## Energy Balancing (`method = "energy"`)

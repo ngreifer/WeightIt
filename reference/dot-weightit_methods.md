@@ -48,6 +48,13 @@ Each component is itself a list containing the following components:
 
   a string containing the description of the name in English.
 
+- `re_ok`:
+
+  a logical for whether random effects terms (e.g., `(1 | group)`) can
+  be included in the model `formula` supplied to
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  to fit a multilevel version of the method.
+
 - `ps`:
 
   a logical for whether propensity scores are returned by the method for

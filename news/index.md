@@ -2,6 +2,40 @@
 
 ## `WeightIt` (development version)
 
+- `method = "glm"` now supports multilevel (mixed-effects) propensity
+  score models. When the model `formula` supplied to
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  contains `lme4`-style random effects terms (e.g.,
+  `treat ~ x1 + x2 + (1 | school)`), a multilevel model is fit to
+  estimate the propensity scores:
+  [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) for binary
+  treatments, [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html)
+  for continuous treatments, and
+  [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
+  for multi-category treatments. The estimated propensity scores are
+  cluster-specific (they include the estimated random effects).
+  M-estimation-based standard errors are not available for these models;
+  robust (`HC0`) or bootstrap standard errors should be used instead.
+
+- `method = "bart"` now supports multilevel propensity score models.
+  When the model `formula` supplied to
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  contains `lme4`-style random effects terms (e.g.,
+  `treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit
+  using
+  [`stan4bart::stan4bart()`](https://rdrr.io/pkg/stan4bart/man/stan4bart.html),
+  which combines a BART sum-of-trees for the covariates with a
+  Stan-estimated random-effects component. The full flexibility of
+  [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) random
+  effects is available, including multiple grouping factors and random
+  slopes. `bart2()`-style control arguments are translated to their
+  `stan4bart()` equivalents. The estimated propensity scores are
+  cluster-specific.
+
+- Added an `re_ok` field to the entries of `.weightit_methods`
+  indicating whether each method supports random effects terms in the
+  model `formula`.
+
 - M-estimation-based standard errors are now available when `by` is
   supplied to
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
@@ -21,6 +55,23 @@
   `by` variable with all the covariates at every time point. This works
   for `method = "glm"` and `method = "cbps"` (with
   `is.MSM.method = FALSE`) and composes with stabilization.
+
+- With continuous treatments, estimation of the weights works a bit
+  differently for `method = "glm"`, `"bart"`, `"gbm"`, and `"super"`.
+  Previously, the numerator of the weights (corresponding to the
+  marginal distribution of treatment) was estimated using the argument
+  to `density` (by default, a normal distribution). Now, `density` only
+  controls the conditional distribution used to estimate the
+  denominator, and the numerator is estimated by marginalizing over the
+  conditional distribution. This yields a marginal distribution that is
+  compatible with the conditional distribution. In most cases, this will
+  improve balance, but estimation will be a but slower. Note this makes
+  results of these methods no longer backward compatible. Also note that
+  `method = "cbps"` is not affected by this change, even though it too
+  estimates generalized propensity score weights.
+
+- The `plot` argument can no longer be used to visualize the densities
+  for continuous treatments.
 
 - `link = "softplus"` can be used with `method = "cbps"` and
   `method = "ipt"` to use the softplus link.

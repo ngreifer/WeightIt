@@ -13,23 +13,21 @@ In general, this method relies on estimating propensity scores with a
 parametric generalized linear model and then converting those propensity
 scores into weights using a formula that depends on the desired
 estimand. For binary and multi-category treatments, a binomial or
-multinomial regression model is used to estimate the propensity scores
-as the predicted probability of being in each treatment given the
-covariates. For ordinal treatments, an ordinal regression model is used
-to estimate generalized propensity scores. For continuous treatments, a
-generalized linear model is used to estimate generalized propensity
-scores as the conditional density of treatment given the covariates.
+multinomial regression model (logistic, by default) is used to estimate
+the propensity scores as the predicted probability of being in each
+treatment given the covariates. For ordinal treatments, an ordinal
+regression model is used to estimate generalized propensity scores. For
+continuous treatments, a generalized linear model is used to estimate
+generalized propensity scores as the conditional density of treatment
+given the covariates.
 
 ### Binary Treatments
 
 For binary treatments, this method estimates the propensity scores using
-[`glm()`](https://rdrr.io/r/stats/glm.html). An additional argument is
-`link`, which uses the same options as `link` in
-[`family()`](https://rdrr.io/r/stats/family.html). The default link is
-`"logit"`, but others, including `"probit"`, are allowed. The following
-estimands are allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can
-also be computed using marginal mean weighting through stratification
-for the ATE, ATT, and ATC. See
+[`glm()`](https://rdrr.io/r/stats/glm.html). The following estimands are
+allowed: ATE, ATT, ATC, ATO, ATM, and ATOS. Weights can also be computed
+using marginal mean weighting through stratification for the ATE, ATT,
+and ATC. See
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
 for details.
 
@@ -39,12 +37,12 @@ For multi-category treatments, the propensity scores are estimated using
 multinomial regression from one of a few functions depending on the
 argument supplied to `multi.method` (see Additional Arguments below).
 The following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The
-weights for each estimand are computed using the standard formulas or
-those mentioned above. Weights can also be computed using marginal mean
-weighting through stratification for the ATE, ATT, and ATC. See
+weights for each estimand are computed using the standard formulas.
+Weights can also be computed using marginal mean weighting through
+stratification for the ATE, ATT, and ATC. See
 [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
 for details. Ordinal treatments are treated exactly the same as
-non-order multi-category treatments except that additional models are
+non-ordinal multi-category treatments except that additional models are
 available to estimate the generalized propensity score (e.g., ordinal
 logistic regression).
 
@@ -55,15 +53,41 @@ f\_{A\|X}(a_i)\\, where \\f_A(a_i)\\ (known as the stabilization factor)
 is the unconditional density of treatment evaluated the observed
 treatment value and \\f\_{A\|X}(a_i)\\ (known as the generalized
 propensity score) is the conditional density of treatment given the
-covariates evaluated at the observed value of treatment. The shape of
-\\f_A(.)\\ and \\f\_{A\|X}(.)\\ is controlled by the `density` argument
-described below (normal distributions by default), and the predicted
-values used for the mean of the conditional density are estimated using
-linear regression. Kernel density estimation can be used instead of
-assuming a specific density for the numerator and denominator by setting
-`density = "kernel"`. Other arguments to
+covariates evaluated at the observed treatment value. The shape of
+\\f\_{A\|X}(.)\\ is controlled by the `density` argument described below
+(normal distribution by default), and the predicted values used for the
+mean of the conditional density are estimated using linear regression.
+\\f_A(.)\\ is estimated by marginalizing over \\f\_{A\|X}(.)\\. Kernel
+density estimation can be used instead of assuming a specific density
+for the denominator by setting `density = "kernel"`. Other arguments to
 [`density()`](https://rdrr.io/r/stats/density.html) can be specified to
 refine the density estimation parameters.
+
+### Multilevel Treatment Models
+
+When the model `formula` contains
+[lme4](https://CRAN.R-project.org/package=lme4)-style random effects
+terms (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel
+(mixed-effects) model is used to estimate the propensity scores. This
+can improve balance and overlap when units are clustered (e.g., patients
+within hospitals or students within schools). The grouping (and any
+random-slope) variables are taken from `data`. For binary treatments,
+the model is fit using
+[`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) with the
+requested `link` (`"logit"`, `"probit"`, or `"cloglog"`); for continuous
+treatments, using
+[`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) or
+[`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) ; and for
+multi-category treatments, using
+[`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
+with its `random` argument (i.e., `multi.method` is set to `"mclogit"`).
+The propensity scores are the predicted probabilities (or conditional
+densities) that include the estimated random effects, i.e.,
+cluster-specific predictions. M-estimation is not available for these
+models; robust (`HC0`) or bootstrap standard errors should be used
+instead when estimating treatment effects (see the M-estimation section
+below and
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)).
 
 ### Longitudinal Treatments
 
@@ -114,8 +138,9 @@ specified. For continuous treatments, M-estimation is supported when
 `density` is not `"kernel"`. The conditional treatment variance and
 unconditional treatment mean and variance are included as parameters to
 estimate, as these all go into calculation of the weights. For all
-treatment types, M-estimation is not supported when `missing = "saem"`.
-See
+treatment types, M-estimation is not supported when `missing = "saem"`
+or when the model `formula` includes random effects terms (i.e., a
+multilevel model is fit; see *Multilevel Treatment Models* above). See
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 and
 [`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md)
@@ -175,7 +200,7 @@ specified:
   regression implemented in WeightIt or `"polr"` to use ordinal
   regression implemented in
   [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) , unless
-  `link` is `"br.logit"`, in which case bias-reduce ordinal logistic
+  `link` is `"br.logit"`, in which case bias-reduced ordinal logistic
   regression as implemented in
   [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html) is
   used. Ignored when `missing = "saem"`. Using the defaults allows for
@@ -211,8 +236,8 @@ supplied:
 
   A function corresponding the conditional density of the treatment. The
   standardized residuals of the treatment model will be fed through this
-  function to produce the numerator and denominator of the generalized
-  propensity score weights. If blank,
+  function to produce the denominator of the generalized propensity
+  score weights. If blank,
   [`dnorm()`](https://rdrr.io/r/stats/Normal.html) is used as
   recommended by Robins et al. (2000). This can also be supplied as a
   string containing the name of the function to be called. If the string
@@ -225,20 +250,15 @@ supplied:
 
   Can also be `"kernel"` to use kernel density estimation, which calls
   [`density()`](https://rdrr.io/r/stats/density.html) to estimate the
-  numerator and denominator densities for the weights. (This used to be
-  requested by setting `use.kernel = TRUE`, which is now deprecated.)
+  denominator density for the weights. (This used to be requested by
+  setting `use.kernel = TRUE`, which is now deprecated.)
 
 - `bw`, `adjust`, `kernel`, `n`:
 
   If `density = "kernel"`, the arguments to
   [`density()`](https://rdrr.io/r/stats/density.html). The defaults are
   the same as those in
-  [`density()`](https://rdrr.io/r/stats/density.html) except that `n` is
-  10 times the number of units in the sample.
-
-- `plot`:
-
-  If `density = "kernel"`, whether to plot the estimated densities.
+  [`density()`](https://rdrr.io/r/stats/density.html).
 
 - `link`:
 
@@ -269,6 +289,17 @@ For continuous treatments in the presence of missing data with
 [`misaem::predict.miss.lm()`](https://rdrr.io/pkg/misaem/man/predict.miss.lm.html)
 .
 
+When the model `formula` includes random effects terms (see *Multilevel
+Treatment Models* above), additional arguments are passed to the
+corresponding fitting function:
+[`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) for binary
+treatments,
+[`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
+for multi-category treatments, and
+[`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) or
+[`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) for
+continuous treatments.
+
 ## Additional Outputs
 
 - `obj`:
@@ -280,7 +311,12 @@ For continuous treatments in the presence of missing data with
   fitting function (or a list thereof if `multi.method = "glm"`). For
   continuous treatments, the output of the call to
   [`glm()`](https://rdrr.io/r/stats/glm.html) for the predicted values
-  in the denominator density.
+  in the denominator density. When the model `formula` includes random
+  effects terms, the output of the call to
+  [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) ,
+  [`lme4::lmer()`](https://rdrr.io/pkg/lme4/man/lmer.html) , or
+  [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
+  .
 
 ## References
 
@@ -537,35 +573,35 @@ summary(W3)
 #> - Weight ranges:
 #> 
 #>       Min                                  Max
-#> all 0.108 |---------------------------| 101.66
+#> all 0.043 |---------------------------| 44.225
 #> 
 #> - Units with the 5 most extreme weights:
-#>                                       
-#>         482    481   484    483    485
-#>  all 69.644 69.709 85.92 94.337 101.66
+#>                                        
+#>         482    481    484    483    485
+#>  all 30.586 30.632 37.608 41.195 44.225
 #> 
 #> - Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       2.908 1.049   1.156       0
+#> all       2.405 0.933    0.92       0
 #> 
 #> - Effective Sample Sizes:
 #> 
-#>             Total
-#> Unweighted 614.  
-#> Weighted    65.03
+#>            Total
+#> Unweighted 614. 
+#> Weighted    90.6
 
 bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.  -0.0501
-#> educ     Contin.   0.0016
-#> married   Binary  -0.0427
-#> nodegree  Binary  -0.0196
-#> re74     Contin.  -0.0773
+#> age      Contin.  -0.0712
+#> educ     Contin.   0.0100
+#> married   Binary  -0.0834
+#> nodegree  Binary  -0.0186
+#> re74     Contin.  -0.1429
 #> 
 #> Effective sample sizes
-#>             Total
-#> Unadjusted 614.  
-#> Adjusted    65.03
+#>            Total
+#> Unadjusted 614. 
+#> Adjusted    90.6
 ```
