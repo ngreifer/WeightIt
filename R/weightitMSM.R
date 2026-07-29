@@ -312,8 +312,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     stabout <- NULL
     obj.list <- obj[["fit.obj"]]
     #Wrap into the same list-of-lists shape used by the per-time-point path below
-    #so the shared combine step can flatten uniformly.
-    Mparts.list <- list(clear_null(list(.attr(obj, "Mparts"))))
+    #so the shared combine step can flatten uniformly. weightitMSM.fit() returns
+    #"Mparts.list" when `by` has >1 level (per-stratum parts) and "Mparts"
+    #otherwise.
+    Mparts.list <- list(clear_null(.attr(obj, "Mparts.list") %or% list(.attr(obj, "Mparts"))))
   }
   else {
     if (is_not_null(A[["link"]])) {
@@ -544,7 +546,7 @@ print.weightitMSM <- function(x, ...) {
 
   if (is_not_null(x$stabilization)) {
     cat(" - stabilized")
-    if (any_apply(x$stabilization, function(s) is_not_null(all.vars(s)))) {
+    if (any_apply(x$stabilization, function(s) is_not_null(get_varnames(s)))) {
       cat(paste0("; stabilization factors:\n",
                  if (length(x$stabilization) == 1L) {
                    sprintf("      %s", word_list(.attr(terms(x[["stabilization"]][[1L]]), "term.labels"),

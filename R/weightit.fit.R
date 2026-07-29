@@ -457,6 +457,8 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
   }
   info <- make_list(levels(by.factor))
 
+  Mparts.list <- make_list(levels(by.factor))
+
   obj <- NULL
 
   .check_required_packages(method)
@@ -507,6 +509,11 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
       fit.obj[[i]] <- obj$fit.obj
     }
 
+    #Expand this group's Mparts to full-sample size so the per-group parts can be
+    #stacked block-diagonally (mirrors weightit.fit()). No current MSM method
+    #produces Mparts, but this supports a future one that does.
+    Mparts.list[i] <- list(.expand_Mparts_by(obj$Mparts, by.factor == i, treat.list[[1L]]))
+
     info[i] <- list(obj$info)
   }
 
@@ -524,6 +531,10 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
 
   if (nlevels(by.factor) == 1L) {
     attr(out, "Mparts") <- obj$Mparts
+  }
+  else if (all(lengths(Mparts.list) > 0L)) {
+    #Every `by` group supplied Mparts; stack them (mirrors weightit.fit())
+    attr(out, "Mparts.list") <- Mparts.list
   }
 
   if (is_not_null(info) && nlevels(by.factor) == 1L) {
