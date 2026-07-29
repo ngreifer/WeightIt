@@ -1,7 +1,6 @@
 test_that("Binary treatment", {
   skip_on_cran()
   skip_if_not_installed("gbm")
-  skip_if_not_installed("cobalt")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -11,7 +10,7 @@ test_that("Binary treatment", {
   expect_no_condition({
     W0 <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                    data = test_data, method = "gbm", estimand = "ATE",
-                   criterion = "smd.mean", n.trees = 300,
+                   criterion = "smd.max", n.trees = 300,
                    include.obj = TRUE)
   })
 
@@ -35,7 +34,7 @@ test_that("Binary treatment", {
         set.seed(123)
         W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                       data = test_data, method = "gbm", estimand = estimand,
-                      criterion = "smd.mean", n.trees = 200,
+                      criterion = "smd.max", n.trees = 200,
                       s.weights = if (sw) "SW" else NULL,
                       include.obj = TRUE)
 
@@ -81,7 +80,7 @@ test_that("Binary treatment", {
     set.seed(123)
     W_alt <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                       data = test_data, method = "gbm", estimand = "ATT",
-                      criterion = "smd.mean", n.trees = 200)
+                      criterion = "smd.max", n.trees = 200)
 
     max_ks <- function(W) {
       max(abs(cobalt::col_w_ks(W$covs, W$treat, W$weights, s.weights = W$s.weights)))
@@ -94,12 +93,12 @@ test_that("Binary treatment", {
     set.seed(123)
     W0trim <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                        data = test_data, method = "gbm", estimand = "ATE",
-                       criterion = "smd.mean", n.trees = 200)
+                       criterion = "smd.max", n.trees = 200)
 
     set.seed(123)
     Wtrim <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                       data = test_data, method = "gbm", estimand = "ATE",
-                      criterion = "smd.mean", n.trees = 200, trim.at = .9)
+                      criterion = "smd.max", n.trees = 200, trim.at = .9)
 
     expect_true(all(is.finite(Wtrim$weights) & Wtrim$weights > 0))
     expect_true(max(Wtrim$weights) <= max(W0trim$weights) + eps)
@@ -109,7 +108,7 @@ test_that("Binary treatment", {
     set.seed(123)
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm", estimand = "ATE",
-                  criterion = "smd.mean", n.trees = 200,
+                  criterion = "smd.max", n.trees = 200,
                   distribution = "adaboost")
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
@@ -120,7 +119,7 @@ test_that("Binary treatment", {
     set.seed(123)
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm", estimand = "ATE",
-                  criterion = "smd.mean", n.trees = 150,
+                  criterion = "smd.max", n.trees = 150,
                   interaction.depth = c(2, 4), shrinkage = .01)
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
@@ -133,7 +132,7 @@ test_that("Binary treatment", {
     set.seed(123)
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm", estimand = "ATE",
-                  criterion = "smd.mean", n.trees = 200, subclass = 10)
+                  criterion = "smd.max", n.trees = 200, subclass = 10)
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
     # Subclassing yields far fewer distinct weight values than the sample size
@@ -144,7 +143,7 @@ test_that("Binary treatment", {
     set.seed(123)
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm", estimand = "ATE",
-                  criterion = "smd.mean", n.trees = 200, use.offset = TRUE)
+                  criterion = "smd.max", n.trees = 200, use.offset = TRUE)
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
     expect_true(is.numeric(W$ps))
@@ -154,13 +153,13 @@ test_that("Binary treatment", {
     expect_error({
       weightit(Am ~ X1 + X2 + X3 + X4 + X5,
               data = test_data, method = "gbm", estimand = "ATE",
-              criterion = "smd.mean", n.trees = 50, use.offset = TRUE)
+              criterion = "smd.max", n.trees = 50, use.offset = TRUE)
     }, "use.offset.*cannot be used with multi-category", fixed = FALSE)
 
     expect_error({
       weightit(A ~ X1 + X2 + X3 + X4 + X5,
               data = test_data, method = "gbm", estimand = "ATE",
-              criterion = "smd.mean", n.trees = 50, use.offset = TRUE,
+              criterion = "smd.max", n.trees = 50, use.offset = TRUE,
               distribution = "adaboost")
     }, "use.offset.*can only be used with", fixed = FALSE)
   })
@@ -187,13 +186,13 @@ test_that("Binary treatment", {
     expect_no_condition({
       W_ind <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                         data = test_data_na, method = "gbm", estimand = "ATE",
-                        criterion = "smd.mean", n.trees = 200, missing = "ind")
+                        criterion = "smd.max", n.trees = 200, missing = "ind")
     })
 
     expect_warning({
       W_surr <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                          data = test_data_na, method = "gbm", estimand = "ATE",
-                         criterion = "smd.mean", n.trees = 200, missing = "surr")
+                         criterion = "smd.max", n.trees = 200, missing = "surr")
     }, "missing.*will be set to.*ind", ignore.case = TRUE)
 
     # covs retain the original NAs in both cases (per documented `covs` output)
@@ -214,7 +213,7 @@ test_that("Binary treatment", {
     expect_warning({
       weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
               data = test_data_na, method = "gbm", estimand = "ATE",
-              criterion = "smd.mean", n.trees = 50)
+              criterion = "smd.max", n.trees = 50)
     }, "missing values are present", ignore.case = TRUE)
   })
 
@@ -228,7 +227,6 @@ test_that("Binary treatment", {
 test_that("Multi-category treatment", {
   skip_on_cran()
   skip_if_not_installed("gbm")
-  skip_if_not_installed("cobalt")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -254,7 +252,7 @@ test_that("Multi-category treatment", {
   expect_no_condition({
     W0 <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
                    data = test_data, method = "gbm", estimand = "ATE",
-                   criterion = "smd.mean", n.trees = 100,
+                   criterion = "smd.max", n.trees = 100,
                    include.obj = TRUE)
   })
 
@@ -279,7 +277,7 @@ test_that("Multi-category treatment", {
         W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
                       data = test_data, method = "gbm", estimand = estimand,
                       focal = if (estimand %in% c("ATT")) "T" else NULL,
-                      criterion = "smd.mean", n.trees = 100,
+                      criterion = "smd.max", n.trees = 100,
                       s.weights = if (sw) "SW" else NULL,
                       include.obj = TRUE)
 
@@ -325,7 +323,7 @@ test_that("Multi-category treatment", {
     set.seed(123)
     W_alt <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
                       data = test_data, method = "gbm", estimand = "ATE",
-                      criterion = "smd.mean", n.trees = 100)
+                      criterion = "smd.max", n.trees = 100)
 
     mean_ks <- function(W) {
       vals <- vapply(combn(levels(W$treat), 2, simplify = FALSE), function(tt) {
@@ -343,7 +341,7 @@ test_that("Multi-category treatment", {
     set.seed(123)
     W <- weightit(Am ~ X1 + X2 + X3 + X4 + X5,
                   data = test_data, method = "gbm", estimand = "ATE",
-                  criterion = "smd.mean", n.trees = 100, subclass = 8)
+                  criterion = "smd.max", n.trees = 100, subclass = 8)
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
     expect_true(length(unique(W$weights)) < nrow(test_data) / 4)
@@ -353,7 +351,7 @@ test_that("Multi-category treatment", {
     expect_error({
       weightit(Am ~ X1 + X2 + X3 + X4 + X5,
               data = test_data, method = "gbm", estimand = "ATE",
-              criterion = "smd.mean", n.trees = 50, use.offset = TRUE)
+              criterion = "smd.max", n.trees = 50, use.offset = TRUE)
     }, "use.offset.*cannot be used with multi-category", fixed = FALSE)
   })
 })
@@ -361,7 +359,6 @@ test_that("Multi-category treatment", {
 test_that("Continuous treatment", {
   skip_on_cran()
   skip_if_not_installed("gbm")
-  skip_if_not_installed("cobalt")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
@@ -380,7 +377,7 @@ test_that("Continuous treatment", {
   expect_no_condition({
     W0 <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                    data = test_data, method = "gbm",
-                   criterion = "p.mean", n.trees = 1000,
+                   criterion = "p.max", n.trees = 1000,
                    include.obj = TRUE)
   })
 
@@ -401,7 +398,7 @@ test_that("Continuous treatment", {
       set.seed(123)
       W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                     data = test_data, method = "gbm",
-                    criterion = "p.mean", n.trees = 1000,
+                    criterion = "p.max", n.trees = 1000,
                     s.weights = if (sw) "SW" else NULL,
                     include.obj = TRUE)
 
@@ -450,7 +447,7 @@ test_that("Continuous treatment", {
     set.seed(123)
     W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm",
-                  criterion = "p.mean", n.trees = 300,
+                  criterion = "p.max", n.trees = 300,
                   density = "kernel")
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
@@ -460,20 +457,39 @@ test_that("Continuous treatment", {
     set.seed(123)
     W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm",
-                  criterion = "p.mean", n.trees = 300,
+                  criterion = "p.max", n.trees = 300,
                   density = "dt_3")
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
   })
 
+  test_that("GBM: distribution sets density", {
+    set.seed(123)
+    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "gbm",
+                  criterion = "p.max", n.trees = 300,
+                  distribution = "laplace")
+
+    expect_true(all(is.finite(W$weights) & W$weights > 0))
+
+    W1 <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "gbm",
+                  criterion = "p.max", n.trees = 300,
+                  distribution = "laplace", density = "dlaplace")
+
+    expect_true(all(is.finite(W1$weights) & W1$weights > 0))
+
+    expect_equal(W$weights, W1$weights, tolerance = eps)
+  })
+
   test_that("GBM: trim.at - continuous", {
     W0trim <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                        data = test_data, method = "gbm",
-                       criterion = "p.mean", n.trees = 300)
+                       criterion = "p.max", n.trees = 300)
 
     Wtrim <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                       data = test_data, method = "gbm",
-                      criterion = "p.mean", n.trees = 300, trim.at = .9)
+                      criterion = "p.max", n.trees = 300, trim.at = .9)
 
     expect_true(all(is.finite(Wtrim$weights) & Wtrim$weights > 0))
     expect_true(max(Wtrim$weights) <= max(W0trim$weights) + eps)
@@ -482,7 +498,7 @@ test_that("Continuous treatment", {
   test_that("GBM: distribution = 'tdist' - continuous", {
     W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm",
-                  criterion = "p.mean", n.trees = 300,
+                  criterion = "p.max", n.trees = 300,
                   distribution = "tdist")
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
@@ -491,7 +507,7 @@ test_that("Continuous treatment", {
   test_that("GBM: use.offset - continuous", {
     W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "gbm",
-                  criterion = "p.mean", n.trees = 300, use.offset = TRUE)
+                  criterion = "p.max", n.trees = 300, use.offset = TRUE)
 
     expect_true(all(is.finite(W$weights) & W$weights > 0))
   })
@@ -513,13 +529,13 @@ test_that("Continuous treatment", {
     expect_no_condition({
       W_ind <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                         data = test_data_na, method = "gbm",
-                        criterion = "p.mean", n.trees = 500, missing = "ind")
+                        criterion = "p.max", n.trees = 500, missing = "ind")
     })
 
     expect_warning({
       W_surr <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                          data = test_data_na, method = "gbm",
-                         criterion = "p.mean", n.trees = 500, missing = "surr")
+                         criterion = "p.max", n.trees = 500, missing = "surr")
     }, "missing.*will be set to.*ind", ignore.case = TRUE)
 
     expect_true(anyNA(W_ind$covs$X1))

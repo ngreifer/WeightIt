@@ -10,6 +10,7 @@
 #' \item{`estimand`}{which estimands are available for this method. Most methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
 #' \item{`alias`}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is `"ebal"`, but `"ebalance"` and `"entropy"` also work. The first value is the canonical name.}
 #' \item{`description`}{a string containing the description of the name in English.}
+#' \item{`re_ok`}{a logical for whether random effects terms (e.g., `(1 | group)`) can be included in the model `formula` supplied to [weightit()] to fit a multilevel version of the method.}
 #' \item{`ps`}{a logical for whether propensity scores are returned by the method for binary treatments. Propensity scores are never returned for multi-category or continuous treatments.}
 #' \item{`msm_valid`}{a logical for whether the method can be validly used with longitudinal treatments.}
 #' \item{`msm_method_available`}{a logical for whether a version of the method can be used that estimates weights using a single model rather than multiplying the weights across time points. This is related to the `is.MSM.method` argument of `weightitMSM()`.}
@@ -56,6 +57,7 @@
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = c("glm", "ps"),
     description = "propensity score weighting with GLM",
+    re_ok = TRUE,
     ps = TRUE,
     msm_valid = TRUE,
     msm_method_available = FALSE,
@@ -74,6 +76,7 @@
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = "bart",
     description = "propensity score weighting with BART",
+    re_ok = TRUE,
     ps = TRUE,
     msm_valid = TRUE,
     msm_method_available = FALSE,
@@ -93,6 +96,7 @@
     estimand = c("ATE", "ATT", "ATC", "ATO"),
     alias = c("cbps", "cbgps"),
     description = "covariate balancing propensity score weighting",
+    re_ok = FALSE,
     ps = TRUE,
     msm_valid = TRUE,
     msm_method_available = TRUE,
@@ -111,6 +115,7 @@
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("ebal", "ebalance", "entropy"),
     description = "entropy balancing",
+    re_ok = FALSE,
     ps = FALSE,
     msm_valid = FALSE,
     msm_method_available = FALSE,
@@ -129,6 +134,7 @@
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("energy", "dcows"),
     description = "energy balancing",
+    re_ok = FALSE,
     ps = FALSE,
     msm_valid = FALSE,
     msm_method_available = FALSE,
@@ -147,6 +153,7 @@
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = c("gbm", "gbr"),
     description = "propensity score weighting with GBM",
+    re_ok = FALSE,
     ps = TRUE,
     msm_valid = TRUE,
     msm_method_available = FALSE,
@@ -165,6 +172,7 @@
     estimand = c("ATE", "ATT", "ATC"),
     alias = "ipt",
     description = "inverse probability tilting",
+    re_ok = FALSE,
     ps = TRUE,
     msm_valid = TRUE,
     msm_method_available = FALSE,
@@ -183,6 +191,7 @@
     estimand = "ATE",
     alias = c("npcbps", "npcbgps"),
     description = "non-parametric covariate balancing propensity score weighting",
+    re_ok = FALSE,
     ps = FALSE,
     msm_valid = FALSE,
     msm_method_available = FALSE,
@@ -201,6 +210,7 @@
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("optweight", "sbw"),
     description = "stable balancing weights",
+    re_ok = FALSE,
     ps = FALSE,
     msm_valid = FALSE,
     msm_method_available = FALSE,
@@ -220,6 +230,7 @@
     estimand = c("ATE", "ATT", "ATC", "ATO", "ATM", "ATOS"),
     alias = c("super", "superlearner"),
     description = "propensity score weighting with SuperLearner",
+    re_ok = FALSE,
     ps = TRUE,
     msm_valid = TRUE,
     msm_method_available = FALSE,
@@ -238,6 +249,7 @@
     estimand = c("ATE", "ATT", "ATC"),
     alias = c("cfd", "kernel"),
     description = "characteristic function distance balancing",
+    re_ok = FALSE,
     ps = FALSE,
     msm_valid = FALSE,
     msm_method_available = FALSE,

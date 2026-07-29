@@ -280,14 +280,11 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     attr(method, "name") <- method.name
   }
 
-  #Random effects terms are only supported by method = "glm"
-  if (is_not_null(re.bars)) {
-    if (is_null(method) || is.function(method) || method != "glm") {
-      arg::err('random effects terms in {.arg formula} (e.g., {.code (1 | group)}) are only supported when {.code method = "glm"}')
-    }
-    if (is_not_null(ps)) {
-      arg::err("random effects terms in {.arg formula} cannot be used with a supplied {.arg ps}")
-    }
+  #Random effects terms are only supported by methods with re_ok = TRUE
+  .check_method_re(method, re.bars)
+
+  if (is_not_null(re.bars) && is_not_null(ps)) {
+    arg::err("random effects terms in {.arg formula} cannot be used with a supplied {.arg ps}")
   }
 
   #Process estimand and focal
@@ -435,21 +432,19 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   den.parts <- clear_null(.attr(obj, "Mparts.list") %or% list(.attr(obj, "Mparts")))
 
   if (keep.mparts && is_not_null(den.parts)) {
-    if (is_null(stabilize)) {
-      if (length(den.parts) == 1L) {
-        attr(out, "Mparts") <- den.parts[[1L]]
-      }
-      else {
-        attr(out, "Mparts.list") <- den.parts
-      }
-    }
-    else {
+    if (is_not_null(stabilize)) {
       #Stabilization: append the (inverted) numerator part(s), which likewise may
       #be a single Mparts or one per `by` group.
       num.parts <- clear_null(.attr(sw_obj, "Mparts.list") %or% list(.attr(sw_obj, "Mparts")))
       num.parts <- lapply(num.parts, .invert_num_Mpart)
 
       attr(out, "Mparts.list") <- c(den.parts, num.parts)
+    }
+    else if (length(den.parts) == 1L) {
+      attr(out, "Mparts") <- den.parts[[1L]]
+    }
+    else {
+      attr(out, "Mparts.list") <- den.parts
     }
   }
 

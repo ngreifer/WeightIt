@@ -421,10 +421,16 @@ w.m <- function(x, w = NULL, na.rm = TRUE) {
   sum(x * w, na.rm = na.rm) / sum(w, na.rm = na.rm)
 }
 col.w.m <- function(mat, w = NULL, na.rm = TRUE) {
-  if (is_null(w)) w <- 1
-  w.sum <- colSums(w * !is.na(mat))
+  m <- nrow(mat)
+  n <- ncol(mat)
 
-  colSums(mat * w, na.rm = na.rm) / w.sum
+  if (is_null(w)) {
+    .colMeans(mat, m, n, na.rm = na.rm)
+  }
+  else {
+    w.sum <- .colSums(w * !is.na(mat), m, n)
+    .colSums(mat * w, m, n, na.rm = na.rm) / w.sum
+  }
 }
 col.w.v <- function(mat, w = NULL, bin.vars = NULL, na.rm = TRUE) {
   if (!is.matrix(mat)) {
@@ -646,15 +652,11 @@ get_varnames <- function(expr) {
   recurse(expr)
 }
 
-#Random effects (lme4-style) formula helpers -------------------------------
-
 #Return a list of the lme4-style bar terms (e.g. the language object `1 | group`)
 #present in the RHS of a formula, or NULL if there are none. Used to detect
-#random-effects specifications like `treat ~ x1 + x2 + (1 | group)`. Written
-#without a dependency on lme4 because detection runs on every call to
-#`weightit()` and the multi-category engine (mclogit) is not lme4.
+#random-effects specifications like `treat ~ x1 + x2 + (1 | group)`.
 .find_re_bars <- function(f) {
-  rhs <- if (length(f) == 3L) f[[3L]] else f[[2L]]
+  rhs <- if (.length(f) == 3L) f[[3L]] else f[[2L]]
 
   recurse <- function(term) {
     if (!is.call(term)) {
@@ -674,7 +676,7 @@ get_varnames <- function(expr) {
     if (identical(head, quote(`+`)) || identical(head, quote(`*`)) ||
         identical(head, quote(`:`)) || identical(head, quote(`-`))) {
       return(c(recurse(term[[2L]]),
-               if (length(term) >= 3L) recurse(term[[3L]])))
+               if (.length(term) >= 3L) recurse(term[[3L]])))
     }
 
     NULL
@@ -682,7 +684,7 @@ get_varnames <- function(expr) {
 
   bars <- recurse(rhs)
 
-  if (is_null(bars)) NULL else bars
+  bars %or% NULL
 }
 
 #Remove all lme4-style bar terms from a formula, returning the fixed-effects-only
@@ -694,32 +696,40 @@ get_varnames <- function(expr) {
       return(term)
     }
 
-    head <- term[[1L]]
+    .head <- term[[1L]]
 
-    if (identical(head, quote(`|`)) || identical(head, quote(`||`))) {
+    if (identical(.head, quote(`|`)) || identical(.head, quote(`||`))) {
       return(NULL)
     }
 
-    if (identical(head, quote(`(`))) {
+    if (identical(.head, quote(`(`))) {
       inner <- strip(term[[2L]])
-      if (is_null(inner)) return(NULL)
+      if (is_null(inner)) {
+        return(NULL)
+      }
+
       return(call("(", inner))
     }
 
-    if (identical(head, quote(`+`))) {
+    if (identical(.head, quote(`+`))) {
       lhs <- strip(term[[2L]])
-      rhs <- if (length(term) >= 3L) strip(term[[3L]]) else NULL
+      rhs <- if (.length(term) >= 3L) strip(term[[3L]]) else NULL
 
-      if (is_null(lhs) && is_null(rhs)) return(NULL)
-      if (is_null(lhs)) return(rhs)
-      if (is_null(rhs)) return(lhs)
+      if (is_null(lhs)) {
+        return(rhs %or% NULL)
+      }
+
+      if (is_null(rhs)) {
+        return(lhs %or% NULL)
+      }
+
       return(call("+", lhs, rhs))
     }
 
     term
   }
 
-  rhs <- if (length(f) == 3L) f[[3L]] else f[[2L]]
+  rhs <- if (.length(f) == 3L) f[[3L]] else f[[2L]]
   new.rhs <- strip(rhs)
 
   if (is_null(new.rhs)) {
@@ -727,7 +737,7 @@ get_varnames <- function(expr) {
   }
 
   new.f <- {
-    if (length(f) == 3L) call("~", f[[2L]], new.rhs)
+    if (.length(f) == 3L) call("~", f[[2L]], new.rhs)
     else call("~", new.rhs)
   }
 
@@ -1174,7 +1184,7 @@ rep_with <- function(x, y) {
   rep.int(x, length(y)) |>
     setNames(names(y))
 }
-is_null <- function(x) {length(x) == 0L}
+is_null <- function(x) {length(unclass(x)) == 0L}
 is_not_null <- function(x) {!is_null(x)}
 `%or%` <- function(x, y) {
   # like `%||%` but works for non-NULL length 0 objects
@@ -1220,6 +1230,7 @@ len <- function(x, recursive = TRUE) {
   else if (is.list(x) && recursive) vapply(x, len, numeric(1L), recursive = FALSE)
   else length(x)
 }
+.length <- function(x) length(unclass(x))
 seq_row <- function(x) {
   if (is_null(x)) {
     return(integer(0L))

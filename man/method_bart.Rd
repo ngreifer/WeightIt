@@ -28,7 +28,7 @@ For multi-category treatments, the propensity scores are estimated using
 several calls to \pkgfun{dbarts}{bart2}, one for each treatment group; the
 treatment probabilities are not normalized to sum to 1. The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-estimand are computed using the standard formulas or those mentioned above.
+estimand are computed using the standard formulas.
 Weights can also be computed using marginal mean weighting through
 stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
 }
@@ -40,14 +40,43 @@ For continuous treatments, weights are estimated as
 stabilization factor) is the unconditional density of treatment evaluated the
 observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 propensity score) is the conditional density of treatment given the
-covariates evaluated at the observed value of treatment. The shape of
-\eqn{f_A(.)} and \eqn{f_{A|X}(.)} is controlled by the \code{density} argument
-described below (normal distributions by default), and the predicted values
+covariates evaluated at the observed treatment value. The shape of
+\eqn{f_{A|X}(.)} is controlled by the \code{density} argument
+described below (normal distribution by default), and the predicted values
 used for the mean of the conditional density are estimated using BART as
-implemented in \pkgfun{dbarts}{bart2}. Kernel density estimation can be used
-instead of assuming a specific density for the numerator and denominator by
+implemented in \pkgfun{dbarts}{bart2}. \eqn{f_A(.)} is estimated by marginalizing
+over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
+instead of assuming a specific density for the denominator by
 setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
 to refine the density estimation parameters.
+}
+
+\subsection{Multilevel Treatment Models}{
+
+When the model \code{formula} contains \CRANpkg{lme4}-style random effects terms
+(e.g., \code{treat ~ x1 + x2 + (1 | school)}), a multilevel BART model is fit using
+\pkgfun{stan4bart}{stan4bart} instead of \pkgfun{dbarts}{bart2}. This combines a
+BART sum-of-trees for the covariates with a Stan-estimated parametric and
+random-effects component, and can improve balance and overlap when units are
+clustered (e.g., patients within hospitals or students within schools). Unlike
+the other multilevel methods, the full flexibility of \pkgfun{lme4}{glmer}
+random effects is available, including \emph{multiple grouping factors} (e.g.,
+\code{(1 | school) + (1 | district)}) and random slopes. The grouping (and any
+random-slope) variables are taken from \code{data}; the covariates are placed in the
+BART component internally (i.e., the fitted model is \code{treat ~ bart(x1 + x2) + (1 | school)}). The estimated propensity scores (or conditional means for
+continuous treatments) include the estimated random effects, i.e., they are
+cluster-specific.
+
+\code{stan4bart()} uses a different set of control arguments from \code{bart2()}: the
+number of posterior draws and warmup iterations are controlled by \code{iter} and
+\code{warmup}, the number of chains and parallel workers by \code{chains} and \code{cores},
+BART hyperparameters (e.g., \code{n.trees}) are supplied in a \code{bart_args} list, and
+Stan and prior options in a \code{stan_args} list; see \pkgfun{stan4bart}{stan4bart}.
+For convenience, \code{bart2()}-style arguments are translated to their \code{stan4bart()}
+equivalents when supplied (e.g., \code{n.chains} to \code{chains}, \code{n.threads} to \code{cores},
+and BART hyperparameters like \code{n.trees} to \code{bart_args}), so the same argument
+names can be used with or without random effects. As with the non-multilevel
+case, M-estimation is not supported.
 }
 
 \subsection{Longitudinal Treatments}{
@@ -84,7 +113,7 @@ argument. Bayesian priors are used for the hyperparameters, so the result is
 a posterior distribution of predicted values for each unit. The mean of these
 for each unit is taken for use in computing the (generalized) propensity
 score. Although the hyperparameters governing the priors can be modified by
-supplying arguments to \code{weightit()} that are passed to the BART fitting
+supplying arguments to \code{\link[=weightit]{weightit()}} that are passed to the BART fitting
 function, the default values tend to work well and require little
 modification (though the defaults differ for continuous and categorical
 treatments; see the \pkgfun{dbarts}{bart2} documentation for details). Unlike
@@ -103,10 +132,11 @@ do one of two things:
 \enumerate{
 \item supply an argument to \code{seed}, which is passed to \code{dbarts::bart2()} and sets the seed for single- and multi-threaded uses, or
 \item call \code{\link[=set.seed]{set.seed()}} and set \code{n.threads = 1} to use single-threading.
+}
+
 Note that to ensure reproducibility on any machine, regardless of the number of
 cores available, one should use single-threading by setting \code{n.threads = 1} and either supply \code{seed} or
 call \code{set.seed()}.
-}
 }
 }
 \section{Additional Arguments}{
@@ -132,11 +162,10 @@ details and references.}
 
 For continuous treatments, the following arguments may be supplied:
 \describe{
-\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+\item{\code{density}}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 
-Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the numerator and denominator densities for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()} except that \code{n} is 10 times the number of units in the sample.}
-\item{\code{plot}}{If \code{density = "kernel"}, whether to plot the estimated densities.}
+Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the denominator density for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()}.}
 }
 }
 
@@ -144,7 +173,7 @@ Can also be \code{"kernel"} to use kernel density estimation, which calls \code{
 
 \describe{
 \item{\code{obj}}{
-When \code{include.obj = TRUE}, the \code{bart2} fit(s) used to generate the predicted values. With multi-category treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
+When \code{include.obj = TRUE}, the \code{bart2} fit(s) used to generate the predicted values (or the \pkgfun{stan4bart}{stan4bart} fit(s) when the model \code{formula} contains random effects terms). With multi-category treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
 }
 }
 }
@@ -172,10 +201,10 @@ summary(W2)
 cobalt::bal.tab(W2)
 
 #Balancing covariates with respect to re75 (continuous)
-#assuming t(3) conditional density for treatment
+#with kernel density estimation for GPS
 (W3 <- weightit(re75 ~ age + educ + married +
                   nodegree + re74, data = lalonde,
-                method = "bart", density = "dt_3"))
+                method = "bart", density = "kernel"))
 
 summary(W3)
 

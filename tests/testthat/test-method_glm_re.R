@@ -69,10 +69,10 @@ test_that("Binary treatment with random effects (lme4::glmer)", {
 
   #Unsupported link errors
   expect_error(weightit(A ~ X1 + (1 | cluster), data = test_data,
-                        method = "glm", link = "loglog"))
+                        method = "glm", link = "identity"))
 })
 
-test_that("Continuous treatment with random effects (lme4::lmer)", {
+test_that("Continuous treatment with random effects", {
   skip_on_cran()
   skip_if_not_installed("lme4")
   skip_if_not_installed("cobalt")
@@ -96,9 +96,9 @@ test_that("Continuous treatment with random effects (lme4::lmer)", {
 
   expect_null(attr(W, "Mparts"))
 
-  #Non-identity link errors
+  #Unsupported link errors
   expect_error(weightit(Ac ~ X1 + (1 | cluster), data = test_data,
-                        method = "glm", link = "log"))
+                        method = "glm", link = "sqrt"))
 })
 
 test_that("Multi-category treatment with random effects (mclogit::mblogit)", {
@@ -148,4 +148,38 @@ test_that("Random effects standard-error fallback and guardrails", {
   #Random effects only allowed with method = "glm"
   expect_error(weightit(A ~ X1 + (1 | cluster), data = test_data,
                         method = "cbps"))
+})
+
+test_that("Random effects substitute for a correlated omitted predictor", {
+  skip_on_cran()
+  skip_if_not_installed("lme4")
+  skip_if_not_installed("cobalt")
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  #In the fixture, `cluster` is a fine quantile-binning of X1 (a confounder), so
+  #including (1 | cluster) with X1 omitted should adjust for the X1 confounding.
+
+  #Cluster-aware fit (X1 omitted, cluster in its place)
+  expect_no_condition({
+    W_cluster <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + (1 | cluster),
+                          data = test_data, method = "glm", estimand = "ATE",
+                          include.obj = TRUE)
+  })
+
+  #Fit ignoring clustering (X1 also omitted)
+  W_none <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                     data = test_data, method = "glm", estimand = "ATE")
+
+  #Random-effect variance is non-negligible (cluster carries the X1 signal)
+  re.var <- as.numeric(lme4::VarCorr(W_cluster$obj)[["cluster"]])
+  expect_gt(re.var, 0.1)
+
+  #The two fits are distinguishable by the weights they produce
+  expect_not_equal(W_cluster$weights, W_none$weights)
+
+  #Balance on the omitted confounder X1 improves when cluster stands in for it
+  smd_cluster <- abs(cobalt::col_w_smd(test_data$X1, test_data$A, W_cluster$weights))
+  smd_none <- abs(cobalt::col_w_smd(test_data$X1, test_data$A, W_none$weights))
+  expect_lt(smd_cluster, smd_none)
 })

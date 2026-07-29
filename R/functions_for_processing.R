@@ -140,6 +140,19 @@
   }
 }
 
+.check_method_re <- function(method, re.bars) {
+  if (is_null(re.bars)) {
+    return(invisible(NULL))
+  }
+
+  if (rlang::is_string(method) &&
+      !.weightit_methods[[method]]$re_ok) {
+    arg::err("random effects terms in {.arg formula} (e.g., {.code (1 | group)}) cannot be used with {(.method_to_phrase(method))}")
+  }
+
+  invisible(NULL)
+}
+
 .method_to_phrase <- function(method) {
 
   if (is_null(method)) {
@@ -862,6 +875,95 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
   }
 }
 
+#Build the data.frame and model formula for a random-effects (lme4-style) PS
+#model. `covs` is the processed fixed-effects design matrix (already subset);
+#`bars` is the list of bar terms from `.find_re_bars()`. The random-effects
+#variables (grouping factors and any random-slope variables) are pulled fresh
+#from the original `.data` (subset to the current `by` group), because `covs`
+#has already been expanded to a numeric model matrix. Fixed-effect columns are
+#renamed to non-syntactic-safe placeholders (`.x1`, `.x2`, ...) for the fit; the
+#coefficients are never interpreted, only the predictions.
+.make_re_data_formula <- function(covs, treat, s.weights, bars, .data, subset, bart = FALSE) {
+  re.vars <- unique(unlist(lapply(bars, get_varnames)))
+
+  not.found <- setdiff(re.vars, names(.data))
+  if (is_not_null(not.found)) {
+    arg::err("the variable{?s} {.var {not.found}} in the random effects component of {.arg formula} {?was/were} not found in the dataset")
+  }
+
+  re.data <- as.data.frame(.data)[subset, re.vars, drop = FALSE]
+
+  if (anyNA(re.data)) {
+    arg::err("missing values are not allowed in the random effects grouping or slope variables")
+  }
+
+  if (ncol(covs) > 0L) {
+    fe.data <- as.data.frame(covs)
+    names(fe.data) <- paste0(".x", seq_col(covs))
+    data <- cbind(data.frame(.treat = treat, .s.weights = s.weights),
+                  fe.data, re.data)
+    fe.string <- paste(names(fe.data), collapse = " + ")
+
+    if (bart) {
+      fe.string <- sprintf("bart(%s)", fe.string)
+    }
+  }
+  else {
+    data <- cbind(data.frame(.treat = treat, .s.weights = s.weights),
+                  re.data)
+    fe.string <- "1"
+  }
+
+  re.string <- paste(sprintf("(%s)", vapply(bars, deparse1, character(1L))),
+                     collapse = " + ")
+
+  formula <- stats::as.formula(sprintf(".treat ~ %s + %s", fe.string, re.string))
+
+  list(data = data, formula = formula)
+}
+
+#Convert a list of lme4-style bar terms into the `random` argument accepted by
+#mclogit::mblogit(): a one-sided formula `~ 1 | group` (or a list thereof).
+.bars_to_mclogit_random <- function(bars) {
+  out <- lapply(bars, function(b) stats::as.formula(call("~", b)))
+
+  if (length(out) == 1L) out[[1L]] else out
+}
+
+#Assemble the argument list for stan4bart::stan4bart() from the arguments passed
+#through `...` (used by the multilevel BART method). bart2-style arguments (as
+#accepted by the non-multilevel BART method) are translated into their stan4bart
+#equivalents so a single argument interface works for both paths; a natively-named
+#stan4bart argument supplied directly takes precedence over its translation. The
+#returned list excludes `formula`, `data`, and `verbose`, which the caller sets.
+.make_stan4bart_args <- function(...) {
+  #Natively-named stan4bart sampling/control arguments supplied directly
+  native <- c("iter", "warmup", "skip", "chains", "cores", "refresh",
+              "offset_type", "seed", "stan_args")
+  A <- ...mget(intersect(...names(), native))
+
+  #BART hyperparameters -> bart_args (a natively-supplied `bart_args` wins)
+  bart_hp <- c("n.trees", "n.cuts", "k", "power", "base", "keepTrees", "useQuantiles")
+  bart_args <- utils::modifyList(...mget(intersect(...names(), bart_hp)),
+                                 as.list(...get("bart_args")))
+  if (length(bart_args) > 0L) {
+    A[["bart_args"]] <- bart_args
+  }
+
+  #Translate bart2-style sampling arguments to stan4bart's (native args win)
+  if (is_null(A[["chains"]]) && is_not_null(...get("n.chains"))) A[["chains"]] <- ...get("n.chains")
+  if (is_null(A[["cores"]]) && is_not_null(...get("n.threads"))) A[["cores"]] <- ...get("n.threads")
+  if (is_null(A[["skip"]]) && is_not_null(...get("n.thin"))) A[["skip"]] <- ...get("n.thin")
+  if (is_null(A[["warmup"]]) && is_not_null(...get("n.burn"))) A[["warmup"]] <- ...get("n.burn")
+  if (is_null(A[["iter"]]) && is_not_null(...get("n.samples"))) {
+    #stan4bart's `iter` includes warmup, so kept samples = iter - warmup
+    if (is_null(A[["warmup"]])) A[["warmup"]] <- 1000L #stan4bart's default warmup
+    A[["iter"]] <- A[["warmup"]] + ...get("n.samples")
+  }
+
+  A
+}
+
 .make_covs_full_rank <- function(covs, with.intercept = TRUE) {
   if (ncol(covs) <= 1L) {
     return(covs)
@@ -1311,12 +1413,10 @@ stabilize_w <- function(weights, treat) {
   setNames(weights * tab[as.character(treat)], w.names)
 }
 
-.get_dens_fun <- function(use.kernel = FALSE, bw = NULL, adjust = NULL, kernel = NULL,
-                          n = NULL, treat = NULL, density = NULL, weights = NULL) {
-  if (is_null(n)) n <- 10L * length(treat)
-  if (is_null(adjust)) adjust <- 1
+.get_make_dens_fun <- function(density = NULL, bw = NULL, adjust = NULL, kernel = NULL,
+                               n = NULL, use.kernel = FALSE) {
 
-  if (!isFALSE(use.kernel)) {
+  if (is_not_null(use.kernel) && !isFALSE(use.kernel)) {
     if (isTRUE(use.kernel)) {
       arg::wrn('{.arg use.kernel} is deprecated; use {.code density = "kernel"} instead. Setting {.code density = "kernel"}')
       density <- "kernel"
@@ -1326,100 +1426,143 @@ stabilize_w <- function(weights, treat) {
     }
   }
 
-  if (identical(density, "kernel")) {
+  if (is_null(density)) {
+    density <- dnorm
+  }
+
+  arg::arg_or(density,
+              arg::arg_string,
+              arg::arg_function)
+
+  .check_density <- function(p) {
+    if (is_null(p) || !is.numeric(p) || anyNA(p)) {
+      arg::err("there was a problem with the output of {.arg density}. Try another density function or leave it blank to use the Gaussian density")
+    }
+
+    if (!all(is.finite(p)) || any(p < 0)) {
+      arg::err("the input to {.arg density} may not accept the full range of standardized treatment values or residuals")
+    }
+
+    p
+  }
+
+  if (is.function(density)) {
+    make_dens_fun <- function(mu, weights, grid) {
+      function(r) {
+        density(r) |> .check_density()
+      }
+    }
+
+    return(make_dens_fun)
+  }
+
+  if (density == "kernel") {
+    if (is_null(n)) n <- 512L
+    if (is_null(adjust)) adjust <- 1
     if (is_null(bw)) bw <- "nrd0"
     if (is_null(kernel)) kernel <- "gaussian"
 
-    densfun <- function(p, log = FALSE) {
-      d <- stats::density(p, n = n,
-                          weights = weights / sum(weights),
-                          give.Rkern = FALSE,
-                          bw = bw,
-                          adjust = adjust,
-                          kernel = kernel)
+    make_dens_fun <- function(mu, weights, grid) {
+      .d <- stats::density(mu,
+                           weights = weights / sum(weights),
+                           n = n,
+                           give.Rkern = FALSE,
+                           warnWbw = FALSE,
+                           bw = bw,
+                           adjust = adjust,
+                           kernel = kernel,
+                           from = min(grid),
+                           to = max(grid))
 
-      out <- with(d, approxfun(x = x, y = y))(p)
+      function(r) {
+        approxfun(x = .d$x, y = .d$y)(r) |>
+          .check_density()
+      }
+    }
 
-      if (log) out <- log(out)
+    attr(make_dens_fun, "is_kernel") <- TRUE
 
-      attr(out, "density") <- d
-      out
+    return(make_dens_fun)
+  }
+
+  if (density == "dlaplace") {
+    density <- function(x) {
+      exp(-abs(x)) / 2
     }
   }
   else {
-    if (is_null(density)) .density <- function(x, log = FALSE) dnorm(x, log = log)
-    else if (is.function(density)) .density <- function(x, log = FALSE) {
-      if (utils::hasName(formals(density), "log")) density(x, log = log)
-      else if (log) log(density(x))
-      else density(x)
-    }
-    else if (identical(density, "dlaplace")) .density <- function(x, log = FALSE) {
-      mu <- 0
-      b <- 1
-      if (log)
-        -abs(x - mu) / b - log(2 * b)
-      else
-        exp(-abs(x - mu) / b) / (2 * b)
-    }
-    else if (rlang::is_string(density)) {
-      splitdens <- strsplit(density, "_", fixed = TRUE)[[1L]]
+    splitdens <- strsplit(density, "_", fixed = TRUE)[[1L]]
 
-      splitdens1 <- get0(splitdens[1L], mode = "function", envir = parent.frame())
+    splitdens1 <- get0(splitdens[1L], mode = "function", envir = parent.frame())
 
-      if (is_null(splitdens1)) {
-        arg::err("{.arg {density}} is not an appropriate argument to {.arg density} because {splitdens[1L]} is not an available function")
-      }
-
-      if (length(splitdens) > 1L && !can_str2num(splitdens[-1L])) {
-        arg::err("{.arg {density}} is not an appropriate argument to {.arg density} because {.or {.val {splitdens[-1L]}}} cannot be coerced to numeric")
-      }
-
-      .density <- function(x, log = FALSE) {
-        if (utils::hasName(formals(splitdens1), "log")) {
-          out <- rlang::try_fetch(do.call(splitdens1, c(list(x, log = log), as.list(str2num(splitdens[-1L])))),
-                                  error = function(e) {
-                                    arg::err("error in applying density:\n  {conditionMessage(e)}")
-                                  })
-        }
-        else {
-          out <- rlang::try_fetch(do.call(splitdens1, c(list(x), as.list(str2num(splitdens[-1L])))),
-                                  error = function(e) {
-                                    arg::err("error in applying density:\n  {conditionMessage(e)}")
-                                  })
-
-          if (log) out <- log(out)
-        }
-
-        out
-      }
-    }
-    else {
-      arg::err("the argument to {.arg density} cannot be evaluated as a density function")
+    if (is_null(splitdens1)) {
+      arg::err("{.val {density}} is not an appropriate argument to {.arg density} because {.fun {splitdens[1L]}} is not an available function")
     }
 
-    densfun <- function(p, log = FALSE) {
-      # sd <- sd(p)
-      # sd <- sqrt(col.w.v(p, s.weights))
-      dens <- .density(p, log = log)
-      if (is_null(dens) || !is.numeric(dens) || anyNA(dens)) {
-        arg::err("there was a problem with the output of {.arg density}. Try another density function or leave it blank to use the Gaussian density")
-      }
+    if (length(splitdens) > 1L && !can_str2num(splitdens[-1L])) {
+      bad_str <- which(!vapply(splitdens[-1L], can_str2num, logical(1L)))
+      arg::err("{.val {density}} is not an appropriate argument to {.arg density} because {.val {splitdens[-1L][bad_str]}} cannot be coerced to numeric")
+    }
 
-      if ((log && !all(is.finite(dens))) ||
-          (!log && any(dens <= 0))) {
-        arg::err("the input to {.arg density} may not accept the full range of standardized treatment values or residuals")
-      }
+    .args <- as.list(str2num(splitdens[-1L]))
 
-      x <- seq.int(min(p) - 3 * adjust * bw.nrd0(p),
-                   max(p) + 3 * adjust * bw.nrd0(p),
-                   length.out = n)
-      attr(dens, "density") <- data.frame(x = x,
-                                          y = .density(x, log = log))
-      dens
+    density <- function(x) {
+      rlang::try_fetch({
+        do.call(splitdens1, c(list(x), .args))
+      },
+      error = function(e) {
+        arg::err(c("Error in applying {.arg density}:",
+                   "!" = "{conditionMessage(e)}"))
+      })
     }
   }
 
-  densfun
+  make_dens_fun <- function(mu, weights, grid) {
+    function(r) {
+      density(r) |> .check_density()
+    }
+  }
+
+  make_dens_fun
+}
+
+.get_w_from_gps_internal_cont <- function(mu, treat, sd = NULL, s.weights, make_dens_fun, n = 50L) {
+  #Get weights
+  r <- treat - mu
+
+  if (is_null(sd)) {
+    sd <- sqrt(w.m((r - w.m(r, s.weights))^2, s.weights))
+  }
+
+  t_grid <- seq(min(treat), max(treat), length.out = n)
+  t_mu_grid <- outer(t_grid, mu, "-") / sd
+
+  dens_fun <- make_dens_fun(mu = r / sd,
+                            weights = s.weights,
+                            grid = t_mu_grid)
+
+  ## Conditional density
+  dens_denom <- dens_fun(r / sd)
+
+  ## Marginalize over conditional density to get marginal density
+  dens_num <- dens_fun(as.vector(t_mu_grid)) |>
+    matrix(ncol = n, byrow = TRUE) |>
+    col.w.m(s.weights) |>
+    # approx(x = t_grid, xout = treat) |> #linear
+    spline(x = t_grid, xout = treat) |> #spline
+    getElement("y")
+
+  # d1 <- dens_fun(as.vector(t_mu_grid))
+  # d2 <- d1 |> matrix(ncol = n, byrow = TRUE)
+  # d3 <- d2 |> col.w.m(s.weights)
+  # d4 <- d3 |> spline(x = t_grid, xout = treat)
+  # dens_num <- d4 |> getElement("y")
+
+  # plot(x = treat[order(treat)],
+  #      y = dens_num[order(treat)],
+  #      type = "l")
+
+  dens_num / dens_denom
 }
 
 .get_w_from_ps_internal_bin <- function(ps, treat, estimand = "ATE",
@@ -1745,29 +1888,6 @@ stabilize_w <- function(weights, treat) {
   }
 
   dw
-}
-
-plot_density <- function(d.n, d.d, log = FALSE) {
-  d.d <- cbind(as.data.frame(d.d[c("x", "y")]), dens = "Denominator Density", stringsAsfactors = FALSE)
-  d.n <- cbind(as.data.frame(d.n[c("x", "y")]), dens = "Numerator Density", stringsAsfactors = FALSE)
-  d.all <- rbind(d.d, d.n)
-  d.all$dens <- factor(d.all$dens, levels = c("Numerator Density", "Denominator Density"))
-
-  if (log) {
-    d.all$x <- exp(d.all$x)
-  }
-
-  pl <- ggplot(d.all, aes(x = .data$x, y = .data$y)) +
-    geom_line() +
-    labs(title = "Weight Component Densities", x = "E[Treat|X]", y = "Density") +
-    facet_grid(rows = vars(.data$dens)) +
-    theme(panel.background = element_rect(fill = "white"),
-          panel.border = element_rect(fill = NA, color = "black"),
-          axis.text.x = element_text(color = "black"),
-          axis.text.y = element_text(color = "black"),
-          panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank())
-  print(pl)
 }
 
 neg_ent <- function(w) {

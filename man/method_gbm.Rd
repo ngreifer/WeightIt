@@ -10,7 +10,7 @@ in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{
 binary, multi-category, and continuous treatments.
 
 In general, this method relies on estimating propensity scores using
-generalized boosted modeling and then converting those propensity scores into
+generalized boosted modeling (GBM) and then converting those propensity scores into
 weights using a formula that depends on the desired estimand. The algorithm
 involves using a balance-based or prediction-based criterion to optimize in
 choosing the value of tuning parameters (the number of trees and possibly
@@ -33,8 +33,8 @@ mean weighting through stratification for the ATE, ATT, and ATC. See
 
 \subsection{Multi-Category Treatments}{
 
-For binary treatments, this method estimates the propensity scores using
-\pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values
+For multi-category treatments, this method estimates the propensity scores using
+a single call to \pkgfun{gbm}{gbm.fit} with \code{distribution = "multinomial"} and then selects the optimal tuning parameter values
 using the method specified in the \code{criterion} argument. The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed
 from the estimated propensity scores using \code{\link[=get_w_from_ps]{get_w_from_ps()}}, which
@@ -45,9 +45,21 @@ mean weighting through stratification for the ATE, ATT, and ATC. See
 
 \subsection{Continuous Treatments}{
 
-For continuous treatments, this method estimates the generalized propensity
-score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning
-parameter values using the method specified in the \code{criterion} argument.
+For continuous treatments, weights are estimated as
+\eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
+stabilization factor) is the unconditional density of treatment evaluated the
+observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed treatment value. The shape of
+\eqn{f_{A|X}(.)} is controlled by the \code{density} argument
+described below (normal distribution by default), and the predicted values
+used for the mean of the conditional density are estimated using GBM as
+implemented in \pkgfun{gbm}{gbm.fit} with optimal tuning
+parameter values chosen using the method specified in the \code{criterion} argument.
+\eqn{f_A(.)} is estimated by marginalizing over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
+instead of assuming a specific density for the denominator by
+setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
+to refine the density estimation parameters.
 }
 
 \subsection{Longitudinal Treatments}{
@@ -158,9 +170,8 @@ For continuous treatments only, the following arguments may be supplied:
 
 Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the numerator and denominator densities for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)
 
-If unspecified, a density corresponding to the argument passed to \code{distribution}. If \code{"gaussian"} (the default), \code{\link[=dnorm]{dnorm()}} is used. If \code{"tdist"}, a t-distribution with 4 degrees of freedom is used. If \code{"laplace"}, a laplace distribution is used.}
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()} except that \code{n} is 10 times the number of units in the sample.}
-\item{\code{plot}}{If \code{density = "kernel"}, whether to plot the estimated densities.}
+If unspecified, a density corresponding to the argument passed to \code{distribution}. If \code{"gaussian"} (the default), \code{\link[=dnorm]{dnorm()}} is used. If \code{"tdist"}, a t-distribution with 4 degrees of freedom is used. If \code{"laplace"}, a Laplace distribution is used.}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()}.}
 }
 
 For tunable arguments, multiple entries may be supplied, and \code{weightit()}

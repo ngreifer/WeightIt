@@ -5,9 +5,17 @@ WeightIt News and Updates
 
 * `method = "glm"` now supports multilevel (mixed-effects) propensity score models. When the model `formula` supplied to `weightit()` contains `lme4`-style random effects terms (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel model is fit to estimate the propensity scores: `lme4::glmer()` for binary treatments, `lme4::lmer()` for continuous treatments, and `mclogit::mblogit()` for multi-category treatments. The estimated propensity scores are cluster-specific (they include the estimated random effects). M-estimation-based standard errors are not available for these models; robust (`HC0`) or bootstrap standard errors should be used instead.
 
+* `method = "bart"` now supports multilevel propensity score models. When the model `formula` supplied to `weightit()` contains `lme4`-style random effects terms (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit using `stan4bart::stan4bart()`, which combines a BART sum-of-trees for the covariates with a Stan-estimated random-effects component. The full flexibility of `lme4::glmer()` random effects is available, including multiple grouping factors and random slopes. `bart2()`-style control arguments are translated to their `stan4bart()` equivalents. The estimated propensity scores are cluster-specific.
+
+* Added an `re_ok` field to the entries of `.weightit_methods` indicating whether each method supports random effects terms in the model `formula`.
+
 * M-estimation-based standard errors are now available when `by` is supplied to `weightit()`. Previously, specifying `by` omitted the M-estimation components entirely; now the per-stratum components are combined so that `glm_weightit()` produces standard errors asymptotically equivalent to those from estimating the weights from a single model in which the `by` variable is fully interacted with all the covariates. This works for `method` values `"glm"` (including `link = "br.logit"`), `"ebal"`, `"cbps"` (just-identified), and `"ipt"`, and composes with `stabilize`.
 
 * Similarly, M-estimation-based standard errors are now available when `by` is supplied to `weightitMSM()`, giving standard errors asymptotically equivalent to interacting the `by` variable with all the covariates at every time point. This works for `method = "glm"` and `method = "cbps"` (with `is.MSM.method = FALSE`) and composes with stabilization.
+
+* With continuous treatments, estimation of the weights works a bit differently for `method = "glm"`, `"bart"`, `"gbm"`, and `"super"`. Previously, the numerator of the weights (corresponding to the marginal distribution of treatment) was estimated using the argument to `density` (by default, a normal distribution). Now, `density` only controls the conditional distribution used to estimate the denominator, and the numerator is estimated by marginalizing over the conditional distribution. This yields a marginal distribution that is compatible with the conditional distribution. In most cases, this will improve balance, but estimation will be a but slower. Note this makes results of these methods no longer backward compatible. Also note that `method = "cbps"` is not affected by this change, even though it too estimates generalized propensity score weights.
+
+* The `plot` argument can no longer be used to visualize the densities for continuous treatments.
 
 * `link = "softplus"` can be used with `method = "cbps"` and `method = "ipt"` to use the softplus link.
 

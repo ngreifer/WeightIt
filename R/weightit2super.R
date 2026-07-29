@@ -33,19 +33,25 @@
 #' several calls to \pkgfun{SuperLearner}{SuperLearner}, one for each treatment
 #' group; the treatment probabilities are not normalized to sum to 1. The
 #' following estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for
-#' each estimand are computed using the standard formulas or those mentioned
-#' above. Weights can also be computed using marginal mean weighting through
+#' each estimand are computed using the standard formulas. Weights can also be computed using marginal mean weighting through
 #' stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, the generalized propensity score is estimated
-#' using \pkgfun{SuperLearner}{SuperLearner}. In addition, kernel density
-#' estimation can be used instead of assuming a normal density for the numerator
-#' and denominator of the generalized propensity score by setting `density = "kernel"`. Other arguments to [density()] can be specified to refine the
-#' density estimation parameters. `plot = TRUE` can be specified to plot the
-#' density for the numerator and denominator, which can be helpful in diagnosing
-#' extreme weights.
+#' For continuous treatments, weights are estimated as
+#' \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
+#' stabilization factor) is the unconditional density of treatment evaluated the
+#' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
+#' propensity score) is the conditional density of treatment given the
+#' covariates evaluated at the observed treatment value. The shape of
+#' \eqn{f_{A|X}(.)} is controlled by the `density` argument
+#' described below (normal distribution by default), and the predicted values
+#' used for the mean of the conditional density are estimated using
+#' \pkgfun{SuperLearner}{SuperLearner}. \eqn{f_A(.)} is estimated by marginalizing
+#' over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
+#' instead of assuming a specific density for the denominator by
+#' setting `density = "kernel"`. Other arguments to [density()] can be specified
+#' to refine the density estimation parameters.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -96,11 +102,10 @@
 #'
 #' For continuous treatments, the following arguments may be supplied:
 #'   \describe{
-#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 #'
-#' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the numerator and denominator densities for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
-#'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()` except that `n` is 10 times the number of units in the sample.}
-#'     \item{`plot`}{If `density = "kernel"`, whether to plot the estimated densities.}
+#' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the denominator density for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
+#'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()`.}
 #'   }
 #'
 #'   ## Balance SuperLearner
@@ -164,9 +169,9 @@
 #'
 #' The `criterion` argument used to be called `stop.method`, which is its name
 #' in \pkg{twang}. `stop.method` still works for backward compatibility.
-#' Additionally, the criteria formerly named as `es.mean`, `es.max`, and
-#' `es.rms` have been renamed to `smd.mean`, `smd.max`, and `smd.rms`. The
-#' former are used in \pkg{twang} and will still work with `weightit()` for
+#' Additionally, the criteria formerly named as `"es.mean"`, `"es.max"`, and
+#' `"es.rms"` have been renamed to `"smd.mean"`, `"smd.max"`, and `"smd.rms"`. The
+#' former are used in \pkg{twang} and will still work with [weightit()] for
 #' backward compatibility.
 #'
 #' As of version 1.2.0, the default behavior for binary and multi-category
@@ -482,14 +487,13 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     .make_covs_full_rank() |>
     as.data.frame()
 
-  #Process density params
-  densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")), bw = ...get("bw"),
-                           adjust = ...get("adjust"), kernel = ...get("kernel"),
-                           n = ...get("n"), treat = treat, density = ...get("density"),
-                           weights = s.weights)
-
-  #Stabilization - get dens.num
-  log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
+  # Process density params
+  make_dens_fun <- .get_make_dens_fun(density = ...get("density"),
+                                      bw = ...get("bw"),
+                                      adjust = ...get("adjust"),
+                                      kernel = ...get("kernel"),
+                                      n = ...get("n"),
+                                      use.kernel = ...get("use.kernel"))
 
   #Estimate GPS
   SL.method <- ...get("SL.method", eval(formals(SuperLearner::SuperLearner)[["method"]]))
@@ -527,8 +531,8 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
 
     sneaky <- 0
     attr(sneaky, "vals") <- list(init = init,
-                                 log.dens.num = log.dens.num,
-                                 densfun = densfun)
+                                 make_dens_fun = make_dens_fun)
+
     control <- list(trimLogit = sneaky)
 
     SL.method <- .method.balance.cont()
@@ -560,22 +564,14 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     arg::err("(from {.fun SuperLearner::SuperLearner}): {conditionMessage(e)}")
   })
 
-  gp.score <- {
+  mu <- {
     if (discrete) fit$library.predict[, which.min(fit$cvRisk)]
     else fit$SL.predict
   }
 
   #Get weights
-  r <- treat - gp.score
-  log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
-
-  w <- exp(log.dens.num - log.dens.denom)
-
-  if (isTRUE(...get("plot"))) {
-    d.n <- .attr(log.dens.num, "density")
-    d.d <- .attr(log.dens.denom, "density")
-    plot_density(d.n, d.d, log = TRUE)
-  }
+  w <- .get_w_from_gps_internal_cont(mu, treat = treat, s.weights = s.weights,
+                                     make_dens_fun = make_dens_fun)
 
   info <- list(coef = fit$coef,
                cvRisk = fit$cvRisk)
@@ -656,14 +652,12 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     # 1) coef: the weights (coefficients) for each algorithm
     # 2) cvRisk: the V-fold CV risk for each algorithm
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
-      log.dens.num <- .attr(control$trimLogit, "vals")$log.dens.num
-      densfun <- .attr(control$trimLogit, "vals")$densfun
+      make_dens_fun <- .attr(control$trimLogit, "vals")$make_dens_fun
       init <- .attr(control$trimLogit, "vals")$init
 
-      w_mat <- apply(Z, 2L, function(gp.score) {
-        r <- Y - gp.score
-        exp(log.dens.num - densfun(r / sqrt(col.w.v(r, obsWeights)), log = TRUE))
-      })
+      w_mat <- apply(Z, 2L, .get_w_from_gps_internal_cont,
+                     treat = Y, s.weights = obsWeights,
+                     make_dens_fun = make_dens_fun)
 
       cvRisk <- apply(w_mat, 2L, cobalt::bal.compute, x = init)
       names(cvRisk) <- libraryNames
@@ -676,10 +670,11 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
       else {
         loss <- function(alpha) {
           coefs <- c(alpha, 1 - sum(alpha))
-          gp.score <- crossprod(t(Z), coefs)
-          r <- Y - gp.score
-          w <- exp(log.dens.num - densfun(r / sqrt(col.w.v(r, obsWeights)), log = TRUE))
-          cobalt::bal.compute(init, weights = w)
+          mu <- crossprod(t(Z), coefs)
+
+          .get_w_from_gps_internal_cont(mu, treat = Y, s.weights = obsWeights,
+                                        make_dens_fun = make_dens_fun) |>
+            cobalt::bal.compute(x = init)
         }
 
         #Constraints: all coefs greater than 0, sum to less than 1

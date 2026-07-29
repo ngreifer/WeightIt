@@ -89,7 +89,7 @@ If *lme4* is not on CRAN, or if you want to install the development version from
 pak::pkg_install("lme4/lme4")
 ```
 
-*lme4* requires compilation, which means you may need additional software installed on your computer to install it from source. For multi-category treatments, the *mclogit* package is used instead (see above).
+*lme4* requires compilation, which means you may need additional software installed on your computer to install it from source. For multi-category treatments, the *mclogit* package is used instead (see above). With `method = "bart"`, multilevel models are fit using the *stan4bart* package instead of *lme4* (see below).
 
 ### Multi-category treatments with `multi.method = "mnp"`
 
@@ -219,6 +219,20 @@ pak::pkg_install("vdorie/dbarts")
 ```
 
 *dbarts* requires compilation, which means you may need additional software installed on your computer to install it from source.
+
+When the model `formula` supplied to `weightit()` with `method = "bart"` contains `lme4`-style random effects terms (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit using the *stan4bart* package instead. To install *stan4bart* from CRAN, run
+
+```{r}
+pak::pkg_install("stan4bart")
+```
+
+If *stan4bart* is not on CRAN, or if you want to install the development version from source, you can do so from the developer, Vincent Dorie's, [GitHub repo](https://github.com/vdorie/stan4bart) using the following code:
+
+```{r}
+pak::pkg_install("vdorie/stan4bart")
+```
+
+*stan4bart* requires compilation, which means you may need additional software installed on your computer to install it from source.
 
 ## Energy Balancing (`method = "energy"`)
 

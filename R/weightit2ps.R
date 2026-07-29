@@ -113,26 +113,18 @@ weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
-  #Process density params
-  densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")), bw = ...get("bw"),
-                          adjust = ...get("adjust"), kernel = ...get("kernel"),
-                          n = ...get("n"), treat = treat, density = ...get("density"),
-                          weights = s.weights)
-
-  #Stabilization - get dens.num
-  log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
+  # Process density params
+  make_dens_fun <- .get_make_dens_fun(density = ...get("density"),
+                                      bw = ...get("bw"),
+                                      adjust = ...get("adjust"),
+                                      kernel = ...get("kernel"),
+                                      n = ...get("n"),
+                                      use.kernel = ...get("use.kernel"))
 
   #Get weights
-  r <- treat - ps
-  log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
-
-  w <- exp(log.dens.num - log.dens.denom)
-
-  if (isTRUE(...get("plot"))) {
-    d.n <- .attr(log.dens.num, "density")
-    d.d <- .attr(log.dens.denom, "density")
-    plot_density(d.n, d.d, log = TRUE)
-  }
+  w <- .get_w_from_gps_internal_cont(mu = ps, treat = treat,
+                                     s.weights = s.weights,
+                                     make_dens_fun = make_dens_fun)
 
   list(w = w)
 }

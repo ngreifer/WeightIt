@@ -1,0 +1,272 @@
+---
+title: "Weighting with Multilevel and Clustered Data"
+author: "Noah Greifer"
+date: "`r Sys.Date()`"
+output:
+    html_vignette:
+        df_print: kable
+        toc: true
+vignette: >
+  %\VignetteIndexEntry{Weighting with Multilevel and Clustered Data}
+  %\VignetteEncoding{UTF-8}
+  %\VignetteEngine{knitr::rmarkdown_notangle}
+bibliography: references.bib
+link-citations: true
+editor_options:
+  chunk_output_type: console
+---
+
+```{=html}
+<style>
+pre {
+  overflow-x: auto;
+}
+pre code {
+  word-wrap: normal;
+  white-space: pre;
+}
+</style>
+```
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE)
+options(width = 200, digits = 4L)
+
+lme4_ok <- requireNamespace("lme4", quietly = TRUE)
+me_ok <- requireNamespace("marginaleffects", quietly = TRUE)
+```
+
+```{r, include = FALSE}
+#Same data-generating process as vignette("estimating-effects"), which matches
+#the package's test fixture. We add a cluster (school) variable defined as a fine
+#binning of X1 so that school membership captures a cluster-level confounder.
+gen_X <- function(n) {
+  X <- matrix(rnorm(9 * n), nrow = n, ncol = 9)
+  X[, 5] <- as.numeric(X[, 5] < .5)
+  X
+}
+
+gen_Ac <- function(X) {
+  LP_A <- -1.2 + log(2)*X[,1] - log(1.5)*X[,2] + log(2)*X[,4] -
+    log(2.4)*X[,5] + log(2)*X[,7] - log(1.5)*X[,8]
+  LP_A + rlogis(nrow(X))
+}
+
+gen_A <- function(Ac) 1 * (Ac > 0)
+
+gen_Y_C <- function(A, X) {
+  2*A + 2*X[,1] + 2*X[,2] + 2*X[,3] + 1*X[,4] + 2*X[,5] + 1*X[,6] +
+    .5*A*X[,1] + .5*A*X[,2] - .25*A*X[,3] + A*(X[,5] - .5) +
+    rnorm(length(A), 0, 5)
+}
+
+gen_Y_B <- function(A, X) {
+  LP_B <- -2 + log(2.4)*A + log(2)*X[,1] + log(2)*X[,2] + log(2)*X[,3] +
+    log(1.5)*X[,4] + log(2.4)*X[,5] + log(1.5)*X[,6]
+  rbinom(length(A), 1, plogis(LP_B))
+}
+
+set.seed(19599)
+
+n <- 2000
+X <- gen_X(n)
+Ac <- gen_Ac(X)
+A <- gen_A(Ac)
+Y_C <- gen_Y_C(A, X)
+Y_B <- gen_Y_B(A, X)
+
+d <- data.frame(A, X, Y_C, Y_B)
+
+#50 schools defined so that units with similar X1 are grouped together
+d$school <- factor(cut(d$X1, breaks = quantile(d$X1, seq(0, 1, length.out = 51)),
+                       include.lowest = TRUE, labels = FALSE))
+```
+
+## Introduction
+
+Observational data are often *multilevel* or *clustered*: units are nested within higher-level groups, such as patients within hospitals, students within schools, or repeated measurements within people. When estimating a treatment effect by weighting, this structure raises two distinct questions:
+
+1. **How should the clustering enter the propensity score (or balancing) model?** Groups frequently carry their own confounders---some measured (e.g., a hospital's staffing level), and some unmeasured (e.g., a school's unrecorded culture). If these cluster-level factors affect both treatment and outcome, ignoring them leaves confounding bias [@arpinoSpecificationPropensityScore2011; @liPropensityScoreWeighting2013; @thoemmesUsePropensityScores2011].
+
+2. **How should the clustering enter the standard error?** As we discuss at the end, whether standard errors need to account for clustering depends on the *sampling and treatment-assignment design*, not merely on the presence of groups in the data [@abadieWhenShouldYou2023].
+
+This vignette focuses on the common scenario in which **treatment is assigned at the individual level** (e.g., each patient receives or does not receive a drug) and units are nested in groups. The case in which **treatment is assigned at the cluster level** (e.g., a whole hospital adopts a policy)---the observational analog of a cluster-randomized trial---requires different considerations and is discussed by @austinUsingPropensityScore2026; we touch on it only in the section on standard errors.
+
+We review three broad strategies for incorporating the cluster structure into the weighting model---the **fixed-effects**, **random-effects**, and **calibration** approaches---and show how to implement each with `weightit()`, how to check balance with *cobalt* while respecting the clustering, and how to estimate effects and standard errors. Thorough comparisons of these strategies are given by @changPropensityScoreMethods2022, @fuentesCausalInferenceMultilevel2022, and @changFlexiblePropensityScore2022.
+
+## The example data
+
+We use the same simulated dataset `d` as `vignette("estimating-effects")`, with one addition: a grouping variable `school` with 20 levels. `A` is a binary treatment assigned at the individual (student) level, `X1` through `X9` are covariates, `Y_C` is a continuous outcome, and `Y_B` is a binary outcome.
+
+```{r}
+head(d)
+```
+
+```{r}
+#Cluster sizes
+table(d$school)
+```
+
+To make the multilevel structure concrete, we constructed `school` so that students with similar values of `X1` attend the same school---as if students were tracked into schools by a baseline characteristic. As a result, **`X1` is largely a cluster-level (between-school) confounder**: it varies much more between schools than within them.
+
+```{r}
+#X1 varies far more between schools than within
+c(between = var(tapply(d$X1, d$school, mean)),
+  within  = mean(tapply(d$X1, d$school, var)))
+```
+
+For the remainder of this vignette we will treat `X1` as an **unmeasured** cluster-level confounder that we do not get to include in our models; the measured covariates are `X2`--`X9` (individual level) and `school` membership. This mimics the common situation in which a group captures confounders we cannot measure directly. Because we simulated the data, we can peek at `X1` to check whether adjusting for `school` recovers balance on it---something impossible with a truly unmeasured confounder.
+
+## Why the clustering matters
+
+If we simply weight on the measured individual-level covariates and ignore `school`, the unmeasured cluster-level confounder `X1` remains unbalanced and biases the estimate. The central insight of the multilevel weighting literature is that cluster membership itself can serve as a proxy for unmeasured cluster-level confounders [@arpinoSpecificationPropensityScore2011; @liPropensityScoreWeighting2013; @yangPropensityScoreWeighting2018]. Adjusting for the group---whether through fixed effects, random effects, or balancing constraints---absorbs any confounder that is constant within groups, observed or not, provided treatment is still unconfounded given the covariates and the cluster.
+
+We illustrate the naive approach first as a baseline:
+
+```{r}
+library("WeightIt")
+
+#Ignore clustering: weight on measured individual covariates only
+W_naive <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                    data = d, method = "glm", estimand = "ATE")
+```
+
+As we will see below, this leaves substantial residual imbalance on the unmeasured `X1`.
+
+## Three approaches to the clustering
+
+### The fixed-effects approach
+
+The fixed-effects approach includes an indicator (dummy) for each cluster in the propensity score model, treating the cluster effects as fixed parameters. In `weightit()`, this is done simply by adding the grouping factor to the model formula:
+
+```{r}
+W_fe <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + school,
+                 data = d, method = "glm", estimand = "ATE")
+```
+
+Because the model contains a separate intercept for each school, the fixed-effects approach removes confounding by *any* school-level characteristic, measured or not---this is its key strength [@arpinoSpecificationPropensityScore2011]. Its main weakness is statistical: with many small clusters, the number of cluster parameters grows with the sample size (the Neyman--Scott incidental-parameters problem), which can make the propensity score estimates unstable, and clusters in which everyone (or no one) is treated cause perfect separation and must be dropped [@liPropensityScoreWeighting2013; @changPropensityScoreMethods2022]. The fixed-effects approach works best with a moderate number of reasonably sized clusters.
+
+### The random-effects approach
+
+The random-effects (mixed-model) approach treats the cluster effects as random draws from a common distribution and estimates their variance, shrinking each cluster's estimated effect toward the overall mean (partial pooling). This is requested in `weightit()` by supplying an **lme4-style random-effects term** in the model formula. For `method = "glm"`, a random intercept for `school` is fit with `lme4::glmer()`:
+
+```{r, eval = lme4_ok}
+W_re <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + (1 | school),
+                 data = d, method = "glm", estimand = "ATE")
+```
+
+The estimated propensity scores are *cluster-specific* (conditional): they include each school's estimated random intercept, so two students with identical covariates in different schools can receive different propensity scores. Random intercepts are also supported for `method = "bart"` (via `dbarts::rbart_vi()`), e.g.,
+
+```{r, eval = FALSE}
+#Random-intercept BART propensity score (not run)
+weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + (1 | school),
+         data = d, method = "bart", estimand = "ATE")
+```
+
+Compared with fixed effects, the random-effects approach avoids the incidental-parameters problem and handles many small clusters gracefully. Its cost is that the shrinkage that stabilizes estimation can also leave residual *within-cluster* imbalance, and, formally, the random-effects model assumes the cluster effects are independent of the covariates---an assumption that may not hold [@liPropensityScoreWeighting2013; @arpinoSpecificationPropensityScore2011; @fuentesCausalInferenceMultilevel2022]. Simulation comparisons suggest neither fixed nor random effects dominates across all settings; the choice depends on cluster sizes, the number of clusters, and whether cluster effects are correlated with covariates [@changPropensityScoreMethods2022; @changFlexiblePropensityScore2022].
+
+### The calibration approach
+
+A third strategy sidesteps the propensity *model* and instead solves directly for weights that satisfy balance constraints. @kimCausalInferenceObservational2017 (hereafter KPK) and @yangPropensityScoreWeighting2018 independently developed calibration methods for exactly this setting. Their shared, central device is a **within-cluster constraint**: the weights are forced so that, within each cluster and separately in each treatment arm, the weighted count equals the cluster size (Yang's eq. 7; KPK's eqs. 11--12). Because a cluster-level confounder is constant within a cluster, this constraint balances it across treatment groups *without ever observing it*.
+
+The two papers describe the assumption differently but mean the same scenario: Yang calls it **latent ignorability** (treatment is unconfounded given the covariates *and* the latent cluster effect), while KPK call it a **cluster-specific non-ignorable** assignment mechanism (treatment depends on an unobserved cluster random effect). They differ mainly in generality: Yang additionally balances the full observed covariate vector marginally and proves double robustness against a linear mixed-effects outcome model, whereas KPK assume the treatment effect is modified only at the cluster level and marginally balance only the individual-level covariates. Both are reviewed alongside the model-based approaches by @fuentesCausalInferenceMultilevel2022 and @changPropensityScoreMethods2022; related conditional-weighting ideas appear in @heInverseConditionalProbability2018, and a general balancing-weights framework for clustered designs in @benmichaelApproximateBalancingWeights2024.
+
+Seen this way, the within-cluster constraint is the **balancing-weights analog of a cluster fixed effect**: it removes confounding by anything constant within a cluster, just as a cluster dummy does, but by construction rather than by fitting a per-cluster parameter. *WeightIt* does not implement the full KPK/Yang estimators, but their core---within-cluster balance of the cluster effect plus marginal balance of the individual covariates---is obtained by including the grouping factor as a covariate in any of the balancing methods, such as entropy balancing:
+
+```{r}
+W_cal <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + school,
+                  data = d, method = "ebal", estimand = "ATE")
+```
+
+Including `school` as a covariate makes entropy balancing balance each school-indicator between the treatment groups---i.e., it enforces the within-cluster balance of the (possibly unmeasured) cluster effect exactly, while balancing the means of `X2`--`X9`. This is a fixed-effects-style calibration; the distinguishing feature of the calibration methods over a fixed-effects propensity model is the double-robustness theory behind them, not a different set of weighting constraints. A partial-pooling (random-effects) analog, in which within-cluster balance is relaxed toward the pooled solution, is developed by @benmichaelApproximateBalancingWeights2024 and is not currently available in *WeightIt*.
+
+For a *continuous* treatment with multilevel data, analogous strategies apply; see @schulerPropensityScoreWeighting2016.
+
+## Assessing balance with cobalt
+
+Balance should be assessed both *overall* (in the pooled weighted sample) and *within clusters*. The `cluster` argument to `cobalt::bal.tab()` requests the latter; setting `which.cluster = .none` suppresses the per-cluster tables and reports only the summary of balance *across* clusters, which is usually what we want.
+
+First, overall balance. We use `addl` to add the unmeasured confounder `X1` to the table so we can verify whether adjusting for `school` recovered balance on it. Compare the naive weights (ignoring clustering) with the three cluster-aware approaches:
+
+```{r, eval = lme4_ok}
+library("cobalt")
+
+#Naive (ignores clustering): X1 remains imbalanced
+bal.tab(W_naive, addl = d["X1"], un = TRUE)
+```
+
+```{r, eval = lme4_ok}
+#Random-effects approach: adjusting for school balances the unmeasured X1
+bal.tab(W_re, addl = d["X1"])
+```
+
+The naive weights leave a large standardized mean difference on `X1`, because nothing in that model captures the between-school confounder. The cluster-aware approaches balance `X1` far better even though `X1` was never in the model---`school` stood in for it. The fixed-effects (`W_fe`) and calibration (`W_cal`) fits can be checked the same way.
+
+To assess whether balance holds *within* schools---a key diagnostic for the random-effects approach, whose shrinkage can leave within-cluster imbalance---pass the grouping variable to `cluster` and use `which.cluster = .none`:
+
+```{r, eval = lme4_ok}
+#Balance summarized across the 20 schools (no per-school tables)
+bal.tab(W_re, cluster = d$school, which.cluster = .none, addl = d["X1"])
+```
+
+This reports the smallest, mean, and largest standardized differences across the schools for each covariate. Large maximum values flag clusters where balance is poor; comparing the fixed-effects and random-effects fits on this summary is a direct way to see the shrinkage trade-off discussed above. Balance can also be visualized with `love.plot()`, which accepts the same `cluster` and `which.cluster` arguments.
+
+## Estimating the treatment effect
+
+Once a weighting specification with good balance (overall and within clusters) has been chosen, effects are estimated exactly as in the non-clustered case: fit an outcome model incorporating the weights, then use g-computation. See `vignette("estimating-effects")` for the full workflow and rationale; here we show the standard case for the continuous outcome using the random-effects weights.
+
+```{r, eval = lme4_ok && me_ok}
+library("marginaleffects")
+
+#Outcome model incorporating the weights
+fit <- lm_weightit(Y_C ~ A * (X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                   data = d, weightit = W_re)
+
+#g-computation for the ATE (marginal mean difference)
+avg_comparisons(fit, variables = "A")
+```
+
+The outcome model uses only the *measured* individual covariates; the between-school confounding is handled by the weights, which already reflect `school`. The true marginal effect in this data-generating process is a mean difference of 2.
+
+## Standard errors and clustering
+
+A common instinct is to always use cluster-robust standard errors (or a clustered bootstrap that resamples whole clusters) whenever the data are grouped. This is often unnecessary. @abadieWhenShouldYou2023 show that clustering should enter the standard error because of the **design**, not merely because groups are present:
+
+- **Units sampled independently, clusters are (effectively) the population.** If the schools in the data are the schools of interest and students were not sampled in a two-stage cluster design, cluster-robust standard errors are typically *unnecessary and overly conservative*. The default model-based or heteroscedasticity-consistent (HC) standard errors---or an ordinary bootstrap that resamples units---are appropriate. In *WeightIt*, these are what `glm_weightit()` produces by default (using M-estimation when available and HC otherwise).
+
+- **Clusters sampled from a population of clusters (two-stage / cluster sampling).** When only a random subset of clusters is observed and inference generalizes to the population of clusters, standard errors should account for clustering, via cluster-robust standard errors or a bootstrap that resamples clusters [@abadieWhenShouldYou2023; @mackinnonClusterRobustInference2023].
+
+- **Treatment assigned at the cluster level.** When the treatment is applied to whole clusters (the observational analog of a cluster-randomized trial), clustering is a feature of the assignment mechanism and should be reflected in the standard errors [@austinUsingPropensityScore2026].
+
+When clustering *is* warranted, request cluster-robust standard errors by passing the grouping variable to the `cluster` argument of `glm_weightit()`:
+
+```{r, eval = lme4_ok && me_ok}
+#Cluster-robust SEs -- appropriate when clusters were sampled or treatment
+#is assigned at the cluster level
+fit_cr <- lm_weightit(Y_C ~ A * (X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                      data = d, weightit = W_re, cluster = ~school)
+
+avg_comparisons(fit_cr, variables = "A")
+```
+
+Alternatively, a clustered bootstrap---resampling schools rather than individual students---can be used; `glm_weightit()`'s bootstrap options combined with the `cluster` argument, or a manual bootstrap over cluster IDs, accomplish this. For guidance on cluster-robust inference in practice, including cautions with few clusters, see @mackinnonClusterRobustInference2023.
+
+In our running example, treatment is assigned at the individual level and the schools are not a sampled subset, so the default (non-clustered) standard errors from the first effect estimate are the appropriate choice; we show the cluster-robust version only for illustration.
+
+## Summary
+
+| Approach | How to request in `weightit()` | Handles unmeasured cluster confounders? | Main caveat |
+|---|---|---|---|
+| Ignore clustering | `A ~ X` | No | Biased if cluster-level confounders exist |
+| Fixed effects | `A ~ X + cluster` | Yes | Unstable with many small clusters; separation |
+| Random effects | `A ~ X + (1 \| cluster)` (`method` `"glm"` or `"bart"`) | Yes (via cluster-specific PS) | Shrinkage can leave within-cluster imbalance |
+| Calibration (fixed-effect style) | `A ~ X + cluster` with a balancing `method` (e.g. `"ebal"`) | Yes | Full KPK/Yang double-robustness not implemented |
+
+Key practical points:
+
+- Cluster membership can absorb **unmeasured** cluster-level confounders; adding the grouping factor (as a fixed effect, random effect, or balancing constraint) is the core of every approach.
+- Assess balance both overall and **within clusters** using `bal.tab()`'s `cluster` argument with `which.cluster = .none`.
+- Estimate effects exactly as in the non-clustered case (`vignette("estimating-effects")`).
+- Use cluster-robust standard errors or a clustered bootstrap **only** when the design calls for it---cluster sampling or cluster-level treatment assignment---not merely because the data are grouped [@abadieWhenShouldYou2023].
+
+## References

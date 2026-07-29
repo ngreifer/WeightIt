@@ -84,10 +84,14 @@
 
   d$X6 <- factor(cut(d$X6, 4), labels = LETTERS[1:4])
 
-  #Grouping factor for multilevel/random-effects models. Generated last so the
-  #RNG stream for all variables above is unchanged (existing fixtures stay
-  #byte-identical); a single call adds one draw at the end of the stream.
-  d$cluster <- factor(sample(25L, nrow(d), replace = TRUE))
+  #Grouping factor for multilevel/random-effects models. Defined as a fine
+  #quantile-binning of X1 (a confounder for treatment and all outcomes), so that
+  #cluster membership is highly correlated with X1 and can substitute for it when
+  #adjusting for confounding. This is a deterministic function of X1 (no RNG
+  #draw), so every other variable above is unchanged from the fixed-effects
+  #fixture.
+  d$cluster <- factor(cut(d$X1, breaks = quantile(d$X1, seq(0, 1, length.out = 51)),
+                          include.lowest = TRUE, labels = FALSE))
 
   d
 }

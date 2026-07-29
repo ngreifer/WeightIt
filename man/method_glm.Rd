@@ -13,7 +13,7 @@ In general, this method relies on estimating propensity scores with a
 parametric generalized linear model and then converting those propensity
 scores into weights using a formula that depends on the desired estimand. For
 binary and multi-category treatments, a binomial or multinomial regression
-model is used to estimate the propensity scores as the predicted probability
+model (logistic, by default) is used to estimate the propensity scores as the predicted probability
 of being in each treatment given the covariates. For ordinal treatments, an
 ordinal regression model is used to estimate generalized propensity scores.
 For continuous treatments, a generalized linear model is used to estimate
@@ -22,9 +22,7 @@ the covariates.
 \subsection{Binary Treatments}{
 
 For binary treatments, this method estimates the propensity scores using
-\code{\link[=glm]{glm()}}. An additional argument is \code{link}, which uses the same options as
-\code{link} in \code{\link[=family]{family()}}. The default link is \code{"logit"}, but others, including
-\code{"probit"}, are allowed. The following estimands are allowed: ATE, ATT, ATC,
+\code{\link[=glm]{glm()}}. The following estimands are allowed: ATE, ATT, ATC,
 ATO, ATM, and ATOS. Weights can also be computed using marginal mean
 weighting through stratification for the ATE, ATT, and ATC. See
 \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
@@ -36,10 +34,10 @@ For multi-category treatments, the propensity scores are estimated using
 multinomial regression from one of a few functions depending on the argument
 supplied to \code{multi.method} (see Additional Arguments below). The following
 estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-estimand are computed using the standard formulas or those mentioned above.
+estimand are computed using the standard formulas.
 Weights can also be computed using marginal mean weighting through
 stratification for the ATE, ATT, and ATC. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details.
-Ordinal treatments are treated exactly the same as non-order multi-category
+Ordinal treatments are treated exactly the same as non-ordinal multi-category
 treatments except that additional models are available to estimate the
 generalized propensity score (e.g., ordinal logistic regression).
 }
@@ -48,16 +46,18 @@ generalized propensity score (e.g., ordinal logistic regression).
 
 For continuous treatments, weights are estimated as
 \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
-stabilization factor) is the unconditional density of treatment evaluated the observed treatment value
-and \eqn{f_{A|X}(a_i)} (known as the generalized propensity score) is the
-conditional density of treatment given the covariates evaluated at the
-observed value of treatment. The shape of \eqn{f_A(.)} and \eqn{f_{A|X}(.)}
-is controlled by the \code{density} argument described below (normal distributions
-by default), and the predicted values used for the mean of the conditional
-density are estimated using linear regression. Kernel density estimation can
-be used instead of assuming a specific density for the numerator and
-denominator by setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}}
-can be specified to refine the density estimation parameters.
+stabilization factor) is the unconditional density of treatment evaluated the
+observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
+propensity score) is the conditional density of treatment given the
+covariates evaluated at the observed treatment value. The shape of
+\eqn{f_{A|X}(.)} is controlled by the \code{density} argument
+described below (normal distribution by default), and the predicted values
+used for the mean of the conditional density are estimated using linear
+regression. \eqn{f_A(.)} is estimated by marginalizing
+over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
+instead of assuming a specific density for the denominator by
+setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
+to refine the density estimation parameters.
 }
 
 \subsection{Multilevel Treatment Models}{
@@ -69,15 +69,14 @@ when units are clustered (e.g., patients within hospitals or students within
 schools). The grouping (and any random-slope) variables are taken from \code{data}.
 For binary treatments, the model is fit using \pkgfun{lme4}{glmer} with the
 requested \code{link} (\code{"logit"}, \code{"probit"}, or \code{"cloglog"}); for continuous
-treatments, using \pkgfun{lme4}{lmer} (only the identity link is allowed); and
+treatments, using \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer}; and
 for multi-category treatments, using \pkgfun{mclogit}{mblogit} with its
 \code{random} argument (i.e., \code{multi.method} is set to \code{"mclogit"}). The propensity
 scores are the predicted probabilities (or conditional densities) that include
 the estimated random effects, i.e., cluster-specific predictions. M-estimation
 is not available for these models; robust (\code{HC0}) or bootstrap standard errors
 should be used instead when estimating treatment effects (see the M-estimation
-section below and \code{\link[=glm_weightit]{glm_weightit()}}). Random effects are only supported with
-\code{method = "glm"}.
+section below and \code{\link[=glm_weightit]{glm_weightit()}}).
 }
 
 \subsection{Longitudinal Treatments}{
@@ -134,7 +133,7 @@ For binary treatments, the following additional argument can be specified:
 
 For multi-category treatments, the following additional arguments can be specified:
 \describe{
-\item{\code{multi.method}}{the method used to estimate the generalized propensity scores. Allowable options include \code{"weightit"} (the default) to use multinomial logistic regression implemented in \pkg{WeightIt}, \code{"glm"} to use a series of binomial models using \code{\link[=glm]{glm()}}, \code{"mclogit"} to use multinomial logistic regression as implemented in \pkgfun{mclogit}{mblogit}, \code{"mnp"} to use Bayesian multinomial probit regression as implemented in \pkgfun{MNP}{MNP}, and \code{"brmultinom"} to use bias-reduced multinomial logistic regression as implemented in \pkgfun{brglm2}{brmultinom}. \code{"weightit"} and \code{"mclogit"} should give near-identical results, the main difference being increased robustness and customizability when using \code{"mclogit"} at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include \code{"weightit"} (the default) to use ordinal regression implemented in \pkg{WeightIt} or \code{"polr"} to use ordinal regression implemented in \pkgfun{MASS}{polr}, unless \code{link} is \code{"br.logit"}, in which case bias-reduce ordinal logistic regression as implemented in \pkgfun{brglm2}{bracl} is used. Ignored when \code{missing = "saem"}. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.}
+\item{\code{multi.method}}{the method used to estimate the generalized propensity scores. Allowable options include \code{"weightit"} (the default) to use multinomial logistic regression implemented in \pkg{WeightIt}, \code{"glm"} to use a series of binomial models using \code{\link[=glm]{glm()}}, \code{"mclogit"} to use multinomial logistic regression as implemented in \pkgfun{mclogit}{mblogit}, \code{"mnp"} to use Bayesian multinomial probit regression as implemented in \pkgfun{MNP}{MNP}, and \code{"brmultinom"} to use bias-reduced multinomial logistic regression as implemented in \pkgfun{brglm2}{brmultinom}. \code{"weightit"} and \code{"mclogit"} should give near-identical results, the main difference being increased robustness and customizability when using \code{"mclogit"} at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include \code{"weightit"} (the default) to use ordinal regression implemented in \pkg{WeightIt} or \code{"polr"} to use ordinal regression implemented in \pkgfun{MASS}{polr}, unless \code{link} is \code{"br.logit"}, in which case bias-reduced ordinal logistic regression as implemented in \pkgfun{brglm2}{bracl} is used. Ignored when \code{missing = "saem"}. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.}
 \item{\code{link}}{The link used in the multinomial, binomial, or ordered regression model for the generalized propensity scores depending on the argument supplied to \code{multi.method}. When \code{multi.method = "glm"}, \code{link} can be any of those allowed by \code{\link[=binomial]{binomial()}}. When treatment is ordered and \code{multi.method} is \code{"weightit"} or \code{"polr"}, \code{link} can be any of those allowed by \code{MASS::polr()} or \code{"br.logit"}. Otherwise, \code{link} should be \code{"logit"} or not specified.}
 \item{\code{subclass}}{\code{integer}; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If \code{NULL}, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. See \code{\link[=get_w_from_ps]{get_w_from_ps()}} for details and references.}
 }
@@ -142,11 +141,10 @@ For multi-category treatments, the following additional arguments can be specifi
 For continuous treatments, the following additional arguments may be
 supplied:
 \describe{
-\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+\item{\code{density}}{A function corresponding the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, \code{\link[=dnorm]{dnorm()}} is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if \code{density = "dt_2"} is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 
-Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the numerator and denominator densities for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
-\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()} except that \code{n} is 10 times the number of units in the sample.}
-\item{\code{plot}}{If \code{density = "kernel"}, whether to plot the estimated densities.}
+Can also be \code{"kernel"} to use kernel density estimation, which calls \code{\link[=density]{density()}} to estimate the denominator density for the weights. (This used to be requested by setting \code{use.kernel = TRUE}, which is now deprecated.)}
+\item{\code{bw}, \code{adjust}, \code{kernel}, \code{n}}{If \code{density = "kernel"}, the arguments to \code{\link[=density]{density()}}. The defaults are the same as those in \code{density()}.}
 \item{\code{link}}{The link used to fit the linear model for the generalized propensity score. Can be any allowed by \code{\link[=gaussian]{gaussian()}}.
 }
 }
@@ -155,25 +153,21 @@ Additional arguments to \code{glm()} can be specified as well when it is used
 for fitting. The \code{method} argument in \code{glm()} is renamed to \code{glm.method}.
 This can be used to supply alternative fitting functions, such as those
 implemented in the \CRANpkg{glm2} package. Other arguments to \code{weightit()}
-are passed to \code{...} in \code{glm()}. In the presence of missing data with \code{link = "logit"} and \code{missing = "saem"}, additional arguments are passed to
+are passed to \code{...} in \code{glm()}. In the presence of missing data with
+\code{link = "logit"} and \code{missing = "saem"}, additional arguments are passed to
 \pkgfun{misaem}{miss.glm} and \pkgfun{misaem}{predict.miss.glm}, except the
 \code{method} argument in \pkgfun{misaem}{predict.miss.glm} is replaced with
 \code{saem.method}.
 
-For continuous treatments in the presence of missing data with \code{missing = "saem"}, additional arguments are passed to \pkgfun{misaem}{miss.lm} and
-\pkgfun{misaem}{predict.miss.lm}.
+For continuous treatments in the presence of missing data with \code{missing = "saem"}, additional arguments are passed to \pkgfun{misaem}{miss.lm} and \pkgfun{misaem}{predict.miss.lm}.
 
-When the model \code{formula} includes random effects terms (see \emph{Multilevel
-Treatment Models} above), additional arguments are passed to the
-corresponding fitting function: \pkgfun{lme4}{glmer} for binary treatments,
-\pkgfun{lme4}{lmer} for continuous treatments, and \pkgfun{mclogit}{mblogit}
-for multi-category treatments.
+When the model \code{formula} includes random effects terms (see \emph{Multilevel Treatment Models} above), additional arguments are passed to the corresponding fitting function: \pkgfun{lme4}{glmer} for binary treatments, \pkgfun{mclogit}{mblogit} for multi-category treatments, and \pkgfun{lme4}{lmer} or \pkgfun{lme4}{glmer} for continuous treatments.
 }
 
 \section{Additional Outputs}{
 
 \describe{
-\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}} or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if \code{multi.method = "glm"}). For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density. When the model \code{formula} includes random effects terms, the output of the call to \pkgfun{lme4}{glmer} (binary), \pkgfun{lme4}{lmer} (continuous), or \pkgfun{mclogit}{mblogit} (multi-category).
+\item{\code{obj}}{When \code{include.obj = TRUE}, the (generalized) propensity score model fit. For binary treatments, the output of the call to \code{\link[=glm]{glm()}} or the requested fitting function. For multi-category treatments, the output of the call to the fitting function (or a list thereof if \code{multi.method = "glm"}). For continuous treatments, the output of the call to \code{glm()} for the predicted values in the denominator density. When the model \code{formula} includes random effects terms, the output of the call to \pkgfun{lme4}{glmer}, \pkgfun{lme4}{lmer}, or \pkgfun{mclogit}{mblogit}.
 }
 }
 }

@@ -366,6 +366,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   alpha.func <- function(alpha) obj_bal(par_glm * alpha, mod_covs, bal_covs, treat, s.weights)
   par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
 
+  solved <- FALSE
   if (solver == "multiroot") {
     out <- suppressWarnings({
       try(verbosely({
@@ -385,6 +386,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
         utils::hasName(out, "estim.precis") &&
         is_number(out[["estim.precis"]]) &&
         out[["estim.precis"]] < 1e-5) {
+      solved <- TRUE
       par_alpha <- out[["root"]]
     }
   }
@@ -393,7 +395,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
   out <- optim(par = par_alpha,
                fn = obj_bal,
                method = "BFGS",
-               control = list(maxit = maxit,
+               control = list(maxit = if (solved) 0L else maxit,
                               reltol = reltol,
                               trace = as.integer(!over && verbose)),
                Xm = mod_covs,
@@ -628,6 +630,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
                                         A = treat, SW = s.weights)
   par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
 
+  solved <- FALSE
   if (solver == "multiroot") {
     out <- suppressWarnings({
       try(verbosely({
@@ -647,6 +650,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
         utils::hasName(out, "estim.precis") &&
         is_number(out[["estim.precis"]]) &&
         out[["estim.precis"]] < 1e-5) {
+      solved <- TRUE
       par_alpha <- out[["root"]]
     }
   }
@@ -655,7 +659,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
   out <- optim(par = par_alpha,
                fn = obj_bal,
                method = "BFGS",
-               control = list(maxit = maxit,
+               control = list(maxit = if (solved) 0L else maxit,
                               reltol = reltol,
                               trace = as.integer(!over && verbose)),
                Xm = mod_covs,
@@ -957,6 +961,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   alpha.func <- function(alpha) obj_bal(par_glm * alpha, mod_covs, bal_covs, treat, s.weights)
   par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
 
+  solved <- FALSE
   if (solver == "multiroot") {
     out <- suppressWarnings({
       try(verbosely({
@@ -976,6 +981,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
         utils::hasName(out, "estim.precis") &&
         is_number(out[["estim.precis"]]) &&
         out[["estim.precis"]] < 1e-5) {
+      solved <- TRUE
       par_alpha <- out[["root"]]
     }
   }
@@ -984,7 +990,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
   out <- optim(par = par_alpha,
                fn = obj_bal,
                method = "BFGS",
-               control = list(maxit = maxit,
+               control = list(maxit = if (solved) 0L else maxit,
                               reltol = reltol,
                               trace = as.integer(!over && verbose)),
                Xm = mod_covs,
@@ -1299,6 +1305,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   alpha.func <- function(alpha) obj_bal(par_glm * alpha, covs.list, treat.list, s.weights)
   par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
 
+  solved <- FALSE
   if (solver == "multiroot") {
     out <- suppressWarnings({
       try(verbosely({
@@ -1317,6 +1324,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
         utils::hasName(out, "estim.precis") &&
         is_number(out[["estim.precis"]]) &&
         out[["estim.precis"]] < 1e-5) {
+      solved <- TRUE
       par_alpha <- out[["root"]]
     }
   }
@@ -1325,7 +1333,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
   out <- optim(par = par_alpha,
                fn = obj_bal,
                method = "BFGS",
-               control = list(maxit = maxit,
+               control = list(maxit = if (solved) 0L else maxit,
                               reltol = reltol,
                               trace = as.integer(!over && verbose)),
                X.list = covs.list,

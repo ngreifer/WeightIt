@@ -9,7 +9,7 @@
 #' binary, multi-category, and continuous treatments.
 #'
 #' In general, this method relies on estimating propensity scores using
-#' generalized boosted modeling and then converting those propensity scores into
+#' generalized boosted modeling (GBM) and then converting those propensity scores into
 #' weights using a formula that depends on the desired estimand. The algorithm
 #' involves using a balance-based or prediction-based criterion to optimize in
 #' choosing the value of tuning parameters (the number of trees and possibly
@@ -32,8 +32,8 @@
 #'
 #' ## Multi-Category Treatments
 #'
-#' For binary treatments, this method estimates the propensity scores using
-#' \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning parameter values
+#' For multi-category treatments, this method estimates the propensity scores using
+#' a single call to \pkgfun{gbm}{gbm.fit} with `distribution = "multinomial"` and then selects the optimal tuning parameter values
 #' using the method specified in the `criterion` argument. The following
 #' estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights are computed
 #' from the estimated propensity scores using [get_w_from_ps()], which
@@ -43,9 +43,21 @@
 #'
 #' ## Continuous Treatments
 #'
-#' For continuous treatments, this method estimates the generalized propensity
-#' score using \pkgfun{gbm}{gbm.fit} and then selects the optimal tuning
-#' parameter values using the method specified in the `criterion` argument.
+#' For continuous treatments, weights are estimated as
+#' \eqn{w_i = f_A(a_i) / f_{A|X}(a_i)}, where \eqn{f_A(a_i)} (known as the
+#' stabilization factor) is the unconditional density of treatment evaluated the
+#' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
+#' propensity score) is the conditional density of treatment given the
+#' covariates evaluated at the observed treatment value. The shape of
+#' \eqn{f_{A|X}(.)} is controlled by the `density` argument
+#' described below (normal distribution by default), and the predicted values
+#' used for the mean of the conditional density are estimated using GBM as
+#' implemented in \pkgfun{gbm}{gbm.fit} with optimal tuning
+#' parameter values chosen using the method specified in the `criterion` argument.
+#' \eqn{f_A(.)} is estimated by marginalizing over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
+#' instead of assuming a specific density for the denominator by
+#' setting `density = "kernel"`. Other arguments to [density()] can be specified
+#' to refine the density estimation parameters.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -107,9 +119,8 @@
 #'
 #' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the numerator and denominator densities for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)
 #'
-#' If unspecified, a density corresponding to the argument passed to `distribution`. If `"gaussian"` (the default), [dnorm()] is used. If `"tdist"`, a t-distribution with 4 degrees of freedom is used. If `"laplace"`, a laplace distribution is used.}
-#'       \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()` except that `n` is 10 times the number of units in the sample.}
-#'       \item{`plot`}{If `density = "kernel"`, whether to plot the estimated densities.}
+#' If unspecified, a density corresponding to the argument passed to `distribution`. If `"gaussian"` (the default), [dnorm()] is used. If `"tdist"`, a t-distribution with 4 degrees of freedom is used. If `"laplace"`, a Laplace distribution is used.}
+#'       \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()`.}
 #' }
 #'
 #'   For tunable arguments, multiple entries may be supplied, and `weightit()`
@@ -588,9 +599,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                                     A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
                                     tune_args))
 
-      verbosely({
-        cv.results <- eval(gbmCrossVal.call)
-      }, verbose = verbose)
+      suppressPackageStartupMessages({
+        verbosely({
+          cv.results <- eval(gbmCrossVal.call)
+        }, verbose = verbose)
+      })
 
       best.tree.index <- which.min(cv.results$error)
       best.loss <- cv.results$error[best.tree.index]
@@ -804,14 +817,13 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
     }
 
     if (i == 1L || (null_density && !identical(tune[["distribution"]][i], tune[["distribution"]][i - 1L]))) {
-      #Process density params
-      densfun <- .get_dens_fun(use.kernel = isTRUE(use.kernel), bw = ...get("bw"),
-                               adjust = ...get("adjust"), kernel = ...get("kernel"),
-                               n = ...get("n"), treat = treat, density = density,
-                               weights = s.weights)
-
-      #Stabilization - get dens.num
-      log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
+      # Process density params
+      make_dens_fun <- .get_make_dens_fun(density = density,
+                                          bw = ...get("bw"),
+                                          adjust = ...get("adjust"),
+                                          kernel = ...get("kernel"),
+                                          n = ...get("n"),
+                                          use.kernel = use.kernel)
     }
 
     gbm.call <- as.call(c(list(quote(gbm::gbm.fit)),
@@ -841,10 +853,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
         gps <- gps + A[["offset"]]
       }
 
-      w <- apply(gps, 2L, function(p) {
-        r <- treat - p
-        exp(log.dens.num - densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE))
-      })
+      w <- apply(gps, 2L, .get_w_from_gps_internal_cont,
+                 treat = treat, s.weights = s.weights,
+                 make_dens_fun = make_dens_fun)
 
       if (trim.at != 0) {
         w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
@@ -875,10 +886,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
           gps <- gps + A[["offset"]]
         }
 
-        w <- apply(gps, 2L, function(p) {
-          r <- treat - p
-          exp(log.dens.num - densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE))
-        })
+        w <- apply(gps, 2L, .get_w_from_gps_internal_cont,
+                   treat = treat, s.weights = s.weights,
+                   make_dens_fun = make_dens_fun)
 
         if (trim.at != 0) {
           w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
@@ -928,9 +938,11 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
                                     A[names(A) %in% setdiff(names(formals(gbm::gbmCrossVal)), names(tune_args))],
                                     tune_args))
 
-      verbosely({
-        cv.results <- eval(gbmCrossVal.call)
-      }, verbose = verbose)
+      suppressPackageStartupMessages({
+        verbosely({
+          cv.results <- eval(gbmCrossVal.call)
+        }, verbose = verbose)
+      })
 
       best.tree.index <- which.min(cv.results$error)
       best.loss <- cv.results$error[best.tree.index]
@@ -946,9 +958,9 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
           best.gps <- best.gps + A[["offset"]]
         }
 
-        r <- treat - best.gps
-        log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
-        best.w <- exp(log.dens.num - log.dens.denom)
+        best.w <- .get_w_from_gps_internal_cont(best.gps,
+                                                treat = treat, s.weights = s.weights,
+                                                make_dens_fun = make_dens_fun)
 
         current.best.loss <- best.loss
         best.tune.index <- i
@@ -960,14 +972,6 @@ weightit2gbm.cont <- function(covs, treat, s.weights, estimand, focal, subset,
 
     info$best.tree <- c(info$best.tree, setNames(best.tree, i))
     info$tree.val <- rbind(info$tree.val, cbind(tune = i, tree.val))
-  }
-
-  if (isTRUE(...get("plot"))) {
-    d.n <- .attr(log.dens.num, "density")
-    r <- treat - best.gps
-    log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
-    d.d <- .attr(log.dens.denom, "density")
-    plot_density(d.n, d.d, log = TRUE)
   }
 
   if (nrow(tune) > 1L) {

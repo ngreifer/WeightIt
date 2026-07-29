@@ -27,7 +27,7 @@
 #' several calls to \pkgfun{dbarts}{bart2}, one for each treatment group; the
 #' treatment probabilities are not normalized to sum to 1. The following
 #' estimands are allowed: ATE, ATT, ATC, ATO, and ATM. The weights for each
-#' estimand are computed using the standard formulas or those mentioned above.
+#' estimand are computed using the standard formulas.
 #' Weights can also be computed using marginal mean weighting through
 #' stratification for the ATE, ATT, and ATC. See [get_w_from_ps()] for details.
 #'
@@ -38,14 +38,42 @@
 #' stabilization factor) is the unconditional density of treatment evaluated the
 #' observed treatment value and \eqn{f_{A|X}(a_i)} (known as the generalized
 #' propensity score) is the conditional density of treatment given the
-#' covariates evaluated at the observed value of treatment. The shape of
-#' \eqn{f_A(.)} and \eqn{f_{A|X}(.)} is controlled by the `density` argument
-#' described below (normal distributions by default), and the predicted values
+#' covariates evaluated at the observed treatment value. The shape of
+#' \eqn{f_{A|X}(.)} is controlled by the `density` argument
+#' described below (normal distribution by default), and the predicted values
 #' used for the mean of the conditional density are estimated using BART as
-#' implemented in \pkgfun{dbarts}{bart2}. Kernel density estimation can be used
-#' instead of assuming a specific density for the numerator and denominator by
+#' implemented in \pkgfun{dbarts}{bart2}. \eqn{f_A(.)} is estimated by marginalizing
+#' over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
+#' instead of assuming a specific density for the denominator by
 #' setting `density = "kernel"`. Other arguments to [density()] can be specified
 #' to refine the density estimation parameters.
+#'
+#' ## Multilevel Treatment Models
+#'
+#' When the model `formula` contains \CRANpkg{lme4}-style random effects terms
+#' (e.g., `treat ~ x1 + x2 + (1 | school)`), a multilevel BART model is fit using
+#' \pkgfun{stan4bart}{stan4bart} instead of \pkgfun{dbarts}{bart2}. This combines a
+#' BART sum-of-trees for the covariates with a Stan-estimated
+#' random-effects component and can improve balance when units are
+#' clustered (e.g., patients within hospitals or students within schools). The full flexibility of \pkgfun{lme4}{glmer}
+#' random effects is available, including multiple grouping factors (e.g.,
+#' `(1 | school) + (1 | district)`) and random slopes. The grouping (and any
+#' random-slope) variables are taken from `data`; the covariates are placed in the
+#' BART component internally (i.e., the fitted model is `treat ~ bart(x1 + x2) + (1
+#' | school)`). The estimated propensity scores (or conditional means for
+#' continuous treatments) include the estimated random effects; i.e., they are
+#' cluster-specific.
+#'
+#' `stan4bart()` uses a different set of control arguments from `bart2()`: the
+#' number of posterior draws and warmup iterations are controlled by `iter` and
+#' `warmup`, the number of chains and parallel workers by `chains` and `cores`,
+#' BART hyperparameters (e.g., `n.trees`) are supplied in a `bart_args` list, and
+#' Stan and prior options in a `stan_args` list; see \pkgfun{stan4bart}{stan4bart}.
+#' For convenience, `bart2()`-style arguments are translated to their `stan4bart()`
+#' equivalents when supplied (e.g., `n.chains` to `chains`, `n.threads` to `cores`,
+#' and BART hyperparameters like `n.trees` to `bart_args`), so the same argument
+#' names can be used with or without random effects. As with the single-level
+#' case, M-estimation is not supported.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -91,17 +119,16 @@
 #'
 #' For continuous treatments, the following arguments may be supplied:
 #'   \describe{
-#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the numerator and denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
+#'     \item{`density`}{A function corresponding to the conditional density of the treatment. The standardized residuals of the treatment model will be fed through this function to produce the denominator of the generalized propensity score weights. If blank, [dnorm()] is used as recommended by Robins et al. (2000). This can also be supplied as a string containing the name of the function to be called. If the string contains underscores, the call will be split by the underscores and the latter splits will be supplied as arguments to the second argument and beyond. For example, if `density = "dt_2"` is specified, the density used will be that of a t-distribution with 2 degrees of freedom. Using a t-distribution can be useful when extreme outcome values are observed (Naimi et al., 2014).
 #'
-#' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the numerator and denominator densities for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
-#'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()` except that `n` is 10 times the number of units in the sample.}
-#'     \item{`plot`}{If `density = "kernel"`, whether to plot the estimated densities.}
+#' Can also be `"kernel"` to use kernel density estimation, which calls [density()] to estimate the denominator density for the weights. (This used to be requested by setting `use.kernel = TRUE`, which is now deprecated.)}
+#'     \item{`bw`, `adjust`, `kernel`, `n`}{If `density = "kernel"`, the arguments to [density()]. The defaults are the same as those in `density()`.}
 #'   }
 #'
 #' @section Additional Outputs:
 #' \describe{
 #'   \item{`obj`}{
-#'     When `include.obj = TRUE`, the `bart2` fit(s) used to generate the predicted values. With multi-category treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
+#'     When `include.obj = TRUE`, the `bart2` fit(s) used to generate the predicted values (or the \pkgfun{stan4bart}{stan4bart} fit(s) when the model `formula` contains random effects terms). With multi-category treatments, this will be a list of the fits; otherwise, it will be a single fit. The predicted probabilities used to compute the propensity scores can be extracted using \pkgfun2{dbarts}{bart}{fitted}.
 #'   }
 #' }
 #'
@@ -112,7 +139,7 @@
 #' a posterior distribution of predicted values for each unit. The mean of these
 #' for each unit is taken for use in computing the (generalized) propensity
 #' score. Although the hyperparameters governing the priors can be modified by
-#' supplying arguments to `weightit()` that are passed to the BART fitting
+#' supplying arguments to [weightit()] that are passed to the BART fitting
 #' function, the default values tend to work well and require little
 #' modification (though the defaults differ for continuous and categorical
 #' treatments; see the \pkgfun{dbarts}{bart2} documentation for details). Unlike
@@ -129,8 +156,10 @@
 #' reproducibility across runs. See the *Reproducibility* section at
 #' \pkgfun{dbarts}{bart2} for more details. To ensure reproducibility, one can
 #' do one of two things:
+#'
 #' 1. supply an argument to `seed`, which is passed to `dbarts::bart2()` and sets the seed for single- and multi-threaded uses, or
 #' 2. call [set.seed()] and set `n.threads = 1` to use single-threading.
+#'
 #' Note that to ensure reproducibility on any machine, regardless of the number of
 #' cores available, one should use single-threading by setting `n.threads = 1` and either supply `seed` or
 #' call `set.seed()`.
@@ -180,10 +209,10 @@
 #' cobalt::bal.tab(W2)
 #'
 #' #Balancing covariates with respect to re75 (continuous)
-#' #assuming t(3) conditional density for treatment
+#' #with kernel density estimation for GPS
 #' (W3 <- weightit(re75 ~ age + educ + married +
 #'                   nodegree + re74, data = lalonde,
-#'                 method = "bart", density = "dt_3"))
+#'                 method = "bart", density = "kernel"))
 #'
 #' summary(W3)
 #'
@@ -191,7 +220,7 @@
 NULL
 
 weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabilize,
-                          missing, verbose, ...) {
+                          missing, .data, verbose, ...) {
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
   s.weights <- s.weights[subset]
@@ -209,26 +238,50 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
   t.lev <- get_treated_level(treat, estimand, focal)
   treat <- binarize(treat, one = t.lev)
 
-  A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
-                         rlang::fn_fmls_names(dbarts::dbartsControl)),
-                       c("offset.test", "weights", "subset", "test")))
+  re.bars <- ...get(".random")
 
-  A[["data"]] <- treat
-  A[["formula"]] <- covs
-  A[["keepCall"]] <- FALSE
-  A[["combineChains"]] <- TRUE
-  A[["verbose"]] <- FALSE #necessary to prevent crash
+  if (is_not_null(re.bars)) {
+    #Random effects (multilevel) PS model via stan4bart::stan4bart()
+    rlang::check_installed("stan4bart")
 
-  bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
+    df <- .make_re_data_formula(covs, treat, s.weights, re.bars, .data,
+                                subset, bart = TRUE)
 
-  rlang::try_fetch({verbosely({
-    fit <- eval(bart.call)
-  }, verbose = verbose)},
-  error = function(e) {
-    arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
-  })
+    A <- .make_stan4bart_args(...)
+    A[["formula"]] <- df[["formula"]]
+    A[["data"]] <- df[["data"]]
+    A[["verbose"]] <- if (isTRUE(verbose)) TRUE else -1L
 
-  p.score <- fitted(fit)
+    rlang::try_fetch({verbosely({
+      fit <- do.call(stan4bart::stan4bart, A)
+    }, verbose = verbose)},
+    error = function(e) {
+      arg::err("(from {.fun stan4bart::stan4bart}): {conditionMessage(e)}")
+    })
+
+    p.score <- fitted(fit, type = "ev", sample = "train")
+  }
+  else {
+    #dbarts::bart2()
+    A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
+                           rlang::fn_fmls_names(dbarts::dbartsControl)),
+                         c("offset.test", "weights", "subset", "test")))
+
+    A[["data"]] <- treat
+    A[["formula"]] <- covs
+    A[["keepCall"]] <- FALSE
+    A[["combineChains"]] <- TRUE
+    A[["verbose"]] <- FALSE #necessary to prevent crash
+
+    rlang::try_fetch({verbosely({
+      fit <- eval(as.call(c(list(quote(dbarts::bart2)), A)))
+    }, verbose = verbose)},
+    error = function(e) {
+      arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
+    })
+
+    p.score <- fitted(fit)
+  }
 
   w <- .get_w_from_ps_internal_bin(ps = p.score, treat = treat, estimand,
                                    stabilize = stabilize, subclass = ...get("subclass"))
@@ -237,7 +290,7 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
 }
 
 weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize,
-                                 missing, verbose, ...) {
+                                 missing, .data, verbose, ...) {
   covs <- covs[subset, , drop = FALSE]
   treat <- factor(treat[subset])
   s.weights <- s.weights[subset]
@@ -254,29 +307,58 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
 
   ps <- make_df(levels(treat), nrow = length(treat))
 
-  A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
-                         rlang::fn_fmls_names(dbarts::dbartsControl)),
-                       c("offset.test", "weights", "subset", "test")))
-
-  A[["formula"]] <- covs
-  A[["keepCall"]] <- FALSE
-  A[["combineChains"]] <- TRUE
-  A[["verbose"]] <- FALSE #necessary to prevent crash
+  re.bars <- ...get(".random")
 
   fit.list <- make_list(levels(treat))
 
-  for (i in levels(treat)) {
-    A[["data"]] <- as.integer(treat == i)
-    bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
+  if (is_not_null(re.bars)) {
+    #Random effects (multilevel) PS model via stan4bart::stan4bart()
+    rlang::check_installed("stan4bart")
 
-    rlang::try_fetch({verbosely({
-      fit.list[[i]] <- eval(bart.call)
-    }, verbose = verbose)},
-    error = function(e) {
-      arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
-    })
+    df <- .make_re_data_formula(covs, treat, s.weights, re.bars, .data,
+                                subset, bart = TRUE)
 
-    ps[[i]] <- fitted(fit.list[[i]])
+    A <- .make_stan4bart_args(...)
+    A[["formula"]] <- df[["formula"]]
+    A[["verbose"]] <- if (isTRUE(verbose)) TRUE else -1L
+
+    for (i in levels(treat)) {
+      df[["data"]][[".treat"]] <- as.integer(treat == i)
+      A[["data"]] <- df[["data"]]
+
+      rlang::try_fetch({verbosely({
+        fit.list[[i]] <- do.call(stan4bart::stan4bart, A)
+      }, verbose = verbose)},
+      error = function(e) {
+        arg::err("(from {.fun stan4bart::stan4bart}): {conditionMessage(e)}")
+      })
+
+      ps[[i]] <- fitted(fit.list[[i]], type = "ev", sample = "train")
+    }
+  }
+  else {
+    #dbarts::bart2()
+    A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
+                           rlang::fn_fmls_names(dbarts::dbartsControl)),
+                         c("offset.test", "weights", "subset", "test")))
+
+    A[["formula"]] <- covs
+    A[["keepCall"]] <- FALSE
+    A[["combineChains"]] <- TRUE
+    A[["verbose"]] <- FALSE #necessary to prevent crash
+
+    for (i in levels(treat)) {
+      A[["data"]] <- as.integer(treat == i)
+
+      rlang::try_fetch({verbosely({
+        fit.list[[i]] <- eval(as.call(c(list(quote(dbarts::bart2)), A)))
+      }, verbose = verbose)},
+      error = function(e) {
+        arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
+      })
+
+      ps[[i]] <- fitted(fit.list[[i]])
+    }
   }
 
   #ps should be matrix of probs for each treat
@@ -287,7 +369,7 @@ weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal
   list(w = w, fit.obj = fit.list)
 }
 
-weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
+weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, .data, verbose, ...) {
 
   covs <- covs[subset, , drop = FALSE]
   treat <- treat[subset]
@@ -302,49 +384,67 @@ weightit2bart.cont <- function(covs, treat, s.weights, subset, stabilize, missin
   covs <- covs |>
     .make_covs_closer_to_1()
 
-  #Process density params
-  densfun <- .get_dens_fun(use.kernel = isTRUE(...get("use.kernel")),
-                           bw = ...get("bw"),
-                           adjust = ...get("adjust"),
-                           kernel = ...get("kernel"),
-                           n = ...get("n"),
-                           treat = treat,
-                           density = ...get("density"),
-                           weights = s.weights)
+  # Process density params
+  make_dens_fun <- .get_make_dens_fun(density = ...get("density"),
+                                      bw = ...get("bw"),
+                                      adjust = ...get("adjust"),
+                                      kernel = ...get("kernel"),
+                                      n = ...get("n"),
+                                      use.kernel = ...get("use.kernel"))
 
-  A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
-                         rlang::fn_fmls_names(dbarts::dbartsControl)),
-                       c("offset.test", "weights", "subset", "test")))
+  re.bars <- ...get(".random")
 
-  A[["formula"]] <- covs
-  A[["data"]] <- treat
-  A[["keepCall"]] <- FALSE
-  A[["combineChains"]] <- TRUE
-  A[["verbose"]] <- FALSE #necessary to prevent crash
+  if (is_not_null(re.bars)) {
+    #Random effects (multilevel) GPS model via stan4bart::stan4bart()
+    rlang::check_installed("stan4bart")
 
-  bart.call <- as.call(c(list(quote(dbarts::bart2)), A))
+    #stan4bart's dbartsData requires a plain numeric response (drop "treat" class)
+    df <- .make_re_data_formula(covs, as.numeric(treat), s.weights, re.bars,
+                                .data, subset, bart = TRUE)
 
-  #Estimate GPS
-  rlang::try_fetch({verbosely({
-    fit <- eval(bart.call)
-  }, verbose = verbose)},
-  error = function(e) {
-    arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
-  })
+    A <- .make_stan4bart_args(...)
+    A[["formula"]] <- df[["formula"]]
+    A[["data"]] <- df[["data"]]
+    A[["verbose"]] <- if (isTRUE(verbose)) TRUE else -1L
 
-  r <- residuals(fit)
+    #Estimate GPS
+    rlang::try_fetch({verbosely({
+      fit <- do.call(stan4bart::stan4bart, A)
+    }, verbose = verbose)},
+    error = function(e) {
+      arg::err("(from {.fun stan4bart::stan4bart}): {conditionMessage(e)}")
+    })
+
+    mu <- fitted(fit, type = "ev", sample = "train")
+    sd <- fitted(fit, type = "sigma")
+  }
+  else {
+    #dbarts::bart2()
+    A <- ...mget(setdiff(c(rlang::fn_fmls_names(dbarts::bart2),
+                           rlang::fn_fmls_names(dbarts::dbartsControl)),
+                         c("offset.test", "weights", "subset", "test")))
+
+    A[["formula"]] <- covs
+    A[["data"]] <- treat
+    A[["keepCall"]] <- FALSE
+    A[["combineChains"]] <- TRUE
+    A[["verbose"]] <- FALSE #necessary to prevent crash
+
+    #Estimate GPS
+    rlang::try_fetch({verbosely({
+      fit <- eval(as.call(c(list(quote(dbarts::bart2)), A)))
+    }, verbose = verbose)},
+    error = function(e) {
+      arg::err("(from {.fun dbarts::bart2}): {conditionMessage(e)}")
+    })
+
+    mu <- fitted(fit)
+    sd <- sqrt(mean(fit$sigma^2))
+  }
 
   #Get weights
-  log.dens.num <- densfun(scale_w(treat, s.weights), log = TRUE)
-  log.dens.denom <- densfun(r / sqrt(col.w.v(r, s.weights)), log = TRUE)
-
-  w <- exp(log.dens.num - log.dens.denom)
-
-  if (isTRUE(...get("plot"))) {
-    d.n <- .attr(log.dens.num, "density")
-    d.d <- .attr(log.dens.denom, "density")
-    plot_density(d.n, d.d, log = TRUE)
-  }
+  w <- .get_w_from_gps_internal_cont(mu, treat, sd, s.weights,
+                                     make_dens_fun)
 
   list(w = w, fit.obj = fit)
 }

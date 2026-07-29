@@ -197,9 +197,9 @@ head(d)
 
 In addition to *WeightIt* and whatever package may be required to estimate the weights, we will need the following packages to perform the analyses:
 
--   *marginaleffects* provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
--   *survival* provides functionality to estimate the coefficients in a Cox proportional hazards model for the marginal hazard ratio, which is called internally by `coxph_weightit()` for survival outcomes
--   *ardftools* provides tools for estimating, visualizing, and testing the effect of a continuous treatment on an outcome
+- *marginaleffects* provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
+- *survival* provides functionality to estimate the coefficients in a Cox proportional hazards model for the marginal hazard ratio, which is called internally by `coxph_weightit()` for survival outcomes
+- *ardftools* provides tools for estimating, visualizing, and testing the effect of a continuous treatment on an outcome
 
 ```{r,message=FALSE,warning=FALSE, eval= if (me_ok) TRUE else 1L}
 library("WeightIt")
@@ -343,7 +343,7 @@ A negative value for the survival probability difference indicates that the trea
 
 The [*adjustedCurves*](https://cran.r-project.org/package=adjustedCurves) package provides limited integration with *WeightIt* to estimate adjusted survival estimands. We recommend using this package to estimate effects after weighting.
 
-#### Using sampling weights and/or clustered data
+#### Using sampling weights with complex surveys
 
 When sampling weights are required to generalize to the correct population, they must be included in the call to `weightit()` to estimate the balancing weights, in the outcome model, and in the call to `avg_comparisons()`, etc. In most cases, this can be handled without modifying the standard case except that `s.weights` must be supplied to `weightit()`, and `wts = W$s.weights` must be supplied to `avg_comparisons()`, etc. `lm_weightit()` and `glm_weightit()` automatically incorporate the sampling weights into estimation of the outcome model.
 
@@ -606,11 +606,11 @@ For continuous treatments, moderation analysis is possible using *adrftools*.
 
 It is important to be as thorough and complete as possible when describing the methods of estimating the treatment effect and the results of the analysis. This improves transparency and replicability of the analysis. Results should at least include the following:
 
--   a description of the outcome model used (e.g., logistic regression, a linear model with treatment-covariate interactions and covariates, a Cox proportional hazards model with the propensity score weights applied)
--   the way the effect was estimated (e.g., using g-computation or as the coefficient in the outcome model)
--   the way SEs were estimated (e.g., using M-estimation, using robust SEs that treat the weights as fixed, using the fractional weighted bootstrap with 1000 bootstrap replications and the entire process of weighting and effect estimation included in each replication)
--   R packages and functions used in estimating the effect and its SE (e.g., `glm_weightit()` in *WeightIt*, `avg_comparisons()` in *marginaleffects*, `adrf()` in *adrftools*)
--   The effect and its SE and confidence interval
+- a description of the outcome model used (e.g., logistic regression, a linear model with treatment-covariate interactions and covariates, a Cox proportional hazards model with the propensity score weights applied)
+- the way the effect was estimated (e.g., using g-computation or as the coefficient in the outcome model)
+- the way SEs were estimated (e.g., using M-estimation, using robust SEs that treat the weights as fixed, using the fractional weighted bootstrap with 1000 bootstrap replications and the entire process of weighting and effect estimation included in each replication)
+- R packages and functions used in estimating the effect and its SE (e.g., `glm_weightit()` in *WeightIt*, `avg_comparisons()` in *marginaleffects*, `adrf()` in *adrftools*)
+- The effect and its SE and confidence interval
 
 All this is in addition to information about the weighting method, estimand, propensity score estimation procedure (if used), balance assessment, etc.
 
