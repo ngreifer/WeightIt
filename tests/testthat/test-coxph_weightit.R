@@ -267,7 +267,7 @@ test_that("an intercept-only (null) model is supported", {
   expect_equal(fit_null_w$loglik, fit_null_w_ref$loglik, tolerance = eps)
 })
 
-test_that("collinear covariates give NA for the aliased coefficients", {
+test_that("a rank-deficient fit gives estimable coefficients and NA for the rest", {
   skip_on_cran()
   skip_if_not_installed("survival")
   skip_if_not_installed("sandwich")
@@ -277,56 +277,73 @@ test_that("collinear covariates give NA for the aliased coefficients", {
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data <- .censor_Y_S(test_data)
 
-  #An exact duplicate of an existing covariate
-  test_data$X1b <- test_data$X1
+  # X1dup is collinear with X1, so one of the two is not estimable
+  test_data$X1dup <- test_data$X1
 
   expect_no_condition({
-    fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1b + X2,
+    fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1dup + X2,
                           data = test_data)
   })
 
-  fit_ref <- survival::coxph(survival::Surv(time, event) ~ A + X1 + X1b + X2,
+  fit_ref <- survival::coxph(survival::Surv(time, event) ~ A + X1 + X1dup + X2,
                              data = test_data, robust = TRUE)
 
-  #`survival::coxph()` also returns NA for the redundant coefficient
+  # `survival::coxph()` also returns NA for the redundant coefficient
   expect_equal(coef(fit), coef(fit_ref), tolerance = eps)
-  expect_identical(is.na(coef(fit)), c(A = FALSE, X1 = FALSE, X1b = TRUE, X2 = FALSE))
+  expect_identical(is.na(coef(fit)),
+                   c(A = FALSE, X1 = FALSE, X1dup = TRUE, X2 = FALSE))
 
-  #`complete = TRUE` (the default) expands the variance to the full set of
-  #coefficients with NAs, as for the other `*_weightit()` functions;
-  #`complete = FALSE` covers the estimable coefficients only
+  # `complete = TRUE` (the default) expands the variance to the full set of
+  # coefficients, giving the aliased term an NA row and column rather than a
+  # bogus variance; `complete = FALSE` covers the estimable coefficients only
   V <- vcov(fit)
   expect_identical(dim(V), c(4L, 4L))
-  expect_identical(is.na(V["X1b", ]), c(A = TRUE, X1 = TRUE, X1b = TRUE, X2 = TRUE))
+  expect_true(all(is.na(V["X1dup", ])))
+  expect_true(all(is.na(V[, "X1dup"])))
 
   V_est <- vcov(fit, complete = FALSE)
   expect_identical(dim(V_est), c(3L, 3L))
   expect_false(anyNA(V_est))
   expect_identical(colnames(V_est), c("A", "X1", "X2"))
 
-  #The estimable standard errors match coxph()'s robust ones
+  # The estimable standard errors match coxph()'s robust ones
   expect_equal(unname(sqrt(diag(V_est))),
                unname(sqrt(diag(vcov(fit_ref)))[!is.na(coef(fit_ref))]),
                tolerance = eps)
 
-  #print() and summary() report only the estimable coefficients
+  # A perfectly collinear column carries no information, so dropping it changes
+  # nothing about the estimable results
+  expect_no_condition({
+    fit_red <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X2,
+                              data = test_data)
+  })
+
+  expect_equal(coef(fit)[!is.na(coef(fit))], coef(fit_red), tolerance = eps)
+  expect_equal(V_est, vcov(fit_red), ignore_attr = TRUE, tolerance = eps)
+
+  # No `gradient` is stored, so the variance comes from `psi`, evaluated against
+  # the model matrix already reduced to its estimable columns
+  expect_null(fit$gradient)
+  expect_null(fit_red$gradient)
+
+  # print() and summary() report only the estimable coefficients
   expect_no_condition(invisible(capture.output(print(fit))))
   expect_no_condition(s <- summary(fit))
   expect_identical(rownames(s$coefficients), c("A", "X1", "X2"))
   expect_false(anyNA(s$coefficients))
 
-  #sandwich's estfun()/bread() are also restricted to the estimable coefficients
+  # sandwich's estfun()/bread() are also restricted to the estimable coefficients
   expect_identical(ncol(sandwich::estfun(fit)), 3L)
   expect_identical(dim(sandwich::bread(fit)), c(3L, 3L))
   expect_equal(unname(sandwich::sandwich(fit)), unname(V_est), tolerance = eps)
 
-  #vcov = "const" is the model-based variance over the estimable coefficients
+  # vcov = "const" is the model-based variance over the estimable coefficients
   expect_no_condition({
-    fit_const <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1b + X2,
+    fit_const <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1dup + X2,
                                 data = test_data, vcov = "const")
   })
 
-  fit_const_ref <- survival::coxph(survival::Surv(time, event) ~ A + X1 + X1b + X2,
+  fit_const_ref <- survival::coxph(survival::Surv(time, event) ~ A + X1 + X1dup + X2,
                                    data = test_data)
 
   expect_equal(unname(vcov(fit_const, complete = FALSE)),
@@ -334,16 +351,16 @@ test_that("collinear covariates give NA for the aliased coefficients", {
                                           !is.na(coef(fit_const_ref))]),
                tolerance = eps)
 
-  #A redundant factor: two aliased coefficients at once
+  # A redundant factor: two aliased coefficients at once
   test_data$G <- factor(rep(c("a", "b", "c"), length.out = nrow(test_data)))
-  test_data$Gb <- test_data$G
+  test_data$Gdup <- test_data$G
 
   expect_no_condition({
-    fit_f <- coxph_weightit(survival::Surv(time, event) ~ A + G + Gb,
+    fit_f <- coxph_weightit(survival::Surv(time, event) ~ A + G + Gdup,
                             data = test_data)
   })
 
-  fit_f_ref <- survival::coxph(survival::Surv(time, event) ~ A + G + Gb,
+  fit_f_ref <- survival::coxph(survival::Surv(time, event) ~ A + G + Gdup,
                                data = test_data, robust = TRUE)
 
   expect_equal(coef(fit_f), coef(fit_f_ref), tolerance = eps)
@@ -353,27 +370,28 @@ test_that("collinear covariates give NA for the aliased coefficients", {
                unname(sqrt(diag(vcov(fit_f_ref)))[!is.na(coef(fit_f_ref))]),
                tolerance = eps)
 
-  #Weights don't change any of this; M-estimation still accounts for them
+  # Weights don't change any of this; M-estimation still accounts for them
   expect_no_condition({
     W <- weightit(A ~ X1 + X2 + X3 + X4 + X5, data = test_data,
                   method = "glm", estimand = "ATE")
   })
 
   expect_no_condition({
-    fit_w <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1b + X2,
+    fit_w <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1dup + X2,
                             data = test_data, weightit = W)
   })
 
   expect_identical(fit_w$vcov_type, "asympt")
-  expect_identical(is.na(coef(fit_w)), c(A = FALSE, X1 = FALSE, X1b = TRUE, X2 = FALSE))
+  expect_identical(is.na(coef(fit_w)),
+                   c(A = FALSE, X1 = FALSE, X1dup = TRUE, X2 = FALSE))
   expect_false(anyNA(vcov(fit_w, complete = FALSE)))
 
   expect_no_condition({
-    fit_w_hc0 <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1b + X2,
+    fit_w_hc0 <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1dup + X2,
                                 data = test_data, weightit = W, vcov = "HC0")
   })
 
-  fit_w_ref <- survival::coxph(survival::Surv(time, event) ~ A + X1 + X1b + X2,
+  fit_w_ref <- survival::coxph(survival::Surv(time, event) ~ A + X1 + X1dup + X2,
                                data = test_data, weights = W$weights,
                                robust = TRUE)
 
@@ -385,6 +403,18 @@ test_that("collinear covariates give NA for the aliased coefficients", {
 
   expect_true(all(diag(vcov(fit_w, complete = FALSE)) <=
                     diag(vcov(fit_w_hc0, complete = FALSE))))
+
+  # Dropping the collinear column also changes nothing on the M-estimation path,
+  # where a wrongly chosen column would give wrong standard errors rather than
+  # an error
+  expect_no_condition({
+    fit_w_red <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X2,
+                                data = test_data, weightit = W)
+  })
+
+  expect_equal(coef(fit_w)[!is.na(coef(fit_w))], coef(fit_w_red), tolerance = eps)
+  expect_equal(vcov(fit_w, complete = FALSE), vcov(fit_w_red),
+               ignore_attr = TRUE, tolerance = eps)
 })
 
 test_that("a model with no events returns NA coefficients rather than erroring", {
@@ -780,46 +810,6 @@ test_that("a non-Surv response (including Surv2) is rejected", {
 # columns, so a stored `gradient` (which has one column per model.matrix column)
 # would not line up. `coxph_weightit()` therefore stores none and lets them
 # evaluate `psi` themselves.
-test_that("a rank-deficient fit gives estimable coefficients and NA for the rest", {
-  skip_on_cran()
-  skip_if_not_installed("survival")
-
-  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
-
-  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
-  test_data <- .censor_Y_S(test_data)
-
-  # X1dup is collinear with X1, so one of the two is not estimable
-  test_data$X1dup <- test_data$X1
-
-  W <- weightit(A ~ X1 + X2, data = test_data, method = "glm")
-
-  expect_no_error({
-    fit <- coxph_weightit(survival::Surv(time, event) ~ A + X1 + X1dup,
-                          data = test_data, weightit = W)
-  })
-
-  expect_true(is.na(coef(fit)["X1dup"]))
-  expect_true(all(!is.na(coef(fit)[c("A", "X1")])))
-
-  # The aliased term gets an NA row and column rather than a bogus variance
-  V <- vcov(fit)
-  expect_true(all(is.na(V["X1dup", ])))
-  expect_true(all(is.na(V[, "X1dup"])))
-
-  # The estimable coefficients and their SEs are exactly those of the full-rank fit
-  ref <- coxph_weightit(survival::Surv(time, event) ~ A + X1,
-                        data = test_data, weightit = W)
-
-  expect_equal(unname(coef(fit)[c("A", "X1")]), unname(coef(ref)), tolerance = eps)
-  expect_equal(unname(V[c("A", "X1"), c("A", "X1")]), unname(vcov(ref)),
-               tolerance = eps)
-
-  # No `gradient` is stored, so the variance comes from `psi`
-  expect_null(fit$gradient)
-  expect_null(ref$gradient)
-})
-
 test_that("nobs() counts units, and AIC()/BIC() still use the number of events", {
   skip_on_cran()
   skip_if_not_installed("survival")

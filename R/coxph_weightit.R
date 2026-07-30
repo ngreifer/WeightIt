@@ -118,7 +118,7 @@ coxph_weightit <- function(formula, data, weightit = NULL,
   #the same values (they agree to ~1e-14), but it returns one column per
   #model.matrix column, whereas `.compute_vcov()` reduces the model matrix to the
   #estimable columns; supplying it made rank-deficient fits fail with
-  #"non-conformable arrays". It is also undefined for a fit whose row-indexed
+  #"non-conformable arguments". It is also undefined for a fit whose row-indexed
   #components were scattered back from a subset fit (see `.coxph_weightit()`).
   fit[["psi"]] <- .get_coxph_psi(fit)
 

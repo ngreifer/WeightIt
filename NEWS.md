@@ -65,7 +65,7 @@ WeightIt News and Updates
 
 * Fixed a bug in `method = "cbps"` with `is.MSM.method = TRUE` in which a time point at which every unit was treated would compute the weights for all units as though none were treated.
 
-* Fixed a bug in `coxph_weightit()` in which a rank-deficient model (one with collinear predictors, so that some coefficients are not estimable) would fail with "non-conformable arrays". The score contributions used for the variance had one column per model matrix column, while the model matrix itself had been reduced to its estimable columns. Such fits now succeed, reporting the estimable coefficients and their standard errors and `NA` for the rest, as `glm_weightit()` does.
+* Fixed a bug in `coxph_weightit()` in which a rank-deficient model (one with collinear predictors, so that some coefficients are not estimable) would fail with "non-conformable arguments". The score contributions used for the variance had one column per model matrix column, while the model matrix itself had been reduced to its estimable columns. Such fits now succeed, reporting the estimable coefficients and their standard errors and `NA` for the rest, as `glm_weightit()` does.
 
 * Fixed a bug in `weightitMSM()` in which supplying a single formula to `num.formula` would fail to correctly incorporate its terms into the stabilization model at all but the first time point.
 
