@@ -115,7 +115,7 @@
 #' ```
 #' weightitMSM(list(A_1 ~ X1_0 + X2_0,
 #'                  A_2 ~ X1_1 + X2_1 + A_1,
-#'                  .cens(C_2) ~ X1_1 + X2_1 + A_1,
+#'                  .cens(C_2) ~ X1_1 + X2_1 + A_1 + A_2,
 #'                  A_3 ~ X1_2 + X2_2 + A_2),
 #'             data = d, method = "glm")
 #' ```
@@ -478,7 +478,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
       A_i["covs"] <- list(covs.list[[i]])
       A_i["treat"] <- list(treat.list[[i]])
-      A_i["treat.type"] <- list(get_treat_type(treat.list[[i]]))
       A_i[".data"] <- list(data)
       A_i[".covs"] <- list(reported.covs.list[[i]])
 
@@ -559,7 +558,6 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
           #0 for those censored here.
           A_i["treat"] <- list(as.treat(.make_cens_treat(treat.list[[i]]),
                                         process = TRUE))
-          A_i["treat.type"] <- list(NULL)
         }
 
         sw_obj <- do.call("weightit.fit", A_i)

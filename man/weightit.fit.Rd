@@ -18,14 +18,17 @@ weightit.fit(
   verbose = FALSE,
   include.obj = FALSE,
   subset = NULL,
-  treat.type = NULL,
   ...
 )
 }
 \arguments{
 \item{covs}{a numeric matrix of covariates.}
 
-\item{treat}{a vector of treatment statuses.}
+\item{treat}{a vector of treatment statuses. To request inverse probability
+of censoring weights, supply a 0/1 censoring indicator (1 = censored)
+tagged with \code{\link[=.cens]{.cens()}}, as in \code{treat = .cens(C)}; \code{NA} values are
+then allowed outside \code{subset}, since a unit censored at an earlier time
+point has no later indicator.}
 
 \item{method}{a string containing the name of the method that will be used to
 estimate weights. See \code{\link[=weightit]{weightit()}} for allowable options. The default is
@@ -82,14 +85,6 @@ under observation when a censoring model is fit. The weights of the
 remaining units are left as \code{NA} for the caller to fill in. When \code{by.factor}
 is also supplied, the model is fit within the intersection of each \code{by}
 level and \code{subset}. If \code{NULL} (the default), all units are used.}
-
-\item{treat.type}{an optional string identifying the treatment type, used to
-request a type that cannot be inferred from \code{treat} itself. The only such
-type is \code{"censoring"}, which requests inverse probability of censoring
-weights and requires \code{treat} to be a 0/1 censoring indicator (1 = censored).
-\code{NA} values in \code{treat} are then allowed outside \code{subset}. If \code{NULL} (the
-default), the type is determined from \code{treat}; supplying \code{treat} as
-\code{\link[=.cens]{.cens(C)}} is equivalent to setting \code{treat.type = "censoring"}.}
 
 \item{...}{other arguments for functions called by \code{weightit.fit()} that
 control aspects of fitting that are not covered by the above arguments.}

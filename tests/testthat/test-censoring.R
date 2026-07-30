@@ -137,19 +137,15 @@ test_that(".cens() returns a tagged censoring indicator", {
   expect_error(.cens(factor(ifelse(d$C == 1L, "Yes", "No"))), "only the values")
 })
 
-test_that("all three ways of requesting censoring weights agree", {
+test_that("both ways of requesting censoring weights agree", {
   d <- make_cens_data()
 
   X <- as.matrix(d[c("X1", "X2", "X3", "X4")])
 
   W_formula <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = "glm")
   WF_tagged <- weightit.fit(X, treat = .cens(d$C), method = "glm")
-  WF_argument <- weightit.fit(X, treat = d$C, treat.type = "censoring",
-                              method = "glm")
 
   expect_equal(unname(W_formula$weights), unname(WF_tagged$weights),
-               tolerance = eps)
-  expect_equal(unname(W_formula$weights), unname(WF_argument$weights),
                tolerance = eps)
 
   # An untagged 0/1 vector is still an ordinary binary treatment

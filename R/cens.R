@@ -26,7 +26,7 @@
 #' get_w_from_ps(ps, treat = .cens(C))
 #' ```
 #'
-#' For [weightit.fit()], passing `treat.type = "censoring"` with an untagged 0/1 vector is equivalent.
+#' Tagging is the only way to request censoring weights from these interfaces; an untagged 0/1 vector is treated as an ordinary binary treatment.
 #'
 #' @section Note on the coding convention:
 #' The survival convention is used: `1` means the unit is *censored* (drops out of observation) and `0` means it remains under observation. This is the opposite of an "observed" or "event" indicator. When a censoring model is supplied to [weightit()], the returned propensity score is \eqn{P(C = 1 | X)}, the probability of *being censored*.

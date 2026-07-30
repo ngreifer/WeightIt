@@ -12,7 +12,11 @@
 #'
 #' @inheritParams weightit
 #' @param covs a numeric matrix of covariates.
-#' @param treat a vector of treatment statuses.
+#' @param treat a vector of treatment statuses. To request inverse probability
+#'   of censoring weights, supply a 0/1 censoring indicator (1 = censored)
+#'   tagged with [`.cens()`][.cens], as in `treat = .cens(C)`; `NA` values are
+#'   then allowed outside `subset`, since a unit censored at an earlier time
+#'   point has no later indicator.
 #' @param method a string containing the name of the method that will be used to
 #'   estimate weights. See [weightit()] for allowable options. The default is
 #'   `"glm"` for propensity score weighting using a generalized linear model to
@@ -45,13 +49,6 @@
 #'   remaining units are left as `NA` for the caller to fill in. When `by.factor`
 #'   is also supplied, the model is fit within the intersection of each `by`
 #'   level and `subset`. If `NULL` (the default), all units are used.
-#' @param treat.type an optional string identifying the treatment type, used to
-#'   request a type that cannot be inferred from `treat` itself. The only such
-#'   type is `"censoring"`, which requests inverse probability of censoring
-#'   weights and requires `treat` to be a 0/1 censoring indicator (1 = censored).
-#'   `NA` values in `treat` are then allowed outside `subset`. If `NULL` (the
-#'   default), the type is determined from `treat`; supplying `treat` as
-#'   [`.cens(C)`][.cens] is equivalent to setting `treat.type = "censoring"`.
 #' @param ... other arguments for functions called by `weightit.fit()` that
 #'   control aspects of fitting that are not covered by the above arguments.
 #'
@@ -132,7 +129,7 @@
 weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.factor = NULL,
                          estimand = "ATE", focal = NULL, stabilize = FALSE,
                          ps = NULL, missing = NULL, verbose = FALSE, include.obj = FALSE,
-                         subset = NULL, treat.type = NULL, ...) {
+                         subset = NULL, ...) {
 
   A <- list(...)
 
@@ -150,10 +147,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     arg::arg_vector(treat)
     arg::arg_numeric(treat)
 
-    #Censoring can be requested either by tagging `treat` with `.cens()` or by
-    #supplying `treat.type` explicitly for a plain numeric indicator.
-    censoring <- identical(treat.type, "censoring") ||
-      identical(get_treat_type(treat), "censoring")
+    #Censoring is requested by tagging `treat` with `.cens()`
+    censoring <- identical(get_treat_type(treat), "censoring")
 
     if (!censoring) {
       #Censoring indicators may be NA outside `subset`: a unit censored at an

@@ -173,7 +173,7 @@ models. For example,
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{weightitMSM(list(A_1 ~ X1_0 + X2_0,
                  A_2 ~ X1_1 + X2_1 + A_1,
-                 .cens(C_2) ~ X1_1 + X2_1 + A_1,
+                 .cens(C_2) ~ X1_1 + X2_1 + A_1 + A_2,
                  A_3 ~ X1_2 + X2_2 + A_2),
             data = d, method = "glm")
 }\if{html}{\out{</div>}}

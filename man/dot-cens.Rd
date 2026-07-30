@@ -36,7 +36,7 @@ weightit.fit(covs, treat = .cens(C), method = "glm")
 get_w_from_ps(ps, treat = .cens(C))
 }\if{html}{\out{</div>}}
 
-For \code{\link[=weightit.fit]{weightit.fit()}}, passing \code{treat.type = "censoring"} with an untagged 0/1 vector is equivalent.
+Tagging is the only way to request censoring weights from these interfaces; an untagged 0/1 vector is treated as an ordinary binary treatment.
 }
 }
 \section{Note on the coding convention}{
