@@ -120,11 +120,11 @@ adjusted for the estimation of the weights if requested and a compatible
 of variance matrix requested. If \code{cluster} is supplied, it will be stored in
 the \code{"cluster"} attribute of the output object, even if not used.
 
-The \code{model} component of the output object (also the \code{model.frame()} output)
+The \code{model} component of the output object (also the \code{\link[=model.frame]{model.frame()}} output)
 will include two extra columns when \code{weightit} is supplied: \code{(weights)}
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and \code{(s.weights)} containing the
-sampling weights, which will be 1 if \code{s.weights} is not supplied in the
+sampling weights, which will all be 1 if \code{s.weights} is not supplied in the
 original \code{weightit()} call.
 }
 \description{
@@ -223,7 +223,6 @@ summary(fit3)
 \itemize{
 \item \code{\link[=lm]{lm()}} and \code{\link[=glm]{glm()}} for fitting (generalized) linear models without
 adjusting standard errors for estimation of the weights.
-\item \code{\link[=glm_weightit]{glm_weightit()}} for fitting generalized linear models that adjust for estimation of the weights.
 \item \code{\link[=multinom_weightit]{multinom_weightit()}} for fitting multinomial regression models that adjust for estimation of the weights.
 \item \code{\link[=ordinal_weightit]{ordinal_weightit()}} for fitting ordinal regression models that adjust for estimation of the weights.
 \item \code{\link[=coxph_weightit]{coxph_weightit()}} for fitting Cox proportional hazards models that adjust for estimation of the weights.

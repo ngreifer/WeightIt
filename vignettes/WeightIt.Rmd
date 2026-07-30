@@ -27,7 +27,7 @@ set.seed(1000)
 
 *WeightIt* contains several functions for estimating and assessing balancing weights for observational studies. These weights can be used to estimate the causal parameters of marginal structural models. I will not go into the basics of causal inference methods here. For good introductory articles, see @austinIntroductionPropensityScore2011, @austinMovingBestPractice2015, @robinsMarginalStructuralModels2000, or @thoemmesPrimerInverseProbability2016.
 
-Typically, the analysis of an observational study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. This is not meant to be a definitive guide, but rather an introduction to the relevant issues.
+Typically, the analysis of an observational study might proceed as follows: identify the covariates for which balance is required; assess the quality of the data available, including missingness and measurement error; estimate weights that balance the covariates adequately; and estimate a treatment effect and corresponding standard error or confidence interval. This guide will go through these steps for two observational studies: estimating the causal effect of a point treatment on an outcome, and estimating the causal parameters of a marginal structural model with multiple treatment periods. In addition, we will demonstrate the use of *WeightIt* to estimate censoring weights in the case of informative censoring. This is not meant to be a definitive guide, but rather an introduction to the relevant issues and demonstration of *WeightIt*'s capabilities.
 
 ## Balancing Weights for a Point Treatment
 
@@ -201,19 +201,25 @@ These results indicate that receiving treatment at all time points reduces the r
 
 ### Accounting for censoring
 
-Units often drop out of a study before the outcome is measured, and if they do so for reasons related to the covariates, restricting the analysis to those who remain introduces bias in the same way confounding does. `WeightIt` can estimate inverse probability of censoring weights (IPCW) to adjust for this, by wrapping a censoring indicator in `.cens()` on the left side of a model formula. The indicator should be 1 for units that are censored and 0 for those still under observation.
+Units often drop out of a study before the outcome is measured, and if they do so for reasons related to the covariates, restricting the analysis to those who remain introduces bias in the same way confounding does. *WeightIt* can estimate inverse probability of censoring weights (IPCW) to adjust for this, which can be requested by wrapping a censoring indicator in `.cens()` on the left side of a model formula. The indicator should be 1/`TRUE` for units that are censored and 0/`FALSE` for those still under observation.
 
 Here we simulate loss to follow-up after the second time point, which makes everything measured afterward unavailable for those units:
 
 ```{r}
 set.seed(2000)
 msmdata2 <- msmdata
-msmdata2$C_2 <- rbinom(nrow(msmdata2), 1,
-                       prob = plogis(-2 + .2 * msmdata2$X1_1))
+
+# Generate censoring probability, to occur between A_2 and X1_2
+cens <- rbinom(nrow(msmdata2), 1,
+               prob = plogis(-2 + .2 * msmdata2$X1_1 + .3 * msmdata2$X1_0))
+
+# Apply censoring to all variables measured after censoring
+is.na(msmdata2[cens == 1, c("X1_2", "X2_2", "A_3", "Y_B")]) <- TRUE
 
 # Post-censoring variables are unobserved for censored units
-cens <- msmdata2$C_2 == 1
-msmdata2[cens, c("X1_2", "X2_2", "A_3")] <- NA
+msmdata2$C_2 <- with(msmdata2,
+                     is.na(X1_2) | is.na(X2_2) |
+                       is.na(A_3) | is.na(Y_B))
 ```
 
 The censoring model goes into `formula.list` in temporal order, alongside the treatment models:
@@ -221,7 +227,7 @@ The censoring model goes into `formula.list` in temporal order, alongside the tr
 ```{r}
 (Wc <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
                         A_2 ~ X1_1 + X2_1 + A_1,
-                        .cens(C_2) ~ X1_1 + X2_1 + A_1,
+                        .cens(C_2) ~ X1_1 + X2_1 + A_1 + A_2,
                         A_3 ~ X1_2 + X2_2 + A_2),
                    data = msmdata2, method = "glm"))
 ```
@@ -229,19 +235,17 @@ The censoring model goes into `formula.list` in temporal order, alongside the tr
 Each model is fit only among the units still under observation when it is reached, so the missing values for censored units are not a problem. Censored units receive a weight of exactly 0:
 
 ```{r}
-all(Wc$weights[cens] == 0)
+all(Wc$weights[msmdata2$C_2] == 0)
 ```
 
 Because they have a weight of 0, censored units contribute nothing to a weighted outcome model, and `glm_weightit()` tolerates their missing outcomes. Standard errors that account for estimation of both the treatment and censoring weights are still available:
 
 ```{r}
-msmdata2$Y_B[cens] <- NA
-
-fitc <- glm_weightit(Y_B ~ A_1 * A_2 * A_3,
+fitc <- glm_weightit(Y_B ~ A_1 + A_2 + A_3,
                      data = msmdata2, weightit = Wc,
                      family = binomial)
 
-summary(fitc)$coefficients[1:4, ]
+summary(fitc)
 ```
 
 See `?.cens` for more, including how to assess balance, which requires a little care because the target of a censoring model is the full at-risk sample rather than another treatment group.

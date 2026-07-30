@@ -19,14 +19,14 @@ Depends:
     R (>= 4.1.0)
 Imports:
     cobalt (>= 4.6.1),
-    ggplot2 (>= 3.4.0),
+    ggplot2 (>= 4.0.0),
     cli (>= 3.6.5),
     rlang (>= 1.1.0),
     sandwich,
     generics,
     utils,
     stats,
-    arg (>= 0.1.0)
+    arg (>= 0.2.1)
 Suggests:
     rootSolve (>= 1.8.2.4),
     CBPS (>= 0.18),

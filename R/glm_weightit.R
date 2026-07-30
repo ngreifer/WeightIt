@@ -72,11 +72,11 @@
 #' of variance matrix requested. If `cluster` is supplied, it will be stored in
 #' the `"cluster"` attribute of the output object, even if not used.
 #'
-#' The `model` component of the output object (also the `model.frame()` output)
+#' The `model` component of the output object (also the [model.frame()] output)
 #' will include two extra columns when `weightit` is supplied: `(weights)`
 #' containing the weights used in the model (the product of the estimated
 #' weights and the sampling weights, if any) and `(s.weights)` containing the
-#' sampling weights, which will be 1 if `s.weights` is not supplied in the
+#' sampling weights, which will all be 1 if `s.weights` is not supplied in the
 #' original `weightit()` call.
 #'
 #' @details
@@ -125,7 +125,6 @@
 #' @seealso
 #' * [lm()] and [glm()] for fitting (generalized) linear models without
 #' adjusting standard errors for estimation of the weights.
-#' * [glm_weightit()] for fitting generalized linear models that adjust for estimation of the weights.
 #' * [multinom_weightit()] for fitting multinomial regression models that adjust for estimation of the weights.
 #' * [ordinal_weightit()] for fitting ordinal regression models that adjust for estimation of the weights.
 #' * [coxph_weightit()] for fitting Cox proportional hazards models that adjust for estimation of the weights.
@@ -194,11 +193,7 @@ glm_weightit <- function(formula, data, family = gaussian, weightit = NULL,
   }
 
   if (identical(family, "multinomial")) {
-    arg::wrn('using {.fun glm_weightit}  with {.code family = "multinomial"} is deprecated. Please use {.fun multinom_weightit} instead')
-    model_call[[1L]] <- quote(WeightIt::multinom_weightit)
-    model_call[["family"]] <- NULL
-
-    return(eval.parent(model_call))
+    arg::err('{.code family = "multinomial"} is not allowed with {.fun glm_weightit}. Please use {.fun multinom_weightit} instead')
   }
 
   ###

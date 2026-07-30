@@ -13,7 +13,7 @@ eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
 # Censoring depends on X1 and X3, so the uncensored units are a biased subsample
-make_cens_data <- function(seed = 1L, p = -0.9) {
+make_cens_data <- function(seed = 123L, p = -0.9) {
   set.seed(seed)
   d <- test_data
   d$C <- rbinom(nrow(d), 1L, prob = plogis(p + 0.8 * d$X1 - 0.5 * d$X3))
@@ -276,7 +276,7 @@ test_that("options that do not apply to censoring are rejected or ignored", {
 
   # NAs in the indicator are an error for point treatments (there is no risk set)
   dna <- d
-  dna$C[1L] <- NA
+  is.na(dna$C[1L]) <- TRUE
   expect_error(weightit(.cens(C) ~ X1, data = dna, method = "glm"),
                "censoring indicator")
 
@@ -668,7 +668,7 @@ test_that("M-estimation parts are internally consistent", {
   }
 
   # glm with non-default links
-  for (lk in c("probit", "cloglog")) {
+  for (lk in c("probit", "cloglog", "br.logit"[rlang::is_installed("brglm2")])) {
     W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "glm", link = lk)
     expect_M_parts_okay(W, tolerance = eps)
   }
@@ -709,7 +709,7 @@ test_that("censoring composes with by", {
   W_int <- weightit(.cens(C) ~ G * (X1 + X2), data = d, method = "glm")
 
   d$Y <- d$Y_B
-  d$Y[d$C == 1L] <- NA
+  is.na(d$Y[d$C == 1L]) <- TRUE
 
   f_by <- glm_weightit(Y ~ X1, data = d, weightit = W, vcov = "asympt",
                        family = binomial)
@@ -757,9 +757,9 @@ test_that("glm_weightit tolerates NAs in censored units", {
 
   # After censoring, the outcome and later covariates are unobserved
   d$Y <- d$Y_C
-  d$Y[cens] <- NA
+  is.na(d$Y[cens]) <- TRUE
   d$Xpost <- d$X2
-  d$Xpost[cens] <- NA
+  is.na(d$Xpost[cens]) <- TRUE
 
   W <- weightit(.cens(C) ~ X1 + X3, data = d, method = "glm")
 
@@ -786,7 +786,7 @@ test_that("glm_weightit tolerates NAs in censored units", {
 
   # A missing value in a NONZERO-weight unit must still error
   dbad <- d
-  dbad$Y[which(!cens)[1L]] <- NA
+  is.na(dbad$Y[which(!cens)[1L]]) <- TRUE
   expect_error(glm_weightit(Y ~ X1 + Xpost, data = dbad, weightit = W,
                             vcov = "asympt"),
                "[Mm]issing")
@@ -797,11 +797,11 @@ test_that("other model types also tolerate NAs in censored units", {
 
   cens <- d$C == 1L
   d$Y <- d$Y_C
-  d$Y[cens] <- NA
+  is.na(d$Y[cens]) <- TRUE
   d$Yb <- factor(d$Y_B)
-  d$Yb[cens] <- NA
+  is.na(d$Yb[cens]) <- TRUE
   d$Yo <- d$Y_O
-  d$Yo[cens] <- NA
+  is.na(d$Yo[cens]) <- TRUE
 
   W <- weightit(.cens(C) ~ X1 + X3, data = d, method = "glm")
 
@@ -838,8 +838,8 @@ test_that("coxph_weightit tolerates zero weights and NA event times", {
   d$time <- pmin(d$Y_S, cutoff)
 
   # After censoring, the event time is never ascertained
-  d$time[cens] <- NA
-  d$event[cens] <- NA
+  is.na(d$time[cens]) <- TRUE
+  is.na(d$event[cens]) <- TRUE
 
   W <- weightit(.cens(C) ~ X1 + X3, data = d, method = "glm")
 
@@ -891,7 +891,7 @@ test_that("coxph_weightit tolerates zero weights and NA event times", {
 
   # A missing value in a NONZERO-weight unit must still error
   dbad <- d
-  dbad$time[which(!cens)[1L]] <- NA
+  is.na(dbad$time[which(!cens)[1L]]) <- TRUE
   expect_error(coxph_weightit(survival::Surv(time, event) ~ A + X2, data = dbad,
                               weightit = W, vcov = "asympt"),
                "[Mm]issing")
@@ -912,8 +912,8 @@ test_that("coxph_weightit variance types work with censoring weights", {
   cutoff <- quantile(d$Y_S, .8)
   d$event <- as.numeric(d$Y_S < cutoff)
   d$time <- pmin(d$Y_S, cutoff)
-  d$time[d$C == 1L] <- NA
-  d$event[d$C == 1L] <- NA
+  is.na(d$time[d$C == 1L]) <- TRUE
+  is.na(d$event[d$C == 1L]) <- TRUE
 
   W <- weightit(.cens(C) ~ X1 + X3, data = d, method = "glm")
 
@@ -949,7 +949,7 @@ test_that("HC0 and bootstrap variances also work", {
   d <- make_cens_data()
 
   d$Y <- d$Y_C
-  d$Y[d$C == 1L] <- NA
+  is.na(d$Y[d$C == 1L]) <- TRUE
 
   W <- weightit(.cens(C) ~ X1 + X3, data = d, method = "glm")
 
@@ -968,7 +968,7 @@ make_msm_cens_data <- function(seed = 1234L) {
   set.seed(seed)
   d <- msmdata
   d$C_2 <- rbinom(nrow(d), 1L, prob = plogis(-2 + 0.2 * d$X1_1 - 0.3 * d$A_1))
-  d[d$C_2 == 1L, c("X1_2", "X2_2", "A_3")] <- NA
+  is.na(d[d$C_2 == 1L, c("X1_2", "X2_2", "A_3")]) <- TRUE
   d
 }
 
@@ -1055,7 +1055,7 @@ test_that("weightitMSM censoring works with glm_weightit and NA outcomes", {
   cens <- d$C_2 == 1L
 
   d$Y <- d$Y_B
-  d$Y[cens] <- NA
+  is.na(d$Y[cens]) <- TRUE
 
   W <- weightitMSM(msm_cens_formulas, data = d, method = "glm")
 
@@ -1081,8 +1081,8 @@ test_that("weightitMSM censoring works with coxph_weightit", {
   cutoff <- quantile(Y_S, .8)
   d$event <- as.numeric(Y_S < cutoff)
   d$time <- pmin(Y_S, cutoff)
-  d$time[cens] <- NA
-  d$event[cens] <- NA
+  is.na(d$time[cens]) <- TRUE
+  is.na(d$event[cens]) <- TRUE
 
   W <- weightitMSM(msm_cens_formulas, data = d, method = "glm")
 
@@ -1112,11 +1112,11 @@ test_that("multiple censoring time points give nested risk sets", {
   c1 <- d$C_1 == 1L
 
   d$C_2 <- rbinom(n, 1L, plogis(-2 + 0.2 * d$X1_1))
-  d$C_2[c1] <- NA
+  is.na(d$C_2[c1]) <- TRUE
   c2 <- !is.na(d$C_2) & d$C_2 == 1L
 
-  d[c1, c("X1_1", "X2_1", "A_2", "X1_2", "X2_2", "A_3")] <- NA
-  d[c2, c("X1_2", "X2_2", "A_3")] <- NA
+  is.na(d[c1, c("X1_1", "X2_1", "A_2", "X1_2", "X2_2", "A_3")]) <- TRUE
+  is.na(d[c2, c("X1_2", "X2_2", "A_3")]) <- TRUE
 
   ever <- c1 | c2
 
@@ -1217,7 +1217,7 @@ test_that("weightitMSM censoring handles missing values by risk set", {
 
   # A missing value in a unit still under observation is an error
   dbad <- d
-  dbad$A_3[which(d$C_2 == 0L)[1L]] <- NA
+  is.na(dbad$A_3[which(d$C_2 == 0L)[1L]]) <- TRUE
   expect_error(weightitMSM(msm_cens_formulas, data = dbad, method = "glm"),
                "still under observation")
 })
@@ -1236,7 +1236,7 @@ test_that("weightitMSM censoring error handling", {
 
   # Without censoring, missing treatment values remain an error
   dna <- msmdata
-  dna$A_3[1L] <- NA
+  is.na(dna$A_3[1L]) <- TRUE
   expect_error(weightitMSM(list(A_1 ~ X1_0, A_2 ~ X1_1 + A_1, A_3 ~ X1_2 + A_2),
                            data = dna, method = "glm"),
                "[Mm]issing values")
@@ -1466,8 +1466,8 @@ test_that("degenerate Cox models still work with zero weights", {
   cutoff <- quantile(d$Y_S, .8)
   d$event <- as.numeric(d$Y_S < cutoff)
   d$time <- pmin(d$Y_S, cutoff)
-  d$time[d$C == 1L] <- NA
-  d$event[d$C == 1L] <- NA
+  is.na(d$time[d$C == 1L]) <- TRUE
+  is.na(d$event[d$C == 1L]) <- TRUE
 
   #A collinear duplicate of an existing covariate
   d$X2b <- d$X2

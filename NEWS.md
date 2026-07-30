@@ -47,6 +47,8 @@ WeightIt News and Updates
 
 * `nobs()` on a `coxph_weightit` object now returns the number of units contributing to the fit (i.e., those with a nonzero weight), consistent with the other `*_weightit()` methods. Previously the method was defined but never registered, so dispatch fell through to `survival:::nobs.coxph()`, which returns the number of *events*. `AIC()` and `BIC()` are unaffected, as they read the `"nobs"` attribute that `logLik()` carries, but the residual degrees of freedom reported by `anova()` change accordingly.
 
+* Passing `family = "multinomial"` to `glm_weightit()` now results in an error. Previously it would route the input to `multinom_weightit()`.
+
 ## Bug fixes
 
 * Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could cause the FISTA solver to stop before the requested balance tolerance was reliably achieved. Thanks to Ivan Geshev for pointing it out.

@@ -1,10 +1,7 @@
 #' Fitting (Weighted) Multinomial Regression Models
 #'
 #' @description
-#' `multinom_weightit()` fits a multinomial logistic regression model with a
-#' covariance matrix that accounts for estimation of weights, if supplied. By default, this function uses M-estimation to construct a robust covariance
-#' matrix using the estimating equations for the weighting model and the outcome
-#' model when available.
+#' `multinom_weightit()` fits a multinomial logistic regression model with a covariance matrix that accounts for estimation of weights, if supplied. By default, this function uses M-estimation to construct a robust covariance matrix using the estimating equations for the weighting model and the outcome model when available.
 #'
 #' @inheritParams glm_weightit
 #' @param link a string corresponding to the desired link function. Currently, only

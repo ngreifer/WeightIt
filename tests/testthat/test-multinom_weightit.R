@@ -15,13 +15,13 @@ test_that("No weights", {
 
   expect_no_condition({
     fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                         data = test_data)
+                              data = test_data)
   })
 
   #M-estimation for mlogit
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                        data = test_data, vcov = "HC0")
+                             data = test_data, vcov = "HC0")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -40,7 +40,7 @@ test_that("No weights", {
 
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
-                           data = test_data)
+                             data = test_data)
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -53,15 +53,15 @@ test_that("No weights", {
   #Offset
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
-                        data = test_data)
+                             data = test_data)
   })
 
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)
 
   #Test using sandwich functions
   expect_no_condition({
-    fit0 <- glm_weightit(Y_B ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
-                         data = test_data, family = binomial)
+    fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9),
+                              data = test_data)
   })
 
   expect_equal(vcov(fit0), sandwich::sandwich(fit0),
@@ -90,13 +90,13 @@ test_that("Binary treatment", {
 
   expect_no_condition({
     fit0 <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                            data = test_data, weightit = W)
+                              data = test_data, weightit = W)
   })
 
   #M-estimation for mlogit
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5),
-                           data = test_data,  weightit = W, vcov = "asympt")
+                             data = test_data,  weightit = W, vcov = "asympt")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -104,7 +104,7 @@ test_that("Binary treatment", {
 
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A  * (X1 + X2 + X3 + X4 + X5),
-                           data = test_data, weightit = W, vcov = "HC0")
+                             data = test_data, weightit = W, vcov = "HC0")
   })
 
   mlogit_data <- dfidx::dfidx(transform(test_data, .weights = W$weights),
@@ -115,7 +115,7 @@ test_that("Binary treatment", {
                           weights = .weights, tol = 1e-12, ftol = 1e-12)
 
   ind <- unlist(split(seq_along(coef(fit)), rep(seq_len(nlevels(test_data$Y_M) - 1),
-                                                 length(coef(fit))/(nlevels(test_data$Y_M) - 1))))
+                                                length(coef(fit))/(nlevels(test_data$Y_M) - 1))))
 
   expect_equal(unname(coef(fit)), unname(coef(fit_g)[ind]),
                tolerance = eps)
@@ -124,7 +124,7 @@ test_that("Binary treatment", {
 
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5), cluster = ~clus,
-                           data = test_data, weightit = W, vcov = "HC0")
+                             data = test_data, weightit = W, vcov = "HC0")
   })
 
   expect_equal(coef(fit0), coef(fit), tolerance = eps)
@@ -137,7 +137,7 @@ test_that("Binary treatment", {
   #Offset
   expect_no_condition({
     fit <- multinom_weightit(Y_M ~ A * (X1 + X2 + X3 + X4 + X5) + offset(off),
-                           data = test_data)
+                             data = test_data)
   })
 
   expect_not_equal(coef(fit0), coef(fit), tolerance = eps)

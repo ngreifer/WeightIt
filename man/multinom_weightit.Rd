@@ -100,10 +100,7 @@ sampling weights, which will be 1 if \code{s.weights} is not supplied in the
 original \code{weightit()} call.
 }
 \description{
-\code{multinom_weightit()} fits a multinomial logistic regression model with a
-covariance matrix that accounts for estimation of weights, if supplied. By default, this function uses M-estimation to construct a robust covariance
-matrix using the estimating equations for the weighting model and the outcome
-model when available.
+\code{multinom_weightit()} fits a multinomial logistic regression model with a covariance matrix that accounts for estimation of weights, if supplied. By default, this function uses M-estimation to construct a robust covariance matrix using the estimating equations for the weighting model and the outcome model when available.
 }
 \details{
 \code{multinom_weightit()} implements multinomial logistic regression using a
