@@ -69,11 +69,11 @@ of weights that target the provided estimand.</p>
 
 
 <dl><dt id="arg-ps">ps<a class="anchor" aria-label="anchor" href="#arg-ps"></a></dt>
-<dd><p>a vector, matrix, or data frame of propensity scores. See Details.</p></dd>
+<dd><p>a vector, matrix, or data frame of propensity scores. See Details. When <code>treat</code> is a censoring indicator, must be a vector of the probability of <em>being censored</em>.</p></dd>
 
 
 <dt id="arg-treat">treat<a class="anchor" aria-label="anchor" href="#arg-treat"></a></dt>
-<dd><p>a vector of treatment status for each individual. See Details.</p></dd>
+<dd><p>a vector of treatment status for each individual. See Details. Can also be a censoring indicator created with <code><a href="dot-cens.html">.cens()</a></code>, in which case inverse probability of censoring weights are returned and the remaining arguments do not apply.</p></dd>
 
 
 <dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
@@ -144,6 +144,13 @@ w^{ATOS}_i &amp;= w^{ATE}_i \times \mathbb{1}\left(\alpha &lt; p_{2, i} &lt; 1 -
 \end{aligned}
 $$</p>
 <p><code>get_w_from_ps()</code> can only be used with binary and multi-category treatments.</p><div class="section">
+<h3 id="censoring-indicators">Censoring indicators<a class="anchor" aria-label="anchor" href="#censoring-indicators"></a></h3>
+
+
+<p>When <code>treat</code> is a censoring indicator created with <code><a href="dot-cens.html">.cens()</a></code>, <code>get_w_from_ps()</code> instead returns inverse probability of censoring weights: \((1 - e(X))^{-1}\) for the units still under observation and exactly 0 for the censored units, where <code>ps</code> is \(e(X) = P(C = 1 | X)\), the probability of <em>being censored</em>. <code>estimand</code>, <code>focal</code>, <code>treated</code>, <code>subclass</code>, and <code>stabilize</code> do not apply and are ignored with a warning. See <code><a href="dot-cens.html">.cens()</a></code>.</p>
+</div>
+
+<div class="section">
 <h3 id="supplying-the-ps-argument">Supplying the <code>ps</code> argument<a class="anchor" aria-label="anchor" href="#supplying-the-ps-argument"></a></h3>
 
 
@@ -292,12 +299,12 @@ nonexperimental data. <em>Psychological Methods</em>, 17(1), 44–60.
 <span class="r-in"><span><span class="va">ps.multi</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/fitted.values.html" class="external-link">fitted</a></span><span class="op">(</span><span class="va">multi.fit</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">ps.multi</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           A         B         C</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.3275345 0.2714686 0.4009970</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.3110696 0.3349112 0.3540192</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.3261981 0.3602605 0.3135413</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.3176130 0.3061721 0.3762149</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.3214072 0.3244588 0.3541339</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.3294088 0.3469696 0.3236216</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.2858225 0.4168571 0.2973204</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.2951184 0.3688008 0.3360807</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.2101576 0.4491344 0.3407080</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 0.2821068 0.3908246 0.3270686</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 0.2307228 0.4209003 0.3483769</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 0.2814126 0.3804613 0.3381262</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">w5</span> <span class="op">&lt;-</span> <span class="fu">get_w_from_ps</span><span class="op">(</span><span class="va">ps.multi</span>, treat <span class="op">=</span> <span class="va">T3</span>,</span></span>
 <span class="r-in"><span>                    estimand <span class="op">=</span> <span class="st">"ATE"</span><span class="op">)</span></span></span>

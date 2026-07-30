@@ -20,9 +20,11 @@ estimate a treatment effect and corresponding standard error or
 confidence interval. This guide will go through these steps for two
 observational studies: estimating the causal effect of a point treatment
 on an outcome, and estimating the causal parameters of a marginal
-structural model with multiple treatment periods. This is not meant to
-be a definitive guide, but rather an introduction to the relevant
-issues.
+structural model with multiple treatment periods. In addition, we will
+demonstrate the use of *WeightIt* to estimate censoring weights in the
+case of informative censoring. This is not meant to be a definitive
+guide, but rather an introduction to the relevant issues and
+demonstration of *WeightIt*’s capabilities.
 
 ## Balancing Weights for a Point Treatment
 
@@ -265,7 +267,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_hispan  Binary        0 Balanced, <0.05           .
     ## race_white   Binary       -0 Balanced, <0.05           .
     ## married      Binary       -0 Balanced, <0.05           .
-    ## nodegree     Binary       -0 Balanced, <0.05           .
+    ## nodegree     Binary        0 Balanced, <0.05           .
     ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
@@ -681,6 +683,115 @@ hypotheses(p, "b8 - b1 = 0")
 These results indicate that receiving treatment at all time points
 reduces the risk of the outcome relative to not receiving treatment at
 all.
+
+### Accounting for censoring
+
+Units often drop out of a study before the outcome is measured, and if
+they do so for reasons related to the covariates, restricting the
+analysis to those who remain introduces bias in the same way confounding
+does. *WeightIt* can estimate inverse probability of censoring weights
+(IPCW) to adjust for this, which can be requested by wrapping a
+censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+on the left side of a model formula. The indicator should be 1/`TRUE`
+for units that are censored and 0/`FALSE` for those still under
+observation.
+
+Here we simulate loss to follow-up after the second time point, which
+makes everything measured afterward unavailable for those units:
+
+``` r
+
+set.seed(2000)
+msmdata2 <- msmdata
+
+# Generate censoring probability, to occur between A_2 and X1_2
+cens <- rbinom(nrow(msmdata2), 1,
+               prob = plogis(-2 + .2 * msmdata2$X1_1 + .3 * msmdata2$X1_0))
+
+# Apply censoring to all variables measured after censoring
+is.na(msmdata2[cens == 1, c("X1_2", "X2_2", "A_3", "Y_B")]) <- TRUE
+
+# Post-censoring variables are unobserved for censored units
+msmdata2$C_2 <- with(msmdata2,
+                     is.na(X1_2) | is.na(X2_2) |
+                       is.na(A_3) | is.na(Y_B))
+```
+
+The censoring model goes into `formula.list` in temporal order,
+alongside the treatment models:
+
+``` r
+
+(Wc <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                        A_2 ~ X1_1 + X2_1 + A_1,
+                        .cens(C_2) ~ X1_1 + X2_1 + A_1 + A_2,
+                        A_3 ~ X1_2 + X2_2 + A_2),
+                   data = msmdata2, method = "glm"))
+```
+
+    ## A weightitMSM object
+    ##  - method: "glm" (propensity score weighting with GLM)
+    ##  - number of obs.: 7500
+    ##  - sampling weights: none
+    ##  - number of time points: 3 (A_1, A_2, A_3)
+    ##  - treatment:
+    ##     + time 1: 2-category
+    ##     + time 2: 2-category
+    ##     + time 3: 2-category
+    ##  - censoring (IPCW):
+    ##     + C_2: 3864 of 7500 units censored
+    ##  - covariates:
+    ##     + baseline: X1_0, X2_0
+    ##     + after time 1: X1_1, X2_1, A_1
+    ##     + after time 2: X1_2, X2_2, A_2
+
+Each model is fit only among the units still under observation when it
+is reached, so the missing values for censored units are not a problem.
+Censored units receive a weight of exactly 0:
+
+``` r
+
+all(Wc$weights[msmdata2$C_2] == 0)
+```
+
+    ## [1] TRUE
+
+Because they have a weight of 0, censored units contribute nothing to a
+weighted outcome model, and
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+tolerates their missing outcomes. Standard errors that account for
+estimation of both the treatment and censoring weights are still
+available:
+
+``` r
+
+fitc <- glm_weightit(Y_B ~ A_1 + A_2 + A_3,
+                     data = msmdata2, weightit = Wc,
+                     family = binomial)
+
+summary(fitc)
+```
+
+    ## 
+    ## Call:
+    ## glm_weightit(formula = Y_B ~ A_1 + A_2 + A_3, data = msmdata2, 
+    ##     family = binomial, weightit = Wc)
+    ## 
+    ## Coefficients:
+    ##             Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)    0.511      0.137    3.73  0.00019 ***
+    ## A_1           -0.104      0.159   -0.65  0.51397    
+    ## A_2           -0.727      0.154   -4.72  2.3e-06 ***
+    ## A_3           -0.202      0.145   -1.39  0.16377    
+    ## Standard error: HC0 robust (adjusted for estimation of weights)
+    ## 
+
+See
+[`?.cens`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+for more, including how to assess balance, which requires a little care
+because the target of a censoring model is the full at-risk sample
+rather than another treatment group.
 
 ## References
 

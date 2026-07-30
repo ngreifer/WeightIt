@@ -5,7 +5,8 @@ probability tilting by setting `method = "ipt"` in the call to
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-This method can be used with binary and multi-category treatments.
+This method can be used with binary and multi-category treatments, as
+well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using a
 modification of the usual generalized linear model score equations to
@@ -35,6 +36,16 @@ non-focal (i.e., control) group.
 
 Inverse probability tilting is not compatible with continuous
 treatments.
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+the censoring model is tilted so that the weighted covariate means of
+the units still under observation equal those of the full at-risk
+sample. Only one set of tilting parameters is solved for, rather than
+one per treatment group as for the ATE. The censored units receive a
+weight of 0.
 
 ### Longitudinal Treatments
 

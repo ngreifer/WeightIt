@@ -157,6 +157,17 @@ weights if a `weightit` or `weightitMSM` object is supplied to the
   observation per unit (and the `id` and `istate` arguments to `coxph()`
   are ignored)
 
+- Weights of 0 are allowed (`coxph()` rejects them). Such units are
+  omitted from the model fit, which is exact rather than an
+  approximation: a unit with a weight of 0 contributes neither its own
+  term nor anything to any risk set denominator, both of which are
+  weighted by the same weights. Missing values in the model variables
+  are tolerated for these units, which makes it possible to fit an
+  outcome model after censoring, where the event time is unascertained
+  for censored units (see
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)).
+  Missing values in units with a nonzero weight produce an error.
+
 When no argument is supplied to `weightit` or there is no `"Mparts"`
 attribute in the supplied object, the default variance matrix returned
 will be the "HC0" sandwich variance matrix, which is robust to

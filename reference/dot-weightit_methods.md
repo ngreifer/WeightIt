@@ -26,6 +26,10 @@ Each component is itself a list containing the following components:
 
   at least one of `"binary"`, `"multinomial"`, or `"continuous"`
   indicating which treatment types are available for this method.
+  `"censoring"` indicates the method can also estimate inverse
+  probability of censoring weights when the censoring indicator is
+  wrapped in
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md).
 
 - `estimand`:
 

@@ -8,7 +8,7 @@
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Inverse Probability Tilting — method_ipt"><meta name="description" content='This page explains the details of estimating weights using
 inverse probability tilting by setting method = "ipt" in the call to
 weightit() or weightitMSM(). This method can be used with binary and
-multi-category treatments.
+multi-category treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating propensity scores using a
 modification of the usual generalized linear model score equations to enforce
 balance and then converting those propensity scores into weights using a
@@ -41,6 +41,13 @@ Continuous Treatments
 
 
 Inverse probability tilting is not compatible with continuous treatments.
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), the censoring model is tilted so that the weighted covariate means of the units still under observation equal those of the full at-risk sample. Only one set of tilting parameters is solved for, rather than one per treatment group as for the ATE. The censored units receive a weight of 0.
 
 
 
@@ -82,7 +89,7 @@ vignette("estimating-effects") for details.
 '><meta property="og:description" content='This page explains the details of estimating weights using
 inverse probability tilting by setting method = "ipt" in the call to
 weightit() or weightitMSM(). This method can be used with binary and
-multi-category treatments.
+multi-category treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating propensity scores using a
 modification of the usual generalized linear model score equations to enforce
 balance and then converting those propensity scores into weights using a
@@ -115,6 +122,13 @@ Continuous Treatments
 
 
 Inverse probability tilting is not compatible with continuous treatments.
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), the censoring model is tilted so that the weighted covariate means of the units still under observation equal those of the full at-risk sample. Only one set of tilting parameters is solved for, rather than one per treatment group as for the ATE. The censored units receive a weight of 0.
 
 
 
@@ -196,7 +210,7 @@ vignette("estimating-effects") for details.
     <p>This page explains the details of estimating weights using
 inverse probability tilting by setting <code>method = "ipt"</code> in the call to
 <code><a href="weightit.html">weightit()</a></code> or <code><a href="weightitMSM.html">weightitMSM()</a></code>. This method can be used with binary and
-multi-category treatments.</p>
+multi-category treatments, as well as for estimating censoring weights.</p>
 <p>In general, this method relies on estimating propensity scores using a
 modification of the usual generalized linear model score equations to enforce
 balance and then converting those propensity scores into weights using a
@@ -229,6 +243,13 @@ group.</p>
 
 
 <p>Inverse probability tilting is not compatible with continuous treatments.</p>
+</div>
+
+<div class="section">
+<h3 id="censoring-weights">Censoring Weights<a class="anchor" aria-label="anchor" href="#censoring-weights"></a></h3>
+
+
+<p>For censoring weights, requested by wrapping the censoring indicator in <code><a href="dot-cens.html">.cens()</a></code>, the censoring model is tilted so that the weighted covariate means of the units still under observation equal those of the full at-risk sample. Only one set of tilting parameters is solved for, rather than one per treatment group as for the ATE. The censored units receive a weight of 0.</p>
 </div>
 
 <div class="section">

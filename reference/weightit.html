@@ -255,6 +255,36 @@ information about them, including additional arguments and outputs (e.g.,
 when <code>include.obj = TRUE</code>), how missing values are treated, which estimands
 are allowed, and whether sampling weights are allowed.</p><table class="table table"><tr><td><code><a href="method_glm.html">"glm"</a></code></td><td>Propensity score weighting using generalized linear models</td></tr><tr><td><code><a href="method_gbm.html">"gbm"</a></code></td><td>Propensity score weighting using generalized boosted modeling</td></tr><tr><td><code><a href="method_cbps.html">"cbps"</a></code></td><td>Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_npcbps.html">"npcbps"</a></code></td><td>Non-parametric Covariate Balancing Propensity Score weighting</td></tr><tr><td><code><a href="method_ebal.html">"ebal"</a></code></td><td>Entropy balancing</td></tr><tr><td><code><a href="method_ipt.html">"ipt"</a></code></td><td>Inverse probability tilting</td></tr><tr><td><code><a href="method_optweight.html">"optweight"</a></code></td><td>Stable balancing weights</td></tr><tr><td><code><a href="method_super.html">"super"</a></code></td><td>Propensity score weighting using SuperLearner</td></tr><tr><td><code><a href="method_bart.html">"bart"</a></code></td><td>Propensity score weighting using Bayesian additive regression trees (BART)</td></tr><tr><td><code><a href="method_energy.html">"energy"</a></code></td><td>Energy balancing</td></tr><tr><td><code><a href="method_cfd.html">"cfd"</a></code></td><td>Characteristic function distance balancing</td></tr></table><p><code>method</code> can also be supplied as a user-defined function; see <code><a href="method_user.html">method_user</a></code>
 for instructions and examples. Setting <code>method = NULL</code> computes unit weights.</p><div class="section">
+<h3 id="censoring-weights-ipcw-">Censoring weights (IPCW)<a class="anchor" aria-label="anchor" href="#censoring-weights-ipcw-"></a></h3>
+
+
+<p>Wrapping the left side of <code>formula</code> in <code><a href="dot-cens.html">.cens()</a></code> requests inverse
+probability of censoring weights instead of treatment weights, as in
+<code>weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")</code>. Censoring is treated as
+its own treatment type, distinct from binary, multi-category, and continuous
+treatments; the indicator must be 0 for units still under observation and 1 for
+units that are censored.</p>
+<p>Weights are estimated only for the units still under observation, and are those
+that make their covariate distribution resemble that of the full at-risk sample.
+Writing \(e(X) = P(C = 1 | X)\), the weights are \(1 / (1 - e(X))\) for units with
+\(C = 0\) and exactly 0 for units with \(C = 1\). Because only one group is weighted,
+the estimation problem is smaller and better conditioned than the corresponding
+binary-treatment problem, which would additionally solve for weights among the
+censored units; this matters most when few units are censored.</p>
+<p><code>estimand</code>, <code>focal</code>, and <code>subclass</code> do not apply and are rejected or ignored.
+<code>by</code> and <code>stabilize</code> can be used; stabilization divides the weights by those from
+a marginal censoring model, giving \(P(C = 0) / P(C = 0 | X)\). <code>ps</code> is the
+predicted probability of <em>being censored</em>. Not all methods support censoring
+weights; see the <code>treat_type</code> component of <a href="dot-weightit_methods.html">.weightit_methods</a>.</p>
+<p>Because censored units receive a weight of exactly 0, they contribute nothing to a
+weighted outcome model, and <code><a href="glm_weightit.html">glm_weightit()</a></code> and friends tolerate missing values
+in the model variables for those units, including a missing event time in the
+<code>Surv()</code> response of a <code><a href="coxph_weightit.html">coxph_weightit()</a></code> model. Missing values in units with a
+nonzero weight still produce an error. See <code><a href="dot-cens.html">.cens()</a></code> for how to
+assess balance, which requires a little care.</p>
+</div>
+
+<div class="section">
 <h3 id="estimand-and-focal"><code>estimand</code> and <code>focal</code><a class="anchor" aria-label="anchor" href="#estimand-and-focal"></a></h3>
 
 
@@ -295,9 +325,7 @@ references section of the method used.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="weightitMSM.html">weightitMSM()</a></code> for estimating weights with sequential (i.e.,
-longitudinal) treatments for use in estimating marginal structural models
-(MSMs).</p>
+    <div class="dont-index"><p><code><a href="weightitMSM.html">weightitMSM()</a></code> for estimating weights with sequential (i.e., longitudinal) treatments or with both treatment and censoring indicators for use in estimating marginal structural models (MSMs).</p>
 <p><code><a href="weightit.fit.html">weightit.fit()</a></code>, which is a lower-level dispatcher function that accepts a
 matrix of covariates and a vector of treatment statuses rather than a formula
 and data frame and performs minimal argument checking and processing. It may

@@ -266,7 +266,40 @@ treatment history encoded in separate variables.</p>
 <p>The <code>"cbps"</code> method, which calls <code>CBPS()</code> in <span class="pkg">CBPS</span>, will yield different
 results from <code>CBMSM()</code> in <span class="pkg">CBPS</span> because <code>CBMSM()</code> takes a different
 approach to generating weights than simply estimating several time-specific
-models.</p>
+models.</p><div class="section">
+<h3 id="censoring-weights-ipcw-">Censoring weights (IPCW)<a class="anchor" aria-label="anchor" href="#censoring-weights-ipcw-"></a></h3>
+
+
+<p>Censoring can be modeled by including entries in <code>formula.list</code> whose left side
+is wrapped in <code><a href="dot-cens.html">.cens()</a></code>, placed in temporal order among the treatment
+models. For example,</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">weightitMSM</span>(<span class="fu">list</span>(A_1 <span class="sc">~</span> X1_0 <span class="sc">+</span> X2_0,</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>                 A_2 <span class="sc">~</span> X1_1 <span class="sc">+</span> X2_1 <span class="sc">+</span> A_1,</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>                 <span class="fu">.cens</span>(C_2) <span class="sc">~</span> X1_1 <span class="sc">+</span> X2_1 <span class="sc">+</span> A_1 <span class="sc">+</span> A_2,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>                 A_3 <span class="sc">~</span> X1_2 <span class="sc">+</span> X2_2 <span class="sc">+</span> A_2),</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>            <span class="at">data =</span> d, <span class="at">method =</span> <span class="st">"glm"</span>)</span></code></pre><p></p></div>
+<p>models censoring occurring after the second treatment. Each censoring indicator
+must be 0 for units still under observation and 1 for units censored at that time
+point. See <code><a href="dot-cens.html">.cens()</a></code> for details of what the resulting weights
+estimate.</p>
+<p>Every model, treatment or censoring, is fit only among the units still under
+observation when it is reached, and the resulting weights are multiplied together
+across time points as usual. A unit censored at any time point therefore has a
+final weight of exactly 0. Because such units drop out, missing values are
+permitted in the treatments and covariates that follow their censoring; missing
+values among units still under observation remain an error. <code>at.risk</code> in the
+output has one column per time point recording which units were under
+observation when that model was fit.</p>
+<p>Censoring weights are not stabilized by <code>num.formula</code>; each is stabilized by its
+own marginal censoring model when <code>stabilize = TRUE</code>. When <code>num.formula</code> is
+supplied as a list, it should have one entry per <em>treatment</em> time point, ignoring
+the censoring entries.</p>
+<p>Censoring can also be used with <code>is.MSM.method = TRUE</code> when <code>method = "cbps"</code>, in
+which case one set of weights is estimated satisfying the balance conditions at
+every time point simultaneously, each evaluated among the units still under
+observation at that time point. See <code><a href="method_cbps.html">method_cbps</a></code>.</p>
+</div>
+
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

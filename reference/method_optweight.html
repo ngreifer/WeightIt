@@ -6,7 +6,7 @@
     }
   };
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Stable Balancing Weights — method_optweight"><meta name="description" content='This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit(). This method can be used with binary, multi-category, and continuous treatments.
+weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit(). This method can be used with binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
 method relies on optweight::optweight.fit()
@@ -43,6 +43,13 @@ For continuous treatments, this method estimates the weights using
 optweight::optweight.fit()
 . The weights are taken from the output of the
 optweight.fit fit object.
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), optweight::optweight.svy.fit() is used rather than optweight::optweight.fit(). It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. tols are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the 1/P(C = 0 | X) scale; the two differ by a constant factor. M-estimation is not supported.
 
 
 
@@ -84,7 +91,7 @@ M-estimation
 M-estimation is not supported.
 
 '><meta property="og:description" content='This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit(). This method can be used with binary, multi-category, and continuous treatments.
+weights (also known as optimization-based weights) by setting method = "optweight" in the call to weightit(). This method can be used with binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
 method relies on optweight::optweight.fit()
@@ -121,6 +128,13 @@ For continuous treatments, this method estimates the weights using
 optweight::optweight.fit()
 . The weights are taken from the output of the
 optweight.fit fit object.
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), optweight::optweight.svy.fit() is used rather than optweight::optweight.fit(). It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. tols are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the 1/P(C = 0 | X) scale; the two differ by a constant factor. M-estimation is not supported.
 
 
 
@@ -202,7 +216,7 @@ M-estimation is not supported.
 
     <div class="ref-description section level2">
     <p>This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting <code>method = "optweight"</code> in the call to <code><a href="weightit.html">weightit()</a></code>. This method can be used with binary, multi-category, and continuous treatments.</p>
+weights (also known as optimization-based weights) by setting <code>method = "optweight"</code> in the call to <code><a href="weightit.html">weightit()</a></code>. This method can be used with binary, multi-category, and continuous treatments, as well as for estimating censoring weights.</p>
 <p>In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
 method relies on <code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight.fit()</a></code>
@@ -239,6 +253,13 @@ ATT. The weights are taken from the output of the <code>optweight.fit</code> fit
 <code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight.fit()</a></code>
 . The weights are taken from the output of the
 <code>optweight.fit</code> fit object.</p>
+</div>
+
+<div class="section">
+<h3 id="censoring-weights">Censoring Weights<a class="anchor" aria-label="anchor" href="#censoring-weights"></a></h3>
+
+
+<p>For censoring weights, requested by wrapping the censoring indicator in <code><a href="dot-cens.html">.cens()</a></code>, <code><a href="https://ngreifer.github.io/optweight/reference/optweight.svy.html" class="external-link">optweight::optweight.svy.fit()</a></code> is used rather than <code><a href="https://ngreifer.github.io/optweight/reference/optweight.html" class="external-link">optweight::optweight.fit()</a></code>. It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. <code>tols</code> are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the <code>1/P(C = 0 | X)</code> scale; the two differ by a constant factor. M-estimation is not supported.</p>
 </div>
 
 <div class="section">

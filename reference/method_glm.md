@@ -7,7 +7,7 @@ call to
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
 This method can be used with binary, multi-category, and continuous
-treatments.
+treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores with a
 parametric generalized linear model and then converting those propensity
@@ -88,6 +88,17 @@ models; robust (`HC0`) or bootstrap standard errors should be used
 instead when estimating treatment effects (see the M-estimation section
 below and
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)).
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+a single binomial regression model of the probability of being censored
+is fit, and the weights are `1/P(C = 0 | X)` for the units still under
+observation and 0 for the censored units. All of the `link` options,
+`missing` options, and multilevel models described above apply
+unchanged, and the returned propensity score is the probability of
+*being censored*.
 
 ### Longitudinal Treatments
 

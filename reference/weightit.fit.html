@@ -84,6 +84,7 @@ interface that performs minimal argument checking.</p>
 <span>  missing <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  include.obj <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  subset <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -97,7 +98,11 @@ interface that performs minimal argument checking.</p>
 
 
 <dt id="arg-treat">treat<a class="anchor" aria-label="anchor" href="#arg-treat"></a></dt>
-<dd><p>a vector of treatment statuses.</p></dd>
+<dd><p>a vector of treatment statuses. To request inverse probability
+of censoring weights, supply a 0/1 censoring indicator (1 = censored)
+tagged with <code><a href="dot-cens.html">.cens()</a></code>, as in <code>treat = .cens(C)</code>; <code>NA</code> values are
+then allowed outside <code>subset</code>, since a unit censored at an earlier time
+point has no later indicator.</p></dd>
 
 
 <dt id="arg-method">method<a class="anchor" aria-label="anchor" href="#arg-method"></a></dt>
@@ -169,6 +174,15 @@ will be included. See the individual pages for each method for information
 on what object will be included if <code>TRUE</code>.</p></dd>
 
 
+<dt id="arg-subset">subset<a class="anchor" aria-label="anchor" href="#arg-subset"></a></dt>
+<dd><p>a <code>logical</code> vector with length equal to that of <code>treat</code>
+restricting which units are used to fit the model, e.g., the units still
+under observation when a censoring model is fit. The weights of the
+remaining units are left as <code>NA</code> for the caller to fill in. When <code>by.factor</code>
+is also supplied, the model is fit within the intersection of each <code>by</code>
+level and <code>subset</code>. If <code>NULL</code> (the default), all units are used.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>other arguments for functions called by <code>weightit.fit()</code> that
 control aspects of fitting that are not covered by the above arguments.</p></dd>
@@ -190,7 +204,7 @@ control aspects of fitting that are not covered by the above arguments.</p></dd>
 <dd><p>The weight estimation method specified.</p></dd>
 
 <dt>ps</dt>
-<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"ipt"</code>, <code>"super"</code>, or <code>"bart"</code>. The propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details at <code><a href="weightit.html">weightit()</a></code> for how the treated group is determined.</p></dd>
+<dd><p>The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models, and only when <code>method</code> is <code>"glm"</code>, <code>"gbm"</code>, <code>"cbps"</code>, <code>"ipt"</code>, <code>"super"</code>, or <code>"bart"</code>. For binary treatments, the propensity score corresponds to the predicted probability of being treated; see section <em><code>estimand</code> and <code>focal</code></em> in Details at <code><a href="weightit.html">weightit()</a></code> for how the treated group is determined. For censoring models, it corresponds to the predicted probability of <em>being censored</em>, i.e., of the censoring indicator equalling 1.</p></dd>
 
 <dt>s.weights</dt>
 <dd><p>The provided sampling weights.</p></dd>

@@ -8,7 +8,7 @@
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Energy Balancing — method_energy"><meta name="description" content='This page explains the details of estimating weights using
 energy balancing by setting method = "energy" in the call to weightit()
 or weightitMSM(). This method can be used with binary, multi-category, and
-continuous treatments.
+continuous treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating weights by minimizing an energy
 statistic related to covariate balance. For binary and multi-category
 treatments, this is the energy distance, which is a multivariate distance
@@ -43,6 +43,13 @@ Continuous Treatments
 
 For continuous treatments, this method estimates the weights using osqp()
 using formulas described by Huling, Greifer, and Chen (2023).
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), the energy distance minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0. improved does not apply, as only one group is weighted.
 
 
 
@@ -86,7 +93,7 @@ M-estimation is not supported.
 '><meta property="og:description" content='This page explains the details of estimating weights using
 energy balancing by setting method = "energy" in the call to weightit()
 or weightitMSM(). This method can be used with binary, multi-category, and
-continuous treatments.
+continuous treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating weights by minimizing an energy
 statistic related to covariate balance. For binary and multi-category
 treatments, this is the energy distance, which is a multivariate distance
@@ -121,6 +128,13 @@ Continuous Treatments
 
 For continuous treatments, this method estimates the weights using osqp()
 using formulas described by Huling, Greifer, and Chen (2023).
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), the energy distance minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0. improved does not apply, as only one group is weighted.
 
 
 
@@ -204,7 +218,7 @@ M-estimation is not supported.
     <p>This page explains the details of estimating weights using
 energy balancing by setting <code>method = "energy"</code> in the call to <code><a href="weightit.html">weightit()</a></code>
 or <code><a href="weightitMSM.html">weightitMSM()</a></code>. This method can be used with binary, multi-category, and
-continuous treatments.</p>
+continuous treatments, as well as for estimating censoring weights.</p>
 <p>In general, this method relies on estimating weights by minimizing an energy
 statistic related to covariate balance. For binary and multi-category
 treatments, this is the energy distance, which is a multivariate distance
@@ -239,6 +253,13 @@ estimands are allowed: ATE and ATT.</p>
 
 <p>For continuous treatments, this method estimates the weights using <code>osqp()</code>
 using formulas described by Huling, Greifer, and Chen (2023).</p>
+</div>
+
+<div class="section">
+<h3 id="censoring-weights">Censoring Weights<a class="anchor" aria-label="anchor" href="#censoring-weights"></a></h3>
+
+
+<p>For censoring weights, requested by wrapping the censoring indicator in <code><a href="dot-cens.html">.cens()</a></code>, the energy distance minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0. <code>improved</code> does not apply, as only one group is weighted.</p>
 </div>
 
 <div class="section">

@@ -72,7 +72,7 @@
                         <h4 data-toc-skip class="author">Noah
 Greifer</h4>
             
-            <h4 data-toc-skip class="date">2026-07-29</h4>
+            <h4 data-toc-skip class="date">2026-07-30</h4>
       
       <small class="dont-index">Source: <a href="https://github.com/ngreifer/WeightIt/blob/master/vignettes/WeightIt.Rmd" class="external-link"><code>vignettes/WeightIt.Rmd</code></a></small>
       <div class="d-none name"><code>WeightIt.Rmd</code></div>
@@ -98,9 +98,11 @@ estimate a treatment effect and corresponding standard error or
 confidence interval. This guide will go through these steps for two
 observational studies: estimating the causal effect of a point treatment
 on an outcome, and estimating the causal parameters of a marginal
-structural model with multiple treatment periods. This is not meant to
-be a definitive guide, but rather an introduction to the relevant
-issues.</p>
+structural model with multiple treatment periods. In addition, we will
+demonstrate the use of <em>WeightIt</em> to estimate censoring weights
+in the case of informative censoring. This is not meant to be a
+definitive guide, but rather an introduction to the relevant issues and
+demonstration of <em>WeightIt</em>’s capabilities.</p>
 </div>
 <div class="section level2">
 <h2 id="balancing-weights-for-a-point-treatment">Balancing Weights for a Point Treatment<a class="anchor" aria-label="anchor" href="#balancing-weights-for-a-point-treatment"></a>
@@ -309,7 +311,7 @@ there are any gains in terms of balance:</p>
 <span><span class="co">## race_hispan  Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## race_white   Binary       -0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## married      Binary       -0 Balanced, &lt;0.05           .</span></span>
-<span><span class="co">## nodegree     Binary       -0 Balanced, &lt;0.05           .</span></span>
+<span><span class="co">## nodegree     Binary        0 Balanced, &lt;0.05           .</span></span>
 <span><span class="co">## re74        Contin.       -0 Balanced, &lt;0.05       1.326</span></span>
 <span><span class="co">## re75        Contin.       -0 Balanced, &lt;0.05       1.335</span></span>
 <span><span class="co">## </span></span>
@@ -664,6 +666,90 @@ treatment for all three time points, we would run</p>
 <p>These results indicate that receiving treatment at all time points
 reduces the risk of the outcome relative to not receiving treatment at
 all.</p>
+<div class="section level3">
+<h3 id="accounting-for-censoring">Accounting for censoring<a class="anchor" aria-label="anchor" href="#accounting-for-censoring"></a>
+</h3>
+<p>Units often drop out of a study before the outcome is measured, and
+if they do so for reasons related to the covariates, restricting the
+analysis to those who remain introduces bias in the same way confounding
+does. <em>WeightIt</em> can estimate inverse probability of censoring
+weights (IPCW) to adjust for this, which can be requested by wrapping a
+censoring indicator in <code><a href="../reference/dot-cens.html">.cens()</a></code> on the left side of a model
+formula. The indicator should be 1/<code>TRUE</code> for units that are
+censored and 0/<code>FALSE</code> for those still under observation.</p>
+<p>Here we simulate loss to follow-up after the second time point, which
+makes everything measured afterward unavailable for those units:</p>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2000</span><span class="op">)</span></span>
+<span><span class="va">msmdata2</span> <span class="op">&lt;-</span> <span class="va">msmdata</span></span>
+<span></span>
+<span><span class="co"># Generate censoring probability, to occur between A_2 and X1_2</span></span>
+<span><span class="va">cens</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Binomial.html" class="external-link">rbinom</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">msmdata2</span><span class="op">)</span>, <span class="fl">1</span>,</span>
+<span>               prob <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Logistic.html" class="external-link">plogis</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span> <span class="op">+</span> <span class="fl">.2</span> <span class="op">*</span> <span class="va">msmdata2</span><span class="op">$</span><span class="va">X1_1</span> <span class="op">+</span> <span class="fl">.3</span> <span class="op">*</span> <span class="va">msmdata2</span><span class="op">$</span><span class="va">X1_0</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Apply censoring to all variables measured after censoring</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">msmdata2</span><span class="op">[</span><span class="va">cens</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"X1_2"</span>, <span class="st">"X2_2"</span>, <span class="st">"A_3"</span>, <span class="st">"Y_B"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="cn">TRUE</span></span>
+<span></span>
+<span><span class="co"># Post-censoring variables are unobserved for censored units</span></span>
+<span><span class="va">msmdata2</span><span class="op">$</span><span class="va">C_2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/with.html" class="external-link">with</a></span><span class="op">(</span><span class="va">msmdata2</span>,</span>
+<span>                     <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">X1_2</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">X2_2</span><span class="op">)</span> <span class="op">|</span></span>
+<span>                       <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">A_3</span><span class="op">)</span> <span class="op">|</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">Y_B</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>The censoring model goes into <code>formula.list</code> in temporal
+order, alongside the treatment models:</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="op">(</span><span class="va">Wc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weightitMSM.html">weightitMSM</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">A_1</span> <span class="op">~</span> <span class="va">X1_0</span> <span class="op">+</span> <span class="va">X2_0</span>,</span>
+<span>                        <span class="va">A_2</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span>,</span>
+<span>                        <span class="fu"><a href="../reference/dot-cens.html">.cens</a></span><span class="op">(</span><span class="va">C_2</span><span class="op">)</span> <span class="op">~</span> <span class="va">X1_1</span> <span class="op">+</span> <span class="va">X2_1</span> <span class="op">+</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">A_2</span>,</span>
+<span>                        <span class="va">A_3</span> <span class="op">~</span> <span class="va">X1_2</span> <span class="op">+</span> <span class="va">X2_2</span> <span class="op">+</span> <span class="va">A_2</span><span class="op">)</span>,</span>
+<span>                   data <span class="op">=</span> <span class="va">msmdata2</span>, method <span class="op">=</span> <span class="st">"glm"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## A <span style="font-style: italic;">weightitMSM</span> object</span></span>
+<span><span class="co">##  - method: "glm" (propensity score weighting with GLM)</span></span>
+<span><span class="co">##  - number of obs.: 7500</span></span>
+<span><span class="co">##  - sampling weights: none</span></span>
+<span><span class="co">##  - number of time points: 3 (A_1, A_2, A_3)</span></span>
+<span><span class="co">##  - treatment:</span></span>
+<span><span class="co">##     + time 1: 2-category</span></span>
+<span><span class="co">##     + time 2: 2-category</span></span>
+<span><span class="co">##     + time 3: 2-category</span></span>
+<span><span class="co">##  - censoring (IPCW):</span></span>
+<span><span class="co">##     + C_2: 3864 of 7500 units censored</span></span>
+<span><span class="co">##  - covariates:</span></span>
+<span><span class="co">##     + baseline: X1_0, X2_0</span></span>
+<span><span class="co">##     + after time 1: X1_1, X2_1, A_1</span></span>
+<span><span class="co">##     + after time 2: X1_2, X2_2, A_2</span></span></code></pre>
+<p>Each model is fit only among the units still under observation when
+it is reached, so the missing values for censored units are not a
+problem. Censored units receive a weight of exactly 0:</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">Wc</span><span class="op">$</span><span class="va">weights</span><span class="op">[</span><span class="va">msmdata2</span><span class="op">$</span><span class="va">C_2</span><span class="op">]</span> <span class="op">==</span> <span class="fl">0</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
+<p>Because they have a weight of 0, censored units contribute nothing to
+a weighted outcome model, and <code><a href="../reference/glm_weightit.html">glm_weightit()</a></code> tolerates
+their missing outcomes. Standard errors that account for estimation of
+both the treatment and censoring weights are still available:</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fitc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/glm_weightit.html">glm_weightit</a></span><span class="op">(</span><span class="va">Y_B</span> <span class="op">~</span> <span class="va">A_1</span> <span class="op">+</span> <span class="va">A_2</span> <span class="op">+</span> <span class="va">A_3</span>,</span>
+<span>                     data <span class="op">=</span> <span class="va">msmdata2</span>, weightit <span class="op">=</span> <span class="va">Wc</span>,</span>
+<span>                     family <span class="op">=</span> <span class="va">binomial</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fitc</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## </span></span>
+<span><span class="co">## <span style="text-decoration: underline;">Call:</span></span></span>
+<span><span class="co">## glm_weightit(formula = Y_B ~ A_1 + A_2 + A_3, data = msmdata2, </span></span>
+<span><span class="co">##     family = binomial, weightit = Wc)</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## <span style="text-decoration: underline;">Coefficients:</span></span></span>
+<span><span class="co">##             Estimate Std. Error z value Pr(&gt;|z|)    </span></span>
+<span><span class="co">## (Intercept)    0.511      0.137    3.73  0.00019 ***</span></span>
+<span><span class="co">## A_1           -0.104      0.159   -0.65  0.51397    </span></span>
+<span><span class="co">## A_2           -0.727      0.154   -4.72  2.3e-06 ***</span></span>
+<span><span class="co">## A_3           -0.202      0.145   -1.39  0.16377    </span></span>
+<span><span class="co">## <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span></span>
+<span><span class="co"><span style="font-style: italic;">## </span></span></span></code></pre>
+<p>See <code><a href="../reference/dot-cens.html">?.cens</a></code> for more, including how to assess balance,
+which requires a little care because the target of a censoring model is
+the full at-risk sample rather than another treatment group.</p>
+</div>
 </div>
 <div class="section level2 unnumbered">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>

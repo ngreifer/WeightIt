@@ -8,7 +8,7 @@
 </script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet"><script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet"><link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet"><script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Entropy Balancing — method_ebal"><meta name="description" content='This page explains the details of estimating weights using
 entropy balancing by setting method = "ebal" in the call to weightit() or
 weightitMSM(). This method can be used with binary, multi-category, and
-continuous treatments.
+continuous treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating weights by minimizing the
 negative entropy of the weights subject to exact moment balancing
 constraints. This method relies on code written for WeightIt using
@@ -38,6 +38,13 @@ Continuous Treatments
 
 For continuous treatments, this method estimates the weights using optim()
 using formulas described by Tübbicke (2022) and Vegetabile et al. (2021).
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), entropy balancing is performed on the units still under observation only, with the target being the covariate means of the full at-risk sample (censored and uncensored combined). Because a single set of weights is estimated rather than one per treatment group, the optimization problem is smaller than for the ATE. The censored units receive a weight of 0. M-estimation is supported when tols is 0. With link = "clog", method = "ipt" yields identical weights.
 
 
 
@@ -81,7 +88,7 @@ vignette("estimating-effects") for details.
 '><meta property="og:description" content='This page explains the details of estimating weights using
 entropy balancing by setting method = "ebal" in the call to weightit() or
 weightitMSM(). This method can be used with binary, multi-category, and
-continuous treatments.
+continuous treatments, as well as for estimating censoring weights.
 In general, this method relies on estimating weights by minimizing the
 negative entropy of the weights subject to exact moment balancing
 constraints. This method relies on code written for WeightIt using
@@ -111,6 +118,13 @@ Continuous Treatments
 
 For continuous treatments, this method estimates the weights using optim()
 using formulas described by Tübbicke (2022) and Vegetabile et al. (2021).
+
+
+
+Censoring Weights
+
+
+For censoring weights, requested by wrapping the censoring indicator in .cens(), entropy balancing is performed on the units still under observation only, with the target being the covariate means of the full at-risk sample (censored and uncensored combined). Because a single set of weights is estimated rather than one per treatment group, the optimization problem is smaller than for the ATE. The censored units receive a weight of 0. M-estimation is supported when tols is 0. With link = "clog", method = "ipt" yields identical weights.
 
 
 
@@ -194,7 +208,7 @@ vignette("estimating-effects") for details.
     <p>This page explains the details of estimating weights using
 entropy balancing by setting <code>method = "ebal"</code> in the call to <code><a href="weightit.html">weightit()</a></code> or
 <code><a href="weightitMSM.html">weightitMSM()</a></code>. This method can be used with binary, multi-category, and
-continuous treatments.</p>
+continuous treatments, as well as for estimating censoring weights.</p>
 <p>In general, this method relies on estimating weights by minimizing the
 negative entropy of the weights subject to exact moment balancing
 constraints. This method relies on code written for <span class="pkg">WeightIt</span> using
@@ -224,6 +238,13 @@ requested, the optimization is run once for each non-focal (i.e., control) group
 
 <p>For continuous treatments, this method estimates the weights using <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code>
 using formulas described by Tübbicke (2022) and Vegetabile et al. (2021).</p>
+</div>
+
+<div class="section">
+<h3 id="censoring-weights">Censoring Weights<a class="anchor" aria-label="anchor" href="#censoring-weights"></a></h3>
+
+
+<p>For censoring weights, requested by wrapping the censoring indicator in <code><a href="dot-cens.html">.cens()</a></code>, entropy balancing is performed on the units still under observation only, with the target being the covariate means of the full at-risk sample (censored and uncensored combined). Because a single set of weights is estimated rather than one per treatment group, the optimization problem is smaller than for the ATE. The censored units receive a weight of 0. M-estimation is supported when <code>tols</code> is 0. With <code>link = "clog"</code>, <code>method = "ipt"</code> yields identical weights.</p>
 </div>
 
 <div class="section">
@@ -426,7 +447,7 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Diff.Adj</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.        0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary        0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary       -0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.        0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -596,7 +617,7 @@ which work similarly. <a href="method_optweight.html">method_optweight</a> for a
 <span class="r-out co"><span class="r-pr">#&gt;</span>             Type Diff.weightit Diff.inexact</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> age      Contin.             0         0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> educ     Contin.             0         0.02</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary             0        -0.02</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> married   Binary            -0        -0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> nodegree  Binary             0         0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> re74     Contin.             0        -0.02</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

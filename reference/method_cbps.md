@@ -6,7 +6,7 @@ balancing propensity scores by setting `method = "cbps"` in the call to
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
 This method can be used with binary, multi-category, and continuous
-treatments.
+treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using
 generalized method of moments and then converting those propensity
@@ -35,6 +35,24 @@ For continuous treatments, this method estimates the generalized
 propensity scores and weights using
 [`optim()`](https://rdrr.io/r/stats/optim.html) using a modification of
 the formulas described by Fong, Hazlett, and Imai (2018). See Details.
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+the balance conditions require the weighted covariate means of the units
+still under observation to equal those of the full at-risk sample. The
+censored units receive a weight of 0.
+
+Censoring weights are also available with `is.MSM.method = TRUE`, i.e.,
+when the weights at all time points are estimated simultaneously;
+`"cbps"` is the only method for which this is possible. Each time
+point's balance condition is then evaluated among the units still under
+observation at that time point, so the covariates and treatments that
+are missing for already-censored units never enter. The treatment
+conditions use the cumulative weights, which include the censoring
+factors; each censoring condition uses its own factor. As for
+treatments, M-estimation is not available with `is.MSM.method = TRUE`.
 
 ### Longitudinal Treatments
 
@@ -78,9 +96,9 @@ are allowed:
 ### M-estimation
 
 M-estimation is supported for the just-identified CBPS (the default,
-setting `over = FALSE`) for binary and multi-category treatments.
-Otherwise (i.e., for continuous or longitudinal treatments or when
-`over = TRUE`), M-estimation is not supported. See
+setting `over = FALSE`) for binary and multi-category treatments and
+censoring weights. Otherwise (i.e., for continuous or longitudinal
+treatments or when `over = TRUE`), M-estimation is not supported. See
 [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
 and
 [`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md)
@@ -89,20 +107,21 @@ for details.
 ## Details
 
 CBPS estimates the coefficients of a generalized linear model (for
-binary treatments), multinomial logistic regression model (for
-multi-category treatments), or linear regression model (for continuous
-treatments) that is used to compute (generalized) propensity scores,
-from which the weights are computed. It involves replacing (or
-augmenting, in the case of the over-identified version) the standard
-maximum likelihood score equations with the balance constraints in a
-generalized method of moments estimation. The idea is to nudge the
-estimation of the coefficients toward those that produce balance in the
-weighted sample. The just-identified version (with `over = FALSE`) does
-away with the maximum likelihood score equations for the coefficients so
-that only the balance constraints are used, which will therefore produce
-superior balance on the means (i.e., corresponding to the balance
-constraints) for binary and multi-category treatments and linear terms
-for continuous treatments than will the over-identified version.
+binary treatments and censoring weights), multinomial logistic
+regression model (for multi-category treatments), or linear regression
+model (for continuous treatments) that is used to compute (generalized)
+propensity scores, from which the weights are computed. It involves
+replacing (or augmenting, in the case of the over-identified version)
+the standard maximum likelihood score equations with the balance
+constraints in a generalized method of moments estimation. The idea is
+to nudge the estimation of the coefficients toward those that produce
+balance in the weighted sample. The just-identified version (with
+`over = FALSE`) does away with the maximum likelihood score equations
+for the coefficients so that only the balance constraints are used,
+which will therefore produce superior balance on the means (i.e.,
+corresponding to the balance constraints) for binary and multi-category
+treatments and linear terms for continuous treatments than will the
+over-identified version.
 
 Just-identified CBPS is very similar to entropy balancing and inverse
 probability tilting. For the ATT, all three methods will yield identical
@@ -156,10 +175,10 @@ The following additional arguments can be specified:
 
   `logical`; whether to request the over-identified CBPS, which combines
   the generalized linear model regression score equations (for binary
-  treatments), multinomial logistic regression score equations (for
-  multi-category treatments), or linear regression score equations (for
-  continuous treatments) to the balance moment conditions. Default is
-  `FALSE` to use the just-identified CBPS.
+  treatments and censoring weights), multinomial logistic regression
+  score equations (for multi-category treatments), or linear regression
+  score equations (for continuous treatments) to the balance moment
+  conditions. Default is `FALSE` to use the just-identified CBPS.
 
 - `twostep`:
 

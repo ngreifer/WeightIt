@@ -179,8 +179,8 @@ The `model` component of the output object (also the
 include two extra columns when `weightit` is supplied: `(weights)`
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and `(s.weights)` containing
-the sampling weights, which will be 1 if `s.weights` is not supplied in
-the original
+the sampling weights, which will all be 1 if `s.weights` is not supplied
+in the original
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 call.
 
@@ -236,9 +236,6 @@ supplied. Not all types are available for all models.
   [`glm()`](https://rdrr.io/r/stats/glm.html) for fitting (generalized)
   linear models without adjusting standard errors for estimation of the
   weights.
-
-- `glm_weightit()` for fitting generalized linear models that adjust for
-  estimation of the weights.
 
 - [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
   for fitting multinomial regression models that adjust for estimation

@@ -7,7 +7,7 @@ the call to
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
 This method can be used with binary, multi-category, and continuous
-treatments.
+treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using the
 SuperLearner algorithm for stacking predictions and then converting
@@ -62,6 +62,20 @@ density estimation can be used instead of assuming a specific density
 for the denominator by setting `density = "kernel"`. Other arguments to
 [`density()`](https://rdrr.io/r/stats/density.html) can be specified to
 refine the density estimation parameters.
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+a single SuperLearner model of the probability of being censored is fit,
+and the weights are `1/P(C = 0 | X)` for the units still under
+observation and 0 for the censored units. With
+`SL.method = "method.balance"`, the library weights are chosen using
+balance between the *weighted units still under observation* and the
+*full at-risk sample*, which is what the weights target. This is
+cobalt's "target" balance; accordingly, `criterion` must be one of
+`cobalt::available.stats("target")`, a subset of the values allowed for
+binary treatments.
 
 ### Longitudinal Treatments
 

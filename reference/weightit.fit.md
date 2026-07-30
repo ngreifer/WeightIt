@@ -30,6 +30,7 @@ weightit.fit(
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
+  subset = NULL,
   ...
 )
 ```
@@ -42,7 +43,13 @@ weightit.fit(
 
 - treat:
 
-  a vector of treatment statuses.
+  a vector of treatment statuses. To request inverse probability of
+  censoring weights, supply a 0/1 censoring indicator (1 = censored)
+  tagged with
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+  as in `treat = .cens(C)`; `NA` values are then allowed outside
+  `subset`, since a unit censored at an earlier time point has no later
+  indicator.
 
 - method:
 
@@ -118,6 +125,16 @@ weightit.fit(
   model will be included. See the individual pages for each method for
   information on what object will be included if `TRUE`.
 
+- subset:
+
+  a `logical` vector with length equal to that of `treat` restricting
+  which units are used to fit the model, e.g., the units still under
+  observation when a censoring model is fit. The weights of the
+  remaining units are left as `NA` for the caller to fill in. When
+  `by.factor` is also supplied, the model is fit within the intersection
+  of each `by` level and `subset`. If `NULL` (the default), all units
+  are used.
+
 - ...:
 
   other arguments for functions called by `weightit.fit()` that control
@@ -146,12 +163,15 @@ A `weightit.fit` object with the following elements:
 - ps:
 
   The estimated or provided propensity scores. Estimated propensity
-  scores are returned for binary treatments and only when `method` is
-  `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The
-  propensity score corresponds to the predicted probability of being
-  treated; see section *`estimand` and `focal`* in Details at
+  scores are returned for binary treatments and censoring models, and
+  only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`,
+  or `"bart"`. For binary treatments, the propensity score corresponds
+  to the predicted probability of being treated; see section *`estimand`
+  and `focal`* in Details at
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-  for how the treated group is determined.
+  for how the treated group is determined. For censoring models, it
+  corresponds to the predicted probability of *being censored*, i.e., of
+  the censoring indicator equalling 1.
 
 - s.weights:
 

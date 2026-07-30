@@ -95,6 +95,9 @@
 
 ## Other functions
 
+- [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  : Mark a censoring indicator in a model formula
+
 - [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
   : Compute weights from propensity scores
 

@@ -6,7 +6,7 @@ balancing by setting `method = "ebal"` in the call to
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
 This method can be used with binary, multi-category, and continuous
-treatments.
+treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating weights by minimizing the
 negative entropy of the weights subject to exact moment balancing
@@ -34,6 +34,18 @@ optimization is run once for each non-focal (i.e., control) group.
 For continuous treatments, this method estimates the weights using
 [`optim()`](https://rdrr.io/r/stats/optim.html) using formulas described
 by Tübbicke (2022) and Vegetabile et al. (2021).
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+entropy balancing is performed on the units still under observation
+only, with the target being the covariate means of the full at-risk
+sample (censored and uncensored combined). Because a single set of
+weights is estimated rather than one per treatment group, the
+optimization problem is smaller than for the ATE. The censored units
+receive a weight of 0. M-estimation is supported when `tols` is 0. With
+`link = "clog"`, `method = "ipt"` yields identical weights.
 
 ### Longitudinal Treatments
 
@@ -308,7 +320,7 @@ cobalt::bal.tab(W1)
 #>             Type Diff.Adj
 #> age      Contin.        0
 #> educ     Contin.        0
-#> married   Binary        0
+#> married   Binary       -0
 #> nodegree  Binary        0
 #> re74     Contin.        0
 #> 
@@ -478,7 +490,7 @@ cobalt::bal.tab(W1, weights = list(inexact = W1b))
 #>             Type Diff.weightit Diff.inexact
 #> age      Contin.             0         0.02
 #> educ     Contin.             0         0.02
-#> married   Binary             0        -0.02
+#> married   Binary            -0        -0.02
 #> nodegree  Binary             0         0.02
 #> re74     Contin.             0        -0.02
 #> 

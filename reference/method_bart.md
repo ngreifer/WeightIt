@@ -7,7 +7,7 @@ additive regression trees (BART)-based propensity scores by setting
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
 This method can be used with binary, multi-category, and continuous
-treatments.
+treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using
 BART and then converting those propensity scores into weights using a
@@ -65,18 +65,17 @@ is fit using
 [`stan4bart::stan4bart()`](https://rdrr.io/pkg/stan4bart/man/stan4bart.html)
 instead of [`dbarts::bart2()`](https://rdrr.io/pkg/dbarts/man/bart.html)
 . This combines a BART sum-of-trees for the covariates with a
-Stan-estimated parametric and random-effects component, and can improve
-balance and overlap when units are clustered (e.g., patients within
-hospitals or students within schools). Unlike the other multilevel
-methods, the full flexibility of
+Stan-estimated random-effects component and can improve balance when
+units are clustered (e.g., patients within hospitals or students within
+schools). The full flexibility of
 [`lme4::glmer()`](https://rdrr.io/pkg/lme4/man/glmer.html) random
-effects is available, including *multiple grouping factors* (e.g.,
+effects is available, including multiple grouping factors (e.g.,
 `(1 | school) + (1 | district)`) and random slopes. The grouping (and
 any random-slope) variables are taken from `data`; the covariates are
 placed in the BART component internally (i.e., the fitted model is
 `treat ~ bart(x1 + x2) + (1 | school)`). The estimated propensity scores
 (or conditional means for continuous treatments) include the estimated
-random effects, i.e., they are cluster-specific.
+random effects; i.e., they are cluster-specific.
 
 `stan4bart()` uses a different set of control arguments from `bart2()`:
 the number of posterior draws and warmup iterations are controlled by
@@ -89,8 +88,17 @@ supplied in a `bart_args` list, and Stan and prior options in a
 `stan4bart()` equivalents when supplied (e.g., `n.chains` to `chains`,
 `n.threads` to `cores`, and BART hyperparameters like `n.trees` to
 `bart_args`), so the same argument names can be used with or without
-random effects. As with the non-multilevel case, M-estimation is not
+random effects. As with the single-level case, M-estimation is not
 supported.
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+a single BART model of the probability of being censored is fit, and the
+weights are `1/P(C = 0 | X)` for the units still under observation and 0
+for the censored units. The returned propensity score is the probability
+of *being censored*.
 
 ### Longitudinal Treatments
 
@@ -288,41 +296,41 @@ summary(W1)
 #> 
 #>           Min                                 Max
 #> treated 1.       ||                         1.   
-#> control 0.002 |---------------------------| 9.648
+#> control 0.002 |---------------------------| 9.371
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                      
-#>              5     4     3    2     1
-#>  treated     1     1     1    1     1
-#>            585   569   592  374   608
-#>  control 2.455 2.546 2.783 3.25 9.648
+#>                                     
+#>              5     4   3     2     1
+#>  treated     1     1   1     1     1
+#>            585   592 569   374   608
+#>  control 2.295 2.792 3.1 3.374 9.371
 #> 
 #> - Weight statistics:
 #> 
 #>         Coef of Var   MAD Entropy # Zeros
 #> treated       0.    0.      0.          0
-#> control       1.807 0.935   0.732       0
+#> control       1.808 0.938   0.736       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>            Control Treated
 #> Unweighted  429.       185
-#> Weighted    100.76     185
+#> Weighted    100.69     185
 
 cobalt::bal.tab(W1)
 #> Balance Measures
 #>                Type Diff.Adj
-#> prop.score Distance   0.4908
-#> age         Contin.   0.0685
-#> educ        Contin.  -0.0231
-#> married      Binary  -0.0341
-#> nodegree     Binary   0.0287
-#> re74        Contin.  -0.0675
+#> prop.score Distance   0.4932
+#> age         Contin.   0.0717
+#> educ        Contin.  -0.0105
+#> married      Binary  -0.0349
+#> nodegree     Binary   0.0313
+#> re74        Contin.  -0.0534
 #> 
 #> Effective sample sizes
 #>            Control Treated
 #> Unadjusted  429.       185
-#> Adjusted    100.76     185
+#> Adjusted    100.69     185
 
 #Balancing covariates with respect to race (multi-category)
 (W2 <- weightit(race ~ age + educ + married +
@@ -342,45 +350,45 @@ summary(W2)
 #> - Weight ranges:
 #> 
 #>          Min                                  Max
-#> black  1.242 |----------------|             8.996
-#> hispan 2.648    |------------------------| 13.226
-#> white  1.059 |---------------|              8.359
+#> black  1.239 |------------------|           9.058
+#> hispan 2.682     |-----------------------| 12.68 
+#> white  1.06  |-----------------|            8.637
 #> 
 #> - Units with the 5 most extreme weights by group:
-#>                                           
-#>            226    181    244    423    231
-#>   black  7.119   7.52  8.097  8.256  8.996
-#>            346    512    426    570    564
-#>  hispan 12.058 12.551 12.599 13.083 13.226
-#>            409     23     60     76    140
-#>   white  4.413  5.133  5.478  7.978  8.359
+#>                                         
+#>            226    283   244    423   231
+#>   black  7.125  7.373 7.736   8.34 9.058
+#>            346    426   512    570   564
+#>  hispan 12.015 12.316 12.35 12.676 12.68
+#>             68     23    60     76   140
+#>   white   4.49  5.091  5.69  8.351 8.637
 #> 
 #> - Weight statistics:
 #> 
 #>        Coef of Var   MAD Entropy # Zeros
-#> black        0.578 0.373   0.126       0
-#> hispan       0.383 0.317   0.073       0
-#> white        0.464 0.321   0.084       0
+#> black        0.579 0.371   0.126       0
+#> hispan       0.366 0.303   0.067       0
+#> white        0.473 0.322   0.087       0
 #> 
 #> - Effective Sample Sizes:
 #> 
-#>             black hispan  white
-#> Unweighted 243.    72.   299.  
-#> Weighted   182.28  62.89 246.14
+#>             black hispan white
+#> Unweighted 243.     72.  299. 
+#> Weighted   182.24   63.6 244.4
 
 cobalt::bal.tab(W2)
 #> Balance summary across all treatment pairs
 #>             Type Max.Diff.Adj
-#> age      Contin.       0.1920
-#> educ     Contin.       0.1585
+#> age      Contin.       0.1848
+#> educ     Contin.       0.1729
 #> married   Binary       0.0513
-#> nodegree  Binary       0.0248
-#> re74     Contin.       0.1120
+#> nodegree  Binary       0.0320
+#> re74     Contin.       0.1130
 #> 
 #> Effective sample sizes
-#>             black hispan  white
-#> Unadjusted 243.    72.   299.  
-#> Adjusted   182.28  62.89 246.14
+#>             black hispan white
+#> Unadjusted 243.     72.  299. 
+#> Adjusted   182.24   63.6 244.4
 
 #Balancing covariates with respect to re75 (continuous)
 #with kernel density estimation for GPS
@@ -399,36 +407,36 @@ summary(W3)
 #> 
 #> - Weight ranges:
 #> 
-#>       Min                                  Max
-#> all 0.004 |---------------------------| 54.859
+#>       Min                               Max
+#> all 0.003 |---------------------------|  44
 #> 
 #> - Units with the 5 most extreme weights:
-#>                                       
-#>         431    486   487    484    469
-#>  all 18.584 20.183 48.03 48.088 54.859
+#>                                   
+#>        490   485    469    484 487
+#>  all 22.53 24.73 36.965 43.864  44
 #> 
 #> - Weight statistics:
 #> 
 #>     Coef of Var   MAD Entropy # Zeros
-#> all       2.683 0.923   0.955       0
+#> all       2.466 0.912   0.907       0
 #> 
 #> - Effective Sample Sizes:
 #> 
 #>             Total
 #> Unweighted 614.  
-#> Weighted    74.99
+#> Weighted    86.82
 
 cobalt::bal.tab(W3)
 #> Balance Measures
 #>             Type Corr.Adj
-#> age      Contin.  -0.0303
-#> educ     Contin.   0.0116
-#> married   Binary  -0.0621
-#> nodegree  Binary  -0.0252
-#> re74     Contin.  -0.0608
+#> age      Contin.  -0.0333
+#> educ     Contin.   0.0321
+#> married   Binary  -0.0606
+#> nodegree  Binary  -0.0458
+#> re74     Contin.  -0.0465
 #> 
 #> Effective sample sizes
 #>             Total
 #> Unadjusted 614.  
-#> Adjusted    74.99
+#> Adjusted    86.82
 ```

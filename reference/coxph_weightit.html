@@ -180,6 +180,7 @@ estimates when specified</p></li>
 <li><p>Special formula components, such as <code>strata()</code>, <code>cluster()</code>, <code>pspline()</code>, <code>frailty()</code>, <code>ridge()</code>, and <code>tt()</code> are not allowed</p></li>
 <li><p>Only right censoring is allowed, and only two-state models are allowed (i.e., the <code>Surv()</code> component of <code>formula</code> must be of the form <code>Surv(time, event)</code>)</p></li>
 <li><p>Time-varying predictors are not allowed and there must be one observation per unit (and the <code>id</code> and <code>istate</code> arguments to <code>coxph()</code> are ignored)</p></li>
+<li><p>Weights of 0 are allowed (<code>coxph()</code> rejects them). Such units are omitted from the model fit, which is exact rather than an approximation: a unit with a weight of 0 contributes neither its own term nor anything to any risk set denominator, both of which are weighted by the same weights. Missing values in the model variables are tolerated for these units, which makes it possible to fit an outcome model after censoring, where the event time is unascertained for censored units (see <code><a href="dot-cens.html">.cens()</a></code>). Missing values in units with a nonzero weight produce an error.</p></li>
 </ul><p>When no argument is supplied to
 <code>weightit</code> or there is no <code>"Mparts"</code> attribute in the supplied object, the
 default variance matrix returned will be the "HC0" sandwich variance matrix,

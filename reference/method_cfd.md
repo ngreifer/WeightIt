@@ -6,8 +6,8 @@ characteristic function distance (CFD) balancing by setting
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
-This method can be used with binary, multi-category, and continuous
-treatments.
+This method can be used with binary and multi-category treatments, as
+well as for estimating censoring weights.
 
 In general, this method relies on estimating weights by minimizing a
 scalar measure of covariate balance, the CFD. The CFD is related to the
@@ -34,6 +34,16 @@ following estimands are allowed: ATE and ATT.
 ### Continuous Treatments
 
 CFD balancing is not compatible with continuous treatments.
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+the CFD minimized is that between the weighted units still under
+observation and the full at-risk sample (censored and uncensored
+combined), rather than that between two treatment groups. Weights are
+estimated for the units still under observation only; the censored units
+receive a weight of 0.
 
 ### Longitudinal Treatments
 

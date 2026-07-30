@@ -6,7 +6,7 @@ balancing by setting `method = "energy"` in the call to
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
 This method can be used with binary, multi-category, and continuous
-treatments.
+treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating weights by minimizing an
 energy statistic related to covariate balance. For binary and
@@ -38,6 +38,17 @@ following estimands are allowed: ATE and ATT.
 
 For continuous treatments, this method estimates the weights using
 `osqp()` using formulas described by Huling, Greifer, and Chen (2023).
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+the energy distance minimized is that between the weighted units still
+under observation and the full at-risk sample (censored and uncensored
+combined), rather than that between two treatment groups. Weights are
+estimated for the units still under observation only; the censored units
+receive a weight of 0. `improved` does not apply, as only one group is
+weighted.
 
 ### Longitudinal Treatments
 

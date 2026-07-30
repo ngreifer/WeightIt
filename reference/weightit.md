@@ -251,6 +251,44 @@ estimands are allowed, and whether sampling weights are allowed.
 for instructions and examples. Setting `method = NULL` computes unit
 weights.
 
+### Censoring weights (IPCW)
+
+Wrapping the left side of `formula` in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+requests inverse probability of censoring weights instead of treatment
+weights, as in `weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")`.
+Censoring is treated as its own treatment type, distinct from binary,
+multi-category, and continuous treatments; the indicator must be 0 for
+units still under observation and 1 for units that are censored.
+
+Weights are estimated only for the units still under observation, and
+are those that make their covariate distribution resemble that of the
+full at-risk sample. Writing \\e(X) = P(C = 1 \| X)\\, the weights are
+\\1 / (1 - e(X))\\ for units with \\C = 0\\ and exactly 0 for units with
+\\C = 1\\. Because only one group is weighted, the estimation problem is
+smaller and better conditioned than the corresponding binary-treatment
+problem, which would additionally solve for weights among the censored
+units; this matters most when few units are censored.
+
+`estimand`, `focal`, and `subclass` do not apply and are rejected or
+ignored. `by` and `stabilize` can be used; stabilization divides the
+weights by those from a marginal censoring model, giving \\P(C = 0) /
+P(C = 0 \| X)\\. `ps` is the predicted probability of *being censored*.
+Not all methods support censoring weights; see the `treat_type`
+component of
+[.weightit_methods](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md).
+
+Because censored units receive a weight of exactly 0, they contribute
+nothing to a weighted outcome model, and
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+and friends tolerate missing values in the model variables for those
+units, including a missing event time in the `Surv()` response of a
+[`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+model. Missing values in units with a nonzero weight still produce an
+error. See
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+for how to assess balance, which requires a little care.
+
 ### `estimand` and `focal`
 
 For binary and multi-category treatments, the argument to `estimand`
@@ -309,7 +347,8 @@ the method used.
 
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 for estimating weights with sequential (i.e., longitudinal) treatments
-for use in estimating marginal structural models (MSMs).
+or with both treatment and censoring indicators for use in estimating
+marginal structural models (MSMs).
 
 [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md),
 which is a lower-level dispatcher function that accepts a matrix of

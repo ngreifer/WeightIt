@@ -7,7 +7,7 @@ call to
 or
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
 This method can be used with binary, multi-category, and continuous
-treatments.
+treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using
 generalized boosted modeling (GBM) and then converting those propensity
@@ -72,6 +72,21 @@ assuming a specific density for the denominator by setting
 `density = "kernel"`. Other arguments to
 [`density()`](https://rdrr.io/r/stats/density.html) can be specified to
 refine the density estimation parameters.
+
+### Censoring Weights
+
+For censoring weights, requested by wrapping the censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+a single model of the probability of being censored is fit, and the
+weights are \\1/P(C = 0 \| X)\\ for the units still under observation
+and 0 for the censored units. The number of trees is selected using
+`criterion` computed between the *weighted units still under
+observation* and the *full at-risk sample*, which is what the weights
+target. This is cobalt's "target" balance, so `criterion` must be one of
+`cobalt::available.stats("target")` – a subset of the values allowed for
+binary treatments, excluding `"r2"`, `"r2.2"`, `"r2.3"`,
+`"kernel.dist"`, and `"l1.med"`. `"cv{#}"` works as it does for binary
+treatments.
 
 ### Longitudinal Treatments
 

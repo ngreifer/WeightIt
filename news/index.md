@@ -2,6 +2,88 @@
 
 ## `WeightIt` (development version)
 
+### Censoring weights (IPCW)
+
+- Added support for estimating inverse probability of censoring weights
+  (IPCW). Censoring is now its own treatment type, distinct from binary,
+  multi-category, and continuous treatments. Wrapping a censoring
+  indicator in
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  on the left side of a model formula requests it, as in
+  `weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")`. The
+  convention is that the indicator is 1 for units that are censored and
+  0 for those still under observation; censored units receive a weight
+  of exactly 0, and the rest receive `1/P(C = 0 | X)`.
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  is documented at
+  [`?.cens`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md).
+
+- [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  can also be called outside a formula to tag a variable as a censoring
+  indicator, which routes the lower-level interfaces to the censoring
+  path: `weightit.fit(covs, treat = .cens(C), method = "glm")` and
+  `get_w_from_ps(ps, treat = .cens(C))` estimate and compute censoring
+  weights, the latter returning `(1 - C)/(1 - ps)`, where `ps` is the
+  probability of *being censored*. Arguments that do not apply
+  (`estimand`, `focal`, `treated`, `subclass`, `stabilize`) are ignored
+  with a warning.
+
+- Each weighting method has a dedicated implementation for censoring
+  weights, rather than reusing the binary-treatment machinery. Because
+  inverse probability of censoring weights are only ever needed for the
+  units still under observation, these estimate weights for that group
+  alone, targeting the covariate distribution of the full at-risk
+  sample. This avoids the wasted (and sometimes infeasible) problem of
+  solving for weights among the censored units, which matters most when
+  few units are censored. Censoring weights are available for `method`
+  values `"glm"`, `"bart"`, `"cbps"`, `"ebal"`, `"energy"`, `"gbm"`,
+  `"ipt"`, `"optweight"`, `"super"`, and `"cfd"`, as well as
+  `method = NULL` (which yields complete-case weights) and a supplied
+  `ps`. They are not available for `method = "npcbps"`.
+  M-estimation-based standard errors are available for the same methods
+  that support them for binary treatments.
+
+- [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  supports censoring models interleaved with the treatment models in
+  `formula.list` in temporal order, as in
+  `list(A_1 ~ X_0, A_2 ~ X_1 + A_1, .cens(C_2) ~ X_1 + A_1, A_3 ~ X_2 + A_2)`.
+  Each model is fit only among the units still under observation at that
+  time point, missing values are permitted in later treatments for units
+  already censored, and the censoring weights are folded into the
+  product of weights across time points. The new `cens.list`,
+  `cens.covs.list`, `cens.formula.list`, `cens.time`, and `at.risk`
+  components of the output describe the censoring models.
+
+- Censoring weights are also available with `method = "cbps"` and
+  `is.MSM.method = TRUE` in
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  i.e., estimating one set of weights that satisfies the balance
+  conditions at all time points simultaneously. Each condition is
+  evaluated among the units still under observation at that time point,
+  so the covariates and treatments that are missing for already-censored
+  units never enter the estimating equations. The treatment conditions
+  use the cumulative weights, which include the censoring factors, so
+  they account for censoring; each censoring condition uses its own
+  factor.
+
+- [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  now tolerate missing values in the model variables for units with a
+  weight of 0, which contribute neither to the fit nor to its variance.
+  This makes it possible to fit an outcome model after censoring, where
+  the outcome is unobserved for censored units. Missing values in units
+  with a nonzero weight continue to produce an error. Relatedly,
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  now allows weights of 0 at all, which
+  [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
+  rejects; such units are omitted from the model fit.
+
+### Random effects in PS models
+
 - `method = "glm"` now supports multilevel (mixed-effects) propensity
   score models. When the model `formula` supplied to
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
@@ -14,10 +96,8 @@
   [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
   for multi-category treatments. The estimated propensity scores are
   cluster-specific (they include the estimated random effects).
-  M-estimation-based standard errors are not available for these models;
-  robust (`HC0`) or bootstrap standard errors should be used instead.
 
-- `method = "bart"` now supports multilevel propensity score models.
+- `method = "bart"` also supports multilevel propensity score models.
   When the model `formula` supplied to
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   contains `lme4`-style random effects terms (e.g.,
@@ -36,25 +116,32 @@
   indicating whether each method supports random effects terms in the
   model `formula`.
 
+### Other new features
+
 - M-estimation-based standard errors are now available when `by` is
   supplied to
-  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
   Previously, specifying `by` omitted the M-estimation components
   entirely; now the per-stratum components are combined so that
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  produces standard errors asymptotically equivalent to those from
-  estimating the weights from a single model in which the `by` variable
-  is fully interacted with all the covariates. This works for `method`
-  values `"glm"` (including `link = "br.logit"`), `"ebal"`, `"cbps"`
-  (just-identified), and `"ipt"`, and composes with `stabilize`.
+  and friends produce standard errors asymptotically equivalent to those
+  from estimating the weights from a single model in which the `by`
+  variable is fully interacted with all the covariates (at all time
+  points for
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)).
+  This works for methods that support M-estimation and composes with
+  `stabilize`.
 
-- Similarly, M-estimation-based standard errors are now available when
-  `by` is supplied to
-  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
-  giving standard errors asymptotically equivalent to interacting the
-  `by` variable with all the covariates at every time point. This works
-  for `method = "glm"` and `method = "cbps"` (with
-  `is.MSM.method = FALSE`) and composes with stabilization.
+- `link = "softplus"` can be used with `method = "cbps"` and
+  `method = "ipt"` to use the softplus link.
+
+- [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  gains a `subset` argument, restricting which units are used to fit the
+  model.
+
+### Changes in behavior
 
 - With continuous treatments, estimation of the weights works a bit
   differently for `method = "glm"`, `"bart"`, `"gbm"`, and `"super"`.
@@ -65,7 +152,7 @@
   denominator, and the numerator is estimated by marginalizing over the
   conditional distribution. This yields a marginal distribution that is
   compatible with the conditional distribution. In most cases, this will
-  improve balance, but estimation will be a but slower. Note this makes
+  improve balance, but estimation will be a bit slower. Note this makes
   results of these methods no longer backward compatible. Also note that
   `method = "cbps"` is not affected by this change, even though it too
   estimates generalized propensity score weights.
@@ -73,8 +160,36 @@
 - The `plot` argument can no longer be used to visualize the densities
   for continuous treatments.
 
-- `link = "softplus"` can be used with `method = "cbps"` and
-  `method = "ipt"` to use the softplus link.
+- With `method = "gbm"`, `method = "surr"` is no longer allowed, as it
+  did nothing different from `"ind"`. It is now set to `"ind"` with a
+  warning.
+
+- The `link` argument in
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  no longer accepts `"log"` and `"clog"` as valid links.
+
+- An argument passed to the `subset` argument of
+  [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  was previously silently ignored; it is now honored.
+
+- [`nobs()`](https://rdrr.io/r/stats/nobs.html) on a `coxph_weightit`
+  object now returns the number of units contributing to the fit (i.e.,
+  those with a nonzero weight), consistent with the other `*_weightit()`
+  methods. Previously the method was defined but never registered, so
+  dispatch fell through to `survival:::nobs.coxph()`, which returns the
+  number of *events*. [`AIC()`](https://rdrr.io/r/stats/AIC.html) and
+  [`BIC()`](https://rdrr.io/r/stats/AIC.html) are unaffected, as they
+  read the `"nobs"` attribute that
+  [`logLik()`](https://rdrr.io/r/stats/logLik.html) carries, but the
+  residual degrees of freedom reported by
+  [`anova()`](https://rdrr.io/r/stats/anova.html) change accordingly.
+
+- Passing `family = "multinomial"` to
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  now results in an error. Previously it would route the input to
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md).
+
+### Bug fixes
 
 - Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could
   cause the FISTA solver to stop before the requested balance tolerance
@@ -85,19 +200,38 @@
   could allow the treatment-covariate correlation to slightly exceed the
   requested tolerance.
 
-- Fixed a bug in which `method = "gbm"` with `criterion` set to a
-  cross-validation specification (e.g., `"cv5"`) would fail with an
-  error.
-
-- With `method = "gbm"`, `method = "surr"` is no longer allowed, as it
-  did nothing different from `"ind"`. It is now set to `"ind"` with a
-  warning.
-
 - Fixed a bug in `method = "energy"` with `estimand = "ATC"` and
   `moments` greater than 0.
 
 - Fixed a bug in `method = "energy"` and `method = "cfd"` with `min.w`
   set to `-Inf`.
+
+- Fixed a bug in which `method = "gbm"` with `criterion` set to a
+  cross-validation specification (e.g., `"cv5"`) would fail with an
+  error.
+
+- Fixed a bug in `method = "cbps"` with `is.MSM.method = TRUE` in which
+  the balance conditions for a multi-category treatment used the
+  treatment levels of the *last* time point rather than their own. This
+  produced an error when the last time point was binary and silently
+  used the wrong level set when two multi-category time points had the
+  same number of levels.
+
+- Fixed a bug in `method = "cbps"` with `is.MSM.method = TRUE` in which
+  a time point at which every unit was treated would compute the weights
+  for all units as though none were treated.
+
+- Fixed a bug in
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  in which a rank-deficient model (one with collinear predictors, so
+  that some coefficients are not estimable) would fail with
+  “non-conformable arguments”. The score contributions used for the
+  variance had one column per model matrix column, while the model
+  matrix itself had been reduced to its estimable columns. Such fits now
+  succeed, reporting the estimable coefficients and their standard
+  errors and `NA` for the rest, as
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  does.
 
 - Fixed a bug in
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
@@ -111,15 +245,68 @@
   no `newdata` supplied could return incorrect values due to a scaling
   error.
 
-- The `link` argument in
+- Fixed a bug in
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  in which `vcov = "const"` would always fail with the error “attempt to
+  set an attribute on NULL”. The model-based variance is now returned,
+  matching that of an unweighted
+  [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
+  fit.
+
+- Fixed a bug in
   [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
-  no longer accepts `"log"` and `"clog"` as valid links.
+  and
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  in which `vcov = "const"` would always fail with the error “no
+  applicable method for ‘vcov’ applied to an object of class "list"”.
+  The model-based variance is now returned, matching that of
+  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) and
+  [`mlogit::mlogit()`](https://rdrr.io/pkg/mlogit/man/mlogit.html),
+  respectively.
+
+- Fixed a bug in
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  in which a model with no covariates (e.g., `Surv(time, event) ~ 1`)
+  would fail with the error “‘score’ residuals are not defined for a
+  null model”. Such a model now returns an object with no coefficients
+  and an empty variance matrix, which also makes
+  [`anova()`](https://rdrr.io/r/stats/anova.html) against a null model
+  work.
+
+- Fixed a bug in
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  and
+  [`lm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  in which a model with collinear covariates would fail, with the error
+  “length of ‘dimnames’ \[1\] not equal to array extent” when
+  `vcov = "const"` and “the Hessian for the outcome model could not be
+  inverted” when `vcov = "HC0"` or `vcov = "asympt"`. As with
+  [`stats::glm()`](https://rdrr.io/r/stats/glm.html), the redundant
+  coefficients are now `NA`, and the variance matrix covers the
+  estimable coefficients.
+
+- Fixed a bug in [`summary()`](https://rdrr.io/r/base/summary.html) for
+  `glm_weightit`, `lm_weightit`, `multinom_weightit`, and
+  `ordinal_weightit` objects in which all standard errors (and the test
+  statistics and p-values derived from them) would be `NA` when any
+  coefficient was aliased due to collinear covariates.
+
+- Fixed a bug in
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  in which a model fit to data with no observed events would fail with
+  the error “object ‘jacob’ not found” (or “replacement has length zero”
+  for a model with no covariates). As with
+  [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html),
+  the coefficients are now `NA`, along with the variance matrix, and a
+  warning is thrown.
 
 - `weights` is now correctly ignored with a warning in
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
   and friends.
 
-- Added units tests for all weighting methods.
+### Other
+
+- Added unit tests for all weighting methods.
 
 ## `WeightIt` 1.7.0
 

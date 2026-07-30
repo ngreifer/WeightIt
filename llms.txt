@@ -8,8 +8,8 @@ status](https://www.r-pkg.org/badges/version/WeightIt?color=00622B)](https://CRA
 
 *WeightIt* is a one-stop package to generate balancing weights for point
 and longitudinal treatments in observational studies. Support is
-included for binary, multi-category, and continuous treatments, a
-variety of estimands including the ATE, ATT, ATC, ATO, and others, and
+included for binary, multi-category, and continuous treatments; a
+variety of estimands including the ATE, ATT, ATC, ATO, and others; and
 for a wide variety of weighting methods, including those that rely on
 parametric modeling, machine learning, or optimization. *WeightIt* also
 provides functionality for fitting regression models in weighted samples
@@ -173,7 +173,7 @@ for information on how to install them.
 #### Binary Treatments
 
 | Method | `method` |
-|----|----|
+|:---|:--:|
 | Binary regression PS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
 | Generalized boosted modeling PS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
 | Covariate balancing PS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
@@ -189,7 +189,7 @@ for information on how to install them.
 #### Multi-Category Treatments
 
 | Method | `method` |
-|----|----|
+|:---|:--:|
 | Multinomial regression PS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
 | Generalized boosted modeling PS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
 | Covariate balancing PS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
@@ -205,7 +205,7 @@ for information on how to install them.
 #### Continuous Treatments
 
 | Method | `method` |
-|----|----|
+|:---|:--:|
 | Generalized linear model GPS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
 | Generalized boosted modeling GPS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
 | Covariate balancing GPS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
@@ -219,7 +219,8 @@ for information on how to install them.
 In addition, *WeightIt* implements the subgroup balancing propensity
 score using the function
 [`sbps()`](https://ngreifer.github.io/WeightIt/reference/sbps.md).
-Several other tools and utilities are available, including
+Censoring weights can be estimated to account for missingness in the
+outcome. Several other tools and utilities are available, including
 [`trim()`](https://ngreifer.github.io/WeightIt/reference/trim.md) to
 trim or truncate weights,
 [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
@@ -355,6 +356,9 @@ citation("WeightIt")
   Subgroup Balancing Propensity Score
 
 ## Other functions
+
+- [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  : Mark a censoring indicator in a model formula
 
 - [`get_w_from_ps()`](https://ngreifer.github.io/WeightIt/reference/get_w_from_ps.md)
   : Compute weights from propensity scores

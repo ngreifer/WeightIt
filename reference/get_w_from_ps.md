@@ -22,10 +22,16 @@ get_w_from_ps(
 - ps:
 
   a vector, matrix, or data frame of propensity scores. See Details.
+  When `treat` is a censoring indicator, must be a vector of the
+  probability of *being censored*.
 
 - treat:
 
-  a vector of treatment status for each individual. See Details.
+  a vector of treatment status for each individual. See Details. Can
+  also be a censoring indicator created with
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+  in which case inverse probability of censoring weights are returned
+  and the remaining arguments do not apply.
 
 - estimand:
 
@@ -96,6 +102,18 @@ i}, \ldots, p\_{g, i}) \\ w^{ATOS}\_i &= w^{ATE}\_i \times
 
 `get_w_from_ps()` can only be used with binary and multi-category
 treatments.
+
+### Censoring indicators
+
+When `treat` is a censoring indicator created with
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+`get_w_from_ps()` instead returns inverse probability of censoring
+weights: \\(1 - e(X))^{-1}\\ for the units still under observation and
+exactly 0 for the censored units, where `ps` is \\e(X) = P(C = 1 \|
+X)\\, the probability of *being censored*. `estimand`, `focal`,
+`treated`, `subclass`, and `stabilize` do not apply and are ignored with
+a warning. See
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md).
 
 ### Supplying the `ps` argument
 
@@ -276,12 +294,12 @@ multi.fit <- multinom_weightit(
 ps.multi <- fitted(multi.fit)
 head(ps.multi)
 #>           A         B         C
-#> 1 0.3275345 0.2714686 0.4009970
-#> 2 0.3110696 0.3349112 0.3540192
-#> 3 0.3261981 0.3602605 0.3135413
-#> 4 0.3176130 0.3061721 0.3762149
-#> 5 0.3214072 0.3244588 0.3541339
-#> 6 0.3294088 0.3469696 0.3236216
+#> 1 0.2858225 0.4168571 0.2973204
+#> 2 0.2951184 0.3688008 0.3360807
+#> 3 0.2101576 0.4491344 0.3407080
+#> 4 0.2821068 0.3908246 0.3270686
+#> 5 0.2307228 0.4209003 0.3483769
+#> 6 0.2814126 0.3804613 0.3381262
 
 w5 <- get_w_from_ps(ps.multi, treat = T3,
                     estimand = "ATE")

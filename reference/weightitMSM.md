@@ -249,6 +249,47 @@ results from `CBMSM()` in CBPS because `CBMSM()` takes a different
 approach to generating weights than simply estimating several
 time-specific models.
 
+### Censoring weights (IPCW)
+
+Censoring can be modeled by including entries in `formula.list` whose
+left side is wrapped in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md),
+placed in temporal order among the treatment models. For example,
+
+    weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                     A_2 ~ X1_1 + X2_1 + A_1,
+                     .cens(C_2) ~ X1_1 + X2_1 + A_1 + A_2,
+                     A_3 ~ X1_2 + X2_2 + A_2),
+                data = d, method = "glm")
+
+models censoring occurring after the second treatment. Each censoring
+indicator must be 0 for units still under observation and 1 for units
+censored at that time point. See
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+for details of what the resulting weights estimate.
+
+Every model, treatment or censoring, is fit only among the units still
+under observation when it is reached, and the resulting weights are
+multiplied together across time points as usual. A unit censored at any
+time point therefore has a final weight of exactly 0. Because such units
+drop out, missing values are permitted in the treatments and covariates
+that follow their censoring; missing values among units still under
+observation remain an error. `at.risk` in the output has one column per
+time point recording which units were under observation when that model
+was fit.
+
+Censoring weights are not stabilized by `num.formula`; each is
+stabilized by its own marginal censoring model when `stabilize = TRUE`.
+When `num.formula` is supplied as a list, it should have one entry per
+*treatment* time point, ignoring the censoring entries.
+
+Censoring can also be used with `is.MSM.method = TRUE` when
+`method = "cbps"`, in which case one set of weights is estimated
+satisfying the balance conditions at every time point simultaneously,
+each evaluated among the units still under observation at that time
+point. See
+[`method_cbps`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md).
+
 ## References
 
 Cole, S. R., & Hernán, M. A. (2008). Constructing Inverse Probability

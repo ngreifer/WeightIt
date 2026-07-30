@@ -226,7 +226,7 @@ the <code>"cluster"</code> attribute of the output object, even if not used.</p>
 will include two extra columns when <code>weightit</code> is supplied: <code>(weights)</code>
 containing the weights used in the model (the product of the estimated
 weights and the sampling weights, if any) and <code>(s.weights)</code> containing the
-sampling weights, which will be 1 if <code>s.weights</code> is not supplied in the
+sampling weights, which will all be 1 if <code>s.weights</code> is not supplied in the
 original <code><a href="weightit.html">weightit()</a></code> call.</p>
     </div>
     <div class="section level2">
@@ -275,7 +275,6 @@ for all models.</p>
     <div class="dont-index">
 <ul><li><p><code><a href="https://rdrr.io/r/stats/lm.html" class="external-link">lm()</a></code> and <code><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm()</a></code> for fitting (generalized) linear models without
 adjusting standard errors for estimation of the weights.</p></li>
-<li><p><code>glm_weightit()</code> for fitting generalized linear models that adjust for estimation of the weights.</p></li>
 <li><p><code><a href="multinom_weightit.html">multinom_weightit()</a></code> for fitting multinomial regression models that adjust for estimation of the weights.</p></li>
 <li><p><code><a href="ordinal_weightit.html">ordinal_weightit()</a></code> for fitting ordinal regression models that adjust for estimation of the weights.</p></li>
 <li><p><code><a href="coxph_weightit.html">coxph_weightit()</a></code> for fitting Cox proportional hazards models that adjust for estimation of the weights.</p></li>
