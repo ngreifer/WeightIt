@@ -273,23 +273,22 @@ test_that("Gaussian and Poisson families", {
   expect_equal(vcov(fit_p_hc0), sandwich::sandwich(fit_p_hc0, asympt = FALSE), tolerance = eps)
 })
 
-test_that("family = 'multinomial' redirects to multinom_weightit() (deprecated)", {
+test_that("family = 'multinomial' is rejected", {
   skip_on_cran()
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
   test_data$Y_M <- factor(test_data$Y_O, ordered = FALSE)
 
-  expect_warning({
-    fit <- glm_weightit(Y_M ~ A + X1 + X2, data = test_data, family = "multinomial")
-  }, "deprecated")
+  #Previously this warned and routed the input to multinom_weightit()
+  expect_error(glm_weightit(Y_M ~ A + X1 + X2, data = test_data,
+                            family = "multinomial"),
+               "not allowed")
 
-  expect_s3_class(fit, "multinom_weightit")
-
-  #Coefficients should match calling multinom_weightit() directly
-  fit_direct <- multinom_weightit(Y_M ~ A + X1 + X2, data = test_data)
-
-  expect_equal(coef(fit), coef(fit_direct))
+  expect_error(glm_weightit(Y_M ~ A + X1 + X2, data = test_data,
+                            family = "multinomial"),
+               "multinom_weightit")
 })
+
 test_that("collinear covariates give NA for the aliased coefficients", {
   skip_on_cran()
   skip_if_not_installed("sandwich")
