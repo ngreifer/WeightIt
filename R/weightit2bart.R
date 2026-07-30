@@ -6,7 +6,7 @@
 #' This page explains the details of estimating weights from
 #' Bayesian additive regression trees (BART)-based propensity scores by setting
 #' `method = "bart"` in the call to [weightit()] or [weightitMSM()]. This method
-#' can be used with binary, multi-category, and continuous treatments.
+#' can be used with binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating propensity scores using BART and
 #' then converting those propensity scores into weights using a formula that
@@ -74,6 +74,10 @@
 #' and BART hyperparameters like `n.trees` to `bart_args`), so the same argument
 #' names can be used with or without random effects. As with the single-level
 #' case, M-estimation is not supported.
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], a single BART model of the probability of being censored is fit, and the weights are `1/P(C = 0 | X)` for the units still under observation and 0 for the censored units. The returned propensity score is the probability of *being censored*.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -287,6 +291,27 @@ weightit2bart <- function(covs, treat, s.weights, subset, estimand, focal, stabi
                                    stabilize = stabilize, subclass = ...get("subclass"))
 
   list(w = w, ps = p.score, fit.obj = fit)
+}
+
+weightit2bart.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                               estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  C <- .make_cens_treat(treat)
+
+  out <- .cens_degenerate_out(C[subset])
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  #The censoring model P(C = 1 | X) is the binary propensity score model with the
+  #censored units as the focal group; see `weightit2glm.cens()`.
+  out <- weightit2bart(covs = covs, treat = C, s.weights = s.weights,
+                       subset = subset, estimand = "ATT", focal = 1,
+                       stabilize = FALSE, missing = missing,
+                       verbose = verbose, ...)
+
+  .att_out_to_cens(out, C[subset])
 }
 
 weightit2bart.multi <-  function(covs, treat, s.weights, subset, estimand, focal, stabilize,

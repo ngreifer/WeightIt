@@ -7,7 +7,7 @@
 This page explains the details of estimating weights from
 generalized boosted model-based propensity scores by setting \code{method = "gbm"}
 in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with
-binary, multi-category, and continuous treatments.
+binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using
 generalized boosted modeling (GBM) and then converting those propensity scores into
@@ -60,6 +60,11 @@ parameter values chosen using the method specified in the \code{criterion} argum
 instead of assuming a specific density for the denominator by
 setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
 to refine the density estimation parameters.
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, a single model of the probability of being censored is fit, and the weights are \eqn{1/P(C = 0 | X)} for the units still under observation and 0 for the censored units. The number of trees is selected using \code{criterion} computed between the \emph{weighted units still under observation} and the \emph{full at-risk sample}, which is what the weights target. This is cobalt's "target" balance, so \code{criterion} must be one of \code{cobalt::available.stats("target")} -- a subset of the values allowed for binary treatments, excluding \code{"r2"}, \code{"r2.2"}, \code{"r2.3"}, \code{"kernel.dist"}, and \code{"l1.med"}. \code{"cv{#}"} works as it does for binary treatments.
 }
 
 \subsection{Longitudinal Treatments}{

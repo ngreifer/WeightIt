@@ -53,7 +53,16 @@
   if (rlang::is_string(method) &&
       utils::hasName(.weightit_methods, method) &&
       (treat.type %nin% .weightit_methods[[method]]$treat_type)) {
-    arg::err("{(.method_to_phrase(method))} can only be used with a {.or {(.weightit_methods[[method]]$treat_type)}} treatment")
+    if (treat.type == "censoring") {
+      arg::err(c("{(.method_to_phrase(method))} cannot be used to estimate censoring weights.",
+                 "i" = "See the {.field treat_type} component of {.code .weightit_methods} for the methods that can."))
+    }
+
+    #Censoring is not a treatment type from the user's point of view, so it is left
+    #out of the list of allowable treatments here.
+    allowable_treat_types <- setdiff(.weightit_methods[[method]]$treat_type, "censoring")
+
+    arg::err("{(.method_to_phrase(method))} can only be used with a {.or {allowable_treat_types}} treatment")
   }
 }
 
@@ -191,6 +200,14 @@
     return("ATE")
   }
 
+  if (treat.type == "censoring") {
+    if (is_not_null(estimand) && (!rlang::is_string(estimand) || !identical(toupper(estimand), "ATE"))) {
+      arg::wrn("{.arg estimand} is ignored for censoring models")
+    }
+
+    return("ATE")
+  }
+
   arg::arg_string(estimand)
 
   allowable_estimands <- {
@@ -214,6 +231,10 @@
   if (is_not_null(subclass) && is_not_null(method) && !is.function(method)) {
 
     subclass_ok <- .weightit_methods[[method]]$subclass_ok
+
+    if (treat.type == "censoring") {
+      arg::err("subclasses are not compatible with censoring weights")
+    }
 
     if (treat.type == "continuous" || !subclass_ok) {
       arg::err("subclasses are not compatible with {(.method_to_phrase(method))} with a {treat.type} treatment")
@@ -489,7 +510,7 @@
   }
 
   if (!is.numeric(ps)) {
-    arg::err("the argument to {.arg ps} must be a vector of propensity scores or the (quoted) name of a numeric variable in {.arg data} that contains propensity scores")
+    arg::err("the argument to {.arg ps} must be a vector of propensity scores or a string containing the name of a numeric variable in {.arg data} that contains propensity scores")
   }
 
   if (length(ps) != length(treat)) {
@@ -505,7 +526,9 @@
   if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
   treat.type <- get_treat_type(treat)
 
-  if (treat.type == "continuous") {
+  if (treat.type %in% c("continuous", "censoring")) {
+    #"ATE" rather than NULL: `weightit()` tests `reported.estimand %in%
+    #c("ATT", "ATC")`, and `NULL %in% ...` is logical(0), which `if()` rejects.
     return(list(focal = NULL,
                 estimand = "ATE",
                 reported.estimand = "ATE"))
@@ -736,8 +759,23 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
                                             is.factor(by.components[[1L]]))))
   }
 
-  if (treat.type != "continuous" &&
-      any_apply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]))) {
+  if (treat.type == "censoring") {
+    #A censoring indicator need not take both values within each group, but a group
+    #in which every unit is censored has no units left to weight. Only relevant when
+    #grouping actually occurs; the all-censored sample as a whole is handled by the
+    #weighting functions, which warn and return weights of 0.
+    if (nlevels(by.factor) > 1L) {
+      C <- .make_cens_treat(treat)
+
+      if (any_apply(levels(by.factor), function(x) {
+        all(C[by.factor == x] == 1, na.rm = TRUE)
+      })) {
+        arg::err("all units are censored in at least one of the groups formed by {.arg {by.arg}}. Consider coarsening {.arg {by.arg}}")
+      }
+    }
+  }
+  else if (treat.type != "continuous" &&
+           any_apply(levels(by.factor), function(x) nunique(treat) != nunique(treat[by.factor == x]))) {
     if (is_null(treat.name)) {
       arg::err("not all the groups formed by {.arg {by.arg}} contain all treatment levels. Consider coarsening {.arg {by.arg}}")
     }
@@ -1182,7 +1220,26 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
 
   extreme.warn <- FALSE
   if (all_the_same(w)) {
-    arg::wrn("all weights are {.val {w[1L]}}, possibly indicating an estimation failure")
+    #For censoring, constant weights of 1 mean no unit was censored and constant
+    #weights of 0 mean every unit was, neither of which indicates a failure. The
+    #latter is already reported by the weighting function itself.
+    if (treat.type != "censoring" ||
+        !any(check_if_zero(w[1L] - c(0, 1)))) {
+      arg::wrn("all weights are {.val {w[1L]}}, possibly indicating an estimation failure")
+    }
+  }
+  else if (treat.type == "censoring") {
+    #Censored units have a weight of 0 by construction, so judge extremeness
+    #among the units still under observation only.
+    keep <- !check_if_zero(w) & is.finite(tw)
+
+    if (!any(keep)) {
+      arg::wrn("all weights are {.val {0}}, indicating that all units are censored")
+    }
+    else if (sum(keep) > 1L) {
+      w.cv <- sd(tw[keep], na.rm = TRUE) / mean(tw[keep], na.rm = TRUE)
+      if (!is.finite(w.cv) || w.cv > 4) extreme.warn <- TRUE
+    }
   }
   else if (treat.type == "continuous") {
     w.cv <- sd(tw, na.rm = TRUE) / mean(tw, na.rm = TRUE)
@@ -1626,6 +1683,37 @@ stabilize_w <- function(weights, treat) {
   w
 }
 
+#Inverse probability of censoring weights: `ps` is the probability of being
+#censored, P(C = 1 | X), and `treat` the 0/1 censoring indicator. Units still
+#under observation receive 1 / P(C = 0 | X); censored units receive exactly 0.
+.get_w_from_ps_internal_cens <- function(ps, treat) {
+  w <- rep_with(0, treat)
+
+  i0 <- which(treat == 0)
+
+  w[i0] <- 1 / (1 - ps[i0])
+
+  names(w) <- names(treat) %or% NULL
+
+  w
+}
+
+#Vectorized version of `.get_w_from_ps_internal_cens()` over the columns of a
+#matrix of censoring probabilities (one column per candidate tuning value). The
+#censored rows are filled with 0 directly rather than computed and multiplied by
+#an indicator, since `1 - ps` can be 0 for them under a saturated model, and
+#`0 / 0` would give `NaN`.
+.get_w_from_ps_internal_cens_array <- function(ps, treat) {
+  w <- matrix(0, nrow = nrow(ps), ncol = ncol(ps),
+              dimnames = dimnames(ps))
+
+  i0 <- which(treat == 0)
+
+  w[i0, ] <- 1 / (1 - ps[i0, , drop = FALSE])
+
+  w
+}
+
 .get_w_from_ps_internal_multi <- function(ps, treat, estimand = "ATE", focal = NULL,
                                           subclass = NULL, stabilize = FALSE) {
 
@@ -1838,6 +1926,66 @@ stabilize_w <- function(weights, treat) {
   }
 
   dw
+}
+
+#Derivative of the IPCW weights wrt the probability of being censored. Since
+#w = 1/(1 - p) for the units still under observation and is identically 0 for the
+#censored units, this is the same as for the ATT.
+.dw_dp_cens <- function(p, treat) {
+  .dw_dp_bin(p, treat, estimand = "ATT")
+}
+
+#Handle the two degenerate censoring problems, returning the finished output when
+#one applies and NULL when there is a model to fit. `C` must already be subset.
+#
+#These are not merely shortcuts. `binarize()` returns all 1s when its input takes
+#a single value, and `get_treated_level(treat, "ATT", focal = 1)` errors when 1 is
+#not among the values present, so an all-uncensored problem must never reach a
+#weighting function.
+.cens_degenerate_out <- function(C) {
+  #No unit was censored: every unit stays in the sample at full weight
+  if (!any(C == 1)) {
+    return(list(w = rep.int(1, length(C))))
+  }
+
+  #Every unit was censored: nothing is left to weight
+  if (all(C == 1)) {
+    arg::wrn("all units are censored, so all weights will be {.val {0}}")
+
+    return(list(w = rep.int(0, length(C))))
+  }
+
+  NULL
+}
+
+#Convert the output of a binary weighting function fit with `estimand = "ATT"`
+#and `focal = 1` (the censored units) into IPCW output.
+#
+#The ATT weights are the odds p/(1 - p) for the units still under observation and
+#exactly 1 for the censored units, so
+#
+#  w_IPCW = (1 - C) * (w_ATT + 1) = (1 - C) / (1 - p)
+#
+#Delegating through the ATT rather than the ATE matters: the ATE weights are 1/p
+#for the censored units, which is `Inf` under separation, and 0 * Inf would give
+#`NaN` here and in `wfun()`.
+#
+#`psi_treat`, `hess_treat`, and `dw_dBtreat` need no adjustment. The censoring
+#score is the negative of the ATT score, and the Wooldridge correction used in
+#`.compute_vcov()` is invariant to that sign flip because the Hessian flips with
+#it; and dw/dp is the same for both (see `.dw_dp_cens()`). Only `wfun()` changes.
+.att_out_to_cens <- function(out, C) {
+  out[["w"]] <- (1 - C) * (out[["w"]] + 1)
+
+  if (is_not_null(out[["Mparts"]])) {
+    .wfun <- out[["Mparts"]][["wfun"]]
+
+    out[["Mparts"]][["wfun"]] <- function(Btreat, Xtreat, A) {
+      (1 - A) * (.wfun(Btreat, Xtreat, A) + 1)
+    }
+  }
+
+  out
 }
 
 #Derivative of weights wrt ps for different estimands

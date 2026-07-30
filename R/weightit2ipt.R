@@ -6,7 +6,7 @@
 #' This page explains the details of estimating weights using
 #' inverse probability tilting by setting `method = "ipt"` in the call to
 #' [weightit()] or [weightitMSM()]. This method can be used with binary and
-#' multi-category treatments.
+#' multi-category treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating propensity scores using a
 #' modification of the usual generalized linear model score equations to enforce
@@ -33,6 +33,10 @@
 #' ## Continuous Treatments
 #'
 #' Inverse probability tilting is not compatible with continuous treatments.
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], the censoring model is tilted so that the weighted covariate means of the units still under observation equal those of the full at-risk sample. Only one set of tilting parameters is solved for, rather than one per treatment group as for the ATE. The censored units receive a weight of 0.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -351,6 +355,138 @@ weightit2ipt <- function(covs, treat, s.weights, subset, estimand, focal,
   )
 
   list(w = w, ps = ps, fit.obj = fit.list,
+       Mparts = Mparts)
+}
+
+weightit2ipt.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  cens <- .make_cens_treat(treat)[subset]
+  covs <- covs[subset, , drop = FALSE]
+  s.weights <- s.weights[subset]
+
+  out <- .cens_degenerate_out(cens)
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  missing <- .process_missing2(missing, covs)
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  #`focal` and `treat` are deliberately omitted: any quantile terms must be defined
+  #by the full at-risk sample, which is the target here.
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights) |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
+
+  C <- cbind(`(Intercept)` = 1, covs)
+
+  link <- ...get("link", "logit")
+
+  if (is.character(link) && length(link) == 1L) {
+    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog",
+                             "cauchit", "log", "clog", "softplus"))
+
+    link <- .make_link(link)
+  }
+  else if (inherits(link, "family") && is_not_null(link$linkfun) &&
+           is_not_null(link$linkinv) && is_not_null(link$mu.eta) &&
+           is_not_null(link$valideta)) {
+    link <- list(linkfun = link$linkfun,
+                 linkinv = link$linkinv,
+                 mu.eta = link$mu.eta,
+                 valideta = link$valideta,
+                 name = link$link)
+    class(link) <- "link-glm"
+  }
+  else if (!inherits(link, "link-glm")) {
+    arg::err('{.arg link} must be a string or an object of class {.cls link-glm}')
+  }
+
+  .fam <- quasibinomial(link)
+
+  n <- length(cens)
+  k <- ncol(C)
+
+  #Tilt the censoring model so that the inverse probability of censoring weights
+  #reproduce the full at-risk sample's covariate totals:
+  #
+  #  sum_i SW_i * [(1 - C_i)/(1 - p_i) - 1] * X_i = 0
+  #
+  #This is exactly the group-0 condition of the ATE case of `weightit2ipt()`, with
+  #the censoring indicator in place of the treatment; there is no second group to
+  #solve for. `p` is evaluated only where C == 0 because the term is 0 elsewhere,
+  #which also keeps unbounded links from straying outside (0, 1) where it does not
+  #matter.
+  psi <- function(B, X, A, SW) {
+    p <- rep.int(0, n)
+    p[A == 0] <- .fam$linkinv(drop(X[A == 0, , drop = FALSE] %*% B))
+
+    SW * ((1 - A) / (1 - p) - 1) * X
+  }
+
+  f <- function(B, X, A, SW) {
+    .colMeans(psi(B, X, A, SW), n, k)
+  }
+
+  start <- .get_glm_starting_values(X = C, Y = cens, w = s.weights,
+                                   family = .fam)
+
+  verbosely({
+    fit <- rootSolve::multiroot(f,
+                               start = start,
+                               X = C,
+                               A = cens,
+                               SW = s.weights,
+                               rtol = 1e-10, atol = 1e-10, ctol = 1e-10,
+                               verbose = TRUE)
+  }, verbose = verbose)
+
+  if (fit[["estim.precis"]] > 1e-5) {
+    arg::wrn("the optimization failed to converge; consider using fewer covariates or a different link function")
+  }
+
+  par <- fit[["root"]]
+
+  ps <- .fam$linkinv(drop(C %*% par))
+
+  w <- .get_w_from_ps_internal_cens(ps, cens)
+
+  Mparts <- list(
+    psi_treat = function(Btreat, Xtreat, A, SW) {
+      psi(Btreat, Xtreat, A, SW)
+    },
+    wfun = function(Btreat, Xtreat, A) {
+      .get_w_from_ps_internal_cens(.fam$linkinv(drop(Xtreat %*% Btreat)), A)
+    },
+    dw_dBtreat = function(Btreat, Xtreat, A, SW) {
+      XB <- drop(Xtreat %*% Btreat)
+      ps <- .fam$linkinv(XB)
+
+      .dw_dp_cens(ps, A) * .fam$mu.eta(XB) * Xtreat
+    },
+    hess_treat = function(Btreat, Xtreat, A, SW) {
+      XB <- drop(Xtreat %*% Btreat)
+      ps <- .fam$linkinv(XB)
+
+      dw <- .dw_dp_cens(ps, A) * .fam$mu.eta(XB) * SW
+
+      crossprod(Xtreat, dw * Xtreat)
+    },
+    Xtreat = C,
+    A = cens,
+    btreat = par
+  )
+
+  list(w = w, ps = ps, fit.obj = fit,
        Mparts = Mparts)
 }
 

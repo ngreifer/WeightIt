@@ -169,7 +169,8 @@ summary.glm_weightit <- function(object,
       pvalue <- tvalue <- s.err
     }
     else {
-      s.err <- sqrt(diag(covmat)[!aliased])
+      # `covmat` already covers only the estimable coefficients
+      s.err <- sqrt(diag(covmat))
       tvalue <- coef.p / s.err
       pvalue <- 2 * pnorm(-abs(tvalue))
     }
@@ -268,7 +269,8 @@ summary.multinom_weightit <- function(object,
       pvalue <- tvalue <- s.err
     }
     else {
-      s.err <- sqrt(diag(covmat)[!aliased])
+      # `covmat` already covers only the estimable coefficients
+      s.err <- sqrt(diag(covmat))
       tvalue <- coef.p / s.err
       pvalue <- 2 * pnorm(-abs(tvalue))
     }
@@ -614,7 +616,7 @@ nobs.multinom_weightit <- function(object, ...) {
 #' @exportS3Method stats::nobs ordinal_weightit
 nobs.ordinal_weightit <- nobs.multinom_weightit
 
-#' @exportS3Method stats::nobs multinom_weightit
+#' @exportS3Method stats::nobs coxph_weightit
 nobs.coxph_weightit <- nobs.multinom_weightit
 
 #' @importFrom sandwich estfun
@@ -652,12 +654,7 @@ estfun.glm_weightit <- function(x, asympt = TRUE, ...) {
   offset <- x[["offset"]] %or% rep_with(0, Y)
 
   if (any(aliased)) {
-    if (is_not_null(.attr(x[["qr"]][["qr"]], "aliased"))) {
-      Xout <- Xout[, !.attr(x[["qr"]][["qr"]], "aliased"), drop = FALSE]
-    }
-    else {
-      Xout <- make_full_rank(Xout, with.intercept = FALSE)
-    }
+    Xout <- .drop_aliased_cols(Xout, x)
 
     bout <- bout[!aliased]
   }
@@ -843,12 +840,8 @@ bread.glm_weightit <- function(x, ...) {
     offset <- x[["offset"]] %or% rep_with(0, Y)
 
     if (any(aliased)) {
-      if (is_not_null(.attr(x[["qr"]][["qr"]], "aliased"))) {
-        Xout <- Xout[, !.attr(x[["qr"]][["qr"]], "aliased"), drop = FALSE]
-      }
-      else {
-        Xout <- make_full_rank(Xout, with.intercept = FALSE)
-      }
+      Xout <- .drop_aliased_cols(Xout, x)
+
       bout <- bout[!aliased]
     }
 

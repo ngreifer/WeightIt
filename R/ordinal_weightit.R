@@ -127,11 +127,12 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
   fit$family$family <- "ordinal"
   ###
 
+  # Class must be assigned before `.compute_vcov()`, which dispatches on it
+  class(fit) <- "ordinal_weightit"
+
   fit$vcov <- .compute_vcov(fit, weightit, vcov, cluster, model_call, internal_model_call)
 
   fit <- .process_fit(fit, weightit, vcov, model_call, x, y)
-
-  class(fit) <- "ordinal_weightit"
 
   fit
 }

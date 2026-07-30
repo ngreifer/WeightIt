@@ -164,6 +164,37 @@ are allowed, and whether sampling weights are allowed.\tabular{ll}{
 
 \code{method} can also be supplied as a user-defined function; see \code{\link{method_user}}
 for instructions and examples. Setting \code{method = NULL} computes unit weights.
+\subsection{Censoring weights (IPCW)}{
+
+Wrapping the left side of \code{formula} in \code{\link[=.cens]{.cens()}} requests inverse
+probability of censoring weights instead of treatment weights, as in
+\code{weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")}. Censoring is treated as
+its own treatment type, distinct from binary, multi-category, and continuous
+treatments; the indicator must be 0 for units still under observation and 1 for
+units that are censored.
+
+Weights are estimated only for the units still under observation, and are those
+that make their covariate distribution resemble that of the full at-risk sample.
+Writing \eqn{e(X) = P(C = 1 | X)}, the weights are \eqn{1 / (1 - e(X))} for units with
+\eqn{C = 0} and exactly 0 for units with \eqn{C = 1}. Because only one group is weighted,
+the estimation problem is smaller and better conditioned than the corresponding
+binary-treatment problem, which would additionally solve for weights among the
+censored units; this matters most when few units are censored.
+
+\code{estimand}, \code{focal}, and \code{subclass} do not apply and are rejected or ignored.
+\code{by} and \code{stabilize} can be used; stabilization divides the weights by those from
+a marginal censoring model, giving \eqn{P(C = 0) / P(C = 0 | X)}. \code{ps} is the
+predicted probability of \emph{being censored}. Not all methods support censoring
+weights; see the \code{treat_type} component of \link{.weightit_methods}.
+
+Because censored units receive a weight of exactly 0, they contribute nothing to a
+weighted outcome model, and \code{\link[=glm_weightit]{glm_weightit()}} and friends tolerate missing values
+in the model variables for those units, including a missing event time in the
+\code{Surv()} response of a \code{\link[=coxph_weightit]{coxph_weightit()}} model. Missing values in units with a
+nonzero weight still produce an error. See \code{\link[=.cens]{.cens()}} for how to
+assess balance, which requires a little care.
+}
+
 \subsection{\code{estimand} and \code{focal}}{
 
 For binary and multi-category treatments, the
@@ -229,9 +260,7 @@ summary(W3)
 bal.tab(W3)
 }
 \seealso{
-\code{\link[=weightitMSM]{weightitMSM()}} for estimating weights with sequential (i.e.,
-longitudinal) treatments for use in estimating marginal structural models
-(MSMs).
+\code{\link[=weightitMSM]{weightitMSM()}} for estimating weights with sequential (i.e., longitudinal) treatments or with both treatment and censoring indicators for use in estimating marginal structural models (MSMs).
 
 \code{\link[=weightit.fit]{weightit.fit()}}, which is a lower-level dispatcher function that accepts a
 matrix of covariates and a vector of treatment statuses rather than a formula

@@ -16,6 +16,23 @@
                              cluster = cluster))
   }
 
+  if (inherits(fit, "coxph.null")) {
+    # A null (covariate-free) Cox model has no coefficients, so there is no
+    # variance matrix to compute regardless of the requested type
+    return(.modify_vcov_info(sq_matrix(n = 0L),
+                             vcov_type = vcov,
+                             cluster = cluster))
+  }
+
+  if (inherits(fit, "coxph") && isTRUE(fit[["nevent"]] == 0)) {
+    # With no events, the coefficients are all `NA`, so their variance is, too
+    nm <- names(fit[["coefficients"]])
+
+    return(.modify_vcov_info(sq_matrix(NA_real_, n = length(nm), names = nm),
+                             vcov_type = vcov,
+                             cluster = cluster))
+  }
+
   bout <- fit[["coefficients"]]
   aliased <- is.na(bout)
 
@@ -34,7 +51,9 @@
 
       V <- .solve_hessian(-fit[["hessian"]])
     }
-    else if (inherits(fit, "coxph_weightit")) {
+    # Tested on "coxph", not "coxph_weightit", because the class is assigned
+    # after `.compute_vcov()` is called from `coxph_weightit()`
+    else if (inherits(fit, "coxph")) {
       if (is_null(fit[["hessian"]])) {
         fit[["hessian"]] <- .get_hess_coxph(fit)
       }
@@ -48,6 +67,12 @@
       }
 
       V <- stats::vcov(.declass(fit))
+
+      if (any(aliased) && NROW(V) == length(aliased)) {
+        # `vcov()` methods expand to the full set of coefficients (with `NA`s)
+        # by default; keep only the estimable ones
+        V <- V[!aliased, !aliased, drop = FALSE]
+      }
     }
 
     colnames(V) <- rownames(V) <- names(aliased)[!aliased]
@@ -77,12 +102,7 @@
   offset <- fit[["offset"]] %or% rep_with(0, Y)
 
   if (any(aliased)) {
-    if (is_not_null(.attr(fit[["qr"]][["qr"]], "aliased"))) {
-      Xout <- Xout[, !.attr(fit[["qr"]][["qr"]], "aliased"), drop = FALSE]
-    }
-    else {
-      Xout <- make_full_rank(Xout, with.intercept = FALSE)
-    }
+    Xout <- .drop_aliased_cols(Xout, fit)
 
     bout <- bout[!aliased]
   }
@@ -686,7 +706,10 @@
   }
 
   if (is_null(vcov.) && ...length() == 0L) {
-    if (is_not_null(object[["vcov"]])) {
+    # An empty variance matrix is the correct answer for a model with no
+    # coefficients (e.g., a null Cox model), so don't treat it as missing
+    if (is_not_null(object[["vcov"]]) ||
+        (utils::hasName(object, "vcov") && is_null(object[["coefficients"]]))) {
       return(.modify_vcov_info(object[["vcov"]],
                                vcov_type = object[["vcov_type"]],
                                cluster = .attr(object, "cluster")))
@@ -933,6 +956,57 @@
   invisible(x)
 }
 
+# An `na.action` for weighted outcome models: like `na.fail()`, except that it
+# tolerates missing values in units with a weight of 0 (e.g., censored units under
+# IPCW), which contribute nothing to the fit or to its variance.
+#
+# No rows are ever dropped. This is required, not merely convenient:
+# `.compute_vcov()` pairs the model's `x`/`y` with the full-length weights and
+# `psi_treat` matrices taken from the `weightit` object, so dropping a row
+# desynchronizes them. A censored unit also has a nonzero contribution to the
+# treatment model's score even though its contribution to the outcome score is 0,
+# so its row genuinely belongs in the meat matrix. Missing values cannot simply be
+# left in place either: `glm.fit()` forms `x %*% start` over all rows before
+# subsetting to those with positive weight, so `0 * NA` would propagate.
+#
+# Instead, each incomplete row is filled from a single fully observed donor row.
+# Copying a whole row (rather than filling column by column) keeps factor levels
+# valid and matrix columns from `poly()`, `ns()`, and `Surv()` internally
+# consistent. The special model frame columns (`(weights)`, `(offset)`, ...) are
+# never overwritten: filling `(weights)` would make the fabricated rows count
+# toward `nobs()` and `df.residual()`, which is exactly what must not happen.
+#
+# Because no rows are dropped, no `na.action` attribute is set, so the fit passes
+# the missing-data check in `.compute_vcov()`. The original contents of the filled
+# rows are recorded so that `.process_fit()` can restore them in `fit$model`.
+.na_zero_weight <- function(object, ...) {
+  na_rows <- !stats::complete.cases(object)
+
+  if (!any(na_rows)) {
+    return(object)
+  }
+
+  w <- object[["(weights)"]]
+
+  #No weights, every row incomplete, or a missing value in a row that is not
+  #verifiably zero-weight: fail exactly as `na.fail()` would.
+  if (is_null(w) || all(na_rows) ||
+      any(na_rows & (is.na(w) | !check_if_zero(w)))) {
+    return(stats::na.fail(object))
+  }
+
+  keep <- !startsWith(names(object), "(")
+
+  donor <- which(!na_rows)[1L]
+
+  attr(object, "na.zero.weight") <- list(rows = which(na_rows),
+                                         orig = object[na_rows, keep, drop = FALSE])
+
+  object[na_rows, keep] <- object[rep(donor, sum(na_rows)), keep]
+
+  object
+}
+
 # Constructs a model call, used in .compute_vcov() to compute variance
 .build_internal_model_call <- function(object = NULL, model = "glm", model_call,
                                        weightit = NULL, vcov = NULL, br = FALSE) {
@@ -981,7 +1055,12 @@
     model_call$x <- TRUE
     model_call$y <- TRUE
     model_call$model <- TRUE
-    model_call$na.action <- "na.fail"
+    #Tolerates missing values in zero-weight units (e.g., censored units under
+    #IPCW) while failing on any other missing value; see `.na_zero_weight()`.
+    #The function itself rather than its name, because this call is re-evaluated
+    #in the user's environment for `vcov = "BS"` and `"FWB"`, where the name
+    #would not resolve.
+    model_call$na.action <- .na_zero_weight
 
     if (br) {
       rlang::check_installed("brglm2")
@@ -1004,7 +1083,12 @@
     model_call$x <- TRUE
     model_call$y <- TRUE
     model_call$model <- TRUE
-    model_call$na.action <- "na.fail"
+    #Tolerates missing values in zero-weight units (e.g., censored units under
+    #IPCW) while failing on any other missing value; see `.na_zero_weight()`.
+    #The function itself rather than its name, because this call is re-evaluated
+    #in the user's environment for `vcov = "BS"` and `"FWB"`, where the name
+    #would not resolve.
+    model_call$na.action <- .na_zero_weight
     model_call$family <- "gaussian"
 
     model_call[setdiff(names(model_call), c(rlang::fn_fmls_names(stats::glm),
@@ -1021,6 +1105,7 @@
     model_call$y <- TRUE
     model_call$model <- TRUE
     model_call$hess <- vcov %nin% c("none", "BS", "FWB")
+    model_call$na.action <- .na_zero_weight
   }
   else if (model == "multinom") {
     model_call[[1L]] <- .multinom_weightit
@@ -1033,6 +1118,7 @@
     model_call$y <- TRUE
     model_call$model <- TRUE
     model_call$hess <- vcov %nin% c("none", "BS", "FWB")
+    model_call$na.action <- .na_zero_weight
   }
   else if (model == "coxph") {
     model_call[[1L]] <- .coxph_weightit
@@ -1045,6 +1131,7 @@
     model_call$x <- TRUE
     model_call$y <- TRUE
     model_call$model <- TRUE
+    model_call$na.action <- .na_zero_weight
   }
 
   model_call
@@ -1052,6 +1139,18 @@
 
 # Processes fit for output; used in glm_weightit()
 .process_fit <- function(fit, weightit = NULL, vcov, model_call, x, y) {
+  #Undo the placeholder fill applied by `.na_zero_weight()` so that the returned
+  #model frame reports the data as it was supplied. Only `fit$model` is restored;
+  #`fit$x` and `fit$y` keep the placeholders, since `.compute_vcov()` reads them
+  #and `0 * NA` would propagate into the score contributions there.
+  nzw <- .attr(fit[["model"]], "na.zero.weight")
+
+  if (is_not_null(nzw)) {
+    fit$model[nzw[["rows"]], colnames(nzw[["orig"]])] <- nzw[["orig"]]
+
+    attr(fit$model, "na.zero.weight") <- nzw[["rows"]]
+  }
+
   if (is_not_null(weightit) && is_not_null(fit[["model"]])) {
     fit$model[["(s.weights)"]] <- weightit[["s.weights"]]
     fit$model[["(weights)"]] <- weightit[["weights"]] * weightit[["s.weights"]]
@@ -1073,6 +1172,33 @@
   fit[["vcov"]] <- .modify_vcov_info(fit[["vcov"]])
 
   fit
+}
+
+# Drops the columns of a model matrix belonging to aliased (collinear)
+# coefficients. Prefers the fit's own record of which columns are aliased (the
+# `"aliased"` attribute set by some fitters, or the `aliased` component set by
+# `coxph_weightit()`), since that is authoritative. Failing that, a model with
+# one coefficient per column of the model matrix (`glm`, `lm`, `coxph`)
+# identifies its aliased columns through its `NA` coefficients. Only when
+# neither applies (e.g., `ordinal_weightit()` and `multinom_weightit()`, which
+# have several coefficients per column) are the columns identified from the
+# model matrix itself.
+.drop_aliased_cols <- function(Xout, fit) {
+  aliased_cols <- .attr(fit[["qr"]][["qr"]], "aliased") %or% fit[["aliased"]]
+
+  if (is_null(aliased_cols)) {
+    aliased <- is.na(fit[["coefficients"]])
+
+    if (length(aliased) == ncol(Xout)) {
+      aliased_cols <- aliased
+    }
+  }
+
+  if (is_null(aliased_cols)) {
+    return(make_full_rank(Xout, with.intercept = FALSE))
+  }
+
+  Xout[, !aliased_cols, drop = FALSE]
 }
 
 .solve_hessian <- function(h, ..., model = "out") {

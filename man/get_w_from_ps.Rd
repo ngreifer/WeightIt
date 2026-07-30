@@ -15,9 +15,9 @@ get_w_from_ps(
 )
 }
 \arguments{
-\item{ps}{a vector, matrix, or data frame of propensity scores. See Details.}
+\item{ps}{a vector, matrix, or data frame of propensity scores. See Details. When \code{treat} is a censoring indicator, must be a vector of the probability of \emph{being censored}.}
 
-\item{treat}{a vector of treatment status for each individual. See Details.}
+\item{treat}{a vector of treatment status for each individual. See Details. Can also be a censoring indicator created with \code{\link[=.cens]{.cens()}}, in which case inverse probability of censoring weights are returned and the remaining arguments do not apply.}
 
 \item{estimand}{the desired estimand that the weights should target. Current
 options include \code{"ATE"} (average treatment effect), \code{"ATT"} (average
@@ -81,6 +81,11 @@ w^{ATOS}_i &= w^{ATE}_i \times \mathbb{1}\left(\alpha < p_{2, i} < 1 - \alpha\ri
 }
 
 \code{get_w_from_ps()} can only be used with binary and multi-category treatments.
+\subsection{Censoring indicators}{
+
+When \code{treat} is a censoring indicator created with \code{\link[=.cens]{.cens()}}, \code{get_w_from_ps()} instead returns inverse probability of censoring weights: \eqn{(1 - e(X))^{-1}} for the units still under observation and exactly 0 for the censored units, where \code{ps} is \eqn{e(X) = P(C = 1 | X)}, the probability of \emph{being censored}. \code{estimand}, \code{focal}, \code{treated}, \code{subclass}, and \code{stabilize} do not apply and are ignored with a warning. See \code{\link[=.cens]{.cens()}}.
+}
+
 \subsection{Supplying the \code{ps} argument}{
 
 The \code{ps} argument can be entered in two ways:

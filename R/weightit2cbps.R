@@ -6,7 +6,7 @@
 #' This page explains the details of estimating weights from covariate balancing
 #' propensity scores by setting `method = "cbps"` in the call to [weightit()] or
 #' [weightitMSM()]. This method can be used with binary, multi-category, and
-#' continuous treatments.
+#' continuous treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating propensity scores using
 #' generalized method of moments and then converting those propensity scores
@@ -30,6 +30,12 @@
 #' For continuous treatments, this method estimates the generalized propensity
 #' scores and weights using `optim()` using a modification of the formulas
 #' described by Fong, Hazlett, and Imai (2018). See Details.
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], the balance conditions require the weighted covariate means of the units still under observation to equal those of the full at-risk sample. The censored units receive a weight of 0.
+#'
+#' Censoring weights are also available with `is.MSM.method = TRUE`, i.e., when the weights at all time points are estimated simultaneously; `"cbps"` is the only method for which this is possible. Each time point's balance condition is then evaluated among the units still under observation at that time point, so the covariates and treatments that are missing for already-censored units never enter. The treatment conditions use the cumulative weights, which include the censoring factors; each censoring condition uses its own factor. As for treatments, M-estimation is not available with `is.MSM.method = TRUE`.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -65,7 +71,7 @@
 #' ## M-estimation
 #'
 #' M-estimation is supported for the just-identified CBPS (the default, setting
-#' `over = FALSE`) for binary and multi-category treatments. Otherwise (i.e.,
+#' `over = FALSE`) for binary and multi-category treatments and censoring weights. Otherwise (i.e.,
 #' for continuous or longitudinal treatments or when `over = TRUE`),
 #' M-estimation is not supported. See [glm_weightit()] and
 #' `vignette("estimating-effects")` for details.
@@ -74,7 +80,7 @@
 #'
 #' The following additional arguments can be specified:
 #' \describe{
-#'     \item{`over`}{`logical`; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is `FALSE` to use the just-identified CBPS.
+#'     \item{`over`}{`logical`; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is `FALSE` to use the just-identified CBPS.
 #'     }
 #'     \item{`twostep`}{`logical`; when `over = TRUE`, whether to use the two-step approximation to the generalized method of moments variance. Default is `TRUE`. Setting to `FALSE` increases computation time but may improve estimation. Ignored with a warning when `over = FALSE`.
 #'     }
@@ -103,7 +109,7 @@
 #'
 #' @details
 #' CBPS estimates the coefficients of a generalized linear model (for
-#' binary treatments), multinomial logistic regression model (for multi-category
+#' binary treatments and censoring weights), multinomial logistic regression model (for multi-category
 #' treatments), or linear regression model (for continuous treatments) that is
 #' used to compute (generalized) propensity scores, from which the weights are
 #' computed. It involves replacing (or augmenting, in the case of the
@@ -511,6 +517,270 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
     },
     Xtreat = mod_covs,
     A = treat,
+    btreat = par_out
+  )}
+
+  list(w = w, ps = p.score, fit.obj = out,
+       Mparts = Mparts)
+}
+
+weightit2cbps.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                               estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  cens <- .make_cens_treat(treat)[subset]
+  covs <- covs[subset, , drop = FALSE]
+  s.weights <- s.weights[subset]
+
+  out <- .cens_degenerate_out(cens)
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  missing <- .process_missing2(missing, covs)
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  #`focal` and `treat` are deliberately omitted: any quantile terms must be defined
+  #by the full at-risk sample, which is the target here.
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights) |>
+    .make_covs_full_rank()
+
+  mod_covs <- cbind(`(Intercept)` = 1, scale(svd(covs)$u))
+  bal_covs <- mod_covs
+
+  solver <- ...get("solver", NULL)
+  if (is_null(solver)) {
+    solver <- {
+      if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
+    }
+  }
+  else {
+    solver <- arg::match_arg(solver, c("optim", "multiroot"))
+
+    if (solver == "multiroot") {
+      rlang::check_installed("rootSolve")
+    }
+  }
+
+  over <- ...get("over", FALSE)
+  arg::arg_flag(over)
+
+  twostep <- ...get("twostep", TRUE)
+
+  if (over) {
+    arg::arg_flag(twostep)
+  }
+  else if (!isTRUE(twostep)) {
+    arg::wrn("{.arg twostep} is ignored when {.code over = FALSE}")
+  }
+
+  reltol <- ...get("reltol", 1e-10)
+  arg::arg_number(reltol)
+
+  maxit <- ...get("maxit", 5e3L)
+  arg::arg_count(maxit)
+
+  N <- sum(s.weights)
+
+  link <- ...get("link", "logit")
+
+  if (rlang::is_string(link)) {
+    arg::arg_element(link, c("logit", "probit", "cloglog", "loglog", "cauchit",
+                             "log", "clog", "identity", "softplus"))
+
+    link <- .make_link(link)
+  }
+  else if (inherits(link, "family") && is_not_null(link$linkfun) &&
+           is_not_null(link$linkinv) && is_not_null(link$mu.eta) &&
+           is_not_null(link$valideta)) {
+    link <- list(linkfun = link$linkfun,
+                 linkinv = link$linkinv,
+                 mu.eta = link$mu.eta,
+                 valideta = link$valideta,
+                 name = link$link)
+    class(link) <- "link-glm"
+  }
+  else if (!inherits(link, "link-glm")) {
+    arg::err('{.arg link} must be a string or an object of class {.cls link-glm}')
+  }
+
+  .fam <- quasibinomial(link)
+
+  # Balance condition for the censoring target: the inverse probability of
+  # censoring weights must reproduce the full at-risk sample's covariate totals,
+  #
+  #   sum_i SW_i * [(1 - C_i)/(1 - p_i) - 1] * X_i = 0
+  #
+  # which is the negative of the ATT condition with the censored units as focal.
+  # `p` is evaluated only where C == 0 because the first term is 0 elsewhere; this
+  # also keeps unbounded links (e.g., `link = "identity"`) from producing 0/0.
+  psi_bal <- function(B, Xm, Xb = Xm, A, SW) {
+    p <- rep.int(0, length(A))
+    p[A == 0] <- .fam$linkinv(drop(Xm[A == 0, , drop = FALSE] %*% B))
+
+    SW * ((1 - A) / (1 - p) - 1) * Xb
+  }
+
+  obj_bal <- function(B, Xm, Xb = Xm, A, SW) {
+    gbar <- colMeans(psi_bal(B, Xm, Xb, A, SW))
+    sqrt(sum(gbar^2))
+  }
+
+  # Initialize coefs using glm
+  par_glm <- .get_glm_starting_values(X = mod_covs, Y = cens, w = s.weights,
+                                      family = .fam)
+
+  # Slightly improve glm coefs to move closer to optimal
+  alpha.func <- function(alpha) obj_bal(par_glm * alpha, mod_covs, bal_covs, cens, s.weights)
+  par_alpha <- par_glm * optimize(alpha.func, interval = c(.8, 1.1))$min
+
+  solved <- FALSE
+  if (solver == "multiroot") {
+    out <- suppressWarnings({
+      try(verbosely({
+        rootSolve::multiroot(f = function(...) colMeans(psi_bal(...)),
+                             start = par_alpha,
+                             Xm = mod_covs,
+                             Xb = bal_covs,
+                             A = cens,
+                             SW = s.weights,
+                             rtol = reltol,
+                             atol = reltol,
+                             ctol = reltol)
+      }, verbose = FALSE), silent = TRUE)
+    })
+
+    if (!null_or_error(out) && utils::hasName(out, "root") &&
+        utils::hasName(out, "estim.precis") &&
+        is_number(out[["estim.precis"]]) &&
+        out[["estim.precis"]] < 1e-5) {
+      solved <- TRUE
+      par_alpha <- out[["root"]]
+    }
+  }
+
+  # Optimize balance objective
+  out <- optim(par = par_alpha,
+               fn = obj_bal,
+               method = "BFGS",
+               control = list(maxit = if (solved) 0L else maxit,
+                              reltol = reltol,
+                              trace = as.integer(!over && verbose)),
+               Xm = mod_covs,
+               Xb = bal_covs,
+               A = cens,
+               SW = s.weights)
+
+  par_out <- out$par
+
+  if (over) {
+    #Generalized linear model score
+    psi_glm <- function(B, Xm, A, SW) {
+      lin_pred <- drop(Xm %*% B)
+      p <- .fam$linkinv(lin_pred)
+      (SW * (A - p) * .fam$mu.eta(lin_pred) / .fam$variance(p)) * Xm
+    }
+
+    # Combine LR and balance
+    psi <- function(B, Xm, Xb = Xm, A, SW) {
+      cbind(psi_glm(B, Xm, A, SW), psi_bal(B, Xm, Xb, A, SW))
+    }
+
+    Sigma <- function(B, Xm, Xb = Xm, A, SW) {
+      lp <- drop(Xm %*% B)
+      p <- .fam$linkinv(lp)
+      g <- .fam$mu.eta(lp) / .fam$variance(p)
+
+      S11 <- crossprod(SW * g * (p * (1 - p)) * Xm, SW * g * Xm)
+
+      #The censoring balance condition is the negative of the ATT's, so the
+      #cross-term flips sign while the balance block, being quadratic in it, does not.
+      S12 <- -crossprod(SW * g * Xm, SW * p * Xb)
+      S21 <- t(S12)
+      S22 <- crossprod(SW * (p / (1 - p)) * Xb, SW * Xb)
+
+      rbind(cbind(S11, S12),
+            cbind(S21, S22)) / N
+    }
+
+    obj <- function(B, Xm, Xb = Xm, A, SW, invS = NULL) {
+      if (is_null(invS)) {
+        invS <- generalized_inverse(Sigma(B, Xm, Xb, A, SW))
+      }
+
+      gbar <- colMeans(psi(B, Xm, Xb, A, SW))
+
+      sqrt(drop(t(gbar) %*% invS %*% gbar))
+    }
+
+    invS <- {
+      if (twostep) generalized_inverse(Sigma(par_alpha, mod_covs, bal_covs, cens, s.weights))
+      else NULL
+    }
+
+    start.list <- {
+      if (max(abs(par_alpha - par_out)) < 1e-6) list(par_out)
+      else list(par_alpha, par_out)
+    }
+
+    out <- lapply(start.list, function(par_) {
+      optim(par = par_,
+            fn = obj,
+            method = "BFGS",
+            control = list(maxit = maxit,
+                           reltol = reltol,
+                           trace = as.integer(verbose)),
+            Xm = mod_covs,
+            Xb = bal_covs,
+            A = cens,
+            SW = s.weights,
+            invS = invS)
+    })
+
+    out <- out[[which.min(unlist(grab(out, "value")))]]
+
+    par_out <- out$par
+  }
+
+  p.score <- .fam$linkinv(drop(mod_covs %*% par_out))
+
+  if (!isTRUE(all.equal(out$converge, 0))) {
+    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
+  }
+
+  w <- .get_w_from_ps_internal_cens(p.score, cens)
+
+  Mparts <- if (!over) {list(
+    psi_treat = function(Btreat, Xtreat, A, SW) {
+      psi_bal(Btreat, Xtreat, Xtreat, A, SW)
+    },
+    wfun = function(Btreat, Xtreat, A) {
+      .get_w_from_ps_internal_cens(.fam$linkinv(drop(Xtreat %*% Btreat)), A)
+    },
+    dw_dBtreat = function(Btreat, Xtreat, A, SW) {
+      XB <- drop(Xtreat %*% Btreat)
+      ps <- .fam$linkinv(XB)
+
+      .dw_dp_cens(ps, A) * .fam$mu.eta(XB) * Xtreat
+    },
+    hess_treat = function(Btreat, Xtreat, A, SW) {
+      XB <- drop(Xtreat %*% Btreat)
+      ps <- .fam$linkinv(XB)
+
+      dw <- .dw_dp_cens(ps, A) * .fam$mu.eta(XB) * SW
+
+      crossprod(Xtreat, dw * Xtreat)
+    },
+    Xtreat = mod_covs,
+    A = cens,
     btreat = par_out
   )}
 
@@ -1084,10 +1354,27 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
        Mparts = Mparts)
 }
 
-weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, verbose, ...) {
+weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, verbose,
+                             atrisk.list = NULL, ...) {
 
   s.weights <- s.weights[subset]
   treat.types <- character(length(treat.list))
+
+  n <- sum(subset)
+
+  #A censoring time point at which no unit under observation is censored needs no
+  #weighting at all: its factor is identically 1. Such a block is given zero
+  #parameters, since its balance condition would otherwise drive the censoring
+  #probability to 0 and the coefficients to -Inf.
+  degenerate <- rep.int(FALSE, length(treat.list))
+
+  #Units still under observation when each model is fit. Without censoring every
+  #unit is at risk at every time point and everything below reduces to the
+  #original computation exactly.
+  atrisk <- lapply(seq_along(covs.list), function(i) {
+    if (is_null(atrisk.list)) rep.int(TRUE, n)
+    else atrisk.list[[i]][subset]
+  })
 
   for (i in seq_along(covs.list)) {
     treat.list[[i]] <- treat.list[[i]][subset]
@@ -1097,22 +1384,32 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     }
     treat.types[i] <- get_treat_type(treat.list[[i]])
 
-    covs.list[[i]] <- covs.list[[i]][subset, , drop = FALSE]
+    r <- which(atrisk[[i]])
 
-    if (.process_missing2(missing, covs.list[[i]]) == "ind") {
-      covs.list[[i]] <- add_missing_indicators(covs.list[[i]])
+    if (treat.types[i] == "censoring") {
+      degenerate[i] <- !any(.make_cens_treat(treat.list[[i]])[r] == 1)
     }
 
-    if (treat.types[i] %in% c("binary", "multinomial", "multi-category")) {
-      covs.list[[i]] <- covs.list[[i]] |>
+    #The covariates are prepared using the units under observation only: they are
+    #the sample this time point's balance condition is evaluated on, and the
+    #covariates of the already-censored units are missing, which `svd()` below
+    #would not tolerate.
+    covs_i <- covs.list[[i]][subset, , drop = FALSE][r, , drop = FALSE]
+
+    if (.process_missing2(missing, covs_i) == "ind") {
+      covs_i <- add_missing_indicators(covs_i)
+    }
+
+    if (treat.types[i] %in% c("binary", "multinomial", "multi-category", "censoring")) {
+      covs_i <- covs_i |>
         .apply_moments_int_quantile(moments = ...get("moments"),
                                     int = ...get("int"),
                                     quantile = ...get("quantile"),
-                                    s.weights = s.weights) |>
+                                    s.weights = s.weights[r]) |>
         .make_covs_full_rank()
     }
     else {
-      covs.list[[i]] <- covs.list[[i]] |>
+      covs_i <- covs_i |>
         .apply_moments_int_quantile(moments = ...get("moments"),
                                     int = ...get("int")) |>
         .make_covs_full_rank()
@@ -1120,17 +1417,37 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
     treat.list[[i]] <- switch(
       treat.types[i],
-      binary = binarize(treat.list[[i]], one = get_treated_level(treat.list[[i]], "ATE")),
+      binary = {
+        #Binarized among the units under observation only: `binarize()` counts a
+        #missing value as a third level, and the treatment is legitimately missing
+        #for units that have already been censored
+        z <- treat.list[[i]]
+        z[r] <- binarize(z[r], one = get_treated_level(z[r], "ATE"))
+        unclass(z)
+      },
       `multi-category` =,
       multinomial = factor(treat.list[[i]]),
-      continuous = scale_w(treat.list[[i]], s.weights)
+      censoring = .make_cens_treat(treat.list[[i]]),
+      continuous = {
+        #Scaled among the units under observation, the sample the conditions use
+        z <- treat.list[[i]]
+        z[r] <- scale_w(z[r], s.weights[r])
+        unclass(z)
+      }
     )
 
-    for (j in seq_col(covs.list[[i]])) {
-      covs.list[[i]][, j] <- scale_w(covs.list[[i]][, j], s.weights)
+    for (j in seq_col(covs_i)) {
+      covs_i[, j] <- scale_w(covs_i[, j], s.weights[r])
     }
 
-    covs.list[[i]] <- cbind(`(Intercept)` = 1, scale(svd(covs.list[[i]])$u))
+    covs_i <- cbind(`(Intercept)` = 1, scale(svd(covs_i)$u))
+
+    #Scattered back with zeros outside the risk set, so those units contribute
+    #nothing to this time point's balance condition. Every closure below relies on
+    #this, together with `!is.na(A)` marking exactly the units under observation.
+    covs.list[[i]] <- matrix(0, nrow = n, ncol = ncol(covs_i),
+                             dimnames = list(NULL, colnames(covs_i)))
+    covs.list[[i]][r, ] <- covs_i
   }
 
   solver <- ...get("solver", NULL)
@@ -1171,6 +1488,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     coef_ind[[i]] <- length(unlist(coef_ind)) + switch(
       treat.types[i],
       binary = seq_col(covs.list[[i]]),
+      censoring = if (degenerate[i]) integer() else seq_col(covs.list[[i]]),
       `multi-category` =,
       multinomial = seq_len((nlevels(treat.list[[i]]) - 1L) * ncol(covs.list[[i]])),
       continuous = seq_len(3L + ncol(covs.list[[i]]))
@@ -1188,22 +1506,35 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       }
 
       get_w[[i]] <- function(p, A, B) {
-        w <- numeric(length(A))
-        w1 <- which(A == 1)
+        #1 outside the risk set, so the cumulative product is unaffected by time
+        #points a unit had already dropped out of. `is.na(A)` marks exactly those
+        #units. Logical rather than negative indexing: `-which(A == 1)` would
+        #select everything when no unit is treated.
+        w <- rep.int(1, length(A))
 
-        w[w1] <- 1 / p[w1]
-        w[-w1] <- 1 / (1 - p[-w1])
+        ar <- !is.na(A)
+        a1 <- ar & A == 1
+        a0 <- ar & A == 0
+
+        w[a1] <- 1 / p[a1]
+        w[a0] <- 1 / (1 - p[a0])
 
         w
       }
 
       get_psi_bal[[i]] <- function(w, B, X, A, SW) {
+        #Rows outside the risk set have `X == 0`, so neutralizing the missing `A`
+        #is enough to make their contribution exactly 0 rather than `NA`
+        A[is.na(A)] <- 0
+
         SW * w * (A - (1 - A)) * X
       }
 
       get_par_glm[[i]] <- function(X, A, SW) {
-        glm.fit(X, A, family = quasibinomial(),
-                weights = SW)$coefficients
+        ar <- !is.na(A)
+
+        glm.fit(X[ar, , drop = FALSE], A[ar], family = quasibinomial(),
+                weights = SW[ar])$coefficients
       }
     }
     else if (treat.types[i] %in% c("multinomial", "multi-category")) {
@@ -1218,23 +1549,104 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       }
 
       get_w[[i]] <- function(p, A, B) {
-        w <- numeric(length(A))
+        #1 outside the risk set; see the binary case
+        w <- rep.int(1, length(A))
+
         for (a in levels(A)) {
           wa <- which(A == a)
           w[wa] <- 1 / p[wa, a]
         }
+
         w
       }
 
       get_psi_bal[[i]] <- function(w, B, X, A, SW) {
-        do.call("cbind", lapply(utils::combn(levels(treat.list[[i]]), 2L, simplify = FALSE), function(co) {
-          SW * w * ((A == co[1L]) - (A == co[2L])) * X
+        #`levels(A)`, not `levels(treat.list[[i]])`: `i` is resolved lazily when
+        #this closure runs, at which point the enclosing loop has finished and `i`
+        #refers to the last time point
+        do.call("cbind", lapply(utils::combn(levels(A), 2L, simplify = FALSE), function(co) {
+          #Rows outside the risk set have `X == 0`; the indicators below are FALSE
+          #rather than NA there, so their contribution is exactly 0
+          SW * w * (!is.na(A) & A == co[1L]) * X -
+            SW * w * (!is.na(A) & A == co[2L]) * X
         }))
       }
 
       get_par_glm[[i]] <- function(X, A, SW) {
-        .multinom_weightit.fit(X, A, hess = FALSE,
-                               weights = SW)$coefficients
+        ar <- !is.na(A)
+
+        .multinom_weightit.fit(X[ar, , drop = FALSE], droplevels(A[ar]), hess = FALSE,
+                               weights = SW[ar])$coefficients
+      }
+    }
+    else if (treat.types[i] == "censoring" && degenerate[i]) {
+      #No unit under observation is censored here, so this time point contributes a
+      #weight factor of exactly 1 and no parameters or conditions.
+      get_p[[i]] <- function(B, X, A) {
+        rep.int(0, length(A))
+      }
+
+      get_w[[i]] <- function(p, A, B) {
+        rep.int(1, length(A))
+      }
+
+      get_psi_bal[[i]] <- function(w, B, X, A, SW) {
+        matrix(0, nrow = length(A), ncol = 0L)
+      }
+
+      get_par_glm[[i]] <- function(X, A, SW) {
+        numeric()
+      }
+    }
+    else if (treat.types[i] == "censoring") {
+      get_p[[i]] <- function(B, X, A) {
+        plogis(drop(X %*% B))
+      }
+
+      get_w[[i]] <- function(p, A, B) {
+        #1 outside the risk set, 1/P(C = 0 | X) for the units still under
+        #observation, and exactly 0 for those censored at this time point -- so the
+        #cumulative product is 0 for every censored unit from here on
+        w <- rep.int(1, length(A))
+
+        ar <- !is.na(A)
+        u <- ar & A == 0
+
+        w[u] <- 1 / (1 - p[u])
+        w[ar & A == 1] <- 0
+
+        w
+      }
+
+      get_psi_bal[[i]] <- function(w, B, X, A, SW) {
+        #This time point's censoring factor must make the units still under
+        #observation reproduce the covariate totals of the whole risk set:
+        #
+        #  sum_{i in R_t} SW_i [(1 - C_ti)/(1 - e_t(X_ti)) - 1] X_ti = 0
+        #
+        #Note this uses the censoring factor rather than the cumulative weight
+        #`w`. With the cumulative weight, the intercept row would instead demand
+        #that the *total* weights average 1 over the risk set, which directly
+        #contradicts the treatment conditions (whose weights do not average 1) and
+        #leaves the system unsolvable. The treatment conditions still use the
+        #cumulative weight, so they account for censoring; that is what makes this
+        #simultaneous rather than a product of separate fits.
+        ar <- !is.na(A)
+
+        p <- plogis(drop(X %*% B))
+
+        wc <- rep.int(1, length(A))
+        wc[ar] <- (1 - A[ar]) / (1 - p[ar])
+
+        #Outside the risk set `wc == 1` and `X == 0`, so those rows contribute 0
+        SW * (wc - 1) * X
+      }
+
+      get_par_glm[[i]] <- function(X, A, SW) {
+        ar <- !is.na(A)
+
+        glm.fit(X[ar, , drop = FALSE], A[ar], family = quasibinomial(),
+                weights = SW[ar])$coefficients
       }
     }
     else if (treat.types[i] == "continuous") {
@@ -1246,6 +1658,8 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
         un_s2 <- exp(B[1L])
         un_p <- B[2L]
 
+        ar <- !is.na(A)
+
         log.dens.num <- squish(dnorm(A, un_p, sqrt(un_s2), log = TRUE),
                                lo = -Inf, hi = squish_tol)
 
@@ -1253,7 +1667,11 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
         log.dens.denom <- squish(dnorm(A, p, sqrt(s2), log = TRUE),
                                  lo = -squish_tol, hi = Inf)
 
-        exp(log.dens.num - log.dens.denom)
+        #1 outside the risk set; see the binary case
+        w <- rep.int(1, length(A))
+        w[ar] <- exp(log.dens.num[ar] - log.dens.denom[ar])
+
+        w
       }
 
       get_psi_bal[[i]] <- function(w, B, X, A, SW) {
@@ -1262,15 +1680,28 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
         s2 <- exp(B[3L])
         p <- drop(X %*% B[-(1:3)])
 
-        cbind(
+        ar <- !is.na(A)
+
+        #The treatment-moment columns do not involve `X`, so unlike the other
+        #treatment types the rows outside the risk set have to be zeroed
+        #explicitly rather than relying on `X == 0`
+        A[!ar] <- un_p
+
+        out <- cbind(
           SW * (A - un_p)^2 - un_s2,
           SW * (A - un_p),
           SW * (A - p)^2 - s2,
           SW * w * A * X)
+
+        out[!ar, ] <- 0
+
+        out
       }
 
       get_par_glm[[i]] <- function(X, A, SW) {
-        init.fit <- lm.wfit(X, A, w = SW)
+        ar <- !is.na(A)
+
+        init.fit <- lm.wfit(X[ar, , drop = FALSE], A[ar], w = SW[ar])
         b <- c(0, 0, log(var(init.fit$residuals)), init.fit$coefficients)
         names(b)[1:3] <- c("log(s^2)", "E[A]", "log(s_r^2)")
         b
@@ -1346,20 +1777,31 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     get_psi_glm <- make_list(length(treat.list))
 
     for (i in seq_along(treat.list)) {
-      if (treat.types[i] == "binary") {
+      #Rows outside the risk set have `X == 0`, so it is enough to keep the other
+      #factors from being `NA` there; see `get_psi_bal()` above.
+      if (treat.types[i] == "censoring" && degenerate[i]) {
         get_psi_glm[[i]] <- function(p, X, A, SW) {
+          matrix(0, nrow = length(A), ncol = 0L)
+        }
+      }
+      else if (treat.types[i] %in% c("binary", "censoring")) {
+        get_psi_glm[[i]] <- function(p, X, A, SW) {
+          A[is.na(A)] <- 0
+
           SW * (A - p) * X
         }
       }
       else if (treat.types[i] %in% c("multinomial", "multi-category")) {
         get_psi_glm[[i]] <- function(p, X, A, SW) {
-          do.call("cbind", lapply(levels(A), function(i) {
-            SW * ((A == i) - p[, i]) * X
+          do.call("cbind", lapply(levels(A), function(a) {
+            SW * ((!is.na(A) & A == a) - p[, a]) * X
           }))
         }
       }
       else if (treat.types[i] == "continuous") {
         get_psi_glm[[i]] <- function(p, X, A, SW) {
+          A[is.na(A)] <- 0
+
           SW * (A - p) * X
         }
       }

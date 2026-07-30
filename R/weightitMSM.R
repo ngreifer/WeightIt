@@ -106,6 +106,44 @@
 #' approach to generating weights than simply estimating several time-specific
 #' models.
 #'
+#' ## Censoring weights (IPCW)
+#'
+#' Censoring can be modeled by including entries in `formula.list` whose left side
+#' is wrapped in [`.cens()`][.cens], placed in temporal order among the treatment
+#' models. For example,
+#'
+#' ```
+#' weightitMSM(list(A_1 ~ X1_0 + X2_0,
+#'                  A_2 ~ X1_1 + X2_1 + A_1,
+#'                  .cens(C_2) ~ X1_1 + X2_1 + A_1,
+#'                  A_3 ~ X1_2 + X2_2 + A_2),
+#'             data = d, method = "glm")
+#' ```
+#'
+#' models censoring occurring after the second treatment. Each censoring indicator
+#' must be 0 for units still under observation and 1 for units censored at that time
+#' point. See [`.cens()`][.cens] for details of what the resulting weights
+#' estimate.
+#'
+#' Every model, treatment or censoring, is fit only among the units still under
+#' observation when it is reached, and the resulting weights are multiplied together
+#' across time points as usual. A unit censored at any time point therefore has a
+#' final weight of exactly 0. Because such units drop out, missing values are
+#' permitted in the treatments and covariates that follow their censoring; missing
+#' values among units still under observation remain an error. `at.risk` in the
+#' output has one column per time point recording which units were under
+#' observation when that model was fit.
+#'
+#' Censoring weights are not stabilized by `num.formula`; each is stabilized by its
+#' own marginal censoring model when `stabilize = TRUE`. When `num.formula` is
+#' supplied as a list, it should have one entry per *treatment* time point, ignoring
+#' the censoring entries.
+#'
+#' Censoring can also be used with `is.MSM.method = TRUE` when `method = "cbps"`, in
+#' which case one set of weights is estimated satisfying the balance conditions at
+#' every time point simultaneously, each evaluated among the units still under
+#' observation at that time point. See [`method_cbps`].
+#'
 #' @seealso
 #' [weightit()] for information on the allowable methods
 #'
@@ -198,7 +236,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   }
 
   reported.covs.list <- simple.covs.list <- covs.list <- treat.list <- w.list <- ps.list <-
-    stabout <- sw.list <- Mparts.list <- stab.Mparts.list <- make_list(length(formula.list))
+    stabout <- sw.list <- Mparts.list <- stab.Mparts.list <- na.list <-
+    atrisk.list <- make_list(length(formula.list))
 
   if (is_null(formula.list) || !is.list(formula.list) ||
       !all_apply(formula.list, rlang::is_formula, lhs = TRUE)) {
@@ -233,9 +272,15 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
     treat.name <- .attr(treat.list[[i]], "treat.name")
 
-    if (anyNA(treat.list[[i]]) || !all(is.finite(treat.list[[i]]))) {
-      arg::err(c("No missing or non-finite values are allowed in the treatment variable.",
-                 "i" = "Missing or non-finite values found in {.var treat.name}"))
+    #Non-finite values are never allowed. Missing values are allowed only when a
+    #censoring model is present, because a unit censored at an earlier time point
+    #legitimately has no later treatment or censoring indicator. Those are checked
+    #against the risk sets after this loop, once the risk sets are known.
+    na.list[[i]] <- is.na(treat.list[[i]])
+
+    if (!all(is.finite(treat.list[[i]][!na.list[[i]]]))) {
+      arg::err(c("No non-finite values are allowed in the treatment variable.",
+                 "i" = "Non-finite values found in {.var treat.name}"))
     }
 
     names(treat.list)[i] <- treat.name
@@ -252,9 +297,83 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
                                 by.arg = by.arg)
   }
 
+  #Censoring models, marked by wrapping the censoring indicator in `.cens()` on the
+  #LHS of a formula in `formula.list` (e.g., `.cens(C) ~ x1 + x2`). They are
+  #interleaved with the treatment models in temporal order and folded into the
+  #final product as inverse probability of censoring weights.
+  is.cens <- vapply(treat.list, function(t) {
+    identical(get_treat_type(t), "censoring")
+  }, logical(1L))
+
+  if (any(is.cens)) {
+    #`method = "cbps"` is the only built-in method that estimates the weights for
+    #all time points at once, and it supports censoring; a user-defined MSM method
+    #has no way to receive the risk sets.
+    #`==` rather than `identical()`: `method` carries a `"name"` attribute
+    if (is.MSM.method && !(is.character(method) && isTRUE(method == "cbps"))) {
+      arg::err(c("censoring models (specified with {.fun .cens} in {.arg formula.list}) cannot be used with this method when it estimates the weights for all time points simultaneously.",
+                 "i" = "Set {.code is.MSM.method = FALSE} to estimate the weights separately at each time point."))
+    }
+
+    if (all(is.cens)) {
+      arg::err("{.arg formula.list} must contain at least one treatment model")
+    }
+  }
+
+  #Units still under observation when each model is fit. A censoring model is fit on
+  #the units at risk just before that censoring event removes any of them.
+  .ar <- rep.int(TRUE, n)
+
+  for (i in seq_along(formula.list)) {
+    atrisk.list[[i]] <- .ar
+
+    if (is.cens[i]) {
+      ind <- .make_cens_treat(treat.list[[i]])
+
+      #The !is.na() guard matters: NA == 1 would propagate NA into the risk set
+      .ar[.ar & !is.na(ind) & ind == 1] <- FALSE
+    }
+  }
+
+  #Missing values in a treatment or censoring indicator are tolerated only for
+  #units already censored; units still under observation must be fully observed.
+  if (any(is.cens)) {
+    for (i in seq_along(formula.list)) {
+      if (any(na.list[[i]] & atrisk.list[[i]])) {
+        arg::err(c("No missing values are allowed among the units still under observation.",
+                   "i" = "Missing values found in {.var {names(treat.list)[i]}} among units not yet censored"))
+      }
+    }
+
+    for (i in which(is.cens)) {
+      ind <- .make_cens_treat(treat.list[[i]])[atrisk.list[[i]]]
+
+      if (all(ind == 1)) {
+        arg::err("all units still under observation are censored at {.var {names(treat.list)[i]}}, so no censoring weights can be estimated")
+      }
+
+      if (!any(ind == 1)) {
+        arg::msg("no units are censored at {.var {names(treat.list)[i]}}; the corresponding censoring weights are all {.val {1}}")
+      }
+    }
+  }
+  else if (any_apply(na.list, any)) {
+    bad <- names(treat.list)[vapply(na.list, any, logical(1L))]
+
+    arg::err(c("No missing values are allowed in the treatment variable.",
+               "i" = "Missing values found in {.var {bad}}"))
+  }
+
   #Process missing
   missing <- {
-    if (is_null(method) || !any_apply(reported.covs.list, anyNA)) ""
+    if (is_null(method) ||
+        !any_apply(seq_along(formula.list), function(i) {
+          #Covariates that are missing only for units already censored must not
+          #trigger the missingness machinery, since those units are never used.
+          anyNA(reported.covs.list[[i]][atrisk.list[[i]], , drop = FALSE])
+        })) {
+      ""
+    }
     else .process_missing(missing, method)
   }
 
@@ -282,8 +401,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
       num.formula <- NULL
     }
     else if (is_not_null(num.formula)) {
+      #Censoring weights are stabilized by their own marginal model rather than by a
+      #numerator formula, so a list of numerator formulas has one entry per
+      #*treatment* time point.
       .check_num.formula(num.formula, data, env = parent.frame(),
-                         formula.list = formula.list)
+                         formula.list = formula.list[!is.cens])
     }
   }
 
@@ -305,6 +427,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     A["covs.list"] <- list(covs.list)
     A["treat.list"] <- list(treat.list)
     A["stabilize"] <- list(stabilize)
+
+    #Only passed when censoring is present, so that without it the fitting
+    #function takes exactly its original code path
+    A["atrisk.list"] <- list(if (any(is.cens)) atrisk.list)
 
     obj <- do.call("weightitMSM.fit", A)
 
@@ -335,11 +461,20 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     A["ps"] <- list(numeric())
     A["is.MSM.method"] <- list(FALSE)
 
+    #Index of each time point among the treatment models only, for `num.formula`
+    t.idx <- cumsum(!is.cens)
+
+    #Prior treatments, used as stabilization predictors; censoring indicators are
+    #never included among them.
+    prior.treat.names <- character()
+
     for (i in seq_along(formula.list)) {
       A_i <- A
       if (length(A[["link"]]) == length(formula.list)) {
         A_i["link"] <- list(A[["link"]][[i]])
       }
+
+      at.risk <- atrisk.list[[i]]
 
       A_i["covs"] <- list(covs.list[[i]])
       A_i["treat"] <- list(treat.list[[i]])
@@ -347,12 +482,23 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
       A_i[".data"] <- list(data)
       A_i[".covs"] <- list(reported.covs.list[[i]])
 
+      #Only units still under observation are used to fit the model. `NULL` rather
+      #than an all-TRUE vector when there is no censoring, so that `weightit.fit()`
+      #takes exactly its original code path.
+      A_i["subset"] <- list(if (any(is.cens)) at.risk else NULL)
+
       ## Running models ----
 
       #Returns weights (w) and propensity score (ps)
       obj <- do.call("weightit.fit", A_i)
 
-      w.list[i] <- list(obj[["weights"]])
+      #`weightit.fit()` leaves the weights of units outside `subset` as NA. Those
+      #units contribute nothing at this time point, so their factor is 1. Censored
+      #units already have a weight of exactly 0 from the censoring method itself.
+      w_i <- obj[["weights"]]
+      w_i[!at.risk] <- 1
+
+      w.list[i] <- list(w_i)
       ps.list[i] <- list(obj[["ps"]])
       obj.list[i] <- list(obj[["fit.obj"]])
       #A list of parts for this time point: one per `by` group (already expanded
@@ -362,31 +508,39 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
       if (stabilize) {
         #Process stabilization formulas and get stab weights
-        if (rlang::is_formula(num.formula)) {
-          if (i == 1L) {
+        if (is.cens[i]) {
+          #A censoring model is stabilized by its own marginal censoring model. The
+          #numerator must be fit as an ordinary binary treatment rather than as a
+          #censoring model: a censoring numerator would carry the same (1 - C)
+          #factor as the denominator, making the ratio 0/0 for the censored units
+          #(and `Inf` in the inverted M-estimation part).
+          stab.f <- update(.uncens_formula(formula.list[[i]]), ". ~ 1")
+        }
+        else if (rlang::is_formula(num.formula)) {
+          if (t.idx[i] == 1L) {
             stab.f <- update(formula.list[[i]], num.formula)
             # stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
             #                          as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
           }
           else {
             stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~",
-                                                      paste(names(treat.list)[seq_along(names(treat.list)) < i],
+                                                      paste(prior.treat.names,
                                                             collapse = " * "))),
                                      as.formula(paste("~", deparse1(rlang::f_rhs(num.formula)), "+ .")))
           }
         }
         else if (is.list(num.formula)) {
-          stab.f <- update(formula.list[[i]], num.formula[[i]])
+          stab.f <- update(formula.list[[i]], num.formula[[t.idx[i]]])
           # stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
           #                          as.formula(paste(paste(num.formula[[i]], collapse = ""), "+ .")))
         }
         else {
-          if (i == 1L) {
+          if (t.idx[i] == 1L) {
             stab.f <- update(formula.list[[i]], ". ~ 1")
           }
           else {
             stab.f <- update(formula.list[[i]],
-                             sprintf(". ~ %s", paste(names(treat.list)[seq_along(treat.list) < i],
+                             sprintf(". ~ %s", paste(prior.treat.names,
                                                      collapse = " * ")))
           }
         }
@@ -399,9 +553,21 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         A_i["int"] <- list(FALSE)
         A_i["quantile"] <- list(list())
 
+        if (is.cens[i]) {
+          #See above: the numerator is a plain binary model, so the ratio is
+          #P(C = 0)/P(C = 0 | X) for the units still under observation and exactly
+          #0 for those censored here.
+          A_i["treat"] <- list(as.treat(.make_cens_treat(treat.list[[i]]),
+                                        process = TRUE))
+          A_i["treat.type"] <- list(NULL)
+        }
+
         sw_obj <- do.call("weightit.fit", A_i)
 
-        sw.list[[i]] <- 1 / sw_obj[["weights"]]
+        sw_i <- 1 / sw_obj[["weights"]]
+        sw_i[!at.risk] <- 1
+
+        sw.list[[i]] <- sw_i
         stabout[[i]] <- stab.f[-2L]
 
         #Invert each numerator part (one per `by` group when by has >1 level).
@@ -409,14 +575,20 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
           clear_null(.attr(sw_obj, "Mparts.list") %or% list(.attr(sw_obj, "Mparts"))),
           .invert_num_Mpart)
       }
+
+      if (!is.cens[i]) {
+        prior.treat.names <- c(prior.treat.names, names(treat.list)[i])
+      }
     }
 
     w <- Reduce("*", w.list, init = 1)
 
     if (stabilize) {
-      w <-  Reduce("*", sw.list, init = w)
+      #`clear_null()` is load-bearing, not cosmetic: a NULL entry would collapse `w`
+      #to length 0 (Reduce("*", list(NULL, x), init = y) is numeric(0)).
+      w <-  Reduce("*", clear_null(sw.list), init = w)
 
-      unique.stabout <- unique(stabout)
+      unique.stabout <- unique(clear_null(stabout))
 
       if (length(unique.stabout) <= 1L) {
         stabout <- unique.stabout
@@ -427,6 +599,8 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     }
 
     if (include.obj) {
+      #`treat.list` is still full length here, so censoring fit objects are named
+      #after their censoring indicator; it is subset in the output below.
       names(obj.list) <- names(treat.list)
     }
   }
@@ -436,15 +610,32 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
   }
 
   ## Assemble output object----
+  #`treat.list` and `covs.list` describe treatments only, so that printing, balance
+  #assessment, and stabilization operate on treatments alone; the censoring models
+  #are stored separately. `formula.list` is kept as supplied, `.cens()` markers
+  #included, so that `update()` round-trips.
   out <- list(weights = w,
-              treat.list = treat.list,
-              covs.list = simple.covs.list,
+              treat.list = treat.list[!is.cens],
+              covs.list = simple.covs.list[!is.cens],
               estimand = "ATE",
               method = method,
               s.weights = s.weights,
               by = processed.by,
               call = call,
               formula.list = formula.list,
+              cens.list = if (any(is.cens)) treat.list[is.cens],
+              cens.covs.list = if (any(is.cens)) simple.covs.list[is.cens],
+              cens.formula.list = if (any(is.cens)) formula.list[is.cens],
+              cens.time = if (any(is.cens)) which(is.cens),
+              at.risk = if (any(is.cens)) {
+                #One column per model, treatment or censoring, giving the units
+                #still under observation when that model was fit. Needed to assess
+                #balance, since `bal.tab()` cannot handle the NA treatments that
+                #censoring implies; subsetting to a column gives exactly the sample
+                #the corresponding model was fit on.
+                do.call("cbind", atrisk.list) |>
+                  `colnames<-`(names(treat.list))
+              },
               stabilization = stabout,
               missing = if (nzchar(missing)) missing else NULL,
               env = parent.frame(),
@@ -516,6 +707,16 @@ print.weightitMSM <- function(x, ...) {
                                              nunique(x[["treat.list"]][[i]]),
                                              word_list(levels(x[["treat.list"]][[i]]), and.or = FALSE)),
                        binary = "2-category")))
+  }
+
+  if (is_not_null(x[["cens.list"]])) {
+    cat(" - censoring (IPCW):\n")
+    for (i in seq_along(x[["cens.list"]])) {
+      cat(sprintf("    + %s: %s of %s units censored\n",
+                  names(x[["cens.list"]])[i],
+                  sum(.make_cens_treat(x[["cens.list"]][[i]]) == 1, na.rm = TRUE),
+                  nobs(x)))
+    }
   }
 
   if (is_not_null(x[["covs.list"]])) {

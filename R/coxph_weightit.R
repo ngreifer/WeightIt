@@ -40,6 +40,7 @@
 #' * Special formula components, such as `strata()`, `cluster()`, `pspline()`, `frailty()`, `ridge()`, and `tt()` are not allowed
 #' * Only right censoring is allowed, and only two-state models are allowed (i.e., the `Surv()` component of `formula` must be of the form `Surv(time, event)`)
 #' * Time-varying predictors are not allowed and there must be one observation per unit (and the `id` and `istate` arguments to `coxph()` are ignored)
+#' * Weights of 0 are allowed (`coxph()` rejects them). Such units are omitted from the model fit, which is exact rather than an approximation: a unit with a weight of 0 contributes neither its own term nor anything to any risk set denominator, both of which are weighted by the same weights. Missing values in the model variables are tolerated for these units, which makes it possible to fit an outcome model after censoring, where the event time is unascertained for censored units (see [`.cens()`][.cens]). Missing values in units with a nonzero weight produce an error.
 #'
 #' When no argument is supplied to
 #' `weightit` or there is no `"Mparts"` attribute in the supplied object, the
@@ -112,9 +113,40 @@ coxph_weightit <- function(formula, data, weightit = NULL,
                    errors = c("missing values in object" = "missing values are not allowed in the model variables"),
                    from = FALSE)
 
+  #No `gradient` component is stored, so `.compute_vcov()` and `estfun()` evaluate
+  #`psi` themselves. `residuals(fit, type = "score", weighted = TRUE)` would give
+  #the same values (they agree to ~1e-14), but it returns one column per
+  #model.matrix column, whereas `.compute_vcov()` reduces the model matrix to the
+  #estimable columns; supplying it made rank-deficient fits fail with
+  #"non-conformable arrays". It is also undefined for a fit whose row-indexed
+  #components were scattered back from a subset fit (see `.coxph_weightit()`).
   fit[["psi"]] <- .get_coxph_psi(fit)
-  fit[["gradient"]] <- residuals(fit, type = "score", weighted = TRUE) |>
-    as.matrix()
+
+  if (isTRUE(fit[["nevent"]] == 0)) {
+    # With no events, the coefficients are all `NA`, so there is nothing to
+    # differentiate or invert
+    arg::wrn("no events were observed, so no coefficients could be estimated")
+  }
+  else if (inherits(fit, "coxph.null")) {
+    # `coxph.fit()` returns a `coxph.null` object when the model has no
+    # covariates, which has no coefficients and so no Hessian
+    fit[["coefficients"]] <- setNames(numeric(0L), character(0L))
+  }
+  else {
+    aliased <- is.na(fit[["coefficients"]])
+
+    if (any(aliased)) {
+      # `coxph.fit()` returns `NA` for the coefficients of collinear columns of
+      # the model matrix. Record which those are so that everything downstream
+      # drops the same columns rather than inferring them.
+      fit[["aliased"]] <- aliased
+    }
+
+    # The model-based ("naive") variance returned by `coxph.fit()` in `var` is
+    # the only source for the outcome model Hessian, so store the Hessian
+    # before `var` is cleared below.
+    fit[["hessian"]] <- .get_hess_coxph(fit)
+  }
 
   fit[["var"]] <- NULL
 
@@ -252,7 +284,6 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 
   attr(X, "assign") <- Xatt$assign[!xdrop]
   attr(X, "contrasts") <- Xatt$contrasts
-  Xmeans <- colMeans(X)
 
   # Process weights
   weights <- as.vector(model.weights(mf))
@@ -261,6 +292,25 @@ coxph_weightit <- function(formula, data, weightit = NULL,
     arg::arg_numeric(weights)
     arg::arg_gte(weights, 0)
   }
+
+  #`survival::coxph.fit()` rejects weights of 0, but a unit with a weight of 0
+  #contributes nothing to the weighted partial likelihood: neither its own term
+  #nor any risk set denominator, which is weighted by the same weights. The fit
+  #is therefore identical whether such units are retained or dropped, so they are
+  #dropped here and scattered back afterward. The returned object must keep all
+  #`n` rows because `.compute_vcov()` aligns it with the full-length weights of
+  #the `weightit` object, and a unit with an outcome weight of 0 can still make a
+  #nonzero contribution to the estimating equations for the weights.
+  pos <- {
+    if (is_null(weights)) rep.int(TRUE, n)
+    else weights > 0
+  }
+
+  if (!any(pos)) {
+    arg::err("all weights are 0; no units contribute to the model fit")
+  }
+
+  Xmeans <- colMeans(X[pos, , drop = FALSE])
 
   # Process offset
   offset <- as.vector(model.offset(mf))
@@ -286,37 +336,55 @@ coxph_weightit <- function(formula, data, weightit = NULL,
   temp <- c("(Intercept)", attr(Terms, "term.labels"))[attr(X, "assign") + 1L]
   assign <- split(seq(along.with = temp), factor(temp, levels = unique(temp)))
 
-  # No events
-  if (sum(Y[, ncol(Y)]) == 0) {
-    ncoef <- ncol(X)
+  # Fit Cox model, omitting any units with a weight of 0 (see above)
+  fit <- {
+    if (sum(Y[, ncol(Y)][pos]) == 0) {
+      # No events, so nothing can be estimated; mirror `survival::coxph()` by
+      # returning `NA` coefficients instead of failing. Shaped like the output
+      # of `coxph.fit()` on the retained units so the processing below, including
+      # the scatter back to the full sample, applies unchanged.
+      ncoef <- ncol(X)
 
-    rval <- list(coefficients = setNames(rep.int(NA_real_, ncoef), colnames(X)),
-                 var = sq_matrix(0, ncoef),
-                 loglik = c(0, 0), score = 0, iter = 0, linear.predictors = offset,
-                 residuals = rep(0, data.n), means = Xmeans,
-                 method = "breslow", n = data.n, nevent = 0, terms = Terms,
-                 assign = assign,
-                 y = Y, call = cal)
-
-    class(rval) <- "coxph"
-
-    return(rval)
+      list(coefficients = setNames(rep.int(NA_real_, ncoef), colnames(X)),
+           var = sq_matrix(NA_real_, ncoef),
+           loglik = c(0, 0), score = 0, iter = 0,
+           linear.predictors = offset[pos],
+           residuals = rep.int(0, sum(pos)),
+           means = Xmeans,
+           method = "breslow",
+           class = "coxph")
+    }
+    else {
+      survival::coxph.fit(x = X[pos, , drop = FALSE], y = Y[pos], strata = NULL,
+                          offset = offset[pos], init = NULL,
+                          control = control, weights = weights[pos],
+                          method = "breslow", rownames = row.names(mf)[pos],
+                          nocenter = c(-1, 0, 1))
+    }
   }
-
-  # Fit Cox model
-  fit <- survival::coxph.fit(x = X, y = Y, strata = NULL,
-                             offset = offset, init = NULL,
-                             control = control, weights = weights,
-                             method = "breslow", rownames = row.names(mf),
-                             nocenter = c(-1, 0, 1))
 
   if (is.character(fit)) {
     fit <- list(fail = fit)
     class(fit) <- "coxph"
   }
   else {
+    if (!all(pos)) {
+      #Scatter the row-indexed components back to the full sample. The values for
+      #units with a weight of 0 are arbitrary but must be finite; NAs there would
+      #propagate through `0 * NA` into `psi` and the variance computation. The
+      #linear predictor uses the same centering as `coxph.fit()` does.
+      b <- fit$coefficients
+      b[is.na(b)] <- 0
+
+      fit$linear.predictors <- drop(X %*% b) + offset - sum(b * fit$means)
+
+      res <- setNames(rep.int(0, n), row.names(mf))
+      res[pos] <- fit$residuals
+      fit$residuals <- res
+    }
+
     fit$n <- data.n
-    fit$nevent <- sum(Y[, ncol(Y)])
+    fit$nevent <- sum(Y[, ncol(Y)][pos])
     fit$terms <- Terms
     fit$assign <- assign
 
@@ -356,13 +424,37 @@ coxph_weightit <- function(formula, data, weightit = NULL,
 }
 
 .get_coxph_psi <- function(fit) {
+  if (inherits(fit, "coxph.null")) {
+    # A null model has no coefficients, so its score contributions form an
+    # n x 0 matrix
+    return(function(B, X, y, weights, offset = 0) {
+      matrix(0, nrow = NROW(X), ncol = 0L)
+    })
+  }
+
   .y <- fit[["y"]] %or% model.response(model.frame(fit))
 
   ranks <- rank(.y[, "time"]) |>
     factor() |>
     unclass()
 
+  #Units with a weight of 0 in the fit are excluded from the estimating equation
+  #entirely: their own contribution is 0 and they are absent from every risk set.
+  #The mask must come from the fit's weights rather than from the `weights`
+  #argument because `.compute_vcov()` evaluates `psi` at `weights = s.weights`
+  #(i.e., with the estimated weights set to 1) to form the cross-derivative block,
+  #which would otherwise return those units to the risk sets and perturb the psi
+  #of the units that do contribute.
+  .w <- fit[["weights"]]
+
+  pos <- {
+    if (is_null(.w)) TRUE
+    else .w > 0
+  }
+
   psi <- function(B, X, y, weights, offset = 0) {
+    weights <- weights * pos
+
     time <- y[, "time"]
     status <- y[, "status"]
 
@@ -411,7 +503,18 @@ coxph_weightit <- function(formula, data, weightit = NULL,
     return(NULL)
   }
 
-  solve(-V)
+  # `coxph.fit()` zeroes out the rows and columns of `var` belonging to aliased
+  # (collinear) coefficients, which would make it singular
+  aliased <- is.na(fit[["coefficients"]])
+
+  if (any(aliased)) {
+    V <- V[!aliased, !aliased, drop = FALSE]
+  }
+
+  # A degenerate fit can have a variance that isn't invertible; returning
+  # `NULL` lets callers fall back to computing the Hessian numerically, which
+  # routes the failure through `.solve_hessian()`'s more informative error
+  tryCatch(solve(-V), error = function(e) NULL)
 }
 
 .removeDoubleColonSurv <- function(formula) {

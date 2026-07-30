@@ -91,6 +91,13 @@ summary.weightit <- function(object, top = 5L, ignore.s.weights = FALSE, weight.
     tx <- lapply(levels(t), function(i) which(t == i)) |>
       setNames(levels(t))
   }
+  else if (treat.type == "censoring") {
+    #Censored units have a weight of exactly 0 and are not part of the weighted
+    #sample, so the weight distribution is summarized over the units still under
+    #observation. The effective sample size below still compares against all
+    #units, so the loss from censoring remains visible.
+    tx <- list(all = which(.make_cens_treat(t) == 0))
+  }
   else {
     tx <- list(all = seq_along(w))
   }

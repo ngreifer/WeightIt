@@ -4,8 +4,8 @@
 #' Given a vector or matrix of propensity scores, outputs a vector
 #' of weights that target the provided estimand.
 #'
-#' @param ps a vector, matrix, or data frame of propensity scores. See Details.
-#' @param treat a vector of treatment status for each individual. See Details.
+#' @param ps a vector, matrix, or data frame of propensity scores. See Details. When `treat` is a censoring indicator, must be a vector of the probability of *being censored*.
+#' @param treat a vector of treatment status for each individual. See Details. Can also be a censoring indicator created with [`.cens()`][.cens], in which case inverse probability of censoring weights are returned and the remaining arguments do not apply.
 #' @param estimand the desired estimand that the weights should target. Current
 #'   options include `"ATE"` (average treatment effect), `"ATT"` (average
 #'   treatment effect on the treated), `"ATC"` (average treatment effect on the
@@ -60,6 +60,10 @@
 #' }
 #'
 #' `get_w_from_ps()` can only be used with binary and multi-category treatments.
+#'
+#' ## Censoring indicators
+#'
+#' When `treat` is a censoring indicator created with [`.cens()`][.cens], `get_w_from_ps()` instead returns inverse probability of censoring weights: \eqn{(1 - e(X))^{-1}} for the units still under observation and exactly 0 for the censored units, where `ps` is \eqn{e(X) = P(C = 1 | X)}, the probability of *being censored*. `estimand`, `focal`, `treated`, `subclass`, and `stabilize` do not apply and are ignored with a warning. See [`.cens()`][.cens].
 #'
 #' ## Supplying the `ps` argument
 #'
@@ -231,6 +235,37 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
 
   if (treat.type == "continuous") {
     arg::err("{.fun get_w_from_ps} can only be used with binary or multi-category treatments")
+  }
+
+  if (treat.type == "censoring") {
+    #Inverse probability of censoring weights. `ps` is the probability of being
+    #censored, so the units still under observation receive 1/P(C = 0 | X) and the
+    #censored units receive exactly 0. None of the estimand machinery applies.
+    C <- .make_cens_treat(treat)
+
+    if (!rlang::is_string(estimand) || !identical(toupper(estimand), "ATE")) {
+      arg::wrn("{.arg estimand} is ignored for a censoring indicator")
+    }
+
+    for (i in c("focal", "treated", "subclass")) {
+      if (is_not_null(get(i, inherits = FALSE))) {
+        arg::wrn("{.arg {i}} is ignored for a censoring indicator")
+      }
+    }
+
+    if (isTRUE(stabilize)) {
+      arg::wrn("{.arg stabilize} is ignored for a censoring indicator. To stabilize censoring weights, use {.fun weightit} with {.arg stabilize}")
+    }
+
+    if (!is.numeric(ps) || length(dim(ps)) > 1L) {
+      arg::err("{.arg ps} must be a numeric vector of the probability of being censored when {.arg treat} is a censoring indicator")
+    }
+
+    if (length(ps) != length(C)) {
+      arg::err("{.arg ps} and {.arg treat} must have the same number of units")
+    }
+
+    return(.get_w_from_ps_internal_cens(ps, C))
   }
 
   estimand <- .process_estimand(estimand, method = "glm", treat.type = treat.type)

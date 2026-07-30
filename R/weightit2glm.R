@@ -6,7 +6,7 @@
 #' This page explains the details of estimating weights from
 #' generalized linear model-based propensity scores by setting `method = "glm"`
 #' in the call to [weightit()] or [weightitMSM()]. This method can be used with
-#' binary, multi-category, and continuous treatments.
+#' binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating propensity scores with a
 #' parametric generalized linear model and then converting those propensity
@@ -74,6 +74,10 @@
 #' is not available for these models; robust (`HC0`) or bootstrap standard errors
 #' should be used instead when estimating treatment effects (see the M-estimation
 #' section below and [glm_weightit()]).
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], a single binomial regression model of the probability of being censored is fit, and the weights are `1/P(C = 0 | X)` for the units still under observation and 0 for the censored units. All of the `link` options, `missing` options, and multilevel models described above apply unchanged, and the returned propensity score is the probability of *being censored*.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -579,6 +583,34 @@ weightit2glm <- function(covs, treat, s.weights, subset, estimand, focal,
 
   list(w = w, ps = p.score, fit.obj = fit,
        Mparts = Mparts)
+}
+
+weightit2glm.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  C <- .make_cens_treat(treat)
+
+  out <- .cens_degenerate_out(C[subset])
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  #The censoring model P(C = 1 | X) is the binary propensity score model with the
+  #censored units as the focal group. The GLM score is the same either way, and
+  #only the map from the propensity score to the weights differs, so the whole
+  #binary machinery (links, `missing = "saem"`, random effects, bias reduction,
+  #and the M-estimation parts) is inherited unchanged.
+  #
+  #`stabilize` must be FALSE: `stabilize_w()` would break the w_ATT + 1 identity
+  #that `.att_out_to_cens()` relies on. Stabilized censoring weights are instead
+  #formed in `weightit()` from a separate numerator model.
+  out <- weightit2glm(covs = covs, treat = C, s.weights = s.weights,
+                      subset = subset, estimand = "ATT", focal = 1,
+                      stabilize = FALSE, missing = missing,
+                      verbose = verbose, ...)
+
+  .att_out_to_cens(out, C[subset])
 }
 
 weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,

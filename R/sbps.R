@@ -127,6 +127,11 @@ sbps <- function(obj, obj2 = NULL, moderator = NULL, formula = NULL,
   treat <- obj[["treat"]]
   treat.type <- get_treat_type(treat)
 
+  if (identical(treat.type, "censoring")) {
+    #The subgroup balancing objectives below have no censoring counterpart
+    arg::err("{.fun sbps} cannot be used with censoring weights")
+  }
+
   focal <- obj[["focal"]]
   estimand <- obj[["estimand"]]
 

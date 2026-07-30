@@ -5,7 +5,7 @@
 #'
 #' @description
 #' This page explains the details of estimating stable balancing
-#' weights (also known as optimization-based weights) by setting `method = "optweight"` in the call to [weightit()]. This method can be used with binary, multi-category, and continuous treatments.
+#' weights (also known as optimization-based weights) by setting `method = "optweight"` in the call to [weightit()]. This method can be used with binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating weights by solving a quadratic
 #' programming problem subject to approximate or exact balance constraints. This
@@ -33,6 +33,10 @@
 #' For continuous treatments, this method estimates the weights using
 #' \pkgfun{optweight}{optweight.fit}. The weights are taken from the output of the
 #' `optweight.fit` fit object.
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], `optweight::optweight.svy.fit()` is used rather than `optweight::optweight.fit()`. It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. `tols` are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the `1/P(C = 0 | X)` scale; the two differ by a constant factor. M-estimation is not supported.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -229,6 +233,71 @@ weightit2optweight <- function(covs, treat, s.weights, subset, estimand, focal, 
 }
 
 weightit2optweight.multi <- weightit2optweight
+
+weightit2optweight.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                                    estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  bw <- .process_b.weights(..., treat = treat)
+
+  cens <- .make_cens_treat(treat)[subset]
+  covs <- covs[subset, , drop = FALSE]
+  s.weights <- s.weights[subset]
+  bw <- bw[subset]
+
+  out <- .cens_degenerate_out(cens)
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  missing <- .process_missing2(missing, covs)
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  #`focal` and `treat` are deliberately omitted: the moment, interaction, and
+  #quantile terms must be defined by the full at-risk sample, which is the target.
+  covs <- .apply_moments_int_quantile(covs,
+                                     moments = ...get("moments"),
+                                     int = ...get("int"),
+                                     quantile = ...get("quantile"),
+                                     s.weights = s.weights)
+
+  A <- list(...)
+
+  if (is_not_null(A[["targets"]])) {
+    arg::wrn("{.arg targets} cannot be used through {.pkg WeightIt} and will be ignored")
+  }
+
+  u <- which(cens == 0)
+
+  #Only the units still under observation are weighted, and their target is the
+  #sampling-weighted mean of the full at-risk sample. `optweight.svy.fit()` solves
+  #exactly this one-sample problem, so unlike `optweight.fit()` it never solves for
+  #weights among the censored units.
+  #
+  #Note the resulting weights are normalized to a mean of 1 among the units still
+  #under observation, whereas the other censoring methods put them on the
+  #1/P(C = 0 | X) scale; the two differ by a constant factor.
+  A[["targets"]] <- col.w.m(covs, s.weights)
+  A[["covs"]] <- covs[u, , drop = FALSE]
+  A[["s.weights"]] <- s.weights[u]
+  A[["b.weights"]] <- bw[u]
+  A[["verbose"]] <- TRUE
+
+  verbosely({
+    opt.out <- do.call(optweight::optweight.svy.fit, A, quote = TRUE)
+  }, verbose = verbose)
+
+  #Censored units get a weight of 0
+  w <- rep.int(0, length(cens))
+  w[u] <- opt.out[["w"]]
+
+  list(w = w,
+       info = list(duals = .process_duals(opt.out[["duals"]], covs)),
+       fit.obj = opt.out)
+}
 
 weightit2optweight.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
   bw <- .process_b.weights(..., treat = treat)

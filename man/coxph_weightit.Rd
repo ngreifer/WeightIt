@@ -101,6 +101,7 @@ estimates when specified
 \item Special formula components, such as \code{strata()}, \code{cluster()}, \code{pspline()}, \code{frailty()}, \code{ridge()}, and \code{tt()} are not allowed
 \item Only right censoring is allowed, and only two-state models are allowed (i.e., the \code{Surv()} component of \code{formula} must be of the form \code{Surv(time, event)})
 \item Time-varying predictors are not allowed and there must be one observation per unit (and the \code{id} and \code{istate} arguments to \code{coxph()} are ignored)
+\item Weights of 0 are allowed (\code{coxph()} rejects them). Such units are omitted from the model fit, which is exact rather than an approximation: a unit with a weight of 0 contributes neither its own term nor anything to any risk set denominator, both of which are weighted by the same weights. Missing values in the model variables are tolerated for these units, which makes it possible to fit an outcome model after censoring, where the event time is unascertained for censored units (see \code{\link[=.cens]{.cens()}}). Missing values in units with a nonzero weight produce an error.
 }
 
 When no argument is supplied to

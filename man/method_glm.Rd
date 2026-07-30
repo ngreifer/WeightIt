@@ -7,7 +7,7 @@
 This page explains the details of estimating weights from
 generalized linear model-based propensity scores by setting \code{method = "glm"}
 in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with
-binary, multi-category, and continuous treatments.
+binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores with a
 parametric generalized linear model and then converting those propensity
@@ -77,6 +77,11 @@ the estimated random effects, i.e., cluster-specific predictions. M-estimation
 is not available for these models; robust (\code{HC0}) or bootstrap standard errors
 should be used instead when estimating treatment effects (see the M-estimation
 section below and \code{\link[=glm_weightit]{glm_weightit()}}).
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, a single binomial regression model of the probability of being censored is fit, and the weights are \code{1/P(C = 0 | X)} for the units still under observation and 0 for the censored units. All of the \code{link} options, \code{missing} options, and multilevel models described above apply unchanged, and the returned propensity score is the probability of \emph{being censored}.
 }
 
 \subsection{Longitudinal Treatments}{

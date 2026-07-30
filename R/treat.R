@@ -12,7 +12,7 @@
   y
 }
 
-as.treat <- function(x, process = NULL) {
+as.treat <- function(x, process = NULL, censoring = NULL) {
   if (is_null(process)) {
     process <- !inherits(x, "treat")
   }
@@ -20,7 +20,7 @@ as.treat <- function(x, process = NULL) {
   arg::arg_flag(process)
 
   if (process || !has_treat_type(x)) {
-    x <- assign_treat_type(x)
+    x <- assign_treat_type(x, censoring = censoring)
     treat.type <- get_treat_type(x)
 
     if (treat.type %in% c("multinomial", "multi-category")) {

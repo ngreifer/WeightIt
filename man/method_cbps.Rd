@@ -7,7 +7,7 @@
 This page explains the details of estimating weights from covariate balancing
 propensity scores by setting \code{method = "cbps"} in the call to \code{\link[=weightit]{weightit()}} or
 \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and
-continuous treatments.
+continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using
 generalized method of moments and then converting those propensity scores
@@ -32,6 +32,13 @@ Imai and Ratkovic (2014). The following estimands are allowed: ATE and ATT.
 For continuous treatments, this method estimates the generalized propensity
 scores and weights using \code{optim()} using a modification of the formulas
 described by Fong, Hazlett, and Imai (2018). See Details.
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, the balance conditions require the weighted covariate means of the units still under observation to equal those of the full at-risk sample. The censored units receive a weight of 0.
+
+Censoring weights are also available with \code{is.MSM.method = TRUE}, i.e., when the weights at all time points are estimated simultaneously; \code{"cbps"} is the only method for which this is possible. Each time point's balance condition is then evaluated among the units still under observation at that time point, so the covariates and treatments that are missing for already-censored units never enter. The treatment conditions use the cumulative weights, which include the censoring factors; each censoring condition uses its own factor. As for treatments, M-estimation is not available with \code{is.MSM.method = TRUE}.
 }
 
 \subsection{Longitudinal Treatments}{
@@ -71,7 +78,7 @@ First, for each variable with missingness, a new missingness indicator variable 
 \subsection{M-estimation}{
 
 M-estimation is supported for the just-identified CBPS (the default, setting
-\code{over = FALSE}) for binary and multi-category treatments. Otherwise (i.e.,
+\code{over = FALSE}) for binary and multi-category treatments and censoring weights. Otherwise (i.e.,
 for continuous or longitudinal treatments or when \code{over = TRUE}),
 M-estimation is not supported. See \code{\link[=glm_weightit]{glm_weightit()}} and
 \code{vignette("estimating-effects")} for details.
@@ -79,7 +86,7 @@ M-estimation is not supported. See \code{\link[=glm_weightit]{glm_weightit()}} a
 }
 \details{
 CBPS estimates the coefficients of a generalized linear model (for
-binary treatments), multinomial logistic regression model (for multi-category
+binary treatments and censoring weights), multinomial logistic regression model (for multi-category
 treatments), or linear regression model (for continuous treatments) that is
 used to compute (generalized) propensity scores, from which the weights are
 computed. It involves replacing (or augmenting, in the case of the
@@ -137,7 +144,7 @@ required.
 
 The following additional arguments can be specified:
 \describe{
-\item{\code{over}}{\code{logical}; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is \code{FALSE} to use the just-identified CBPS.
+\item{\code{over}}{\code{logical}; whether to request the over-identified CBPS, which combines the generalized linear model regression score equations (for binary treatments and censoring weights), multinomial logistic regression score equations (for multi-category treatments), or linear regression score equations (for continuous treatments) to the balance moment conditions. Default is \code{FALSE} to use the just-identified CBPS.
 }
 \item{\code{twostep}}{\code{logical}; when \code{over = TRUE}, whether to use the two-step approximation to the generalized method of moments variance. Default is \code{TRUE}. Setting to \code{FALSE} increases computation time but may improve estimation. Ignored with a warning when \code{over = FALSE}.
 }

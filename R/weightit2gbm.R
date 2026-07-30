@@ -6,7 +6,7 @@
 #' This page explains the details of estimating weights from
 #' generalized boosted model-based propensity scores by setting `method = "gbm"`
 #' in the call to [weightit()] or [weightitMSM()]. This method can be used with
-#' binary, multi-category, and continuous treatments.
+#' binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating propensity scores using
 #' generalized boosted modeling (GBM) and then converting those propensity scores into
@@ -58,6 +58,10 @@
 #' instead of assuming a specific density for the denominator by
 #' setting `density = "kernel"`. Other arguments to [density()] can be specified
 #' to refine the density estimation parameters.
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], a single model of the probability of being censored is fit, and the weights are \eqn{1/P(C = 0 | X)} for the units still under observation and 0 for the censored units. The number of trees is selected using `criterion` computed between the *weighted units still under observation* and the *full at-risk sample*, which is what the weights target. This is cobalt's "target" balance, so `criterion` must be one of `cobalt::available.stats("target")` -- a subset of the values allowed for binary treatments, excluding `"r2"`, `"r2.2"`, `"r2.3"`, `"kernel.dist"`, and `"l1.med"`. `"cv{#}"` works as it does for binary treatments.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -331,6 +335,10 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   available.criteria <- cobalt::available.stats(switch(treat.type,
                                                        `multi-category` =,
                                                        multinomial = "multi",
+                                                       #Censoring weights target the covariate
+                                                       #distribution of the full at-risk sample
+                                                       #rather than another treatment group
+                                                       censoring = "target",
                                                        treat.type))
 
   if (startsWith(criterion, "es.")) {
@@ -384,7 +392,11 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     }
   }
 
-  if (treat.type == "binary")  {
+  if (treat.type == "censoring") {
+    available.distributions <- c("bernoulli", "adaboost")
+    treat <- .make_cens_treat(treat)
+  }
+  else if (treat.type == "binary")  {
     available.distributions <- c("bernoulli", "adaboost")
     t.lev <- get_treated_level(treat, estimand, focal)
     treat <- binarize(treat, one = t.lev)
@@ -404,11 +416,25 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
     arg::arg_count(n.grid)
     arg::arg_between(n.grid, c(2, n.trees))
 
-    init <- cobalt::bal.init(
-      if (!anyNA(covs)) covs else add_missing_indicators(covs),
-      treat = treat, stat = criterion,
-      estimand = estimand, s.weights = s.weights,
-      focal = focal, ...)
+    init <- {
+      if (treat.type == "censoring") {
+        #A target init: omitting `treat` makes the target the (s.weights-weighted)
+        #covariate means of `covs` itself, i.e. of the full at-risk sample, which
+        #is what the censoring weights are designed to reproduce. The uncensored
+        #subset is encoded by the zero weights supplied to `bal.compute()`, so
+        #`covs` must be the whole at-risk sample here.
+        cobalt::bal.init(
+          if (!anyNA(covs)) covs else add_missing_indicators(covs),
+          stat = criterion, s.weights = s.weights, ...)
+      }
+      else {
+        cobalt::bal.init(
+          if (!anyNA(covs)) covs else add_missing_indicators(covs),
+          treat = treat, stat = criterion,
+          estimand = estimand, s.weights = s.weights,
+          focal = focal, ...)
+      }
+    }
   }
 
   A[["x"]] <- covs
@@ -514,9 +540,18 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                               type = "response", newdata = covs)
       }
 
-      w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
-                                         focal = focal, stabilize = stabilize,
-                                         subclass = ...get("subclass"))
+      w <- {
+        if (treat.type == "censoring") {
+          #The criterion must be evaluated on the censoring weights themselves,
+          #which is why the censoring path cannot post-process a binary fit
+          .get_w_from_ps_internal_cens_array(ps, treat)
+        }
+        else {
+          .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
+                                        focal = focal, stabilize = stabilize,
+                                        subclass = ...get("subclass"))
+        }
+      }
       if (trim.at != 0) {
         w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
       }
@@ -548,9 +583,18 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                                 type = "response", newdata = covs)
         }
 
-        w <- .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
-                                           focal = focal, stabilize = stabilize,
-                                           subclass = ...get("subclass"))
+        w <- {
+          if (treat.type == "censoring") {
+            #The criterion must be evaluated on the censoring weights themselves,
+            #which is why the censoring path cannot post-process a binary fit
+            .get_w_from_ps_internal_cens_array(ps, treat)
+          }
+          else {
+            .get_w_from_ps_internal_array(ps, treat = treat, estimand = estimand,
+                                          focal = focal, stabilize = stabilize,
+                                          subclass = ...get("subclass"))
+          }
+        }
         if (trim.at != 0) {
           w <- suppressMessages(apply(w, 2L, trim, at = trim.at, treat = treat))
         }
@@ -567,7 +611,7 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
 
       tree.val <- unique(tree.val[order(tree.val$tree), ])
       w <- w[, best.tree.index]
-      ps <- if (treat.type == "binary") ps[, best.tree.index] else NULL
+      ps <- if (treat.type %in% c("binary", "censoring")) ps[, best.tree.index] else NULL
 
       tune[[paste.("best", criterion)]][i] <- best.loss
       tune[["best.tree"]][i] <- best.tree
@@ -622,9 +666,19 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
                                 type = "response", newdata = covs)
         }
 
-        best.w <- drop(.get_w_from_ps_internal_array(best.ps, treat = treat, estimand = estimand,
-                                                     focal = focal, stabilize = stabilize,
-                                                     subclass = ...get("subclass")))
+        best.w <- {
+          if (treat.type == "censoring") {
+            #`criterion = "cv{#}"` selects trees by cross-validation error rather
+            #than by balance, but the weights it returns are still censoring
+            #weights
+            .get_w_from_ps_internal_cens(drop(best.ps), treat)
+          }
+          else {
+            drop(.get_w_from_ps_internal_array(best.ps, treat = treat, estimand = estimand,
+                                               focal = focal, stabilize = stabilize,
+                                               subclass = ...get("subclass")))
+          }
+        }
 
         current.best.loss <- best.loss
         best.tune.index <- i
@@ -652,6 +706,31 @@ weightit2gbm <- function(covs, treat, s.weights, estimand, focal, subset,
   }
 
   list(w = best.w, ps = best.ps, info = info, fit.obj = best.fit)
+}
+
+weightit2gbm.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  C <- .make_cens_treat(treat)
+
+  out <- .cens_degenerate_out(C[subset])
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  #Unlike the other propensity score methods, this one cannot delegate to the
+  #binary version and convert its output afterwards: the number of trees is chosen
+  #by a balance criterion evaluated *inside* the fitting loop, so that criterion
+  #has to see the censoring weights. `weightit2gbm()` therefore handles
+  #`treat.type == "censoring"` itself, and the censoring-tagged treatment is
+  #passed straight through so it can. The criterion then compares the weighted
+  #units still under observation against the full at-risk sample, which is what
+  #the weights actually target.
+  weightit2gbm(covs = covs, treat = as.treat(C, censoring = TRUE),
+               s.weights = s.weights, subset = subset,
+               estimand = "ATE", focal = NULL, stabilize = FALSE,
+               missing = missing, verbose = verbose, ...)
 }
 
 weightit2gbm.multi <- weightit2gbm

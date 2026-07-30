@@ -7,7 +7,7 @@
 This page explains the details of estimating weights using
 energy balancing by setting \code{method = "energy"} in the call to \code{\link[=weightit]{weightit()}}
 or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and
-continuous treatments.
+continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating weights by minimizing an energy
 statistic related to covariate balance. For binary and multi-category
@@ -37,6 +37,11 @@ estimands are allowed: ATE and ATT.
 
 For continuous treatments, this method estimates the weights using \code{osqp()}
 using formulas described by Huling, Greifer, and Chen (2023).
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, the energy distance minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0. \code{improved} does not apply, as only one group is weighted.
 }
 
 \subsection{Longitudinal Treatments}{

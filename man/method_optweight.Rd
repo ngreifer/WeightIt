@@ -6,7 +6,7 @@
 \title{Stable Balancing Weights}
 \description{
 This page explains the details of estimating stable balancing
-weights (also known as optimization-based weights) by setting \code{method = "optweight"} in the call to \code{\link[=weightit]{weightit()}}. This method can be used with binary, multi-category, and continuous treatments.
+weights (also known as optimization-based weights) by setting \code{method = "optweight"} in the call to \code{\link[=weightit]{weightit()}}. This method can be used with binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating weights by solving a quadratic
 programming problem subject to approximate or exact balance constraints. This
@@ -35,6 +35,11 @@ ATT. The weights are taken from the output of the \code{optweight.fit} fit objec
 For continuous treatments, this method estimates the weights using
 \pkgfun{optweight}{optweight.fit}. The weights are taken from the output of the
 \code{optweight.fit} fit object.
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, \code{optweight::optweight.svy.fit()} is used rather than \code{optweight::optweight.fit()}. It solves exactly the required problem: finding weights for the units still under observation whose weighted covariate means equal those of the full at-risk sample, without estimating any weights for the censored units, which receive a weight of 0. \code{tols} are standardized using the units still under observation. Note the resulting weights have a mean of 1 among those units, whereas the other methods put them on the \code{1/P(C = 0 | X)} scale; the two differ by a constant factor. M-estimation is not supported.
 }
 
 \subsection{Longitudinal Treatments}{

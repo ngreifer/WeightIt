@@ -28,6 +28,10 @@
 #' \pkgfun{CBPS}{npCBPS}. The weights are taken from the output of the `npCBPS`
 #' fit object.
 #'
+#' ## Censoring Weights
+#'
+#' Censoring weights are not available for this method, because `npCBPS()` provides no way to target an external set of covariate means or to restrict estimation to one group. For empirical-likelihood-flavored censoring weights, use `method = "optweight"` with `norm = "log"`; for the entropy analogue, use `method = "ebal"`.
+#'
 #' ## Longitudinal Treatments
 #'
 #' For longitudinal treatments, the weights are the product of the weights

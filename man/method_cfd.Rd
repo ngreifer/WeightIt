@@ -6,11 +6,9 @@
 \description{
 This page explains the details of estimating weights using
 characteristic function distance (CFD) balancing by setting \code{method = "cfd"} in the call to \code{\link[=weightit]{weightit()}}
-or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and
-continuous treatments.
+or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary and multi-category treatments, as well as for estimating censoring weights.
 
-In general, this method relies on estimating weights by minimizing a scalar measure of covariate balance, the CFD. The CFD is related to the maximum mean discrepancy and captures covariate balance for the joint covariate distribution as determined by a specific choice of kernel. This
-method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp}
+In general, this method relies on estimating weights by minimizing a scalar measure of covariate balance, the CFD. The CFD is related to the maximum mean discrepancy and captures covariate balance for the joint covariate distribution as determined by a specific choice of kernel. This method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp}
 from the \CRANpkg{osqp} package to perform the optimization. This method may
 be slow or memory-intensive for large datasets.
 \subsection{Binary Treatments}{
@@ -30,6 +28,11 @@ estimands are allowed: ATE and ATT.
 \subsection{Continuous Treatments}{
 
 CFD balancing is not compatible with continuous treatments.
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, the CFD minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0.
 }
 
 \subsection{Longitudinal Treatments}{

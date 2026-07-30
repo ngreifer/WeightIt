@@ -5,11 +5,9 @@
 #' @description
 #' This page explains the details of estimating weights using
 #' characteristic function distance (CFD) balancing by setting `method = "cfd"` in the call to [weightit()]
-#' or [weightitMSM()]. This method can be used with binary, multi-category, and
-#' continuous treatments.
+#' or [weightitMSM()]. This method can be used with binary and multi-category treatments, as well as for estimating censoring weights.
 #'
-#' In general, this method relies on estimating weights by minimizing a scalar measure of covariate balance, the CFD. The CFD is related to the maximum mean discrepancy and captures covariate balance for the joint covariate distribution as determined by a specific choice of kernel. This
-#' method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp}
+#' In general, this method relies on estimating weights by minimizing a scalar measure of covariate balance, the CFD. The CFD is related to the maximum mean discrepancy and captures covariate balance for the joint covariate distribution as determined by a specific choice of kernel. This method relies on code written for \pkg{WeightIt} using \pkgfun{osqp}{osqp}
 #' from the \CRANpkg{osqp} package to perform the optimization. This method may
 #' be slow or memory-intensive for large datasets.
 #'
@@ -28,6 +26,10 @@
 #' ## Continuous Treatments
 #'
 #' CFD balancing is not compatible with continuous treatments.
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], the CFD minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -432,6 +434,155 @@ weightit2cfd <- function(covs, treat, s.weights, subset, estimand, focal,
   if (abs(min.w) <= 1e-10) {
     w[abs(w) <= 1e-10] <- 0
   }
+
+  opt.out$lambda <- lambda
+
+  list(w = w, fit.obj = opt.out)
+}
+
+weightit2cfd.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                              estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  missing <- .process_missing2(missing, covs)
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  d <- .process_kernel(covs, s.weights, subset,
+                       kernel = ...get("kernel", "gaussian"),
+                       bw_scale = ...get("bw_scale", 1),
+                       nu = ...get("nu"),
+                       nsim = ...get("nsim", 5000L))
+
+  d <- unname(d[subset, subset, drop = FALSE])
+
+  covs <- covs[subset, , drop = FALSE]
+  cens <- .make_cens_treat(treat)[subset]
+  s.weights <- s.weights[subset]
+
+  out <- .cens_degenerate_out(cens)
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  n <- length(cens)
+
+  sw0 <- check_if_zero(s.weights)
+
+  min.w <- ...get("min.w", 1e-8)
+  arg::arg_number(min.w)
+
+  lambda <- ...get("lambda", 1e-4)
+  arg::arg_number(lambda)
+
+  moments <- ...get("moments", 0)
+  int <- isTRUE(...get("int", FALSE))
+  quantile <- ...get("quantile")
+  add_constraints <- any(moments > 0) || int || is_not_null(quantile)
+
+  if (add_constraints) {
+    covs <- scale(covs)
+
+    tols <- ...get("tols", 0)
+    arg::arg_number(tols)
+    tols <- abs(tols)
+  }
+
+  options.list <- .process_osqp_settings(verbose = verbose, ...)
+
+  u <- which(cens == 0)
+  nu <- length(u)
+
+  #The characteristic function distance is between the weighted units still under
+  #observation and the *full at-risk sample*, rather than between two treatment
+  #groups, so both sets of masses use the same global normalization; see
+  #`weightit2energy.cens()`. `d` here is a positive semi-definite kernel rather
+  #than a distance, so the two signs are the reverse of the energy case.
+  s.weights <- s.weights / mean_fast(s.weights)
+  s.weights_n <- s.weights / n
+
+  P <- d[u, u, drop = FALSE] * tcrossprod(s.weights_n[u])
+
+  q <- -2 * drop(s.weights_n %*% d[, u, drop = FALSE]) * s.weights_n[u]
+
+  #Constraints for positivity and sum of weights
+  Amat <- cbind(diag(nu), s.weights_n[u])
+  lvec <- c(ifelse(sw0[u], 1, min.w), 1)
+  uvec <- c(ifelse(sw0[u], 1, Inf), 1)
+
+  if (add_constraints) {
+    #Balance moments, interactions, and/or quantiles against the full at-risk
+    #sample. `focal` and `treat` are omitted so the terms and the target are both
+    #defined by that sample.
+    covs <- .apply_moments_int_quantile(covs,
+                                        moments = moments,
+                                        int = int,
+                                        quantile = quantile,
+                                        s.weights = s.weights)
+
+    targets <- col.w.m(covs, s.weights)
+
+    sds <- rep.int(1, ncol(covs))
+
+    if (tols > 0) {
+      bin.vars <- is_binary_col(covs)
+
+      if (!all(bin.vars)) {
+        sds[!bin.vars] <- sqrt(col.w.v(covs[, !bin.vars, drop = FALSE], w = s.weights))
+      }
+    }
+
+    #Only one group is weighted, so unlike the ATE the tolerances are not halved
+    Amat <- cbind(Amat, covs[u, , drop = FALSE] * s.weights_n[u])
+    lvec <- c(lvec, targets - sds * tols)
+    uvec <- c(uvec, targets + sds * tols)
+  }
+
+  #Add weight penalty
+  if (lambda < 0) {
+    #Find lambda to make P PSD
+    e <- eigen(P, symmetric = TRUE, only.values = TRUE)
+    e.min <- min(e$values)
+
+    if (e.min < 0) {
+      diag(P) <- diag(P) - e.min + .Machine$double.eps
+    }
+  }
+  else if (lambda != 0) {
+    diag(P) <- diag(P) + lambda * s.weights_n[u]^2 / 2
+  }
+
+  unbounded <- lvec == -Inf & uvec == Inf
+
+  if (any(unbounded)) {
+    Amat <- Amat[, !unbounded, drop = FALSE]
+    lvec <- lvec[!unbounded]
+    uvec <- uvec[!unbounded]
+  }
+
+  verbosely({
+    opt.out <- osqp::solve_osqp(P = 2 * P, q = q, A = t(Amat),
+                                l = lvec, u = uvec,
+                                pars = options.list)
+  }, verbose = verbose)
+
+  opt.out <- .process_osqp_output(opt.out, options.list)
+
+  #The inaccuracy fix-ups must be applied before padding with zeros, or the
+  #censored units' zeros would be raised to `min.w`.
+  wu <- opt.out$x
+
+  wu[wu < min.w] <- min.w
+
+  if (abs(min.w) <= 1e-10) {
+    wu[abs(wu) <= 1e-10] <- 0
+  }
+
+  #Censored units get a weight of 0
+  w <- rep.int(0, n)
+  w[u] <- wu
 
   opt.out$lambda <- lambda
 

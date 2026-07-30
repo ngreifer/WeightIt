@@ -290,3 +290,138 @@ test_that("family = 'multinomial' redirects to multinom_weightit() (deprecated)"
 
   expect_equal(coef(fit), coef(fit_direct))
 })
+test_that("collinear covariates give NA for the aliased coefficients", {
+  skip_on_cran()
+  skip_if_not_installed("sandwich")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  #An exact duplicate of an existing covariate
+  test_data$X1b <- test_data$X1
+
+  expect_no_condition({
+    fit <- glm_weightit(Y_C ~ A + X1 + X1b + X2, data = test_data)
+  })
+
+  fit_g <- glm(Y_C ~ A + X1 + X1b + X2, data = test_data)
+
+  #stats::glm() also returns NA for the redundant coefficient
+  expect_equal(coef(fit), coef(fit_g), tolerance = eps)
+  expect_identical(is.na(coef(fit)),
+                   c("(Intercept)" = FALSE, A = FALSE, X1 = FALSE,
+                     X1b = TRUE, X2 = FALSE))
+
+  #`complete = TRUE` (the default) expands the variance to the full set of
+  #coefficients with NAs; `complete = FALSE` covers the estimable ones only
+  V <- vcov(fit)
+  expect_identical(dim(V), c(5L, 5L))
+  expect_true(all(is.na(V["X1b", ])))
+
+  V_est <- vcov(fit, complete = FALSE)
+  expect_identical(dim(V_est), c(4L, 4L))
+  expect_false(anyNA(V_est))
+  expect_identical(colnames(V_est), c("(Intercept)", "A", "X1", "X2"))
+
+  #The default HC0 variance matches the sandwich variance of the glm() fit
+  expect_equal(unname(V_est), unname(sandwich::sandwich(fit_g)), tolerance = eps)
+
+  #print() and summary() report only the estimable coefficients, with standard
+  #errors aligned to them
+  expect_no_condition(invisible(capture.output(print(fit))))
+  expect_no_condition(s <- summary(fit))
+  expect_identical(rownames(s$coefficients), c("(Intercept)", "A", "X1", "X2"))
+  expect_false(anyNA(s$coefficients))
+  expect_equal(unname(s$coefficients[, "Std. Error"]),
+               unname(sqrt(diag(sandwich::sandwich(fit_g)))), tolerance = eps)
+
+  #sandwich's estfun()/bread() are also restricted to the estimable coefficients
+  expect_identical(ncol(sandwich::estfun(fit)), 4L)
+  expect_identical(dim(sandwich::bread(fit)), c(4L, 4L))
+  expect_equal(unname(sandwich::sandwich(fit)), unname(V_est), tolerance = eps)
+
+  #vcov = "const" is the model-based variance over the estimable coefficients
+  expect_no_condition({
+    fit_const <- glm_weightit(Y_C ~ A + X1 + X1b + X2, data = test_data,
+                              vcov = "const")
+  })
+
+  expect_equal(unname(vcov(fit_const, complete = FALSE)),
+               unname(vcov(fit_g, complete = FALSE)), tolerance = eps)
+
+  #lm_weightit() behaves the same way
+  expect_no_condition({
+    fit_lm <- lm_weightit(Y_C ~ A + X1 + X1b + X2, data = test_data)
+  })
+
+  expect_equal(coef(fit_lm), coef(fit), tolerance = eps)
+  expect_equal(vcov(fit_lm, complete = FALSE), V_est, tolerance = eps)
+
+  #A redundant factor: two aliased coefficients at once
+  test_data$G <- factor(rep(c("a", "b", "c"), length.out = nrow(test_data)))
+  test_data$Gb <- test_data$G
+
+  expect_no_condition({
+    fit_f <- glm_weightit(Y_B ~ A + G + Gb, data = test_data, family = binomial)
+  })
+
+  fit_f_g <- glm(Y_B ~ A + G + Gb, data = test_data, family = binomial)
+
+  expect_equal(coef(fit_f), coef(fit_f_g), tolerance = eps)
+  expect_identical(sum(is.na(coef(fit_f))), 2L)
+  expect_equal(unname(vcov(fit_f, complete = FALSE)),
+               unname(sandwich::sandwich(fit_f_g)), tolerance = eps)
+})
+
+test_that("dropping a collinear covariate doesn't change the estimable results", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+  test_data$X1b <- test_data$X1
+
+  expect_no_condition({
+    W <- weightit(A ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  estimand = "ATE")
+  })
+
+  #A perfectly collinear column carries no information, so fitting with it must
+  #give exactly what fitting without it does. This covers the M-estimation
+  #(`asympt`) path, where the aliased columns must be dropped from the model
+  #matrix consistently with the NA coefficients.
+  for (v in c("const", "HC0")) {
+    fit_full <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
+                             family = binomial, vcov = v)
+    fit_red <- glm_weightit(Y_B ~ A + X1 + X2, data = test_data,
+                            family = binomial, vcov = v)
+
+    expect_equal(coef(fit_full)[!is.na(coef(fit_full))], coef(fit_red),
+                 tolerance = eps)
+    expect_equal(vcov(fit_full, complete = FALSE), vcov(fit_red),
+                 ignore_attr = TRUE, tolerance = eps)
+  }
+
+  for (v in c("asympt", "HC0")) {
+    fit_full <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
+                             family = binomial, weightit = W, vcov = v)
+    fit_red <- glm_weightit(Y_B ~ A + X1 + X2, data = test_data,
+                            family = binomial, weightit = W, vcov = v)
+
+    expect_identical(fit_full$vcov_type, v)
+    expect_equal(coef(fit_full)[!is.na(coef(fit_full))], coef(fit_red),
+                 tolerance = eps)
+    expect_equal(vcov(fit_full, complete = FALSE), vcov(fit_red),
+                 ignore_attr = TRUE, tolerance = eps)
+  }
+
+  #M-estimation still yields smaller SEs than treating the weights as fixed
+  fit_asympt <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
+                             family = binomial, weightit = W, vcov = "asympt")
+  fit_hc0 <- glm_weightit(Y_B ~ A + X1 + X1b + X2, data = test_data,
+                          family = binomial, weightit = W, vcov = "HC0")
+
+  expect_true(all(diag(vcov(fit_asympt, complete = FALSE)) <=
+                    diag(vcov(fit_hc0, complete = FALSE))))
+})

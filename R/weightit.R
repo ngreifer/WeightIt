@@ -130,6 +130,36 @@
 #' `method` can also be supplied as a user-defined function; see [`method_user`]
 #' for instructions and examples. Setting `method = NULL` computes unit weights.
 #'
+#' ## Censoring weights (IPCW)
+#'
+#' Wrapping the left side of `formula` in [`.cens()`][.cens] requests inverse
+#' probability of censoring weights instead of treatment weights, as in
+#' `weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")`. Censoring is treated as
+#' its own treatment type, distinct from binary, multi-category, and continuous
+#' treatments; the indicator must be 0 for units still under observation and 1 for
+#' units that are censored.
+#'
+#' Weights are estimated only for the units still under observation, and are those
+#' that make their covariate distribution resemble that of the full at-risk sample.
+#' Writing \eqn{e(X) = P(C = 1 | X)}, the weights are \eqn{1 / (1 - e(X))} for units with
+#' \eqn{C = 0} and exactly 0 for units with \eqn{C = 1}. Because only one group is weighted,
+#' the estimation problem is smaller and better conditioned than the corresponding
+#' binary-treatment problem, which would additionally solve for weights among the
+#' censored units; this matters most when few units are censored.
+#'
+#' `estimand`, `focal`, and `subclass` do not apply and are rejected or ignored.
+#' `by` and `stabilize` can be used; stabilization divides the weights by those from
+#' a marginal censoring model, giving \eqn{P(C = 0) / P(C = 0 | X)}. `ps` is the
+#' predicted probability of *being censored*. Not all methods support censoring
+#' weights; see the `treat_type` component of [.weightit_methods].
+#'
+#' Because censored units receive a weight of exactly 0, they contribute nothing to a
+#' weighted outcome model, and [glm_weightit()] and friends tolerate missing values
+#' in the model variables for those units, including a missing event time in the
+#' `Surv()` response of a [coxph_weightit()] model. Missing values in units with a
+#' nonzero weight still produce an error. See [`.cens()`][.cens] for how to
+#' assess balance, which requires a little care.
+#'
 #' ## `estimand` and `focal`
 #'
 #' For binary and multi-category treatments, the
@@ -167,9 +197,7 @@
 #' references section of the method used.
 #'
 #' @seealso
-#' [weightitMSM()] for estimating weights with sequential (i.e.,
-#' longitudinal) treatments for use in estimating marginal structural models
-#' (MSMs).
+#' [weightitMSM()] for estimating weights with sequential (i.e., longitudinal) treatments or with both treatment and censoring indicators for use in estimating marginal structural models (MSMs).
 #'
 #' [weightit.fit()], which is a lower-level dispatcher function that accepts a
 #' matrix of covariates and a vector of treatment statuses rather than a formula
@@ -211,8 +239,6 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
 
   ## Checks and processing ----
 
-
-
   #Checks
   if (is_null(formula) || !rlang::is_formula(formula, lhs = TRUE)) {
     arg::err("{.arg formula} must be a formula relating treatment to covariates")
@@ -243,6 +269,11 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   n <- length(treat)
 
   if (anyNA(treat)) {
+    if (identical(get_treat_type(treat), "censoring")) {
+      arg::err(c("missing values are not allowed in the censoring indicator.",
+                 "i" = "To model censoring that can only occur among units not already censored, supply the censoring models to {.fun weightitMSM} in temporal order."))
+    }
+
     arg::err("missing values are not allowed in the treatment variable")
   }
 
@@ -398,6 +429,17 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     A[".covs"] <- list(stab.t.c[["reported.covs"]])
     A[".random"] <- list(NULL)
 
+    if (treat.type == "censoring") {
+      #The numerator is fit as an ordinary binary treatment rather than as a
+      #censoring model. A censoring numerator would carry the same (1 - C) factor
+      #as the denominator, making the ratio 0/0 for the censored units (and Inf in
+      #the inverted M-estimation part). With a binary ATE numerator, the weights
+      #are 1/P(C = 0) for the uncensored and 1/P(C = 1) for the censored, so the
+      #ratio is the stabilized IPCW P(C = 0)/P(C = 0 | X) for the former and
+      #exactly 0 for the latter.
+      A["treat"] <- list(as.treat(.make_cens_treat(treat), process = TRUE))
+    }
+
     sw_obj <- do.call("weightit.fit", A)
 
     obj$weights <- obj$weights / sw_obj[["weights"]]
@@ -411,7 +453,7 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   out <- list(weights = obj$weights,
               treat = treat,
               covs = simple.covs,
-              estimand = if (treat.type != "continuous") reported.estimand,
+              estimand = if (treat.type %nin% c("continuous", "censoring")) reported.estimand,
               method = method,
               ps = if (is_not_null(obj$ps) && !all(is.na(obj$ps))) obj$ps,
               s.weights = s.weights,
@@ -492,14 +534,21 @@ print.weightit <- function(x, ...) {
   cli::cat_line(sprintf(" - sampling weights: %s",
                         if (is_null(x[["s.weights"]]) || all_the_same(x[["s.weights"]])) "none" else "present"))
 
-  cli::cat_line(sprintf(" - treatment: %s",
-                        switch(treat.type,
-                               continuous = "continuous",
-                               `multi-category` =,
-                               multinomial = sprintf("%s-category (%s)",
-                                                     nunique(x[["treat"]]),
-                                                     word_list(levels(x[["treat"]]), and.or = FALSE)),
-                               binary = "2-category")))
+  if (treat.type == "censoring") {
+    cli::cat_line(sprintf(" - censoring: %s of %s units censored",
+                          sum(.make_cens_treat(x[["treat"]]) == 1, na.rm = TRUE),
+                          nobs(x)))
+  }
+  else {
+    cli::cat_line(sprintf(" - treatment: %s",
+                          switch(treat.type,
+                                 continuous = "continuous",
+                                 `multi-category` =,
+                                 multinomial = sprintf("%s-category (%s)",
+                                                       nunique(x[["treat"]]),
+                                                       word_list(levels(x[["treat"]]), and.or = FALSE)),
+                                 binary = "2-category")))
+  }
 
   if (is_not_null(x[["estimand"]])) {
     cli::cat_line(sprintf(" - estimand: %s",

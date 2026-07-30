@@ -10,6 +10,7 @@ reference:
   - weightit
   - weightitMSM
   - summary.weightit
+  - .cens
 - title: Specific estimation methods
 - contents: starts_with("method_")
 - title: Fit weighted regression models

@@ -744,11 +744,69 @@ get_varnames <- function(expr) {
   stats::as.formula(new.f, env = environment(f))
 }
 
+#Censoring (IPCW) models are marked by wrapping the censoring indicator in
+#`.cens()` on the LHS of the formula, e.g. `.cens(C) ~ x1 + x2`. The marker is
+#never evaluated; it is detected by name and stripped before the formula reaches
+#`terms()`/`model.frame()`, so that `treat.name` is the indicator's own name
+#(`"C"`, not `".cens(C)"`) and the indicator is otherwise processed like any
+#other treatment.
+.is_cens_formula <- function(f) {
+  if (!rlang::is_formula(f, lhs = TRUE)) {
+    return(FALSE)
+  }
+
+  lhs <- rlang::f_lhs(f)
+
+  is.call(lhs) && identical(lhs[[1L]], quote(.cens))
+}
+
+#`.cens(C) ~ rhs` -> `C ~ rhs`
+.uncens_formula <- function(f) {
+  lhs <- rlang::f_lhs(f)
+
+  if (.length(lhs) != 2L) {
+    arg::err("{.fun .cens} must wrap exactly one censoring indicator, as in {.code .cens(C) ~ x1 + x2}")
+  }
+
+  rlang::new_formula(lhs[[2L]], rlang::f_rhs(f), env = rlang::f_env(f))
+}
+
+#Coerce a censoring indicator to a plain 0/1 numeric vector, stripped of
+#attributes (1 = censored, 0 = still at risk). `NA`s are preserved: a unit
+#censored at an earlier time point has no later indicator.
+.make_cens_treat <- function(treat) {
+  C <- {
+    if (is.factor(treat) || is.character(treat))
+      suppressWarnings(as.numeric(as.character(treat)))
+    else if (is.logical(treat))
+      as.numeric(treat)
+    else
+      suppressWarnings(as.numeric(treat))
+  }
+
+  #A coercion that introduces new NAs (e.g. a "Yes"/"No" factor) is an error,
+  #not a silently all-missing indicator.
+  if (any(is.na(C) & !is.na(treat)) || !all(na.rem(C) %in% c(0, 1))) {
+    arg::err(c("a censoring indicator must contain only the values {.val {0}} (still at risk) and {.val {1}} (censored).",
+               "i" = "Logical values and factors with levels {.val {0}}/{.val {1}} or {.val {FALSE}}/{.val {TRUE}} are also allowed."))
+  }
+
+  C
+}
+
 #treat/covs
 get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
   arg::arg_formula(f, .arg = "formula")
   arg::arg_string(sep)
+
+  #Strip the `.cens()` marker (if present) before `terms()` sees it; the treat
+  #returned below is tagged with treat.type = "censoring".
+  censoring <- .is_cens_formula(f)
+
+  if (censoring) {
+    f <- .uncens_formula(f)
+  }
 
   env <- rlang::f_env(f)
 
@@ -795,6 +853,12 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
     if (inherits(test, "simpleError")) {
       m <- conditionMessage(test)
       if (!startsWith(m, "object '") || !endsWith(m, "' not found")) {
+        #An unevaluable call on the LHS is most often a mistyped `.cens()` marker
+        if (is.call(rlang::f_lhs(tt)) && grepl("^[Cc]ould not find function", m)) {
+          arg::err(c("{m}",
+                     "i" = "the left side of the formula must be a treatment variable; to model censoring, use {.code .cens(C) ~ x1 + x2}"))
+        }
+
         arg::err("{m}")
       }
 
@@ -837,6 +901,10 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
 
       class(treat) <- unique(c("treat", class(treat)))
       attr(treat, "treat.name") <- treat.name
+
+      if (censoring) {
+        attr(treat, "treat.type") <- "censoring"
+      }
     }
 
     return(list(reported.covs = covs,
@@ -1017,6 +1085,10 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
   if (is_not_null(treat)) {
     class(treat) <- unique(c("treat", class(treat)))
     attr(treat, "treat.name") <- treat.name
+
+    if (censoring) {
+      attr(treat, "treat.type") <- "censoring"
+    }
   }
 
   list(reported.covs = covs,
@@ -1024,8 +1096,28 @@ get_covs_and_treat_from_formula2 <- function(f, data = NULL, sep = "", ...) {
        simple.covs = simple.covs,
        treat = treat)
 }
-assign_treat_type <- function(treat, use.multi = FALSE) {
+assign_treat_type <- function(treat, use.multi = FALSE, censoring = NULL) {
   #Returns treat with treat.type attribute
+  if (is_null(censoring)) {
+    censoring <- identical(get_treat_type(treat), "censoring")
+  }
+
+  if (censoring) {
+    #A censoring indicator is validated rather than classified. Unlike a
+    #treatment, it may take a single value: a time point at which no unit (or
+    #every unit) is censored is degenerate but not malformed. `NA`s are allowed
+    #because a unit censored earlier has no later indicator.
+    C <- .make_cens_treat(treat)
+
+    if (nunique(C) == 0L) {
+      arg::err("the censoring indicator has no non-missing values")
+    }
+
+    attr(treat, "treat.type") <- "censoring"
+
+    return(treat)
+  }
+
   nunique.treat <- nunique(treat)
 
   if (nunique.treat < 2L) {

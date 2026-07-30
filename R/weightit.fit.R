@@ -39,6 +39,19 @@
 #'   values, and if present, `missing` will be set to `"ind"`. If `""`, `covs`
 #'   will not be checked for `NA` values; this can be faster when it is known
 #'   there are none.
+#' @param subset a `logical` vector with length equal to that of `treat`
+#'   restricting which units are used to fit the model, e.g., the units still
+#'   under observation when a censoring model is fit. The weights of the
+#'   remaining units are left as `NA` for the caller to fill in. When `by.factor`
+#'   is also supplied, the model is fit within the intersection of each `by`
+#'   level and `subset`. If `NULL` (the default), all units are used.
+#' @param treat.type an optional string identifying the treatment type, used to
+#'   request a type that cannot be inferred from `treat` itself. The only such
+#'   type is `"censoring"`, which requests inverse probability of censoring
+#'   weights and requires `treat` to be a 0/1 censoring indicator (1 = censored).
+#'   `NA` values in `treat` are then allowed outside `subset`. If `NULL` (the
+#'   default), the type is determined from `treat`; supplying `treat` as
+#'   [`.cens(C)`][.cens] is equivalent to setting `treat.type = "censoring"`.
 #' @param ... other arguments for functions called by `weightit.fit()` that
 #'   control aspects of fitting that are not covered by the above arguments.
 #'
@@ -49,7 +62,7 @@
 #' \item{treat}{The values of the treatment variable.}
 #' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
-#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details at [weightit()] for how the treated group is determined.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models, and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. For binary treatments, the propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details at [weightit()] for how the treated group is determined. For censoring models, it corresponds to the predicted probability of *being censored*, i.e., of the censoring indicator equalling 1.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 #' \item{fit.obj}{When `include.obj = TRUE`, the fit object.}
@@ -118,7 +131,8 @@
 #' @export
 weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.factor = NULL,
                          estimand = "ATE", focal = NULL, stabilize = FALSE,
-                         ps = NULL, missing = NULL, verbose = FALSE, include.obj = FALSE, ...) {
+                         ps = NULL, missing = NULL, verbose = FALSE, include.obj = FALSE,
+                         subset = NULL, treat.type = NULL, ...) {
 
   A <- list(...)
 
@@ -135,7 +149,17 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     arg::arg_supplied(treat)
     arg::arg_vector(treat)
     arg::arg_numeric(treat)
-    arg::arg_no_NA(treat)
+
+    #Censoring can be requested either by tagging `treat` with `.cens()` or by
+    #supplying `treat.type` explicitly for a plain numeric indicator.
+    censoring <- identical(treat.type, "censoring") ||
+      identical(get_treat_type(treat), "censoring")
+
+    if (!censoring) {
+      #Censoring indicators may be NA outside `subset`: a unit censored at an
+      #earlier time point has no later indicator.
+      arg::arg_no_NA(treat)
+    }
 
     arg::arg_flag(stabilize)
     arg::arg_flag(verbose)
@@ -145,7 +169,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
       arg::err("{.arg treat} and {.arg covs} must contain the same number of units")
     }
 
-    treat <- as.treat(treat, process = TRUE)
+    treat <- as.treat(treat, process = TRUE, censoring = censoring)
     treat.type <- get_treat_type(treat)
 
     .check_acceptable_method(method, msm = FALSE, force = FALSE)
@@ -258,6 +282,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
                   `multi-category` =,
                   multinomial = paste.(fun, "multi"),
                   continuous = paste.(fun, "cont"),
+                  censoring = paste.(fun, "cens"),
                   fun)
   }
 
@@ -272,7 +297,16 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   A["verbose"] <- list(verbose)
 
   for (i in levels(by.factor)) {
-    A["subset"] <- list(by.factor == i)
+    #`subset` (e.g., the units still under observation when a censoring model is
+    #fit) further restricts which units are used within this `by` level; the
+    #weights of the rest are left as NA for the caller to fill in.
+    sub <- by.factor == i
+
+    if (is_not_null(subset)) {
+      sub <- sub & subset
+    }
+
+    A["subset"] <- list(sub)
 
     #Run method
     if (is.function(method)) {
@@ -296,9 +330,9 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     }
     # else if (any(!is.finite(obj$w))) probably_a_bug()
 
-    out$weights[by.factor == i] <- obj$w
+    out$weights[sub] <- obj$w
     if (is_not_null(obj$ps)) {
-      out$ps[by.factor == i] <- obj$ps
+      out$ps[sub] <- obj$ps
     }
 
     if (include.obj && is_not_null(obj$fit.obj)) {
@@ -309,7 +343,7 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     #stacked block-diagonally (equivalent to interacting `by` with all predictors).
     #Single-bracket assignment keeps a NULL entry in place (as length 0) rather
     #than deleting it, so the all(lengths > 0L) guard below stays correct.
-    Mparts.list[i] <- list(.expand_Mparts_by(obj$Mparts, by.factor == i, treat))
+    Mparts.list[i] <- list(.expand_Mparts_by(obj$Mparts, sub, treat))
 
     info[[i]] <- obj$info
   }
@@ -327,7 +361,10 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
   }
 
   if (nlevels(by.factor) == 1L) {
-    attr(out, "Mparts") <- obj$Mparts
+    #With a single `by` level and no `subset`, return the raw Mparts (identical to
+    #before). When `subset` restricts the fitted units, return the
+    #full-sample-expanded version so downstream stacking aligns on all n rows.
+    attr(out, "Mparts") <- if (is_not_null(subset)) Mparts.list[[1L]] else obj$Mparts
   }
   else if (all(lengths(Mparts.list) > 0L)) {
     #Every `by` group supplied Mparts; stack them (mirrors weightitMSM())
@@ -358,7 +395,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = NULL, by.factor = NULL,
                             estimand = "ATE", focal = NULL, stabilize = FALSE,
                             is.MSM.method = FALSE, missing = NULL,
-                            verbose = FALSE, include.obj = FALSE, ...) {
+                            verbose = FALSE, include.obj = FALSE,
+                            atrisk.list = NULL, ...) {
 
   A <- list(...)
 
@@ -385,7 +423,13 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
     for (i in seq_along(treat.list)) {
       arg::arg_vector(treat.list[[i]], sprintf("treat.list[[%s]]", i))
       arg::arg_numeric(treat.list[[i]], sprintf("treat.list[[%s]]", i))
-      arg::arg_no_NA(treat.list[[i]], sprintf("treat.list[[%s]]", i))
+
+      #Censoring indicators, and the treatments that follow them, are legitimately
+      #missing for units that have already dropped out
+      if (!identical(get_treat_type(treat.list[[i]]), "censoring") &&
+          is_null(atrisk.list)) {
+        arg::arg_no_NA(treat.list[[i]], sprintf("treat.list[[%s]]", i))
+      }
     }
 
     arg::arg_flag(stabilize)
@@ -403,7 +447,9 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
         arg::err("treatment and covariates must have the same number of units")
       }
 
-      if (anyNA(treat.list[[i]])) {
+      if (is_null(atrisk.list) &&
+          !identical(get_treat_type(treat.list[[i]]), "censoring") &&
+          anyNA(treat.list[[i]])) {
         arg::err("no missing values are allowed in the treatment variable. Missing values found in treat.list[[{i}]]")
       }
 
@@ -471,6 +517,7 @@ weightitMSM.fit <- function(covs.list, treat.list, method = "glm", s.weights = N
 
   A["covs.list"] <- list(covs.list)
   A["treat.list"] <- list(treat.list)
+  A["atrisk.list"] <- list(atrisk.list)
   A["s.weights"] <- list(s.weights)
   A["estimand"] <- list(estimand)
   A["focal"] <- list(focal)

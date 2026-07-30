@@ -6,6 +6,12 @@ weightit2null.multi <- weightit2null
 
 weightit2null.cont <- weightit2null
 
+#With no censoring model, the inverse probability of censoring weights are the
+#complete-case weights: 1 for the units still under observation, 0 for the rest.
+weightit2null.cens <- function(covs, treat, s.weights, subset, ...) {
+  list(w = 1 - .make_cens_treat(treat)[subset])
+}
+
 weightitMSM2null <- function(covs.list, treat.list, s.weights, subset, ...) {
   list(w = rep.int(1, length(treat.list[[1L]][subset])))
 }

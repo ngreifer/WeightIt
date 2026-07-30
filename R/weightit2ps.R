@@ -108,6 +108,28 @@ weightit2ps.multi <- function(covs, treat, s.weights, subset, estimand, focal,
   list(w = w)
 }
 
+weightit2ps.cens <- function(covs, treat, s.weights, subset, missing, ps, verbose,
+                             estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  C <- .make_cens_treat(treat)
+
+  out <- .cens_degenerate_out(C[subset])
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  #`ps` is the probability of being censored, so the censored units are the focal
+  #("treated") group of the equivalent ATT problem. Delegating this way inherits
+  #all of `weightit2ps()`'s input parsing.
+  out <- weightit2ps(covs = covs, treat = C, s.weights = s.weights,
+                     subset = subset, estimand = "ATT", focal = 1,
+                     stabilize = FALSE, missing = missing, ps = ps,
+                     verbose = verbose, ...)
+
+  .att_out_to_cens(out, C[subset])
+}
+
 weightit2ps.cont <- function(covs, treat, s.weights, subset, stabilize, missing, ps, verbose, ...) {
 
   treat <- treat[subset]

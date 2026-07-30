@@ -31,6 +31,11 @@ For continuous treatments, this method estimates the weights using
 fit object.
 }
 
+\subsection{Censoring Weights}{
+
+Censoring weights are not available for this method, because \code{npCBPS()} provides no way to target an external set of covariate means or to restrict estimation to one group. For empirical-likelihood-flavored censoring weights, use \code{method = "optweight"} with \code{norm = "log"}; for the entropy analogue, use \code{method = "ebal"}.
+}
+
 \subsection{Longitudinal Treatments}{
 
 For longitudinal treatments, the weights are the product of the weights

@@ -7,7 +7,7 @@
 This page explains the details of estimating weights using
 inverse probability tilting by setting \code{method = "ipt"} in the call to
 \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary and
-multi-category treatments.
+multi-category treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using a
 modification of the usual generalized linear model score equations to enforce
@@ -35,6 +35,11 @@ group.
 \subsection{Continuous Treatments}{
 
 Inverse probability tilting is not compatible with continuous treatments.
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, the censoring model is tilted so that the weighted covariate means of the units still under observation equal those of the full at-risk sample. Only one set of tilting parameters is solved for, rather than one per treatment group as for the ATE. The censored units receive a weight of 0.
 }
 
 \subsection{Longitudinal Treatments}{

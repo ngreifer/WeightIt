@@ -287,6 +287,12 @@ lm_weightit <- function(formula, data, weightit = NULL,
 .get_hess_glm <- function(fit) {
   X <- fit[["x"]] %or% model.matrix(fit)
 
+  if (anyNA(fit[["coefficients"]])) {
+    # Columns belonging to aliased (collinear) coefficients would make the
+    # Hessian singular
+    X <- .drop_aliased_cols(X, fit)
+  }
+
   d1mus <- fit$family$mu.eta(fit$linear.predictors)
   varmus <- fit$family$variance(fit$fitted.values)
 

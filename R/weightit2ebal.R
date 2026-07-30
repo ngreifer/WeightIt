@@ -7,7 +7,7 @@
 #' This page explains the details of estimating weights using
 #' entropy balancing by setting `method = "ebal"` in the call to [weightit()] or
 #' [weightitMSM()]. This method can be used with binary, multi-category, and
-#' continuous treatments.
+#' continuous treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating weights by minimizing the
 #' negative entropy of the weights subject to exact moment balancing
@@ -32,6 +32,10 @@
 #'
 #' For continuous treatments, this method estimates the weights using `optim()`
 #' using formulas described by Tübbicke (2022) and Vegetabile et al. (2021).
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], entropy balancing is performed on the units still under observation only, with the target being the covariate means of the full at-risk sample (censored and uncensored combined). Because a single set of weights is estimated rather than one per treatment group, the optimization problem is smaller than for the ATE. The censored units receive a weight of 0. M-estimation is supported when `tols` is 0. With `link = "clog"`, `method = "ipt"` yields identical weights.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -431,6 +435,215 @@ weightit2ebal <- function(covs, treat, s.weights, subset, estimand, focal,
 }
 
 weightit2ebal.multi <- weightit2ebal
+
+weightit2ebal.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                               estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  bw <- .process_b.weights(..., treat = treat)
+
+  cens <- .make_cens_treat(treat)[subset]
+  covs <- covs[subset, , drop = FALSE]
+  s.weights <- s.weights[subset]
+  bw <- bw[subset]
+
+  out <- .cens_degenerate_out(cens)
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  missing <- .process_missing2(missing, covs)
+
+  if (missing == "ind") {
+    covs <- add_missing_indicators(covs)
+  }
+
+  #`focal` and `treat` are deliberately omitted: any quantile terms must be
+  #defined by the full at-risk sample, which is the target here.
+  covs <- covs |>
+    .apply_moments_int_quantile(moments = ...get("moments"),
+                                int = ...get("int"),
+                                quantile = ...get("quantile"),
+                                s.weights = s.weights) |>
+    .make_covs_closer_to_1() |>
+    .make_covs_full_rank()
+
+  tols <- ...get("tols", 0)
+  arg::arg_numeric(tols)
+  arg::arg_length(tols, c(1L, ncol(covs)))
+  tols <- abs(tols)
+
+  reltol <- ...get("reltol", 1e-10)
+  arg::arg_number(reltol)
+
+  maxit <- ...get("maxit", 1e4L)
+  arg::arg_count(maxit)
+
+  solver <- ...get("solver", NULL)
+  if (is_null(solver)) {
+    solver <- {
+      if (any(tols > 0)) "FISTA"
+      else if (rlang::is_installed("rootSolve")) "multiroot"
+      else "optim"
+    }
+  }
+  else if (any(tols > 0)) {
+    solver <- arg::match_arg(solver, c("optim", "FISTA"))
+  }
+  else {
+    solver <- arg::match_arg(solver, c("optim", "multiroot"))
+
+    if (solver == "multiroot") {
+      rlang::check_installed("rootSolve")
+    }
+  }
+
+  if (any(tols > 0)) {
+    #Standardized against the full at-risk sample, which is the target. Only one
+    #group is weighted, so unlike the ATE the tolerances are not halved.
+    sds <- rep.int(1, ncol(covs))
+
+    bin.vars <- is_binary_col(covs)
+
+    if (!all(bin.vars)) {
+      sds[!bin.vars] <- cobalt::col_w_sd(covs[, !bin.vars, drop = FALSE],
+                                         s.weights = s.weights)
+    }
+
+    tols <- c(0, tols * sds)
+  }
+
+  sw0 <- check_if_zero(s.weights)
+
+  covs <- cbind(`(Intercept)` = 1, covs)
+
+  #Only the units still under observation are weighted, and their target is the
+  #full at-risk sample (as for the ATE) rather than another treatment group (as for
+  #the ATT). Normalizing by the mean sampling weight makes sum(s.weights) equal N,
+  #so the first-order condition is exactly
+  #
+  #  sum_{uncensored}(SW * w * X) == sum_{all}(SW * X)
+  #
+  #whose intercept row puts the weights on the 1/P(C = 0 | X) scale, matching the
+  #other censoring methods.
+  N <- sum(!sw0)
+  s.weights <- s.weights / mean(s.weights[!sw0])
+  targets <- cobalt::col_w_mean(covs, s.weights = s.weights)
+
+  eb <- function(C, s.weights_t, Q, M) {
+    W <- function(Z, Q, C) {
+      Q * exp(-drop(C %*% Z))
+    }
+
+    objective.EB <- function(Z, S, Q, C) {
+      sum(S * W(Z, Q, C)) / N + sum(Z * M) + sum(tols * abs(Z))
+    }
+
+    gradient.EB <- function(Z, S, Q, C) {
+      w <- S * W(Z, Q, C)
+      -drop(w %*% C) / N + M + tols * sign1(Z)
+    }
+
+    coef_start <- setNames(rep.int(0, ncol(C)),
+                           colnames(C))
+
+    if (solver == "FISTA") {
+      opt.out <- .FISTA_ebal(coef_start, S = s.weights_t,
+                             C = C, Q = Q, N = N,
+                             M = M, tols = tols,
+                             reltol = reltol, maxit = maxit)
+    }
+    else if (solver == "multiroot") {
+      out <- suppressWarnings({
+        try(verbosely({
+          rootSolve::multiroot(f = gradient.EB,
+                               start = coef_start,
+                               S = s.weights_t, C = C, Q = Q,
+                               rtol = reltol,
+                               atol = reltol,
+                               ctol = reltol)
+        }, verbose = verbose), silent = TRUE)
+      })
+
+      if (!null_or_error(out) && utils::hasName(out, "root") &&
+          utils::hasName(out, "estim.precis") &&
+          is_number(out[["estim.precis"]]) &&
+          out[["estim.precis"]] < 1e-5) {
+        coef_start <- out$root
+      }
+
+      opt.out <- optim(par = coef_start,
+                       fn = objective.EB,
+                       method = "BFGS",
+                       control = list(trace = 1,
+                                      reltol = reltol,
+                                      maxit = if (all(coef_start == 0)) maxit else 0),
+                       S = s.weights_t, C = C, Q = Q)
+
+      opt.out$gradient <- gradient.EB(opt.out$par, s.weights_t, Q, C)
+    }
+    else {
+      opt.out <- optim(par = coef_start,
+                       fn = objective.EB,
+                       gr = gradient.EB,
+                       method = "BFGS",
+                       control = list(trace = 1,
+                                      reltol = reltol,
+                                      maxit = maxit),
+                       S = s.weights_t, C = C, Q = Q)
+
+      opt.out$gradient <- gradient.EB(opt.out$par, s.weights_t, Q, C)
+    }
+
+    w <- W(opt.out$par, Q, C)
+
+    if (opt.out$convergence != 0) {
+      arg::wrn("the optimization failed to converge in the alotted number of iterations. Try increasing {.arg maxit}")
+    }
+    else if (any(abs(opt.out$gradient) > tols + 1e-4)) {
+      arg::wrn("the estimated weights do not balance the covariates, indicating the optimization arrived at a degenerate solution. Try decreasing the number of variables supplied to the optimization")
+    }
+
+    list(Z = setNames(opt.out$par, colnames(C)),
+         w = w,
+         opt.out = opt.out)
+  }
+
+  in_u <- which(cens == 0 & !sw0)
+
+  verbosely({
+    fit <- eb(C = covs[in_u, , drop = FALSE],
+              s.weights_t = s.weights[in_u],
+              Q = bw[in_u], M = targets)
+  }, verbose = verbose)
+
+  #Censored units get a weight of 0. Units with a zero sampling weight are left at
+  #1 as in the other methods; they contribute nothing either way.
+  w <- 1 - cens
+  w[in_u] <- fit$w
+
+  Mparts <- if (all(tols == 0)) {list(
+    psi_treat = function(Btreat, Xtreat, A, SW) {
+      SW * Xtreat * (1 - (1 - A) * bw * exp(-drop(Xtreat %*% Btreat)))
+    },
+    wfun = function(Btreat, Xtreat, A) {
+      (1 - A) * bw * exp(-drop(Xtreat %*% Btreat))
+    },
+    dw_dBtreat = function(Btreat, Xtreat, A, SW) {
+      -((1 - A) * bw * exp(-drop(Xtreat %*% Btreat))) * Xtreat
+    },
+    hess_treat = function(Btreat, Xtreat, A, SW) {
+      crossprod(Xtreat, (SW * (1 - A) * bw * exp(-drop(Xtreat %*% Btreat))) * Xtreat)
+    },
+    Xtreat = covs,
+    A = cens,
+    btreat = fit$Z
+  )}
+
+  list(w = w,
+       fit.obj = fit$opt.out,
+       Mparts = Mparts)
+}
 
 weightit2ebal.cont <- function(covs, treat, s.weights, subset, missing, verbose, ...) {
 

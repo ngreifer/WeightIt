@@ -7,7 +7,7 @@
 This page explains the details of estimating weights from
 Bayesian additive regression trees (BART)-based propensity scores by setting
 \code{method = "bart"} in the call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method
-can be used with binary, multi-category, and continuous treatments.
+can be used with binary, multi-category, and continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using BART and
 then converting those propensity scores into weights using a formula that
@@ -56,15 +56,14 @@ to refine the density estimation parameters.
 When the model \code{formula} contains \CRANpkg{lme4}-style random effects terms
 (e.g., \code{treat ~ x1 + x2 + (1 | school)}), a multilevel BART model is fit using
 \pkgfun{stan4bart}{stan4bart} instead of \pkgfun{dbarts}{bart2}. This combines a
-BART sum-of-trees for the covariates with a Stan-estimated parametric and
-random-effects component, and can improve balance and overlap when units are
-clustered (e.g., patients within hospitals or students within schools). Unlike
-the other multilevel methods, the full flexibility of \pkgfun{lme4}{glmer}
-random effects is available, including \emph{multiple grouping factors} (e.g.,
+BART sum-of-trees for the covariates with a Stan-estimated
+random-effects component and can improve balance when units are
+clustered (e.g., patients within hospitals or students within schools). The full flexibility of \pkgfun{lme4}{glmer}
+random effects is available, including multiple grouping factors (e.g.,
 \code{(1 | school) + (1 | district)}) and random slopes. The grouping (and any
 random-slope) variables are taken from \code{data}; the covariates are placed in the
 BART component internally (i.e., the fitted model is \code{treat ~ bart(x1 + x2) + (1 | school)}). The estimated propensity scores (or conditional means for
-continuous treatments) include the estimated random effects, i.e., they are
+continuous treatments) include the estimated random effects; i.e., they are
 cluster-specific.
 
 \code{stan4bart()} uses a different set of control arguments from \code{bart2()}: the
@@ -75,8 +74,13 @@ Stan and prior options in a \code{stan_args} list; see \pkgfun{stan4bart}{stan4b
 For convenience, \code{bart2()}-style arguments are translated to their \code{stan4bart()}
 equivalents when supplied (e.g., \code{n.chains} to \code{chains}, \code{n.threads} to \code{cores},
 and BART hyperparameters like \code{n.trees} to \code{bart_args}), so the same argument
-names can be used with or without random effects. As with the non-multilevel
+names can be used with or without random effects. As with the single-level
 case, M-estimation is not supported.
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, a single BART model of the probability of being censored is fit, and the weights are \code{1/P(C = 0 | X)} for the units still under observation and 0 for the censored units. The returned propensity score is the probability of \emph{being censored}.
 }
 
 \subsection{Longitudinal Treatments}{

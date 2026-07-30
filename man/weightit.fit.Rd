@@ -17,6 +17,8 @@ weightit.fit(
   missing = NULL,
   verbose = FALSE,
   include.obj = FALSE,
+  subset = NULL,
+  treat.type = NULL,
   ...
 )
 }
@@ -74,6 +76,21 @@ objects created in the process of estimating the weights. For example, with
 will be included. See the individual pages for each method for information
 on what object will be included if \code{TRUE}.}
 
+\item{subset}{a \code{logical} vector with length equal to that of \code{treat}
+restricting which units are used to fit the model, e.g., the units still
+under observation when a censoring model is fit. The weights of the
+remaining units are left as \code{NA} for the caller to fill in. When \code{by.factor}
+is also supplied, the model is fit within the intersection of each \code{by}
+level and \code{subset}. If \code{NULL} (the default), all units are used.}
+
+\item{treat.type}{an optional string identifying the treatment type, used to
+request a type that cannot be inferred from \code{treat} itself. The only such
+type is \code{"censoring"}, which requests inverse probability of censoring
+weights and requires \code{treat} to be a 0/1 censoring indicator (1 = censored).
+\code{NA} values in \code{treat} are then allowed outside \code{subset}. If \code{NULL} (the
+default), the type is determined from \code{treat}; supplying \code{treat} as
+\code{\link[=.cens]{.cens(C)}} is equivalent to setting \code{treat.type = "censoring"}.}
+
 \item{...}{other arguments for functions called by \code{weightit.fit()} that
 control aspects of fitting that are not covered by the above arguments.}
 }
@@ -84,7 +101,7 @@ A \code{weightit.fit} object with the following elements:
 \item{treat}{The values of the treatment variable.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
-\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined.}
+\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models, and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. For binary treatments, the propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined. For censoring models, it corresponds to the predicted probability of \emph{being censored}, i.e., of the censoring indicator equalling 1.}
 \item{s.weights}{The provided sampling weights.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{fit.obj}{When \code{include.obj = TRUE}, the fit object.}

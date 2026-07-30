@@ -165,6 +165,43 @@ The \code{"cbps"} method, which calls \code{CBPS()} in \pkg{CBPS}, will yield di
 results from \code{CBMSM()} in \pkg{CBPS} because \code{CBMSM()} takes a different
 approach to generating weights than simply estimating several time-specific
 models.
+\subsection{Censoring weights (IPCW)}{
+
+Censoring can be modeled by including entries in \code{formula.list} whose left side
+is wrapped in \code{\link[=.cens]{.cens()}}, placed in temporal order among the treatment
+models. For example,
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                 A_2 ~ X1_1 + X2_1 + A_1,
+                 .cens(C_2) ~ X1_1 + X2_1 + A_1,
+                 A_3 ~ X1_2 + X2_2 + A_2),
+            data = d, method = "glm")
+}\if{html}{\out{</div>}}
+
+models censoring occurring after the second treatment. Each censoring indicator
+must be 0 for units still under observation and 1 for units censored at that time
+point. See \code{\link[=.cens]{.cens()}} for details of what the resulting weights
+estimate.
+
+Every model, treatment or censoring, is fit only among the units still under
+observation when it is reached, and the resulting weights are multiplied together
+across time points as usual. A unit censored at any time point therefore has a
+final weight of exactly 0. Because such units drop out, missing values are
+permitted in the treatments and covariates that follow their censoring; missing
+values among units still under observation remain an error. \code{at.risk} in the
+output has one column per time point recording which units were under
+observation when that model was fit.
+
+Censoring weights are not stabilized by \code{num.formula}; each is stabilized by its
+own marginal censoring model when \code{stabilize = TRUE}. When \code{num.formula} is
+supplied as a list, it should have one entry per \emph{treatment} time point, ignoring
+the censoring entries.
+
+Censoring can also be used with \code{is.MSM.method = TRUE} when \code{method = "cbps"}, in
+which case one set of weights is estimated satisfying the balance conditions at
+every time point simultaneously, each evaluated among the units still under
+observation at that time point. See \code{\link{method_cbps}}.
+}
 }
 \examples{
 data("msmdata")

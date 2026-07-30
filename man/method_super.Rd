@@ -7,7 +7,7 @@
 This page explains the details of estimating weights from
 SuperLearner-based propensity scores by setting \code{method = "super"} in the
 call to \code{\link[=weightit]{weightit()}} or \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary,
-multi-category, and continuous treatments.
+multi-category, and continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating propensity scores using the
 SuperLearner algorithm for stacking predictions and then converting those
@@ -54,6 +54,11 @@ over \eqn{f_{A|X}(.)}. Kernel density estimation can be used
 instead of assuming a specific density for the denominator by
 setting \code{density = "kernel"}. Other arguments to \code{\link[=density]{density()}} can be specified
 to refine the density estimation parameters.
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, a single SuperLearner model of the probability of being censored is fit, and the weights are \code{1/P(C = 0 | X)} for the units still under observation and 0 for the censored units. With \code{SL.method = "method.balance"}, the library weights are chosen using balance between the \emph{weighted units still under observation} and the \emph{full at-risk sample}, which is what the weights target. This is cobalt's "target" balance; accordingly, \code{criterion} must be one of \code{cobalt::available.stats("target")}, a subset of the values allowed for binary treatments.
 }
 
 \subsection{Longitudinal Treatments}{

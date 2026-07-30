@@ -8,7 +8,7 @@
 This page explains the details of estimating weights using
 entropy balancing by setting \code{method = "ebal"} in the call to \code{\link[=weightit]{weightit()}} or
 \code{\link[=weightitMSM]{weightitMSM()}}. This method can be used with binary, multi-category, and
-continuous treatments.
+continuous treatments, as well as for estimating censoring weights.
 
 In general, this method relies on estimating weights by minimizing the
 negative entropy of the weights subject to exact moment balancing
@@ -34,6 +34,11 @@ requested, the optimization is run once for each non-focal (i.e., control) group
 
 For continuous treatments, this method estimates the weights using \code{optim()}
 using formulas described by Tübbicke (2022) and Vegetabile et al. (2021).
+}
+
+\subsection{Censoring Weights}{
+
+For censoring weights, requested by wrapping the censoring indicator in \code{\link[=.cens]{.cens()}}, entropy balancing is performed on the units still under observation only, with the target being the covariate means of the full at-risk sample (censored and uncensored combined). Because a single set of weights is estimated rather than one per treatment group, the optimization problem is smaller than for the ATE. The censored units receive a weight of 0. M-estimation is supported when \code{tols} is 0. With \code{link = "clog"}, \code{method = "ipt"} yields identical weights.
 }
 
 \subsection{Longitudinal Treatments}{

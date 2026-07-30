@@ -6,7 +6,7 @@
 #' This page explains the details of estimating weights from
 #' SuperLearner-based propensity scores by setting `method = "super"` in the
 #' call to [weightit()] or [weightitMSM()]. This method can be used with binary,
-#' multi-category, and continuous treatments.
+#' multi-category, and continuous treatments, as well as for estimating censoring weights.
 #'
 #' In general, this method relies on estimating propensity scores using the
 #' SuperLearner algorithm for stacking predictions and then converting those
@@ -52,6 +52,10 @@
 #' instead of assuming a specific density for the denominator by
 #' setting `density = "kernel"`. Other arguments to [density()] can be specified
 #' to refine the density estimation parameters.
+#'
+#' ## Censoring Weights
+#'
+#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], a single SuperLearner model of the probability of being censored is fit, and the weights are `1/P(C = 0 | X)` for the units still under observation and 0 for the censored units. With `SL.method = "method.balance"`, the library weights are chosen using balance between the *weighted units still under observation* and the *full at-risk sample*, which is what the weights target. This is cobalt's "target" balance; accordingly, `criterion` must be one of `cobalt::available.stats("target")`, a subset of the values allowed for binary treatments.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -272,6 +276,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   treat <- treat[subset]
   s.weights <- s.weights[subset]
 
+  if (!has_treat_type(treat)) treat <- assign_treat_type(treat)
+  treat.type <- get_treat_type(treat)
+
   missing <- .process_missing2(missing, covs)
 
   if (missing == "ind") {
@@ -310,7 +317,10 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
       arg::arg_string(criterion)
     }
 
-    available.criteria <- cobalt::available.stats("binary")
+    #Censoring weights target the covariate distribution of the full at-risk
+    #sample rather than another treatment group
+    available.criteria <- cobalt::available.stats(
+      if (treat.type == "censoring") "target" else "binary")
 
     if (startsWith(criterion, "es.")) {
       subbed.crit <- sub("es.", "smd.", criterion, fixed = TRUE)
@@ -322,23 +332,43 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
 
     criterion <- arg::match_arg(criterion, available.criteria)
 
-    init <- cobalt::bal.init(covs,
-                             treat = treat,
-                             stat = criterion,
-                             estimand = estimand,
-                             s.weights = s.weights,
-                             focal = focal,
-                             ...)
+    init <- {
+      if (treat.type == "censoring") {
+        #A target init: omitting `treat` makes the target the (s.weights-weighted)
+        #covariate means of `covs` itself, i.e. of the full at-risk sample. The
+        #uncensored subset is encoded by the zero weights passed to
+        #`bal.compute()`, so `covs` must be the whole at-risk sample.
+        cobalt::bal.init(covs,
+                         stat = criterion,
+                         s.weights = s.weights,
+                         ...)
+      }
+      else {
+        cobalt::bal.init(covs,
+                         treat = treat,
+                         stat = criterion,
+                         estimand = estimand,
+                         s.weights = s.weights,
+                         focal = focal,
+                         ...)
+      }
+    }
 
     sneaky <- 0
-    attr(sneaky, "vals") <- list(init = init, estimand = estimand)
+    attr(sneaky, "vals") <- list(init = init, estimand = estimand,
+                                 censoring = treat.type == "censoring")
     control <- list(trimLogit = sneaky)
 
     SL.method <- .method.balance()
   }
 
-  t.lev <- get_treated_level(treat, estimand, focal)
-  treat <- binarize(treat, one = t.lev)
+  if (treat.type == "censoring") {
+    treat <- .make_cens_treat(treat)
+  }
+  else {
+    t.lev <- get_treated_level(treat, estimand, focal)
+    treat <- binarize(treat, one = t.lev)
+  }
 
   rlang::try_fetch(
     {verbosely({
@@ -378,11 +408,42 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
 
   #ps should be matrix of probs for each treat
   #Computing weights
-  w <- .get_w_from_ps_internal_bin(ps = ps, treat = treat, estimand,
-                                   stabilize = stabilize,
-                                   subclass = ...get("subclass"))
+  w <- {
+    if (treat.type == "censoring") {
+      .get_w_from_ps_internal_cens(ps, treat)
+    }
+    else {
+      .get_w_from_ps_internal_bin(ps = ps, treat = treat, estimand,
+                                  stabilize = stabilize,
+                                  subclass = ...get("subclass"))
+    }
+  }
 
   list(w = w, ps = ps, info = info, fit.obj = fit)
+}
+
+weightit2super.cens <- function(covs, treat, s.weights, subset, missing, verbose,
+                                estimand = NULL, focal = NULL, stabilize = FALSE, ...) {
+
+  C <- .make_cens_treat(treat)
+
+  out <- .cens_degenerate_out(C[subset])
+
+  if (is_not_null(out)) {
+    return(out)
+  }
+
+  #With `SL.method = "method.balance"` the library weights are chosen by a balance
+  #criterion evaluated inside the SuperLearner fit, so that criterion has to see
+  #the censoring weights; the output cannot simply be converted afterwards.
+  #`weightit2super()` therefore handles `treat.type == "censoring"` itself and the
+  #censoring-tagged treatment is passed straight through. The criterion then
+  #compares the weighted units still under observation against the full at-risk
+  #sample, which is what the weights actually target.
+  weightit2super(covs = covs, treat = as.treat(C, censoring = TRUE),
+                 s.weights = s.weights, subset = subset,
+                 estimand = "ATE", focal = NULL, stabilize = FALSE,
+                 missing = missing, verbose = verbose, ...)
 }
 
 weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal,
@@ -593,12 +654,19 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
     computeCoef = function(Z, Y, libraryNames, obsWeights, control, verbose, ...) {
       estimand <- .attr(control$trimLogit, "vals")$estimand
       init <- .attr(control$trimLogit, "vals")$init
+      censoring <- isTRUE(.attr(control$trimLogit, "vals")$censoring)
 
       for (i in seq_col(Z)) {
         Z[, i] <- squish(Z[, i], .001)
       }
 
-      w_mat <- .get_w_from_ps_internal_array(Z, treat = Y, estimand = estimand)
+      #For censoring, `Y` is the 0/1 indicator and the criterion is evaluated on
+      #the censoring weights against the full at-risk sample
+      w_mat <- {
+        if (censoring) .get_w_from_ps_internal_cens_array(Z, Y)
+        else .get_w_from_ps_internal_array(Z, treat = Y, estimand = estimand)
+      }
+
       cvRisk <- apply(w_mat, 2L, cobalt::bal.compute, x = init)
 
       names(cvRisk) <- libraryNames
@@ -612,7 +680,12 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
         loss <- function(alpha) {
           coefs <- c(alpha, 1 - sum(alpha))
           ps <- crossprod(t(Z), coefs)
-          w <- get_w_from_ps(ps, Y, estimand)
+
+          w <- {
+            if (censoring) .get_w_from_ps_internal_cens(drop(ps), Y)
+            else get_w_from_ps(ps, Y, estimand)
+          }
+
           cobalt::bal.compute(init, weights = w)
         }
 
