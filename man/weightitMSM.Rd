@@ -28,7 +28,9 @@ pre-treatment covariates to be balanced on the right hand side. The
 formulas must be in temporal order, and must contain all covariates to be
 balanced at that time point (i.e., treatments and covariates featured in
 early formulas should appear in later ones). Interactions and functions of
-covariates are allowed.}
+covariates are allowed. As in \code{\link[=weightit]{weightit()}}, a formula may have an empty
+right hand side (e.g., \code{A_1 ~ 1}), which requests a marginal model at that
+time point; see \emph{Empty model formulas} in Details at \code{\link[=weightit]{weightit()}}.}
 
 \item{data}{an optional data set in the form of a data frame that contains
 the variables in the formulas in \code{formula.list}. This must be a wide data
@@ -196,6 +198,19 @@ Censoring weights are not stabilized by \code{num.formula}; each is stabilized b
 own marginal censoring model when \code{stabilize = TRUE}. When \code{num.formula} is
 supplied as a list, it should have one entry per \emph{treatment} time point, ignoring
 the censoring entries.
+
+The right side of a censoring formula may be empty, as in \code{.cens(C_2) ~ 1}, which
+requests a marginal censoring model that assumes censoring at that time point is
+independent of the covariates; its contribution to the product is \eqn{1/P(C = 0)}
+for the units still under observation and 0 for those censored there. Everything
+else is unaffected: the risk sets, the missing values permitted after censoring,
+\code{stabilize}, \code{by}, and M-estimation all work as they do for a
+covariate-dependent censoring model, and empty and non-empty censoring formulas
+can be mixed freely. Each time point is fit separately, so only the empty ones
+take the intercept-only shortcut described in \emph{Empty model formulas} in Details at
+\code{\link[=weightit]{weightit()}}; when \code{is.MSM.method = TRUE} there is no shortcut to take, because a
+single set of weights is estimated for all time points at once, and a time point
+with no covariates instead contributes only its intercept balance condition.
 
 Censoring can also be used with \code{is.MSM.method = TRUE} when \code{method = "cbps"}, in
 which case one set of weights is estimated satisfying the balance conditions at

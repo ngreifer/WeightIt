@@ -164,6 +164,35 @@ are allowed, and whether sampling weights are allowed.\tabular{ll}{
 
 \code{method} can also be supplied as a user-defined function; see \code{\link{method_user}}
 for instructions and examples. Setting \code{method = NULL} computes unit weights.
+\subsection{Empty model formulas}{
+
+The right hand side of \code{formula} may be empty, as in \code{A ~ 1}, requesting a
+marginal model in which the treatment (or censoring) is taken to be independent
+of the covariates. With no covariates there is nothing for any method to model or
+balance, and every method's target is met by the same weights: the inverse of the
+marginal treatment probability, or \eqn{1/P(C = 0)} for a censoring model. Those
+weights are computed by fitting an intercept-only generalized linear model
+whatever \code{method} is supplied, which is simply the easiest way to get them; any
+method-specific arguments are ignored, since none of them can apply to covariates
+that do not exist. This is invisible: \code{method} is reported as supplied, the
+package for the requested method need not be installed, and the weights are what
+that method would have produced. Every method therefore accepts an empty formula.
+
+For a continuous treatment the conditional density of the treatment is its
+marginal density, so all the weights are exactly 1 and nothing is estimated; no
+M-estimation components are produced. For the other treatment types the marginal
+probability is estimated, so M-estimation is available as usual.
+
+\code{estimand}, \code{focal}, \code{by}, \code{s.weights}, and \code{stabilize} are unaffected, and the
+arguments are still checked against the requested \code{method}, so a method that
+cannot handle the treatment type at all (e.g., \code{"npcbps"} with a censoring model)
+still produces an error.
+
+A formula whose only terms are \code{lme4}-style random effects, such as
+\code{A ~ (1 | school)}, is \emph{not} empty in this sense and is fit as the multilevel
+model it describes.
+}
+
 \subsection{Censoring weights (IPCW)}{
 
 Wrapping the left side of \code{formula} in \code{\link[=.cens]{.cens()}} requests inverse
@@ -186,6 +215,15 @@ censored units; this matters most when few units are censored.
 a marginal censoring model, giving \eqn{P(C = 0) / P(C = 0 | X)}. \code{ps} is the
 predicted probability of \emph{being censored}. Not all methods support censoring
 weights; see the \code{treat_type} component of \link{.weightit_methods}.
+
+As with a treatment model, the right side of the formula may be empty, as in
+\code{.cens(C) ~ 1}, which requests a marginal censoring model that assumes censoring
+is independent of the covariates. The resulting weights are \eqn{1/P(C = 0)} for
+the units still under observation and 0 for the censored units. The rest of the
+censoring machinery is unaffected, so such a model can be combined with \code{by},
+\code{s.weights}, \code{stabilize} (which then makes all nonzero weights exactly 1), and
+M-estimation, and it can be interleaved with covariate-dependent censoring models
+in \code{\link[=weightitMSM]{weightitMSM()}}. See \emph{Empty model formulas} above for how \code{method} is handled.
 
 Because censored units receive a weight of exactly 0, they contribute nothing to a
 weighted outcome model, and \code{\link[=glm_weightit]{glm_weightit()}} and friends tolerate missing values

@@ -25,6 +25,8 @@ Because only one group is weighted, the estimation problem is smaller and better
 Because censored units receive a weight of exactly 0, they contribute nothing to a weighted outcome model, and \code{\link[=glm_weightit]{glm_weightit()}}, \code{\link[=lm_weightit]{lm_weightit()}}, \code{\link[=multinom_weightit]{multinom_weightit()}}, \code{\link[=ordinal_weightit]{ordinal_weightit()}}, and \code{\link[=coxph_weightit]{coxph_weightit()}} all tolerate missing values in the model variables for those units. This is what makes it possible to fit an outcome model whose outcome is unobserved after censoring. See the \emph{Censoring weights (IPCW)} section of \code{\link[=weightit]{weightit()}} for details.
 
 No \code{estimand} or \code{focal} argument applies to censoring models; supplying one produces a warning and it is ignored. \code{subclass} cannot be used. Not all methods support censoring weights; see the \code{treat_type} component of \link{.weightit_methods} to check.
+
+The right side of the formula may be empty, as in \code{.cens(C) ~ 1}, requesting a marginal censoring model in which censoring is assumed independent of the covariates. The weights are then \eqn{1/P(C = 0)} for the units still under observation and 0 for the censored units, whatever \code{method} is supplied; see \emph{Empty model formulas} in Details at \code{\link[=weightit]{weightit()}}. Nothing else changes, so a marginal censoring model still composes with \code{by}, \code{stabilize}, M-estimation, and, in \code{\link[=weightitMSM]{weightitMSM()}}, the risk sets and the missing values permitted after censoring.
 \subsection{Use outside a formula}{
 
 Calling \code{.cens()} directly returns a tagged indicator that routes the lower-level interfaces to the censoring path:

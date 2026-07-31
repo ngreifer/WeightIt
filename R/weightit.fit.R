@@ -11,7 +11,10 @@
 #' interface that performs minimal argument checking.
 #'
 #' @inheritParams weightit
-#' @param covs a numeric matrix of covariates.
+#' @param covs a numeric matrix of covariates. May have zero columns, in which case
+#'   the weights are computed with an intercept-only generalized linear model
+#'   whatever `method` is supplied and any method-specific arguments are ignored; see
+#'   *Empty model formulas* in Details at [weightit()].
 #' @param treat a vector of treatment statuses. To request inverse probability
 #'   of censoring weights, supply a 0/1 censoring indicator (1 = censored)
 #'   tagged with [`.cens()`][.cens], as in `treat = .cens(C)`; `NA` values are
@@ -247,6 +250,20 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
   missing <- .process_missing2(missing, covs)
 
+  #`fit.method` is what dispatches; `method` is reported back as supplied. The two
+  #differ only when a covariate-free model is routed to an intercept-only GLM as a
+  #shortcut (see `.route_empty_covs()`), which every method would agree with.
+  fit.method <- method
+
+  if (.route_empty_covs(method, covs, ps, A)) {
+    fit.method <- "glm"
+
+    #Everything in `...` either tunes the method that is not being used or
+    #describes covariates that do not exist. Only the arguments describing the
+    #data are kept.
+    A <- A[intersect(names(A), c(".data", ".formula", ".covs"))]
+  }
+
   out <- make_list(c("weights", "treat", "estimand", "method", "ps", "s.weights",
                      "focal", "missing", "fit.obj", "info"))
   out$weights <- out$ps <- rep_with(NA_real_, treat)
@@ -261,16 +278,16 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
 
   obj <- NULL
 
-  .check_required_packages(method)
+  .check_required_packages(fit.method)
 
-  if (is.function(method)) {
+  if (is.function(fit.method)) {
     fun <- "weightit2user"
   }
   else {
     fun <- {
       if (is_not_null(ps)) "weightit2ps"
-      else if (is_null(method)) "weightit2null"
-      else sprintf("weightit2%s", method)
+      else if (is_null(fit.method)) "weightit2null"
+      else sprintf("weightit2%s", fit.method)
     }
 
     fun <- switch(treat.type,
@@ -304,8 +321,8 @@ weightit.fit <- function(covs, treat, method = "glm", s.weights = NULL, by.facto
     A["subset"] <- list(sub)
 
     #Run method
-    if (is.function(method)) {
-      A["Fun"] <- list(method)
+    if (is.function(fit.method)) {
+      A["Fun"] <- list(fit.method)
     }
 
     obj <- do.call(fun, A)

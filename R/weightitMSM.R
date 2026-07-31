@@ -14,7 +14,9 @@
 #'   formulas must be in temporal order, and must contain all covariates to be
 #'   balanced at that time point (i.e., treatments and covariates featured in
 #'   early formulas should appear in later ones). Interactions and functions of
-#'   covariates are allowed.
+#'   covariates are allowed. As in [weightit()], a formula may have an empty
+#'   right hand side (e.g., `A_1 ~ 1`), which requests a marginal model at that
+#'   time point; see *Empty model formulas* in Details at [weightit()].
 #' @param data an optional data set in the form of a data frame that contains
 #'   the variables in the formulas in `formula.list`. This must be a wide data
 #'   set with exactly one row per unit.
@@ -139,6 +141,19 @@
 #' supplied as a list, it should have one entry per *treatment* time point, ignoring
 #' the censoring entries.
 #'
+#' The right side of a censoring formula may be empty, as in `.cens(C_2) ~ 1`, which
+#' requests a marginal censoring model that assumes censoring at that time point is
+#' independent of the covariates; its contribution to the product is \eqn{1/P(C = 0)}
+#' for the units still under observation and 0 for those censored there. Everything
+#' else is unaffected: the risk sets, the missing values permitted after censoring,
+#' `stabilize`, `by`, and M-estimation all work as they do for a
+#' covariate-dependent censoring model, and empty and non-empty censoring formulas
+#' can be mixed freely. Each time point is fit separately, so only the empty ones
+#' take the intercept-only shortcut described in *Empty model formulas* in Details at
+#' [weightit()]; when `is.MSM.method = TRUE` there is no shortcut to take, because a
+#' single set of weights is estimated for all time points at once, and a time point
+#' with no covariates instead contributes only its intercept balance condition.
+#'
 #' Censoring can also be used with `is.MSM.method = TRUE` when `method = "cbps"`, in
 #' which case one set of weights is estimated satisfying the balance conditions at
 #' every time point simultaneously, each evaluated among the units still under
@@ -246,17 +261,18 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
 
   for (i in seq_along(formula.list)) {
 
-    #Process treat and covs from formula and data
+    #Process treat and covs from formula and data. An empty right side (e.g.,
+    #`A_1 ~ 1` or `.cens(C_2) ~ 1`) yields a zero-column `model.covs` and is
+    #allowed, as it is in `weightit()`: the corresponding model is marginal. This
+    #is what makes it possible to model censoring that does not depend on
+    #covariates while keeping the rest of the censoring machinery (risk sets,
+    #tolerated NAs after censoring, M-estimation).
     t.c <- get_covs_and_treat_from_formula2(formula.list[[i]], data)
     simple.covs.list[[i]] <- t.c[["simple.covs"]]
     reported.covs.list[[i]] <- t.c[["reported.covs"]]
 
     covs.list[[i]] <- t.c[["model.covs"]]
     treat.list[[i]] <- t.c[["treat"]]
-
-    if (is_null(covs.list[[i]])) {
-      arg::err("no covariates were specified in the {ordinal(i)} formula")
-    }
 
     if (is_null(treat.list[[i]])) {
       arg::err("no treatment variable was specified in the {ordinal(i)} formula")
@@ -728,7 +744,8 @@ print.weightitMSM <- function(x, ...) {
       else {
         cat(sprintf("    + after time %s: %s\n",
                     i - 1L,
-                    word_list(names(x$covs.list[[i]]), and.or = FALSE)))
+                    if (is_null(x$covs.list[[i]])) "(none)"
+                    else word_list(names(x$covs.list[[i]]), and.or = FALSE)))
       }
     }
   }

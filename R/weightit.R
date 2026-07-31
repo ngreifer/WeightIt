@@ -130,6 +130,34 @@
 #' `method` can also be supplied as a user-defined function; see [`method_user`]
 #' for instructions and examples. Setting `method = NULL` computes unit weights.
 #'
+#' ## Empty model formulas
+#'
+#' The right hand side of `formula` may be empty, as in `A ~ 1`, requesting a
+#' marginal model in which the treatment (or censoring) is taken to be independent
+#' of the covariates. With no covariates there is nothing for any method to model or
+#' balance, and every method's target is met by the same weights: the inverse of the
+#' marginal treatment probability, or \eqn{1/P(C = 0)} for a censoring model. Those
+#' weights are computed by fitting an intercept-only generalized linear model
+#' whatever `method` is supplied, which is simply the easiest way to get them; any
+#' method-specific arguments are ignored, since none of them can apply to covariates
+#' that do not exist. This is invisible: `method` is reported as supplied, the
+#' package for the requested method need not be installed, and the weights are what
+#' that method would have produced. Every method therefore accepts an empty formula.
+#'
+#' For a continuous treatment the conditional density of the treatment is its
+#' marginal density, so all the weights are exactly 1 and nothing is estimated; no
+#' M-estimation components are produced. For the other treatment types the marginal
+#' probability is estimated, so M-estimation is available as usual.
+#'
+#' `estimand`, `focal`, `by`, `s.weights`, and `stabilize` are unaffected, and the
+#' arguments are still checked against the requested `method`, so a method that
+#' cannot handle the treatment type at all (e.g., `"npcbps"` with a censoring model)
+#' still produces an error.
+#'
+#' A formula whose only terms are `lme4`-style random effects, such as
+#' `A ~ (1 | school)`, is *not* empty in this sense and is fit as the multilevel
+#' model it describes.
+#'
 #' ## Censoring weights (IPCW)
 #'
 #' Wrapping the left side of `formula` in [`.cens()`][.cens] requests inverse
@@ -152,6 +180,15 @@
 #' a marginal censoring model, giving \eqn{P(C = 0) / P(C = 0 | X)}. `ps` is the
 #' predicted probability of *being censored*. Not all methods support censoring
 #' weights; see the `treat_type` component of [.weightit_methods].
+#'
+#' As with a treatment model, the right side of the formula may be empty, as in
+#' `.cens(C) ~ 1`, which requests a marginal censoring model that assumes censoring
+#' is independent of the covariates. The resulting weights are \eqn{1/P(C = 0)} for
+#' the units still under observation and 0 for the censored units. The rest of the
+#' censoring machinery is unaffected, so such a model can be combined with `by`,
+#' `s.weights`, `stabilize` (which then makes all nonzero weights exactly 1), and
+#' M-estimation, and it can be interleaved with covariate-dependent censoring models
+#' in [weightitMSM()]. See *Empty model formulas* above for how `method` is handled.
 #'
 #' Because censored units receive a weight of exactly 0, they contribute nothing to a
 #' weighted outcome model, and [glm_weightit()] and friends tolerate missing values
@@ -446,7 +483,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
   }
 
   if (is_not_null(method) && is_null(ps)) {
-    .check_estimated_weights(obj$weights, treat, treat.type, s.weights)
+    .check_estimated_weights(obj$weights, treat, treat.type, s.weights,
+                             covs.empty = ncol(covs) == 0L && is_null(re.bars))
   }
 
   ## Assemble output object----

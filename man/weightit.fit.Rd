@@ -22,7 +22,10 @@ weightit.fit(
 )
 }
 \arguments{
-\item{covs}{a numeric matrix of covariates.}
+\item{covs}{a numeric matrix of covariates. May have zero columns, in which case
+the weights are computed with an intercept-only generalized linear model
+whatever \code{method} is supplied and any method-specific arguments are ignored; see
+\emph{Empty model formulas} in Details at \code{\link[=weightit]{weightit()}}.}
 
 \item{treat}{a vector of treatment statuses. To request inverse probability
 of censoring weights, supply a 0/1 censoring indicator (1 = censored)

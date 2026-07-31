@@ -1094,6 +1094,17 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
 
   re.bars <- ...get(".random")
 
+  #With nothing to condition on, the conditional density of the treatment is its
+  #marginal density and the weights are exactly 1. Fitting the model would instead
+  #send them through the numeric marginalization in
+  #`.get_w_from_gps_internal_cont()`, which evaluates the density on a grid and so
+  #returns values near but not equal to 1. Nothing is estimated, so there are no
+  #M-estimation parts either. A formula whose only terms are random effects also has
+  #a zero-column `covs`, but is a real model, hence the `re.bars` guard.
+  if (ncol(covs) == 0L && is_null(re.bars)) {
+    return(list(w = rep_with(1, treat)))
+  }
+
   if (missing == "saem" && is_not_null(re.bars)) {
     arg::err('random effects are not supported with {.code missing = "saem"}')
   }

@@ -14,6 +14,8 @@
 #'
 #' No `estimand` or `focal` argument applies to censoring models; supplying one produces a warning and it is ignored. `subclass` cannot be used. Not all methods support censoring weights; see the `treat_type` component of [.weightit_methods] to check.
 #'
+#' The right side of the formula may be empty, as in `.cens(C) ~ 1`, requesting a marginal censoring model in which censoring is assumed independent of the covariates. The weights are then \eqn{1/P(C = 0)} for the units still under observation and 0 for the censored units, whatever `method` is supplied; see *Empty model formulas* in Details at [weightit()]. Nothing else changes, so a marginal censoring model still composes with `by`, `stabilize`, M-estimation, and, in [weightitMSM()], the risk sets and the missing values permitted after censoring.
+#'
 #' ## Use outside a formula
 #'
 #' Calling `.cens()` directly returns a tagged indicator that routes the lower-level interfaces to the censoring path:

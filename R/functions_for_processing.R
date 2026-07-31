@@ -66,6 +66,27 @@
   }
 }
 
+#When `covs` has no columns -- an empty model formula such as `A ~ 1` or
+#`.cens(C) ~ 1` -- there is nothing for any method to model or balance, and every
+#method's target is met by the same weights: the inverse of the marginal treatment
+#probability. Many methods cannot run at all in that case, since the packages they
+#call reject a zero-column `covs` with errors that say nothing about the cause.
+#Fitting an intercept-only GLM is the simplest way to get those weights, so
+#estimation is routed there, with no method-specific arguments (none of which can
+#apply to covariates that do not exist). This is purely an implementation shortcut:
+#the weights are what the requested method would have produced, and it is the
+#requested method that is reported back.
+#
+#Three cases are left alone. `method = NULL` estimates nothing to begin with. A
+#user-supplied function is the user's own to define, and may well handle a
+#covariate-free problem deliberately. And a formula whose only terms are
+#`lme4`-style random effects (e.g., `A ~ (1 | school)`) also has a zero-column
+#fixed-effects `covs`, but is a real model; `.random` carries those terms.
+.route_empty_covs <- function(method, covs, ps = NULL, A = list()) {
+  is.character(method) && ncol(covs) == 0L &&
+    is_null(ps) && is_null(A[[".random"]])
+}
+
 .check_required_packages <- function(method) {
   if (!rlang::is_string(method) ||
       !utils::hasName(.weightit_methods, method)) {
@@ -1214,17 +1235,24 @@ get.s.d.denom.weightit <- function(s.d.denom = NULL, estimand = NULL, weights = 
   "pooled"
 }
 
-.check_estimated_weights <- function(w, treat, treat.type, s.weights) {
+.check_estimated_weights <- function(w, treat, treat.type, s.weights,
+                                     covs.empty = FALSE) {
 
   tw <- w * s.weights
 
   extreme.warn <- FALSE
   if (all_the_same(w)) {
-    #For censoring, constant weights of 1 mean no unit was censored and constant
-    #weights of 0 mean every unit was, neither of which indicates a failure. The
-    #latter is already reported by the weighting function itself.
-    if (treat.type != "censoring" ||
-        !any(check_if_zero(w[1L] - c(0, 1)))) {
+    #Some constant weights are correct by construction rather than a sign of
+    #failure. For censoring, 1 means no unit was censored and 0 means every unit
+    #was; the latter is already reported by the weighting function itself. For a
+    #covariate-free continuous model, the conditional density of the treatment is
+    #its marginal density, so every weight is exactly 1.
+    expected <- switch(treat.type,
+                       censoring = c(0, 1),
+                       continuous = if (covs.empty) 1 else numeric(),
+                       numeric())
+
+    if (!any(check_if_zero(w[1L] - expected))) {
       arg::wrn("all weights are {.val {w[1L]}}, possibly indicating an estimation failure")
     }
   }
