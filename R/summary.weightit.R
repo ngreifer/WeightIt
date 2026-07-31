@@ -235,7 +235,8 @@ plot.summary.weightit <- function(x, binwidth = NULL, bins = NULL, ...) {
                      color = "gray70",
                      fill = "gray70", alpha = 1) +
       scale_y_continuous(expand = expansion(c(0, .05))) +
-      geom_vline(xintercept = mean(w), linetype = "12", color = "blue", size = .75) +
+      geom_vline(xintercept = mean(w), linetype = "12", color = "blue",
+                 linewidth = .75) +
       labs(x = "Weight", y = "Count", title = "Distribution of Weights",
            subtitle = subtitle) +
       theme_bw()
