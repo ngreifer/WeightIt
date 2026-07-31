@@ -1063,7 +1063,12 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
           Btreat <- matrix(Btreat, nrow = ncol(Xtreat))
 
           do.call("cbind", lapply(seq_len(nlevels(A)), function(i) {
-            .psi.list[[i]](Btreat[, i], Xtreat, A, SW)
+            #Each element of `.psi.list` is the score of one one-vs-rest binomial
+            #GLM, so it takes that level's 0/1 indicator, not the treatment factor.
+            #Passing the factor makes `y - p` a factor subtraction, which returns NA
+            #for the whole score and so for the whole variance matrix.
+            .psi.list[[i]](Btreat[, i], Xtreat,
+                           as.numeric(A == levels(A)[i]), SW)
           }))
         },
         wfun = function(Btreat, Xtreat, A) {
@@ -1292,8 +1297,14 @@ weightit2glm.cont <- function(covs, treat, s.weights, subset, stabilize, missing
 
     mu <- fit$fitted.values
 
-    sd <- NULL #uses formula consistent with M-estimation
-    # sd <- sigma(fit) #extracted from model
+    #Not `sigma(fit)`, which divides by n - p. The M-estimation score for the
+    #variance parameter below is `sum(SW * (A - mu)^2 - s2) = 0`, so the residual
+    #SD consistent with it is the sampling-weighted root mean square of the
+    #residuals, uncentered. Computing it here rather than leaving it to
+    #`.get_w_from_gps_internal_cont()` (which centers the residuals first) is what
+    #keeps `w`, `btreat`, and `psi_treat` mutually consistent, so that `wfun()`
+    #reproduces `w` and `btreat` solves the score equations.
+    sd <- sqrt(w.m((treat - mu)^2, s.weights))
   }
 
   #Get weights

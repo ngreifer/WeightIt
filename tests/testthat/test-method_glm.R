@@ -473,3 +473,159 @@ test_that("Multi-category treatment with a bias-reduced model", {
   expect_true(W_dep$obj$br)
   expect_equal(W_dep$weights, W_br$weights, tolerance = eps)
 })
+
+test_that("Multi-category treatment: multi.method values", {
+  skip_on_cran()
+  skip_if_not_installed("rootSolve")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # `multi.method = "glm"` fits one one-vs-rest binomial GLM per level rather than a
+  # single multinomial model, so its M-estimation parts stack `nlevels(treat)` separate
+  # scores. Regression test for those scores being handed the treatment factor instead
+  # of each level's 0/1 indicator, which made the whole score -- and therefore every
+  # standard error from a model using these weights -- silently NA.
+  W_glm <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                    multi.method = "glm", include.obj = TRUE)
+
+  expect_M_parts_okay(W_glm, tolerance = eps)
+  expect_false(anyNA(attr(W_glm, "Mparts")$psi_treat(
+    attr(W_glm, "Mparts")$btreat, attr(W_glm, "Mparts")$Xtreat,
+    attr(W_glm, "Mparts")$A, W_glm$s.weights)))
+
+  fit_glm <- glm_weightit(Y_C ~ Am, data = test_data, weightit = W_glm)
+  expect_false(anyNA(vcov(fit_glm)))
+
+  # One binomial GLM per level is a different parameterization of the same propensity
+  # scores as the multinomial fit, so the two should give similar weights and similar
+  # standard errors -- a much tighter check on the stacked score than "not NA"
+  W_wt <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                   multi.method = "weightit", include.obj = TRUE)
+
+  expect_M_parts_okay(W_wt, tolerance = eps)
+
+  fit_wt <- glm_weightit(Y_C ~ Am, data = test_data, weightit = W_wt)
+  expect_equal(unname(coef(fit_glm)), unname(coef(fit_wt)), tolerance = 1e-2)
+  expect_equal(unname(sqrt(diag(vcov(fit_glm)))),
+               unname(sqrt(diag(vcov(fit_wt)))), tolerance = 1e-2)
+
+  # Links other than logit, and estimands other than ATE, use the same stacked score
+  for (lk in c("probit", "cloglog")) {
+    W <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  multi.method = "glm", link = lk)
+    expect_M_parts_okay(W, tolerance = eps)
+  }
+
+  for (est in c("ATT", "ATO", "ATM")) {
+    W <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  multi.method = "glm", estimand = est,
+                  focal = if (est == "ATT") "T" else NULL)
+    expect_M_parts_okay(W, tolerance = eps)
+  }
+
+  # `subclass` deliberately suppresses the M-estimation parts
+  W_sub <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                    multi.method = "glm", subclass = 5)
+  expect_null(attr(W_sub, "Mparts", exact = TRUE))
+})
+
+test_that("Continuous treatment", {
+  skip_on_cran()
+  skip_if_not_installed("rootSolve")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # The M-estimation parameter vector is (log(s_r^2), coefficients). Regression
+  # test for its variance element going missing, which made `Xtreat %*% Btreat[-1]`
+  # non-conformable and every asymptotic standard error for a continuous treatment
+  # an error.
+  expect_no_condition({
+    W0 <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                   data = test_data, method = "glm", include.obj = TRUE)
+  })
+
+  expect_named(attr(W0, "Mparts")$btreat[1L], "log(s_r^2)")
+  expect_length(attr(W0, "Mparts")$btreat,
+                1L + ncol(attr(W0, "Mparts")$Xtreat))
+
+  expect_M_parts_okay(W0, tolerance = eps)
+
+  expect_no_error(vcov(lm_weightit(Y_C ~ Ac, data = test_data, weightit = W0)))
+
+  # quick
+
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+                  data = test_data, method = "glm", quick = TRUE)
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+  expect_equal(W$weights, W0$weights, tolerance = eps)
+
+  # Non-identity link, on a strictly positive treatment
+
+  test_data$Ap <- test_data$Ac - min(test_data$Ac) + 1
+
+  expect_no_condition({
+    W <- weightit(Ap ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  link = "log")
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+
+  # Sampling weights, `by`, and a non-normal density
+
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  s.weights = "SW")
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  by = ~X5)
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  density = "dt_4")
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+})
+
+test_that("Continuous treatment: stabilize composes with M-estimation", {
+  skip_on_cran()
+  skip_if_not_installed("rootSolve")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # `stabilize = <formula>` with a continuous treatment stacks two continuous glm
+  # M-estimation parts, one of them inverted by `.invert_num_Mpart()`. Same function and
+  # same `btreat` layout as the variance-parameter bug, plus a composition step, and
+  # untested until now.
+  expect_no_condition({
+    W <- weightit(Ac ~ X1 + X2 + X3, data = test_data, method = "glm",
+                  stabilize = ~X5)
+  })
+
+  expect_M_parts_okay(W, tolerance = eps)
+  expect_length(attr(W, "Mparts.list"), 2L)
+
+  fit <- lm_weightit(Y_C ~ Ac, data = test_data, weightit = W)
+  expect_true(all(is.finite(sqrt(diag(vcov(fit))))))
+
+  # `stabilize = TRUE` does nothing for a continuous treatment and says so
+  expect_warning(weightit(Ac ~ X1 + X2 + X3, data = test_data, method = "glm",
+                          stabilize = TRUE),
+                 "continuous")
+})
