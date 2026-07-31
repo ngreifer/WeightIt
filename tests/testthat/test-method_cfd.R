@@ -178,13 +178,16 @@ test_that("Binary treatment", {
              kernel = "matern", nu = 20)
   })
 
-  # Spot-check: int (interactions). As with energy balancing, restricted to
+  # Spot-check: int (interactions). As with energy balancing, restricted to a few
   # continuous covariates only -- combining int = TRUE with a dummy-coded
   # multi-level factor (X6) and tols = 0 produces an infeasible QP on this
   # dataset (same "no feasible solution" warning and degenerate constant
-  # weight vector observed for method = "energy"), so it is avoided here.
+  # weight vector observed for method = "energy"), so it is avoided here, and
+  # `int = TRUE` on more than four covariates is infeasible for the same reason:
+  # the pairwise expansion asks for more exact-balance constraints than the ~150
+  # treated units in the fixture can satisfy.
   expect_no_condition({
-    W_int <- weightit(A ~ X1 + X2 + X3 + X4 + X7 + X8 + X9,
+    W_int <- weightit(A ~ X1 + X2 + X3 + X4,
                       data = test_data, method = "cfd", estimand = "ATE",
                       int = TRUE, include.obj = TRUE)
   })

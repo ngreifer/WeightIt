@@ -192,15 +192,17 @@ test_that("Binary treatment", {
   # min.w: floor on individual weights (default 1e-8, effectively unbounded below;
   # see ?optweight::optweight). Raising it should force every weight to be at
   # least that large while still permitting exact balance (tols = 0, the default)
-  # to be achieved.
+  # to be achieved. The floor has to stay low enough to leave the problem feasible:
+  # requiring every one of the ~150 treated units to carry a weight of at least .5
+  # while also balancing all nine covariates exactly has no solution in this fixture.
   expect_no_condition({
     W_minw <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                        data = test_data, method = "optweight", estimand = "ATE",
-                       include.obj = TRUE, min.w = .5)
+                       include.obj = TRUE, min.w = .3)
   })
 
-  expect_true(min(W_minw$weights) >= .5 - tols.eps)
-  expect_true(min(W0$weights) < .5) #confirms the floor is a real, binding constraint here
+  expect_true(min(W_minw$weights) >= .3 - tols.eps)
+  expect_true(min(W0$weights) < .3) #confirms the floor is a real, binding constraint here
 
   expect_equal(cobalt::col_w_smd(W_minw$covs, W_minw$treat, W_minw$weights),
                0 * cobalt::col_w_smd(W_minw$covs, W_minw$treat),

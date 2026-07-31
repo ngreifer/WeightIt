@@ -385,3 +385,34 @@ test_that("Continuous treatment", {
   expect_true(any(abs(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) - .05) <= eps)) #Some exactly tols
   expect_true(any(abs(cobalt::bal.tab(W)$Balance$Corr.Adj) > eps)) #Some worse than 0
 })
+
+test_that("Continuous treatment: M-estimation parts assemble into a variance", {
+  skip_on_cran()
+  skip_if_not_installed("rootSolve")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # The continuous parts supply `dw_dBtreat` but no `hess_treat`, so assembling them
+  # takes the mixed analytic/numeric branch in `.get_glm_weightit_vcov()`. The parts
+  # themselves were checked above; nothing verified that the assembly produces a usable
+  # variance, which is where a wrong standard error would appear without any error.
+  W <- weightit(Ac ~ X1 + X2 + X3, data = test_data, method = "ebal")
+
+  expect_M_parts_okay(W, tolerance = eps)
+  expect_false(is_null(attr(W, "Mparts")$dw_dBtreat))
+  expect_null(attr(W, "Mparts")$hess_treat)
+
+  fit <- lm_weightit(Y_C ~ Ac, data = test_data, weightit = W)
+
+  se_asympt <- sqrt(diag(vcov(fit)))
+  se_hc0 <- sqrt(diag(vcov(fit, vcov = "HC0")))
+
+  expect_true(all(is.finite(se_asympt)))
+  expect_true(all(se_asympt > 0))
+
+  # Accounting for estimation of the weights changes the answer, so the parts are
+  # actually contributing rather than being dropped
+  expect_not_equal(unname(se_asympt), unname(se_hc0))
+})

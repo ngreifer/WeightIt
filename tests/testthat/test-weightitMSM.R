@@ -81,8 +81,11 @@ test_that("msm_valid methods fit without error: glm, gbm, cbps, ipt, super, bart
   skip_if_not_installed("SuperLearner")
   set.seed(123)
   expect_no_error({
+    # `SL.step` rather than `SL.step.interaction`: `msmdata` has 7500 rows and this fits
+    # one model per time point, so stepping over all pairwise interactions inside
+    # 10-fold CV was the single most expensive call in the suite.
     W_super <- weightitMSM(msm_formulas, data = msmdata, method = "super",
-                           SL.library = c("SL.mean", "SL.glm", "SL.step.interaction"))
+                           SL.library = c("SL.mean", "SL.glm", "SL.step"))
   })
   expect_true(all(is.finite(W_super$weights) & W_super$weights > 0))
 

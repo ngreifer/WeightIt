@@ -76,3 +76,26 @@ inject_missingness <- function(data, cols, prop = 0.1, seed = 4321) {
 
   data
 }
+
+# `method = "cbps"` with a continuous treatment cannot always solve its balance
+# conditions -- at some samples the estimating equations have no root, and `weightit()`
+# now warns rather than silently returning weights that do not balance. Whether it fires
+# depends on the sample and the specification, so the affected tests cannot simply
+# `expect_warning()`. This accepts that one warning and nothing else, so an unrelated
+# condition still fails the test, and it keeps working unchanged if the warning stops
+# firing.
+expect_no_unexpected_warning <- function(expr, known = "could not be solved") {
+  ws <- character()
+
+  val <- withCallingHandlers(expr,
+                             warning = function(w) {
+                               ws <<- c(ws, conditionMessage(w))
+                               invokeRestart("muffleWarning")
+                             })
+
+  expect_true(all(vapply(ws, grepl, logical(1L), pattern = known, fixed = TRUE)),
+              label = sprintf("all warnings match \"%s\" (got: %s)", known,
+                              paste(substr(ws, 1L, 40L), collapse = "; ")))
+
+  invisible(val)
+}

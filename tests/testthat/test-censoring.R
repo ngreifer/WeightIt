@@ -299,6 +299,143 @@ test_that("trim() leaves the censored units at zero", {
   expect_true(all(Wt$weights[d$C == 1L] == 0))
 })
 
+# ---- Marginal (empty) censoring models -------------------------------------
+
+# An empty right side (`.cens(C) ~ 1`) requests a censoring model that does not
+# depend on the covariates, which must still route through the whole censoring
+# infrastructure. This mirrors an empty treatment formula in `weightit()`.
+
+test_that("an empty censoring formula gives a marginal censoring model", {
+  d <- make_cens_data()
+
+  W <- weightit(.cens(C) ~ 1, data = d, method = "glm")
+
+  expect_identical(get_treat_type(W$treat), "censoring")
+  expect_true(all(W$weights[d$C == 1L] == 0))
+
+  # 1/P(C = 0), constant across the units still under observation
+  expect_equal(unname(W$weights[d$C == 0L]),
+               rep.int(1 / mean(d$C == 0L), sum(d$C == 0L)),
+               tolerance = eps)
+
+  # `ps` is the (constant) marginal probability of being censored
+  expect_equal(unname(W$ps), rep.int(mean(d$C == 1L), nrow(d)),
+               tolerance = eps)
+
+  # There are no covariates to report, exactly as for an empty treatment formula
+  expect_length(W$covs, 0L)
+  expect_length(weightit(A ~ 1, data = d, method = "glm")$covs, 0L)
+
+  # method = NULL and a supplied `ps` also take the censoring path
+  expect_equal(unname(weightit(.cens(C) ~ 1, data = d, method = NULL)$weights),
+               1 - d$C, tolerance = eps)
+  expect_equal(unname(weightit(.cens(C) ~ 1, data = d,
+                               ps = rep.int(mean(d$C), nrow(d)))$weights),
+               unname(W$weights), tolerance = eps)
+
+  # `weightit.fit()` accepts the equivalent zero-column `covs`
+  W.fit <- weightit.fit(matrix(0, nrow = nrow(d), ncol = 0L),
+                        treat = .cens(d$C), method = "glm")
+  expect_equal(unname(W.fit$weights), unname(W$weights), tolerance = eps)
+})
+
+test_that("bart censoring weights zero out the censored and invert P(C = 0 | X)", {
+  skip_if_not_installed("dbarts")
+
+  # `weightit2bart.cens()` was the one `.cens` method with no test at all
+  d <- make_cens_data()
+
+  set.seed(123)
+  W <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "bart",
+                n.trees = 20, n.samples = 50, n.burn = 50, n.chains = 1,
+                n.threads = 1)
+
+  expect_identical(get_treat_type(W$treat), "censoring")
+  expect_true(all(W$weights[d$C == 1L] == 0))
+  expect_true(all(W$weights[d$C == 0L] > 0))
+
+  # `ps` is the probability of BEING censored, and the weights invert its complement
+  expect_true(all(W$ps > 0 & W$ps < 1))
+  expect_equal(unname(W$weights[d$C == 0L]),
+               unname(1 / (1 - W$ps[d$C == 0L])),
+               tolerance = eps)
+
+  # BART supplies no M-estimation parts, for censoring as for treatments
+  expect_null(attr(W, "Mparts", exact = TRUE))
+})
+
+test_that("every method gives the same marginal censoring weights", {
+  d <- make_cens_data()
+
+  # With no covariates there is nothing for any method to model or balance, so
+  # every method lands on the same 1/P(C = 0). How that is computed is covered in
+  # test-empty_formula.R.
+  W_glm <- weightit(.cens(C) ~ 1, data = d, method = "glm")
+
+  for (m in c("ebal", "ipt", "cbps", "energy", "optweight", "cfd")) {
+    if (!all(vapply(.weightit_methods[[m]]$packages_needed,
+                    rlang::is_installed, logical(1L)))) {
+      next
+    }
+
+    W <- weightit(.cens(C) ~ 1, data = d, method = m)
+
+    expect_identical(as.character(W$method), m)
+    expect_equal(unname(W$weights), unname(W_glm$weights), tolerance = eps)
+  }
+})
+
+test_that("a marginal censoring model composes with by, s.weights, and stabilize", {
+  skip_if_not_installed("rootSolve")
+
+  d <- make_cens_data()
+
+  # `by`: the marginal model is fit within each stratum
+  W_by <- weightit(.cens(C) ~ 1, data = d, method = "glm", by = ~G)
+
+  for (g in levels(d$G)) {
+    in.g <- which(d$G == g & d$C == 0L)
+    expect_equal(unname(W_by$weights[in.g]),
+                 rep.int(1 / mean(d$C[d$G == g] == 0L), length(in.g)),
+                 tolerance = eps)
+  }
+
+  expect_M_parts_okay(W_by, tolerance = eps)
+
+  # `s.weights`: the marginal rate is the sampling-weighted one
+  W_sw <- weightit(.cens(C) ~ 1, data = d, method = "glm", s.weights = "SW")
+  expect_equal(unname(W_sw$weights[d$C == 0L]),
+               rep.int(sum(d$SW) / sum(d$SW * (d$C == 0L)), sum(d$C == 0L)),
+               tolerance = eps)
+
+  # `stabilize`: the numerator is the same marginal model, so every nonzero
+  # weight is exactly 1
+  W_st <- weightit(.cens(C) ~ 1, data = d, method = "glm", stabilize = TRUE)
+  expect_equal(unname(W_st$weights), 1 - d$C, tolerance = eps)
+
+  expect_M_parts_okay(W_st, tolerance = eps)
+})
+
+test_that("a marginal censoring model supports M-estimation", {
+  skip_if_not_installed("rootSolve")
+
+  d <- make_cens_data()
+
+  for (m in c("glm", "ebal", "ipt")) {
+    W <- weightit(.cens(C) ~ 1, data = d, method = m)
+    expect_M_parts_okay(W, tolerance = eps)
+  }
+
+  # NAs are still tolerated in the censored units, since their weight is 0
+  d$Y <- d$Y_B
+  is.na(d$Y[d$C == 1L]) <- TRUE
+
+  W <- weightit(.cens(C) ~ 1, data = d, method = "glm")
+  fit <- glm_weightit(Y ~ X1, data = d, weightit = W, family = binomial)
+
+  expect_true(all(is.finite(sqrt(diag(vcov(fit))))))
+})
+
 # ---- Degenerate risk sets --------------------------------------------------
 
 test_that("no censored units gives all weights of 1", {
@@ -319,6 +456,20 @@ test_that("all units censored warns and gives all weights of 0", {
   expect_warning(W <- weightit(.cens(C) ~ X1 + X2, data = d, method = "glm"),
                  "censored")
   expect_true(all(W$weights == 0))
+})
+
+test_that("both degenerate risk sets are caught before an empty model is fit", {
+  d <- make_cens_data()
+
+  d0 <- d
+  d0$C <- 0L
+  expect_true(all(weightit(.cens(C) ~ 1, data = d0, method = "glm")$weights == 1))
+
+  d1 <- d
+  d1$C <- 1L
+  expect_warning(W1 <- weightit(.cens(C) ~ 1, data = d1, method = "glm"),
+                 "censored")
+  expect_true(all(W1$weights == 0))
 })
 
 test_that("very few uncensored units still works", {
@@ -1222,11 +1373,102 @@ test_that("weightitMSM censoring handles missing values by risk set", {
                "still under observation")
 })
 
+test_that("weightitMSM accepts an empty censoring formula", {
+  skip_if_not_installed("rootSolve")
+
+  d <- make_msm_cens_data()
+  cens <- d$C_2 == 1L
+
+  f <- list(A_1 ~ X1_0 + X2_0,
+            A_2 ~ X1_1 + X2_1 + A_1,
+            .cens(C_2) ~ 1,
+            A_3 ~ X1_2 + X2_2 + A_2)
+
+  W <- weightitMSM(f, data = d, method = "glm", include.obj = TRUE)
+
+  # The censoring factor is the marginal 1/P(C = 0) among those still at risk
+  w1 <- weightit(A_1 ~ X1_0 + X2_0, data = d, method = "glm")$weights
+  w2 <- weightit(A_2 ~ X1_1 + X2_1 + A_1, data = d, method = "glm")$weights
+  cw <- ifelse(cens, 0, 1 / mean(!cens))
+  w3 <- rep.int(1, nrow(d))
+  w3[!cens] <- weightit(A_3 ~ X1_2 + X2_2 + A_2, data = d[!cens, ],
+                        method = "glm")$weights
+
+  expect_equal(unname(W$weights), unname(w1 * w2 * cw * w3), tolerance = eps)
+
+  # The rest of the censoring infrastructure is untouched: the risk sets are the
+  # same as with a covariate-dependent censoring model, the models after censoring
+  # are fit on the at-risk units only, and NAs there are still tolerated
+  W_cov <- weightitMSM(msm_cens_formulas, data = d, method = "glm")
+  expect_identical(W$at.risk, W_cov$at.risk)
+  expect_identical(W$cens.time, W_cov$cens.time)
+  expect_identical(stats::nobs(W$obj$A_3), sum(!cens))
+  expect_null(W$missing)
+
+  expect_length(attr(W, "Mparts.list"), 4L)
+  expect_M_parts_okay(W, tolerance = eps)
+
+  # Stabilization divides by the same marginal model, so the censoring factor
+  # becomes exactly 1 for the units still under observation: the stabilized
+  # weights differ from the unstabilized ones only by the treatment numerators,
+  # which is the factor mean(!cens) that `cw` contributes above
+  W_stab <- weightitMSM(f, data = d, method = "glm", stabilize = TRUE)
+  W_stab_cov <- weightitMSM(msm_cens_formulas, data = d, method = "glm",
+                            stabilize = TRUE)
+
+  expect_true(all(W_stab$weights[cens] == 0))
+  expect_equal(unname(W_stab$weights / W$weights)[!cens],
+               unname(W_stab_cov$weights / W_cov$weights)[!cens],
+               tolerance = eps)
+  expect_M_parts_okay(W_stab, tolerance = eps)
+
+  # Empty and non-empty censoring formulas can be mixed
+  d$C_3 <- 0L
+  at.risk <- which(!cens)
+  set.seed(8L)
+  d$C_3[at.risk] <- rbinom(length(at.risk), 1L,
+                           prob = plogis(-1.5 + 0.3 * d$X1_2[at.risk]))
+  is.na(d$C_3[cens]) <- TRUE
+
+  W_mix <- weightitMSM(list(A_1 ~ X1_0 + X2_0,
+                            A_2 ~ X1_1 + X2_1 + A_1,
+                            .cens(C_2) ~ 1,
+                            A_3 ~ X1_2 + X2_2 + A_2,
+                            .cens(C_3) ~ X1_2 + A_3),
+                       data = d, method = "glm")
+
+  expect_equal(unname(W_mix$cens.time), c(3L, 5L))
+  expect_true(all(W_mix$weights[cens | d$C_3 == 1L] == 0))
+  expect_true(all(W_mix$weights[!cens & d$C_3 == 0L] > 0))
+  expect_M_parts_okay(W_mix, tolerance = eps)
+})
+
+test_that("weightitMSM accepts an empty treatment formula", {
+  # An empty right side is allowed in `weightitMSM()` just as it is in
+  # `weightit()`; the corresponding time point gets a marginal model
+  d <- msmdata
+
+  W <- weightitMSM(list(A_1 ~ 1, A_2 ~ X1_1 + A_1), data = d, method = "glm")
+
+  w1 <- weightit(A_1 ~ 1, data = d, method = "glm")$weights
+  w2 <- weightit(A_2 ~ X1_1 + A_1, data = d, method = "glm")$weights
+
+  expect_equal(unname(W$weights), unname(w1 * w2), tolerance = eps)
+
+  # Printing reports the absent covariates at every time point, not just baseline
+  expect_output(print(W), "baseline: \\(none\\)")
+  expect_output(print(weightitMSM(list(A_1 ~ X1_0, A_2 ~ 1), data = d,
+                                  method = "glm")),
+                "after time 1: \\(none\\)")
+})
+
 test_that("weightitMSM censoring error handling", {
   d <- make_msm_cens_data()
 
-  # At least one treatment model is required
+  # At least one treatment model is required, empty formula or not
   expect_error(weightitMSM(list(.cens(C_2) ~ X1_1), data = d, method = "glm"),
+               "at least one treatment model")
+  expect_error(weightitMSM(list(.cens(C_2) ~ 1), data = d, method = "glm"),
                "at least one treatment model")
 
   # `method = "cbps"` with `is.MSM.method = TRUE` supports censoring (see the
@@ -1533,4 +1775,248 @@ test_that("degenerate Cox models still work with zero weights", {
 
   expect_equal(unname(vcov(fit_const)), unname(vcov(fit_const_ref)),
                tolerance = eps)
+})
+
+# ---- Agreement with a hand-written IPCW/IPTW implementation -----------------
+#
+# The tests above check the censoring weights against identities and against other
+# methods, which verifies internal consistency but shares WeightIt's machinery. These
+# reproduce the weights from scratch instead: one `glm()` per model, fit by hand among the
+# units still under observation, and the reciprocal of the predicted probability of the
+# value actually observed. Nothing below calls `weightit()` to build the reference, so a
+# systematic error anywhere in the censoring path -- the risk sets, which units each model
+# is fit on, the direction of the censoring indicator, or how the per-time-point factors
+# are combined -- shows up as a numeric disagreement.
+#
+# `quasibinomial()` rather than `binomial()` only to avoid the non-integer-successes
+# warning when sampling weights are passed; the two give identical fitted values.
+
+# Predicted probability of the observed value of the left-hand-side variable, from a
+# logistic regression fit among `subset` only. `NA` outside `subset`.
+p_observed <- function(formula, data, subset = NULL, s.weights = NULL) {
+  n <- nrow(data)
+
+  if (is_null(subset)) subset <- rep.int(TRUE, n)
+
+  data$.sw <- s.weights %or% rep.int(1, n)
+
+  fit <- glm(formula, data = data[subset, , drop = FALSE],
+             family = quasibinomial, weights = .sw)
+
+  p1 <- rep(NA_real_, n)
+  p1[subset] <- unname(fitted(fit))
+
+  y <- data[[all.vars(formula)[1L]]]
+
+  ifelse(y == 1, p1, 1 - p1)
+}
+
+# Inverse probability of treatment weight for one time point: 1/P(A = a | X) among the
+# units at risk, and 1 for everyone else (they contribute nothing at this time point).
+iptw_factor <- function(formula, data, at.risk, s.weights = NULL) {
+  f <- rep.int(1, nrow(data))
+  f[at.risk] <- (1 / p_observed(formula, data, at.risk, s.weights))[at.risk]
+  f
+}
+
+# Inverse probability of censoring weight for one time point: 1/P(C = 0 | X) for the
+# units still under observation, exactly 0 for those censored here, and 1 for units
+# outside the risk set.
+ipcw_factor <- function(formula, data, at.risk, s.weights = NULL) {
+  C <- data[[all.vars(formula)[1L]]]
+
+  f <- rep.int(1, nrow(data))
+  f[at.risk] <- ifelse(C[at.risk] == 1L, 0,
+                       (1 / p_observed(formula, data, at.risk, s.weights))[at.risk])
+  f
+}
+
+test_that("point-treatment censoring weights match a hand-written IPCW", {
+  d <- make_cens_data()
+
+  all.at.risk <- rep.int(TRUE, nrow(d))
+
+  # Plain
+  W <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = "glm")
+
+  manual <- ipcw_factor(C ~ X1 + X2 + X3 + X4, d, all.at.risk)
+
+  expect_equal(unname(W$weights), unname(manual), tolerance = eps)
+  expect_true(all(manual[d$C == 1L] == 0))
+  expect_true(all(manual[d$C == 0L] > 0))
+
+  # Sampling weights enter the censoring model as regression weights
+  W_sw <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = "glm",
+                   s.weights = "SW")
+
+  manual_sw <- ipcw_factor(C ~ X1 + X2 + X3 + X4, d, all.at.risk,
+                           s.weights = d$SW)
+
+  expect_equal(unname(W_sw$weights), unname(manual_sw), tolerance = eps)
+  expect_not_equal(unname(manual_sw), unname(manual))
+
+  # `by` fits a separate censoring model within each stratum
+  W_by <- weightit(.cens(C) ~ X1 + X2, data = d, method = "glm", by = ~G)
+
+  manual_by <- rep.int(NA_real_, nrow(d))
+  for (g in levels(d$G)) {
+    in.g <- d$G == g
+    manual_by[in.g] <- ipcw_factor(C ~ X1 + X2, d, in.g)[in.g]
+  }
+
+  expect_equal(unname(W_by$weights), unname(manual_by), tolerance = eps)
+
+  # Stabilization divides by a marginal censoring model, so the numerator is
+  # P(C = 0) rather than P(C = 0 | X)
+  W_st <- weightit(.cens(C) ~ X1 + X2 + X3 + X4, data = d, method = "glm",
+                   stabilize = TRUE)
+
+  manual_st <- manual * p_observed(C ~ 1, d, all.at.risk)
+
+  expect_equal(unname(W_st$weights), unname(manual_st), tolerance = eps)
+})
+
+test_that("longitudinal censoring weights match a hand-written IPTW x IPCW product", {
+  d <- make_msm_cens_data()
+
+  # `msm_cens_formulas` is A_1, A_2, .cens(C_2), A_3: censoring occurs after the second
+  # treatment, so the first three models are fit on everyone and only the A_3 model is
+  # restricted to the units still under observation.
+  W <- weightitMSM(msm_cens_formulas, data = d, method = "glm")
+
+  at.risk <- rep.int(TRUE, nrow(d))
+
+  f_a1 <- iptw_factor(A_1 ~ X1_0 + X2_0, d, at.risk)
+  f_a2 <- iptw_factor(A_2 ~ X1_1 + X2_1 + A_1, d, at.risk)
+  f_c2 <- ipcw_factor(C_2 ~ X1_1 + X2_1 + A_1, d, at.risk)
+
+  at.risk <- at.risk & d$C_2 == 0L
+
+  f_a3 <- iptw_factor(A_3 ~ X1_2 + X2_2 + A_2, d, at.risk)
+
+  manual <- f_a1 * f_a2 * f_c2 * f_a3
+
+  expect_equal(unname(W$weights), unname(manual), tolerance = eps)
+
+  # The risk sets WeightIt used are the ones the manual version assumed
+  expect_identical(unname(W$at.risk[, "A_3"]), unname(at.risk))
+  expect_identical(unname(W$at.risk[, "C_2"]), rep.int(TRUE, nrow(d)))
+
+  # Censored units are zeroed out by the censoring factor alone
+  expect_true(all(manual[d$C_2 == 1L] == 0))
+  expect_true(all(manual[d$C_2 == 0L] > 0))
+  expect_identical(sum(W$weights == 0), sum(d$C_2 == 1L))
+
+  # Sampling weights again enter every model as regression weights (`msmdata` has none
+  # of its own, so one is built here)
+  set.seed(99L)
+  d$SW <- 1 / plogis(0.5 + 0.4 * d$X1_0 - 0.3 * d$A_1)
+
+  W_sw <- weightitMSM(msm_cens_formulas, data = d, method = "glm",
+                      s.weights = "SW")
+
+  at.risk <- rep.int(TRUE, nrow(d))
+  g_a1 <- iptw_factor(A_1 ~ X1_0 + X2_0, d, at.risk, d$SW)
+  g_a2 <- iptw_factor(A_2 ~ X1_1 + X2_1 + A_1, d, at.risk, d$SW)
+  g_c2 <- ipcw_factor(C_2 ~ X1_1 + X2_1 + A_1, d, at.risk, d$SW)
+  at.risk <- at.risk & d$C_2 == 0L
+  g_a3 <- iptw_factor(A_3 ~ X1_2 + X2_2 + A_2, d, at.risk, d$SW)
+
+  expect_equal(unname(W_sw$weights), unname(g_a1 * g_a2 * g_c2 * g_a3),
+               tolerance = eps)
+  expect_not_equal(unname(W_sw$weights), unname(W$weights))
+})
+
+test_that("two censoring time points match a hand-written product with nested risk sets", {
+  # The distinctive part of the longitudinal implementation is that each model is fit on
+  # the units surviving every earlier censoring event, so the risk sets are nested. This
+  # reproduces that by hand.
+  set.seed(1234L)
+
+  d <- msmdata
+  n <- nrow(d)
+
+  d$C_2 <- rbinom(n, 1L, prob = plogis(-2 + 0.2 * d$X1_1 - 0.3 * d$A_1))
+
+  u <- which(d$C_2 == 0L)
+  d$C_3 <- NA_integer_
+  d$C_3[u] <- rbinom(length(u), 1L, prob = plogis(-1.8 + 0.25 * d$X1_2[u]))
+
+  # Everything measured after each censoring event is unobserved for the units it removed
+  is.na(d[d$C_2 == 1L, c("X1_2", "X2_2", "A_2", "A_3")]) <- TRUE
+  is.na(d[which(d$C_3 == 1L), "A_3"]) <- TRUE
+
+  formulas <- list(A_1 ~ X1_0 + X2_0,
+                   .cens(C_2) ~ X1_1 + X2_1 + A_1,
+                   A_2 ~ X1_1 + X2_1 + A_1,
+                   .cens(C_3) ~ X1_2 + A_2,
+                   A_3 ~ X1_2 + X2_2 + A_2)
+
+  W <- weightitMSM(formulas, data = d, method = "glm")
+
+  ar1 <- rep.int(TRUE, n)                       # A_1 and C_2: everyone
+  f_a1 <- iptw_factor(A_1 ~ X1_0 + X2_0, d, ar1)
+  f_c2 <- ipcw_factor(C_2 ~ X1_1 + X2_1 + A_1, d, ar1)
+
+  ar2 <- ar1 & d$C_2 == 0L                      # A_2 and C_3: survivors of C_2
+  f_a2 <- iptw_factor(A_2 ~ X1_1 + X2_1 + A_1, d, ar2)
+  f_c3 <- ipcw_factor(C_3 ~ X1_2 + A_2, d, ar2)
+
+  ar3 <- ar2 & d$C_3 == 0L                      # A_3: survivors of both
+  f_a3 <- iptw_factor(A_3 ~ X1_2 + X2_2 + A_2, d, ar3)
+
+  manual <- f_a1 * f_c2 * f_a2 * f_c3 * f_a3
+
+  expect_equal(unname(W$weights), unname(manual), tolerance = eps)
+
+  # The risk sets shrink as assumed, and censoring at either point zeroes the weight
+  expect_identical(unname(W$at.risk[, "C_2"]), unname(ar1))
+  expect_identical(unname(W$at.risk[, "A_2"]), unname(ar2))
+  expect_identical(unname(W$at.risk[, "C_3"]), unname(ar2))
+  expect_identical(unname(W$at.risk[, "A_3"]), unname(ar3))
+
+  expect_true(all(manual[!ar3] == 0))
+  expect_true(all(manual[ar3] > 0))
+  expect_equal(unname(W$cens.time), c(2L, 4L))
+})
+
+test_that("stabilized longitudinal censoring weights match a hand-written product", {
+  d <- make_msm_cens_data()
+  n <- nrow(d)
+
+  W <- weightitMSM(msm_cens_formulas, data = d, method = "glm", stabilize = TRUE)
+
+  # With `stabilize = TRUE` and no `num.formula`, each treatment numerator is a model
+  # saturated in the previous treatments (an intercept at the first time point), and each
+  # censoring numerator is its own marginal model. Censoring indicators are not counted
+  # among the previous treatments.
+  at.risk <- rep.int(TRUE, n)
+
+  a1 <- iptw_factor(A_1 ~ X1_0 + X2_0, d, at.risk) *
+    p_observed(A_1 ~ 1, d, at.risk)
+  a2 <- iptw_factor(A_2 ~ X1_1 + X2_1 + A_1, d, at.risk) *
+    p_observed(A_2 ~ A_1, d, at.risk)
+  c2 <- ipcw_factor(C_2 ~ X1_1 + X2_1 + A_1, d, at.risk) *
+    p_observed(C_2 ~ 1, d, at.risk)
+
+  at.risk <- at.risk & d$C_2 == 0L
+
+  num_a3 <- rep.int(1, n)
+  num_a3[at.risk] <- p_observed(A_3 ~ A_1 * A_2, d, at.risk)[at.risk]
+  a3 <- iptw_factor(A_3 ~ X1_2 + X2_2 + A_2, d, at.risk) * num_a3
+
+  manual <- a1 * a2 * c2 * a3
+
+  expect_equal(unname(W$weights), unname(manual), tolerance = eps)
+
+  # The censoring numerator is a marginal model of C, not a censoring model: a censoring
+  # numerator would carry the same (1 - C) factor as the denominator and give 0/0 for the
+  # censored units. Here they stay finite and exactly 0.
+  expect_true(all(is.finite(manual)))
+  expect_true(all(manual[d$C_2 == 1L] == 0))
+
+  # Stabilizing changes the weights but not which units are zeroed
+  W_un <- weightitMSM(msm_cens_formulas, data = d, method = "glm")
+  expect_not_equal(unname(W$weights), unname(W_un$weights))
+  expect_identical(W$weights == 0, W_un$weights == 0)
 })

@@ -7,8 +7,12 @@ test_that("Binary treatment", {
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
-  # Small/fast library throughout
-  SL.lib <- c("SL.mean", "SL.glm", "SL.step.interaction")
+  # Small/fast library throughout. `SL.step` rather than `SL.step.interaction`: both add
+  # a third learner that selects among terms, but stepping over all pairwise
+  # interactions of 9 covariates inside 10-fold CV costs ~23s per fit against ~1s here,
+  # and this file fits ~33 times. (`SL.glm.interaction` is faster still but separates
+  # the treatment on the interaction expansion, which makes `glm.fit()` warn.)
+  SL.lib <- c("SL.mean", "SL.glm", "SL.step")
 
   # `expect_no_error()` (not `expect_no_condition()`) because the very first
   # SuperLearner fit in a session emits a `packageStartupMessage` when it
@@ -194,7 +198,7 @@ test_that("Multi-category treatment", {
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
-  SL.lib <- c("SL.mean", "SL.glm", "SL.step.interaction")
+  SL.lib <- c("SL.mean", "SL.glm", "SL.step")
 
   set.seed(123)
   suppressPackageStartupMessages({
@@ -319,7 +323,7 @@ test_that("Continuous treatment", {
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
-  SL.lib <- c("SL.mean", "SL.glm", "SL.step.interaction")
+  SL.lib <- c("SL.mean", "SL.glm", "SL.step")
 
   set.seed(123)
   suppressPackageStartupMessages({

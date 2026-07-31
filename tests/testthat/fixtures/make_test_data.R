@@ -90,7 +90,15 @@
   #adjusting for confounding. This is a deterministic function of X1 (no RNG
   #draw), so every other variable above is unchanged from the fixed-effects
   #fixture.
-  d$cluster <- factor(cut(d$X1, breaks = quantile(d$X1, seq(0, 1, length.out = 51)),
+  #
+  #The bin count scales with n to keep ~30 units per cluster. Below roughly that,
+  #`lmer()` cannot pin down the cluster variance well enough for the density-ratio
+  #weights of a continuous treatment to improve balance, so the multilevel tests
+  #start failing for reasons that have nothing to do with the code under test.
+  nclust <- max(5L, round(n / 30))
+
+  d$cluster <- factor(cut(d$X1,
+                          breaks = quantile(d$X1, seq(0, 1, length.out = nclust + 1L)),
                           include.lowest = TRUE, labels = FALSE))
 
   d
@@ -98,6 +106,14 @@
 
 set.seed(1234)
 
-test_data <- .gen_data(2000)
+#n is a test-suite runtime lever, not a statistical choice. The optimization-based
+#methods (`energy`, `cfd`) build a dense n x n kernel matrix and hand it to OSQP, and
+#`expect_M_parts_okay()` builds n x p numerical Jacobians, so their cost grows faster
+#than n. Going from 2000 to 750 cut those files by more than 10x while leaving ~130
+#units in the smallest `Am` level -- enough for every method to converge across all
+#estimands and for the balance assertions to stay meaningful. Regenerate rather than
+#subset if changing it: `Y_O` is defined by quantiles of `Y_C` and `cluster` by
+#quantiles of `X1`, so taking the first k rows distorts both.
+test_data <- .gen_data(750)
 
 saveRDS(test_data, testthat::test_path("fixtures", "test_data.rds"))

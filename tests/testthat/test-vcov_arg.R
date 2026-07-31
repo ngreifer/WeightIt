@@ -1,3 +1,11 @@
+# These four blocks assert that `vcov`, `R`, and `cluster` are honored identically by
+# `vcov()`, `summary()`, `anova()`, and `update()` for each model class. They check
+# reproducibility given a seed and well-formedness, never statistical accuracy, so `R`
+# only has to exceed the number of parameters for the bootstrap covariance to be
+# full-rank -- `R = 10` exercises exactly the same code paths as a realistic number of
+# replicates. Every replicate re-estimates the weights as well as the outcome model, so
+# this is the difference between ~560 and ~1400 model fits in this file alone.
+
 test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
   skip_on_cran()
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
@@ -17,11 +25,11 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
                           data = test_data, weightit = W, vcov = "HC0")
   set.seed(123)
   fit_bs <- glm_weightit(Y_C ~ A * (X1),
-                         data = test_data, weightit = W, vcov = "BS", R = 25)
+                         data = test_data, weightit = W, vcov = "BS", R = 10)
 
   set.seed(123)
   fit_fwb <- glm_weightit(Y_C ~ A * (X1),
-                          data = test_data, weightit = W, vcov = "FWB", R = 25)
+                          data = test_data, weightit = W, vcov = "FWB", R = 10)
 
   fit_asympt_clus <- glm_weightit(Y_C ~ A * (X1),
                                   data = test_data, weightit = W, vcov = "asympt",
@@ -31,12 +39,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
                                cluster = ~clus)
   set.seed(123)
   fit_bs_clus <- glm_weightit(Y_C ~ A * (X1),
-                              data = test_data, weightit = W, vcov = "BS", R = 25,
+                              data = test_data, weightit = W, vcov = "BS", R = 10,
                               cluster = ~clus)
 
   set.seed(123)
   fit_fwb_clus <- glm_weightit(Y_C ~ A * (X1),
-                               data = test_data, weightit = W, vcov = "FWB", R = 25,
+                               data = test_data, weightit = W, vcov = "FWB", R = 10,
                                cluster = ~clus)
 
 
@@ -49,12 +57,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10),
                vcov(fit_bs),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10),
                vcov(fit_fwb),
                tolerance = eps)
 
@@ -67,12 +75,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10, cluster = ~clus),
                vcov(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10, cluster = ~clus),
                vcov(fit_fwb_clus),
                tolerance = eps)
 
@@ -109,7 +117,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 25)$coef,
+  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 10)$coef,
                summary(fit_bs_clus)$coef,
                tolerance = eps)
 
@@ -134,7 +142,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
 
   set.seed(123)
   expect_equal(anova(fit_bs_clus, fit_small),
-               anova(fit_none, fit_small, vcov = "BS", R = 25, cluster = ~clus),
+               anova(fit_none, fit_small, vcov = "BS", R = 10, cluster = ~clus),
                tolerance = eps)
 
   expect_error(anova(fit_asympt_clus, fit_small, vcov = "none"),
@@ -164,12 +172,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
 
   set.seed(123)
   expect_equal(fit_bs,
-               update(fit_none, vcov = "BS", R = 25),
+               update(fit_none, vcov = "BS", R = 10),
                tolerance = eps)
 
   set.seed(123)
   expect_equal(fit_fwb,
-               update(fit_none, vcov = "FWB", R = 25),
+               update(fit_none, vcov = "FWB", R = 10),
                tolerance = eps)
 
   expect_equal(update(fit_hc0, cluster = ~clus),
@@ -191,12 +199,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for glm_weightit", {
   }
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_bs, R = 25, cluster = ~clus)),
+  expect_equal(.remove_call(update(fit_bs, R = 10, cluster = ~clus)),
                .remove_call(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 25)),
+  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 10)),
                .remove_call(fit_fwb_clus),
                tolerance = eps)
 })
@@ -220,11 +228,11 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
                           data = test_data, weightit = W, vcov = "HC0")
   set.seed(123)
   fit_bs <- ordinal_weightit(Y_O ~ A * (X1),
-                         data = test_data, weightit = W, vcov = "BS", R = 25)
+                         data = test_data, weightit = W, vcov = "BS", R = 10)
 
   set.seed(123)
   fit_fwb <- ordinal_weightit(Y_O ~ A * (X1),
-                          data = test_data, weightit = W, vcov = "FWB", R = 25)
+                          data = test_data, weightit = W, vcov = "FWB", R = 10)
 
   fit_asympt_clus <- ordinal_weightit(Y_O ~ A * (X1),
                                   data = test_data, weightit = W, vcov = "asympt",
@@ -234,12 +242,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
                                cluster = ~clus)
   set.seed(123)
   fit_bs_clus <- ordinal_weightit(Y_O ~ A * (X1),
-                              data = test_data, weightit = W, vcov = "BS", R = 25,
+                              data = test_data, weightit = W, vcov = "BS", R = 10,
                               cluster = ~clus)
 
   set.seed(123)
   fit_fwb_clus <- ordinal_weightit(Y_O ~ A * (X1),
-                               data = test_data, weightit = W, vcov = "FWB", R = 25,
+                               data = test_data, weightit = W, vcov = "FWB", R = 10,
                                cluster = ~clus)
 
 
@@ -252,12 +260,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10),
                vcov(fit_bs),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10),
                vcov(fit_fwb),
                tolerance = eps)
 
@@ -270,12 +278,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10, cluster = ~clus),
                vcov(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10, cluster = ~clus),
                vcov(fit_fwb_clus),
                tolerance = eps)
 
@@ -312,7 +320,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 25)$coef,
+  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 10)$coef,
                summary(fit_bs_clus)$coef,
                tolerance = eps)
 
@@ -337,7 +345,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
 
   set.seed(123)
   expect_equal(anova(fit_bs_clus, fit_small),
-               anova(fit_none, fit_small, vcov = "BS", R = 25, cluster = ~clus),
+               anova(fit_none, fit_small, vcov = "BS", R = 10, cluster = ~clus),
                tolerance = eps)
 
   expect_error(anova(fit_asympt_clus, fit_small, vcov = "none"),
@@ -367,12 +375,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
 
   set.seed(123)
   expect_equal(fit_bs,
-               update(fit_none, vcov = "BS", R = 25),
+               update(fit_none, vcov = "BS", R = 10),
                tolerance = eps)
 
   set.seed(123)
   expect_equal(fit_fwb,
-               update(fit_none, vcov = "FWB", R = 25),
+               update(fit_none, vcov = "FWB", R = 10),
                tolerance = eps)
 
   expect_equal(update(fit_hc0, cluster = ~clus),
@@ -393,12 +401,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for ordinal_weightit
   }
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_bs, R = 25, cluster = ~clus)),
+  expect_equal(.remove_call(update(fit_bs, R = 10, cluster = ~clus)),
                .remove_call(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 25)),
+  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 10)),
                .remove_call(fit_fwb_clus),
                tolerance = eps)
 })
@@ -425,11 +433,11 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
                               data = test_data, weightit = W, vcov = "HC0")
   set.seed(123)
   fit_bs <- multinom_weightit(Y_M ~ A * (X1),
-                             data = test_data, weightit = W, vcov = "BS", R = 25)
+                             data = test_data, weightit = W, vcov = "BS", R = 10)
 
   set.seed(123)
   fit_fwb <- multinom_weightit(Y_M ~ A * (X1),
-                              data = test_data, weightit = W, vcov = "FWB", R = 25)
+                              data = test_data, weightit = W, vcov = "FWB", R = 10)
 
   fit_asympt_clus <- multinom_weightit(Y_M ~ A * (X1),
                                       data = test_data, weightit = W, vcov = "asympt",
@@ -439,12 +447,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
                                    cluster = ~clus)
   set.seed(123)
   fit_bs_clus <- multinom_weightit(Y_M ~ A * (X1),
-                                  data = test_data, weightit = W, vcov = "BS", R = 25,
+                                  data = test_data, weightit = W, vcov = "BS", R = 10,
                                   cluster = ~clus)
 
   set.seed(123)
   fit_fwb_clus <- multinom_weightit(Y_M ~ A * (X1),
-                                   data = test_data, weightit = W, vcov = "FWB", R = 25,
+                                   data = test_data, weightit = W, vcov = "FWB", R = 10,
                                    cluster = ~clus)
 
   expect_equal(vcov(fit_none, vcov = "asympt"),
@@ -456,12 +464,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10),
                vcov(fit_bs),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10),
                vcov(fit_fwb),
                tolerance = eps)
 
@@ -474,12 +482,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10, cluster = ~clus),
                vcov(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10, cluster = ~clus),
                vcov(fit_fwb_clus),
                tolerance = eps)
 
@@ -516,7 +524,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 25)$coef,
+  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 10)$coef,
                summary(fit_bs_clus)$coef,
                tolerance = eps)
 
@@ -541,7 +549,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
 
   set.seed(123)
   expect_equal(anova(fit_bs_clus, fit_small),
-               anova(fit_none, fit_small, vcov = "BS", R = 25, cluster = ~clus),
+               anova(fit_none, fit_small, vcov = "BS", R = 10, cluster = ~clus),
                tolerance = eps)
 
   expect_error(anova(fit_asympt_clus, fit_small, vcov = "none"),
@@ -571,12 +579,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
 
   set.seed(123)
   expect_equal(fit_bs,
-               update(fit_none, vcov = "BS", R = 25),
+               update(fit_none, vcov = "BS", R = 10),
                tolerance = eps)
 
   set.seed(123)
   expect_equal(fit_fwb,
-               update(fit_none, vcov = "FWB", R = 25),
+               update(fit_none, vcov = "FWB", R = 10),
                tolerance = eps)
 
   expect_equal(update(fit_hc0, cluster = ~clus),
@@ -598,12 +606,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for multinom_weighti
   }
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_bs, R = 25, cluster = ~clus)),
+  expect_equal(.remove_call(update(fit_bs, R = 10, cluster = ~clus)),
                .remove_call(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 25)),
+  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 10)),
                .remove_call(fit_fwb_clus),
                tolerance = eps)
 })
@@ -632,11 +640,11 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
                             data = test_data, weightit = W, vcov = "HC0")
   set.seed(123)
   fit_bs <- coxph_weightit(survival::Surv(time, event) ~ A * (X1),
-                           data = test_data, weightit = W, vcov = "BS", R = 25)
+                           data = test_data, weightit = W, vcov = "BS", R = 10)
 
   set.seed(123)
   fit_fwb <- coxph_weightit(survival::Surv(time, event) ~ A * (X1),
-                            data = test_data, weightit = W, vcov = "FWB", R = 25)
+                            data = test_data, weightit = W, vcov = "FWB", R = 10)
 
   fit_asympt_clus <- coxph_weightit(survival::Surv(time, event) ~ A * (X1),
                                     data = test_data, weightit = W, vcov = "asympt",
@@ -646,12 +654,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
                                  cluster = ~clus)
   set.seed(123)
   fit_bs_clus <- coxph_weightit(survival::Surv(time, event) ~ A * (X1),
-                                data = test_data, weightit = W, vcov = "BS", R = 25,
+                                data = test_data, weightit = W, vcov = "BS", R = 10,
                                 cluster = ~clus)
 
   set.seed(123)
   fit_fwb_clus <- coxph_weightit(survival::Surv(time, event) ~ A * (X1),
-                                 data = test_data, weightit = W, vcov = "FWB", R = 25,
+                                 data = test_data, weightit = W, vcov = "FWB", R = 10,
                                  cluster = ~clus)
 
 
@@ -664,12 +672,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10),
                vcov(fit_bs),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10),
                vcov(fit_fwb),
                tolerance = eps)
 
@@ -682,12 +690,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "BS", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "BS", R = 10, cluster = ~clus),
                vcov(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(vcov(fit_none, vcov = "FWB", R = 25, cluster = ~clus),
+  expect_equal(vcov(fit_none, vcov = "FWB", R = 10, cluster = ~clus),
                vcov(fit_fwb_clus),
                tolerance = eps)
 
@@ -724,7 +732,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 25)$coef,
+  expect_equal(summary(fit_asympt_clus, vcov = "BS", R = 10)$coef,
                summary(fit_bs_clus)$coef,
                tolerance = eps)
 
@@ -749,7 +757,7 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
 
   set.seed(123)
   expect_equal(anova(fit_bs_clus, fit_small),
-               anova(fit_none, fit_small, vcov = "BS", R = 25, cluster = ~clus),
+               anova(fit_none, fit_small, vcov = "BS", R = 10, cluster = ~clus),
                tolerance = eps)
 
   expect_error(anova(fit_asympt_clus, fit_small, vcov = "none"),
@@ -779,12 +787,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
 
   set.seed(123)
   expect_equal(fit_bs,
-               update(fit_none, vcov = "BS", R = 25),
+               update(fit_none, vcov = "BS", R = 10),
                tolerance = eps)
 
   set.seed(123)
   expect_equal(fit_fwb,
-               update(fit_none, vcov = "FWB", R = 25),
+               update(fit_none, vcov = "FWB", R = 10),
                tolerance = eps)
 
   expect_equal(update(fit_hc0, cluster = ~clus),
@@ -806,12 +814,12 @@ test_that("vcov arg works in vcov(), summary(), and anova() for coxph_weightit",
   }
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_bs, R = 25, cluster = ~clus)),
+  expect_equal(.remove_call(update(fit_bs, R = 10, cluster = ~clus)),
                .remove_call(fit_bs_clus),
                tolerance = eps)
 
   set.seed(123)
-  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 25)),
+  expect_equal(.remove_call(update(fit_fwb, cluster = ~clus, R = 10)),
                .remove_call(fit_fwb_clus),
                tolerance = eps)
 })

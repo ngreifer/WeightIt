@@ -30,9 +30,15 @@ test_that("Binary treatment with random effects (lme4::glmer)", {
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
+  #X1 is omitted from every fixed part below, as in test-method_bart_re.R: `cluster` is
+  #a quantile-binning of X1, so with X1 also in the model the random intercept has
+  #nothing left to explain, lme4 estimates its variance at the boundary (a singular
+  #fit), and the weights collapse to those of the fixed-effects-only model. Leaving X1
+  #out is what makes these tests exercise the multilevel path at all.
+
   #ATE
   expect_no_condition({
-    W <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + (1 | cluster),
+    W <- weightit(A ~ X2 + X3 + X4 + X5 + X7 + X8 + X9 + (1 | cluster),
                   data = test_data, method = "glm", estimand = "ATE",
                   include.obj = TRUE)
   })
@@ -43,25 +49,28 @@ test_that("Binary treatment with random effects (lme4::glmer)", {
   expect_s4_class(W$obj, "glmerMod")
   expect_balance_improved(W)
 
+  #The random intercept is actually estimated, not pinned at 0
+  expect_gt(as.numeric(lme4::VarCorr(W$obj)[["cluster"]]), 0.1)
+
   #No M-estimation parts for mixed models
   expect_null(attr(W, "Mparts"))
   expect_null(attr(W, "Mparts.list"))
 
   #Weights differ from the fixed-effects-only fit
-  W_fe <- weightit(A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+  W_fe <- weightit(A ~ X2 + X3 + X4 + X5 + X7 + X8 + X9,
                    data = test_data, method = "glm", estimand = "ATE")
   expect_not_equal(W$weights, W_fe$weights)
 
   #ATT
   expect_no_condition({
-    W2 <- weightit(A ~ X1 + X2 + X3 + X7 + (1 | cluster),
+    W2 <- weightit(A ~ X2 + X3 + X7 + (1 | cluster),
                    data = test_data, method = "glm", estimand = "ATT")
   })
   expect_ATT_weights_okay(W2)
 
   #Link other than logit
   expect_no_condition({
-    Wp <- weightit(A ~ X1 + X2 + X7 + (1 | cluster),
+    Wp <- weightit(A ~ X2 + X3 + X4 + X7 + (1 | cluster),
                    data = test_data, method = "glm", estimand = "ATE",
                    link = "probit")
   })
@@ -80,7 +89,7 @@ test_that("Continuous treatment with random effects", {
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
   expect_no_condition({
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + (1 | cluster),
+    W <- weightit(Ac ~ X2 + X3 + X4 + X5 + X7 + X8 + X9 + (1 | cluster),
                   data = test_data, method = "glm", include.obj = TRUE)
   })
 
@@ -110,7 +119,7 @@ test_that("Multi-category treatment with random effects (mclogit::mblogit)", {
 
   #mclogit's IWLS can emit benign convergence warnings on this data
   expect_no_error(suppressWarnings({
-    W <- weightit(Am ~ X1 + X2 + X3 + X7 + (1 | cluster),
+    W <- weightit(Am ~ X2 + X3 + X7 + (1 | cluster),
                   data = test_data, method = "glm", estimand = "ATE",
                   include.obj = TRUE)
   }))
@@ -134,7 +143,7 @@ test_that("Random effects standard-error fallback and guardrails", {
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
-  W <- weightit(A ~ X1 + X2 + X7 + (1 | cluster), data = test_data,
+  W <- weightit(A ~ X2 + X7 + (1 | cluster), data = test_data,
                 method = "glm", estimand = "ATE")
 
   #SEs fall back to HC0; asymptotic (M-estimation) SEs are unavailable
@@ -162,13 +171,13 @@ test_that("Random effects substitute for a correlated omitted predictor", {
 
   #Cluster-aware fit (X1 omitted, cluster in its place)
   expect_no_condition({
-    W_cluster <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 + (1 | cluster),
+    W_cluster <- weightit(A ~ X2 + X3 + X4 + X5 + X7 + X8 + X9 + (1 | cluster),
                           data = test_data, method = "glm", estimand = "ATE",
                           include.obj = TRUE)
   })
 
   #Fit ignoring clustering (X1 also omitted)
-  W_none <- weightit(A ~ X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+  W_none <- weightit(A ~ X2 + X3 + X4 + X5 + X7 + X8 + X9,
                      data = test_data, method = "glm", estimand = "ATE")
 
   #Random-effect variance is non-negligible (cluster carries the X1 signal)

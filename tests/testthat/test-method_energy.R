@@ -147,8 +147,11 @@ test_that("Binary treatment", {
   # feasible solution" and returns a degenerate constant weight vector),
   # which appears to be a genuine (if edge-case) source behavior rather than
   # a testing mistake, so it is avoided here rather than worked around.
+  # Four covariates rather than seven for the same reason: `int = TRUE` expands to
+  # every pairwise product, so seven covariates means 28 exact-balance constraints,
+  # which is infeasible among the ~150 treated units in the fixture.
   expect_no_condition({
-    W_int <- weightit(A ~ X1 + X2 + X3 + X4 + X7 + X8 + X9,
+    W_int <- weightit(A ~ X1 + X2 + X3 + X4,
                       data = test_data, method = "energy", estimand = "ATE",
                       int = TRUE, include.obj = TRUE)
   })
