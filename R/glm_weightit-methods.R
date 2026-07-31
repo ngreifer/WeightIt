@@ -878,9 +878,28 @@ tidy.glm_weightit <- function(x, conf.int = FALSE, conf.level = 0.95, exponentia
                ...)
 
   ret <- cbind(rownames(s$coefficients),
-               as.data.frame(s$coefficients)) |>
-    setNames(c("term", "estimate", "std.error", "statistic",
-               "p.value"))
+               as.data.frame(s$coefficients))
+
+  #The columns `summary()` returns are not fixed: `ci = TRUE` appends two
+  #confidence-limit columns named after the percentiles (e.g. "2.5 %"), and supplying
+  #`transform` drops the standard error, since a transformed estimate's SE is not the
+  #transform of the original. Assuming a fixed set of five names therefore left the
+  #limits unnamed when `conf.int = TRUE` and shifted every name by one when
+  #`exponentiate = TRUE`, so the statistic was labelled `std.error`. Map from the
+  #columns actually present instead.
+  cn <- colnames(s$coefficients)
+  nms <- cn
+
+  nms[cn == "Estimate"] <- "estimate"
+  nms[cn == "Std. Error"] <- "std.error"
+  nms[startsWith(cn, "z value") | startsWith(cn, "t value")] <- "statistic"
+  nms[startsWith(cn, "Pr(")] <- "p.value"
+
+  if (conf.int) {
+    nms[length(cn) - c(1L, 0L)] <- c("conf.low", "conf.high")
+  }
+
+  ret <- setNames(ret, c("term", nms))
 
   class(ret) <- c("tbl_df", "tbl", "data.frame")
 
