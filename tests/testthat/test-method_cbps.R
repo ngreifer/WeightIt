@@ -206,11 +206,11 @@ test_that("Continuous treatment", {
 
   test_data <- readRDS(test_path("fixtures", "test_data.rds"))
 
-  expect_no_condition({
-    W0 <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-                   data = test_data, method = "cbps",
-                   include.obj = TRUE, solver = "optim")
-  })
+  W0 <- expect_no_unexpected_warning(
+    weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+             data = test_data, method = "cbps",
+             include.obj = TRUE, solver = "optim")
+  )
 
   sw.opts <- c(FALSE, TRUE)
   over.opts <- c("exact", "twostep", "cont")
@@ -234,12 +234,32 @@ test_that("Continuous treatment", {
         })
 
         if (over == "exact") {
-          expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
-                                         s.weights = W$s.weights),
-                       0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
-                                             s.weights = W$s.weights),
-                       expected.label = "all 0s",
-                       tolerance = eps)
+          # For a continuous treatment the balance conditions cannot always be solved:
+          # at some samples the estimating equations have no root, the optimizer settles
+          # at a stationary point where the objective (the norm of the mean estimating
+          # function) is far from 0, and the weighted covariances are not exact. Whether
+          # that happens depends on the sample and the specification -- with this
+          # generator the full-covariate spec solves at n = 900 and n = 1000 but not at
+          # n = 750 or n = 1200 -- so the exact-balance assertion is conditional on the
+          # objective saying the conditions were actually met. `weightit()` warns in the
+          # other branch; see `.check_cbps_converged()`.
+          if (W$obj$value < 1e-8) {
+            expect_equal(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                           s.weights = W$s.weights),
+                         0 * cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
+                                               s.weights = W$s.weights),
+                         expected.label = "all 0s",
+                         tolerance = eps)
+          }
+          else {
+            # Unsolved, but the weights must still be usable and must improve on the
+            # unweighted covariances
+            expect_true(all(is.finite(W$weights) & W$weights > 0))
+            expect_lt(max(abs(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                                s.weights = W$s.weights))),
+                      max(abs(cobalt::col_w_cov(W$covs, W$treat, std = TRUE,
+                                                s.weights = W$s.weights))))
+          }
         }
 
         expect_true(is_null(W$ps))
@@ -260,12 +280,81 @@ test_that("Continuous treatment", {
   }
 
   #Non-full rank
-  expect_no_condition({
-    W <- weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
-                    I(1 - X5) + I(X9 * 2),
-                  data = test_data, method = "cbps",
-                  include.obj = TRUE, solver = "optim")
-  })
+  W <- expect_no_unexpected_warning(
+    weightit(Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9 +
+               I(1 - X5) + I(X9 * 2),
+             data = test_data, method = "cbps",
+             include.obj = TRUE, solver = "optim")
+  )
 
   expect_equal(W$weights, W0$weights, tolerance = eps)
+})
+
+test_that("unsolved balance conditions are reported rather than silently returned", {
+  skip_on_cran()
+  skip_if_not_installed("cobalt")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  # With `over = FALSE` the system is exactly identified, so the objective -- the norm of
+  # the mean estimating function -- has to reach ~0 for the conditions to be solved.
+  # `optim()` reports `convergence == 0` whether or not it got there, so the objective is
+  # the only signal, and it used to be ignored. Regression test for that: whenever the
+  # objective says the conditions were not met, there must be a warning saying so.
+  obj_value <- function(W) W$obj$value
+
+  specs <- list(
+    full = Ac ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+    small = Ac ~ X1 + X2 + X3,
+    binary = A ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
+    multi = Am ~ X1 + X2 + X3 + X4 + X5
+  )
+
+  n_warned <- 0L
+
+  for (nm in names(specs)) {
+    ws <- character()
+    W <- withCallingHandlers(
+      weightit(specs[[nm]], data = test_data, method = "cbps", include.obj = TRUE),
+      warning = function(w) {
+        ws <<- c(ws, conditionMessage(w))
+        invokeRestart("muffleWarning")
+      })
+
+    warned <- any(grepl("could not be solved", ws, fixed = TRUE))
+    stalled <- obj_value(W) > 1e-5
+
+    expect_identical(warned, stalled,
+                     label = sprintf("warning matches the objective for %s (obj = %.2e)",
+                                     nm, obj_value(W)))
+
+    if (stalled) n_warned <- n_warned + 1L
+
+    # The objective is not just a solver diagnostic: it tracks the balance actually
+    # achieved. Checked on the continuous specs, where `col_w_cov()` is the relevant
+    # statistic (binary and multi-category use standardized mean differences instead).
+    if (nm %in% c("full", "small")) {
+      achieved <- max(abs(cobalt::col_w_cov(W$covs, W$treat, W$weights, std = TRUE,
+                                            s.weights = W$s.weights)))
+
+      if (stalled) expect_gt(achieved, eps)
+      else expect_lt(achieved, eps)
+    }
+  }
+
+  # The continuous full-covariate spec is the case that motivated this check, so at least
+  # one of the four above must exercise the warning path; otherwise this test is vacuous
+  expect_gt(n_warned, 0L)
+
+  # `over = TRUE` is over-identified, so a non-zero objective is expected and must not
+  # warn
+  expect_no_warning(weightit(specs$full, data = test_data, method = "cbps",
+                             over = TRUE, include.obj = TRUE))
+
+  # Hitting the iteration limit is still reported separately, with its own message
+  expect_warning(weightit(specs$full, data = test_data, method = "cbps",
+                          maxit = 1L, solver = "optim"),
+                 "higher value of")
 })

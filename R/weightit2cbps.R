@@ -162,7 +162,25 @@
 #' an initial call to \pkgfun{rootSolve}{multiroot}. However, the package is not
 #' required.
 #'
-#' @seealso [weightit()], [weightitMSM()]
+#' ## Unsolvable Balance Conditions
+#'
+#' The just-identified CBPS (`over = FALSE`) has exactly as many parameters as balance
+#' conditions, so at a solution the conditions hold exactly and the corresponding
+#' covariate moments are exactly balanced. For some samples no such solution exists: the
+#' optimizer settles at a point where the conditions are still unmet, and the resulting
+#' weights balance the covariates only approximately. This is most likely with a
+#' continuous treatment and many covariates, and whether it happens depends on the
+#' sample, not just on the specification.
+#'
+#' `weightit()` warns when this occurs, since the returned weights are otherwise
+#' indistinguishable from ones that did solve the conditions. When it does, assess the
+#' balance actually achieved (e.g., with `cobalt::bal.tab()`) rather than assuming it is
+#' exact. With `include.obj = TRUE`, the `value` component of the returned `optim()` output object is the
+#' norm of the mean estimating function, which is what the warning is based on: it is
+#' essentially 0 when the conditions were solved.
+#'
+#' @seealso
+#' [weightit()], [weightitMSM()]
 #'
 #' [method_ebal] and [method_ipt] for entropy balancing and inverse probability
 #' tilting, which work similarly.
@@ -487,9 +505,7 @@ weightit2cbps <- function(covs, treat, s.weights, estimand, focal, subset,
 
   p.score <- .fam$linkinv(drop(mod_covs %*% par_out))
 
-  if (!isTRUE(all.equal(out$converge, 0))) {
-    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
-  }
+  .check_cbps_converged(out, over)
 
   w <- .get_w_from_ps_internal_bin(p.score, treat, estimand = estimand,
                                    stabilize = stabilize)
@@ -752,9 +768,7 @@ weightit2cbps.cens <- function(covs, treat, s.weights, subset, missing, verbose,
 
   p.score <- .fam$linkinv(drop(mod_covs %*% par_out))
 
-  if (!isTRUE(all.equal(out$converge, 0))) {
-    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
-  }
+  .check_cbps_converged(out, over)
 
   w <- .get_w_from_ps_internal_cens(p.score, cens)
 
@@ -1076,9 +1090,7 @@ weightit2cbps.multi <- function(covs, treat, s.weights, estimand, focal, subset,
     par_out <- out$par
   }
 
-  if (!isTRUE(all.equal(out$converge, 0))) {
-    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
-  }
+  .check_cbps_converged(out, over)
 
   pp <- get_pp(par_out, mod_covs)
 
@@ -1332,9 +1344,7 @@ weightit2cbps.cont <- function(covs, treat, s.weights, subset, missing, verbose,
     par_out <- out$par
   }
 
-  if (!isTRUE(all.equal(out$converge, 0))) {
-    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
-  }
+  .check_cbps_converged(out, over)
 
   un_s2 <- exp(par_out[1L])
   un_p <- par_out[2L]
@@ -1427,20 +1437,35 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       },
       `multi-category` =,
       multinomial = factor(treat.list[[i]]),
-      censoring = .make_cens_treat(treat.list[[i]]),
       continuous = {
         #Scaled among the units under observation, the sample the conditions use
         z <- treat.list[[i]]
         z[r] <- scale_w(z[r], s.weights[r])
         unclass(z)
-      }
+      },
+      censoring = .make_cens_treat(treat.list[[i]])
     )
 
     for (j in seq_col(covs_i)) {
       covs_i[, j] <- scale_w(covs_i[, j], s.weights[r])
     }
 
-    covs_i <- cbind(`(Intercept)` = 1, scale(svd(covs_i)$u))
+    #A time point with no covariates (an empty formula) contributes only the
+    #intercept condition, i.e., that the weighted marginal treatment or censoring
+    #probability match its unweighted counterpart. `svd()` cannot be called on a
+    #zero-column matrix, and there is nothing for it to orthogonalize anyway. The
+    #intercept-only shortcut `weightit.fit()` takes for a covariate-free model is not
+    #available here, since one set of weights is estimated for all time points at
+    #once and a single empty formula cannot stand in for the whole problem.
+    covs_i <- {
+      if (ncol(covs_i) == 0L) {
+        matrix(1, nrow = nrow(covs_i), ncol = 1L,
+               dimnames = list(NULL, "(Intercept)"))
+      }
+      else {
+        cbind(`(Intercept)` = 1, scale(svd(covs_i)$u))
+      }
+    }
 
     #Scattered back with zeros outside the risk set, so those units contribute
     #nothing to this time point's balance condition. Every closure below relies on
@@ -1488,10 +1513,10 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     coef_ind[[i]] <- length(unlist(coef_ind)) + switch(
       treat.types[i],
       binary = seq_col(covs.list[[i]]),
-      censoring = if (degenerate[i]) integer() else seq_col(covs.list[[i]]),
       `multi-category` =,
       multinomial = seq_len((nlevels(treat.list[[i]]) - 1L) * ncol(covs.list[[i]])),
-      continuous = seq_len(3L + ncol(covs.list[[i]]))
+      continuous = seq_len(3L + ncol(covs.list[[i]])),
+      censoring = if (degenerate[i]) integer() else seq_col(covs.list[[i]])
     )
   }
 
@@ -1561,9 +1586,6 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
       }
 
       get_psi_bal[[i]] <- function(w, B, X, A, SW) {
-        #`levels(A)`, not `levels(treat.list[[i]])`: `i` is resolved lazily when
-        #this closure runs, at which point the enclosing loop has finished and `i`
-        #refers to the last time point
         do.call("cbind", lapply(utils::combn(levels(A), 2L, simplify = FALSE), function(co) {
           #Rows outside the risk set have `X == 0`; the indicators below are FALSE
           #rather than NA there, so their contribution is exactly 0
@@ -1577,76 +1599,6 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
         .multinom_weightit.fit(X[ar, , drop = FALSE], droplevels(A[ar]), hess = FALSE,
                                weights = SW[ar])$coefficients
-      }
-    }
-    else if (treat.types[i] == "censoring" && degenerate[i]) {
-      #No unit under observation is censored here, so this time point contributes a
-      #weight factor of exactly 1 and no parameters or conditions.
-      get_p[[i]] <- function(B, X, A) {
-        rep.int(0, length(A))
-      }
-
-      get_w[[i]] <- function(p, A, B) {
-        rep.int(1, length(A))
-      }
-
-      get_psi_bal[[i]] <- function(w, B, X, A, SW) {
-        matrix(0, nrow = length(A), ncol = 0L)
-      }
-
-      get_par_glm[[i]] <- function(X, A, SW) {
-        numeric()
-      }
-    }
-    else if (treat.types[i] == "censoring") {
-      get_p[[i]] <- function(B, X, A) {
-        plogis(drop(X %*% B))
-      }
-
-      get_w[[i]] <- function(p, A, B) {
-        #1 outside the risk set, 1/P(C = 0 | X) for the units still under
-        #observation, and exactly 0 for those censored at this time point -- so the
-        #cumulative product is 0 for every censored unit from here on
-        w <- rep.int(1, length(A))
-
-        ar <- !is.na(A)
-        u <- ar & A == 0
-
-        w[u] <- 1 / (1 - p[u])
-        w[ar & A == 1] <- 0
-
-        w
-      }
-
-      get_psi_bal[[i]] <- function(w, B, X, A, SW) {
-        #This time point's censoring factor must make the units still under
-        #observation reproduce the covariate totals of the whole risk set:
-        #
-        #  sum_{i in R_t} SW_i [(1 - C_ti)/(1 - e_t(X_ti)) - 1] X_ti = 0
-        #
-        #Note this uses the censoring factor rather than the cumulative weight
-        #`w`. With the cumulative weight, the intercept row would instead demand
-        #that the *total* weights average 1 over the risk set, which directly
-        #contradicts the treatment conditions (whose weights do not average 1) and
-        #leaves the system unsolvable. The treatment conditions still use the
-        #cumulative weight, so they account for censoring; that is what makes this
-        #simultaneous rather than a product of separate fits.
-        ar <- !is.na(A)
-
-        p <- plogis(drop(X %*% B))
-
-        wc <- rep.int(1, length(A))
-        wc[ar] <- (1 - A[ar]) / (1 - p[ar])
-
-        #Outside the risk set `wc == 1` and `X == 0`, so those rows contribute 0
-        SW * (wc - 1) * X
-      }
-
-      get_par_glm[[i]] <- function(X, A, SW) {
-        ar <- !is.na(A)
-
-        glm.fit(X[ar, , drop = FALSE], A[ar], family = quasibinomial(),
-                weights = SW[ar])$coefficients
       }
     }
     else if (treat.types[i] == "continuous") {
@@ -1705,6 +1657,78 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
         b <- c(0, 0, log(var(init.fit$residuals)), init.fit$coefficients)
         names(b)[1:3] <- c("log(s^2)", "E[A]", "log(s_r^2)")
         b
+      }
+    }
+    else if (treat.types[i] == "censoring") {
+      if (degenerate[i]) {
+        #No unit under observation is censored here, so this time point contributes a
+        #weight factor of exactly 1 and no parameters or conditions.
+        get_p[[i]] <- function(B, X, A) {
+          rep.int(0, length(A))
+        }
+
+        get_w[[i]] <- function(p, A, B) {
+          rep.int(1, length(A))
+        }
+
+        get_psi_bal[[i]] <- function(w, B, X, A, SW) {
+          matrix(0, nrow = length(A), ncol = 0L)
+        }
+
+        get_par_glm[[i]] <- function(X, A, SW) {
+          numeric()
+        }
+      }
+      else {
+        get_p[[i]] <- function(B, X, A) {
+          plogis(drop(X %*% B))
+        }
+
+        get_w[[i]] <- function(p, A, B) {
+          #1 outside the risk set, 1/P(C = 0 | X) for the units still under
+          #observation, and exactly 0 for those censored at this time point -- so the
+          #cumulative product is 0 for every censored unit from here on
+          w <- rep.int(1, length(A))
+
+          ar <- !is.na(A)
+          u <- ar & A == 0
+
+          w[u] <- 1 / (1 - p[u])
+          w[ar & A == 1] <- 0
+
+          w
+        }
+
+        get_psi_bal[[i]] <- function(w, B, X, A, SW) {
+          #This time point's censoring factor must make the units still under
+          #observation reproduce the covariate totals of the whole risk set:
+          #
+          #  sum_{i in R_t} SW_i [(1 - C_ti)/(1 - e_t(X_ti)) - 1] X_ti = 0
+          #
+          #Note this uses the censoring factor rather than the cumulative weight
+          #`w`. With the cumulative weight, the intercept row would instead demand
+          #that the *total* weights average 1 over the risk set, which directly
+          #contradicts the treatment conditions (whose weights do not average 1) and
+          #leaves the system unsolvable. The treatment conditions still use the
+          #cumulative weight, so they account for censoring; that is what makes this
+          #simultaneous rather than a product of separate fits.
+          ar <- !is.na(A)
+
+          p <- plogis(drop(X %*% B))
+
+          wc <- rep.int(1, length(A))
+          wc[ar] <- (1 - A[ar]) / (1 - p[ar])
+
+          #Outside the risk set `wc == 1` and `X == 0`, so those rows contribute 0
+          SW * (wc - 1) * X
+        }
+
+        get_par_glm[[i]] <- function(X, A, SW) {
+          ar <- !is.na(A)
+
+          glm.fit(X[ar, , drop = FALSE], A[ar], family = quasibinomial(),
+                  weights = SW[ar])$coefficients
+        }
       }
     }
   }
@@ -1784,7 +1808,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
           matrix(0, nrow = length(A), ncol = 0L)
         }
       }
-      else if (treat.types[i] %in% c("binary", "censoring")) {
+      else if (treat.types[i] %in% c("binary", "continuous", "censoring")) {
         get_psi_glm[[i]] <- function(p, X, A, SW) {
           A[is.na(A)] <- 0
 
@@ -1796,13 +1820,6 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
           do.call("cbind", lapply(levels(A), function(a) {
             SW * ((!is.na(A) & A == a) - p[, a]) * X
           }))
-        }
-      }
-      else if (treat.types[i] == "continuous") {
-        get_psi_glm[[i]] <- function(p, X, A, SW) {
-          A[is.na(A)] <- 0
-
-          SW * (A - p) * X
         }
       }
     }
@@ -1869,9 +1886,7 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
     par_out <- out$par
   }
 
-  if (!isTRUE(all.equal(out$converge, 0))) {
-    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
-  }
+  .check_cbps_converged(out, over)
 
   w <- Reduce("*", lapply(seq_along(treat.list), function(i) {
     Bi <- par_out[coef_ind[[i]]]
@@ -1883,4 +1898,34 @@ weightitMSM2cbps <- function(covs.list, treat.list, s.weights, subset, missing, 
 
   list(w = w, fit.obj = out,
        Mparts = Mparts)
+}
+
+#Convergence check shared by every `method = "cbps"` fitting function.
+#
+#`optim()`'s `convergence` flag only reports whether it hit its iteration limit or a
+#line-search failure; it says nothing about whether the estimating equations were
+#actually solved. With `over = FALSE` the system is exactly identified, so `obj_bal()` --
+#the Euclidean norm of the mean estimating function -- must be ~0 at a solution, and BFGS
+#can stop at a stationary point where it is not while still reporting `convergence == 0`.
+#Without this check that stall is invisible and the returned weights simply do not
+#balance the covariates.
+#
+#An absolute tolerance is meaningful because the objective is built on standardized
+#quantities: the treatment goes through `scale_w()` and the covariates through
+#`scale(svd(covs)$u)`, so every component of the mean estimating function is O(1). The
+#observed split is wide -- a solved system lands between 1e-16 and 1e-10 and a stalled one
+#at 1e-3 or above -- so 1e-5 separates the two by orders of magnitude in both directions.
+#It is also the threshold already used to accept a `multiroot()` root.
+#
+#`over = TRUE` is excluded: the objective is then the inverse-variance-weighted GMM
+#criterion for an over-identified system, which has no reason to reach 0.
+.check_cbps_converged <- function(out, over = FALSE, tol = 1e-5) {
+  if (!isTRUE(all.equal(out$convergence, 0))) {
+    arg::wrn("the optimization failed to converge; try again with a higher value of {.arg maxit}")
+
+  }
+  else if (!over && is_number(out$value) && out$value > tol) {
+    arg::wrn(c("The covariate balancing conditions could not be solved, so the covariates will not be exactly balanced.",
+               "i" = "The optimizer reached a stationary point at which the conditions are still unmet, which usually means they have no solution for this sample rather than that it stopped early. Assess the balance that was achieved (e.g., with {.fun cobalt::bal.tab})."))
+  }
 }
