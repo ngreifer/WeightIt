@@ -395,7 +395,9 @@
       }
 
       H_out_treat <- {
-        if (is_not_null(dw_dBtreat)) {
+        #The shortcut requires the outcome score to be linear in the weights, which
+        #the bias-reducing adjustment is not
+        if (is_not_null(dw_dBtreat) && !isTRUE(fit[["br"]])) {
           crossprod(psi_out(bout, 1, Y, Xout, SW, offset),
                     dw_dBtreat(btreat, Xtreat, A, SW))
         }
@@ -447,7 +449,9 @@
         }
       }
 
-      if (all(lengths(dw_dBtreat.list) > 0L)) {
+      #The shortcut requires the outcome score to be linear in the weights, which the
+      #bias-reducing adjustment is not
+      if (all(lengths(dw_dBtreat.list) > 0L) && !isTRUE(fit[["br"]])) {
         w.list <- c(lapply(seq_along(btreat.list), function(i) {
           wfun.list[[i]](btreat.list[[i]], Xtreat.list[[i]], A.list[[i]])
         }), list(rep_with(1, A.list[[1L]])))
@@ -1095,6 +1099,8 @@
                                             rlang::fn_fmls_names(stats::glm.control)))] <- NULL
   }
   else if (model == "ordinal") {
+    arg::arg_flag(br)
+
     model_call[[1L]] <- .ordinal_weightit
     model_call[setdiff(names(model_call), rlang::fn_fmls_names(.ordinal_weightit))] <- NULL
 
@@ -1106,8 +1112,11 @@
     model_call$model <- TRUE
     model_call$hess <- vcov %nin% c("none", "BS", "FWB")
     model_call$na.action <- .na_zero_weight
+    model_call$br <- br
   }
   else if (model == "multinom") {
+    arg::arg_flag(br)
+
     model_call[[1L]] <- .multinom_weightit
     model_call[setdiff(names(model_call), rlang::fn_fmls_names(.multinom_weightit))] <- NULL
 
@@ -1119,6 +1128,7 @@
     model_call$model <- TRUE
     model_call$hess <- vcov %nin% c("none", "BS", "FWB")
     model_call$na.action <- .na_zero_weight
+    model_call$br <- br
   }
   else if (model == "coxph") {
     model_call[[1L]] <- .coxph_weightit
@@ -1199,6 +1209,18 @@
   }
 
   Xout[, !aliased_cols, drop = FALSE]
+}
+
+# Inverts the expected information matrix used by the bias-reducing adjustment in
+# `multinom_weightit()` and `ordinal_weightit()`
+.solve_info <- function(info) {
+  out <- try(solve(info), silent = TRUE)
+
+  if (null_or_error(out)) {
+    arg::err("the information matrix could not be inverted, which is required for bias-reduced estimation. This indicates an estimation failure, possibly due to a model that is too complex. Simplifying the model can sometimes help")
+  }
+
+  out
 }
 
 .solve_hessian <- function(h, ..., model = "out") {

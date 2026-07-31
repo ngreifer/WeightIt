@@ -19,6 +19,7 @@ multinom_weightit(
   y = TRUE,
   contrasts = NULL,
   fwb.args = list(),
+  br = FALSE,
   ...
 )
 }
@@ -80,6 +81,12 @@ See \code{\link[=model.matrix]{model.matrix()}}.}
 \item{fwb.args}{an optional list of further arguments to supply to
 \pkgfun{fwb}{fwb} when \code{vcov = "FWB"}.}
 
+\item{br}{\code{logical}; whether to use mean bias reduction, i.e., to solve the
+bias-reducing adjusted score equations of Firth (1993) rather than the score
+equations. This yields estimates with smaller asymptotic bias that are always
+finite, even when the maximum likelihood estimates are not (e.g., under
+separation). Default is \code{FALSE}. See Details.}
+
 \item{...}{arguments to be used to form the default control argument if it
 is not supplied directly.}
 }
@@ -108,7 +115,7 @@ custom function in \pkg{WeightIt} that optionally computes a coefficient varianc
 account for estimation of the weights if a \code{weightit} or \code{weightitMSM} object
 is supplied to the \code{weightit} argument. This implementation is less robust to
 failures than other multinomial logistic regression solvers and should be
-used with caution. Estimation of coefficients should align with that from
+used with caution. Unless \code{br = TRUE}, estimation of coefficients should align with that from
 \code{mlogit::mlogit()} and \code{mclogit::mblogit()} but might differ from \code{nnet::multinom()} due to the relaxed convergence thresholds of the latter.
 
 When no argument is supplied to
@@ -137,6 +144,28 @@ error if it doesn't). Setting \code{vcov = "FWB"} and supplying \code{fwb.args =
 also performs the resampling-based bootstrap but
 with the additional features \pkg{fwb} provides (e.g., a progress bar and
 parallelization).
+\subsection{Bias reduction}{
+
+When \code{br = TRUE}, the coefficients solve the bias-reducing adjusted score
+equations of Firth (1993) instead of the score equations, which removes the
+first-order term in the asymptotic bias of the estimates. Because the
+multinomial logistic regression model uses the canonical link, the adjusted
+score function is the gradient of the log-likelihood penalized by the Jeffreys
+invariant prior, \eqn{\log|F(\beta)|/2}, where \eqn{F(\beta)} is the expected
+information matrix (Kosmidis & Firth, 2011). Consequently, the estimates are
+always finite and correspond to the maximum of a penalized likelihood.
+Estimation should align with that from \pkgfun{brglm2}{brmultinom} with its
+default \code{type = "AS_mean"}.
+
+Weights are treated as multinomial totals, as they are by \pkg{brglm2}, which
+makes the estimates invariant to whether the data are supplied as individual
+units or as groups of identical units with weights equal to their counts. As
+for \code{br = TRUE} in \code{\link[=glm_weightit]{glm_weightit()}}, the reported variance matrix uses the
+information matrix at the estimates rather than the Jacobian of the adjusted
+score, i.e., the adjustment is treated as fixed; the two differ by a term that
+vanishes asymptotically. M-estimation and bootstrapping can be used with
+\code{br = TRUE} just as they can without it.
+}
 }
 \examples{
 data("lalonde", package = "cobalt")
@@ -156,6 +185,22 @@ fit <- multinom_weightit(re78_3 ~ treat,
                          weightit = w.out)
 
 summary(fit)
+
+# Same model using mean bias reduction
+fit_br <- multinom_weightit(re78_3 ~ treat,
+                            data = lalonde,
+                            weightit = w.out,
+                            br = TRUE)
+
+summary(fit_br)
+}
+\references{
+Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+\emph{Biometrika}, 80(1), 27–38. \doi{10.1093/biomet/80.1.27}
+
+Kosmidis, I., & Firth, D. (2011). Multinomial logit bias reduction via the
+Poisson log-linear model. \emph{Biometrika}, 98(3), 755–759.
+\doi{10.1093/biomet/asr026}
 }
 \seealso{
 \itemize{
@@ -163,5 +208,6 @@ summary(fit)
 \item \code{\link[=ordinal_weightit]{ordinal_weightit()}} for fitting ordinal regression models that adjust for estimation of the weights.
 \item \code{\link[=coxph_weightit]{coxph_weightit()}} for fitting Cox proportional hazards models that adjust for estimation of the weights.
 \item \pkgfun{mclogit}{mblogit} for fitting multinomial regression models that do not account for estimation of the weights.
+\item \pkgfun{brglm2}{brmultinom} for fitting bias-reduced multinomial regression models that do not account for estimation of the weights.
 }
 }

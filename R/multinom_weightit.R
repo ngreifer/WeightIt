@@ -6,6 +6,11 @@
 #' @inheritParams glm_weightit
 #' @param link a string corresponding to the desired link function. Currently, only
 #'   `"logit"` is allowed.
+#' @param br `logical`; whether to use mean bias reduction, i.e., to solve the
+#'   bias-reducing adjusted score equations of Firth (1993) rather than the score
+#'   equations. This yields estimates with smaller asymptotic bias that are always
+#'   finite, even when the maximum likelihood estimates are not (e.g., under
+#'   separation). Default is `FALSE`. See Details.
 #'
 #' @returns
 #' A `multinom_weightit` object.
@@ -29,7 +34,7 @@
 #' account for estimation of the weights if a `weightit` or `weightitMSM` object
 #' is supplied to the `weightit` argument. This implementation is less robust to
 #' failures than other multinomial logistic regression solvers and should be
-#' used with caution. Estimation of coefficients should align with that from
+#' used with caution. Unless `br = TRUE`, estimation of coefficients should align with that from
 #' `mlogit::mlogit()` and `mclogit::mblogit()` but might differ from `nnet::multinom()` due to the relaxed convergence thresholds of the latter.
 #'
 #' When no argument is supplied to
@@ -59,11 +64,42 @@
 #' with the additional features \pkg{fwb} provides (e.g., a progress bar and
 #' parallelization).
 #'
+#' ## Bias reduction
+#'
+#' When `br = TRUE`, the coefficients solve the bias-reducing adjusted score
+#' equations of Firth (1993) instead of the score equations, which removes the
+#' first-order term in the asymptotic bias of the estimates. Because the
+#' multinomial logistic regression model uses the canonical link, the adjusted
+#' score function is the gradient of the log-likelihood penalized by the Jeffreys
+#' invariant prior, \eqn{\log|F(\beta)|/2}, where \eqn{F(\beta)} is the expected
+#' information matrix (Kosmidis & Firth, 2011). Consequently, the estimates are
+#' always finite and correspond to the maximum of a penalized likelihood.
+#' Estimation should align with that from \pkgfun{brglm2}{brmultinom} with its
+#' default `type = "AS_mean"`.
+#'
+#' Weights are treated as multinomial totals, as they are by \pkg{brglm2}, which
+#' makes the estimates invariant to whether the data are supplied as individual
+#' units or as groups of identical units with weights equal to their counts. As
+#' for `br = TRUE` in [glm_weightit()], the reported variance matrix uses the
+#' information matrix at the estimates rather than the Jacobian of the adjusted
+#' score, i.e., the adjustment is treated as fixed; the two differ by a term that
+#' vanishes asymptotically. M-estimation and bootstrapping can be used with
+#' `br = TRUE` just as they can without it.
+#'
 #' @seealso
 #' * [glm_weightit()] for fitting generalized linear models that adjust for estimation of the weights.
 #' * [ordinal_weightit()] for fitting ordinal regression models that adjust for estimation of the weights.
 #' * [coxph_weightit()] for fitting Cox proportional hazards models that adjust for estimation of the weights.
 #' * \pkgfun{mclogit}{mblogit} for fitting multinomial regression models that do not account for estimation of the weights.
+#' * \pkgfun{brglm2}{brmultinom} for fitting bias-reduced multinomial regression models that do not account for estimation of the weights.
+#'
+#' @references
+#' Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+#' *Biometrika*, 80(1), 27–38. \doi{10.1093/biomet/80.1.27}
+#'
+#' Kosmidis, I., & Firth, D. (2011). Multinomial logit bias reduction via the
+#' Poisson log-linear model. *Biometrika*, 98(3), 755–759.
+#' \doi{10.1093/biomet/asr026}
 #'
 #' @examples
 #' data("lalonde", package = "cobalt")
@@ -83,6 +119,14 @@
 #'                          weightit = w.out)
 #'
 #' summary(fit)
+#'
+#' # Same model using mean bias reduction
+#' fit_br <- multinom_weightit(re78_3 ~ treat,
+#'                             data = lalonde,
+#'                             weightit = w.out,
+#'                             br = TRUE)
+#'
+#' summary(fit_br)
 
 #' @export
 multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
@@ -90,7 +134,8 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
                               offset, start = NULL,
                               control = list(...),
                               x = FALSE, y = TRUE,
-                              contrasts = NULL, fwb.args = list(), ...) {
+                              contrasts = NULL, fwb.args = list(),
+                              br = FALSE, ...) {
 
   vcov <- .process_vcov(vcov, weightit, R, fwb.args)
 
@@ -111,10 +156,13 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
     arg::err("{.arg family} cannot be used with {.fun multinom_weightit}")
   }
 
+  arg::arg_flag(br)
+
   internal_model_call <- .build_internal_model_call(model = "multinom",
                                                     model_call = model_call,
                                                     weightit = weightit,
-                                                    vcov = vcov)
+                                                    vcov = vcov,
+                                                    br = br)
 
   fit <- .eval_fit(internal_model_call,
                    errors = c("missing values in object" = "missing values are not allowed in the model variables"),
@@ -122,6 +170,8 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
   fit$family <- list(family = "multinomial",
                      link = "logit")
+
+  fit$br <- br
   ###
 
   # Class must be assigned before `.compute_vcov()`, which dispatches on it
@@ -134,13 +184,86 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
   fit
 }
 
+# Expected information matrix of a multinomial logistic regression model, with
+# (k, l) blocks sum_i w_i p_ik (1{k == l} - p_il) x_i x_i'. Blocks are ordered by
+# category, matching the ordering of the coefficients.
+.multinom_info <- function(X, P, weights) {
+  K <- ncol(P) - 1L
+  p <- ncol(X)
+
+  P <- squish(P, lo = 1e-12, hi = 1)
+
+  out <- sq_matrix(0, n = K * p)
+
+  for (k in seq_len(K)) {
+    k_ind <- (k - 1L) * p + seq_len(p)
+
+    for (l in seq_len(k)) {
+      s <- {
+        if (l == k) P[, k + 1L] * (1 - P[, k + 1L])
+        else -P[, k + 1L] * P[, l + 1L]
+      }
+
+      blk <- crossprod(X, X * (s * weights))
+
+      l_ind <- (l - 1L) * p + seq_len(p)
+
+      out[k_ind, l_ind] <- blk
+      out[l_ind, k_ind] <- t(blk)
+    }
+  }
+
+  out
+}
+
+# Bias-reducing adjustment to the multinomial "counts" 1{y_i == k} (returned as an
+# n x K matrix). Because the multinomial logit model uses the canonical link, the
+# bias-reducing adjusted score function (Firth, 1993) is the gradient of the
+# Jeffreys-prior-penalized log-likelihood l(B) + log|F(B)| / 2, which works out to
+#     c_i = S_i (diag(G_i) - 2 G_i p_i) / 2
+# where p_i contains the K non-baseline category probabilities,
+# S_i = diag(p_i) - p_i p_i' is the Jacobian of p_i with respect to the linear
+# predictors, and G_i = Z_i F^{-1} Z_i' is their asymptotic covariance matrix.
+.multinom_br_counts <- function(X, P, weights) {
+  K <- ncol(P) - 1L
+  p <- ncol(X)
+
+  Finv <- .solve_info(.multinom_info(X, P, weights))
+
+  pp <- P[, -1L, drop = FALSE]
+
+  # G_i %*% p_i and diag(G_i)
+  Gp <- gd <- matrix(0, nrow(X), K)
+
+  for (l in seq_len(K)) {
+    l_ind <- (l - 1L) * p + seq_len(p)
+
+    for (mm in seq_len(K)) {
+      m_ind <- (mm - 1L) * p + seq_len(p)
+
+      G_lm <- rowSums((X %*% Finv[l_ind, m_ind, drop = FALSE]) * X)
+
+      Gp[, l] <- Gp[, l] + G_lm * pp[, mm]
+
+      if (mm == l) {
+        gd[, l] <- G_lm
+      }
+    }
+  }
+
+  u <- pp * (gd - 2 * Gp)
+
+  .5 * (u - pp * rowSums(u))
+}
+
 # Multinomial logistic regression
 .multinom_weightit.fit <- function(x, y, weights = NULL, offset = NULL, start = NULL,
-                                   hess = TRUE, control = list(), ...) {
+                                   hess = TRUE, control = list(), br = FALSE, ...) {
   arg::arg_atomic(y)
   y <- as.factor(y)
   arg::arg_numeric(x)
   arg::arg_matrix(x)
+  arg::arg_flag(br)
 
   if (is_null(colnames(x))) {
     colnames(x) <- paste0("x", seq_col(x))
@@ -193,12 +316,25 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
     pp
   }
 
-  #Multinomial logistic regression score
+  #Multinomial logistic regression score, with the bias-reducing adjustment to the
+  #counts added when `br = TRUE`
   psi <- function(B, X, y, weights, offset = NULL) {
     pp <- get_pp(B, X, offset)
 
-    out <- do.call("cbind", lapply(levels(y)[-1L], function(i) {
-      weights * ((y == i) - pp[, i]) * X
+    cc <- {
+      if (br) .multinom_br_counts(X, pp, weights)
+      else NULL
+    }
+
+    lev <- levels(y)[-1L]
+
+    out <- do.call("cbind", lapply(seq_along(lev), function(i) {
+      adj <- {
+        if (is_null(cc)) 0
+        else cc[, i]
+      }
+
+      weights * ((y == lev[i]) - pp[, lev[i]] + adj) * X
     }))
 
     if (is_not_null(names(B))) {
@@ -214,10 +350,19 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
   ind_mat <- cbind(seq_along(y), as.integer(y))
 
+  #When `br = TRUE`, the objective is the Jeffreys-prior-penalized log-likelihood,
+  #whose gradient is the bias-reducing adjusted score computed by `psi()`
   ll <- function(B, X, y, weights, offset) {
-    p <- get_pp(B, X, offset)[ind_mat]
+    pp <- get_pp(B, X, offset)
 
-    sum(weights * log(p))
+    out <- sum(weights * log(pp[ind_mat]))
+
+    if (br) {
+      out <- out + .5 * as.numeric(determinant(.multinom_info(X, pp, weights),
+                                               logarithm = TRUE)$modulus)
+    }
+
+    out
   }
 
   m_control <- list(fnscale = -1, #maximize likelihood; optim() minimizes by default
@@ -258,7 +403,8 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
               x = x,
               y = y,
               weights = weights,
-              gradient = grad)
+              gradient = grad,
+              br = br)
 
   if (hess) {
     hessian <- sq_matrix(NA_real_, n = sum(!aliased_B),
@@ -287,12 +433,13 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
 .multinom_weightit <- function(formula, data, weights, subset, start = NULL, na.action,
                                hess = TRUE, control = list(), model = TRUE,
-                               x = FALSE, y = TRUE, contrasts = NULL, ...) {
+                               x = FALSE, y = TRUE, contrasts = NULL, br = FALSE, ...) {
   cal <- match.call()
 
   arg::arg_supplied(formula)
   arg::arg_formula(formula, one_sided = FALSE)
   arg::arg_flag(hess)
+  arg::arg_flag(br)
   arg::arg_flag(model)
   arg::arg_flag(x)
   arg::arg_flag(y)
@@ -345,7 +492,7 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
   fit <- eval(call(".multinom_weightit.fit",
                    x = X, y = Y, weights = weights,
                    offset = offset, start = start,
-                   hess = hess, control = control))
+                   hess = hess, control = control, br = br))
 
   if (model) fit$model <- mf
   fit$na.action <- .attr(mf, "na.action")

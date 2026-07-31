@@ -27,6 +27,12 @@ WeightIt News and Updates
 
 ## Other new features
 
+* `multinom_weightit()` and `ordinal_weightit()` gain a `br` argument, which, when set to `TRUE`, performs mean bias reduction by solving the bias-reducing adjusted score equations of Firth (1993) instead of the score equations. This yields estimates with smaller asymptotic bias that are always finite, even when the maximum likelihood estimates are not (e.g., under separation or when an end category of an ordinal outcome is unobserved). This mirrors `br` in `glm_weightit()` but uses in-house implementations rather than `brglm2`, so it requires no additional dependencies and composes with M-estimation, cluster-robust standard errors, and bootstrapping.
+
+  For `multinom_weightit()`, the adjustment is that of Kosmidis and Firth (2011); because the model uses the canonical link, the adjusted score is the gradient of the log-likelihood penalized by the Jeffreys invariant prior, and estimates align with `brglm2::brmultinom()`. For `ordinal_weightit()`, the adjustment is the one derived for cumulative link models by Kosmidis (2014) and works for all supported links; the adjusted score equations are solved by quasi-Fisher scoring, controlled by the new `br.maxit` and `br.tol` components of `control`. Note this differs from `brglm2::bracl()`, which fits an adjacent category logit model rather than a cumulative link model (including with `parallel = TRUE`, which constrains the adjacent category logits rather than the cumulative ones to be parallel). In both cases, weights are treated as multinomial totals, so estimates are invariant to whether the data are supplied one row per unit or as weighted groups of identical units.
+
+* With `method = "glm"` and a multi-category treatment, bias-reduced propensity score models are now fit by `WeightIt` itself rather than by `brglm2`. A `br.` prefix on `link` requests mean bias reduction, as before, but it is now handled by `multinom_weightit()`'s and `ordinal_weightit()`'s machinery: `multi.method = "weightit"` accepts `"br.logit"` for unordered treatments and any of `"br.logit"`, `"br.probit"`, `"br.loglog"`, `"br.cloglog"`, and `"br.cauchit"` for ordered ones. Because `MASS::polr()` cannot fit bias-reduced models, supplying a `br.` link with `multi.method = "polr"` uses the `WeightIt` implementation as well. The practical gain is that M-estimation-based standard errors are now available for bias-reduced propensity score models, which they were not when `brglm2` did the fitting; `brglm2` is also no longer needed for this.
+
 * M-estimation-based standard errors are now available when `by` is supplied to `weightit()` and `weightitMSM()`. Previously, specifying `by` omitted the M-estimation components entirely; now the per-stratum components are combined so that `glm_weightit()` and friends produce standard errors asymptotically equivalent to those from estimating the weights from a single model in which the `by` variable is fully interacted with all the covariates (at all time points for `weightitMSM()`). This works for methods that support M-estimation and composes with `stabilize`.
 
 * `link = "softplus"` can be used with `method = "cbps"` and `method = "ipt"` to use the softplus link.
@@ -48,8 +54,15 @@ WeightIt News and Updates
 * `nobs()` on a `coxph_weightit` object now returns the number of units contributing to the fit (i.e., those with a nonzero weight), consistent with the other `*_weightit()` methods. Previously the method was defined but never registered, so dispatch fell through to `survival:::nobs.coxph()`, which returns the number of *events*. `AIC()` and `BIC()` are unaffected, as they read the `"nobs"` attribute that `logLik()` carries, but the residual degrees of freedom reported by `anova()` change accordingly.
 
 * Passing `family = "multinomial"` to `glm_weightit()` now results in an error. Previously it would route the input to `multinom_weightit()`.
+* `multi.method = "brmultinom"` and `multi.method = "bracl"` in `weightit()` with `method = "glm"` are deprecated. They are accepted with a warning and now use the equivalent in-house bias-reduced fitters. Note the estimated propensity scores change for the former `"bracl"`: `brglm2::bracl()` fits an adjacent category logit model, whereas `ordinal_weightit()` fits a cumulative link (proportional odds) model.
+
+* For ordered multi-category treatments with `method = "glm"` and `multi.method = "weightit"`, the `link` argument no longer accepts `"identity"`, `"log"`, or `"clog"`. These were listed as allowable but always errored, since `ordinal_weightit()` does not implement them.
 
 ## Bug fixes
+
+* Fixed a bug in `ordinal_weightit()` with `link = "loglog"` that made the gradient and every robust variance matrix `NaN`. The `"loglog"` `mu.eta()` function evaluated to `NaN` rather than 0 at a linear predictor of `-Inf`, which is where the lowest threshold sits.
+
+* When `br = TRUE` in `glm_weightit()` and a `weightit` object supplying M-estimation components is used, the derivative of the outcome score with respect to the weighting model's coefficients is now computed by numeric differentiation. It previously used a shortcut that assumes the outcome score is linear in the weights, which the bias-reducing adjustment is not. Standard errors change slightly.
 
 * Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could cause the FISTA solver to stop before the requested balance tolerance was reliably achieved. Thanks to Ivan Geshev for pointing it out.
 

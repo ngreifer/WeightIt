@@ -2370,7 +2370,9 @@ generalized_inverse <- function(sigma, .try = TRUE) {
     linkfun <- function(mu) -log(-log(mu))
     linkinv <- function(eta) exp(-exp(-eta)) |> squish(.Machine$double.eps, Inf)
     mu.eta <- function(eta) {
-      eta <- squish(eta, -Inf, 700)
+      #Bounded below as well as above; at `eta = -Inf` the unbounded expression
+      #would be `exp(Inf - Inf)`, i.e., `NaN`
+      eta <- squish(eta, -700, 700)
       exp(-eta - exp(-eta)) |> squish(.Machine$double.eps, Inf)
     }
     valideta <- function(eta) TRUE
@@ -2395,6 +2397,63 @@ generalized_inverse <- function(sigma, .try = TRUE) {
               name = name)
   class(out) <- "link-glm"
   out
+}
+
+#Second derivative of the inverse link function, d2G(eta)/deta2. Needed for the
+#bias-reducing adjustment in cumulative link models, which depends on the
+#curvature of the inverse link (Kosmidis, 2014). `link` can be a string or a
+#"link-glm" object; links not recognized by name are differentiated numerically.
+.make_d2mu.deta <- function(link) {
+  if (rlang::is_string(link)) {
+    name <- link
+    link <- .make_link(link)
+  }
+  else {
+    name <- link[["name"]] %or% link[["link"]] %or% ""
+  }
+
+  #Linear predictors are bounded to keep intermediate quantities finite; beyond
+  #these bounds the second derivative is 0 to machine precision for all links
+  b <- function(eta) squish(eta, -700, 700)
+
+  switch(name,
+         logit = function(eta) {
+           p <- plogis(eta)
+           p * (1 - p) * (1 - 2 * p)
+         },
+         probit = function(eta) {
+           eta <- b(eta)
+           -eta * dnorm(eta)
+         },
+         cloglog = function(eta) {
+           eta <- b(eta)
+           #exp(-e) * e written as exp(-e + eta) to avoid overflow times underflow
+           (1 - exp(eta)) * exp(eta - exp(eta))
+         },
+         loglog = function(eta) {
+           eta <- b(eta)
+           (exp(-eta) - 1) * exp(-eta - exp(-eta))
+         },
+         cauchit = function(eta) {
+           eta <- b(eta)
+           -2 * eta / (pi * (1 + eta^2)^2)
+         },
+         identity = function(eta) rep_with(0, eta),
+         log = function(eta) exp(eta),
+         {
+           .mu.eta <- link[["mu.eta"]]
+
+           if (!is.function(.mu.eta)) {
+             arg::err("the supplied link must have a {.field mu.eta} component")
+           }
+
+           function(eta) {
+             eta <- b(eta)
+             eps <- squish(1e-6 * abs(eta), lo = 1e-6, hi = Inf)
+
+             (.mu.eta(eta + eps) - .mu.eta(eta - eps)) / (2 * eps)
+           }
+         })
 }
 
 .get_glm_starting_values <- function(X, Y, w, family, offset = NULL) {

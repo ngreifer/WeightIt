@@ -374,14 +374,6 @@ test_that("Ordinal treatment", {
 
   expect_M_parts_okay(W0, tolerance = eps)
 
-  # expect_no_condition({
-  #   W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
-  #                  data = test_data, method = "glm", estimand = "ATE",
-  #                 link = "br.logit", parallel = TRUE,
-  #                 include.obj = TRUE)
-  # })
-  # expect_failure(expect_M_parts_okay(W))
-
   expect_no_condition({
     W <- weightit(Ao ~ X1 + X2 + X3 + X4 + X5 + X6 + X7 + X8 + X9,
                   data = test_data, method = "glm", estimand = "ATE",
@@ -390,4 +382,94 @@ test_that("Ordinal treatment", {
   })
 
   expect_M_parts_okay(W, tolerance = eps)
+
+  #A "br." link requests bias reduction from the in-house cumulative link fitter,
+  #which (unlike `brglm2::bracl()`, formerly used here) supports M-estimation
+  for (link in c("br.logit", "br.probit", "br.cloglog", "br.loglog", "br.cauchit")) {
+    expect_no_condition({
+      W_br <- weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+                       estimand = "ATE", link = link, include.obj = TRUE)
+    })
+
+    expect_true(W_br$obj$br)
+    expect_M_parts_okay(W_br, tolerance = 1e-4)
+
+    W_ml <- weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+                     estimand = "ATE", link = sub("^br\\.", "", link),
+                     include.obj = TRUE)
+
+    expect_false(isTRUE(W_ml$obj$br))
+    expect_true(max(abs(coef(W_br$obj) - coef(W_ml$obj))) > 1e-5)
+  }
+
+  #`multi.method = "polr"` cannot do bias reduction, so a "br." link routes to the
+  #in-house fitter and gives exactly what `multi.method = "weightit"` gives
+  expect_no_condition({
+    W_polr_br <- weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+                          estimand = "ATE", multi.method = "polr",
+                          link = "br.logit", include.obj = TRUE)
+  })
+
+  W_wi_br <- weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+                      estimand = "ATE", multi.method = "weightit",
+                      link = "br.logit", include.obj = TRUE)
+
+  expect_equal(W_polr_br$weights, W_wi_br$weights, tolerance = eps)
+
+  #Without a "br." link, `multi.method = "polr"` still uses MASS::polr()
+  skip_if_not_installed("MASS")
+
+  W_polr <- weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+                     estimand = "ATE", multi.method = "polr", include.obj = TRUE)
+
+  expect_s3_class(W_polr$obj, "polr")
+
+  #`multi.method = "bracl"` is deprecated and reroutes to the in-house fitter
+  expect_warning({
+    W_dep <- weightit(Ao ~ X1 + X2 + X3, data = test_data, method = "glm",
+                      estimand = "ATE", multi.method = "bracl",
+                      include.obj = TRUE)
+  }, "deprecated")
+
+  expect_true(W_dep$obj$br)
+  expect_equal(W_dep$weights, W_wi_br$weights, tolerance = eps)
+})
+
+test_that("Multi-category treatment with a bias-reduced model", {
+  skip_on_cran()
+  skip_if_not_installed("rootSolve")
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  test_data <- readRDS(test_path("fixtures", "test_data.rds"))
+
+  expect_no_condition({
+    W_br <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                     estimand = "ATE", link = "br.logit", include.obj = TRUE)
+  })
+
+  expect_true(W_br$obj$br)
+  expect_M_parts_okay(W_br, tolerance = 1e-4)
+
+  W_ml <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                   estimand = "ATE", include.obj = TRUE)
+
+  expect_false(isTRUE(W_ml$obj$br))
+  expect_true(max(abs(coef(W_br$obj) - coef(W_ml$obj))) > 1e-5)
+
+  #Only the logit link is available for unordered multi-category treatments
+  expect_error({
+    weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+             estimand = "ATE", link = "br.probit")
+  }, "logit")
+
+  #`multi.method = "brmultinom"` is deprecated and reroutes to the in-house fitter
+  expect_warning({
+    W_dep <- weightit(Am ~ X1 + X2 + X3, data = test_data, method = "glm",
+                      estimand = "ATE", multi.method = "brmultinom",
+                      include.obj = TRUE)
+  }, "deprecated")
+
+  expect_true(W_dep$obj$br)
+  expect_equal(W_dep$weights, W_br$weights, tolerance = eps)
 })

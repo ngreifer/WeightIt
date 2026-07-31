@@ -128,8 +128,12 @@
 #'
 #' For multi-category treatments, the following additional arguments can be specified:
 #' \describe{
-#'   \item{`multi.method`}{the method used to estimate the generalized propensity scores. Allowable options include `"weightit"` (the default) to use multinomial logistic regression implemented in \pkg{WeightIt}, `"glm"` to use a series of binomial models using [glm()], `"mclogit"` to use multinomial logistic regression as implemented in \pkgfun{mclogit}{mblogit}, `"mnp"` to use Bayesian multinomial probit regression as implemented in \pkgfun{MNP}{MNP}, and `"brmultinom"` to use bias-reduced multinomial logistic regression as implemented in \pkgfun{brglm2}{brmultinom}. `"weightit"` and `"mclogit"` should give near-identical results, the main difference being increased robustness and customizability when using `"mclogit"` at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include `"weightit"` (the default) to use ordinal regression implemented in \pkg{WeightIt} or `"polr"` to use ordinal regression implemented in \pkgfun{MASS}{polr}, unless `link` is `"br.logit"`, in which case bias-reduced ordinal logistic regression as implemented in \pkgfun{brglm2}{bracl} is used. Ignored when `missing = "saem"`. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.}
-#'   \item{`link`}{The link used in the multinomial, binomial, or ordered regression model for the generalized propensity scores depending on the argument supplied to `multi.method`. When `multi.method = "glm"`, `link` can be any of those allowed by [binomial()]. When treatment is ordered and `multi.method` is `"weightit"` or `"polr"`, `link` can be any of those allowed by `MASS::polr()` or `"br.logit"`. Otherwise, `link` should be `"logit"` or not specified.}
+#'   \item{`multi.method`}{the method used to estimate the generalized propensity scores. Allowable options include `"weightit"` (the default) to use multinomial logistic regression implemented in \pkg{WeightIt}, `"glm"` to use a series of binomial models using [glm()], `"mclogit"` to use multinomial logistic regression as implemented in \pkgfun{mclogit}{mblogit}, and `"mnp"` to use Bayesian multinomial probit regression as implemented in \pkgfun{MNP}{MNP}. `"weightit"` and `"mclogit"` should give near-identical results, the main difference being increased robustness and customizability when using `"mclogit"` at the expense of not being able to use M-estimation to compute standard errors after weighting. For ordered treatments, allowable options include `"weightit"` (the default) to use ordinal regression implemented in \pkg{WeightIt} or `"polr"` to use ordinal regression implemented in \pkgfun{MASS}{polr}. Ignored when `missing = "saem"`. Using the defaults allows for the use of M-estimation and requires no additional dependencies, but other packages may provide benefits such as speed and flexibility.
+#'
+#'   Bias-reduced models are requested by adding a `br.` prefix to `link` rather than by supplying a `multi.method` (see below). Because `MASS::polr()` cannot fit bias-reduced models, supplying a `br.` link with `multi.method = "polr"` uses the \pkg{WeightIt} implementation instead, which also makes M-estimation available.}
+#'   \item{`link`}{The link used in the multinomial, binomial, or ordered regression model for the generalized propensity scores depending on the argument supplied to `multi.method`. When `multi.method = "glm"`, `link` can be any of those allowed by [binomial()] as well as `"loglog"` and `"clog"`. When treatment is ordered and `multi.method` is `"weightit"` or `"polr"`, `link` can be any of `"logit"`, `"probit"`, `"loglog"`, `"cloglog"`, or `"cauchit"`. Otherwise, `link` should be `"logit"` or not specified.
+#'
+#'   For unordered treatments with `multi.method = "weightit"` and for ordered treatments with `multi.method` of `"weightit"` or `"polr"`, a `br.` prefix can be added (e.g., `"br.logit"`) to request mean bias reduction, i.e., to solve the bias-reducing adjusted score equations of Firth (1993) rather than the score equations. See [multinom_weightit()] and [ordinal_weightit()] for details. The estimates are always finite, even when the maximum likelihood estimates are not, which can help when the treatment groups are nearly separated. M-estimation remains available.}
 #'   \item{`subclass`}{`integer`; the number of subclasses to use for computing weights using marginal mean weighting through stratification (MMWS). If `NULL`, standard inverse probability weights (and their extensions) will be computed; if a number greater than 1, subclasses will be formed and weights will be computed based on subclass membership. See [get_w_from_ps()] for details and references.}
 #' }
 #'
@@ -191,9 +195,11 @@
 #'
 #' Hong, G. (2010). Marginal mean weighting through stratification: Adjustment for selection bias in multilevel data. *Journal of Educational and Behavioral Statistics*, 35(5), 499–531. \doi{10.3102/1076998609359785}
 #'
-#' - Bias-reduced logistic regression
+#' - Bias-reduced regression
 #'
-#' See references for the \CRANpkg{brglm2} package.
+#' Firth, D. (1993). Bias reduction of maximum likelihood estimates. *Biometrika*, 80(1), 27–38. \doi{10.1093/biomet/80.1.27}
+#'
+#' For binary treatments, see also the references for the \CRANpkg{brglm2} package, which does the fitting. For multi-category treatments, the fitting is done by \pkg{WeightIt}; see [multinom_weightit()] and [ordinal_weightit()], which document the adjustments used.
 #'
 #' - Firth corrected logistic regression
 #'
@@ -679,16 +685,12 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       multi.method <- "mclogit"
     }
     else if (ord.treat) {
-      multi.method <- {
-        if (identical(link, "br.logit")) "bracl"
-        else "weightit"
-      }
+      multi.method <- "weightit"
     }
     else {
       multi.method <- {
         if (missing == "saem") "saem"
         else if (identical(link, "bayes.probit")) "mnp"
-        else if (identical(link, "br.logit")) "brmultinom"
         else "weightit"
       }
     }
@@ -715,32 +717,50 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
       multi.method <- "mclogit"
     }
 
+    #Bias reduction is now performed by the in-house fitters, requested with a
+    #"br." link, so these no longer name distinct fitting functions
+    if (tolower(multi.method) %in% c("brmultinom", "bracl")) {
+      arg::wrn(c('{.code multi.method = "{multi.method}"} is deprecated; bias-reduced {if (ord.treat) "ordinal" else "multinomial"} regression is now fit by {.pkg WeightIt} itself, requested with {.code multi.method = "weightit"} and a {.val br.} link.',
+                 "i" = if (tolower(multi.method) == "bracl")
+                   'This fits a bias-reduced cumulative link model, not the adjacent category logit model {.fun brglm2::bracl} fits, so the estimated propensity scores will differ.'))
+
+      multi.method <- "weightit"
+
+      if (is_null(link)) {
+        link <- "br.logit"
+      }
+    }
+
     if (ord.treat) {
-      allowable.multi.methods <- c("weightit", "polr", "glm", "mclogit", "mnp", "brmultinom", "bracl")
+      allowable.multi.methods <- c("weightit", "polr", "glm", "mclogit", "mnp")
       multi.method <- arg::match_arg(multi.method, allowable.multi.methods)
 
-      ord.treat <- (multi.method %in% c("weightit", "polr", "bracl"))
+      ord.treat <- (multi.method %in% c("weightit", "polr"))
     }
     else {
-      allowable.multi.methods <- c("weightit", "glm", "mclogit", "mnp", "brmultinom")
+      allowable.multi.methods <- c("weightit", "glm", "mclogit", "mnp")
       multi.method <- arg::match_arg(multi.method, allowable.multi.methods)
     }
   }
 
-  link.ignored <- multi.method %in% c("mclogit", "mnp", "brmultinom", "bracl")
+  link.ignored <- multi.method %in% c("mclogit", "mnp")
 
-  #Process link
+  #Process link. A "br." prefix requests mean bias reduction, available for the
+  #in-house multinomial and ordinal fitters.
   acceptable.links <- switch(multi.method,
                              weightit = {
-                               if (ord.treat) c("logit", "probit", "cloglog", "loglog",
-                                                "identity", "log", "clog", "cauchit")
-                               else "logit"
+                               if (ord.treat) {
+                                 expand_grid_string(c("", "br."),
+                                                    c("logit", "probit", "cloglog",
+                                                      "loglog", "cauchit"))
+                               }
+                               else c("logit", "br.logit")
                              },
                              glm = c("logit", "probit", "cloglog", "loglog", "identity",
                                      "log", "clog", "cauchit"),
-                             polr = c("logit", "probit", "loglog", "cloglog", "cauchit"),
-                             brmultinom = c("br.logit", "logit"),
-                             bracl = c("br.logit", "logit"),
+                             polr = expand_grid_string(c("", "br."),
+                                                       c("logit", "probit", "loglog",
+                                                         "cloglog", "cauchit")),
                              mnp = c("bayes.probit", "probit"),
                              mclogit = "logit",
                              saem = "logit")
@@ -765,6 +785,17 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     link <- acceptable.links[link_match][1L]
   }
 
+  use.br <- startsWith(link, "br.")
+  if (use.br) {
+    link <- substr(link, 4L, nchar(link))
+
+    #`MASS::polr()` cannot do bias reduction, so use the in-house cumulative link
+    #fitter, which can (and which additionally supports M-estimation)
+    if (multi.method == "polr") {
+      multi.method <- "weightit"
+    }
+  }
+
   # Fit model
   if (multi.method == "weightit") {
     if (ord.treat) {
@@ -773,7 +804,8 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
                                          y = treat,
                                          weights = s.weights,
                                          hess = FALSE,
-                                         link = link)
+                                         link = link,
+                                         br = use.br)
       }, verbose = verbose)
     }
     else {
@@ -781,7 +813,8 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
         fit.obj <- .multinom_weightit.fit(x = cbind(`(Intercept)` = 1, covs),
                                           y = treat,
                                           weights = s.weights,
-                                          hess = FALSE)
+                                          hess = FALSE,
+                                          br = use.br)
       }, verbose = verbose)
     }
 
@@ -865,33 +898,6 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     }, verbose = verbose)},
     error = function(e) {
       arg::err("there was a problem fitting the ordinal {link} regressions with {.fun polr}. Try again with an un-ordered treatment.Error message: (from {.fun MASS::polr}):\f{conditionMessage(e)}")
-    })
-
-    ps <- fit.obj$fitted.values
-  }
-  else if (multi.method == "bracl") {
-    rlang::check_installed("brglm2")
-
-    ctrl_fun <- brglm2::brglmControl
-
-    control <- do.call(ctrl_fun, c(as.list(...get("control")),
-                                   ...mget(setdiff(names(formals(ctrl_fun))[pmatch(...names(), names(formals(ctrl_fun)), 0L)],
-                                                   names(...get("control"))))))
-
-    data <- data.frame(treat, covs)
-    formula <- formula(data)
-
-    rlang::try_fetch({verbosely({
-      fit.obj <- do.call(brglm2::bracl,
-                         list(formula,
-                              data = data,
-                              weights = s.weights,
-                              control = control,
-                              parallel = ...get("parallel", FALSE)),
-                         quote = TRUE)
-    }, verbose = verbose)},
-    error = function(e) {
-      arg::err("there was a problem with the bias-reduced ordinal logit regression. Try a different link. Error message: (from {.fun brglm2::bracl}):\f{conditionMessage(e)}")
     })
 
     ps <- fit.obj$fitted.values
@@ -1025,29 +1031,6 @@ weightit2glm.multi <- function(covs, treat, s.weights, subset, estimand, focal,
     }
 
     colnames(ps) <- levels(treat)
-  }
-  else if (multi.method == "brmultinom") {
-    rlang::check_installed("brglm2")
-    data <- data.frame(treat, covs)
-    formula <- formula(data)
-    ctrl_fun <- brglm2::brglmControl
-
-    control <- do.call(ctrl_fun, c(as.list(...get("control")),
-                                   ...mget(setdiff(names(formals(ctrl_fun))[pmatch(...names(), names(formals(ctrl_fun)), 0L)],
-                                                   names(...get("control"))))))
-
-    rlang::try_fetch({verbosely({
-      fit.obj <- do.call(brglm2::brmultinom,
-                         list(formula, data,
-                              weights = s.weights,
-                              control = control),
-                         quote = TRUE)
-    }, verbose = verbose)},
-    error = function(e) {
-      arg::err("there was a problem fitting the bias-reduced multinomial logit regression. Try a different {.arg multi.method}. Error message: (from {.fun brglm2::brmultinom}):\f{conditionMessage(e)}")
-    })
-
-    ps <- fit.obj$fitted.values
   }
 
   #ps should be matrix of probs for each treat

@@ -19,6 +19,7 @@ ordinal_weightit(
   y = TRUE,
   contrasts = NULL,
   fwb.args = list(),
+  br = FALSE,
   ...
 )
 }
@@ -79,6 +80,12 @@ See \code{\link[=model.matrix]{model.matrix()}}.}
 \item{fwb.args}{an optional list of further arguments to supply to
 \pkgfun{fwb}{fwb} when \code{vcov = "FWB"}.}
 
+\item{br}{\code{logical}; whether to use mean bias reduction, i.e., to solve the
+bias-reducing adjusted score equations of Kosmidis (2014) rather than the
+score equations. This yields estimates with smaller asymptotic bias that are
+always finite, even when the maximum likelihood estimates are not (e.g., when
+an end category is unobserved). Default is \code{FALSE}. See Details.}
+
 \item{...}{arguments to be used to form the default control argument if it
 is not supplied directly.}
 }
@@ -109,7 +116,7 @@ model when available.
 custom function in \pkg{WeightIt} that optionally computes a coefficient variance matrix that can be adjusted to
 account for estimation of the weights if a \code{weightit} or \code{weightitMSM} object
 is supplied to the \code{weightit} argument. Estimation of coefficients should align with that from
-\code{MASS::polr()}.
+\code{MASS::polr()} unless \code{br = TRUE}.
 
 When no argument is supplied to
 \code{weightit} or there is no \code{"Mparts"} attribute in the supplied object, the
@@ -137,6 +144,42 @@ error if it doesn't). Setting \code{vcov = "FWB"} and supplying \code{fwb.args =
 also performs the resampling-based bootstrap but
 with the additional features \pkg{fwb} provides (e.g., a progress bar and
 parallelization).
+\subsection{Bias reduction}{
+
+When \code{br = TRUE}, the coefficients solve the bias-reducing adjusted score
+equations for cumulative link models derived by Kosmidis (2014) instead of the
+score equations, which removes the first-order term in the asymptotic bias of
+the estimates. Reduction of bias is equivalent to a parameter-dependent additive
+adjustment of the multinomial counts, and the resulting estimates are always
+finite and remain invariant to linear transformations of the parameters and to
+reversal of the order of the response categories. In the special case of two
+response categories, this reduces to the bias-reduced generalized linear model
+available with \code{br = TRUE} in \code{\link[=glm_weightit]{glm_weightit()}}; for a saturated model without
+covariates and a logit link, it amounts to adding \eqn{1/2} to the counts of the
+first and last categories.
+
+The adjusted score equations are solved by quasi-Fisher scoring started at the
+maximum likelihood estimates. Two components of \code{control} govern this: \code{br.maxit}
+(the maximum number of iterations, default 100) and \code{br.tol} (the convergence
+tolerance for the adjusted score relative to the sum of the weights, default
+\code{1e-10}).
+
+Weights are treated as multinomial totals, which makes the estimates invariant
+to whether the data are supplied as individual units or as groups of identical
+units with weights equal to their counts. As for \code{br = TRUE} in
+\code{\link[=glm_weightit]{glm_weightit()}}, the reported variance matrix uses the information matrix at
+the estimates rather than the Jacobian of the adjusted score, i.e., the
+adjustment is treated as fixed; the two differ by a term that vanishes
+asymptotically. M-estimation and bootstrapping can be used with \code{br = TRUE} just
+as they can without it.
+
+Note that \pkgfun{brglm2}{bracl}, which also performs bias reduction for ordinal
+responses, fits an adjacent category logit model rather than a cumulative link
+model, so its estimates are not comparable to those from \code{ordinal_weightit()}.
+This is true of \code{parallel = TRUE} as well, which constrains the adjacent
+category logits rather than the cumulative ones to be parallel and so yields
+different fitted probabilities.
+}
 }
 \examples{
 data("lalonde", package = "cobalt")
@@ -159,6 +202,23 @@ fit <- ordinal_weightit(re78_3o ~ treat,
                          weightit = w.out)
 
 summary(fit)
+
+# Same model using mean bias reduction
+fit_br <- ordinal_weightit(re78_3o ~ treat,
+                           data = lalonde,
+                           link = "probit",
+                           weightit = w.out,
+                           br = TRUE)
+
+summary(fit_br)
+}
+\references{
+Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+\emph{Biometrika}, 80(1), 27–38. \doi{10.1093/biomet/80.1.27}
+
+Kosmidis, I. (2014). Improved estimation in cumulative link models. \emph{Journal of
+the Royal Statistical Society: Series B (Statistical Methodology)}, 76(1),
+169–196. \doi{10.1111/rssb.12025}
 }
 \seealso{
 \itemize{
