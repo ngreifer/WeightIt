@@ -385,6 +385,8 @@ multinom_weightit <- function(formula, data, link = "logit", weightit = NULL,
   grad <- psi(out$par, X = x_, y = y,
               weights = weights, offset = offset)
 
+  .check_solution(out$convergence, grad, weights)
+
   pp <- get_pp(out$par, x_, offset)
 
   res <- setNames(1 - pp[ind_mat], rownames(x))

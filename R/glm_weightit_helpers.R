@@ -1138,6 +1138,7 @@
     if (is_not_null(weightit)) {
       model_call$weights <- weightit[["weights"]] * weightit[["s.weights"]]
     }
+
     model_call$x <- TRUE
     model_call$y <- TRUE
     model_call$model <- TRUE
@@ -1209,6 +1210,21 @@
   }
 
   Xout[, !aliased_cols, drop = FALSE]
+}
+
+# Warns when an `optim()`-based fit did not converge or, more importantly, when the
+# estimating equations are not solved at the returned estimates. The latter catches
+# the case where `optim()` reports success at a numerically flat point, which happens
+# when it is started far from the solution: the coefficients are then not a solution
+# of anything, and the score contributions do not sum to 0, so the sandwich variance
+# is not valid either. `gradient` is the matrix of score contributions.
+.check_solution <- function(convergence, gradient, weights, tol = 1e-5) {
+  if (!identical(as.integer(convergence), 0L)) {
+    arg::wrn("the optimization did not converge; estimates should not be trusted. Try increasing {.code maxit} in {.arg control}")
+  }
+  else if (max(abs(colSums(gradient))) > tol * max(1, sum(weights))) {
+    arg::wrn("the optimization stopped at a point that does not solve the estimating equations, so the estimates and their standard errors should not be trusted. If {.arg start} was supplied, try omitting it or supplying values closer to 0")
+  }
 }
 
 # Inverts the expected information matrix used by the bias-reducing adjustment in

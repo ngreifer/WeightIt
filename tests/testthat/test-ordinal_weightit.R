@@ -579,3 +579,73 @@ test_that("br = TRUE works with all links, M-estimation, and bootstrapping", {
 
   expect_equal(vcov(fit_none, vcov = "asympt"), vcov(fit), tolerance = eps)
 })
+
+test_that("br = TRUE gives finite estimates when the ML estimates are infinite", {
+  skip_on_cran()
+
+  eps <- if (capabilities("long.double")) 1e-5 else 1e-3
+
+  #`x` separates categories {1, 2} from {3, 4} completely, so the maximum likelihood
+  #estimates of `x` and of the middle threshold are infinite: they are limited only
+  #by the optimizer's tolerance, and the corresponding fitted probabilities collapse
+  #to 0. All four categories are observed, so none is dropped. Bias reduction gives
+  #finite estimates for the same data (Kosmidis, 2014).
+  sep_data <- data.frame(x = rep(0:1, each = 10L),
+                         y = factor(rep(1:4, each = 5L), ordered = TRUE))
+
+  expect_no_condition({
+    fit_ml <- ordinal_weightit(y ~ x, data = sep_data, vcov = "HC0")
+  })
+
+  expect_no_condition({
+    fit_br <- ordinal_weightit(y ~ x, data = sep_data, br = TRUE, vcov = "HC0")
+  })
+
+  #The ML fit sits on the boundary: enormous coefficients and fitted probabilities
+  #numerically equal to 0
+  expect_true(max(abs(coef(fit_ml))) > 20)
+  expect_true(min(fit_ml$fitted.values) < 1e-10)
+
+  #The bias-reduced fit does not
+  expect_true(all(is.finite(coef(fit_br))))
+  expect_true(max(abs(coef(fit_br))) < 10)
+  expect_true(min(fit_br$fitted.values) > 1e-4)
+  expect_false(anyNA(vcov(fit_br)))
+
+  #The parameters that diverge under ML are pulled back to finite values (the
+  #remaining threshold is essentially 0 in both fits, so it is not informative)
+  diverging <- abs(coef(fit_ml)) > 20
+
+  expect_true(any(diverging))
+  expect_true(all(abs(coef(fit_br)[diverging]) < abs(coef(fit_ml)[diverging]) / 3))
+
+  #The adjusted score is solved, and the solution is a genuine root: it does not
+  #move when the optimizer is allowed to work harder, unlike a diverging estimate
+  expect_equal(unname(colSums(fit_br$gradient)), rep.int(0, length(coef(fit_br))),
+               tolerance = 1e-6)
+
+  fit_br2 <- ordinal_weightit(y ~ x, data = sep_data, br = TRUE, vcov = "none",
+                              control = list(maxit = 5000L, reltol = 1e-14))
+
+  expect_equal(coef(fit_br), coef(fit_br2), tolerance = eps)
+
+  #The hardest pattern: every unit's category is determined by `x`, so each cell of
+  #the 3 x 3 table is either empty or the whole group. Bias reduction still returns
+  #finite estimates that solve the adjusted score equations.
+  diag_data <- data.frame(x = rep(1:3, each = 6L),
+                          y = factor(rep(1:3, each = 6L), ordered = TRUE))
+
+  fit_ml_d <- ordinal_weightit(y ~ x, data = diag_data, vcov = "none")
+
+  expect_true(max(abs(coef(fit_ml_d))) > 100)
+
+  expect_no_condition({
+    fit_br_d <- ordinal_weightit(y ~ x, data = diag_data, br = TRUE, vcov = "HC0")
+  })
+
+  expect_true(all(is.finite(coef(fit_br_d))))
+  expect_true(max(abs(coef(fit_br_d))) < 50)
+  expect_false(anyNA(vcov(fit_br_d)))
+  expect_equal(unname(colSums(fit_br_d$gradient)),
+               rep.int(0, length(coef(fit_br_d))), tolerance = 1e-6)
+})

@@ -288,14 +288,30 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
 # Solves the bias-reducing adjusted score equations of a cumulative link model by
 # quasi-Fisher scoring, with step halving to keep the thresholds ordered and the
-# adjusted score shrinking. `gr()` supplies the adjusted score and `info()` the
-# expected information at a set of coefficients; `n_a` is the number of thresholds.
-.ordinal_br_solve <- function(start, X, y, weights, offset, gr, info, n_a,
+# adjusted score shrinking. `gr()` supplies the adjusted score and `parts()` the
+# category probabilities and inverse link derivatives at a set of coefficients;
+# `n_a` is the number of thresholds.
+.ordinal_br_solve <- function(start, X, y, weights, offset, gr, parts, n_a,
                               maxit = 100L, tol = 1e-10) {
   a_ind <- length(start) - n_a + seq_len(n_a)
 
   #The score scales with the sum of the weights, so the tolerance should, too
   crit <- tol * max(1, sum(weights))
+
+  #The bias-reduced estimates keep every fitted probability away from 0. When the
+  #coefficients diverge instead, the probabilities underflow and the adjusted score
+  #becomes numerically 0 as well, which would otherwise look like convergence.
+  usable <- function(theta) {
+    pr <- try(parts(theta), silent = TRUE)
+
+    !null_or_error(pr) && all(is.finite(pr[["P"]])) && min(pr[["P"]]) > 1e-10
+  }
+
+  info <- function(theta) {
+    pr <- parts(theta)
+
+    .ordinal_info(X, pr[["P"]], pr[["g"]], weights)
+  }
 
   theta <- start
   U <- gr(theta, X, y, weights, offset)
@@ -332,7 +348,8 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
     U <- U_new
   }
 
-  list(par = theta, converged = max(abs(U)) <= crit, iter = i, score = U)
+  list(par = theta, converged = max(abs(U)) <= crit && usable(theta),
+       iter = i, score = U)
 }
 
 # Ordinal regression
@@ -535,18 +552,22 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
                 hessian = FALSE,
                 control = control)
 
-  theta0 <- out0$par
+  # Convert from the cumsum parameterization of the thresholds to the natural one
+  to_natural <- function(B) {
+    if (m > 2L) {
+      if (no_x) {
+        B[-1L] <- B[1L] + cumsum(exp(B[-1L]))
+      }
+      else {
+        a1 <- B[ncol(x_) + 1L]
+        B[-seq_len(ncol(x_))] <- c(a1, a1 + cumsum(exp(B[-seq_len(ncol(x_) + 1L)])))
+      }
+    }
 
-  # Convert to natural param
-  if (m > 2L) {
-    if (no_x) {
-      theta0[-1L] <- theta0[1L] + cumsum(exp(theta0[-1L]))
-    }
-    else {
-      a1 <- theta0[ncol(x_) + 1L]
-      theta0[-seq_len(ncol(x_))] <- c(a1, a1 + cumsum(exp(theta0[-seq_len(ncol(x_) + 1L)])))
-    }
+    B
   }
+
+  theta0 <- to_natural(out0$par)
 
   # Psi function and gradient using natural parameterization. `.adjust` controls
   # whether the bias-reducing adjustment is included; it is excluded when computing
@@ -606,16 +627,36 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
     # starting from the maximum likelihood estimates. Unlike for the multinomial
     # logit model, the adjusted score of a cumulative link model is not the gradient
     # of a penalized likelihood, so there is no objective function to optimize.
-    br_out <- .ordinal_br_solve(theta0, x_, y_, weights, offset,
-                                gr = gr, info = function(B) {
-                                  parts <- get_br_parts(B, x_, offset)
+    .br_solve <- function(from) {
+      .ordinal_br_solve(from, x_, y_, weights, offset,
+                        gr = gr,
+                        parts = function(B) get_br_parts(B, x_, offset),
+                        n_a = m - 1L,
+                        maxit = br_maxit,
+                        tol = br_tol)
+    }
 
-                                  .ordinal_info(x_, parts[["P"]], parts[["g"]],
-                                                weights)
-                                },
-                                n_a = m - 1L,
-                                maxit = br_maxit,
-                                tol = br_tol)
+    br_out <- .br_solve(theta0)
+
+    # Under separation the maximum likelihood estimates diverge, which leaves the
+    # information matrix there nearly singular and the first scoring step useless,
+    # so retry from a neutral point: no covariate effect, with thresholds from the
+    # marginal cumulative proportions of the categories, offset by 1/2 so that they
+    # stay interior. `start` is unsuitable for this, because it comes from a binomial
+    # fit that diverges for exactly the same data. Only a converged retry is
+    # accepted: the adjusted score also tends to 0 along the divergent path, so a
+    # smaller score is not evidence of having found the root.
+    if (!br_out[["converged"]]) {
+      cum_w <- cumsum(vapply(seq_len(m), function(j) sum(weights[y_ == j]),
+                             numeric(1L)) + .5)
+
+      br_out_start <- .br_solve(c(rep.int(0, ncol(x_)),
+                                  .linkfun(cum_w[-m] / (sum(weights) + .5 * m))))
+
+      if (br_out_start[["converged"]]) {
+        br_out <- br_out_start
+      }
+    }
 
     if (!br_out[["converged"]]) {
       arg::wrn("the bias-reducing adjusted score equations did not converge; estimates should not be trusted. Try increasing {.code br.maxit} in {.arg control} or simplifying the model")
@@ -658,6 +699,12 @@ ordinal_weightit <- function(formula, data, link = "logit", weightit = NULL,
 
   grad <- psi(theta, X = x_, y = y_,
               weights = weights, offset = offset)
+
+  #When `br = TRUE`, `.ordinal_br_solve()` has already reported on its own
+  #convergence, and it is its solution rather than `out0` that is returned
+  if (!br) {
+    .check_solution(out0$convergence, grad, weights)
+  }
 
   # Get predicted probabilities for all units for all categories,
   # natural parameterization of `a`

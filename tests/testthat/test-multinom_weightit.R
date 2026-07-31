@@ -440,34 +440,46 @@ test_that("br = TRUE matches brglm2::brmultinom()", {
   expect_equal(unname(coef(fit_b)), unname(coef(fit_g)), tolerance = eps)
 })
 
-test_that("br = TRUE gives finite estimates under separation", {
+test_that("br = TRUE gives finite estimates when the ML estimates are infinite", {
   skip_on_cran()
   skip_if_not_installed("brglm2")
 
   eps <- if (capabilities("long.double")) 1e-5 else 1e-3
 
   #Each level of the outcome occurs at exactly one value of the predictor, so the
-  #ML estimates diverge
+  #ML estimates are infinite: they are limited only by the optimizer's tolerance,
+  #and the corresponding fitted probabilities collapse to 0
   sep_data <- data.frame(x = rep(c(0, 1, 2), each = 10L),
                          y = factor(rep(c("a", "b", "c"), each = 10L)))
 
   expect_no_condition({
-    fit_ml <- multinom_weightit(y ~ x, data = sep_data, vcov = "none")
+    fit_ml <- multinom_weightit(y ~ x, data = sep_data, vcov = "HC0")
   })
 
   expect_true(max(abs(coef(fit_ml))) > 20)
+  expect_true(min(fit_ml$fitted.values) < 1e-10)
 
   expect_no_condition({
-    fit_br <- multinom_weightit(y ~ x, data = sep_data, br = TRUE, vcov = "none")
+    fit_br <- multinom_weightit(y ~ x, data = sep_data, br = TRUE, vcov = "HC0")
   })
 
   expect_true(all(is.finite(coef(fit_br))))
   expect_true(max(abs(coef(fit_br))) < 20)
+  expect_true(min(fit_br$fitted.values) > 1e-8)
+  expect_false(anyNA(vcov(fit_br)))
 
+  #`brglm2` gives the same finite estimates
   fit_ref <- brglm2::brmultinom(y ~ x, data = sep_data, type = "AS_mean")
 
   expect_equal(unname(coef(fit_br)), as.vector(t(coef(fit_ref))),
                tolerance = eps)
+
+  #The solution is a genuine maximum of the penalized likelihood: it does not move
+  #when the optimizer is allowed to work harder, unlike a diverging estimate
+  fit_br2 <- multinom_weightit(y ~ x, data = sep_data, br = TRUE, vcov = "none",
+                               control = list(maxit = 5000L, reltol = 1e-14))
+
+  expect_equal(coef(fit_br), coef(fit_br2), tolerance = eps)
 })
 
 test_that("br = TRUE works with M-estimation and bootstrapping", {
