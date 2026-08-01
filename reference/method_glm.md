@@ -198,25 +198,26 @@ specified:
   [`glm()`](https://rdrr.io/r/stats/glm.html), `"mclogit"` to use
   multinomial logistic regression as implemented in
   [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
-  , `"mnp"` to use Bayesian multinomial probit regression as implemented
-  in [`MNP::MNP()`](https://rdrr.io/pkg/MNP/man/mnp.html) , and
-  `"brmultinom"` to use bias-reduced multinomial logistic regression as
-  implemented in
-  [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
-  . `"weightit"` and `"mclogit"` should give near-identical results, the
+  , and `"mnp"` to use Bayesian multinomial probit regression as
+  implemented in [`MNP::MNP()`](https://rdrr.io/pkg/MNP/man/mnp.html) .
+  `"weightit"` and `"mclogit"` should give near-identical results, the
   main difference being increased robustness and customizability when
   using `"mclogit"` at the expense of not being able to use M-estimation
   to compute standard errors after weighting. For ordered treatments,
   allowable options include `"weightit"` (the default) to use ordinal
   regression implemented in WeightIt or `"polr"` to use ordinal
   regression implemented in
-  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) , unless
-  `link` is `"br.logit"`, in which case bias-reduced ordinal logistic
-  regression as implemented in
-  [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html) is
-  used. Ignored when `missing = "saem"`. Using the defaults allows for
-  the use of M-estimation and requires no additional dependencies, but
-  other packages may provide benefits such as speed and flexibility.
+  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) . Ignored
+  when `missing = "saem"`. Using the defaults allows for the use of
+  M-estimation and requires no additional dependencies, but other
+  packages may provide benefits such as speed and flexibility.
+
+  Bias-reduced models are requested by adding a `br.` prefix to `link`
+  rather than by supplying a `multi.method` (see below). Because
+  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) cannot fit
+  bias-reduced models, supplying a `br.` link with
+  `multi.method = "polr"` uses the WeightIt implementation instead,
+  which also makes M-estimation available.
 
 - `link`:
 
@@ -224,11 +225,23 @@ specified:
   model for the generalized propensity scores depending on the argument
   supplied to `multi.method`. When `multi.method = "glm"`, `link` can be
   any of those allowed by
-  [`binomial()`](https://rdrr.io/r/stats/family.html). When treatment is
-  ordered and `multi.method` is `"weightit"` or `"polr"`, `link` can be
-  any of those allowed by
-  [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) or
-  `"br.logit"`. Otherwise, `link` should be `"logit"` or not specified.
+  [`binomial()`](https://rdrr.io/r/stats/family.html) as well as
+  `"loglog"` and `"clog"`. When treatment is ordered and `multi.method`
+  is `"weightit"` or `"polr"`, `link` can be any of `"logit"`,
+  `"probit"`, `"loglog"`, `"cloglog"`, or `"cauchit"`. Otherwise, `link`
+  should be `"logit"` or not specified.
+
+  For unordered treatments with `multi.method = "weightit"` and for
+  ordered treatments with `multi.method` of `"weightit"` or `"polr"`, a
+  `br.` prefix can be added (e.g., `"br.logit"`) to request mean bias
+  reduction, i.e., to solve the bias-reducing adjusted score equations
+  of Firth (1993) rather than the score equations. See
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  and
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  for details. The estimates are always finite, even when the maximum
+  likelihood estimates are not, which can help when the treatment groups
+  are nearly separated. M-estimation remains available.
 
 - `subclass`:
 
@@ -367,10 +380,20 @@ Adjustment for selection bias in multilevel data. *Journal of
 Educational and Behavioral Statistics*, 35(5), 499–531.
 [doi:10.3102/1076998609359785](https://doi.org/10.3102/1076998609359785)
 
-- Bias-reduced logistic regression
+- Bias-reduced regression
 
-See references for the
-[brglm2](https://CRAN.R-project.org/package=brglm2) package.
+Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+*Biometrika*, 80(1), 27–38.
+[doi:10.1093/biomet/80.1.27](https://doi.org/10.1093/biomet/80.1.27)
+
+For binary treatments, see also the references for the
+[brglm2](https://CRAN.R-project.org/package=brglm2) package, which does
+the fitting. For multi-category treatments, the fitting is done by
+WeightIt; see
+[`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+and
+[`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+which document the adjustments used.
 
 - Firth corrected logistic regression
 

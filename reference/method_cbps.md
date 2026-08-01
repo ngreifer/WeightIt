@@ -104,6 +104,29 @@ and
 [`vignette("estimating-effects")`](https://ngreifer.github.io/WeightIt/articles/estimating-effects.md)
 for details.
 
+### Unsolvable Balance Conditions
+
+The just-identified CBPS (`over = FALSE`) has exactly as many parameters
+as balance conditions, so at a solution the conditions hold exactly and
+the corresponding covariate moments are exactly balanced. For some
+samples no such solution exists: the optimizer settles at a point where
+the conditions are still unmet, and the resulting weights balance the
+covariates only approximately. This is most likely with a continuous
+treatment and many covariates, and whether it happens depends on the
+sample, not just on the specification.
+
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+warns when this occurs, since the returned weights are otherwise
+indistinguishable from ones that did solve the conditions. When it does,
+assess the balance actually achieved (e.g., with
+[`cobalt::bal.tab()`](https://ngreifer.github.io/cobalt/reference/bal.tab.html))
+rather than assuming it is exact, and consider `over = TRUE`, a
+different `link`, or fewer covariates. With `include.obj = TRUE`, the
+`value` component of the returned
+[`optim()`](https://rdrr.io/r/stats/optim.html) object is the norm of
+the mean estimating function, which is what the warning is based on: it
+is essentially 0 when the conditions were solved.
+
 ## Details
 
 CBPS estimates the coefficients of a generalized linear model (for

@@ -54,6 +54,19 @@
   `cens.covs.list`, `cens.formula.list`, `cens.time`, and `at.risk`
   components of the output describe the censoring models.
 
+- A censoring formula may have an empty right hand side, as in
+  `.cens(C) ~ 1`, requesting a marginal censoring model in which
+  censoring does not depend on the covariates. The weights are then
+  `1/P(C = 0)` for the units still under observation and 0 for those
+  censored. This works in both
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  with any `method` (see the note on empty formulas under *Other new
+  features*), and leaves the rest of the censoring machinery intact,
+  including the risk sets, the missing values permitted after censoring,
+  `by`, `stabilize`, and M-estimation.
+
 - Censoring weights are also available with `method = "cbps"` and
   `is.MSM.method = TRUE` in
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
@@ -78,7 +91,7 @@
   the outcome is unobserved for censored units. Missing values in units
   with a nonzero weight continue to produce an error. Relatedly,
   [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
-  now allows weights of 0 at all, which
+  now allows weights of 0, which
   [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
   rejects; such units are omitted from the model fit.
 
@@ -118,6 +131,60 @@
 
 ### Other new features
 
+- [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  and
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  gain a `br` argument, which, when set to `TRUE`, performs mean bias
+  reduction by solving the bias-reducing adjusted score equations of
+  Firth (1993) instead of the score equations. This yields estimates
+  with smaller asymptotic bias that are always finite, even when the
+  maximum likelihood estimates are not (e.g., under separation or when
+  an end category of an ordinal outcome is unobserved). This mirrors
+  `br` in
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  but uses in-house implementations rather than *brglm2*, so it requires
+  no additional dependencies and composes with M-estimation,
+  cluster-robust standard errors, and bootstrapping.
+
+  For
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  the adjustment is that of Kosmidis and Firth (2011); because the model
+  uses the canonical link, the adjusted score is the gradient of the
+  log-likelihood penalized by the Jeffreys invariant prior, and
+  estimates align with
+  [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html).
+  For
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  the adjustment is the one derived for cumulative link models by
+  Kosmidis (2014) and works for all supported links; the adjusted score
+  equations are solved by quasi-Fisher scoring, controlled by the new
+  `br.maxit` and `br.tol` components of `control`. Note this differs
+  from [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html),
+  which fits an adjacent category logit model rather than a cumulative
+  link model (including with `parallel = TRUE`, which constrains the
+  adjacent category logits rather than the cumulative ones to be
+  parallel). In both cases, weights are treated as multinomial totals,
+  so estimates are invariant to whether the data are supplied one row
+  per unit or as weighted groups of identical units.
+
+- With `method = "glm"` and a multi-category treatment, bias-reduced
+  propensity score models are now fit by *WeightIt* itself rather than
+  by *brglm2*. A `br.` prefix on `link` requests mean bias reduction, as
+  before, but it is now handled by
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)’s
+  and
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)’s
+  machinery: `multi.method = "weightit"` accepts `"br.logit"` for
+  unordered treatments and any of `"br.logit"`, `"br.probit"`,
+  `"br.loglog"`, `"br.cloglog"`, and `"br.cauchit"` for ordered ones.
+  Because [`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html)
+  cannot fit bias-reduced models, supplying a `br.` link with
+  `multi.method = "polr"` uses the *WeightIt* implementation as well.
+  The practical gain is that M-estimation-based standard errors are now
+  available for bias-reduced propensity score models, which they were
+  not when *brglm2* did the fitting; *brglm2* is also no longer needed
+  for this.
+
 - M-estimation-based standard errors are now available when `by` is
   supplied to
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
@@ -141,6 +208,34 @@
   gains a `subset` argument, restricting which units are used to fit the
   model.
 
+- The formulas in `formula.list` supplied to
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
+  can now have an empty right hand side (e.g., `A_1 ~ 1`), which
+  requests a marginal model at that time point. Previously this produced
+  an error, even though
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  has always allowed it.
+
+- An empty model formula now works with every `method`. With no
+  covariates there is nothing for any method to model or balance, and
+  every method’s target is met by the same weights, but most methods
+  could not run at all on a covariate-free model, failing with errors
+  from the packages they call that said nothing about the cause. Those
+  weights are now computed by fitting an intercept-only GLM whatever
+  `method` is supplied, ignoring any method-specific arguments. This is
+  an implementation shortcut only: `method` is reported as supplied, and
+  the package for the requested method need not be installed.
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  and
+  [`weightit.fit()`](https://ngreifer.github.io/WeightIt/reference/weightit.fit.md)
+  all behave this way. `method = NULL`, a user-defined `method`
+  function, a supplied `ps`, and a formula whose only terms are
+  `lme4`-style random effects (e.g., `A ~ (1 | school)`) are unaffected.
+  Relatedly, `method = "cbps"` with `is.MSM.method = TRUE` now accepts a
+  time point with no covariates, which contributes only its intercept
+  balance condition.
+
 ### Changes in behavior
 
 - With continuous treatments, estimation of the weights works a bit
@@ -148,7 +243,7 @@
   Previously, the numerator of the weights (corresponding to the
   marginal distribution of treatment) was estimated using the argument
   to `density` (by default, a normal distribution). Now, `density` only
-  controls the conditional distribution used to estimate the
+  controls the *conditional* distribution used to estimate the
   denominator, and the numerator is estimated by marginalizing over the
   conditional distribution. This yields a marginal distribution that is
   compatible with the conditional distribution. In most cases, this will
@@ -189,7 +284,130 @@
   now results in an error. Previously it would route the input to
   [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md).
 
+- `multi.method = "brmultinom"` and `multi.method = "bracl"` in
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  with `method = "glm"` are deprecated. They are accepted with a warning
+  and now use the equivalent in-house bias-reduced fitters. Note the
+  estimated propensity scores change for the former `"bracl"`:
+  [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html) fits an
+  adjacent category logit model, whereas
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  fits a cumulative link (proportional odds) model.
+
+- For ordered multi-category treatments with `method = "glm"` and
+  `multi.method = "weightit"`, the `link` argument no longer accepts
+  `"identity"`, `"log"`, or `"clog"`. These were listed as allowable but
+  always errored, since
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  does not implement them.
+
 ### Bug fixes
+
+- `method = "cbps"` now warns when the just-identified CBPS
+  (`over = FALSE`) fails to solve its balance conditions. Previously
+  this was silent: [`optim()`](https://rdrr.io/r/stats/optim.html)’s
+  convergence flag only reports whether the iteration limit or a line
+  search failed, and the code never checked whether the balance
+  objective had actually been driven to zero, so a fit that settled at a
+  point where the conditions were still unmet returned weights that did
+  not balance the covariates with no indication anything was wrong. This
+  is most likely with a continuous treatment and many covariates, and
+  depends on the sample rather than the specification alone. See the new
+  *Unsolvable Balance Conditions* section of
+  [`?method_cbps`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md).
+
+- Fixed a bug in
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) for
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+  and
+  [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
+  objects that mislabeled columns. With `conf.int = TRUE` the two
+  confidence limits were returned unnamed rather than as `conf.low` and
+  `conf.high`, and with `exponentiate = TRUE` every name was shifted by
+  one — the test statistic was labeled `std.error` — because
+  transforming drops the standard-error column. The names are now taken
+  from the columns actually returned.
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a
+  `summary.weightit` object for a continuous treatment no longer
+  triggers a *ggplot2* deprecation warning about the `size` aesthetic
+  for lines.
+
+- Fixed a bug in `method = "glm"` with a multi-category treatment and
+  `multi.method = "glm"` that made every M-estimation-based standard
+  error `NA`. That option fits one one-vs-rest binomial model per
+  treatment level, and the M-estimation parts passed the treatment
+  factor to each of those scores instead of the level’s 0/1 indicator,
+  so the score matrix (and hence the whole variance matrix) came out
+  `NA`. Note this failed silently:
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  and friends returned a fit whose standard errors were all `NA` rather
+  than erroring.
+
+- Fixed a bug in `method = "glm"` with a continuous treatment that made
+  every M-estimation-based standard error an error. The residual
+  standard deviation was omitted from the M-estimation parameter vector,
+  leaving it one element short of the model matrix, so
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html) on a
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  fit using such weights failed with “non-conformable arguments”.
+  `vcov = "HC0"` and the other non-M-estimation variance types were
+  unaffected. The standard deviation used is now the sampling-weighted
+  root mean square of the residuals, which is the value the M-estimation
+  score for that parameter solves for.
+
+- [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  and
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  now warn when the optimization fails, which previously passed
+  silently. Two cases are detected:
+  [`optim()`](https://rdrr.io/r/stats/optim.html) reporting
+  non-convergence (e.g., from exhausting `maxit`), and
+  [`optim()`](https://rdrr.io/r/stats/optim.html) reporting success at a
+  point that does not solve the estimating equations. The latter happens
+  when the optimization is started far from the solution, which can
+  occur when `start` is supplied from a diverging maximum likelihood
+  fit; the coefficients returned in that case were not a solution of
+  anything, and the score contributions did not sum to 0, so the
+  standard errors were invalid too. The internal starting values are
+  unaffected:
+  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
+  starts from 0, and
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  with `br = TRUE` retries from a neutral point.
+
+- [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  with `br = TRUE` is more robust when the maximum likelihood estimates
+  diverge, which is one of the main reasons to use bias reduction. The
+  adjusted score equations were solved starting from the maximum
+  likelihood estimates, but under separation the information matrix
+  there is nearly singular, so the first step was useless and the
+  maximum likelihood estimates were returned unchanged. Estimation now
+  retries from a neutral point (no covariate effect, thresholds from the
+  marginal category proportions); the usual starting values are
+  unsuitable because they come from a binomial fit that diverges for the
+  same data. Divergent solutions are also no longer mistaken for
+  converged ones: as the coefficients diverge the fitted probabilities
+  underflow and the adjusted score becomes numerically 0, which
+  previously satisfied the convergence check.
+
+- Fixed a bug in
+  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
+  with `link = "loglog"` that made the gradient and every robust
+  variance matrix `NaN`. The `"loglog"` `mu.eta()` function evaluated to
+  `NaN` rather than 0 at a linear predictor of `-Inf`, which is where
+  the lowest threshold sits.
+
+- When `br = TRUE` in
+  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
+  and a `weightit` object supplying M-estimation components is used, the
+  derivative of the outcome score with respect to the weighting model’s
+  coefficients is now computed by numeric differentiation. It previously
+  used a shortcut that assumes the outcome score is linear in the
+  weights, which the bias-reducing adjustment is not. Standard errors
+  change slightly.
 
 - Fixed a bug in `method = "ebal"` with `tols` greater than 0 that could
   cause the FISTA solver to stop before the requested balance tolerance

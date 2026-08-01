@@ -290,6 +290,9 @@ multi.fit <- multinom_weightit(
     nodegree + re74 + re75, data = lalonde,
   vcov = "none"
 )
+#> Warning: The optimization stopped at a point that does not solve the estimating
+#> equations, so the estimates and their standard errors should not be trusted. If
+#> `start` was supplied, try omitting it or supplying values closer to 0.
 
 ps.multi <- fitted(multi.fit)
 head(ps.multi)

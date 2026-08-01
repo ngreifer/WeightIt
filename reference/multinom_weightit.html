@@ -13,7 +13,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,6 +65,7 @@
 <span>  y <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fwb.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  br <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -158,6 +159,14 @@ See <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-li
  when <code>vcov = "FWB"</code>.</p></dd>
 
 
+<dt id="arg-br">br<a class="anchor" aria-label="anchor" href="#arg-br"></a></dt>
+<dd><p><code>logical</code>; whether to use mean bias reduction, i.e., to solve the
+bias-reducing adjusted score equations of Firth (1993) rather than the score
+equations. This yields estimates with smaller asymptotic bias that are always
+finite, even when the maximum likelihood estimates are not (e.g., under
+separation). Default is <code>FALSE</code>. See Details.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>arguments to be used to form the default control argument if it
 is not supplied directly.</p></dd>
@@ -185,7 +194,7 @@ custom function in <span class="pkg">WeightIt</span> that optionally computes a 
 account for estimation of the weights if a <code>weightit</code> or <code>weightitMSM</code> object
 is supplied to the <code>weightit</code> argument. This implementation is less robust to
 failures than other multinomial logistic regression solvers and should be
-used with caution. Estimation of coefficients should align with that from
+used with caution. Unless <code>br = TRUE</code>, estimation of coefficients should align with that from
 <code><a href="https://rdrr.io/pkg/mlogit/man/mlogit.html" class="external-link">mlogit::mlogit()</a></code> and <code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code> but might differ from <code><a href="https://rdrr.io/pkg/nnet/man/multinom.html" class="external-link">nnet::multinom()</a></code> due to the relaxed convergence thresholds of the latter.</p>
 <p>When no argument is supplied to
 <code>weightit</code> or there is no <code>"Mparts"</code> attribute in the supplied object, the
@@ -211,7 +220,39 @@ weighting method to accept sampling weights (which most do, and you'll get an
 error if it doesn't). Setting <code>vcov = "FWB"</code> and supplying <code>fwb.args = list(wtype = "multinom")</code>
 also performs the resampling-based bootstrap but
 with the additional features <span class="pkg">fwb</span> provides (e.g., a progress bar and
-parallelization).</p>
+parallelization).</p><div class="section">
+<h3 id="bias-reduction">Bias reduction<a class="anchor" aria-label="anchor" href="#bias-reduction"></a></h3>
+
+
+<p>When <code>br = TRUE</code>, the coefficients solve the bias-reducing adjusted score
+equations of Firth (1993) instead of the score equations, which removes the
+first-order term in the asymptotic bias of the estimates. Because the
+multinomial logistic regression model uses the canonical link, the adjusted
+score function is the gradient of the log-likelihood penalized by the Jeffreys
+invariant prior, \(\log|F(\beta)|/2\), where \(F(\beta)\) is the expected
+information matrix (Kosmidis &amp; Firth, 2011). Consequently, the estimates are
+always finite and correspond to the maximum of a penalized likelihood.
+Estimation should align with that from <code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>
+ with its
+default <code>type = "AS_mean"</code>.</p>
+<p>Weights are treated as multinomial totals, as they are by <span class="pkg">brglm2</span>, which
+makes the estimates invariant to whether the data are supplied as individual
+units or as groups of identical units with weights equal to their counts. As
+for <code>br = TRUE</code> in <code><a href="glm_weightit.html">glm_weightit()</a></code>, the reported variance matrix uses the
+information matrix at the estimates rather than the Jacobian of the adjusted
+score, i.e., the adjustment is treated as fixed; the two differ by a term that
+vanishes asymptotically. M-estimation and bootstrapping can be used with
+<code>br = TRUE</code> just as they can without it.</p>
+</div>
+
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+<em>Biometrika</em>, 80(1), 27–38. <a href="https://doi.org/10.1093/biomet/80.1.27" class="external-link">doi:10.1093/biomet/80.1.27</a></p>
+<p>Kosmidis, I., &amp; Firth, D. (2011). Multinomial logit bias reduction via the
+Poisson log-linear model. <em>Biometrika</em>, 98(3), 755–759.
+<a href="https://doi.org/10.1093/biomet/asr026" class="external-link">doi:10.1093/biomet/asr026</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -221,6 +262,8 @@ parallelization).</p>
 <li><p><code><a href="coxph_weightit.html">coxph_weightit()</a></code> for fitting Cox proportional hazards models that adjust for estimation of the weights.</p></li>
 <li><p><code><a href="https://melff.github.io/mclogit/reference/mblogit.html" class="external-link">mclogit::mblogit()</a></code>
  for fitting multinomial regression models that do not account for estimation of the weights.</p></li>
+<li><p><code><a href="https://rdrr.io/pkg/brglm2/man/brmultinom.html" class="external-link">brglm2::brmultinom()</a></code>
+ for fitting bias-reduced multinomial regression models that do not account for estimation of the weights.</p></li>
 </ul></div>
     </div>
 
@@ -253,6 +296,27 @@ parallelization).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2~treat        0.05006    0.23633   0.212    0.832    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3~(Intercept) -1.02170    0.15699  -6.508   &lt;1e-06 ***</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 3~treat        0.12015    0.23835   0.504    0.614    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Same model using mean bias reduction</span></span></span>
+<span class="r-in"><span><span class="va">fit_br</span> <span class="op">&lt;-</span> <span class="fu">multinom_weightit</span><span class="op">(</span><span class="va">re78_3</span> <span class="op">~</span> <span class="va">treat</span>,</span></span>
+<span class="r-in"><span>                            data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
+<span class="r-in"><span>                            weightit <span class="op">=</span> <span class="va">w.out</span>,</span></span>
+<span class="r-in"><span>                            br <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_br</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call:</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> multinom_weightit(formula = re78_3 ~ treat, data = lalonde, weightit = w.out, </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     br = TRUE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Coefficients:</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>               Estimate Std. Error z value Pr(&gt;|z|)    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2~(Intercept) -0.89698    0.14881  -6.027   &lt;1e-06 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2~treat        0.04968    0.23596   0.211    0.833    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3~(Intercept) -1.01323    0.15654  -6.473   &lt;1e-06 ***</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3~treat        0.11886    0.23780   0.500    0.617    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 </code></pre></div>

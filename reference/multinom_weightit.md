@@ -24,6 +24,7 @@ multinom_weightit(
   y = TRUE,
   contrasts = NULL,
   fwb.args = list(),
+  br = FALSE,
   ...
 )
 ```
@@ -121,6 +122,14 @@ multinom_weightit(
   [`fwb::fwb()`](https://ngreifer.github.io/fwb/reference/fwb.html) when
   `vcov = "FWB"`.
 
+- br:
+
+  `logical`; whether to use mean bias reduction, i.e., to solve the
+  bias-reducing adjusted score equations of Firth (1993) rather than the
+  score equations. This yields estimates with smaller asymptotic bias
+  that are always finite, even when the maximum likelihood estimates are
+  not (e.g., under separation). Default is `FALSE`. See Details.
+
 - ...:
 
   arguments to be used to form the default control argument if it is not
@@ -155,7 +164,8 @@ variance matrix that can be adjusted to account for estimation of the
 weights if a `weightit` or `weightitMSM` object is supplied to the
 `weightit` argument. This implementation is less robust to failures than
 other multinomial logistic regression solvers and should be used with
-caution. Estimation of coefficients should align with that from
+caution. Unless `br = TRUE`, estimation of coefficients should align
+with that from
 [`mlogit::mlogit()`](https://rdrr.io/pkg/mlogit/man/mlogit.html) and
 [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
 but might differ from
@@ -190,6 +200,42 @@ reliable but requires the weighting method to accept sampling weights
 performs the resampling-based bootstrap but with the additional features
 fwb provides (e.g., a progress bar and parallelization).
 
+### Bias reduction
+
+When `br = TRUE`, the coefficients solve the bias-reducing adjusted
+score equations of Firth (1993) instead of the score equations, which
+removes the first-order term in the asymptotic bias of the estimates.
+Because the multinomial logistic regression model uses the canonical
+link, the adjusted score function is the gradient of the log-likelihood
+penalized by the Jeffreys invariant prior, \\\log\|F(\beta)\|/2\\, where
+\\F(\beta)\\ is the expected information matrix (Kosmidis & Firth,
+2011). Consequently, the estimates are always finite and correspond to
+the maximum of a penalized likelihood. Estimation should align with that
+from
+[`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
+with its default `type = "AS_mean"`.
+
+Weights are treated as multinomial totals, as they are by brglm2, which
+makes the estimates invariant to whether the data are supplied as
+individual units or as groups of identical units with weights equal to
+their counts. As for `br = TRUE` in
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+the reported variance matrix uses the information matrix at the
+estimates rather than the Jacobian of the adjusted score, i.e., the
+adjustment is treated as fixed; the two differ by a term that vanishes
+asymptotically. M-estimation and bootstrapping can be used with
+`br = TRUE` just as they can without it.
+
+## References
+
+Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+*Biometrika*, 80(1), 27–38.
+[doi:10.1093/biomet/80.1.27](https://doi.org/10.1093/biomet/80.1.27)
+
+Kosmidis, I., & Firth, D. (2011). Multinomial logit bias reduction via
+the Poisson log-linear model. *Biometrika*, 98(3), 755–759.
+[doi:10.1093/biomet/asr026](https://doi.org/10.1093/biomet/asr026)
+
 ## See also
 
 - [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
@@ -207,6 +253,10 @@ fwb provides (e.g., a progress bar and parallelization).
 - [`mclogit::mblogit()`](https://melff.github.io/mclogit/reference/mblogit.html)
   for fitting multinomial regression models that do not account for
   estimation of the weights.
+
+- [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html)
+  for fitting bias-reduced multinomial regression models that do not
+  account for estimation of the weights.
 
 ## Examples
 
@@ -238,6 +288,27 @@ summary(fit)
 #> 2~treat        0.05006    0.23633   0.212    0.832    
 #> 3~(Intercept) -1.02170    0.15699  -6.508   <1e-06 ***
 #> 3~treat        0.12015    0.23835   0.504    0.614    
+#> Standard error: HC0 robust (adjusted for estimation of weights)
+#> 
+
+# Same model using mean bias reduction
+fit_br <- multinom_weightit(re78_3 ~ treat,
+                            data = lalonde,
+                            weightit = w.out,
+                            br = TRUE)
+
+summary(fit_br)
+#> 
+#> Call:
+#> multinom_weightit(formula = re78_3 ~ treat, data = lalonde, weightit = w.out, 
+#>     br = TRUE)
+#> 
+#> Coefficients:
+#>               Estimate Std. Error z value Pr(>|z|)    
+#> 2~(Intercept) -0.89698    0.14881  -6.027   <1e-06 ***
+#> 2~treat        0.04968    0.23596   0.211    0.833    
+#> 3~(Intercept) -1.01323    0.15654  -6.473   <1e-06 ***
+#> 3~treat        0.11886    0.23780   0.500    0.617    
 #> Standard error: HC0 robust (adjusted for estimation of weights)
 #> 
 ```

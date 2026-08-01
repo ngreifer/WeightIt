@@ -38,7 +38,12 @@ weightitMSM(
   formulas must be in temporal order, and must contain all covariates to
   be balanced at that time point (i.e., treatments and covariates
   featured in early formulas should appear in later ones). Interactions
-  and functions of covariates are allowed.
+  and functions of covariates are allowed. As in
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md),
+  a formula may have an empty right hand side (e.g., `A_1 ~ 1`), which
+  requests a marginal model at that time point; see *Empty model
+  formulas* in Details at
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 
 - data:
 
@@ -282,6 +287,23 @@ Censoring weights are not stabilized by `num.formula`; each is
 stabilized by its own marginal censoring model when `stabilize = TRUE`.
 When `num.formula` is supplied as a list, it should have one entry per
 *treatment* time point, ignoring the censoring entries.
+
+The right side of a censoring formula may be empty, as in
+`.cens(C_2) ~ 1`, which requests a marginal censoring model that assumes
+censoring at that time point is independent of the covariates; its
+contribution to the product is \\1/P(C = 0)\\ for the units still under
+observation and 0 for those censored there. Everything else is
+unaffected: the risk sets, the missing values permitted after censoring,
+`stabilize`, `by`, and M-estimation all work as they do for a
+covariate-dependent censoring model, and empty and non-empty censoring
+formulas can be mixed freely. Each time point is fit separately, so only
+the empty ones take the intercept-only shortcut described in *Empty
+model formulas* in Details at
+[`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md);
+when `is.MSM.method = TRUE` there is no shortcut to take, because a
+single set of weights is estimated for all time points at once, and a
+time point with no covariates instead contributes only its intercept
+balance condition.
 
 Censoring can also be used with `is.MSM.method = TRUE` when
 `method = "cbps"`, in which case one set of weights is estimated

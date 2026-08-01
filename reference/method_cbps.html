@@ -97,6 +97,26 @@ for continuous or longitudinal treatments or when over = TRUE),
 M-estimation is not supported. See glm_weightit() and
 vignette(&quot;estimating-effects&quot;) for details.
 
+
+
+Unsolvable Balance Conditions
+
+
+The just-identified CBPS (over = FALSE) has exactly as many parameters as balance
+conditions, so at a solution the conditions hold exactly and the corresponding
+covariate moments are exactly balanced. For some samples no such solution exists: the
+optimizer settles at a point where the conditions are still unmet, and the resulting
+weights balance the covariates only approximately. This is most likely with a
+continuous treatment and many covariates, and whether it happens depends on the
+sample, not just on the specification.
+weightit() warns when this occurs, since the returned weights are otherwise
+indistinguishable from ones that did solve the conditions. When it does, assess the
+balance actually achieved (e.g., with cobalt::bal.tab()) rather than assuming it is
+exact, and consider over = TRUE, a different link, or fewer covariates. With
+include.obj = TRUE, the value component of the returned optim() object is the
+norm of the mean estimating function, which is what the warning is based on: it is
+essentially 0 when the conditions were solved.
+
 "><meta property="og:description" content="This page explains the details of estimating weights from covariate balancing
 propensity scores by setting method = &quot;cbps&quot; in the call to weightit() or
 weightitMSM(). This method can be used with binary, multi-category, and
@@ -189,6 +209,26 @@ for continuous or longitudinal treatments or when over = TRUE),
 M-estimation is not supported. See glm_weightit() and
 vignette(&quot;estimating-effects&quot;) for details.
 
+
+
+Unsolvable Balance Conditions
+
+
+The just-identified CBPS (over = FALSE) has exactly as many parameters as balance
+conditions, so at a solution the conditions hold exactly and the corresponding
+covariate moments are exactly balanced. For some samples no such solution exists: the
+optimizer settles at a point where the conditions are still unmet, and the resulting
+weights balance the covariates only approximately. This is most likely with a
+continuous treatment and many covariates, and whether it happens depends on the
+sample, not just on the specification.
+weightit() warns when this occurs, since the returned weights are otherwise
+indistinguishable from ones that did solve the conditions. When it does, assess the
+balance actually achieved (e.g., with cobalt::bal.tab()) rather than assuming it is
+exact, and consider over = TRUE, a different link, or fewer covariates. With
+include.obj = TRUE, the value component of the returned optim() object is the
+norm of the mean estimating function, which is what the warning is based on: it is
+essentially 0 when the conditions were solved.
+
 "><meta property="og:image" content="https://ngreifer.github.io/WeightIt/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
@@ -197,7 +237,7 @@ vignette(&quot;estimating-effects&quot;) for details.
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -317,6 +357,26 @@ allowed:</p><dl><dt><code>"ind"</code> (default)</dt>
 for continuous or longitudinal treatments or when <code>over = TRUE</code>),
 M-estimation is not supported. See <code><a href="glm_weightit.html">glm_weightit()</a></code> and
 <code><a href="../articles/estimating-effects.html">vignette("estimating-effects")</a></code> for details.</p>
+</div>
+
+<div class="section">
+<h3 id="unsolvable-balance-conditions">Unsolvable Balance Conditions<a class="anchor" aria-label="anchor" href="#unsolvable-balance-conditions"></a></h3>
+
+
+<p>The just-identified CBPS (<code>over = FALSE</code>) has exactly as many parameters as balance
+conditions, so at a solution the conditions hold exactly and the corresponding
+covariate moments are exactly balanced. For some samples no such solution exists: the
+optimizer settles at a point where the conditions are still unmet, and the resulting
+weights balance the covariates only approximately. This is most likely with a
+continuous treatment and many covariates, and whether it happens depends on the
+sample, not just on the specification.</p>
+<p><code><a href="weightit.html">weightit()</a></code> warns when this occurs, since the returned weights are otherwise
+indistinguishable from ones that did solve the conditions. When it does, assess the
+balance actually achieved (e.g., with <code><a href="https://ngreifer.github.io/cobalt/reference/bal.tab.html" class="external-link">cobalt::bal.tab()</a></code>) rather than assuming it is
+exact, and consider <code>over = TRUE</code>, a different <code>link</code>, or fewer covariates. With
+<code>include.obj = TRUE</code>, the <code>value</code> component of the returned <code><a href="https://rdrr.io/r/stats/optim.html" class="external-link">optim()</a></code> object is the
+norm of the mean estimating function, which is what the warning is based on: it is
+essentially 0 when the conditions were solved.</p>
 </div>
 
     </div>

@@ -39,7 +39,11 @@ weightit.fit(
 
 - covs:
 
-  a numeric matrix of covariates.
+  a numeric matrix of covariates. May have zero columns, in which case
+  the weights are computed with an intercept-only generalized linear
+  model whatever `method` is supplied and any method-specific arguments
+  are ignored; see *Empty model formulas* in Details at
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 
 - treat:
 

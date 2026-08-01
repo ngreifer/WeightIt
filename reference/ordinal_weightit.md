@@ -24,6 +24,7 @@ ordinal_weightit(
   y = TRUE,
   contrasts = NULL,
   fwb.args = list(),
+  br = FALSE,
   ...
 )
 ```
@@ -122,6 +123,15 @@ ordinal_weightit(
   [`fwb::fwb()`](https://ngreifer.github.io/fwb/reference/fwb.html) when
   `vcov = "FWB"`.
 
+- br:
+
+  `logical`; whether to use mean bias reduction, i.e., to solve the
+  bias-reducing adjusted score equations of Kosmidis (2014) rather than
+  the score equations. This yields estimates with smaller asymptotic
+  bias that are always finite, even when the maximum likelihood
+  estimates are not (e.g., when an end category is unobserved). Default
+  is `FALSE`. See Details.
+
 - ...:
 
   arguments to be used to form the default control argument if it is not
@@ -156,7 +166,8 @@ coefficient variance matrix that can be adjusted to account for
 estimation of the weights if a `weightit` or `weightitMSM` object is
 supplied to the `weightit` argument. Estimation of coefficients should
 align with that from
-[`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html).
+[`MASS::polr()`](https://rdrr.io/pkg/MASS/man/polr.html) unless
+`br = TRUE`.
 
 When no argument is supplied to `weightit` or there is no `"Mparts"`
 attribute in the supplied object, the default variance matrix returned
@@ -185,6 +196,58 @@ reliable but requires the weighting method to accept sampling weights
 `vcov = "FWB"` and supplying `fwb.args = list(wtype = "multinom")` also
 performs the resampling-based bootstrap but with the additional features
 fwb provides (e.g., a progress bar and parallelization).
+
+### Bias reduction
+
+When `br = TRUE`, the coefficients solve the bias-reducing adjusted
+score equations for cumulative link models derived by Kosmidis (2014)
+instead of the score equations, which removes the first-order term in
+the asymptotic bias of the estimates. Reduction of bias is equivalent to
+a parameter-dependent additive adjustment of the multinomial counts, and
+the resulting estimates are always finite and remain invariant to linear
+transformations of the parameters and to reversal of the order of the
+response categories. In the special case of two response categories,
+this reduces to the bias-reduced generalized linear model available with
+`br = TRUE` in
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md);
+for a saturated model without covariates and a logit link, it amounts to
+adding \\1/2\\ to the counts of the first and last categories.
+
+The adjusted score equations are solved by quasi-Fisher scoring started
+at the maximum likelihood estimates. Two components of `control` govern
+this: `br.maxit` (the maximum number of iterations, default 100) and
+`br.tol` (the convergence tolerance for the adjusted score relative to
+the sum of the weights, default `1e-10`).
+
+Weights are treated as multinomial totals, which makes the estimates
+invariant to whether the data are supplied as individual units or as
+groups of identical units with weights equal to their counts. As for
+`br = TRUE` in
+[`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md),
+the reported variance matrix uses the information matrix at the
+estimates rather than the Jacobian of the adjusted score, i.e., the
+adjustment is treated as fixed; the two differ by a term that vanishes
+asymptotically. M-estimation and bootstrapping can be used with
+`br = TRUE` just as they can without it.
+
+Note that [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html)
+, which also performs bias reduction for ordinal responses, fits an
+adjacent category logit model rather than a cumulative link model, so
+its estimates are not comparable to those from `ordinal_weightit()`.
+This is true of `parallel = TRUE` as well, which constrains the adjacent
+category logits rather than the cumulative ones to be parallel and so
+yields different fitted probabilities.
+
+## References
+
+Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+*Biometrika*, 80(1), 27–38.
+[doi:10.1093/biomet/80.1.27](https://doi.org/10.1093/biomet/80.1.27)
+
+Kosmidis, I. (2014). Improved estimation in cumulative link models.
+*Journal of the Royal Statistical Society: Series B (Statistical
+Methodology)*, 76(1), 169–196.
+[doi:10.1111/rssb.12025](https://doi.org/10.1111/rssb.12025)
 
 ## See also
 
@@ -241,4 +304,27 @@ summary(fit)
 #>     Estimate Std. Error z value Pr(>|z|)    
 #> 1|2  0.16926    0.07479   2.263   0.0236 *  
 #> 2|3  0.82476    0.08193  10.066   <1e-06 ***
+
+# Same model using mean bias reduction
+fit_br <- ordinal_weightit(re78_3o ~ treat,
+                           data = lalonde,
+                           link = "probit",
+                           weightit = w.out,
+                           br = TRUE)
+
+summary(fit_br)
+#> 
+#> Call:
+#> ordinal_weightit(formula = re78_3o ~ treat, data = lalonde, link = "probit", 
+#>     weightit = w.out, br = TRUE)
+#> 
+#> Coefficients:
+#>       Estimate Std. Error z value Pr(>|z|)
+#> treat  0.05513    0.11121   0.496     0.62
+#> Standard error: HC0 robust (adjusted for estimation of weights)
+#> 
+#> Thresholds:
+#>     Estimate Std. Error z value Pr(>|z|)    
+#> 1|2  0.16856    0.07469   2.257    0.024 *  
+#> 2|3  0.82099    0.08172  10.046   <1e-06 ***
 ```

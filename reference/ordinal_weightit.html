@@ -19,7 +19,7 @@ model when available."><meta property="og:image" content="https://ngreifer.githu
 
     <a class="navbar-brand me-2" href="../index.html">WeightIt</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">1.7.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,6 +74,7 @@ model when available.</p>
 <span>  y <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  contrasts <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fwb.args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  br <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -166,6 +167,14 @@ See <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-li
  when <code>vcov = "FWB"</code>.</p></dd>
 
 
+<dt id="arg-br">br<a class="anchor" aria-label="anchor" href="#arg-br"></a></dt>
+<dd><p><code>logical</code>; whether to use mean bias reduction, i.e., to solve the
+bias-reducing adjusted score equations of Kosmidis (2014) rather than the
+score equations. This yields estimates with smaller asymptotic bias that are
+always finite, even when the maximum likelihood estimates are not (e.g., when
+an end category is unobserved). Default is <code>FALSE</code>. See Details.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>arguments to be used to form the default control argument if it
 is not supplied directly.</p></dd>
@@ -192,7 +201,7 @@ original <code><a href="weightit.html">weightit()</a></code> call.</p>
 custom function in <span class="pkg">WeightIt</span> that optionally computes a coefficient variance matrix that can be adjusted to
 account for estimation of the weights if a <code>weightit</code> or <code>weightitMSM</code> object
 is supplied to the <code>weightit</code> argument. Estimation of coefficients should align with that from
-<code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code>.</p>
+<code><a href="https://rdrr.io/pkg/MASS/man/polr.html" class="external-link">MASS::polr()</a></code> unless <code>br = TRUE</code>.</p>
 <p>When no argument is supplied to
 <code>weightit</code> or there is no <code>"Mparts"</code> attribute in the supplied object, the
 default variance matrix returned will be the "HC0" sandwich variance matrix,
@@ -217,7 +226,51 @@ weighting method to accept sampling weights (which most do, and you'll get an
 error if it doesn't). Setting <code>vcov = "FWB"</code> and supplying <code>fwb.args = list(wtype = "multinom")</code>
 also performs the resampling-based bootstrap but
 with the additional features <span class="pkg">fwb</span> provides (e.g., a progress bar and
-parallelization).</p>
+parallelization).</p><div class="section">
+<h3 id="bias-reduction">Bias reduction<a class="anchor" aria-label="anchor" href="#bias-reduction"></a></h3>
+
+
+<p>When <code>br = TRUE</code>, the coefficients solve the bias-reducing adjusted score
+equations for cumulative link models derived by Kosmidis (2014) instead of the
+score equations, which removes the first-order term in the asymptotic bias of
+the estimates. Reduction of bias is equivalent to a parameter-dependent additive
+adjustment of the multinomial counts, and the resulting estimates are always
+finite and remain invariant to linear transformations of the parameters and to
+reversal of the order of the response categories. In the special case of two
+response categories, this reduces to the bias-reduced generalized linear model
+available with <code>br = TRUE</code> in <code><a href="glm_weightit.html">glm_weightit()</a></code>; for a saturated model without
+covariates and a logit link, it amounts to adding \(1/2\) to the counts of the
+first and last categories.</p>
+<p>The adjusted score equations are solved by quasi-Fisher scoring started at the
+maximum likelihood estimates. Two components of <code>control</code> govern this: <code>br.maxit</code>
+(the maximum number of iterations, default 100) and <code>br.tol</code> (the convergence
+tolerance for the adjusted score relative to the sum of the weights, default
+<code>1e-10</code>).</p>
+<p>Weights are treated as multinomial totals, which makes the estimates invariant
+to whether the data are supplied as individual units or as groups of identical
+units with weights equal to their counts. As for <code>br = TRUE</code> in
+<code><a href="glm_weightit.html">glm_weightit()</a></code>, the reported variance matrix uses the information matrix at
+the estimates rather than the Jacobian of the adjusted score, i.e., the
+adjustment is treated as fixed; the two differ by a term that vanishes
+asymptotically. M-estimation and bootstrapping can be used with <code>br = TRUE</code> just
+as they can without it.</p>
+<p>Note that <code><a href="https://rdrr.io/pkg/brglm2/man/bracl.html" class="external-link">brglm2::bracl()</a></code>
+, which also performs bias reduction for ordinal
+responses, fits an adjacent category logit model rather than a cumulative link
+model, so its estimates are not comparable to those from <code>ordinal_weightit()</code>.
+This is true of <code>parallel = TRUE</code> as well, which constrains the adjacent
+category logits rather than the cumulative ones to be parallel and so yields
+different fitted probabilities.</p>
+</div>
+
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Firth, D. (1993). Bias reduction of maximum likelihood estimates.
+<em>Biometrika</em>, 80(1), 27–38. <a href="https://doi.org/10.1093/biomet/80.1.27" class="external-link">doi:10.1093/biomet/80.1.27</a></p>
+<p>Kosmidis, I. (2014). Improved estimation in cumulative link models. <em>Journal of
+the Royal Statistical Society: Series B (Statistical Methodology)</em>, 76(1),
+169–196. <a href="https://doi.org/10.1111/rssb.12025" class="external-link">doi:10.1111/rssb.12025</a></p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -266,6 +319,29 @@ parallelization).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Estimate Std. Error z value Pr(&gt;|z|)    </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1|2  0.16926    0.07479   2.263   0.0236 *  </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2|3  0.82476    0.08193  10.066   &lt;1e-06 ***</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Same model using mean bias reduction</span></span></span>
+<span class="r-in"><span><span class="va">fit_br</span> <span class="op">&lt;-</span> <span class="fu">ordinal_weightit</span><span class="op">(</span><span class="va">re78_3o</span> <span class="op">~</span> <span class="va">treat</span>,</span></span>
+<span class="r-in"><span>                           data <span class="op">=</span> <span class="va">lalonde</span>,</span></span>
+<span class="r-in"><span>                           link <span class="op">=</span> <span class="st">"probit"</span>,</span></span>
+<span class="r-in"><span>                           weightit <span class="op">=</span> <span class="va">w.out</span>,</span></span>
+<span class="r-in"><span>                           br <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_br</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Call:</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> ordinal_weightit(formula = re78_3o ~ treat, data = lalonde, link = "probit", </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     weightit = w.out, br = TRUE)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Coefficients:</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>       Estimate Std. Error z value Pr(&gt;|z|)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> treat  0.05513    0.11121   0.496     0.62</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-style: italic;">Standard error: HC0 robust (adjusted for estimation of weights)</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="text-decoration: underline;">Thresholds:</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Estimate Std. Error z value Pr(&gt;|z|)    </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1|2  0.16856    0.07469   2.257    0.024 *  </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2|3  0.82099    0.08172  10.046   &lt;1e-06 ***</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
