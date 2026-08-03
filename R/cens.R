@@ -12,7 +12,7 @@
 #'
 #' Because censored units receive a weight of exactly 0, they contribute nothing to a weighted outcome model, and [glm_weightit()], [lm_weightit()], [multinom_weightit()], [ordinal_weightit()], and [coxph_weightit()] all tolerate missing values in the model variables for those units. This is what makes it possible to fit an outcome model whose outcome is unobserved after censoring. See the *Censoring weights (IPCW)* section of [weightit()] for details.
 #'
-#' No `estimand` or `focal` argument applies to censoring models; supplying one produces a warning and it is ignored. `subclass` cannot be used. Not all methods support censoring weights; see the `treat_type` component of [.weightit_methods] to check.
+#' No `estimand` or `focal` argument applies to censoring models; supplying one produces a warning and it is ignored. `subclass` cannot be used. Not all methods support censoring weights; see the `treat_type` component of [`.weightit_methods`] to check.
 #'
 #' The right side of the formula may be empty, as in `.cens(C) ~ 1`, requesting a marginal censoring model in which censoring is assumed independent of the covariates. The weights are then \eqn{1/P(C = 0)} for the units still under observation and 0 for the censored units, whatever `method` is supplied; see *Empty model formulas* in Details at [weightit()]. Nothing else changes, so a marginal censoring model still composes with `by`, `stabilize`, M-estimation, and, in [weightitMSM()], the risk sets and the missing values permitted after censoring.
 #'
@@ -34,7 +34,7 @@
 #' The survival convention is used: `1` means the unit is *censored* (drops out of observation) and `0` means it remains under observation. This is the opposite of an "observed" or "event" indicator. When a censoring model is supplied to [weightit()], the returned propensity score is \eqn{P(C = 1 | X)}, the probability of *being censored*.
 #'
 #' @section Assessing balance:
-#' `cobalt::bal.tab()` cannot be used directly on the output of a censoring model. For a point-treatment `weightit` object it errors because every censored unit has a weight of 0, leaving one "treatment group" with no weight; for a `weightitMSM` object it errors because censoring leaves missing values in the later treatments, which `bal.tab()` does not allow.
+#' [cobalt::bal.tab()] cannot be used directly on the output of a censoring model. For a point-treatment `weightit` object it errors because every censored unit has a weight of 0, leaving one "treatment group" with no weight; for a `weightitMSM` object it errors because censoring leaves missing values in the later treatments, which `bal.tab()` does not allow.
 #'
 #' Because the target of a censoring model is the full at-risk sample rather than another treatment group, balance is assessed by comparing the weighted uncensored units against that sample. This can be done by stacking the two:
 #'
@@ -60,7 +60,7 @@
 #' Inside a formula the marker is stripped before the formula is processed, so `.cens()` is not actually evaluated there and the treatment name remains that of the indicator itself (e.g., `C` rather than `.cens(C)`).
 #'
 #' @seealso
-#' [weightit()] and [weightitMSM()] for estimating censoring weights; [.weightit_methods] for which methods support them.
+#' [weightit()] and [weightitMSM()] for estimating censoring weights; [`.weightit_methods`] for which methods support them.
 #'
 #' @examples
 #' data("msmdata")

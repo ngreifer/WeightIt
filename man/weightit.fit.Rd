@@ -74,13 +74,13 @@ will not be checked for \code{NA} values; this can be faster when it is known
 there are none.}
 
 \item{verbose}{\code{logical}; whether to print additional information output by
-the fitting function.}
+the fitting function. Default is \code{FALSE} to suppress output.}
 
 \item{include.obj}{\code{logical}; whether to include in the output any fit
 objects created in the process of estimating the weights. For example, with
 \code{method = "glm"}, the \code{glm} objects containing the propensity score model
 will be included. See the individual pages for each method for information
-on what object will be included if \code{TRUE}.}
+on what object will be included if \code{TRUE}. Default is \code{FALSE} to keep the returned object small.}
 
 \item{subset}{a \code{logical} vector with length equal to that of \code{treat}
 restricting which units are used to fit the model, e.g., the units still
@@ -99,7 +99,7 @@ A \code{weightit.fit} object with the following elements:
 \item{treat}{The values of the treatment variable.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
-\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models, and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. For binary treatments, the propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined. For censoring models, it corresponds to the predicted probability of \emph{being censored}, i.e., of the censoring indicator equalling 1.}
+\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models, and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. For binary treatments, the propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details at \code{\link[=weightit]{weightit()}} for how the treated group is determined. For censoring models, it corresponds to the predicted probability of \emph{being censored}, i.e., of the censoring indicator equaling 1.}
 \item{s.weights}{The provided sampling weights.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 \item{fit.obj}{When \code{include.obj = TRUE}, the fit object.}

@@ -40,7 +40,7 @@
 #' * Special formula components, such as `strata()`, `cluster()`, `pspline()`, `frailty()`, `ridge()`, and `tt()` are not allowed
 #' * Only right censoring is allowed, and only two-state models are allowed (i.e., the `Surv()` component of `formula` must be of the form `Surv(time, event)`)
 #' * Time-varying predictors are not allowed and there must be one observation per unit (and the `id` and `istate` arguments to `coxph()` are ignored)
-#' * Weights of 0 are allowed (`coxph()` rejects them). Such units are omitted from the model fit, which is exact rather than an approximation: a unit with a weight of 0 contributes neither its own term nor anything to any risk set denominator, both of which are weighted by the same weights. Missing values in the model variables are tolerated for these units, which makes it possible to fit an outcome model after censoring, where the event time is unascertained for censored units (see [`.cens()`][.cens]). Missing values in units with a nonzero weight produce an error.
+#' * Weights of 0 are allowed (`coxph()` rejects them). Such units are omitted from the model fit, which is exact rather than an approximation: a unit with a weight of 0 contributes neither its own term nor anything to any risk set denominator, both of which are weighted by the same weights. Missing values in the model variables are tolerated for these units, which makes it possible to fit an outcome model after censoring, where the event time is unascertained for censored units (see [.cens()]). Missing values in units with a nonzero weight produce an error.
 #'
 #' When no argument is supplied to
 #' `weightit` or there is no `"Mparts"` attribute in the supplied object, the

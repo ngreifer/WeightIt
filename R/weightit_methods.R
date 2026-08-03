@@ -6,7 +6,7 @@
 #' @details
 #' Each component is itself a list containing the following components:
 #' \describe{
-#' \item{`treat_type`}{at least one of `"binary"`, `"multinomial"`, or `"continuous"` indicating which treatment types are available for this method. `"censoring"` indicates the method can also estimate inverse probability of censoring weights when the censoring indicator is wrapped in [`.cens()`][.cens].}
+#' \item{`treat_type`}{at least one of `"binary"`, `"multinomial"`, or `"continuous"` indicating which treatment types are available for this method. `"censoring"` indicates the method can also estimate inverse probability of censoring weights when the censoring indicator is wrapped in [.cens()].}
 #' \item{`estimand`}{which estimands are available for this method. Most methods that support binary and multi-category treatments accept `"ATE"`, `"ATT"`, and `"ATC"`, as well as some other estimands depending on the method. See [get_w_from_ps()] for more details about what each estimand means.}
 #' \item{`alias`}{a character vector of aliases for the method. When an alias is supplied, the corresponding method will still be dispatched. For example, the canonical method to request entropy balancing is `"ebal"`, but `"ebalance"` and `"entropy"` also work. The first value is the canonical name.}
 #' \item{`description`}{a string containing the description of the name in English.}

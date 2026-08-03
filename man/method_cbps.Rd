@@ -83,25 +83,6 @@ for continuous or longitudinal treatments or when \code{over = TRUE}),
 M-estimation is not supported. See \code{\link[=glm_weightit]{glm_weightit()}} and
 \code{vignette("estimating-effects")} for details.
 }
-
-\subsection{Unsolvable Balance Conditions}{
-
-The just-identified CBPS (\code{over = FALSE}) has exactly as many parameters as balance
-conditions, so at a solution the conditions hold exactly and the corresponding
-covariate moments are exactly balanced. For some samples no such solution exists: the
-optimizer settles at a point where the conditions are still unmet, and the resulting
-weights balance the covariates only approximately. This is most likely with a
-continuous treatment and many covariates, and whether it happens depends on the
-sample, not just on the specification.
-
-\code{weightit()} warns when this occurs, since the returned weights are otherwise
-indistinguishable from ones that did solve the conditions. When it does, assess the
-balance actually achieved (e.g., with \code{cobalt::bal.tab()}) rather than assuming it is
-exact, and consider \code{over = TRUE}, a different \code{link}, or fewer covariates. With
-\code{include.obj = TRUE}, the \code{value} component of the returned \code{optim()} object is the
-norm of the mean estimating function, which is what the warning is based on: it is
-essentially 0 when the conditions were solved.
-}
 }
 \details{
 CBPS estimates the coefficients of a generalized linear model (for
@@ -157,6 +138,23 @@ When the \pkg{rootSolve} package is installed, the optimization process will
 be slightly faster and more accurate because starting values are provided by
 an initial call to \pkgfun{rootSolve}{multiroot}. However, the package is not
 required.
+\subsection{Unsolvable Balance Conditions}{
+
+The just-identified CBPS (\code{over = FALSE}) has exactly as many parameters as balance
+conditions, so at a solution the conditions hold exactly and the corresponding
+covariate moments are exactly balanced. For some samples no such solution exists: the
+optimizer settles at a point where the conditions are still unmet, and the resulting
+weights balance the covariates only approximately. This is most likely with a
+continuous treatment and many covariates, and whether it happens depends on the
+sample, not just on the specification.
+
+\code{weightit()} warns when this occurs, since the returned weights are otherwise
+indistinguishable from ones that did solve the conditions. When it does, assess the
+balance actually achieved (e.g., with \code{cobalt::bal.tab()}) rather than assuming it is
+exact. With \code{include.obj = TRUE}, the \code{value} component of the returned \code{optim()} output object is the
+norm of the mean estimating function, which is what the warning is based on: it is
+essentially 0 when the conditions were solved.
+}
 }
 \section{Additional Arguments}{
 

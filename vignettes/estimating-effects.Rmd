@@ -199,7 +199,7 @@ In addition to *WeightIt* and whatever package may be required to estimate the w
 
 - *marginaleffects* provides the `avg_comparisons()` function for performing g-computation and estimating the SEs and confidence intervals of the average estimate potential outcomes and treatment effects
 - *survival* provides functionality to estimate the coefficients in a Cox proportional hazards model for the marginal hazard ratio, which is called internally by `coxph_weightit()` for survival outcomes
-- *ardftools* provides tools for estimating, visualizing, and testing the effect of a continuous treatment on an outcome
+- *adrftools* provides tools for estimating, visualizing, and testing the effect of a continuous treatment on an outcome
 
 ```{r,message=FALSE,warning=FALSE, eval= if (me_ok) TRUE else 1L}
 library("WeightIt")
@@ -313,7 +313,7 @@ Categorical outcomes can be modeled using `ordinal_weightit()` and `multinom_wei
 
 There are several measures of effect size for survival outcomes, some of which are described by @mao2018. A common quantity of interest is the hazard ratio (HR) between the treated and control groups, which can be estimated using a Cox proportional hazards model. As with the OR, the HR is non-collapsible, which means the estimated HR will only be a valid estimate of the marginal HR when no other covariates are included in the model. Other effect measures, such as the difference in mean survival times or probability of survival after a given time, can be treated just like continuous and binary outcomes as previously described.
 
-For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph_weightit()`, which adapts `coxph()` from the *survival* package but allows for estimation of SEs that account for estimation of the weights. Robust SEs for HRs were studied by @austin2016 and were found to be conservative. Other formulas have been developed for estimating standard errors more accurately [@mao2018; @hajage2018; @shuVarianceEstimationInverse2021], though @austin2016 also found the bootstrap to be adequate. The M-estimation-based standard error as decribed by @shuVarianceEstimationInverse2021 is requested by default, and bootstrap standard errors can be requested by setting `vcov` to `"BS"` or `"FWB"`.
+For the HR, we cannot compute average marginal effects and must use the coefficient on treatment in a Cox model fit without covariates. This means that we cannot use the procedures from the Standard Case. Here we describe estimating the marginal HR using `coxph_weightit()`, which adapts `coxph()` from the *survival* package but allows for estimation of SEs that account for estimation of the weights. Robust SEs for HRs were studied by @austin2016 and were found to be conservative. Other formulas have been developed for estimating standard errors more accurately [@mao2018; @hajage2018; @shuVarianceEstimationInverse2021], though @austin2016 also found the bootstrap to be adequate. The M-estimation-based standard error as described by @shuVarianceEstimationInverse2021 is requested by default, and bootstrap standard errors can be requested by setting `vcov` to `"BS"` or `"FWB"`.
 
 ```{r, eval=su_ok, message=F}
 #Cox Regression for marginal HR

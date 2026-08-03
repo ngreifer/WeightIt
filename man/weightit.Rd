@@ -42,19 +42,19 @@ each method for more information on which estimands are allowed with each
 method and what literature to read to interpret these estimands.}
 
 \item{stabilize}{whether or not and how to stabilize the weights. If \code{TRUE},
-each unit's weight will be multiplied by a standardization factor, which is
+each unit's weight will be multiplied by a stabilization factor, which is
 the the unconditional probability (or density) of each unit's observed
 treatment value. If a formula, a generalized linear model will be fit with
 the included predictors, and the inverse of the corresponding weight will
-be used as the standardization factor. Can only be used with continuous
-treatments or when \code{estimand = "ATE"}. Default is \code{FALSE} for no
-standardization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}.
+be used as the standardization factor. Can only be used when \code{estimand = "ATE"} or with continuous
+treatments. Default is \code{FALSE} for no
+stabilization. See also the \code{num.formula} argument at \code{\link[=weightitMSM]{weightitMSM()}}.
 For continuous treatments, weights are already stabilized, so setting
 \code{stabilize = TRUE} will be ignored with a warning (supplying a formula
 still works).}
 
 \item{focal}{when \code{estimand} is set to \code{"ATT"} or \code{"ATC"}, which group to
-consider the "treated" or "control" group. This group will not be weighted,
+consider the "treated" or "control" group, respectively. This group will not be weighted,
 and the other groups will be weighted to resemble the focal group. If
 specified, \code{estimand} will automatically be set to \code{"ATT"} (with a warning
 if \code{estimand} is not \code{"ATT"} or \code{"ATC"}). See section \emph{\code{estimand} and \code{focal}} in Details below.}
@@ -68,13 +68,12 @@ one \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
 variables using \code{\link[=interaction]{interaction()}}.}
 
-\item{s.weights}{a vector of sampling weights or the name of a variable in
-\code{data} that contains sampling weights. These can also be matching weights
-if weighting is to be used on matched data. See the individual pages for
+\item{s.weights}{an optional vector of sampling weights or the name of a variable in
+\code{data} that contains sampling weights. See the individual pages for
 each method for information on whether sampling weights can be supplied.}
 
-\item{ps}{a vector of propensity scores or the name of a variable in \code{data}
-containing propensity scores. If not \code{NULL}, \code{method} is ignored unless it
+\item{ps}{an optional vector of propensity scores or the name of a variable in \code{data}
+containing propensity scores. If supplied, \code{method} is ignored unless it
 is a user-supplied function, and the propensity scores will be used to
 create weights. \code{formula} must include the treatment variable in \code{data},
 but the listed covariates will play no role in the weight estimation. Using
@@ -89,13 +88,13 @@ be used instead. Consider the \CRANpkg{MatchThem} package for the use of
 \code{weightit()} with multiply imputed data.}
 
 \item{verbose}{\code{logical}; whether to print additional information output by
-the fitting function.}
+the fitting function. Default is \code{FALSE} to suppress output.}
 
 \item{include.obj}{\code{logical}; whether to include in the output any fit
 objects created in the process of estimating the weights. For example, with
 \code{method = "glm"}, the \code{glm} objects containing the propensity score model
 will be included. See the individual pages for each method for information
-on what object will be included if \code{TRUE}.}
+on what object will be included if \code{TRUE}. Default is \code{FALSE} to keep the returned object small.}
 
 \item{keep.mparts}{\code{logical}; whether to include in the output components
 necessary to estimate standard errors that account for estimation of the
@@ -116,10 +115,10 @@ A \code{weightit} object with the following elements:
 \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
 \item{estimand}{The estimand requested.}
 \item{method}{The weight estimation method specified.}
-\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is \code{"glm"}, \code{"gbm"}, \code{"cbps"}, \code{"ipt"}, \code{"super"}, or \code{"bart"}. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
-\item{s.weights}{The provided sampling weights.}
+\item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when \code{method} is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section \emph{\code{estimand} and \code{focal}} in Details for how the treated group is determined.}
+\item{s.weights}{The provided sampling weights, or a vector of 1s of none are provided.}
 \item{focal}{The focal treatment level if the ATT or ATC was requested.}
-\item{by}{A data.frame containing the \code{by} variable when specified.}
+\item{by}{A data frame containing the \code{by} variable when specified.}
 \item{obj}{When \code{include.obj = TRUE}, the fit object.}
 \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 
@@ -148,6 +147,7 @@ that perform the estimation of balancing weights using the requested
 information about them, including additional arguments and outputs (e.g.,
 when \code{include.obj = TRUE}), how missing values are treated, which estimands
 are allowed, and whether sampling weights are allowed.\tabular{ll}{
+   \code{method} \tab Name \cr
    \code{\link[=method_glm]{"glm"}} \tab Propensity score weighting using generalized linear models \cr
    \code{\link[=method_gbm]{"gbm"}} \tab Propensity score weighting using generalized boosted modeling \cr
    \code{\link[=method_cbps]{"cbps"}} \tab Covariate Balancing Propensity Score weighting \cr
@@ -188,7 +188,7 @@ arguments are still checked against the requested \code{method}, so a method tha
 cannot handle the treatment type at all (e.g., \code{"npcbps"} with a censoring model)
 still produces an error.
 
-A formula whose only terms are \code{lme4}-style random effects, such as
+A formula whose only terms are \emph{lme4}-style random effects, such as
 \code{A ~ (1 | school)}, is \emph{not} empty in this sense and is fit as the multilevel
 model it describes.
 }
@@ -199,7 +199,7 @@ Wrapping the left side of \code{formula} in \code{\link[=.cens]{.cens()}} reques
 probability of censoring weights instead of treatment weights, as in
 \code{weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")}. Censoring is treated as
 its own treatment type, distinct from binary, multi-category, and continuous
-treatments; the indicator must be 0 for units still under observation and 1 for
+treatments; the indicator must be 0 or \code{FALSE} for units still under observation and 1 or \code{TRUE} for
 units that are censored.
 
 Weights are estimated only for the units still under observation, and are those
@@ -211,10 +211,13 @@ binary-treatment problem, which would additionally solve for weights among the
 censored units; this matters most when few units are censored.
 
 \code{estimand}, \code{focal}, and \code{subclass} do not apply and are rejected or ignored.
-\code{by} and \code{stabilize} can be used; stabilization divides the weights by those from
-a marginal censoring model, giving \eqn{P(C = 0) / P(C = 0 | X)}. \code{ps} is the
-predicted probability of \emph{being censored}. Not all methods support censoring
-weights; see the \code{treat_type} component of \link{.weightit_methods}.
+\code{by} and \code{stabilize} can be used; stabilization multiplies the weights by
+\eqn{P(C = 0 | V)} from a second censoring model (marginal when \code{stabilize} is
+\code{TRUE}, otherwise fit with the predictors in the supplied formula), giving
+\eqn{P(C = 0 | V) / P(C = 0 | X)} for the units still under observation and
+leaving the censored units at exactly 0. \code{ps} is the
+predicted probability of \emph{being censored}. Not all methods support estimating censoring
+weights; see the \code{treat_type} component of \code{\link{.weightit_methods}}.
 
 As with a treatment model, the right side of the formula may be empty, as in
 \code{.cens(C) ~ 1}, which requests a marginal censoring model that assumes censoring
@@ -306,5 +309,5 @@ and data frame and performs minimal argument checking and processing. It may
 be useful for speeding up simulation studies for which the correct arguments
 are known. In general, \code{weightit()} should be used.
 
-\code{\link[=summary.weightit]{summary.weightit()}} for summarizing the weights
+\code{\link[=summary.weightit]{summary.weightit()}} for summarizing the distribution of the weights.
 }

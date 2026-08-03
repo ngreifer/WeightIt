@@ -17,7 +17,7 @@
 #'   *Empty model formulas* in Details at [weightit()].
 #' @param treat a vector of treatment statuses. To request inverse probability
 #'   of censoring weights, supply a 0/1 censoring indicator (1 = censored)
-#'   tagged with [`.cens()`][.cens], as in `treat = .cens(C)`; `NA` values are
+#'   tagged with [.cens()], as in `treat = .cens(C)`; `NA` values are
 #'   then allowed outside `subset`, since a unit censored at an earlier time
 #'   point has no later indicator.
 #' @param method a string containing the name of the method that will be used to
@@ -62,7 +62,7 @@
 #' \item{treat}{The values of the treatment variable.}
 #' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
-#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models, and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. For binary treatments, the propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details at [weightit()] for how the treated group is determined. For censoring models, it corresponds to the predicted probability of *being censored*, i.e., of the censoring indicator equalling 1.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and censoring models, and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. For binary treatments, the propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details at [weightit()] for how the treated group is determined. For censoring models, it corresponds to the predicted probability of *being censored*, i.e., of the censoring indicator equaling 1.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
 #' \item{fit.obj}{When `include.obj = TRUE`, the fit object.}

@@ -77,7 +77,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], a single BART model of the probability of being censored is fit, and the weights are `1/P(C = 0 | X)` for the units still under observation and 0 for the censored units. The returned propensity score is the probability of *being censored*.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], a single BART model of the probability of being censored is fit, and the weights are `1/P(C = 0 | X)` for the units still under observation and 0 for the censored units. The returned propensity score is the probability of *being censored*.
 #'
 #' ## Longitudinal Treatments
 #'

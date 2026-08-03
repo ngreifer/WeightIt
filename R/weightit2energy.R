@@ -38,7 +38,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], the energy distance minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0. `improved` does not apply, as only one group is weighted.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], the energy distance minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0. `improved` does not apply, as only one group is weighted.
 #'
 #' ## Longitudinal Treatments
 #'

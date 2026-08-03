@@ -33,7 +33,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], the balance conditions require the weighted covariate means of the units still under observation to equal those of the full at-risk sample. The censored units receive a weight of 0.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], the balance conditions require the weighted covariate means of the units still under observation to equal those of the full at-risk sample. The censored units receive a weight of 0.
 #'
 #' Censoring weights are also available with `is.MSM.method = TRUE`, i.e., when the weights at all time points are estimated simultaneously; `"cbps"` is the only method for which this is possible. Each time point's balance condition is then evaluated among the units still under observation at that time point, so the covariates and treatments that are missing for already-censored units never enter. The treatment conditions use the cumulative weights, which include the censoring factors; each censoring condition uses its own factor. As for treatments, M-estimation is not available with `is.MSM.method = TRUE`.
 #'

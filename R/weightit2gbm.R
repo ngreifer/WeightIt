@@ -61,7 +61,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], a single model of the probability of being censored is fit, and the weights are \eqn{1/P(C = 0 | X)} for the units still under observation and 0 for the censored units. The number of trees is selected using `criterion` computed between the *weighted units still under observation* and the *full at-risk sample*, which is what the weights target. This is cobalt's "target" balance, so `criterion` must be one of `cobalt::available.stats("target")` -- a subset of the values allowed for binary treatments, excluding `"r2"`, `"r2.2"`, `"r2.3"`, `"kernel.dist"`, and `"l1.med"`. `"cv{#}"` works as it does for binary treatments.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], a single model of the probability of being censored is fit, and the weights are \eqn{1/P(C = 0 | X)} for the units still under observation and 0 for the censored units. The number of trees is selected using `criterion` computed between the *weighted units still under observation* and the *full at-risk sample*, which is what the weights target. This is cobalt's "target" balance, so `criterion` must be one of `cobalt::available.stats("target")` -- a subset of the values allowed for binary treatments, excluding `"r2"`, `"r2.2"`, `"r2.3"`, `"kernel.dist"`, and `"l1.med"`. `"cv{#}"` works as it does for binary treatments.
 #'
 #' ## Longitudinal Treatments
 #'

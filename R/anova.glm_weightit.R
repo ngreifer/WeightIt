@@ -1,4 +1,4 @@
-#' Methods for `glm_weightit()` objects
+#' Methods for `glm_weightit` objects
 #' @name anova.glm_weightit
 #'
 #' @description

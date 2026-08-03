@@ -24,7 +24,7 @@ Because only one group is weighted, the estimation problem is smaller and better
 
 Because censored units receive a weight of exactly 0, they contribute nothing to a weighted outcome model, and \code{\link[=glm_weightit]{glm_weightit()}}, \code{\link[=lm_weightit]{lm_weightit()}}, \code{\link[=multinom_weightit]{multinom_weightit()}}, \code{\link[=ordinal_weightit]{ordinal_weightit()}}, and \code{\link[=coxph_weightit]{coxph_weightit()}} all tolerate missing values in the model variables for those units. This is what makes it possible to fit an outcome model whose outcome is unobserved after censoring. See the \emph{Censoring weights (IPCW)} section of \code{\link[=weightit]{weightit()}} for details.
 
-No \code{estimand} or \code{focal} argument applies to censoring models; supplying one produces a warning and it is ignored. \code{subclass} cannot be used. Not all methods support censoring weights; see the \code{treat_type} component of \link{.weightit_methods} to check.
+No \code{estimand} or \code{focal} argument applies to censoring models; supplying one produces a warning and it is ignored. \code{subclass} cannot be used. Not all methods support censoring weights; see the \code{treat_type} component of \code{\link{.weightit_methods}} to check.
 
 The right side of the formula may be empty, as in \code{.cens(C) ~ 1}, requesting a marginal censoring model in which censoring is assumed independent of the covariates. The weights are then \eqn{1/P(C = 0)} for the units still under observation and 0 for the censored units, whatever \code{method} is supplied; see \emph{Empty model formulas} in Details at \code{\link[=weightit]{weightit()}}. Nothing else changes, so a marginal censoring model still composes with \code{by}, \code{stabilize}, M-estimation, and, in \code{\link[=weightitMSM]{weightitMSM()}}, the risk sets and the missing values permitted after censoring.
 \subsection{Use outside a formula}{
@@ -48,7 +48,7 @@ The survival convention is used: \code{1} means the unit is \emph{censored} (dro
 
 \section{Assessing balance}{
 
-\code{cobalt::bal.tab()} cannot be used directly on the output of a censoring model. For a point-treatment \code{weightit} object it errors because every censored unit has a weight of 0, leaving one "treatment group" with no weight; for a \code{weightitMSM} object it errors because censoring leaves missing values in the later treatments, which \code{bal.tab()} does not allow.
+\code{\link[cobalt:bal.tab]{cobalt::bal.tab()}} cannot be used directly on the output of a censoring model. For a point-treatment \code{weightit} object it errors because every censored unit has a weight of 0, leaving one "treatment group" with no weight; for a \code{weightitMSM} object it errors because censoring leaves missing values in the later treatments, which \code{bal.tab()} does not allow.
 
 Because the target of a censoring model is the full at-risk sample rather than another treatment group, balance is assessed by comparing the weighted uncensored units against that sample. This can be done by stacking the two:
 
@@ -95,5 +95,5 @@ all.equal(get_w_from_ps(Wc$ps, treat = C),
           Wc$weights, check.attributes = FALSE)
 }
 \seealso{
-\code{\link[=weightit]{weightit()}} and \code{\link[=weightitMSM]{weightitMSM()}} for estimating censoring weights; \link{.weightit_methods} for which methods support them.
+\code{\link[=weightit]{weightit()}} and \code{\link[=weightitMSM]{weightitMSM()}} for estimating censoring weights; \code{\link{.weightit_methods}} for which methods support them.
 }

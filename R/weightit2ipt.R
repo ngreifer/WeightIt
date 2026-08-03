@@ -36,7 +36,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], the censoring model is tilted so that the weighted covariate means of the units still under observation equal those of the full at-risk sample. Only one set of tilting parameters is solved for, rather than one per treatment group as for the ATE. The censored units receive a weight of 0.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], the censoring model is tilted so that the weighted covariate means of the units still under observation equal those of the full at-risk sample. Only one set of tilting parameters is solved for, rather than one per treatment group as for the ATE. The censored units receive a weight of 0.
 #'
 #' ## Longitudinal Treatments
 #'

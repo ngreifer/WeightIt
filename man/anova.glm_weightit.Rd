@@ -2,7 +2,7 @@
 % Please edit documentation in R/anova.glm_weightit.R
 \name{anova.glm_weightit}
 \alias{anova.glm_weightit}
-\title{Methods for \code{glm_weightit()} objects}
+\title{Methods for \code{glm_weightit} objects}
 \usage{
 \method{anova}{glm_weightit}(
   object,

@@ -55,7 +55,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], a single SuperLearner model of the probability of being censored is fit, and the weights are `1/P(C = 0 | X)` for the units still under observation and 0 for the censored units. With `SL.method = "method.balance"`, the library weights are chosen using balance between the *weighted units still under observation* and the *full at-risk sample*, which is what the weights target. This is cobalt's "target" balance; accordingly, `criterion` must be one of `cobalt::available.stats("target")`, a subset of the values allowed for binary treatments.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], a single SuperLearner model of the probability of being censored is fit, and the weights are `1/P(C = 0 | X)` for the units still under observation and 0 for the censored units. With `SL.method = "method.balance"`, the library weights are chosen using balance between the *weighted units still under observation* and the *full at-risk sample*, which is what the weights target. This is cobalt's "target" balance; accordingly, `criterion` must be one of `cobalt::available.stats("target")`, a subset of the values allowed for binary treatments.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -296,6 +296,9 @@ weightit2super <- function(covs, treat, s.weights, subset, estimand, focal,
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
+  if (is_null(SL.library)) {
+    arg::err('{.arg SL.library} must be supplied with {.code method = "super"}')
+  }
   arg::arg_character(SL.library)
 
   if (is_null(cvControl[["stratifyCV"]])) {
@@ -470,6 +473,9 @@ weightit2super.multi <- function(covs, treat, s.weights, subset, estimand, focal
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
+  if (is_null(SL.library)) {
+    arg::err('{.arg SL.library} must be supplied with {.code method = "super"}')
+  }
   arg::arg_character(SL.library)
 
   discrete <- ...get("discrete", FALSE)
@@ -563,6 +569,9 @@ weightit2super.cont <- function(covs, treat, s.weights, subset, stabilize, missi
   control <- ...get("control", eval(formals(SuperLearner::SuperLearner)[["control"]]))
 
   SL.library <- ...get("SL.library")
+  if (is_null(SL.library)) {
+    arg::err('{.arg SL.library} must be supplied with {.code method = "super"}')
+  }
   arg::arg_character(SL.library)
 
   discrete <- ...get("discrete", FALSE)

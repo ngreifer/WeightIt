@@ -61,18 +61,18 @@ one \code{by} variable is allowed; to stratify by multiply variables
 simultaneously, create a new variable that is a full cross of those
 variables using \code{\link[=interaction]{interaction()}}.}
 
-\item{s.weights}{a vector of sampling weights or the name of a variable in
-\code{data} that contains sampling weights. These can also be matching weights
-if weighting is to be used on matched data. See the individual pages for
+\item{s.weights}{an optional vector of sampling weights or the name of a variable in
+\code{data} that contains sampling weights. See the individual pages for
 each method for information on whether sampling weights can be supplied.}
 
-\item{num.formula}{optional; a one-sided formula with the stabilization
+\item{num.formula}{an optional one-sided formula with the stabilization
 factors (other than the previous treatments) on the right hand side, which
 adds, for each time point, the stabilization factors to a model saturated
 with previous treatments. See Cole & Hernán (2008) for a discussion of how
 to specify this model; including stabilization factors can change the
 estimand without proper adjustment, and should be done with caution. Can
-also be a list of one-sided formulas, one for each time point. Unless you
+also be a list of one-sided formulas, one for each entry of \code{formula.list},
+including any censoring entries. Unless you
 know what you are doing, we recommend setting \code{stabilize = TRUE} and
 ignoring \code{num.formula}.}
 
@@ -84,7 +84,7 @@ be used instead. Consider the \CRANpkg{MatchThem} package for the use of
 \code{weightit()} with multiply imputed data.}
 
 \item{verbose}{\code{logical}; whether to print additional information output by
-the fitting function.}
+the fitting function. Default is \code{FALSE} to suppress output.}
 
 \item{include.obj}{\code{logical}; whether to include in the output a list of the fit objects
 created in the process of estimating the weights at each time point. For
@@ -109,22 +109,42 @@ user-specified functions.}
 with longitudinal treatments, and will produce an error message if
 attempted. Set to \code{TRUE} to bypass this error message.}
 
-\item{...}{other arguments for functions called by \code{weightit()} that control
-aspects of fitting that are not covered by the above arguments. See Details
-at \code{\link[=weightit]{weightit()}}.}
+\item{...}{other arguments that control aspects of fitting that are not covered by the above arguments. See Details at \code{\link[=weightit]{weightit()}}.}
 }
 \value{
 A \code{weightitMSM} object with the following elements:
 \item{weights}{The estimated weights, one for each unit.}
 \item{treat.list}{A list of the values of the time-varying treatment variables.}
 \item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
-\item{data}{The data.frame originally entered to \code{weightitMSM()}.}
 \item{estimand}{"ATE", currently the only estimand for MSMs with binary or multi-category treatments.}
 \item{method}{The weight estimation method specified.}
-\item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
 \item{s.weights}{The provided sampling weights.}
 \item{by}{A data.frame containing the \code{by} variable when specified.}
 \item{stabilization}{The stabilization factors, if any.}
+
+When censoring is modeled (i.e., when any entry of \code{formula.list} has its left
+side wrapped in \code{\link[=.cens]{.cens()}}), \code{treat.list} and \code{covs.list} describe the \emph{treatment}
+models only, while \code{formula.list} is kept exactly as supplied, markers included,
+so that \code{\link[=update]{update()}} round-trips. The following additional components describe the
+censoring models:
+\item{cens.list}{A list of the values of the censoring indicators, one entry per
+censoring time point. Each is 0 for units still under observation and 1 for units
+censored at that time point, and \code{NA} for units censored earlier.}
+\item{cens.covs.list}{A list of the covariates used to fit each censoring model.
+As with \code{covs.list}, only the raw covariates are included.}
+\item{cens.formula.list}{A list of the censoring model formulas, with the
+\code{\link[=.cens]{.cens()}} marker retained on the left side.}
+\item{cens.time}{The positions of the censoring models within \code{formula.list}, so
+that \code{formula.list[cens.time]} recovers them and their timing relative to the
+treatment models can be determined.}
+\item{at.risk}{A logical matrix with one row per unit and one column per entry of
+\code{formula.list}, named for the treatment or censoring variable modeled at that
+entry. Each column records which units were still under observation when that
+model was fit, i.e., which units contributed to it. Useful for assessing balance;
+see \code{\link[=.cens]{.cens()}}.}
+
+Censored units have a final weight of exactly 0, so \code{weights} is 0 for any unit
+censored at any time point.
 
 When \code{keep.mparts} is \code{TRUE} (the default) and the chosen method is
 compatible with M-estimation, the components related to M-estimation for use
@@ -141,17 +161,13 @@ single-model MSM version of CBPS.)
 \code{weightitMSM()} allows for the easy generation of balancing
 weights for marginal structural models for time-varying treatments using a
 variety of available methods for binary, continuous, and multi-category
-treatments. Many of these methods exist in other packages, which \code{\link[=weightit]{weightit()}}
+treatments, as well as censoring. Some of these methods exist in other packages, which \code{\link[=weightit]{weightit()}}
 calls; these packages must be installed to use the desired method.
 }
 \details{
-Currently only "wide" data sets, where each row corresponds to a
-unit's entire variable history, are supported. You can use \code{\link[=reshape]{reshape()}} or
-other functions to transform your data into this format; see example below.
-
 In general, \code{weightitMSM()} works by separating the estimation of weights
 into separate procedures for each time period based on the formulas provided.
-For each formula, \code{weightitMSM()} simply calls \code{weightit()} to that formula,
+For each formula, \code{weightitMSM()} simply applies \code{weightit()} to that formula,
 collects the weights for each time period, and multiplies them together to
 arrive at longitudinal balancing weights.
 
@@ -159,14 +175,10 @@ Each formula should contain all the covariates to be balanced on. For
 example, the formula corresponding to the second time period should contain
 all the baseline covariates, the treatment variable at the first time period,
 and the time-varying covariates that took on values after the first treatment
-and before the second. Currently, only wide data sets are supported, where
-each unit is represented by exactly one row that contains the covariate and
-treatment history encoded in separate variables.
-
-The \code{"cbps"} method, which calls \code{CBPS()} in \pkg{CBPS}, will yield different
-results from \code{CBMSM()} in \pkg{CBPS} because \code{CBMSM()} takes a different
-approach to generating weights than simply estimating several time-specific
-models.
+and before the second. Currently only "wide" data sets are supported, where each
+unit is represented by exactly one row that contains its covariate and
+treatment history encoded in separate variables. You can use \code{\link[=reshape]{reshape()}} or
+other functions to transform your data into this format; see example below.
 \subsection{Censoring weights (IPCW)}{
 
 Censoring can be modeled by including entries in \code{formula.list} whose left side
@@ -194,10 +206,15 @@ values among units still under observation remain an error. \code{at.risk} in th
 output has one column per time point recording which units were under
 observation when that model was fit.
 
-Censoring weights are not stabilized by \code{num.formula}; each is stabilized by its
-own marginal censoring model when \code{stabilize = TRUE}. When \code{num.formula} is
-supplied as a list, it should have one entry per \emph{treatment} time point, ignoring
-the censoring entries.
+Censoring time points are stabilized in exactly the same way as treatment time
+points: with \code{stabilize = TRUE}, the numerator of a censoring weight is a model
+for that censoring indicator given the preceding treatments (or a marginal model
+when no treatment precedes it), and \code{num.formula} adds stabilization factors to
+it as it does for a treatment. When \code{num.formula} is supplied as a list, it must
+have one entry per entry of \code{formula.list}, censoring entries included. The
+numerator of a censoring weight is itself a censoring model, so the stabilized
+weight is \eqn{P(C = 0 | \cdot) / P(C = 0 | X)} for the units still under
+observation and remains exactly 0 for those censored.
 
 The right side of a censoring formula may be empty, as in \code{.cens(C_2) ~ 1}, which
 requests a marginal censoring model that assumes censoring at that time point is
@@ -211,11 +228,6 @@ take the intercept-only shortcut described in \emph{Empty model formulas} in Det
 \code{\link[=weightit]{weightit()}}; when \code{is.MSM.method = TRUE} there is no shortcut to take, because a
 single set of weights is estimated for all time points at once, and a time point
 with no covariates instead contributes only its intercept balance condition.
-
-Censoring can also be used with \code{is.MSM.method = TRUE} when \code{method = "cbps"}, in
-which case one set of weights is estimated satisfying the balance conditions at
-every time point simultaneously, each evaluated among the units still under
-observation at that time point. See \code{\link{method_cbps}}.
 }
 }
 \examples{

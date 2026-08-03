@@ -29,7 +29,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], the CFD minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], the CFD minimized is that between the weighted units still under observation and the full at-risk sample (censored and uncensored combined), rather than that between two treatment groups. Weights are estimated for the units still under observation only; the censored units receive a weight of 0.
 #'
 #' ## Longitudinal Treatments
 #'
@@ -62,7 +62,7 @@
 #' The following following additional arguments can be specified:
 #'
 #' \describe{
-#'   \item{`kernel`}{the name of the kernel used to characterize the CFD. Allowable optiosn include `"gaussian"` for the multivariate Gaussian kernel (the default), `"matern"` for the multivariate Matern kernel, `"energy"` for the energy distance kernel, `"laplace"` for the univariate Laplacian kernel, and `"t"` for the univariate t-distribution kernel.}
+#'   \item{`kernel`}{the name of the kernel used to characterize the CFD. Allowable options include `"gaussian"` for the multivariate Gaussian kernel (the default), `"matern"` for the multivariate Matern kernel, `"energy"` for the energy distance kernel, `"laplace"` for the univariate Laplacian kernel, and `"t"` for the univariate t-distribution kernel.}
 #'   \item{`nu`}{for `kernel = "matern"`, the \eqn{\nu} parameter used to control smoothness. The default value is 3/2. For any values other than 1/2, 3/2, and 5/2, the \pkg{GPBayes} package is required to compute the Matern kernel. For `kernel = "t"`, the degrees of freedom for the univariate t-distributions used in the kernel. The default value is 5. Ignored for other kernels.}
 #'   \item{`nsim`}{for `kernel = "t"`, the number of simulations to use to compute the t-distribution kernel. Default is 5000. Greater is better but takes longer and uses more memory.}
 #'   \item{`lambda`}{a positive numeric scalar used to penalize the square of the weights. This value divided by the square of the total sample size is added to the diagonal of the quadratic part of the loss function. Higher values favor weights with less variability. Default is .0001, which is essentially 0.}

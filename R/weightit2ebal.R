@@ -35,7 +35,7 @@
 #'
 #' ## Censoring Weights
 #'
-#' For censoring weights, requested by wrapping the censoring indicator in [`.cens()`][.cens], entropy balancing is performed on the units still under observation only, with the target being the covariate means of the full at-risk sample (censored and uncensored combined). Because a single set of weights is estimated rather than one per treatment group, the optimization problem is smaller than for the ATE. The censored units receive a weight of 0. M-estimation is supported when `tols` is 0. With `link = "clog"`, `method = "ipt"` yields identical weights.
+#' For censoring weights, requested by wrapping the censoring indicator in [.cens()], entropy balancing is performed on the units still under observation only, with the target being the covariate means of the full at-risk sample (censored and uncensored combined). Because a single set of weights is estimated rather than one per treatment group, the optimization problem is smaller than for the ATE. The censored units receive a weight of 0. M-estimation is supported when `tols` is 0. With `link = "clog"`, `method = "ipt"` yields identical weights.
 #'
 #' ## Longitudinal Treatments
 #'

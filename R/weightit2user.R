@@ -72,7 +72,7 @@
 #' cobalt::bal.tab(W2)
 #'
 #' # Kernel balancing using the `kbal` package, available
-#' # using `pak::pak_install("chadhazlett/KBAL")`.
+#' # using `pak::pak("chadhazlett/KBAL")`.
 #' # Only the ATT and ATC are available.
 #'
 #' \dontrun{
