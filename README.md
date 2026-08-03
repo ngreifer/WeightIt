@@ -29,10 +29,10 @@ To install and load *WeightIt*, use the code below:
 
 ``` r
 #CRAN version
-pak::pkg_install("WeightIt")
+pak::pak("WeightIt")
 
 #Development version
-pak::pkg_install("ngreifer/WeightIt")
+pak::pak("ngreifer/WeightIt")
 
 library("WeightIt")
 ```

@@ -1,7 +1,7 @@
 Package: WeightIt
 Type: Package
 Title: Weighting for Covariate Balance in Observational Studies
-Version: 1.7.0.9006
+Version: 2.0.0
 Authors@R: c(
     person("Noah", "Greifer", role=c("aut", "cre"), 
            email = "noah.greifer@gmail.com",
@@ -58,6 +58,7 @@ Suggests:
     testthat (>= 3.0.0),
     waldo (>= 0.6.0)
 License: GPL (>=2)
+Language: en-US
 Encoding: UTF-8
 URL: https://ngreifer.github.io/WeightIt/, https://github.com/ngreifer/WeightIt
 BugReports: https://github.com/ngreifer/WeightIt/issues
@@ -65,7 +66,4 @@ VignetteBuilder: knitr
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Config/testthat/edition: 3
-Config/testthat/parallel: true
-Config/testthat/start-first: method_cbps, method_super, method_npcbps,
-    censoring, weightitMSM, method_cfd
 Config/roxygen2/version: 8.0.0
