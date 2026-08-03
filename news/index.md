@@ -1,8 +1,8 @@
 # Changelog
 
-## `WeightIt` (development version)
+## `WeightIt` 2.0.0
 
-### Censoring weights (IPCW)
+#### Censoring weights (IPCW)
 
 - Added support for estimating inverse probability of censoring weights
   (IPCW). Censoring is now its own treatment type, distinct from binary,
@@ -13,7 +13,7 @@
   `weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")`. The
   convention is that the indicator is 1 for units that are censored and
   0 for those still under observation; censored units receive a weight
-  of exactly 0, and the rest receive `1/P(C = 0 | X)`.
+  of exactly 0, and the rest receive \\1/P(C = 0 \| X)\\.
   [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
   is documented at
   [`?.cens`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md).
@@ -52,12 +52,38 @@
   already censored, and the censoring weights are folded into the
   product of weights across time points. The new `cens.list`,
   `cens.covs.list`, `cens.formula.list`, `cens.time`, and `at.risk`
-  components of the output describe the censoring models.
+  components of the output describe the censoring models and are
+  documented in the “Value” section of
+  [`?weightitMSM`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
+  The [`print()`](https://rdrr.io/r/base/print.html) method reports how
+  many units were censored at each censoring time point and the
+  covariates used to model it.
+
+- In
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md),
+  censoring time points are stabilized exactly as treatment time points
+  are. With `stabilize = TRUE`, the numerator of a censoring weight is a
+  model for that censoring indicator saturated in the preceding
+  treatments (an intercept when no treatment precedes it), and
+  `num.formula` adds stabilization factors to it as it does for a
+  treatment. When `num.formula` is supplied as a list, it must therefore
+  have one entry per entry of `formula.list`, censoring entries
+  included.
+
+- The numerator of a stabilized censoring weight is fit as a censoring
+  model, using the same method as the denominator, in both
+  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
+  and
+  [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
+  The stabilized weight is \\P(C = 0 \| V)/P(C = 0 \| X)\\ for the units
+  still under observation, where \\V\\ are the stabilizing variables
+  (usually just prior treatments, if any), and exactly 0 for those
+  censored.
 
 - A censoring formula may have an empty right hand side, as in
   `.cens(C) ~ 1`, requesting a marginal censoring model in which
   censoring does not depend on the covariates. The weights are then
-  `1/P(C = 0)` for the units still under observation and 0 for those
+  \\1/P(C = 0)\\ for the units still under observation and 0 for those
   censored. This works in both
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   and
@@ -95,7 +121,7 @@
   [`survival::coxph()`](https://rdrr.io/pkg/survival/man/coxph.html)
   rejects; such units are omitted from the model fit.
 
-### Random effects in PS models
+#### Random effects in PS models
 
 - `method = "glm"` now supports multilevel (mixed-effects) propensity
   score models. When the model `formula` supplied to
@@ -129,43 +155,42 @@
   indicating whether each method supports random effects terms in the
   model `formula`.
 
-### Other new features
+#### Other new features
 
 - [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md)
   and
   [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
   gain a `br` argument, which, when set to `TRUE`, performs mean bias
   reduction by solving the bias-reducing adjusted score equations of
-  Firth (1993) instead of the score equations. This yields estimates
-  with smaller asymptotic bias that are always finite, even when the
-  maximum likelihood estimates are not (e.g., under separation or when
-  an end category of an ordinal outcome is unobserved). This mirrors
-  `br` in
+  Firth (1993) instead of the usual maximum likelihood score equations.
+  This yields estimates with smaller asymptotic bias that are always
+  finite, even when the maximum likelihood estimates are not (e.g.,
+  under separation or when an end category of an ordinal outcome is
+  unobserved). This mirrors `br` in
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
   but uses in-house implementations rather than *brglm2*, so it requires
   no additional dependencies and composes with M-estimation,
   cluster-robust standard errors, and bootstrapping.
 
-  For
-  [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
-  the adjustment is that of Kosmidis and Firth (2011); because the model
-  uses the canonical link, the adjusted score is the gradient of the
-  log-likelihood penalized by the Jeffreys invariant prior, and
-  estimates align with
-  [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html).
-  For
-  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
-  the adjustment is the one derived for cumulative link models by
-  Kosmidis (2014) and works for all supported links; the adjusted score
-  equations are solved by quasi-Fisher scoring, controlled by the new
-  `br.maxit` and `br.tol` components of `control`. Note this differs
-  from [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html),
-  which fits an adjacent category logit model rather than a cumulative
-  link model (including with `parallel = TRUE`, which constrains the
-  adjacent category logits rather than the cumulative ones to be
-  parallel). In both cases, weights are treated as multinomial totals,
-  so estimates are invariant to whether the data are supplied one row
-  per unit or as weighted groups of identical units.
+  - For
+    [`multinom_weightit()`](https://ngreifer.github.io/WeightIt/reference/multinom_weightit.md),
+    the adjustment is that of Kosmidis and Firth (2011); because the
+    model uses the canonical link, the adjusted score is the gradient of
+    the log-likelihood penalized by the Jeffreys invariant prior, and
+    estimates align with
+    [`brglm2::brmultinom()`](https://rdrr.io/pkg/brglm2/man/brmultinom.html).
+  - For
+    [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md),
+    the adjustment is the one derived for cumulative link models by
+    Kosmidis (2014) and works for all supported links; the adjusted
+    score equations are solved by quasi-Fisher scoring, controlled by
+    the new `br.maxit` and `br.tol` components of `control`. Note this
+    differs from
+    [`brglm2::bracl()`](https://rdrr.io/pkg/brglm2/man/bracl.html),
+    which fits an adjacent category logit model rather than a cumulative
+    link model (including with `parallel = TRUE`, which constrains the
+    adjacent category logits rather than the cumulative ones to be
+    parallel).
 
 - With `method = "glm"` and a multi-category treatment, bias-reduced
   propensity score models are now fit by *WeightIt* itself rather than
@@ -236,7 +261,7 @@
   time point with no covariates, which contributes only its intercept
   balance condition.
 
-### Changes in behavior
+#### Changes in behavior
 
 - With continuous treatments, estimation of the weights works a bit
   differently for `method = "glm"`, `"bart"`, `"gbm"`, and `"super"`.
@@ -296,12 +321,9 @@
 
 - For ordered multi-category treatments with `method = "glm"` and
   `multi.method = "weightit"`, the `link` argument no longer accepts
-  `"identity"`, `"log"`, or `"clog"`. These were listed as allowable but
-  always errored, since
-  [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
-  does not implement them.
+  `"identity"`, `"log"`, or `"clog"`.
 
-### Bug fixes
+#### Bug fixes
 
 - `method = "cbps"` now warns when the just-identified CBPS
   (`over = FALSE`) fails to solve its balance conditions. Previously
@@ -377,21 +399,6 @@
   starts from 0, and
   [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
   with `br = TRUE` retries from a neutral point.
-
-- [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
-  with `br = TRUE` is more robust when the maximum likelihood estimates
-  diverge, which is one of the main reasons to use bias reduction. The
-  adjusted score equations were solved starting from the maximum
-  likelihood estimates, but under separation the information matrix
-  there is nearly singular, so the first step was useless and the
-  maximum likelihood estimates were returned unchanged. Estimation now
-  retries from a neutral point (no covariate effect, thresholds from the
-  marginal category proportions); the usual starting values are
-  unsuitable because they come from a binomial fit that diverges for the
-  same data. Divergent solutions are also no longer mistaken for
-  converged ones: as the coefficients diverge the fitted probabilities
-  underflow and the adjusted score becomes numerically 0, which
-  previously satisfied the convergence check.
 
 - Fixed a bug in
   [`ordinal_weightit()`](https://ngreifer.github.io/WeightIt/reference/ordinal_weightit.md)
@@ -522,7 +529,7 @@
   [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
   and friends.
 
-### Other
+#### Other
 
 - Added unit tests for all weighting methods.
 

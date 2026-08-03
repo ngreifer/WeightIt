@@ -3,7 +3,8 @@
 `weightitMSM()` allows for the easy generation of balancing weights for
 marginal structural models for time-varying treatments using a variety
 of available methods for binary, continuous, and multi-category
-treatments. Many of these methods exist in other packages, which
+treatments, as well as censoring. Some of these methods exist in other
+packages, which
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 calls; these packages must be installed to use the desired method.
 
@@ -87,23 +88,23 @@ weightitMSM(
 
 - s.weights:
 
-  a vector of sampling weights or the name of a variable in `data` that
-  contains sampling weights. These can also be matching weights if
-  weighting is to be used on matched data. See the individual pages for
+  an optional vector of sampling weights or the name of a variable in
+  `data` that contains sampling weights. See the individual pages for
   each method for information on whether sampling weights can be
   supplied.
 
 - num.formula:
 
-  optional; a one-sided formula with the stabilization factors (other
+  an optional one-sided formula with the stabilization factors (other
   than the previous treatments) on the right hand side, which adds, for
   each time point, the stabilization factors to a model saturated with
   previous treatments. See Cole & Hernán (2008) for a discussion of how
   to specify this model; including stabilization factors can change the
   estimand without proper adjustment, and should be done with caution.
-  Can also be a list of one-sided formulas, one for each time point.
-  Unless you know what you are doing, we recommend setting
-  `stabilize = TRUE` and ignoring `num.formula`.
+  Can also be a list of one-sided formulas, one for each entry of
+  `formula.list`, including any censoring entries. Unless you know what
+  you are doing, we recommend setting `stabilize = TRUE` and ignoring
+  `num.formula`.
 
 - missing:
 
@@ -121,7 +122,7 @@ weightitMSM(
 - verbose:
 
   `logical`; whether to print additional information output by the
-  fitting function.
+  fitting function. Default is `FALSE` to suppress output.
 
 - include.obj:
 
@@ -158,10 +159,8 @@ weightitMSM(
 
 - ...:
 
-  other arguments for functions called by
-  [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
-  that control aspects of fitting that are not covered by the above
-  arguments. See Details at
+  other arguments that control aspects of fitting that are not covered
+  by the above arguments. See Details at
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md).
 
 ## Value
@@ -182,10 +181,6 @@ A `weightitMSM` object with the following elements:
   includes the raw covariates, which may have been altered in the
   fitting process.
 
-- data:
-
-  The data.frame originally entered to `weightitMSM()`.
-
 - estimand:
 
   "ATE", currently the only estimand for MSMs with binary or
@@ -194,10 +189,6 @@ A `weightitMSM` object with the following elements:
 - method:
 
   The weight estimation method specified.
-
-- ps.list:
-
-  A list of the estimated propensity scores (if any) at each time point.
 
 - s.weights:
 
@@ -210,6 +201,50 @@ A `weightitMSM` object with the following elements:
 - stabilization:
 
   The stabilization factors, if any.
+
+When censoring is modeled (i.e., when any entry of `formula.list` has
+its left side wrapped in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)),
+`treat.list` and `covs.list` describe the *treatment* models only, while
+`formula.list` is kept exactly as supplied, markers included, so that
+[`update()`](https://rdrr.io/r/stats/update.html) round-trips. The
+following additional components describe the censoring models:
+
+- cens.list:
+
+  A list of the values of the censoring indicators, one entry per
+  censoring time point. Each is 0 for units still under observation and
+  1 for units censored at that time point, and `NA` for units censored
+  earlier.
+
+- cens.covs.list:
+
+  A list of the covariates used to fit each censoring model. As with
+  `covs.list`, only the raw covariates are included.
+
+- cens.formula.list:
+
+  A list of the censoring model formulas, with the
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+  marker retained on the left side.
+
+- cens.time:
+
+  The positions of the censoring models within `formula.list`, so that
+  `formula.list[cens.time]` recovers them and their timing relative to
+  the treatment models can be determined.
+
+- at.risk:
+
+  A logical matrix with one row per unit and one column per entry of
+  `formula.list`, named for the treatment or censoring variable modeled
+  at that entry. Each column records which units were still under
+  observation when that model was fit, i.e., which units contributed to
+  it. Useful for assessing balance; see
+  [`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md).
+
+Censored units have a final weight of exactly 0, so `weights` is 0 for
+any unit censored at any time point.
 
 When `keep.mparts` is `TRUE` (the default) and the chosen method is
 compatible with M-estimation, the components related to M-estimation for
@@ -228,14 +263,9 @@ of CBPS.)
 
 ## Details
 
-Currently only "wide" data sets, where each row corresponds to a unit's
-entire variable history, are supported. You can use
-[`reshape()`](https://rdrr.io/r/stats/reshape.html) or other functions
-to transform your data into this format; see example below.
-
 In general, `weightitMSM()` works by separating the estimation of
 weights into separate procedures for each time period based on the
-formulas provided. For each formula, `weightitMSM()` simply calls
+formulas provided. For each formula, `weightitMSM()` simply applies
 [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
 to that formula, collects the weights for each time period, and
 multiplies them together to arrive at longitudinal balancing weights.
@@ -244,15 +274,12 @@ Each formula should contain all the covariates to be balanced on. For
 example, the formula corresponding to the second time period should
 contain all the baseline covariates, the treatment variable at the first
 time period, and the time-varying covariates that took on values after
-the first treatment and before the second. Currently, only wide data
+the first treatment and before the second. Currently only "wide" data
 sets are supported, where each unit is represented by exactly one row
-that contains the covariate and treatment history encoded in separate
-variables.
-
-The `"cbps"` method, which calls `CBPS()` in CBPS, will yield different
-results from `CBMSM()` in CBPS because `CBMSM()` takes a different
-approach to generating weights than simply estimating several
-time-specific models.
+that contains its covariate and treatment history encoded in separate
+variables. You can use
+[`reshape()`](https://rdrr.io/r/stats/reshape.html) or other functions
+to transform your data into this format; see example below.
 
 ### Censoring weights (IPCW)
 
@@ -283,10 +310,16 @@ observation remain an error. `at.risk` in the output has one column per
 time point recording which units were under observation when that model
 was fit.
 
-Censoring weights are not stabilized by `num.formula`; each is
-stabilized by its own marginal censoring model when `stabilize = TRUE`.
-When `num.formula` is supplied as a list, it should have one entry per
-*treatment* time point, ignoring the censoring entries.
+Censoring time points are stabilized in exactly the same way as
+treatment time points: with `stabilize = TRUE`, the numerator of a
+censoring weight is a model for that censoring indicator given the
+preceding treatments (or a marginal model when no treatment precedes
+it), and `num.formula` adds stabilization factors to it as it does for a
+treatment. When `num.formula` is supplied as a list, it must have one
+entry per entry of `formula.list`, censoring entries included. The
+numerator of a censoring weight is itself a censoring model, so the
+stabilized weight is \\P(C = 0 \| \cdot) / P(C = 0 \| X)\\ for the units
+still under observation and remains exactly 0 for those censored.
 
 The right side of a censoring formula may be empty, as in
 `.cens(C_2) ~ 1`, which requests a marginal censoring model that assumes
@@ -304,13 +337,6 @@ when `is.MSM.method = TRUE` there is no shortcut to take, because a
 single set of weights is estimated for all time points at once, and a
 time point with no covariates instead contributes only its intercept
 balance condition.
-
-Censoring can also be used with `is.MSM.method = TRUE` when
-`method = "cbps"`, in which case one set of weights is estimated
-satisfying the balance conditions at every time point simultaneously,
-each evaluated among the units still under observation at that time
-point. See
-[`method_cbps`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md).
 
 ## References
 

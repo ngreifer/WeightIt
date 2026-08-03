@@ -1,4 +1,4 @@
-# Methods for `glm_weightit()` objects
+# Methods for `glm_weightit` objects
 
 [`anova()`](https://rdrr.io/r/stats/anova.html) is used to compare
 nested models fit with

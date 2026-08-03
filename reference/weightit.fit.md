@@ -119,7 +119,7 @@ weightit.fit(
 - verbose:
 
   `logical`; whether to print additional information output by the
-  fitting function.
+  fitting function. Default is `FALSE` to suppress output.
 
 - include.obj:
 
@@ -127,7 +127,8 @@ weightit.fit(
   the process of estimating the weights. For example, with
   `method = "glm"`, the `glm` objects containing the propensity score
   model will be included. See the individual pages for each method for
-  information on what object will be included if `TRUE`.
+  information on what object will be included if `TRUE`. Default is
+  `FALSE` to keep the returned object small.
 
 - subset:
 
@@ -175,7 +176,7 @@ A `weightit.fit` object with the following elements:
   [`weightit()`](https://ngreifer.github.io/WeightIt/reference/weightit.md)
   for how the treated group is determined. For censoring models, it
   corresponds to the predicted probability of *being censored*, i.e., of
-  the censoring indicator equalling 1.
+  the censoring indicator equaling 1.
 
 - s.weights:
 

@@ -46,9 +46,7 @@
 - [`anova(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/anova.glm_weightit.md)
   :
 
-  Methods for
-  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  objects
+  Methods for `glm_weightit` objects
 
 - [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   : Fitting (Weighted) Cox Proportional Hazards Models

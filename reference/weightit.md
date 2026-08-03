@@ -60,13 +60,13 @@ weightit(
 - stabilize:
 
   whether or not and how to stabilize the weights. If `TRUE`, each
-  unit's weight will be multiplied by a standardization factor, which is
+  unit's weight will be multiplied by a stabilization factor, which is
   the the unconditional probability (or density) of each unit's observed
   treatment value. If a formula, a generalized linear model will be fit
   with the included predictors, and the inverse of the corresponding
   weight will be used as the standardization factor. Can only be used
-  with continuous treatments or when `estimand = "ATE"`. Default is
-  `FALSE` for no standardization. See also the `num.formula` argument at
+  when `estimand = "ATE"` or with continuous treatments. Default is
+  `FALSE` for no stabilization. See also the `num.formula` argument at
   [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md).
   For continuous treatments, weights are already stabilized, so setting
   `stabilize = TRUE` will be ignored with a warning (supplying a formula
@@ -75,10 +75,10 @@ weightit(
 - focal:
 
   when `estimand` is set to `"ATT"` or `"ATC"`, which group to consider
-  the "treated" or "control" group. This group will not be weighted, and
-  the other groups will be weighted to resemble the focal group. If
-  specified, `estimand` will automatically be set to `"ATT"` (with a
-  warning if `estimand` is not `"ATT"` or `"ATC"`). See section
+  the "treated" or "control" group, respectively. This group will not be
+  weighted, and the other groups will be weighted to resemble the focal
+  group. If specified, `estimand` will automatically be set to `"ATT"`
+  (with a warning if `estimand` is not `"ATT"` or `"ATC"`). See section
   *`estimand` and `focal`* in Details below.
 
 - by:
@@ -95,16 +95,15 @@ weightit(
 
 - s.weights:
 
-  a vector of sampling weights or the name of a variable in `data` that
-  contains sampling weights. These can also be matching weights if
-  weighting is to be used on matched data. See the individual pages for
+  an optional vector of sampling weights or the name of a variable in
+  `data` that contains sampling weights. See the individual pages for
   each method for information on whether sampling weights can be
   supplied.
 
 - ps:
 
-  a vector of propensity scores or the name of a variable in `data`
-  containing propensity scores. If not `NULL`, `method` is ignored
+  an optional vector of propensity scores or the name of a variable in
+  `data` containing propensity scores. If supplied, `method` is ignored
   unless it is a user-supplied function, and the propensity scores will
   be used to create weights. `formula` must include the treatment
   variable in `data`, but the listed covariates will play no role in the
@@ -126,7 +125,7 @@ weightit(
 - verbose:
 
   `logical`; whether to print additional information output by the
-  fitting function.
+  fitting function. Default is `FALSE` to suppress output.
 
 - include.obj:
 
@@ -134,7 +133,8 @@ weightit(
   the process of estimating the weights. For example, with
   `method = "glm"`, the `glm` objects containing the propensity score
   model will be included. See the individual pages for each method for
-  information on what object will be included if `TRUE`.
+  information on what object will be included if `TRUE`. Default is
+  `FALSE` to keep the returned object small.
 
 - keep.mparts:
 
@@ -182,14 +182,13 @@ A `weightit` object with the following elements:
 
   The estimated or provided propensity scores. Estimated propensity
   scores are returned for binary treatments and only when `method` is
-  `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The
-  propensity score corresponds to the predicted probability of being
-  treated; see section *`estimand` and `focal`* in Details for how the
-  treated group is determined.
+  one that estimates propensity scores. The propensity score corresponds
+  to the predicted probability of being treated; see section *`estimand`
+  and `focal`* in Details for how the treated group is determined.
 
 - s.weights:
 
-  The provided sampling weights.
+  The provided sampling weights, or a vector of 1s of none are provided.
 
 - focal:
 
@@ -197,7 +196,7 @@ A `weightit` object with the following elements:
 
 - by:
 
-  A data.frame containing the `by` variable when specified.
+  A data frame containing the `by` variable when specified.
 
 - obj:
 
@@ -234,6 +233,7 @@ estimands are allowed, and whether sampling weights are allowed.
 
 |  |  |
 |----|----|
+| `method` | Name |
 | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.md) | Propensity score weighting using generalized linear models |
 | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.md) | Propensity score weighting using generalized boosted modeling |
 | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.md) | Covariate Balancing Propensity Score weighting |
@@ -278,7 +278,7 @@ and the arguments are still checked against the requested `method`, so a
 method that cannot handle the treatment type at all (e.g., `"npcbps"`
 with a censoring model) still produces an error.
 
-A formula whose only terms are `lme4`-style random effects, such as
+A formula whose only terms are *lme4*-style random effects, such as
 `A ~ (1 | school)`, is *not* empty in this sense and is fit as the
 multilevel model it describes.
 
@@ -289,8 +289,9 @@ Wrapping the left side of `formula` in
 requests inverse probability of censoring weights instead of treatment
 weights, as in `weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")`.
 Censoring is treated as its own treatment type, distinct from binary,
-multi-category, and continuous treatments; the indicator must be 0 for
-units still under observation and 1 for units that are censored.
+multi-category, and continuous treatments; the indicator must be 0 or
+`FALSE` for units still under observation and 1 or `TRUE` for units that
+are censored.
 
 Weights are estimated only for the units still under observation, and
 are those that make their covariate distribution resemble that of the
@@ -302,12 +303,15 @@ problem, which would additionally solve for weights among the censored
 units; this matters most when few units are censored.
 
 `estimand`, `focal`, and `subclass` do not apply and are rejected or
-ignored. `by` and `stabilize` can be used; stabilization divides the
-weights by those from a marginal censoring model, giving \\P(C = 0) /
-P(C = 0 \| X)\\. `ps` is the predicted probability of *being censored*.
-Not all methods support censoring weights; see the `treat_type`
+ignored. `by` and `stabilize` can be used; stabilization multiplies the
+weights by \\P(C = 0 \| V)\\ from a second censoring model (marginal
+when `stabilize` is `TRUE`, otherwise fit with the predictors in the
+supplied formula), giving \\P(C = 0 \| V) / P(C = 0 \| X)\\ for the
+units still under observation and leaving the censored units at exactly
+0. `ps` is the predicted probability of *being censored*. Not all
+methods support estimating censoring weights; see the `treat_type`
 component of
-[.weightit_methods](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md).
+[`.weightit_methods`](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md).
 
 As with a treatment model, the right side of the formula may be empty,
 as in `.cens(C) ~ 1`, which requests a marginal censoring model that
@@ -401,7 +405,7 @@ be useful for speeding up simulation studies for which the correct
 arguments are known. In general, `weightit()` should be used.
 
 [`summary.weightit()`](https://ngreifer.github.io/WeightIt/reference/summary.weightit.md)
-for summarizing the weights
+for summarizing the distribution of the weights.
 
 ## Examples
 

@@ -69,7 +69,7 @@ for details.
 No `estimand` or `focal` argument applies to censoring models; supplying
 one produces a warning and it is ignored. `subclass` cannot be used. Not
 all methods support censoring weights; see the `treat_type` component of
-[.weightit_methods](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md)
+[`.weightit_methods`](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md)
 to check.
 
 The right side of the formula may be empty, as in `.cens(C) ~ 1`,
@@ -147,7 +147,7 @@ fit:
 and
 [`weightitMSM()`](https://ngreifer.github.io/WeightIt/reference/weightitMSM.md)
 for estimating censoring weights;
-[.weightit_methods](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md)
+[`.weightit_methods`](https://ngreifer.github.io/WeightIt/reference/dot-weightit_methods.md)
 for which methods support them.
 
 ## Examples

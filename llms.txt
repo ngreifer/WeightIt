@@ -28,10 +28,10 @@ To install and load *WeightIt*, use the code below:
 ``` r
 
 #CRAN version
-pak::pkg_install("WeightIt")
+pak::pak("WeightIt")
 
 #Development version
-pak::pkg_install("ngreifer/WeightIt")
+pak::pak("ngreifer/WeightIt")
 
 library("WeightIt")
 ```
@@ -308,9 +308,7 @@ citation("WeightIt")
 - [`anova(`*`<glm_weightit>`*`)`](https://ngreifer.github.io/WeightIt/reference/anova.glm_weightit.md)
   :
 
-  Methods for
-  [`glm_weightit()`](https://ngreifer.github.io/WeightIt/reference/glm_weightit.md)
-  objects
+  Methods for `glm_weightit` objects
 
 - [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   : Fitting (Weighted) Cox Proportional Hazards Models

@@ -267,7 +267,7 @@ bal.tab(W.out, stats = c("m", "v"),
     ## race_hispan  Binary        0 Balanced, <0.05           .
     ## race_white   Binary       -0 Balanced, <0.05           .
     ## married      Binary       -0 Balanced, <0.05           .
-    ## nodegree     Binary       -0 Balanced, <0.05           .
+    ## nodegree     Binary        0 Balanced, <0.05           .
     ## re74        Contin.       -0 Balanced, <0.05       1.326
     ## re75        Contin.       -0 Balanced, <0.05       1.335
     ## 
@@ -741,6 +741,8 @@ alongside the treatment models:
     ##     + time 3: 2-category
     ##  - censoring (IPCW):
     ##     + C_2: 3864 of 7500 units censored
+    ##  - censoring covariates:
+    ##     + C_2: X1_1, X2_1, A_1, A_2
     ##  - covariates:
     ##     + baseline: X1_0, X2_0
     ##     + after time 1: X1_1, X2_1, A_1

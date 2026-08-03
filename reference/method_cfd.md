@@ -149,7 +149,7 @@ The following following additional arguments can be specified:
 
 - `kernel`:
 
-  the name of the kernel used to characterize the CFD. Allowable optiosn
+  the name of the kernel used to characterize the CFD. Allowable options
   include `"gaussian"` for the multivariate Gaussian kernel (the
   default), `"matern"` for the multivariate Matern kernel, `"energy"`
   for the energy distance kernel, `"laplace"` for the univariate

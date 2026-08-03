@@ -46,7 +46,7 @@ When missing data is present and `missing = "saem"` is supplied, the
 
 ``` r
 
-pak::pkg_install("misaem")
+pak::pak("misaem")
 ```
 
 If *misaem* is not on CRAN, or if you want to install the development
@@ -55,7 +55,7 @@ repo](https://github.com/julierennes/misaem) using the following code:
 
 ``` r
 
-pak::pkg_install("julierennes/misaem")
+pak::pak("julierennes/misaem")
 ```
 
 ### Binary and multi-category treatments with `link = "br.logit"`
@@ -66,7 +66,7 @@ package is required. To install *brglm2* from CRAN, run
 
 ``` r
 
-pak::pkg_install("brglm2")
+pak::pak("brglm2")
 ```
 
 If *brglm2* is not on CRAN, or if you want to install the development
@@ -76,7 +76,7 @@ following code:
 
 ``` r
 
-pak::pkg_install("ikosmidis/brglm2")
+pak::pak("ikosmidis/brglm2")
 ```
 
 *brglm2* requires compilation, which means you may need additional
@@ -90,7 +90,7 @@ install *mclogit* from CRAN, run
 
 ``` r
 
-pak::pkg_install("mclogit")
+pak::pak("mclogit")
 ```
 
 If *mclogit* is not on CRAN, or if you want to install the development
@@ -100,7 +100,7 @@ code:
 
 ``` r
 
-pak::pkg_install("melff/mclogit")
+pak::pak("melff/mclogit")
 ```
 
 *mclogit* is also used for multi-category treatments when the model
@@ -118,7 +118,7 @@ run
 
 ``` r
 
-pak::pkg_install("lme4")
+pak::pak("lme4")
 ```
 
 If *lme4* is not on CRAN, or if you want to install the development
@@ -127,7 +127,7 @@ repo](https://github.com/lme4/lme4) using the following code:
 
 ``` r
 
-pak::pkg_install("lme4/lme4")
+pak::pak("lme4/lme4")
 ```
 
 *lme4* requires compilation, which means you may need additional
@@ -144,7 +144,7 @@ install *MNP* from CRAN, run
 
 ``` r
 
-pak::pkg_install("MNP")
+pak::pak("MNP")
 ```
 
 If *MNP* is not on CRAN, or if you want to install the development
@@ -154,7 +154,7 @@ code:
 
 ``` r
 
-pak::pkg_install("kosukeimai/MNP")
+pak::pak("kosukeimai/MNP")
 ```
 
 *MNP* requires compilation, which means you may need additional software
@@ -168,7 +168,7 @@ using GBM. It does *not* rely on the `twang` package at all. To install
 
 ``` r
 
-pak::pkg_install("gbm")
+pak::pak("gbm")
 ```
 
 If *gbm* is not on CRAN, or if you want to install the development
@@ -177,7 +177,7 @@ repo](https://github.com/gbm-developers/gbm) using the following code:
 
 ``` r
 
-pak::pkg_install("gbm-developers/gbm")
+pak::pak("gbm-developers/gbm")
 ```
 
 *gbm* requires compilation, which means you may need additional software
@@ -197,7 +197,7 @@ nonparametric covariate balancing propensity score weighting. To install
 
 ``` r
 
-pak::pkg_install("CBPS")
+pak::pak("CBPS")
 ```
 
 If *CBPS* is not on CRAN, or if you want to install the development
@@ -207,7 +207,7 @@ code:
 
 ``` r
 
-pak::pkg_install("kosukeimai/CBPS")
+pak::pak("kosukeimai/CBPS")
 ```
 
 ## Entropy balancing (`method = "ebal"`)
@@ -224,7 +224,7 @@ CRAN, run
 
 ``` r
 
-pak::pkg_install("rootSolve")
+pak::pak("rootSolve")
 ```
 
 ## Stable balancing weighting (`method = "optweight"`)
@@ -234,7 +234,7 @@ weights. To install *optweight* from CRAN, run
 
 ``` r
 
-pak::pkg_install("optweight")
+pak::pak("optweight")
 ```
 
 If *optweight* is not on CRAN, or if you want to install the development
@@ -244,7 +244,7 @@ following code:
 
 ``` r
 
-pak::pkg_install("ngreifer/optweight")
+pak::pak("ngreifer/optweight")
 ```
 
 *optweight* depends on the *osqp* package, which requires compilation,
@@ -261,7 +261,7 @@ run
 
 ``` r
 
-pak::pkg_install("SuperLearner")
+pak::pak("SuperLearner")
 ```
 
 If *SuperLearner* is not on CRAN, or if you want to install the
@@ -271,7 +271,7 @@ the following code:
 
 ``` r
 
-pak::pkg_install("ecpolley/SuperLearner")
+pak::pak("ecpolley/SuperLearner")
 ```
 
 *SuperLearner* itself is a wrapper for many other packages. The whole
@@ -302,7 +302,7 @@ weights using BART. To install *dbarts* from CRAN, run
 
 ``` r
 
-pak::pkg_install("dbarts")
+pak::pak("dbarts")
 ```
 
 If *dbarts* is not on CRAN, or if you want to install the development
@@ -312,7 +312,7 @@ code:
 
 ``` r
 
-pak::pkg_install("vdorie/dbarts")
+pak::pak("vdorie/dbarts")
 ```
 
 *dbarts* requires compilation, which means you may need additional
@@ -326,7 +326,7 @@ the *stan4bart* package instead. To install *stan4bart* from CRAN, run
 
 ``` r
 
-pak::pkg_install("stan4bart")
+pak::pak("stan4bart")
 ```
 
 If *stan4bart* is not on CRAN, or if you want to install the development
@@ -336,7 +336,7 @@ code:
 
 ``` r
 
-pak::pkg_install("vdorie/stan4bart")
+pak::pak("vdorie/stan4bart")
 ```
 
 *stan4bart* requires compilation, which means you may need additional
@@ -349,7 +349,7 @@ required for energy balancing. To install *osqp* from CRAN, run
 
 ``` r
 
-pak::pkg_install("osqp")
+pak::pak("osqp")
 ```
 
 If *osqp* is not on CRAN, or if you want to install the development

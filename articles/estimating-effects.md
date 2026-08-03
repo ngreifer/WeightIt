@@ -387,7 +387,7 @@ analyses:
   called internally by
   [`coxph_weightit()`](https://ngreifer.github.io/WeightIt/reference/coxph_weightit.md)
   for survival outcomes
-- *ardftools* provides tools for estimating, visualizing, and testing
+- *adrftools* provides tools for estimating, visualizing, and testing
   the effect of a continuous treatment on an outcome
 
 ``` r
@@ -677,7 +677,7 @@ standard errors more accurately ([Mao et al. 2018](#ref-mao2018);
 [Hajage et al. 2018](#ref-hajage2018); [Shu et al.
 2021](#ref-shuVarianceEstimationInverse2021)), though Austin
 ([2016](#ref-austin2016)) also found the bootstrap to be adequate. The
-M-estimation-based standard error as decribed by Shu et al.
+M-estimation-based standard error as described by Shu et al.
 ([2021](#ref-shuVarianceEstimationInverse2021)) is requested by default,
 and bootstrap standard errors can be requested by setting `vcov` to
 `"BS"` or `"FWB"`.
