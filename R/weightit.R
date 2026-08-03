@@ -23,18 +23,18 @@
 #'   each method for more information on which estimands are allowed with each
 #'   method and what literature to read to interpret these estimands.
 #' @param stabilize whether or not and how to stabilize the weights. If `TRUE`,
-#'   each unit's weight will be multiplied by a standardization factor, which is
+#'   each unit's weight will be multiplied by a stabilization factor, which is
 #'   the the unconditional probability (or density) of each unit's observed
 #'   treatment value. If a formula, a generalized linear model will be fit with
 #'   the included predictors, and the inverse of the corresponding weight will
-#'   be used as the standardization factor. Can only be used with continuous
-#'   treatments or when `estimand = "ATE"`. Default is `FALSE` for no
-#'   standardization. See also the `num.formula` argument at [weightitMSM()].
+#'   be used as the standardization factor. Can only be used when `estimand = "ATE"` or with continuous
+#'   treatments. Default is `FALSE` for no
+#'   stabilization. See also the `num.formula` argument at [weightitMSM()].
 #'   For continuous treatments, weights are already stabilized, so setting
 #'   `stabilize = TRUE` will be ignored with a warning (supplying a formula
 #'   still works).
 #' @param focal when `estimand` is set to `"ATT"` or `"ATC"`, which group to
-#'   consider the "treated" or "control" group. This group will not be weighted,
+#'   consider the "treated" or "control" group, respectively. This group will not be weighted,
 #'   and the other groups will be weighted to resemble the focal group. If
 #'   specified, `estimand` will automatically be set to `"ATT"` (with a warning
 #'   if `estimand` is not `"ATT"` or `"ATC"`). See section *`estimand` and `focal`* in Details below.
@@ -46,12 +46,11 @@
 #'   one `by` variable is allowed; to stratify by multiply variables
 #'   simultaneously, create a new variable that is a full cross of those
 #'   variables using [interaction()].
-#' @param s.weights a vector of sampling weights or the name of a variable in
-#'   `data` that contains sampling weights. These can also be matching weights
-#'   if weighting is to be used on matched data. See the individual pages for
+#' @param s.weights an optional vector of sampling weights or the name of a variable in
+#'   `data` that contains sampling weights. See the individual pages for
 #'   each method for information on whether sampling weights can be supplied.
-#' @param ps a vector of propensity scores or the name of a variable in `data`
-#'   containing propensity scores. If not `NULL`, `method` is ignored unless it
+#' @param ps an optional vector of propensity scores or the name of a variable in `data`
+#'   containing propensity scores. If supplied, `method` is ignored unless it
 #'   is a user-supplied function, and the propensity scores will be used to
 #'   create weights. `formula` must include the treatment variable in `data`,
 #'   but the listed covariates will play no role in the weight estimation. Using
@@ -64,12 +63,12 @@
 #'   be used instead. Consider the \CRANpkg{MatchThem} package for the use of
 #'   `weightit()` with multiply imputed data.
 #' @param verbose `logical`; whether to print additional information output by
-#'   the fitting function.
+#'   the fitting function. Default is `FALSE` to suppress output.
 #' @param include.obj `logical`; whether to include in the output any fit
 #'   objects created in the process of estimating the weights. For example, with
 #'   `method = "glm"`, the `glm` objects containing the propensity score model
 #'   will be included. See the individual pages for each method for information
-#'   on what object will be included if `TRUE`.
+#'   on what object will be included if `TRUE`. Default is `FALSE` to keep the returned object small.
 #' @param keep.mparts `logical`; whether to include in the output components
 #'   necessary to estimate standard errors that account for estimation of the
 #'   weights in [glm_weightit()]. Default is `TRUE` if such parts are present.
@@ -88,10 +87,10 @@
 #' \item{covs}{The covariates used in the fitting. Only includes the raw covariates, which may have been altered in the fitting process.}
 #' \item{estimand}{The estimand requested.}
 #' \item{method}{The weight estimation method specified.}
-#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when `method` is `"glm"`, `"gbm"`, `"cbps"`, `"ipt"`, `"super"`, or `"bart"`. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
-#' \item{s.weights}{The provided sampling weights.}
+#' \item{ps}{The estimated or provided propensity scores. Estimated propensity scores are returned for binary treatments and only when `method` is one that estimates propensity scores. The propensity score corresponds to the predicted probability of being treated; see section *`estimand` and `focal`* in Details for how the treated group is determined.}
+#' \item{s.weights}{The provided sampling weights, or a vector of 1s of none are provided.}
 #' \item{focal}{The focal treatment level if the ATT or ATC was requested.}
-#' \item{by}{A data.frame containing the `by` variable when specified.}
+#' \item{by}{A data frame containing the `by` variable when specified.}
 #' \item{obj}{When `include.obj = TRUE`, the fit object.}
 #' \item{info}{Additional information about the fitting. See the individual methods pages for what is included.}
 #'
@@ -114,8 +113,9 @@
 #' when `include.obj = TRUE`), how missing values are treated, which estimands
 #' are allowed, and whether sampling weights are allowed.
 #'
-#' | [`"glm"`][method_glm] | Propensity score weighting using generalized linear models |
+#' | `method` | Name |
 #' | :---- | :---- |
+#' | [`"glm"`][method_glm] | Propensity score weighting using generalized linear models |
 #' | [`"gbm"`][method_gbm] | Propensity score weighting using generalized boosted modeling |
 #' | [`"cbps"`][method_cbps] | Covariate Balancing Propensity Score weighting |
 #' | [`"npcbps"`][method_npcbps]| Non-parametric Covariate Balancing Propensity Score weighting |
@@ -154,17 +154,17 @@
 #' cannot handle the treatment type at all (e.g., `"npcbps"` with a censoring model)
 #' still produces an error.
 #'
-#' A formula whose only terms are `lme4`-style random effects, such as
+#' A formula whose only terms are *lme4*-style random effects, such as
 #' `A ~ (1 | school)`, is *not* empty in this sense and is fit as the multilevel
 #' model it describes.
 #'
 #' ## Censoring weights (IPCW)
 #'
-#' Wrapping the left side of `formula` in [`.cens()`][.cens] requests inverse
+#' Wrapping the left side of `formula` in [.cens()] requests inverse
 #' probability of censoring weights instead of treatment weights, as in
 #' `weightit(.cens(C) ~ x1 + x2, data = d, method = "glm")`. Censoring is treated as
 #' its own treatment type, distinct from binary, multi-category, and continuous
-#' treatments; the indicator must be 0 for units still under observation and 1 for
+#' treatments; the indicator must be 0 or `FALSE` for units still under observation and 1 or `TRUE` for
 #' units that are censored.
 #'
 #' Weights are estimated only for the units still under observation, and are those
@@ -176,10 +176,13 @@
 #' censored units; this matters most when few units are censored.
 #'
 #' `estimand`, `focal`, and `subclass` do not apply and are rejected or ignored.
-#' `by` and `stabilize` can be used; stabilization divides the weights by those from
-#' a marginal censoring model, giving \eqn{P(C = 0) / P(C = 0 | X)}. `ps` is the
-#' predicted probability of *being censored*. Not all methods support censoring
-#' weights; see the `treat_type` component of [.weightit_methods].
+#' `by` and `stabilize` can be used; stabilization multiplies the weights by
+#' \eqn{P(C = 0 | V)} from a second censoring model (marginal when `stabilize` is
+#' `TRUE`, otherwise fit with the predictors in the supplied formula), giving
+#' \eqn{P(C = 0 | V) / P(C = 0 | X)} for the units still under observation and
+#' leaving the censored units at exactly 0. `ps` is the
+#' predicted probability of *being censored*. Not all methods support estimating censoring
+#' weights; see the `treat_type` component of [`.weightit_methods`].
 #'
 #' As with a treatment model, the right side of the formula may be empty, as in
 #' `.cens(C) ~ 1`, which requests a marginal censoring model that assumes censoring
@@ -194,7 +197,7 @@
 #' weighted outcome model, and [glm_weightit()] and friends tolerate missing values
 #' in the model variables for those units, including a missing event time in the
 #' `Surv()` response of a [coxph_weightit()] model. Missing values in units with a
-#' nonzero weight still produce an error. See [`.cens()`][.cens] for how to
+#' nonzero weight still produce an error. See [.cens()] for how to
 #' assess balance, which requires a little care.
 #'
 #' ## `estimand` and `focal`
@@ -242,7 +245,7 @@
 #' be useful for speeding up simulation studies for which the correct arguments
 #' are known. In general, `weightit()` should be used.
 #'
-#' [summary.weightit()] for summarizing the weights
+#' [summary.weightit()] for summarizing the distribution of the weights.
 #'
 #' @examples
 #' library("cobalt")
@@ -466,20 +469,14 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
     A[".covs"] <- list(stab.t.c[["reported.covs"]])
     A[".random"] <- list(NULL)
 
-    if (treat.type == "censoring") {
-      #The numerator is fit as an ordinary binary treatment rather than as a
-      #censoring model. A censoring numerator would carry the same (1 - C) factor
-      #as the denominator, making the ratio 0/0 for the censored units (and Inf in
-      #the inverted M-estimation part). With a binary ATE numerator, the weights
-      #are 1/P(C = 0) for the uncensored and 1/P(C = 1) for the censored, so the
-      #ratio is the stabilized IPCW P(C = 0)/P(C = 0 | X) for the former and
-      #exactly 0 for the latter.
-      A["treat"] <- list(as.treat(.make_cens_treat(treat), process = TRUE))
-    }
-
     sw_obj <- do.call("weightit.fit", A)
 
-    obj$weights <- obj$weights / sw_obj[["weights"]]
+    #For censoring, the numerator is a censoring model too, so its weights are 0 for
+    #the censored units; `.num_stab_weights()` neutralizes those so the division is
+    #finite. The stabilized weight is then P(C = 0 | V)/P(C = 0 | X) for the units
+    #still under observation and exactly 0 for those censored.
+    obj$weights <- obj$weights /
+      .num_stab_weights(sw_obj, censoring = treat.type == "censoring")
   }
 
   if (is_not_null(method) && is_null(ps)) {
@@ -516,7 +513,8 @@ weightit <- function(formula, data = NULL, method = "glm", estimand = "ATE", sta
       #Stabilization: append the (inverted) numerator part(s), which likewise may
       #be a single Mparts or one per `by` group.
       num.parts <- clear_null(.attr(sw_obj, "Mparts.list") %or% list(.attr(sw_obj, "Mparts")))
-      num.parts <- lapply(num.parts, .invert_num_Mpart)
+      num.parts <- lapply(num.parts, .invert_num_Mpart,
+                          censoring = treat.type == "censoring")
 
       attr(out, "Mparts.list") <- c(den.parts, num.parts)
     }

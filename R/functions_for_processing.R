@@ -874,22 +874,73 @@ get_treated_level <- function(treat, estimand, focal = NULL) {
 # Convert a stabilization-numerator Mpart for stacking: stabilization weights
 # enter the final weights as 1/w_num, so invert wfun and apply the quotient rule
 # to its derivative (d(1/w)/dB = -w'/w^2).
-.invert_num_Mpart <- function(Mparts) {
+#
+# A censoring numerator is a censoring model like any other, so its weights are
+# \eqn{(1 - C)/(1 - p)}: exactly 0 for the units censored at that time point, whose
+# reciprocal is `Inf` and would give `0 * Inf = NaN` once multiplied by the
+# denominator's weight of 0. Those units are held at a factor of 1 instead (and their
+# derivative at 0, since the factor is then constant in `Btreat`). Their value is
+# arbitrary -- the denominator's weight and derivative are both exactly 0 there, so
+# it cancels out of both the weights and the correction -- but it must be finite.
+#
+# The zeros are detected from `wfun` itself rather than from `A`, because a numerator
+# fit on a risk set comes back already expanded by `.expand_Mparts_by()`, whose
+# wrappers ignore the `A` they are passed in favor of the one they closed over. Every
+# `.cens` method's weights are exactly 0 for the censored units, and an expanded
+# `wfun` returns 1 (never 0) outside its subset, so the test is exact either way.
+.invert_num_Mpart <- function(Mparts, censoring = FALSE) {
   if (is_null(Mparts)) {
     return(NULL)
   }
 
   .wfun <- Mparts[["wfun"]]
-  Mparts[["wfun"]] <- Invert(.wfun)
+  .dw_dBtreat <- Mparts[["dw_dBtreat"]]
 
-  if (is_not_null(Mparts[["dw_dBtreat"]])) {
-    .dw_dBtreat <- Mparts[["dw_dBtreat"]]
-    Mparts[["dw_dBtreat"]] <- function(Btreat, Xtreat, A, SW) {
-      -.dw_dBtreat(Btreat, Xtreat, A, SW) / .wfun(Btreat, Xtreat, A)^2
+  if (censoring) {
+    Mparts[["wfun"]] <- function(Btreat, Xtreat, A) {
+      w <- .wfun(Btreat, Xtreat, A)
+
+      1 / (w + (w == 0))
+    }
+
+    if (is_not_null(.dw_dBtreat)) {
+      Mparts[["dw_dBtreat"]] <- function(Btreat, Xtreat, A, SW) {
+        w <- .wfun(Btreat, Xtreat, A)
+
+        out <- -.dw_dBtreat(Btreat, Xtreat, A, SW) / w^2
+        out[w == 0, ] <- 0
+
+        out
+      }
+    }
+  }
+  else {
+    Mparts[["wfun"]] <- Invert(.wfun)
+
+    if (is_not_null(.dw_dBtreat)) {
+      Mparts[["dw_dBtreat"]] <- function(Btreat, Xtreat, A, SW) {
+        -.dw_dBtreat(Btreat, Xtreat, A, SW) / .wfun(Btreat, Xtreat, A)^2
+      }
     }
   }
 
   Mparts
+}
+
+# The weights to divide by in the stabilization step. Their reciprocal is the
+# stabilization factor: \eqn{P(A = a | V)} for a treatment, and \eqn{P(C = 0 | V)}
+# for the units still under observation under censoring. A censoring numerator gives
+# weights of exactly 0 for the units censored at that time point; those are replaced
+# by 1, holding their factor at 1 to match `.invert_num_Mpart()`, which is where the
+# reasoning lives.
+.num_stab_weights <- function(sw_obj, censoring = FALSE) {
+  w <- sw_obj[["weights"]]
+
+  if (censoring) {
+    return(w + (w == 0))
+  }
+
+  w
 }
 
 .check_num.formula <- function(num.formula, data, env, formula.list) {

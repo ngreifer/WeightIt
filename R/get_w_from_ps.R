@@ -5,7 +5,7 @@
 #' of weights that target the provided estimand.
 #'
 #' @param ps a vector, matrix, or data frame of propensity scores. See Details. When `treat` is a censoring indicator, must be a vector of the probability of *being censored*.
-#' @param treat a vector of treatment status for each individual. See Details. Can also be a censoring indicator created with [`.cens()`][.cens], in which case inverse probability of censoring weights are returned and the remaining arguments do not apply.
+#' @param treat a vector of treatment status for each individual. See Details. Can also be a censoring indicator created with [.cens()], in which case inverse probability of censoring weights are returned and the remaining arguments do not apply.
 #' @param estimand the desired estimand that the weights should target. Current
 #'   options include `"ATE"` (average treatment effect), `"ATT"` (average
 #'   treatment effect on the treated), `"ATC"` (average treatment effect on the
@@ -63,7 +63,7 @@
 #'
 #' ## Censoring indicators
 #'
-#' When `treat` is a censoring indicator created with [`.cens()`][.cens], `get_w_from_ps()` instead returns inverse probability of censoring weights: \eqn{(1 - e(X))^{-1}} for the units still under observation and exactly 0 for the censored units, where `ps` is \eqn{e(X) = P(C = 1 | X)}, the probability of *being censored*. `estimand`, `focal`, `treated`, `subclass`, and `stabilize` do not apply and are ignored with a warning. See [`.cens()`][.cens].
+#' When `treat` is a censoring indicator created with [.cens()], `get_w_from_ps()` instead returns inverse probability of censoring weights: \eqn{(1 - e(X))^{-1}} for the units still under observation and exactly 0 for the censored units, where `ps` is \eqn{e(X) = P(C = 1 | X)}, the probability of *being censored*. `estimand`, `focal`, `treated`, `subclass`, and `stabilize` do not apply and are ignored with a warning. See [.cens()].
 #'
 #' ## Supplying the `ps` argument
 #'
@@ -243,18 +243,22 @@ get_w_from_ps <- function(ps, treat, estimand = "ATE", focal = NULL, treated = N
     #censored units receive exactly 0. None of the estimand machinery applies.
     C <- .make_cens_treat(treat)
 
+    ignored_args <- character()
+
     if (!rlang::is_string(estimand) || !identical(toupper(estimand), "ATE")) {
-      arg::wrn("{.arg estimand} is ignored for a censoring indicator")
+      ignored_args <- c(ignored_args, "estimand")
     }
 
-    for (i in c("focal", "treated", "subclass")) {
-      if (is_not_null(get(i, inherits = FALSE))) {
-        arg::wrn("{.arg {i}} is ignored for a censoring indicator")
-      }
+    args <- c("focal", "treated", "subclass")
+    supplied <- lengths(mget(args, inherits = FALSE)) > 0L
+    ignored_args <- c(ignored_args, args[supplied])
+
+    if (is_not_null(ignored_args)) {
+      arg::wrn("{.arg {ignored_args}} {?is/are} ignored when {.arg treat} is a censoring indicator")
     }
 
     if (isTRUE(stabilize)) {
-      arg::wrn("{.arg stabilize} is ignored for a censoring indicator. To stabilize censoring weights, use {.fun weightit} with {.arg stabilize}")
+      arg::wrn("{.arg stabilize} is ignored when {.arg treat} is a censoring indicator. To stabilize censoring weights, use {.fun weightit} with {.arg stabilize}")
     }
 
     if (!is.numeric(ps) || length(dim(ps)) > 1L) {

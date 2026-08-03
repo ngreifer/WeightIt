@@ -897,6 +897,39 @@ test_that("censoring weights can be stabilized", {
                tolerance = 1e-3)
 
   expect_M_parts_okay(W, tolerance = eps)
+
+  Wn <- weightit(.cens(C) ~ X1 + X2 + X3, data = d, method = "glm",
+                 stabilize = ~X1)
+
+  # w = P(C = 0 | X1)/P(C = 0 | X) for the uncensored, exactly 0 for the censored
+  den <- fitted(glm(C ~ X1 + X2 + X3, data = d, family = quasibinomial))
+  num <- fitted(glm(C ~ X1, data = d, family = quasibinomial))
+
+  expect_equal(unname(Wn$weights),
+               unname(ifelse(d$C == 0L, (1 - num) / (1 - den), 0)),
+               tolerance = eps)
+  expect_true(all(is.finite(Wn$weights)))
+
+  # The censoring numerator's weights are 0 for the censored units, so inverting
+  # them would give `Inf` and then `0 * Inf = NaN`. They are held at a factor of 1
+  # instead, which leaves the weights alone (the denominator already zeroes them)
+  # and keeps `wfun` reproducing them exactly, including the zeros.
+  mp <- attr(Wn, "Mparts.list")
+  expect_length(mp, 2L)
+
+  wfun_num <- mp[[2L]]$wfun(mp[[2L]]$btreat, mp[[2L]]$Xtreat, mp[[2L]]$A)
+  expect_equal(unname(wfun_num[d$C == 0L]), unname((1 - num)[d$C == 0L]),
+               tolerance = eps)
+  expect_true(all(wfun_num[d$C == 1L] == 1))
+
+  # (`wfun` multiplies by the reciprocal where the weights themselves divide, so
+  # these agree to floating-point precision rather than bit for bit)
+  wfun_prod <- Reduce("*", lapply(mp, function(m) m$wfun(m$btreat, m$Xtreat, m$A)),
+                      init = 1)
+  expect_equal(unname(wfun_prod), unname(Wn$weights), tolerance = eps)
+  expect_identical(unname(wfun_prod == 0), unname(Wn$weights == 0))
+
+  expect_M_parts_okay(Wn, tolerance = eps)
 })
 
 # ---- Outcome models tolerate NAs in zero-weight units ----------------------
@@ -1154,6 +1187,16 @@ test_that("weightitMSM separates censoring from treatment models", {
 
   expect_output(print(W), "censoring")
   expect_no_condition(summary(W))
+
+  # The censoring models get their own covariate listing, as the treatment models do
+  expect_output(print(W), "censoring covariates")
+  expect_output(print(W), "C_2: X1_1, X2_1, A_1")
+
+  # ...and none appears when there is no censoring model (`d` has NAs in `A_3` for
+  # the censored units, so use the untouched data here)
+  W_nocens <- weightitMSM(msm_cens_formulas[-3L], data = msmdata, method = "glm")
+  expect_output(print(W_nocens), "covariates")
+  expect_failure(expect_output(print(W_nocens), "censoring covariates"))
 })
 
 test_that("each model is fit only among the units under observation", {
@@ -1339,16 +1382,22 @@ test_that("weightitMSM censoring composes with stabilize and by", {
   expect_true(all(W_stab$weights[cens] == 0))
   expect_M_parts_okay(W_stab, tolerance = eps)
 
-  # A numerator formula list has one entry per TREATMENT time point
+  # A numerator formula list has one entry per entry of `formula.list`, censoring
+  # entries included
   expect_no_error({
     W_num <- weightitMSM(msm_cens_formulas, data = d, method = "glm",
-                         num.formula = list(~1, ~A_1, ~ A_1 + A_2))
+                         num.formula = list(~1, ~A_1, ~A_1, ~ A_1 + A_2))
   })
   expect_true(all(W_num$weights[cens] == 0))
+  expect_true(all(is.finite(W_num$weights)))
 
-  # One entry per formula (including censoring) is wrong
+  # The censoring entry's numerator formula is honored
+  expect_true(any(vapply(W_num$stabilization,
+                         function(f) identical(deparse1(f), "~A_1"), logical(1L))))
+
+  # Skipping the censoring entries is wrong
   expect_error(weightitMSM(msm_cens_formulas, data = d, method = "glm",
-                           num.formula = list(~1, ~A_1, ~A_1, ~ A_1 + A_2)),
+                           num.formula = list(~1, ~A_1, ~ A_1 + A_2)),
                "as many entries")
 
   d$G <- factor(d$X2_0)
@@ -1986,10 +2035,10 @@ test_that("stabilized longitudinal censoring weights match a hand-written produc
 
   W <- weightitMSM(msm_cens_formulas, data = d, method = "glm", stabilize = TRUE)
 
-  # With `stabilize = TRUE` and no `num.formula`, each treatment numerator is a model
-  # saturated in the previous treatments (an intercept at the first time point), and each
-  # censoring numerator is its own marginal model. Censoring indicators are not counted
-  # among the previous treatments.
+  # With `stabilize = TRUE` and no `num.formula`, every numerator -- treatment or
+  # censoring alike -- is a model saturated in the previous treatments (an intercept
+  # when no treatment precedes it). Censoring indicators are not counted among the
+  # previous treatments.
   at.risk <- rep.int(TRUE, n)
 
   a1 <- iptw_factor(A_1 ~ X1_0 + X2_0, d, at.risk) *
@@ -1997,7 +2046,7 @@ test_that("stabilized longitudinal censoring weights match a hand-written produc
   a2 <- iptw_factor(A_2 ~ X1_1 + X2_1 + A_1, d, at.risk) *
     p_observed(A_2 ~ A_1, d, at.risk)
   c2 <- ipcw_factor(C_2 ~ X1_1 + X2_1 + A_1, d, at.risk) *
-    p_observed(C_2 ~ 1, d, at.risk)
+    p_observed(C_2 ~ A_1 * A_2, d, at.risk)
 
   at.risk <- at.risk & d$C_2 == 0L
 

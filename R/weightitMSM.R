@@ -4,7 +4,7 @@
 #' `weightitMSM()` allows for the easy generation of balancing
 #' weights for marginal structural models for time-varying treatments using a
 #' variety of available methods for binary, continuous, and multi-category
-#' treatments. Many of these methods exist in other packages, which [weightit()]
+#' treatments, as well as censoring. Some of these methods exist in other packages, which [weightit()]
 #' calls; these packages must be installed to use the desired method.
 #'
 #' @inheritParams weightit
@@ -34,13 +34,14 @@
 #'   `FALSE`. To manually specify stabilization model formulas, e.g., to specify
 #'   non-saturated models, use `num.formula`. With many time points, saturated
 #'   models may be time-consuming or impossible to fit.
-#' @param num.formula optional; a one-sided formula with the stabilization
+#' @param num.formula an optional one-sided formula with the stabilization
 #'   factors (other than the previous treatments) on the right hand side, which
 #'   adds, for each time point, the stabilization factors to a model saturated
 #'   with previous treatments. See Cole & Hernán (2008) for a discussion of how
 #'   to specify this model; including stabilization factors can change the
 #'   estimand without proper adjustment, and should be done with caution. Can
-#'   also be a list of one-sided formulas, one for each time point. Unless you
+#'   also be a list of one-sided formulas, one for each entry of `formula.list`,
+#'   including any censoring entries. Unless you
 #'   know what you are doing, we recommend setting `stabilize = TRUE` and
 #'   ignoring `num.formula`.
 #' @param include.obj `logical`; whether to include in the output a list of the fit objects
@@ -56,22 +57,42 @@
 #' @param weightit.force `logical`; several methods are not valid for estimating weights
 #'   with longitudinal treatments, and will produce an error message if
 #'   attempted. Set to `TRUE` to bypass this error message.
-#' @param ... other arguments for functions called by `weightit()` that control
-#'   aspects of fitting that are not covered by the above arguments. See Details
-#'   at [weightit()].
+#' @param ... other arguments that control aspects of fitting that are not covered by the above arguments. See Details at [weightit()].
 #'
 #' @returns
 #' A `weightitMSM` object with the following elements:
 #' \item{weights}{The estimated weights, one for each unit.}
 #' \item{treat.list}{A list of the values of the time-varying treatment variables.}
 #' \item{covs.list}{A list of the covariates used in the fitting at each time point. Only includes the raw covariates, which may have been altered in the fitting process.}
-#' \item{data}{The data.frame originally entered to `weightitMSM()`.}
 #' \item{estimand}{"ATE", currently the only estimand for MSMs with binary or multi-category treatments.}
 #' \item{method}{The weight estimation method specified.}
-#' \item{ps.list}{A list of the estimated propensity scores (if any) at each time point.}
 #' \item{s.weights}{The provided sampling weights.}
 #' \item{by}{A data.frame containing the `by` variable when specified.}
 #' \item{stabilization}{The stabilization factors, if any.}
+#'
+#' When censoring is modeled (i.e., when any entry of `formula.list` has its left
+#' side wrapped in [.cens()]), `treat.list` and `covs.list` describe the *treatment*
+#' models only, while `formula.list` is kept exactly as supplied, markers included,
+#' so that [update()] round-trips. The following additional components describe the
+#' censoring models:
+#' \item{cens.list}{A list of the values of the censoring indicators, one entry per
+#' censoring time point. Each is 0 for units still under observation and 1 for units
+#' censored at that time point, and `NA` for units censored earlier.}
+#' \item{cens.covs.list}{A list of the covariates used to fit each censoring model.
+#' As with `covs.list`, only the raw covariates are included.}
+#' \item{cens.formula.list}{A list of the censoring model formulas, with the
+#' [.cens()] marker retained on the left side.}
+#' \item{cens.time}{The positions of the censoring models within `formula.list`, so
+#' that `formula.list[cens.time]` recovers them and their timing relative to the
+#' treatment models can be determined.}
+#' \item{at.risk}{A logical matrix with one row per unit and one column per entry of
+#' `formula.list`, named for the treatment or censoring variable modeled at that
+#' entry. Each column records which units were still under observation when that
+#' model was fit, i.e., which units contributed to it. Useful for assessing balance;
+#' see [.cens()].}
+#'
+#' Censored units have a final weight of exactly 0, so `weights` is 0 for any unit
+#' censored at any time point.
 #'
 #' When `keep.mparts` is `TRUE` (the default) and the chosen method is
 #' compatible with M-estimation, the components related to M-estimation for use
@@ -85,13 +106,11 @@
 #' single-model MSM version of CBPS.)
 #'
 #' @details
-#' Currently only "wide" data sets, where each row corresponds to a
-#' unit's entire variable history, are supported. You can use [reshape()] or
-#' other functions to transform your data into this format; see example below.
+#'
 #'
 #' In general, `weightitMSM()` works by separating the estimation of weights
 #' into separate procedures for each time period based on the formulas provided.
-#' For each formula, `weightitMSM()` simply calls `weightit()` to that formula,
+#' For each formula, `weightitMSM()` simply applies `weightit()` to that formula,
 #' collects the weights for each time period, and multiplies them together to
 #' arrive at longitudinal balancing weights.
 #'
@@ -99,19 +118,15 @@
 #' example, the formula corresponding to the second time period should contain
 #' all the baseline covariates, the treatment variable at the first time period,
 #' and the time-varying covariates that took on values after the first treatment
-#' and before the second. Currently, only wide data sets are supported, where
-#' each unit is represented by exactly one row that contains the covariate and
-#' treatment history encoded in separate variables.
-#'
-#' The `"cbps"` method, which calls `CBPS()` in \pkg{CBPS}, will yield different
-#' results from `CBMSM()` in \pkg{CBPS} because `CBMSM()` takes a different
-#' approach to generating weights than simply estimating several time-specific
-#' models.
+#' and before the second. Currently only "wide" data sets are supported, where each
+#' unit is represented by exactly one row that contains its covariate and
+#' treatment history encoded in separate variables. You can use [reshape()] or
+#' other functions to transform your data into this format; see example below.
 #'
 #' ## Censoring weights (IPCW)
 #'
 #' Censoring can be modeled by including entries in `formula.list` whose left side
-#' is wrapped in [`.cens()`][.cens], placed in temporal order among the treatment
+#' is wrapped in [.cens()], placed in temporal order among the treatment
 #' models. For example,
 #'
 #' ```
@@ -124,7 +139,7 @@
 #'
 #' models censoring occurring after the second treatment. Each censoring indicator
 #' must be 0 for units still under observation and 1 for units censored at that time
-#' point. See [`.cens()`][.cens] for details of what the resulting weights
+#' point. See [.cens()] for details of what the resulting weights
 #' estimate.
 #'
 #' Every model, treatment or censoring, is fit only among the units still under
@@ -136,10 +151,15 @@
 #' output has one column per time point recording which units were under
 #' observation when that model was fit.
 #'
-#' Censoring weights are not stabilized by `num.formula`; each is stabilized by its
-#' own marginal censoring model when `stabilize = TRUE`. When `num.formula` is
-#' supplied as a list, it should have one entry per *treatment* time point, ignoring
-#' the censoring entries.
+#' Censoring time points are stabilized in exactly the same way as treatment time
+#' points: with `stabilize = TRUE`, the numerator of a censoring weight is a model
+#' for that censoring indicator given the preceding treatments (or a marginal model
+#' when no treatment precedes it), and `num.formula` adds stabilization factors to
+#' it as it does for a treatment. When `num.formula` is supplied as a list, it must
+#' have one entry per entry of `formula.list`, censoring entries included. The
+#' numerator of a censoring weight is itself a censoring model, so the stabilized
+#' weight is \eqn{P(C = 0 | \cdot) / P(C = 0 | X)} for the units still under
+#' observation and remains exactly 0 for those censored.
 #'
 #' The right side of a censoring formula may be empty, as in `.cens(C_2) ~ 1`, which
 #' requests a marginal censoring model that assumes censoring at that time point is
@@ -153,11 +173,6 @@
 #' [weightit()]; when `is.MSM.method = TRUE` there is no shortcut to take, because a
 #' single set of weights is estimated for all time points at once, and a time point
 #' with no covariates instead contributes only its intercept balance condition.
-#'
-#' Censoring can also be used with `is.MSM.method = TRUE` when `method = "cbps"`, in
-#' which case one set of weights is estimated satisfying the balance conditions at
-#' every time point simultaneously, each evaluated among the units still under
-#' observation at that time point. See [`method_cbps`].
 #'
 #' @seealso
 #' [weightit()] for information on the allowable methods
@@ -417,11 +432,10 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
       num.formula <- NULL
     }
     else if (is_not_null(num.formula)) {
-      #Censoring weights are stabilized by their own marginal model rather than by a
-      #numerator formula, so a list of numerator formulas has one entry per
-      #*treatment* time point.
+      #Censoring time points are stabilized like any other, so a list of numerator
+      #formulas has one entry per entry of `formula.list`, censoring included.
       .check_num.formula(num.formula, data, env = parent.frame(),
-                         formula.list = formula.list[!is.cens])
+                         formula.list = formula.list)
     }
   }
 
@@ -477,11 +491,11 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
     A["ps"] <- list(numeric())
     A["is.MSM.method"] <- list(FALSE)
 
-    #Index of each time point among the treatment models only, for `num.formula`
-    t.idx <- cumsum(!is.cens)
-
     #Prior treatments, used as stabilization predictors; censoring indicators are
-    #never included among them.
+    #never included among them. Whether this is empty also stands in for "is this
+    #the first time point?" when building the stabilization formulas below: it is
+    #equivalent for the treatment models and is the behavior wanted at a censoring
+    #time point that precedes every treatment.
     prior.treat.names <- character()
 
     for (i in seq_along(formula.list)) {
@@ -522,20 +536,21 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
       Mparts.list[[i]] <- clear_null(.attr(obj, "Mparts.list") %or% list(.attr(obj, "Mparts")))
 
       if (stabilize) {
-        #Process stabilization formulas and get stab weights
-        if (is.cens[i]) {
-          #A censoring model is stabilized by its own marginal censoring model. The
-          #numerator must be fit as an ordinary binary treatment rather than as a
-          #censoring model: a censoring numerator would carry the same (1 - C)
-          #factor as the denominator, making the ratio 0/0 for the censored units
-          #(and `Inf` in the inverted M-estimation part).
-          stab.f <- update(.uncens_formula(formula.list[[i]]), ". ~ 1")
+        #Process stabilization formulas and get stab weights. Censoring time points
+        #are stabilized exactly like treatment time points, and by a censoring model
+        #of their own. The marker is stripped from the left side only so that
+        #`get_covs_and_treat_from_formula2()` is asked for nothing but the numerator
+        #covariates; the treatment passed to `weightit.fit()` below is still the
+        #censoring-tagged indicator, so the numerator is fit by the same `.cens`
+        #method as the denominator.
+        f_i <- {
+          if (is.cens[i]) .uncens_formula(formula.list[[i]])
+          else formula.list[[i]]
         }
-        else if (rlang::is_formula(num.formula)) {
-          if (t.idx[i] == 1L) {
-            stab.f <- update(formula.list[[i]], num.formula)
-            # stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
-            #                          as.formula(paste(paste(num.formula, collapse = ""), "+ .")))
+
+        if (rlang::is_formula(num.formula)) {
+          if (is_null(prior.treat.names)) {
+            stab.f <- update(f_i, num.formula)
           }
           else {
             stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~",
@@ -545,16 +560,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
           }
         }
         else if (is.list(num.formula)) {
-          stab.f <- update(formula.list[[i]], num.formula[[t.idx[i]]])
-          # stab.f <- update.formula(as.formula(paste(names(treat.list)[i], "~ 1")),
-          #                          as.formula(paste(paste(num.formula[[i]], collapse = ""), "+ .")))
+          stab.f <- update(f_i, num.formula[[i]])
         }
         else {
-          if (t.idx[i] == 1L) {
-            stab.f <- update(formula.list[[i]], ". ~ 1")
+          if (is_null(prior.treat.names)) {
+            stab.f <- update(f_i, ". ~ 1")
           }
           else {
-            stab.f <- update(formula.list[[i]],
+            stab.f <- update(f_i,
                              sprintf(". ~ %s", paste(prior.treat.names,
                                                      collapse = " * ")))
           }
@@ -568,17 +581,14 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         A_i["int"] <- list(FALSE)
         A_i["quantile"] <- list(list())
 
-        if (is.cens[i]) {
-          #See above: the numerator is a plain binary model, so the ratio is
-          #P(C = 0)/P(C = 0 | X) for the units still under observation and exactly
-          #0 for those censored here.
-          A_i["treat"] <- list(as.treat(.make_cens_treat(treat.list[[i]]),
-                                        process = TRUE))
-        }
-
         sw_obj <- do.call("weightit.fit", A_i)
 
-        sw_i <- 1 / sw_obj[["weights"]]
+        #A censoring numerator is itself a censoring model, so its weights are 0 for
+        #the units censored here; `.num_stab_weights()` neutralizes those so the
+        #reciprocal is finite. The stabilized factor is then P(C = 0 | V) for the
+        #units still under observation, and the denominator keeps those censored here
+        #at exactly 0.
+        sw_i <- 1 / .num_stab_weights(sw_obj, censoring = is.cens[i])
         sw_i[!at.risk] <- 1
 
         sw.list[[i]] <- sw_i
@@ -587,7 +597,7 @@ weightitMSM <- function(formula.list, data = NULL, method = "glm",
         #Invert each numerator part (one per `by` group when by has >1 level).
         stab.Mparts.list[[i]] <- lapply(
           clear_null(.attr(sw_obj, "Mparts.list") %or% list(.attr(sw_obj, "Mparts"))),
-          .invert_num_Mpart)
+          .invert_num_Mpart, censoring = is.cens[i])
       }
 
       if (!is.cens[i]) {
@@ -730,6 +740,16 @@ print.weightitMSM <- function(x, ...) {
                   names(x[["cens.list"]])[i],
                   sum(.make_cens_treat(x[["cens.list"]][[i]]) == 1, na.rm = TRUE),
                   nobs(x)))
+    }
+  }
+
+  if (is_not_null(x[["cens.covs.list"]])) {
+    cat(" - censoring covariates:\n")
+    for (i in seq_along(x[["cens.covs.list"]])) {
+      cat(sprintf("    + %s: %s\n",
+                  names(x[["cens.list"]])[i],
+                  if (is_null(x[["cens.covs.list"]][[i]])) "(none)"
+                  else word_list(names(x[["cens.covs.list"]][[i]]), and.or = FALSE)))
     }
   }
 
