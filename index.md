@@ -163,64 +163,39 @@ summary(fit, ci = TRUE)
 ## Standard error: HC0 robust (adjusted for estimation of weights)
 ```
 
-The tables below contain the available methods in *WeightIt* for
-estimating weights for binary, multi-category, and continuous
-treatments. Some of these methods require installing other packages to
-use; see
+The table below contains the available methods in *WeightIt* for
+estimating weights, and which treatment types each supports. Some of
+these methods require installing other packages to use; see
 [`vignette("installing-packages")`](https://ngreifer.github.io/WeightIt/articles/installing-packages.md)
 for information on how to install them.
 
-#### Binary Treatments
+| Method | `method` | Binary | Multi-category | Continuous | Censoring |
+|:---|:--:|:--:|:--:|:--:|:--:|
+| Generalized linear model PS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) | ✓ | ✓ | ✓ | ✓ |
+| Generalized boosted modeling PS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) | ✓ | ✓ | ✓ | ✓ |
+| Covariate balancing PS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) | ✓ | ✓ | ✓ | ✓ |
+| Non-parametric covariate balancing PS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) | ✓ | ✓ | ✓ |  |
+| Entropy balancing | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html) | ✓ | ✓ | ✓ | ✓ |
+| Inverse probability tilting | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html) | ✓ | ✓ |  | ✓ |
+| Stable balancing weights | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) | ✓ | ✓ | ✓ | ✓ |
+| SuperLearner PS | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html) | ✓ | ✓ | ✓ | ✓ |
+| Bayesian additive regression trees PS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html) | ✓ | ✓ | ✓ | ✓ |
+| Energy balancing^(†) | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html) | ✓ | ✓ | ✓ | ✓ |
+| Characteristic function distance balancing | [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.html) | ✓ | ✓ |  | ✓ |
 
-| Method | `method` |
-|:---|:--:|
-| Binary regression PS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
-| Generalized boosted modeling PS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
-| Covariate balancing PS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
-| Non-Parametric covariate balancing PS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) |
-| Entropy balancing | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html) |
-| Inverse probability tilting | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html) |
-| Stable balancing weights | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
-| SuperLearner PS | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html) |
-| Bayesian additive regression trees PS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html) |
-| Energy balancing | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html) |
-| Characteristic function distance balancing | [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.html) |
-
-#### Multi-Category Treatments
-
-| Method | `method` |
-|:---|:--:|
-| Multinomial regression PS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
-| Generalized boosted modeling PS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
-| Covariate balancing PS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
-| Non-parametric covariate balancing PS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) |
-| Entropy balancing | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html) |
-| Inverse probability tilting | [`"ipt"`](https://ngreifer.github.io/WeightIt/reference/method_ipt.html) |
-| Stable balancing weights | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
-| SuperLearner PS | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html) |
-| Bayesian additive regression trees PS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html) |
-| Energy balancing | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html) |
-| Characteristic function distance balancing | [`"cfd"`](https://ngreifer.github.io/WeightIt/reference/method_cfd.html) |
-
-#### Continuous Treatments
-
-| Method | `method` |
-|:---|:--:|
-| Generalized linear model GPS | [`"glm"`](https://ngreifer.github.io/WeightIt/reference/method_glm.html) |
-| Generalized boosted modeling GPS | [`"gbm"`](https://ngreifer.github.io/WeightIt/reference/method_gbm.html) |
-| Covariate balancing GPS | [`"cbps"`](https://ngreifer.github.io/WeightIt/reference/method_cbps.html) |
-| Non-parametric covariate balancing GPS | [`"npcbps"`](https://ngreifer.github.io/WeightIt/reference/method_npcbps.html) |
-| Entropy balancing | [`"ebal"`](https://ngreifer.github.io/WeightIt/reference/method_ebal.html) |
-| Stable balancing weights | [`"optweight"`](https://ngreifer.github.io/WeightIt/reference/method_optweight.html) |
-| SuperLearner GPS | [`"super"`](https://ngreifer.github.io/WeightIt/reference/method_super.html) |
-| Bayesian additive regression trees GPS | [`"bart"`](https://ngreifer.github.io/WeightIt/reference/method_bart.html) |
-| Distance covariance optimal weighting | [`"energy"`](https://ngreifer.github.io/WeightIt/reference/method_energy.html) |
+PS = propensity score; for continuous treatments, the generalized
+propensity score (GPS). ^(†)With a continuous treatment, `"energy"`
+performs distance covariance optimal weighting.
 
 In addition, *WeightIt* implements the subgroup balancing propensity
 score using the function
 [`sbps()`](https://ngreifer.github.io/WeightIt/reference/sbps.md).
-Censoring weights can be estimated to account for missingness in the
-outcome. Several other tools and utilities are available, including
+Inverse probability of censoring weights, which account for units
+dropping out before the outcome is measured, are requested by wrapping a
+censoring indicator in
+[`.cens()`](https://ngreifer.github.io/WeightIt/reference/dot-cens.md)
+on the left side of a model formula. Several other tools and utilities
+are available, including
 [`trim()`](https://ngreifer.github.io/WeightIt/reference/trim.md) to
 trim or truncate weights,
 [`calibrate()`](https://ngreifer.github.io/WeightIt/reference/calibrate.md)
